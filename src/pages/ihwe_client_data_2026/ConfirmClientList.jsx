@@ -99,7 +99,7 @@ const ConfirmClientList = () => {
   };
 
   return (
-    <div className="w-full h-auto bg-[#eef1f5]">
+    <div className="w-full h-auto bg-[#eef1f5]" style={{ marginTop: "30px" }}>
       {selectedClient ? (
         <ClientOverview client={selectedClient} onBack={handleBackClick} />
       ) : (

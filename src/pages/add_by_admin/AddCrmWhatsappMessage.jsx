@@ -166,7 +166,12 @@ const AddCrmWhatsappMessage = () => {
   return (
     <div
       className="w-full"
-      style={{ backgroundColor: "#ecf0f5", minHeight: "100vh", padding: "0" }}
+      style={{
+        marginTop: "30px",
+        backgroundColor: "#ecf0f5",
+        minHeight: "100vh",
+        padding: "0",
+      }}
     >
       {/* Header Section */}
       <div

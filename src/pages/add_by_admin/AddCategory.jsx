@@ -93,7 +93,7 @@ const AddCategory = () => {
   };
 
   return (
-    <div className="bg-[#ecf0f5] min-h-screen">
+    <div className="bg-[#ecf0f5] min-h-screen" style={{ marginTop: "30px" }}>
       {/* Header */}
       <div className="bg-white px-5 py-1">
         <h1 className="text-gray-600 font-normal text-xl">CATEGORY</h1>

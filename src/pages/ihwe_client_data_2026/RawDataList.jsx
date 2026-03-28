@@ -83,7 +83,7 @@ const RawDataList = () => {
   }));
 
   return (
-    <div className="w-full h-auto bg-[#eef1f5]">
+    <div className="w-full h-auto bg-[#eef1f5]" style={{ marginTop: "30px" }}>
       <div className="w-full bg-white">
         <div className="w-full bg-white flex flex-col sm:flex-row justify-between items-center px-4 py-1 mb-3">
           <h1 className="text-xl text-gray-500 mb-2 lg:mb-0 uppercase">

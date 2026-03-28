@@ -35,7 +35,10 @@ const UserList = () => {
   if (error) return <div className="p-5 text-red-500 text-center">{error}</div>;
 
   return (
-    <div className="w-full min-h-screen bg-[#f5f5f5]">
+    <div
+      className="w-full min-h-screen bg-[#f5f5f5]"
+      style={{ marginTop: "30px" }}
+    >
       <div className="flex justify-between items-center py-2 px-6 w-full bg-white border-b border-gray-200">
         <div className="flex items-center justify-between  ">
           <h1 className="text-xl font-normal text-gray-600">USERS</h1>

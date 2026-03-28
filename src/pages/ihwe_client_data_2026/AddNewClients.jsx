@@ -295,7 +295,10 @@ const AddNewClients = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-gray-100">
+    <div
+      className="w-full min-h-screen bg-gray-100"
+      style={{ marginTop: "30px" }}
+    >
       {/* Heading and Navigation Buttons */}
       <div className="w-full h-fit bg-white shadow-md">
         <div className="w-full bg-white flex flex-col sm:flex-row justify-between items-center px-4 py-1">

@@ -169,7 +169,11 @@ const CorporateVisitorForm = ({
   };
 
   return (
-    <form className="visitor-form" onSubmit={handleSubmit}>
+    <form
+      className="visitor-form"
+      onSubmit={handleSubmit}
+      style={{ marginTop: "30px" }}
+    >
       <h3 className="text-sm text-gray-900 font-semibold mb-3">
         Corporate Visitor Registration
       </h3>

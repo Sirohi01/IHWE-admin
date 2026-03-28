@@ -175,7 +175,11 @@ const AddRemarkLengthFixed = () => {
   return (
     <div
       className="w-full"
-      style={{ backgroundColor: "#ecf0f5", minHeight: "100vh" }}
+      style={{
+        backgroundColor: "#ecf0f5",
+        minHeight: "100vh",
+        marginTop: "30px",
+      }}
     >
       {/* Header */}
       <div

@@ -230,7 +230,10 @@ const AddBank = () => {
     "px-4 py-3 text-sm font-semibold text-left text-gray-700 border-r border-gray-200";
 
   return (
-    <div className="w-full min-h-screen" style={{ backgroundColor: "#ecf0f5" }}>
+    <div
+      className="w-full min-h-screen"
+      style={{ backgroundColor: "#ecf0f5", marginTop: "30px" }}
+    >
       {/* Header */}
       <div className="w-full bg-white border-b border-gray-200">
         <div className="flex items-center justify-between px-6 py-3">

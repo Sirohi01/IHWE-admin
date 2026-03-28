@@ -85,7 +85,7 @@ const NewLeadList = () => {
   }));
 
   return (
-    <div className="w-full h-auto bg-[#eef1f5]">
+    <div className="w-full h-auto bg-[#eef1f5]" style={{ marginTop: "30px" }}>
       {/* 🔹 Header */}
       <div className="w-full bg-white">
         <div className="w-full bg-white flex flex-col sm:flex-row justify-between items-center px-4 py-1 mb-3">

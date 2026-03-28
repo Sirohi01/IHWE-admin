@@ -36,7 +36,10 @@ const UploadExhibitor = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-gray-100">
+    <div
+      className="w-full min-h-screen bg-gray-100"
+      style={{ marginTop: "30px" }}
+    >
       <div className="w-full h-fit bg-white shadow-md">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between px-4 py-1.5">
           <h1 className="text-xl text-gray-500 mb-2 lg:mb-0">

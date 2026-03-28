@@ -150,7 +150,10 @@ const GeneralOverview = () => {
   const hasReviews = visitorReviews.length > 0;
 
   return (
-    <div className="w-full min-h-screen bg-gray-100">
+    <div
+      className="w-full min-h-screen bg-gray-100"
+      style={{ marginTop: "30px" }}
+    >
       {/* Header */}
       <div className="w-full bg-white shadow-md mb-6">
         <div className="flex items-center justify-between px-4 py-2">

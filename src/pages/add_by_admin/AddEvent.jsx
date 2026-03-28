@@ -363,7 +363,12 @@ const AddEvent = () => {
   return (
     <div
       className="w-full"
-      style={{ backgroundColor: "#ecf0f5", minHeight: "100vh", padding: "0" }}
+      style={{
+        backgroundColor: "#ecf0f5",
+        minHeight: "100vh",
+        padding: "0",
+        marginTop: "30px",
+      }}
     >
       {/* Header Section */}
       <div

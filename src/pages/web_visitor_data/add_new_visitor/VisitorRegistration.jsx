@@ -63,7 +63,7 @@ const VisitorRegistration = ({ onNavigateToList }) => {
   }, [dispatch]);
 
   return (
-    <div>
+    <div style={{ marginTop: "30px" }}>
       <div className="w-full bg-white border-b border-gray-200 px-4 py-2 flex justify-between items-center">
         <h1 className="text-xl font-normal text-gray-700">VISITOR</h1>
         <div className="flex gap-2">

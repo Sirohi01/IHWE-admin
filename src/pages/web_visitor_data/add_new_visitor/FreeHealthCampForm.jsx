@@ -142,7 +142,11 @@ const FreeHealthCampForm = ({
   };
 
   return (
-    <form className="visitor-form space-y-6" onSubmit={handleSubmit}>
+    <form
+      className="visitor-form space-y-6"
+      onSubmit={handleSubmit}
+      style={{ marginTop: "30px" }}
+    >
       <h3 className="font-semibold text-gray-900">
         Free Health Camp Registration
       </h3>

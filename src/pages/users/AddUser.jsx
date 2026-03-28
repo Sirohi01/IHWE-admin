@@ -260,7 +260,10 @@ const AddUser = () => {
   };
 
   return (
-    <div className="w-full bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
+    <div
+      className="w-full bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen"
+      style={{ marginTop: "30px" }}
+    >
       {/* Header */}
       <div className="bg-white shadow-md border-b-2 border-[#3598dc] py-2.5">
         <div className="flex flex-row justify-between items-center   px-4 max-w-7xl mx-auto">

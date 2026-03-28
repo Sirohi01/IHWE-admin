@@ -152,7 +152,7 @@ const GeneralVisitorForm = ({
   };
 
   return (
-    <div className="visitor-form space-y-6">
+    <div className="visitor-form space-y-6" style={{ marginTop: "30px" }}>
       <h3 className="font-semibold text-gray-900">
         General Visitor Registration
       </h3>
