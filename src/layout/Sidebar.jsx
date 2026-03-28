@@ -28,7 +28,16 @@ export default function Sidebar({
 }) {
   const location = useLocation();
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [openSections, setOpenSections] = useState({});
   const [theme, setTheme] = useState(DEFAULT_THEME);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const info = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
+    if (info) {
+      setCurrentUser(JSON.parse(info));
+    }
+  }, []);
 
   /* Sidebar is now using static defaults defined above */
   const [logo, setLogo] = useState("");
@@ -43,16 +52,41 @@ export default function Sidebar({
       .catch(err => console.error("Error fetching sidebar settings:", err));
   }, []);
 
-  /* ── Auto-open dropdown for current route ────────────────────────────────── */
+  /* ── Filter Menu Items by Role ────────────────────────────────────────── */
+  const filteredMenuItems = menuItems.filter(item => {
+    if (!currentUser) return false;
+    // If no roles specified, default to super-admin only
+    if (!item.roles) return currentUser.role === 'super-admin';
+    return item.roles.includes(currentUser.role);
+  });
+
+  /* ── Auto-open dropdown & section for current route ─────────────────────── */
   useEffect(() => {
-    menuItems.forEach((item) => {
+    let currentHeading = "General"; // Fallback
+    let foundActiveHeading = null;
+
+    filteredMenuItems.forEach((item) => {
+      if (item.type === "heading") {
+        currentHeading = item.label;
+      }
+      if (item.type === "item" && item.path && location.pathname.includes(item.path)) {
+        foundActiveHeading = currentHeading;
+      }
       if (
         item.type === "dropdown" &&
-        item.children?.some((c) => location.pathname.startsWith(c.path))
+        item.children?.some((c) => location.pathname.includes(c.path))
       ) {
         setOpenDropdown(item.label);
+        foundActiveHeading = currentHeading;
       }
     });
+
+    if (foundActiveHeading) {
+      setOpenSections(prev => {
+        if (prev[foundActiveHeading]) return prev;
+        return { ...prev, [foundActiveHeading]: true };
+      });
+    }
   }, [location.pathname]);
 
   /* ── Logout ──────────────────────────────────────────────────────────────── */
@@ -232,99 +266,112 @@ export default function Sidebar({
 
         {/* MENU */}
         <div className="h-[calc(100vh-140px)] overflow-y-auto sidebar-scroll p-3 space-y-2 text-[13px]">
-          {menuItems.map((item, index) => {
-            /* ===== HEADING ===== */
-            if (item.type === "heading") {
-              return (
-                sidebarOpen && (
-                  <p
-                    key={index}
-                    className="sb-heading px-3 mt-5 mb-2 text-[11px] font-semibold uppercase"
-                  >
-                    {item.label}
-                  </p>
-                )
-              );
-            }
+          {(() => {
+            let currentHeading = "General"; // Fallback tracking var
 
-            /* ===== NORMAL ITEM ===== */
-            if (item.type === "item") {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.label}
-                  to={item.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={({ isActive }) =>
-                    `sb-item flex items-center gap-3 px-3 py-2 rounded-md border border-transparent
-                    ${isActive ? "active" : ""}
-                    ${!sidebarOpen && "justify-center"}`
-                  }
-                >
-                  <Icon size={16} className="sb-icon" />
-                  {sidebarOpen && (
-                    <span className="sb-label whitespace-nowrap">
-                      {item.label}
-                    </span>
-                  )}
-                </NavLink>
-              );
-            }
+            return filteredMenuItems.map((item, index) => {
+              /* ===== HEADING ===== */
+              if (item.type === "heading") {
+                currentHeading = item.label;
+                const isOpen = openSections[item.label];
+                return (
+                  sidebarOpen && (
+                    <div
+                      key={index}
+                      onClick={() => setOpenSections(prev => ({ ...prev, [item.label]: !prev[item.label] }))}
+                      className="sb-heading px-3 mt-5 mb-2 flex justify-between items-center cursor-pointer hover:opacity-75 transition-opacity"
+                    >
+                      <p className="text-[11px] font-semibold uppercase">{item.label}</p>
+                      <ChevronDown size={14} className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                    </div>
+                  )
+                );
+              }
 
-            /* ===== DROPDOWN ===== */
-            if (item.type === "dropdown") {
-              const Icon = item.icon;
-              const isOpen = openDropdown === item.label;
+              // Hide items if their parent section is collapsed (except top-level items before any heading)
+              if (currentHeading !== "General" && !openSections[currentHeading] && sidebarOpen) {
+                return null;
+              }
 
-              return (
-                <div key={item.label}>
-                  <button
-                    onClick={() =>
-                      sidebarOpen && setOpenDropdown(isOpen ? null : item.label)
+              /* ===== NORMAL ITEM ===== */
+              if (item.type === "item") {
+                const Icon = item.icon;
+                return (
+                  <NavLink
+                    key={item.label}
+                    to={item.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={({ isActive }) =>
+                      `sb-item flex items-center gap-3 px-3 py-2 rounded-md border border-transparent
+                      ${isActive ? "active" : ""}
+                      ${!sidebarOpen && "justify-center"}`
                     }
-                    className={`sb-dropdown-btn w-full flex items-center justify-between px-3 py-2 rounded-md
-                      ${!sidebarOpen && "justify-center"}`}
                   >
-                    <div className="flex items-center gap-3">
-                      <Icon size={16} className="sb-icon" />
-                      {sidebarOpen && (
-                        <span className="sb-label whitespace-nowrap">
-                          {item.label}
-                        </span>
-                      )}
-                    </div>
-
+                    <Icon size={16} className="sb-icon" />
                     {sidebarOpen && (
-                      <ChevronDown
-                        size={14}
-                        className={`sb-chevron transition ${isOpen ? "rotate-180" : ""}`}
-                      />
+                      <span className="sb-label whitespace-nowrap">
+                        {item.label}
+                      </span>
                     )}
-                  </button>
+                  </NavLink>
+                );
+              }
 
-                  {sidebarOpen && isOpen && (
-                    <div className="sb-sub-border ml-5 mt-1 space-y-1 border-l pl-3">
-                      {item.children.map((sub) => (
-                        <NavLink
-                          key={sub.path}
-                          to={sub.path}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={({ isActive }) =>
-                            `sb-sub-item block px-3 py-1.5 rounded-md sb-label
-                            ${isActive ? "active" : ""}`
-                          }
-                        >
-                          {sub.label}
-                        </NavLink>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            }
+              /* ===== DROPDOWN ===== */
+              if (item.type === "dropdown") {
+                const Icon = item.icon;
+                const isOpen = openDropdown === item.label;
 
-            return null;
-          })}
+                return (
+                  <div key={item.label}>
+                    <button
+                      onClick={() =>
+                        sidebarOpen && setOpenDropdown(isOpen ? null : item.label)
+                      }
+                      className={`sb-dropdown-btn w-full flex items-center justify-between px-3 py-2 rounded-md
+                        ${!sidebarOpen && "justify-center"}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon size={16} className="sb-icon" />
+                        {sidebarOpen && (
+                          <span className="sb-label whitespace-nowrap">
+                            {item.label}
+                          </span>
+                        )}
+                      </div>
+
+                      {sidebarOpen && (
+                        <ChevronDown
+                          size={14}
+                          className={`sb-chevron transition ${isOpen ? "rotate-180" : ""}`}
+                        />
+                      )}
+                    </button>
+
+                    {sidebarOpen && isOpen && (
+                      <div className="sb-sub-border ml-5 mt-1 space-y-1 border-l pl-3">
+                        {item.children.map((sub) => (
+                          <NavLink
+                            key={sub.path}
+                            to={sub.path}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={({ isActive }) =>
+                              `sb-sub-item block px-3 py-1.5 rounded-md sb-label
+                              ${isActive ? "active" : ""}`
+                            }
+                          >
+                            {sub.label}
+                          </NavLink>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              return null;
+            });
+          })()}
         </div>
 
         {/* FOOTER */}

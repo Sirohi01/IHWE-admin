@@ -16,7 +16,9 @@ import {
     Contact,
     Type,
     Calendar,
-    MessageSquare
+    MessageSquare,
+    CreditCard,
+    Banknote
 } from 'lucide-react';
 import api, { API_URL, SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
@@ -31,6 +33,8 @@ const Settings = () => {
     const [marqueeText, setMarqueeText] = useState("• 150+ Speakers confirmed • Early Bird discount ending soon! • Join 8,000+ Professionals from 25+ Countries");
     const [topbarDate, setTopbarDate] = useState("15–17 October 2026");
     const [supportDeskText, setSupportDeskText] = useState("For exhibitors and delegates traveling from abroad, our international support team is available 24/7 during the expo period for visa, travel, and logistics assistance.");
+    const [onlineAdvancePercentage, setOnlineAdvancePercentage] = useState(50);
+    const [manualAdvancePercentage, setManualAdvancePercentage] = useState(50);
 
     // Email addresses state
     const [emails, setEmails] = useState([
@@ -90,6 +94,12 @@ const Settings = () => {
                 if (savedSupportDeskText) {
                     setSupportDeskText(savedSupportDeskText);
                 }
+                if (res.data.data.onlineAdvancePercentage) {
+                    setOnlineAdvancePercentage(res.data.data.onlineAdvancePercentage);
+                }
+                if (res.data.data.manualAdvancePercentage) {
+                    setManualAdvancePercentage(res.data.data.manualAdvancePercentage);
+                }
 
                 if (emails && emails.length > 0) {
                     setEmails(emails.map((e, index) => ({ ...e, id: Date.now() + index, isEditing: false })));
@@ -128,6 +138,8 @@ const Settings = () => {
             formData.append('marqueeText', marqueeText);
             formData.append('topbarDate', topbarDate);
             formData.append('supportDeskText', supportDeskText);
+            formData.append('onlineAdvancePercentage', onlineAdvancePercentage);
+            formData.append('manualAdvancePercentage', manualAdvancePercentage);
 
             const res = await api.put('/api/settings', formData, {
                 headers: {
@@ -429,6 +441,32 @@ const Settings = () => {
                                     className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d] font-medium resize-none shadow-sm"
                                     placeholder="Enter support desk text for contact page..."
                                 />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider flex items-center gap-2">
+                                    <CreditCard className="w-3 h-3 text-blue-600" /> Online Adv. Payment %
+                                </label>
+                                <input
+                                    type="number"
+                                    value={onlineAdvancePercentage}
+                                    onChange={(e) => setOnlineAdvancePercentage(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d] font-bold shadow-sm"
+                                    placeholder="e.g. 50"
+                                />
+                                <p className="text-[9px] text-gray-400 mt-1 font-medium">Determines how much users pay upfront during online booking.</p>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider flex items-center gap-2">
+                                    <Banknote className="w-3 h-3 text-green-600" /> Manual Adv. Payment %
+                                </label>
+                                <input
+                                    type="number"
+                                    value={manualAdvancePercentage}
+                                    onChange={(e) => setManualAdvancePercentage(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d] font-bold shadow-sm"
+                                    placeholder="e.g. 50"
+                                />
+                                <p className="text-[9px] text-gray-400 mt-1 font-medium">Determines how much users pay upfront during manual booking.</p>
                             </div>
                         </div>
                     </div>

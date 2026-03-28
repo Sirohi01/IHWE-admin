@@ -103,6 +103,12 @@ import ImageGalleryManagement from "../pages/ImageGalleryManagement";
 import VideoGalleryManagement from "../pages/VideoGalleryManagement";
 import MediaGalleryManagement from "../pages/MediaGalleryManagement";
 import ClickAnalytics from "../pages/ClickAnalytics";
+import ManageStalls from "../pages/ManageStalls";
+import ManageRegistrations from "../pages/ManageRegistrations";
+import ManageEvents from "../pages/ManageEvents";
+import ManageStallRates from "../pages/ManageStallRates";
+import ManageTerms from "../pages/ManageTerms";
+
 
 
 /* settings */
@@ -181,6 +187,12 @@ export default function AppRoutes() {
           <Route path="buyer-registration/edit/:id" element={<BuyerRegistrationEdit />} />
           <Route path="stall-vendor-manage" element={<StallVendorManage />} />
           <Route path="exhibitor-list-manage" element={<ExhibitorListManage />} />
+          <Route path="stalls" element={<ManageStalls />} />
+          <Route path="exhibitor-bookings" element={<ManageRegistrations />} />
+          <Route path="events" element={<ManageEvents />} />
+          <Route path="stall-rates" element={<ManageStallRates />} />
+          <Route path="terms-conditions" element={<ManageTerms />} />
+
 
           <Route path="add-meta" element={<AddSeo />} />
           <Route path="meta-list" element={<SeoList />} />

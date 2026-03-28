@@ -1,343 +1,547 @@
-import React, { useState } from 'react';
-import {
-  Search,
-  Eye,
-  Trash2,
-  Edit,
-  TrendingUp,
-  Users,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Download,
-  Printer,
-  ChevronRight,
-  ClipboardList
-} from 'lucide-react';
-import Table from '../components/table/Table';
-import Pagination from '../components/Pagination';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+    CheckCircle, 
+    Send, ChevronRight, 
+    ShieldCheck, 
+    CreditCard, 
+    Banknote, 
+    Lock,
+    User,
+    UserPlus,
+    Mail,
+    Phone,
+    Hexagon,
+    MapPin,
+    Globe,
+    Briefcase,
+    Layout
+} from "lucide-react";
+import api, { SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
 
 const BookAStand = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 25;
-  const [showModal, setShowModal] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [events, setEvents] = useState([]);
+    const [selectedEventId, setSelectedEventId] = useState('');
+    const [availableStalls, setAvailableStalls] = useState([]);
+    const [marketingStaff, setMarketingStaff] = useState([]);
+    const [allRates, setAllRates] = useState([]);
+    const [currentUser, setCurrentUser] = useState(null);
 
-  // STATIC MOCK DATA
-  const mockData = [
-    {
-      _id: "1",
-      exhibitorName: "TechHealth Innovations",
-      mobile: "+971 50 123 4567",
-      industrySector: "Medical Devices",
-      company: "TechHealth LLC",
-      country: "UAE",
-      status: "Active",
-      createdAt: "2026-03-10T10:30:00Z",
-      invoiceNo: "INV-2026-001",
-      amount: "AED 5,000",
-      paymentStatus: "Paid"
-    },
-    {
-      _id: "2",
-      exhibitorName: "Global Pharma Corp",
-      mobile: "+91 98765 43210",
-      industrySector: "Pharmaceuticals",
-      company: "GPC India",
-      country: "India",
-      status: "Inactive",
-      createdAt: "2026-03-11T09:15:00Z",
-      invoiceNo: "INV-2026-002",
-      amount: "USD 1,500",
-      paymentStatus: "Pending"
-    },
-    {
-      _id: "3",
-      exhibitorName: "NextGen Wellness",
-      mobile: "+44 20 7123 4567",
-      industrySector: "Wellness & Spa",
-      company: "NextGen UK",
-      country: "UK",
-      status: "Active",
-      createdAt: "2026-03-11T11:00:00Z",
-      invoiceNo: "INV-2026-003",
-      amount: "GBP 1,200",
-      paymentStatus: "Paid"
-    }
-  ];
+    useEffect(() => {
+        const info = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
+        if (info) setCurrentUser(JSON.parse(info));
+    }, []);
 
-  const stats = [
-    { label: "Total Applications", value: "156", icon: ClipboardList, color: "bg-blue-500" },
-    { label: "Today's Applications", value: "12", icon: Clock, color: "bg-green-500" },
-    { label: "Pending Reviews", value: "45", icon: TrendingUp, color: "bg-orange-500" },
-    { label: "Active Exhibitors", value: "98", icon: Users, color: "bg-purple-500" },
-  ];
-
-  const handleView = (record) => {
-    setSelectedRecord(record);
-    setShowModal(true);
-  };
-
-  const handleEdit = (record) => {
-    Swal.fire({
-      title: 'Edit Registration',
-      text: `Editing registration for ${record.exhibitorName}`,
-      icon: 'info',
-      confirmButtonColor: '#23471d'
+    const [formData, setFormData] = useState({
+        exhibitorName: '',
+        typeOfBusiness: '',
+        industrySector: '',
+        website: '',
+        address: '',
+        country: '',
+        state: '',
+        city: '',
+        pincode: '',
+        landlineNo: '',
+        gstNo: '',
+        panNo: '',
+        natureOfBusiness: '',
+        fasciaName: '',
+        contact1: { title: 'Mr.', firstName: '', lastName: '', email: '', designation: '', mobile: '', alternateNo: '' },
+        contact2: { title: 'Mr.', firstName: '', lastName: '', email: '', designation: '', mobile: '', alternateNo: '' },
+        participation: {
+            eventId: '',
+            stallNo: '',
+            stallFor: '',
+            stallSize: 0,
+            stallType: 'Shell Space',
+            currency: 'INR',
+            rate: 0,
+            amount: 0,
+            gstPercent: 18,
+            total: 0,
+            dimension: ''
+        },
+        selectedSectors: [],
+        referredBy: 'Direct Website',
+        filledBy: 'Admin',
+        status: 'pending',
+        paymentMode: 'manual',
+        paymentType: 'full',
+        amountPaid: 0,
+        balanceAmount: 0
     });
-  };
 
-  const handleDelete = (record) => {
-    Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire('Deleted!', 'Record has been deleted.', 'success');
-      }
-    });
-  };
+    useEffect(() => {
+        const fetchInitialData = async () => {
+            try {
+                const eRes = await api.get('/api/events');
+                const staffRes = await api.get('/api/public/employees');
+                const ratesRes = await api.get('/api/stall-rates');
+                
+                if (eRes.data.success && eRes.data.data.length > 0) {
+                    setEvents(eRes.data.data);
+                    setSelectedEventId(eRes.data.data[0]._id);
+                    setFormData(prev => ({ ...prev, eventId: eRes.data.data[0]._id }));
+                }
+                if (staffRes.data.success) setMarketingStaff(staffRes.data.data);
+                if (ratesRes.data.success) setAllRates(ratesRes.data.data);
+            } catch (error) {
+                console.error("Error fetching initial data:", error);
+            }
+        };
+        fetchInitialData();
+    }, []);
 
-  const columns = [
-    {
-      key: "sno",
-      label: "S.NO",
-      width: "60px",
-      render: (_, index) => (
-        <div className="font-bold text-gray-900">{(currentPage - 1) * itemsPerPage + index + 1}</div>
-      )
-    },
-    {
-      key: "exhibitorName",
-      label: "EXHIBITOR NAME",
-      render: (row) => <div className="font-semibold text-[#d26019]">{row.exhibitorName}</div>
-    },
-    {
-      key: "mobile",
-      label: "MOBILE NUMBER",
-      render: (row) => <div className="text-gray-700">{row.mobile}</div>
-    },
-    {
-      key: "industrySector",
-      label: "INDUSTRY SECTOR",
-      render: (row) => <div className="text-gray-700">{row.industrySector}</div>
-    },
-    {
-      key: "status",
-      label: "STATUS",
-      render: (row) => (
-        <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold w-fit ${
-          row.status === "Active" ? "bg-green-100 text-green-700 border border-green-200" : "bg-red-100 text-red-700 border border-red-200"
-        }`}>
-          {row.status === "Active" ? <CheckCircle size={12} /> : <XCircle size={12} />}
-          {row.status}
-        </div>
-      )
-    },
-    {
-      key: "createdAt",
-      label: "DATE",
-      render: (row) => (
-        <div className="text-gray-600 text-sm">
-          {new Date(row.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-        </div>
-      )
-    },
-    {
-      key: "actions",
-      label: "ACTIONS",
-      render: (row) => (
-        <div className="flex items-center gap-2">
-          <button onClick={() => handleView(row)} className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors shadow-sm border border-blue-100" title="View Invoice">
-            <Eye size={16} />
-          </button>
-          <button onClick={() => handleEdit(row)} className="p-2 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors shadow-sm border border-amber-100" title="Edit">
-            <Edit size={16} />
-          </button>
-          <button onClick={() => handleDelete(row)} className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors shadow-sm border border-red-100" title="Delete">
-            <Trash2 size={16} />
-          </button>
-        </div>
-      )
-    }
-  ];
+    useEffect(() => {
+        if (selectedEventId) {
+            api.get(`/api/stalls?eventId=${selectedEventId}`).then(res => {
+                if (res.data.success) {
+                    setAvailableStalls(res.data.data.filter(s => s.status === 'available'));
+                }
+            });
+        }
+    }, [selectedEventId]);
 
-  return (
-    <div className="p-6 bg-slate-50 min-h-screen font-inter">
-      {/* HEADER */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-[#23471d] tracking-tight">BOOK A STAND</h1>
-        <p className="text-slate-500 mt-2 font-medium">Manage and review exhibitor registration applications</p>
-      </div>
+    // Rate Fetching
+    useEffect(() => {
+        const updateRate = async () => {
+            if (!selectedEventId || !formData.participation.stallType || !formData.participation.currency) return;
+            try {
+                const res = await api.get(`/api/stall-rates/find?eventId=${selectedEventId}&currency=${formData.participation.currency}&stallType=${formData.participation.stallType}`);
+                if (res.data.success && res.data.data) {
+                    setFormData(prev => ({
+                        ...prev,
+                        participation: { ...prev.participation, rate: res.data.data.ratePerSqm }
+                    }));
+                } else {
+                    setFormData(prev => ({
+                        ...prev,
+                        participation: { ...prev.participation, rate: 0 }
+                    }));
+                }
+            } catch (e) { 
+                console.error(e);
+                setFormData(prev => ({ ...prev, participation: { ...prev.participation, rate: 0 } }));
+            }
+        };
+        updateRate();
+    }, [selectedEventId, formData.participation.stallType, formData.participation.currency]);
 
-      {/* STATS CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow group">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-sm font-bold uppercase tracking-wider">{stat.label}</p>
-                <p className="text-3xl font-black text-slate-800 mt-2 tracking-tighter">{stat.value}</p>
-              </div>
-              <div className={`${stat.color} p-4 rounded-2xl text-white shadow-lg group-hover:scale-110 transition-transform`}>
-                <stat.icon size={24} />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-xs font-bold text-green-600 bg-green-50 w-fit px-2 py-1 rounded-full">
-              <TrendingUp size={12} className="mr-1" />
-              +12% this week
-            </div>
-          </div>
-        ))}
-      </div>
+    // Total Calculation
+    useEffect(() => {
+        const part = formData.participation;
+        const stall = availableStalls.find(s => s._id === part.stallNo);
+        const area = stall ? stall.area : 0;
+        const rate = Number(part.rate) || 0;
+        const inc = stall ? stall.incrementPercentage : 0;
+        const disc = stall ? stall.discountPercentage : 0;
 
-      {/* TABLE SECTION */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-6 border-b border-slate-100 bg-[#23471d]">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
-                <Users className="text-white" size={20} />
-              </div>
-              <h2 className="text-xl font-bold text-white tracking-tight">Exhibitor List</h2>
-            </div>
-            <div className="relative w-full md:w-96 group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#d26019] transition-colors" size={18} />
-              <input
-                type="text"
-                placeholder="Search by name, sector or country..."
-                className="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-transparent focus:border-[#d26019] focus:outline-none transition-all rounded-xl text-sm font-medium shadow-inner"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
+        const subtotal = (area * rate) + ((area * rate) * inc / 100) - ((area * rate) * disc / 100);
+        const gst = subtotal * 0.18;
+        const total = subtotal + gst;
 
-        <div className="overflow-x-auto">
-          <Table
-            columns={columns}
-            data={mockData}
-          />
-        </div>
+        setFormData(prev => ({
+            ...prev,
+            participation: { ...prev.participation, stallSize: area, amount: Math.round(subtotal), total: Math.round(total) }
+        }));
+    }, [formData.participation.stallNo, formData.participation.rate, availableStalls]);
 
-        <div className="p-4 bg-slate-50 border-t border-slate-100">
-          <Pagination
-            currentPage={currentPage}
-            totalItems={mockData.length}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-            label="registrations"
-          />
-        </div>
-      </div>
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+        try {
+            const finalData = { 
+                ...formData, 
+                eventId: selectedEventId,
+                filledBy: currentUser?.username || 'Admin',
+                balanceAmount: formData.participation.total
+            };
+            const response = await api.post('/api/registrations', finalData);
+            if (response.data.success) {
+                Swal.fire('Success', 'Registration submitted and marked as PENDING!', 'success');
+            }
+        } catch (error) {
+            Swal.fire('Error', error.response?.data?.message || 'Submission failed', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-      {/* VIEW MODAL (INVOICE) */}
-      {showModal && selectedRecord && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-            {/* Modal Header */}
-            <div className="bg-[#23471d] p-6 text-white flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <Printer size={24} />
-                <h3 className="text-xl font-bold tracking-tight">Exhibitor Invoice Details</h3>
-              </div>
-              <button 
-                onClick={() => setShowModal(false)}
-                className="p-2 hover:bg-white/20 rounded-full transition-colors"
-              >
-                <XCircle size={24} />
-              </button>
-            </div>
+    const handleSelectChange = (name, value) => {
+        if (name.includes('.')) {
+            const [parent, child] = name.split('.');
+            setFormData(prev => ({
+                ...prev,
+                [parent]: { ...prev[parent], [child]: value }
+            }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
 
-            {/* Modal Content */}
-            <div className="p-8 max-h-[80vh] overflow-y-auto">
-              {/* Invoice Layout */}
-              <div className="border border-slate-200 p-8 rounded-2xl bg-slate-50/50">
-                <div className="flex justify-between items-start mb-8">
-                  <div>
-                    <img src="/logo.png" alt="Logo" className="h-16 mb-4 filter drop-shadow-sm" />
-                    <p className="text-slate-500 text-sm font-bold uppercase">International Health & Wellness Expo 2026</p>
-                  </div>
-                  <div className="text-right">
-                    <h4 className="text-3xl font-black text-[#23471d] mb-1">INVOICE</h4>
-                    <p className="text-slate-500 font-bold tracking-widest">{selectedRecord.invoiceNo}</p>
-                  </div>
+    const handleStallSelect = (stallId) => {
+        const stall = availableStalls.find(s => s._id === stallId);
+        if (stall) {
+            setFormData(prev => ({
+                ...prev,
+                participation: {
+                    ...prev.participation,
+                    stallNo: stall._id,
+                    stallFor: stall.stallNumber,
+                    stallSize: stall.area,
+                    stallType: stall.stallType || prev.participation.stallType,
+                    dimension: `${stall.length}x${stall.width}m`
+                }
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                participation: { ...prev.participation, stallNo: '', stallFor: '', stallSize: 0, dimension: '' }
+            }));
+        }
+    };
+
+    const handleSectorToggle = (sector) => {
+        setFormData(prev => {
+            const current = [...prev.selectedSectors];
+            const idx = current.indexOf(sector);
+            if (idx > -1) current.splice(idx, 1);
+            else current.push(sector);
+            return { ...prev, selectedSectors: current };
+        });
+    };
+
+    const inputClasses = "w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#23471d]/20 focus:border-[#23471d] outline-none transition-all font-semibold text-slate-800 text-sm shadow-sm";
+    const labelClasses = "text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 block mb-1";
+
+    return (
+        <div className="p-8 bg-slate-50 min-h-screen">
+            <div className="max-w-[1600px] mx-auto">
+                <div className="mb-8 flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                    <div>
+                        <h1 className="text-3xl font-black text-[#23471d] tracking-tight">MANUAL BOOKING</h1>
+                        <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest mt-1">Add a new exhibitor registration from Admin Panel</p>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-8 mb-8">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bill To:</p>
-                    <p className="text-lg font-bold text-[#23471d]">{selectedRecord.exhibitorName}</p>
-                    <p className="text-sm font-medium text-slate-600">{selectedRecord.company}</p>
-                    <p className="text-sm font-medium text-slate-600">{selectedRecord.country}</p>
-                    <p className="text-sm font-medium text-slate-600">{selectedRecord.mobile}</p>
-                  </div>
-                  <div className="space-y-1 text-right">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Details:</p>
-                    <p className="text-sm font-medium text-slate-600"><span className="font-bold text-slate-800">Date:</span> {new Date(selectedRecord.createdAt).toLocaleDateString()}</p>
-                    <p className="text-sm font-medium text-slate-600"><span className="font-bold text-slate-800">Status:</span> 
-                      <span className={`ml-2 px-2 py-0.5 rounded text-[10px] font-black uppercase ${
-                        selectedRecord.paymentStatus === "Paid" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
-                      }`}>
-                        {selectedRecord.paymentStatus}
-                      </span>
-                    </p>
-                  </div>
-                </div>
+                <form onSubmit={handleSubmit} className="space-y-8">
+                    {/* EVENT & STALL SELECTION */}
+                    <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-200 flex flex-wrap gap-8 items-end">
+                        <div className="flex-1 min-w-[300px]">
+                            <label className={labelClasses}>Select Exhibition Event *</label>
+                            <select value={selectedEventId} onChange={(e) => { setSelectedEventId(e.target.value); }} className={inputClasses}>
+                                {events.map(ev => <option key={ev._id} value={ev._id}>{ev.name} ({new Date(ev.startDate).getFullYear()})</option>)}
+                            </select>
+                        </div>
+                        <div className="flex-1 min-w-[300px]">
+                            <label className={labelClasses}>Select Target Stall *</label>
+                            <select value={formData.participation.stallNo} onChange={(e) => handleStallSelect(e.target.value)} className={inputClasses}>
+                                <option value="">-- Choose Available Stall --</option>
+                                {availableStalls.map(s => <option key={s._id} value={s._id}>{s.stallNumber} ({s.area} sqm - {s.plScheme})</option>)}
+                            </select>
+                        </div>
+                    </div>
 
-                <table className="w-full mb-8 border-collapse">
-                  <thead>
-                    <tr className="border-b-2 border-[#23471d]">
-                      <th className="text-left py-3 text-xs font-black text-slate-500 uppercase tracking-widest">Description</th>
-                      <th className="text-right py-3 text-xs font-black text-slate-500 uppercase tracking-widest">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b border-slate-100">
-                      <td className="py-4 text-sm font-bold text-slate-700">Exhibition Stand Booking - Standard Shell Space</td>
-                      <td className="py-4 text-right text-sm font-bold text-slate-900">{selectedRecord.amount}</td>
-                    </tr>
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <td className="py-6 text-right font-black text-slate-400 uppercase tracking-widest pr-8 font-inter">Total Amount</td>
-                      <td className="py-6 text-right font-black text-2xl text-[#23471d] tracking-tighter font-inter">{selectedRecord.amount}</td>
-                    </tr>
-                  </tfoot>
-                </table>
+                    {/* EVENT STALL RATES DISPLAY */}
+                    {selectedEventId && (
+                        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                            <h2 className="text-sm font-black text-[#23471d] mb-4 flex items-center gap-2">
+                                <Banknote size={16} /> APPLICABLE STALL RATES
+                            </h2>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {allRates.filter(r => (r.eventId?._id || r.eventId) === selectedEventId).length > 0 ? (
+                                    allRates.filter(r => (r.eventId?._id || r.eventId) === selectedEventId).map(rate => (
+                                        <div key={rate._id} className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                            <div className="text-[10px] font-black text-slate-500 uppercase mb-1">{rate.stallType}</div>
+                                            <div className="text-lg font-black text-[#d26019]">{rate.currency} {rate.ratePerSqm.toLocaleString()} <span className="text-[10px] text-slate-400 font-bold">/ SQM</span></div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="col-span-4 text-xs text-slate-400 font-bold uppercase">No pre-configured rates found for this event.</div>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
-                <div className="bg-[#23471d]/5 p-4 rounded-xl border border-[#23471d]/10">
-                  <p className="text-xs text-[#23471d]/80 font-bold leading-relaxed">
-                    * This is a computer generated invoice. No signature is required. Please bring a copy of this invoice during the exhibition setup.
-                  </p>
-                </div>
-              </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* LEFT COLUMN: COMPANY DETAILS */}
+                        <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-200 space-y-6">
+                            <h2 className="text-lg font-black text-[#23471d] flex items-center gap-2 border-b pb-4">
+                                <Briefcase size={20} /> COMPANY INFORMATION
+                            </h2>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className={labelClasses}>Exhibitor Name (Company) *</label>
+                                    <input required type="text" value={formData.exhibitorName} onChange={(e) => handleSelectChange('exhibitorName', e.target.value)} className={inputClasses} placeholder="Enter full brand name" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClasses}>Type of Business</label>
+                                        <select value={formData.typeOfBusiness} onChange={(e) => handleSelectChange('typeOfBusiness', e.target.value)} className={inputClasses}>
+                                            <option value="">Select...</option>
+                                            <option value="Manufacturer">Manufacturer</option>
+                                            <option value="Distributor">Distributor</option>
+                                            <option value="Exporter">Exporter</option>
+                                            <option value="Service Provider">Service Provider</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>Industry Sector</label>
+                                        <input type="text" value={formData.industrySector} onChange={(e) => handleSelectChange('industrySector', e.target.value)} className={inputClasses} placeholder="e.g. Pharma" />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClasses}>Company Website</label>
+                                        <input type="text" value={formData.website} onChange={(e) => handleSelectChange('website', e.target.value)} className={inputClasses} placeholder="www.example.com" />
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>Landline No.</label>
+                                        <input type="text" value={formData.landlineNo} onChange={(e) => handleSelectChange('landlineNo', e.target.value)} className={inputClasses} placeholder="+91..." />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className={labelClasses}>Full Address *</label>
+                                    <textarea required rows={2} value={formData.address} onChange={(e) => handleSelectChange('address', e.target.value)} className={inputClasses} placeholder="Registered address..." />
+                                </div>
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div>
+                                        <label className={labelClasses}>Country</label>
+                                        <input type="text" value={formData.country} onChange={(e) => handleSelectChange('country', e.target.value)} className={inputClasses} />
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>State</label>
+                                        <input type="text" value={formData.state} onChange={(e) => handleSelectChange('state', e.target.value)} className={inputClasses} />
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>City</label>
+                                        <input type="text" value={formData.city} onChange={(e) => handleSelectChange('city', e.target.value)} className={inputClasses} />
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>Pincode</label>
+                                        <input type="text" value={formData.pincode} onChange={(e) => handleSelectChange('pincode', e.target.value)} className={inputClasses} />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClasses}>Fascia Name (For Stall)</label>
+                                        <input type="text" value={formData.fasciaName} onChange={(e) => handleSelectChange('fasciaName', e.target.value)} className={inputClasses} />
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>Nature of Business</label>
+                                        <input type="text" value={formData.natureOfBusiness} onChange={(e) => handleSelectChange('natureOfBusiness', e.target.value)} className={inputClasses} />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClasses}>PAN Number</label>
+                                        <input type="text" value={formData.panNo} onChange={(e) => handleSelectChange('panNo', e.target.value)} className={inputClasses} />
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>GST Number</label>
+                                        <input type="text" value={formData.gstNo} onChange={(e) => handleSelectChange('gstNo', e.target.value)} className={inputClasses} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* RIGHT COLUMN: PARTICIPATION & SECTORS */}
+                        <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-200 space-y-6">
+                            <h2 className="text-lg font-black text-[#23471d] flex items-center gap-2 border-b pb-4">
+                                <Layout size={20} /> STALL & RATE CALCULATION
+                            </h2>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className={labelClasses}>Stall Type</label>
+                                    <select value={formData.participation.stallType} onChange={(e) => handleSelectChange('participation.stallType', e.target.value)} className={inputClasses}>
+                                        <option value="Shell Space">Shell Space</option>
+                                        <option value="Raw Space">Raw Space</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className={labelClasses}>Currency</label>
+                                    <select value={formData.participation.currency} onChange={(e) => handleSelectChange('participation.currency', e.target.value)} className={inputClasses}>
+                                        <option value="INR">INR (₹)</option>
+                                        <option value="USD">USD ($)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
+                                <div className="flex justify-between items-center text-xs font-bold text-slate-500">
+                                    <span>STALL SIZE</span>
+                                    <span className="text-slate-900 uppercase">{formData.participation.stallSize} SQM.</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs font-bold text-slate-500">
+                                    <span>UNIT RATE</span>
+                                    <span className="text-slate-900 uppercase">{formData.participation.currency} {formData.participation.rate} / SQM</span>
+                                </div>
+                                <hr className="border-slate-200" />
+                                {(() => {
+                                    const stall = availableStalls.find(s => s._id === formData.participation.stallNo);
+                                    const inc = stall ? stall.incrementPercentage : 0;
+                                    const disc = stall ? stall.discountPercentage : 0;
+                                    const baseValue = (stall ? stall.area : 0) * (Number(formData.participation.rate) || 0);
+                                    const incValue = baseValue * (inc / 100);
+                                    const discValue = baseValue * (disc / 100);
+
+                                    return (
+                                        <>
+                                            <div className="flex justify-between items-center text-sm font-bold text-slate-500">
+                                                <span>BASE AMOUNT</span>
+                                                <span>{formData.participation.currency} {baseValue}</span>
+                                            </div>
+                                            {inc > 0 && (
+                                                <div className="flex justify-between items-center text-sm font-bold text-red-500">
+                                                    <span>INCREMENT ({inc}%)</span>
+                                                    <span>+ {formData.participation.currency} {Math.round(incValue)}</span>
+                                                </div>
+                                            )}
+                                            {disc > 0 && (
+                                                <div className="flex justify-between items-center text-sm font-bold text-green-600">
+                                                    <span>DISCOUNT ({disc}%)</span>
+                                                    <span>- {formData.participation.currency} {Math.round(discValue)}</span>
+                                                </div>
+                                            )}
+                                            <div className={`flex justify-between items-center text-sm font-black ${(inc > 0 || disc > 0) ? "text-[#d26019] pt-2 border-t" : "text-[#d26019]"}`}>
+                                                <span>STALL SUBTOTAL</span>
+                                                <span>{formData.participation.currency} {formData.participation.amount}</span>
+                                            </div>
+                                        </>
+                                    );
+                                })()}
+                                <div className="flex justify-between items-center text-xs font-bold text-slate-400 mt-2">
+                                    <span>GST (18%)</span>
+                                    <span>{formData.participation.currency} {Math.round(formData.participation.amount * 0.18)}</span>
+                                </div>
+                                <div className="pt-2 flex justify-between items-center text-xl font-black text-[#23471d]">
+                                    <span>TOTAL PAYABLE</span>
+                                    <span>{formData.participation.currency} {formData.participation.total}</span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 pt-4 border-t">
+                                <h3 className={labelClasses}>Industry Sectors Selection</h3>
+                                <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                                    {["Medical Device", "Pharma & Drugs", "Ayurvedic & Herbal", "Fitness & Yoga", "Hospital & Clinics", "Diagnostics", "Nutrition & Wellness", "Technology", "Organic Products", "Beauty & Care", "Research & Education", "Other"].map(sector => (
+                                        <label key={sector} className="flex items-center gap-3 cursor-pointer group">
+                                            <input type="checkbox" checked={formData.selectedSectors.includes(sector)} onChange={() => handleSectorToggle(sector)} className="w-4 h-4 rounded border-slate-300 text-[#23471d] focus:ring-[#23471d]/20" />
+                                            <span className="text-[11px] font-bold text-slate-600 group-hover:text-[#23471d] transition-colors uppercase">{sector}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 pt-4 border-t">
+                                <h3 className={labelClasses}>Referral Logic / Person *</h3>
+                                <select value={formData.referredBy} onChange={(e) => handleSelectChange('referredBy', e.target.value)} className={inputClasses}>
+                                    <option value="Direct Website">Direct Website</option>
+                                    <option value="Email Marketing">Email Marketing</option>
+                                    <option value="Social Media">Social Media</option>
+                                    {marketingStaff.map(staff => (
+                                        <option key={staff._id} value={staff.username}>Staff: {staff.username}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                        {/* CONTACT PERSON 1 */}
+                        <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-200">
+                             <h2 className="text-lg font-black text-[#23471d] mb-6 flex items-center gap-2 border-b pb-4">
+                                <User size={20} /> PRIMARY CONTACT PERSON
+                            </h2>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className={labelClasses}>Full Name *</label>
+                                    <div className="flex gap-2">
+                                        <select value={formData.contact1.title} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, title: e.target.value } }))} className="w-24 px-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm">
+                                            <option value="Mr.">Mr.</option>
+                                            <option value="Ms.">Ms.</option>
+                                            <option value="Dr.">Dr.</option>
+                                            <option value="Prof.">Prof.</option>
+                                        </select>
+                                        <input required type="text" value={formData.contact1.firstName} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, firstName: e.target.value } }))} className={inputClasses} placeholder="First Name" />
+                                        <input required type="text" value={formData.contact1.lastName} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, lastName: e.target.value } }))} className={inputClasses} placeholder="Last Name" />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClasses}>Email Address *</label>
+                                        <input required type="email" value={formData.contact1.email} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, email: e.target.value } }))} className={inputClasses} placeholder="email@company.com" />
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>Designation *</label>
+                                        <input required type="text" value={formData.contact1.designation} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, designation: e.target.value } }))} className={inputClasses} placeholder="e.g. Director" />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClasses}>Mobile Number *</label>
+                                        <input required type="text" value={formData.contact1.mobile} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, mobile: e.target.value } }))} className={inputClasses} placeholder="9876543210" />
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>Alternate No.</label>
+                                        <input type="text" value={formData.contact1.alternateNo} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, alternateNo: e.target.value } }))} className={inputClasses} placeholder="Secondary no." />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* CONTACT PERSON 2 */}
+                        <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-200">
+                             <h2 className="text-lg font-black text-slate-400 mb-6 flex items-center gap-2 border-b pb-4">
+                                <UserPlus size={20} /> SECONDARY CONTACT PERSON (OPTIONAL)
+                            </h2>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className={labelClasses}>Full Name</label>
+                                    <div className="flex gap-2">
+                                        <select value={formData.contact2.title} onChange={(e) => setFormData(p => ({ ...p, contact2: { ...p.contact2, title: e.target.value } }))} className="w-24 px-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm">
+                                            <option value="Mr.">Mr.</option>
+                                            <option value="Ms.">Ms.</option>
+                                            <option value="Dr.">Dr.</option>
+                                        </select>
+                                        <input type="text" value={formData.contact2.firstName} onChange={(e) => setFormData(p => ({ ...p, contact2: { ...p.contact2, firstName: e.target.value } }))} className={inputClasses} placeholder="First Name" />
+                                        <input type="text" value={formData.contact2.lastName} onChange={(e) => setFormData(p => ({ ...p, contact2: { ...p.contact2, lastName: e.target.value } }))} className={inputClasses} placeholder="Last Name" />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClasses}>Email Address</label>
+                                        <input type="email" value={formData.contact2.email} onChange={(e) => setFormData(p => ({ ...p, contact2: { ...p.contact2, email: e.target.value } }))} className={inputClasses} placeholder="email2@company.com" />
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>Designation</label>
+                                        <input type="text" value={formData.contact2.designation} onChange={(e) => setFormData(p => ({ ...p, contact2: { ...p.contact2, designation: e.target.value } }))} className={inputClasses} placeholder="Designation" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className={labelClasses}>Mobile Number</label>
+                                    <input type="text" value={formData.contact2.mobile} onChange={(e) => setFormData(p => ({ ...p, contact2: { ...p.contact2, mobile: e.target.value } }))} className={inputClasses} placeholder="9876543210" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* SUBMIT */}
+                    <button type="submit" disabled={isLoading} className="w-full py-5 bg-[#23471d] text-white rounded-[2rem] font-black text-xl hover:bg-[#1a3516] transition-all shadow-2xl shadow-[#23471d]/20 flex items-center justify-center gap-4 uppercase tracking-tighter active:scale-95 disabled:opacity-50">
+                        {isLoading ? 'Processing Registration...' : (
+                            <>
+                                <span>Proceed to manual registration</span>
+                                <ChevronRight size={24} />
+                            </>
+                        )}
+                    </button>
+                    <p className="text-center text-slate-400 text-[9px] font-bold uppercase tracking-[0.2em] pb-12">Authorized Admin Submission Protocol v2.5</p>
+                </form>
             </div>
-
-            {/* Modal Footer */}
-            <div className="bg-slate-50 p-6 flex justify-end gap-3 items-center">
-              <button className="flex items-center gap-2 px-6 py-2.5 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition-colors uppercase text-xs tracking-wider font-inter">
-                <Download size={16} />
-                Download PDF
-              </button>
-              <button className="flex items-center gap-2 px-8 py-2.5 bg-[#d26019] text-white rounded-xl font-bold hover:bg-[#b35215] transition-all shadow-lg hover:shadow-[#d26019]/25 uppercase text-xs tracking-wider font-inter">
-                <Printer size={16} />
-                Print Invoice
-              </button>
-            </div>
-          </div>
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default BookAStand;
