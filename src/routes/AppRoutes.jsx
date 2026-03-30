@@ -343,6 +343,18 @@ export default function AppRoutes() {
             path="ihweClientData2026/HealthCampOverview"
             element={<HealthCampOverview />}
           />
+          <Route
+            path="webVisitorData/corporateVisitorDetails/:id"
+            element={<CorporateOverview />}
+          />
+          <Route
+            path="webVisitorData/generalVisitorDetails/:id"
+            element={<GeneralOverview />}
+          />
+          <Route
+            path="webVisitorData/healthCampVisitorDetails/:id"
+            element={<HealthCampOverview />}
+          />
           <Route path="ihweClientData2026/adduser" element={<AddUser />} />
           <Route path="ihweClientData2026/userlist" element={<UserList />} />
           <Route path="ihweClientData2026/AddBank" element={<AddBank />} />

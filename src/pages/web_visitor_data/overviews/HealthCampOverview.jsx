@@ -20,25 +20,15 @@ const HealthCampOverview = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // ✅ Safely extract healthCampVisitors – ensure it's an array
-  const healthCampVisitorsState = useSelector(
+  const { healthCampVisitors, loading } = useSelector(
     (state) => state.healthCampVisitors,
   );
-  const healthCampVisitors = Array.isArray(healthCampVisitorsState)
-    ? healthCampVisitorsState
-    : [];
-  const loading = healthCampVisitorsState?.loading ?? false;
 
-  // ✅ Ensure events is an array
-  const eventsState = useSelector((state) => state.crmEvents);
-  const events = Array.isArray(eventsState) ? eventsState : [];
+  const { events } = useSelector((state) => state.crmEvents);
 
-  // ✅ Ensure visitorReviews is an array
-  const visitorReviewsState = useSelector((state) => state.visitorReview);
-  const visitorReviews = Array.isArray(visitorReviewsState)
-    ? visitorReviewsState
-    : [];
-  const reviewLoading = visitorReviewsState?.loading ?? false;
+  const { visitorReviews, loading: reviewLoading } = useSelector(
+    (state) => state.visitorReview,
+  );
 
   const [status, setStatus] = useState("");
   const [description, setDescription] = useState("");

@@ -20,25 +20,15 @@ const CorporateOverview = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // ✅ Safely extract corporateVisitors – ensure it's an array
-  const corporateVisitorsState = useSelector(
+  const { corporateVisitors, loading } = useSelector(
     (state) => state.corporateVisitors,
   );
-  const corporateVisitors = Array.isArray(corporateVisitorsState)
-    ? corporateVisitorsState
-    : [];
-  const loading = corporateVisitorsState?.loading ?? false;
 
-  // ✅ Ensure events is an array
-  const eventsState = useSelector((state) => state.crmEvents);
-  const events = Array.isArray(eventsState) ? eventsState : [];
+  const { events } = useSelector((state) => state.crmEvents);
 
-  // ✅ Ensure visitorReviews is an array
-  const visitorReviewsState = useSelector((state) => state.visitorReview);
-  const visitorReviews = Array.isArray(visitorReviewsState)
-    ? visitorReviewsState
-    : [];
-  const reviewLoading = visitorReviewsState?.loading ?? false;
+  const { visitorReviews, loading: reviewLoading } = useSelector(
+    (state) => state.visitorReview,
+  );
 
   const [status, setStatus] = useState("");
   const [description, setDescription] = useState("");
