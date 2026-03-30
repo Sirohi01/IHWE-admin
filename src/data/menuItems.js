@@ -346,39 +346,16 @@ export const menuItems = [
   },
   {
     type: "dropdown",
-    label: "User Access",
-    icon: Lock,
+    label: "System Management",
+    icon: ShieldCheck,
     children: [
       { label: "Add System User", path: "/ihweClientData2026/adduser" },
       { label: "System User List", path: "/ihweClientData2026/userlist" },
+      { label: "Permission Roles", path: "/admin-users" },
+      { label: "Security Settings", path: "/change-password" },
+      { label: "Global Configuration", path: "/settings" },
+      { label: "App Preferences", path: "/sidebar-customize" },
     ],
-  },
-  {
-    type: "item",
-    label: "Permission Roles",
-    icon: ShieldCheck,
-    path: "/admin-users",
-    roles: ["super-admin", "accountant-admin", "marketing-admin"]
-  },
-  {
-    type: "item",
-    label: "Security Settings",
-    icon: Lock,
-    path: "/change-password",
-    roles: ["super-admin", "accountant-admin", "marketing-admin", "employee"]
-  },
-  {
-    type: "item",
-    label: "System Configuration",
-    icon: Settings,
-    path: "/settings",
-    roles: ["super-admin"]
-  },
-  {
-    type: "item",
-    label: "App Preferences",
-    icon: Palette,
-    path: "/sidebar-customize",
     roles: ["super-admin"]
   },
 ];

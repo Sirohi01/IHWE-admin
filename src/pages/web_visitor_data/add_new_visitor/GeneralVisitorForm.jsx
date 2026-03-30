@@ -415,21 +415,67 @@
 // };
 
 // export default GeneralVisitorForm;
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createGeneralVisitor } from "../../../features/visitor/generalVisitorSlice";
+import { fetchCountries } from "../../../features/add_by_admin/country/countrySlice";
+import { fetchStates } from "../../../features/state/stateSlice";
+import { fetchCities } from "../../../features/city/citySlice";
+import { fetchEvents } from "../../../features/crmEvent/crmEventSlice";
+import { fetchNatures } from "../../../features/add_by_admin/nature/natureSlice";
 import { showError, showSuccess } from "../../../utils/toastMessage";
 
 const GeneralVisitorForm = ({
-  registrationOptions = [],
-  industrySectors = [],
-  countries = [],
-  states = [],
-  cities = [],
-  genders = [],
+  registrationOptions: propRegistrationOptions = [],
+  industrySectors: propIndustrySectors = [],
+  countries: propCountries = [],
+  states: propStates = [],
+  cities: propCities = [],
+  genders: propGenders = [],
 }) => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.generalVisitors);
+
+  // Redux data
+  const { countries: reduxCountries } = useSelector((state) => state.countries);
+  const { states: reduxStates } = useSelector((state) => state.states);
+  const { cities: reduxCities } = useSelector((state) => state.cities);
+  const { events: reduxEvents } = useSelector((state) => state.crmEvents);
+  const { natures: reduxNatures } = useSelector((state) => state.natures);
+
+  // Fetch data if missing
+  useEffect(() => {
+    if (!reduxCountries || reduxCountries.length === 0) dispatch(fetchCountries());
+    if (!reduxStates || reduxStates.length === 0) dispatch(fetchStates());
+    if (!reduxCities || reduxCities.length === 0) dispatch(fetchCities());
+    if (!reduxEvents || reduxEvents.length === 0) dispatch(fetchEvents());
+    if (!reduxNatures || reduxNatures.length === 0) dispatch(fetchNatures());
+  }, [dispatch, reduxCountries?.length, reduxStates?.length, reduxCities?.length, reduxEvents?.length, reduxNatures?.length]);
+
+  // Derived options
+  const registrationOptions = propRegistrationOptions.length > 0 
+    ? propRegistrationOptions 
+    : ["Select Here", ...(reduxEvents || []).map(e => e.event_name).filter(Boolean)];
+
+  const industrySectors = propIndustrySectors.length > 0
+    ? propIndustrySectors
+    : ["Select Here", ...(reduxNatures || []).map(n => n.nature_name).filter(Boolean)];
+
+  const countriesArr = propCountries.length > 0
+    ? propCountries
+    : ["Select Country", ...(reduxCountries || []).map(c => c.name).filter(Boolean)];
+
+  const statesArr = propStates.length > 0
+    ? propStates
+    : ["Select Country first", ...(reduxStates || []).map(s => s.name).filter(Boolean)];
+
+  const citiesArr = propCities.length > 0
+    ? propCities
+    : ["Select State first", ...(reduxCities?.data || reduxCities || []).map(c => c.name).filter(Boolean)];
+
+  const genders = propGenders.length > 0
+    ? propGenders
+    : ["Select Here", "Male", "Female", "Other"];
 
   const [generalData, setGeneralData] = useState({
     registrationFor: "",
@@ -652,7 +698,7 @@ const GeneralVisitorForm = ({
               label: "Country",
               key: "country",
               type: "select",
-              options: countries,
+              options: countriesArr,
               required: true,
               onChange: (e) =>
                 setGeneralData({
@@ -666,7 +712,7 @@ const GeneralVisitorForm = ({
               label: "State",
               key: "state",
               type: "select",
-              options: states,
+              options: statesArr,
               required: true,
               disabled:
                 !generalData.country ||
@@ -682,7 +728,7 @@ const GeneralVisitorForm = ({
               label: "City",
               key: "city",
               type: "select",
-              options: cities,
+              options: citiesArr,
               required: true,
               disabled:
                 !generalData.state ||

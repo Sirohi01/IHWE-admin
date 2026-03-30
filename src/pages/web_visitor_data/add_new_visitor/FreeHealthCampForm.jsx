@@ -533,20 +533,56 @@
 // };
 
 // export default FreeHealthCampForm;
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createHealthCampVisitor } from "../../../features/visitor/freeHealthCampSlice";
+import { fetchCountries } from "../../../features/add_by_admin/country/countrySlice";
+import { fetchStates } from "../../../features/state/stateSlice";
+import { fetchCities } from "../../../features/city/citySlice";
 import { showError, showSuccess } from "../../../utils/toastMessage";
 
 const FreeHealthCampForm = ({
-  countries = [],
-  states = [],
-  cities = [],
-  genders = [],
-  timeSlots = [],
+  countries: propCountries = [],
+  states: propStates = [],
+  cities: propCities = [],
+  genders: propGenders = [],
+  timeSlots: propTimeSlots = [],
 }) => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.healthCampVisitors);
+
+  // Redux data
+  const { countries: reduxCountries } = useSelector((state) => state.countries);
+  const { states: reduxStates } = useSelector((state) => state.states);
+  const { cities: reduxCities } = useSelector((state) => state.cities);
+
+  // Fetch data if missing
+  useEffect(() => {
+    if (!reduxCountries || reduxCountries.length === 0) dispatch(fetchCountries());
+    if (!reduxStates || reduxStates.length === 0) dispatch(fetchStates());
+    if (!reduxCities || reduxCities.length === 0) dispatch(fetchCities());
+  }, [dispatch, reduxCountries?.length, reduxStates?.length, reduxCities?.length]);
+
+  // Derived options
+  const countriesArr = propCountries.length > 0
+    ? propCountries
+    : ["Select Country", ...(reduxCountries || []).map(c => c.name).filter(Boolean)];
+
+  const statesArr = propStates.length > 0
+    ? propStates
+    : ["Select Country first", ...(reduxStates || []).map(s => s.name).filter(Boolean)];
+
+  const citiesArr = propCities.length > 0
+    ? propCities
+    : ["Select State first", ...(reduxCities?.data || reduxCities || []).map(c => c.name).filter(Boolean)];
+
+  const genders = propGenders.length > 0
+    ? propGenders
+    : ["Select Here", "Male", "Female", "Other"];
+
+  const timeSlots = propTimeSlots.length > 0
+    ? propTimeSlots
+    : ["09:00 AM - 12:00 PM", "12:00 PM - 03:00 PM", "03:00 PM - 06:00 PM"];
 
   const [healthCampData, setHealthCampData] = useState({
     firstName: "",
@@ -749,7 +785,7 @@ const FreeHealthCampForm = ({
             label: "Country",
             key: "country",
             type: "select",
-            options: countries,
+            options: countriesArr,
             required: true,
             onChange: (e) =>
               setHealthCampData({
@@ -763,7 +799,7 @@ const FreeHealthCampForm = ({
             label: "State",
             key: "state",
             type: "select",
-            options: states,
+            options: statesArr,
             required: true,
             disabled:
               !healthCampData.country ||
@@ -779,7 +815,7 @@ const FreeHealthCampForm = ({
             label: "City",
             key: "city",
             type: "select",
-            options: cities,
+            options: citiesArr,
             required: true,
             disabled:
               !healthCampData.state ||
