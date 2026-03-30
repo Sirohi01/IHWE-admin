@@ -6,8 +6,9 @@ import {
     Users, Search, Download, Eye, 
     Trash2, Edit, CheckCircle, Clock, 
     XCircle, Filter, Mail, Phone, Building,
-    CreditCard, MapPin
+    CreditCard, MapPin, Calendar
 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import Table from '../components/table/Table';
 
@@ -34,6 +35,8 @@ const ManageRegistrations = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedReg, setSelectedReg] = useState(null);
+    const [searchParams] = useSearchParams();
+    const filterType = searchParams.get('type'); // 'current' or 'incoming'
 
     useEffect(() => {
         fetchRegistrations();
@@ -343,17 +346,36 @@ const ManageRegistrations = () => {
         }
     ];
 
-    const filteredRegs = registrations.filter(r => 
-        r.exhibitorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        r.participation?.stallNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        r.eventId?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredRegs = registrations.filter(r => {
+        const matchesSearch = 
+            r.exhibitorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            r.participation?.stallNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            r.eventId?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        if (!matchesSearch) return false;
+
+        const today = new Date();
+        const eventStartDate = r.eventId?.startDate ? new Date(r.eventId.startDate) : null;
+        const eventEndDate = r.eventId?.endDate ? new Date(r.eventId.endDate) : null;
+
+        if (filterType === 'current') {
+            // Ideally, current means it hasn't ended yet
+            return eventEndDate ? eventEndDate >= today : true;
+        }
+
+        if (filterType === 'incoming') {
+            // Incoming means it hasn't started yet
+            return eventStartDate ? eventStartDate > today : false;
+        }
+
+        return true;
+    });
 
     return (
         <div className="p-6 bg-slate-50 min-h-screen">
             <PageHeader
-                title="EXHIBITOR BOOKINGS"
-                description="Monitor and manage all booth registrations and stand allocations"
+                title={filterType === 'current' ? "CURRENT EXHIBITOR BOOKINGS" : filterType === 'incoming' ? "INCOMING EXHIBITOR BOOKINGS" : "ALL EXHIBITOR BOOKINGS"}
+                description={filterType === 'current' ? "Monitor active registrations for upcoming or ongoing shows" : "Preview bookings for future exhibition cycles"}
             />
 
             <div className="mt-8 space-y-6">

@@ -1,16 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { List } from "lucide-react";
 import PageHeader from "../../components/PageHeader";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+import api from "../../lib/api";
 
 const AddFacilities = () => {
-
   const navigate = useNavigate();
+  const location = useLocation();
+  const editData = location.state?.facility;
+
   const [formData, setFormData] = useState({
     name: "",
     status: "Inactive",
   });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (editData) {
+      setFormData({
+        name: editData.name,
+        status: editData.status,
+      });
+    }
+  }, [editData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -20,57 +33,39 @@ const AddFacilities = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    // 1️⃣ Get existing facilities
-    const existingFacilities =
-      JSON.parse(localStorage.getItem("facilities")) || [];
-
-    // 2️⃣ Create new facility with ID
-    const newFacility = {
-      id:
-        existingFacilities.length > 0
-          ? Math.max(...existingFacilities.map(f => f.id)) + 1
-          : 1,
-      name: formData.name,
-      status: formData.status,
-    };
-
-    // 3️⃣ Add new facility to list
-    const updatedFacilities = [newFacility, ...existingFacilities];
-
-    // 4️⃣ Save back to localStorage
-    localStorage.setItem(
-      "facilities",
-      JSON.stringify(updatedFacilities)
-    );
-
-    toast.success("Facility added successfully");
-
-    // 5️⃣ Navigate back to list
-    navigate("/facilities-list");
+    try {
+      if (editData?._id) {
+        await api.put(`/api/facilities/${editData._id}`, formData);
+        toast.success("Facility updated successfully");
+      } else {
+        await api.post("/api/facilities", formData);
+        toast.success("Facility added successfully");
+      }
+      navigate("/facilities-list");
+    } catch (error) {
+      toast.error("Failed to save facility");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
-      {/* CENTERED CONTAINER */}
-      <div className="w-full">
-
-        {/* HEADER */}
+      <div className="w-full text-center">
         <PageHeader
-          title="ADD FACILITIES"
+          title={editData ? "EDIT FACILITY" : "ADD FACILITIES"}
           description="Manage your facility details"
           buttonText="Facilities List"
           buttonIcon={List}
           buttonPath="/facilities-list"
         />
 
-        {/* FORM CARD */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-
-            {/* NAME */}
             <div>
               <label className="block text-base font-semibold text-gray-900 mb-2">
                 Name <span className="text-red-500">*</span>
@@ -86,8 +81,7 @@ const AddFacilities = () => {
               />
             </div>
 
-            {/* STATUS */}
-            <div>
+            <div className="text-left">
               <label className="block text-base font-semibold text-gray-900 mb-3">
                 Status <span className="text-red-500">*</span>
               </label>
@@ -119,16 +113,19 @@ const AddFacilities = () => {
               </div>
             </div>
 
-            {/* SUBMIT BUTTON */}
             <div className="pt-4">
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md transition"
+                disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md transition disabled:opacity-50"
               >
-                Add Facilities
+                {loading
+                  ? "Saving..."
+                  : editData
+                  ? "Update Facility"
+                  : "Add Facilities"}
               </button>
             </div>
-
           </form>
         </div>
       </div>

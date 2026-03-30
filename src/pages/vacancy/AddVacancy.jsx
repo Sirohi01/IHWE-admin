@@ -79,7 +79,7 @@ const AddVacancy = () => {
 
       if (editData?._id) {
         // Update existing vacancy
-        const response = await api.put(`/vacancies/${editData._id}`, payload);
+        const response = await api.put(`/api/vacancies/${editData._id}`, payload);
 
         if (response.data.success) {
           Swal.fire({

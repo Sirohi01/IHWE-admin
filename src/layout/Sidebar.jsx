@@ -203,14 +203,15 @@ export default function Sidebar({
 
         /* ── Custom Scrollbar ── */
         .sidebar-scroll::-webkit-scrollbar {
-          width: 3px;
+          width: 6px;
         }
         .sidebar-scroll::-webkit-scrollbar-thumb {
           background-color: #23471d;
           border-radius: 10px;
         }
         .sidebar-scroll::-webkit-scrollbar-track {
-          background: transparent;
+          background: #f1f1f1;
+          border-radius: 10px;
         }
       `}</style>
 
@@ -227,7 +228,7 @@ export default function Sidebar({
         id="dh-sidebar"
         style={cssVars}
         className={`fixed top-0 left-0 h-screen border-r-4
-          shadow-xl z-50 transition-all duration-300
+          shadow-xl z-50 transition-all duration-300 flex flex-col
           ${sidebarOpen ? "w-75" : "w-20 -translate-x-full lg:translate-x-0"}
           ${mobileMenuOpen ? "translate-x-0" : ""}`}
       >
@@ -265,7 +266,7 @@ export default function Sidebar({
         )}
 
         {/* MENU */}
-        <div className="h-[calc(100vh-140px)] overflow-y-auto sidebar-scroll p-3 space-y-2 text-[13px]">
+        <div className="flex-1 overflow-y-auto sidebar-scroll p-3 space-y-2 text-[13px]">
           {(() => {
             let currentHeading = "General"; // Fallback tracking var
 
@@ -375,7 +376,7 @@ export default function Sidebar({
         </div>
 
         {/* FOOTER */}
-        <div className="sb-footer absolute bottom-0 w-full p-2 border-t">
+        <div className="sb-footer p-2 border-t bg-inherit mt-auto">
           {sidebarOpen && (
             <div className="flex flex-col items-center gap-2">
               <button
