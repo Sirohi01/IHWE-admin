@@ -225,13 +225,9 @@ const CorporateVisitorsList = () => {
   const [selectedClient, setSelectedClient] = useState(null);
   const [open, setOpen] = useState("");
 
-  const corporateVisitorsState = useSelector(
+  const { corporateVisitors, loading } = useSelector(
     (state) => state.corporateVisitors,
   );
-  const corporateVisitors = Array.isArray(corporateVisitorsState)
-    ? corporateVisitorsState
-    : [];
-  const loading = corporateVisitorsState?.loading ?? false;
 
   useEffect(() => {
     dispatch(fetchCorporateVisitors());

@@ -221,13 +221,9 @@ const HealthCampVisitorsList = () => {
   const [selectedClient, setSelectedClient] = useState(null);
   const [open, setOpen] = useState("");
 
-  const healthCampVisitorsState = useSelector(
+  const { healthCampVisitors, loading } = useSelector(
     (state) => state.healthCampVisitors,
   );
-  const healthCampVisitors = Array.isArray(healthCampVisitorsState)
-    ? healthCampVisitorsState
-    : [];
-  const loading = healthCampVisitorsState?.loading ?? false;
 
   const handle = (value) => setOpen(value);
 

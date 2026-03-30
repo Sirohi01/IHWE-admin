@@ -205,12 +205,9 @@ const GeneralVisitorsList = () => {
   const [selectedClient, setSelectedClient] = useState(null);
   const [open, setOpen] = useState("");
 
-  // ✅ Safe extraction – ensure array and loading state
-  const generalVisitorsState = useSelector((state) => state.generalVisitors);
-  const generalVisitors = Array.isArray(generalVisitorsState)
-    ? generalVisitorsState
-    : [];
-  const loading = generalVisitorsState?.loading ?? false;
+  const { generalVisitors, loading } = useSelector(
+    (state) => state.generalVisitors,
+  );
 
   const handle = (value) => setOpen(value);
 
