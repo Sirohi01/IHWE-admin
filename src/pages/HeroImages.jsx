@@ -370,7 +370,7 @@ const HeroImages = () => {
                                     <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#1a5b32] transition-colors bg-gray-50 rounded">
                                         <ImageIcon className="w-10 h-10 text-gray-300 mb-2" />
                                         <span className="text-xs text-gray-400 font-medium">Click to upload High-Res Image</span>
-                                        <span className="text-[10px] text-gray-400 mt-1 uppercase tracking-tight">1920x1080 (Recommended)</span>
+                                        <span className="text-[10px] text-gray-400 mt-1 uppercase tracking-tight">1920x450 (Recommended)</span>
                                         <input ref={fileInputRef} type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
                                     </label>
                                 )}

@@ -362,8 +362,8 @@ const AddSeo = () => {
                                 <label className="block text-xs font-medium text-gray-700">
                                     Meta Description
                                 </label>
-                                <span className={`text-[10px] font-bold ${formData.metaDescription.length > 140 ? 'text-orange-500' : 'text-gray-400'}`}>
-                                    {formData.metaDescription.length}/150
+                                <span className={`text-[10px] font-bold ${formData.metaDescription.length > 150 ? 'text-orange-500' : 'text-gray-400'}`}>
+                                    {formData.metaDescription.length}/155
                                 </span>
                             </div>
                             <textarea
@@ -372,7 +372,7 @@ const AddSeo = () => {
                                 onChange={handleInputChange}
                                 placeholder="Enter meta description"
                                 rows={3}
-                                maxLength={150}
+                                maxLength={155}
                                 className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
                             />
                         </div>

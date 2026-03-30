@@ -619,7 +619,7 @@ const HeroSlider = () => {
 
             <div className="md:col-span-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Hero Image <span className="text-red-500">*</span>
+                Hero Image (1920 * 900) <span className="text-red-500">*</span>
               </label>
               <input
                 type="file"
