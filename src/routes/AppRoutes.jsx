@@ -126,6 +126,7 @@ import AddNatureOfBusiness from "../pages/add_by_admin/AddNatureOfBusiness";
 import AddRemarkLengthFixed from "../pages/add_by_admin/AddRemarkLengthFixed";
 import AddStatus from "../pages/add_by_admin/AddStatus";
 import AddTarget from "../pages/add_by_admin/AddTarget";
+import ClientOverview1 from "../pages/ihwe_client_data_2026/ClientOverview1";
 export default function AppRoutes() {
   return (
     <Routes>
@@ -347,6 +348,7 @@ export default function AppRoutes() {
           />
           <Route path="ihweClientData2026/AddStatus" element={<AddStatus />} />
           <Route path="ihweClientData2026/AddTarget" element={<AddTarget />} />
+          <Route path="/client-overview/:id" element={<ClientOverview1 />} />
         </Route>
       </Route>
     </Routes>

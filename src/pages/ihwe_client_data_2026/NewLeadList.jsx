@@ -38,7 +38,7 @@ const NewLeadList = () => {
       accessor: "company.name",
       render: (value, row) => (
         <Link
-          to={`/clientOverview1/${row.id}`}
+          to={`/client-overview/${row.id}`}
           className="text-blue-500 hover:underline"
         >
           {value}
@@ -154,7 +154,11 @@ const NewLeadList = () => {
               Error loading companies: {error}
             </div>
           ) : (
-            <Globallytable rows={rows} colomns={columns} />
+            <Globallytable
+              rows={rows}
+              colomns={columns}
+              style={{ marginTop: "20px" }}
+            />
           )}
         </div>
       </div>

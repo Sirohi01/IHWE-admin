@@ -41,8 +41,8 @@ const WarmClientList = () => {
       accessor: "company.name",
       render: (value, row) => (
         <Link
-          to={`/clientOverview1/${row.id}`}
-          className="hover:underline text-blue-500"
+          to={`/client-overview/${row.id}`}
+          className="text-blue-500 hover:underline"
         >
           {value}
         </Link>

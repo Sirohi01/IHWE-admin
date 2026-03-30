@@ -1,3 +1,856 @@
+// import React, { useEffect, useMemo, useState } from "react";
+// import { Pencil, Trash2 } from "lucide-react";
+// import { useSelector, useDispatch } from "react-redux";
+// import {
+//   fetchNatures,
+//   createNature,
+//   updateNature,
+//   deleteNature,
+// } from "../../features/add_by_admin/nature/natureSlice";
+// import { showError, showSuccess } from "../../utils/toastMessage";
+
+// /** Simple Pagination component */
+// const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+//   const pages = [];
+//   const start = Math.max(1, currentPage - 2);
+//   const end = Math.min(totalPages, currentPage + 2);
+//   for (let p = start; p <= end; p++) pages.push(p);
+
+//   return (
+//     <div style={styles.pagination}>
+//       <button
+//         onClick={() => onPageChange(1)}
+//         disabled={currentPage === 1}
+//         style={{
+//           ...styles.pageBtn,
+//           ...(currentPage === 1 ? styles.disabledBtn : {}),
+//         }}
+//       >
+//         {"<<"}
+//       </button>
+//       <button
+//         onClick={() => onPageChange(currentPage - 1)}
+//         disabled={currentPage === 1}
+//         style={{
+//           ...styles.pageBtn,
+//           ...(currentPage === 1 ? styles.disabledBtn : {}),
+//         }}
+//       >
+//         {"<"}
+//       </button>
+
+//       {start > 1 && <span style={styles.pageGap}>...</span>}
+
+//       {pages.map((p) => (
+//         <button
+//           key={p}
+//           onClick={() => onPageChange(p)}
+//           style={{
+//             ...styles.pageBtn,
+//             ...(p === currentPage ? styles.activePageBtn : {}),
+//           }}
+//         >
+//           {p}
+//         </button>
+//       ))}
+
+//       {end < totalPages && <span style={styles.pageGap}>...</span>}
+
+//       <button
+//         onClick={() => onPageChange(currentPage + 1)}
+//         disabled={currentPage === totalPages}
+//         style={{
+//           ...styles.pageBtn,
+//           ...(currentPage === totalPages ? styles.disabledBtn : {}),
+//         }}
+//       >
+//         {">"}
+//       </button>
+//       <button
+//         onClick={() => onPageChange(totalPages)}
+//         disabled={currentPage === totalPages}
+//         style={{
+//           ...styles.pageBtn,
+//           ...(currentPage === totalPages ? styles.disabledBtn : {}),
+//         }}
+//       >
+//         {">>"}
+//       </button>
+//     </div>
+//   );
+// };
+
+// const AddNatureOfBusiness = () => {
+//   const dispatch = useDispatch();
+//   const [editingNature, setEditingNature] = useState(null);
+//   const [formData, setFormData] = useState({
+//     name: "",
+//     status: "Active",
+//   });
+
+//   const [searchText, setSearchText] = useState("");
+//   const [statusFilter, setStatusFilter] = useState("All");
+//   const [sortBy, setSortBy] = useState({ key: "nature_id", dir: "asc" });
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [rowsPerPage, setRowsPerPage] = useState(10);
+//   const [message, setMessage] = useState(null);
+
+//   // Natures of Business redux
+//   const {
+//     natures,
+//     loading: isLoading,
+//     error,
+//   } = useSelector((state) => state.natures);
+
+//   console.log("add nature of business data", natures);
+
+//   useEffect(() => {
+//     dispatch(fetchNatures());
+//   }, [dispatch]);
+
+//   const handleChange = (e) => {
+//     const { name, value } = e.target;
+//     setFormData((prevData) => ({
+//       ...prevData,
+//       [name]: value,
+//     }));
+//   };
+
+//   const resetForm = () => {
+//     setFormData({ name: "", status: "Active" });
+//     setEditingNature(null);
+//   };
+
+//   const handleAddNature = async () => {
+//     if (!formData.name || !formData.name.trim()) {
+//       showError("Please enter a name for the nature of business!");
+//       return;
+//     }
+
+//     const trimmedName = formData.name.trim();
+//     const duplicate = (Array.isArray(natures) ? natures : []).find(
+//       (n) =>
+//         (n?.nature_name || "").trim().toLowerCase() ===
+//           trimmedName.toLowerCase() &&
+//         (!editingNature || n._id !== editingNature._id),
+//     );
+//     if (duplicate) {
+//       showError("A nature of business with that name already exists!");
+//       return;
+//     }
+
+//     const newNatureId =
+//       natures && natures.length > 0
+//         ? Math.max(...natures.map((n) => n.nature_id || 0)) + 1
+//         : 1;
+
+//     const natureData = {
+//       nature_id: newNatureId,
+//       nature_name: trimmedName,
+//       nature_status: formData.status.toLowerCase(),
+//       added: new Date().toISOString(),
+//     };
+
+//     try {
+//       if (editingNature) {
+//         await dispatch(
+//           updateNature({ id: editingNature._id, updates: natureData }),
+//         ).unwrap();
+//         showSuccess("Nature of Business updated successfully!");
+//       } else {
+//         await dispatch(createNature(natureData)).unwrap();
+//         showSuccess("Nature of Business added successfully!");
+//       }
+//       resetForm();
+//       dispatch(fetchNatures());
+//     } catch (err) {
+//       const action = editingNature ? "update" : "create";
+//       showError(`Failed to ${action} Nature of Business. Please try again.`);
+//       console.error(`Failed to ${action} Nature of Business:`, err);
+//     }
+//   };
+
+//   const handleEdit = (natureId) => {
+//     const natureToEdit = natures.find((nat) => nat?._id === natureId);
+//     if (natureToEdit) {
+//       setFormData({
+//         name: natureToEdit.nature_name,
+//         status: natureToEdit.nature_status
+//           ? natureToEdit.nature_status.charAt(0).toUpperCase() +
+//             natureToEdit.nature_status.slice(1)
+//           : "Active",
+//       });
+//       setEditingNature(natureToEdit);
+//       window.scrollTo({ top: 0, behavior: "smooth" });
+//     }
+//   };
+
+//   const handleDelete = async (natureId) => {
+//     const natureToDelete = natures.find((n) => n?._id === natureId);
+//     if (!natureToDelete) return;
+//     {
+//       try {
+//         await dispatch(deleteNature(natureId)).unwrap();
+//         showSuccess("Nature of Business deleted successfully!");
+//         dispatch(fetchNatures());
+//       } catch (err) {
+//         showError(
+//           "Failed to delete Nature of Business. Please try again.",
+//           3000,
+//         );
+//         console.error("Failed to delete Nature of Business:", err);
+//       }
+//     }
+//   };
+
+//   const filteredAndSortedNatures = useMemo(() => {
+//     let list = Array.isArray(natures) ? natures.filter(Boolean) : [];
+//     if (searchText && searchText.trim()) {
+//       const s = searchText.trim().toLowerCase();
+//       list = list.filter((n) =>
+//         (n?.nature_name || "").toLowerCase().includes(s),
+//       );
+//     }
+//     if (statusFilter === "Active" || statusFilter === "Inactive") {
+//       list = list.filter(
+//         (n) =>
+//           (n?.nature_status || "").toLowerCase() === statusFilter.toLowerCase(),
+//       );
+//     }
+//     const { key, dir } = sortBy;
+//     list.sort((a, b) => {
+//       let av = a[key];
+//       let bv = b[key];
+//       if (key === "nature_id") {
+//         av = Number(av);
+//         bv = Number(bv);
+//       } else {
+//         av = (av || "").toString().toLowerCase();
+//         bv = (bv || "").toString().toLowerCase();
+//       }
+//       if (av < bv) return dir === "asc" ? -1 : 1;
+//       if (av > bv) return dir === "asc" ? 1 : -1;
+//       return 0;
+//     });
+//     return list;
+//   }, [natures, searchText, statusFilter, sortBy]);
+
+//   const totalPages = Math.max(
+//     1,
+//     Math.ceil(filteredAndSortedNatures.length / rowsPerPage),
+//   );
+//   useEffect(() => {
+//     if (currentPage > totalPages) setCurrentPage(totalPages);
+//   }, [totalPages, currentPage]);
+
+//   const currentPageData = useMemo(() => {
+//     const start = (currentPage - 1) * rowsPerPage;
+//     return filteredAndSortedNatures.slice(start, start + rowsPerPage);
+//   }, [filteredAndSortedNatures, currentPage, rowsPerPage]);
+
+//   const toggleSort = (key) => {
+//     setSortBy((prev) => {
+//       if (prev.key === key) {
+//         return { ...prev, dir: prev.dir === "asc" ? "desc" : "asc" };
+//       } else {
+//         return { key, dir: "asc" };
+//       }
+//     });
+//   };
+
+//   return (
+//     <div
+//       className="w-full"
+//       style={{
+//         backgroundColor: "#ecf0f5",
+//         minHeight: "100vh",
+//         padding: "0",
+//         marginTop: "30px",
+//       }}
+//     >
+//       {/* Header Section */}
+//       <div
+//         className="w-full bg-white"
+//         style={{ borderBottom: "1px solid #e0e0e0" }}
+//       >
+//         <div className="flex items-center justify-between px-6 py-3">
+//           <h1
+//             className="text-lg font-normal uppercase"
+//             style={{ color: "#666" }}
+//           >
+//             Nature of Business
+//           </h1>
+//         </div>
+//       </div>
+
+//       {/* Main Content */}
+//       <div style={{ padding: "20px" }}>
+//         {/* Notification message */}
+//         {message && (
+//           <div style={styles.messageBox}>
+//             <span>{message}</span>
+//           </div>
+//         )}
+
+//         {/* Add/Edit Nature of Business Section */}
+//         <div className="bg-white mb-5" style={{ border: "1px solid #ddd" }}>
+//           <div
+//             className="px-5 py-3"
+//             style={{
+//               backgroundColor: "#f9f9f9",
+//               borderBottom: "1px solid #ddd",
+//             }}
+//           >
+//             <h2
+//               className="text-base font-semibold uppercase"
+//               style={{ color: "#555", margin: 0 }}
+//             >
+//               {editingNature
+//                 ? "EDIT NATURE OF BUSINESS"
+//                 : "ADD NATURE OF BUSINESS"}
+//             </h2>
+//           </div>
+
+//           <div className="p-6">
+//             <div
+//               className="flex items-start gap-8"
+//               style={{ alignItems: "flex-end" }}
+//             >
+//               {/* Name Field */}
+//               <div style={{ flex: 1 }}>
+//                 <label
+//                   className="block text-sm font-medium mb-2"
+//                   style={{ color: "#333" }}
+//                 >
+//                   Name <span style={{ color: "#f44336" }}>*</span>
+//                 </label>
+//                 <input
+//                   type="text"
+//                   name="name"
+//                   value={formData.name}
+//                   onChange={handleChange}
+//                   className="w-full px-3 py-2 text-sm"
+//                   style={{
+//                     ...styles.input,
+//                   }}
+//                   placeholder="Enter name"
+//                   required
+//                   onKeyDown={(e) => {
+//                     if (e.key === "Enter") {
+//                       handleAddNature();
+//                     }
+//                   }}
+//                 />
+//               </div>
+
+//               {/* Status Field */}
+//               <div style={{ width: 280 }}>
+//                 <label
+//                   className="block text-sm font-medium mb-2"
+//                   style={{ color: "#333" }}
+//                 >
+//                   Status <span style={{ color: "#f44336" }}>*</span>
+//                 </label>
+//                 <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+//                   <label style={styles.radioLabel}>
+//                     <input
+//                       type="radio"
+//                       name="status"
+//                       value="Active"
+//                       checked={formData.status === "Active"}
+//                       onChange={handleChange}
+//                       style={{ marginRight: 8 }}
+//                     />
+//                     <span style={{ color: "#333" }}>Active</span>
+//                   </label>
+//                   <label style={styles.radioLabel}>
+//                     <input
+//                       type="radio"
+//                       name="status"
+//                       value="Inactive"
+//                       checked={formData.status === "Inactive"}
+//                       onChange={handleChange}
+//                       style={{ marginRight: 8 }}
+//                     />
+//                     <span style={{ color: "#333" }}>Inactive</span>
+//                   </label>
+//                 </div>
+//               </div>
+
+//               {/* Add / Update Button */}
+//               <div style={{ display: "flex", alignItems: "flex-end" }}>
+//                 <button
+//                   onClick={handleAddNature}
+//                   className="px-6 py-2 text-sm text-white"
+//                   style={{
+//                     backgroundColor: "#5bc0de",
+//                     border: "none",
+//                     borderRadius: 3,
+//                     cursor: "pointer",
+//                   }}
+//                   title={editingNature ? "Update" : "Add"}
+//                 >
+//                   {editingNature ? "Update" : "Add"}
+//                 </button>
+//               </div>
+
+//               {/* Cancel (visible when editing) */}
+//               {editingNature && (
+//                 <div style={{ display: "flex", alignItems: "flex-end" }}>
+//                   <button
+//                     onClick={resetForm}
+//                     className="px-4 py-2 text-sm"
+//                     style={{
+//                       backgroundColor: "#e0e0e0",
+//                       color: "#333",
+//                       borderRadius: 3,
+//                       border: "none",
+//                       cursor: "pointer",
+//                     }}
+//                   >
+//                     Cancel
+//                   </button>
+//                 </div>
+//               )}
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* List Section */}
+//         <div className="bg-white" style={{ border: "1px solid #ddd" }}>
+//           {/* Filter / Search / Sort Row */}
+//           <div
+//             className="px-5 py-3"
+//             style={{
+//               backgroundColor: "#f9f9f9",
+//               borderBottom: "1px solid #ddd",
+//               display: "flex",
+//               alignItems: "center",
+//               gap: 12,
+//             }}
+//           >
+//             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+//               <label
+//                 style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+//               >
+//                 <span style={{ color: "#333", fontSize: 13 }}>Show</span>
+//                 <select
+//                   value={rowsPerPage}
+//                   onChange={(e) => {
+//                     setRowsPerPage(Number(e.target.value));
+//                     setCurrentPage(1);
+//                   }}
+//                   style={styles.smallSelect}
+//                 >
+//                   <option value={5}>5</option>
+//                   <option value={10}>10</option>
+//                   <option value={20}>20</option>
+//                   <option value={50}>50</option>
+//                 </select>
+//                 <span style={{ color: "#333", fontSize: 13 }}>entries</span>
+//               </label>
+
+//               <label
+//                 style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+//               >
+//                 <span style={{ color: "#333", fontSize: 13 }}>Status</span>
+//                 <select
+//                   value={statusFilter}
+//                   onChange={(e) => {
+//                     setStatusFilter(e.target.value);
+//                     setCurrentPage(1);
+//                   }}
+//                   style={styles.smallSelect}
+//                 >
+//                   <option value="All">All</option>
+//                   <option value="Active">Active</option>
+//                   <option value="Inactive">Inactive</option>
+//                 </select>
+//               </label>
+//             </div>
+
+//             {/* Search box */}
+//             <div
+//               style={{
+//                 marginLeft: "auto",
+//                 display: "flex",
+//                 gap: 8,
+//                 alignItems: "center",
+//               }}
+//             >
+//               <input
+//                 type="text"
+//                 placeholder="Search..."
+//                 value={searchText}
+//                 onChange={(e) => {
+//                   setSearchText(e.target.value);
+//                   setCurrentPage(1);
+//                 }}
+//                 style={styles.searchInput}
+//               />
+//               <button
+//                 onClick={() => {
+//                   setSearchText("");
+//                   setStatusFilter("All");
+//                   setRowsPerPage(10);
+//                   setSortBy({ key: "id", dir: "asc" });
+//                 }}
+//                 style={styles.clearBtn}
+//               >
+//                 Reset
+//               </button>
+//             </div>
+//           </div>
+
+//           {/* Table header */}
+//           <div style={{ maxHeight: "500px", overflowY: "auto" }}>
+//             <table
+//               className="w-full"
+//               style={{ borderCollapse: "collapse", width: "100%" }}
+//             >
+//               <thead
+//                 style={{
+//                   position: "sticky",
+//                   top: 0,
+//                   backgroundColor: "#f9f9f9",
+//                   zIndex: 1,
+//                 }}
+//               >
+//                 <tr style={{ borderBottom: "2px solid #ddd" }}>
+//                   <th
+//                     className="px-4 py-3 text-sm font-semibold text-center"
+//                     style={thStyle(80)}
+//                   >
+//                     <div
+//                       style={{
+//                         display: "flex",
+//                         alignItems: "center",
+//                         justifyContent: "center",
+//                         gap: 8,
+//                       }}
+//                     >
+//                       No.
+//                       <button
+//                         onClick={() => toggleSort("nature_id")}
+//                         style={styles.sortBtn}
+//                       >
+//                         {sortBy.key === "nature_id"
+//                           ? sortBy.dir === "asc"
+//                             ? "▲"
+//                             : "▼"
+//                           : "↕"}
+//                       </button>
+//                     </div>
+//                   </th>
+//                   <th
+//                     className="px-4 py-3 text-sm font-semibold text-left"
+//                     style={thStyle()}
+//                   >
+//                     <div
+//                       style={{ display: "flex", alignItems: "center", gap: 8 }}
+//                     >
+//                       Name
+//                       <button
+//                         onClick={() => toggleSort("nature_name")}
+//                         style={styles.sortBtn}
+//                       >
+//                         {sortBy.key === "nature_name"
+//                           ? sortBy.dir === "asc"
+//                             ? "▲"
+//                             : "▼"
+//                           : "↕"}
+//                       </button>
+//                     </div>
+//                   </th>
+//                   <th
+//                     className="px-4 py-3 text-sm font-semibold text-center"
+//                     style={thStyle(150)}
+//                   >
+//                     <div
+//                       style={{
+//                         display: "flex",
+//                         alignItems: "center",
+//                         justifyContent: "center",
+//                         gap: 8,
+//                       }}
+//                     >
+//                       Status
+//                       <button
+//                         onClick={() => toggleSort("nature_status")}
+//                         style={styles.sortBtn}
+//                       >
+//                         {sortBy.key === "nature_status"
+//                           ? sortBy.dir === "asc"
+//                             ? "▲"
+//                             : "▼"
+//                           : "↕"}
+//                       </button>
+//                     </div>
+//                   </th>
+//                   <th
+//                     className="px-4 py-3 text-sm font-semibold text-center"
+//                     style={thStyle(120)}
+//                   >
+//                     Action
+//                   </th>
+//                 </tr>
+//               </thead>
+
+//               <tbody>
+//                 {isLoading && (
+//                   <tr>
+//                     <td
+//                       colSpan={4}
+//                       style={{
+//                         padding: 24,
+//                         textAlign: "center",
+//                         color: "#777",
+//                       }}
+//                     >
+//                       Loading...
+//                     </td>
+//                   </tr>
+//                 )}
+
+//                 {currentPageData.length === 0 ? (
+//                   <tr>
+//                     <td
+//                       colSpan={4}
+//                       style={{
+//                         padding: 24,
+//                         textAlign: "center",
+//                         color: "#777",
+//                       }}
+//                     >
+//                       No entries found.
+//                     </td>
+//                   </tr>
+//                 ) : (
+//                   currentPageData.map((nature, index) => (
+//                     <tr
+//                       key={nature._id}
+//                       style={{
+//                         borderBottom: "1px solid #ddd",
+//                         backgroundColor:
+//                           index % 2 === 0 ? "#ffffff" : "#f9f9f9",
+//                       }}
+//                     >
+//                       <td
+//                         className="px-4 py-3 text-sm text-center"
+//                         style={{ color: "#333", width: 80 }}
+//                       >
+//                         {(currentPage - 1) * rowsPerPage + index + 1}
+//                       </td>
+
+//                       <td
+//                         className="px-4 py-3 text-sm"
+//                         style={{ color: "#333" }}
+//                       >
+//                         {nature?.nature_name || ""}
+//                       </td>
+
+//                       <td className="px-4 py-3 text-center">
+//                         {nature?.nature_status ? (
+//                           <span
+//                             className="inline-block px-3 py-1 text-xs text-white"
+//                             style={{
+//                               backgroundColor:
+//                                 nature.nature_status.toLowerCase() === "active"
+//                                   ? "#337ab7"
+//                                   : "#d9534f",
+//                               borderRadius: 3,
+//                             }}
+//                           >
+//                             {nature.nature_status.charAt(0).toUpperCase() +
+//                               nature.nature_status.slice(1)}
+//                           </span>
+//                         ) : null}
+//                       </td>
+
+//                       <td className="px-4 py-3" style={{ textAlign: "center" }}>
+//                         <div
+//                           style={{
+//                             display: "flex",
+//                             justifyContent: "center",
+//                             gap: 8,
+//                           }}
+//                         >
+//                           <button
+//                             onClick={() => handleEdit(nature._id)}
+//                             style={{
+//                               ...styles.iconBtn,
+//                               borderColor: "#337ab7",
+//                               color: "#337ab7",
+//                             }}
+//                             title="Edit"
+//                           >
+//                             <Pencil size={14} />
+//                           </button>
+
+//                           <button
+//                             onClick={() => handleDelete(nature._id)}
+//                             style={{
+//                               ...styles.iconBtn,
+//                               borderColor: "#d9534f",
+//                               color: "#d9534f",
+//                             }}
+//                             title="Delete"
+//                           >
+//                             <Trash2 size={14} />
+//                           </button>
+//                         </div>
+//                       </td>
+//                     </tr>
+//                   ))
+//                 )}
+//               </tbody>
+//             </table>
+//           </div>
+
+//           {/* Footer: Pagination and summary */}
+//           <div
+//             style={{
+//               display: "flex",
+//               alignItems: "center",
+//               justifyContent: "space-between",
+//               padding: 12,
+//             }}
+//           >
+//             <div style={{ color: "#666", fontSize: 13 }}>
+//               Showing{" "}
+//               <strong style={{ color: "#333" }}>
+//                 {filteredAndSortedNatures.length === 0
+//                   ? 0
+//                   : (currentPage - 1) * rowsPerPage + 1}
+//               </strong>{" "}
+//               to{" "}
+//               <strong style={{ color: "#333" }}>
+//                 {Math.min(
+//                   currentPage * rowsPerPage,
+//                   filteredAndSortedNatures.length,
+//                 )}
+//               </strong>{" "}
+//               of{" "}
+//               <strong style={{ color: "#333" }}>
+//                 {filteredAndSortedNatures.length}
+//               </strong>{" "}
+//               entries
+//             </div>
+
+//             <Pagination
+//               currentPage={currentPage}
+//               totalPages={totalPages}
+//               onPageChange={setCurrentPage}
+//             />
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// const styles = {
+//   input: {
+//     border: "1px solid #d2d6de",
+//     borderRadius: 3,
+//     padding: "8px 10px",
+//     fontSize: 14,
+//     width: "100%",
+//     boxSizing: "border-box",
+//   },
+//   radioLabel: {
+//     display: "inline-flex",
+//     alignItems: "center",
+//     gap: 6,
+//     cursor: "pointer",
+//   },
+//   smallActionBtn: {
+//     backgroundColor: "#f7f7f7",
+//     border: "1px solid #ddd",
+//     padding: "6px 10px",
+//     borderRadius: 3,
+//     cursor: "pointer",
+//     fontSize: 13,
+//   },
+//   searchInput: {
+//     padding: "8px 10px",
+//     borderRadius: 3,
+//     border: "1px solid #d2d6de",
+//     width: 280,
+//   },
+//   clearBtn: {
+//     padding: "8px 10px",
+//     borderRadius: 3,
+//     border: "1px solid #ddd",
+//     backgroundColor: "#fff",
+//     cursor: "pointer",
+//     fontSize: 13,
+//   },
+//   smallSelect: {
+//     padding: "6px 8px",
+//     borderRadius: 3,
+//     border: "1px solid #d2d6de",
+//   },
+//   iconBtn: {
+//     padding: 6,
+//     borderRadius: 4,
+//     border: "1px solid #ccc",
+//     backgroundColor: "white",
+//     cursor: "pointer",
+//   },
+//   sortBtn: {
+//     background: "transparent",
+//     border: "none",
+//     cursor: "pointer",
+//     padding: 2,
+//     fontSize: 12,
+//   },
+//   messageBox: {
+//     backgroundColor: "#e9f7ef",
+//     border: "1px solid #c7efd9",
+//     padding: "8px 12px",
+//     borderRadius: 4,
+//     marginBottom: 12,
+//     color: "#2f7a4b",
+//     display: "inline-block",
+//   },
+//   pagination: {
+//     display: "flex",
+//     gap: 6,
+//     alignItems: "center",
+//   },
+//   pageBtn: {
+//     padding: "6px 9px",
+//     border: "1px solid #ddd",
+//     borderRadius: 4,
+//     cursor: "pointer",
+//     background: "white",
+//   },
+//   disabledBtn: {
+//     opacity: 0.5,
+//     cursor: "not-allowed",
+//   },
+//   activePageBtn: {
+//     backgroundColor: "#3598dc",
+//     color: "white",
+//     borderColor: "#2f82c4",
+//   },
+//   pageGap: {
+//     padding: "0 6px",
+//     color: "#999",
+//   },
+// };
+
+// /* Helper to produce th style with fixed width optional */
+// const thStyle = (width) => ({
+//   color: "#333",
+//   borderRight: "1px solid #ddd",
+//   textAlign: "center",
+//   width: width ? width : "auto",
+//   padding: "12px 8px",
+// });
+
+// export default AddNatureOfBusiness;
 import React, { useEffect, useMemo, useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
@@ -17,62 +870,69 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   for (let p = start; p <= end; p++) pages.push(p);
 
   return (
-    <div style={styles.pagination}>
+    <div className="flex items-center gap-2">
       <button
         onClick={() => onPageChange(1)}
         disabled={currentPage === 1}
-        style={{
-          ...styles.pageBtn,
-          ...(currentPage === 1 ? styles.disabledBtn : {}),
-        }}
+        className={`px-3 py-2 border border-gray-300 bg-white text-base rounded-md ${
+          currentPage === 1
+            ? "opacity-50 cursor-not-allowed"
+            : "hover:bg-gray-50"
+        }`}
       >
         {"<<"}
       </button>
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        style={{
-          ...styles.pageBtn,
-          ...(currentPage === 1 ? styles.disabledBtn : {}),
-        }}
+        className={`px-3 py-2 border border-gray-300 bg-white text-base rounded-md ${
+          currentPage === 1
+            ? "opacity-50 cursor-not-allowed"
+            : "hover:bg-gray-50"
+        }`}
       >
         {"<"}
       </button>
 
-      {start > 1 && <span style={styles.pageGap}>...</span>}
+      {start > 1 && <span className="px-2 text-gray-400 text-base">...</span>}
 
       {pages.map((p) => (
         <button
           key={p}
           onClick={() => onPageChange(p)}
-          style={{
-            ...styles.pageBtn,
-            ...(p === currentPage ? styles.activePageBtn : {}),
-          }}
+          className={`px-3 py-2 border text-base rounded-md ${
+            p === currentPage
+              ? "bg-blue-500 text-white border-blue-600"
+              : "border-gray-300 bg-white hover:bg-gray-50"
+          }`}
         >
           {p}
         </button>
       ))}
 
-      {end < totalPages && <span style={styles.pageGap}>...</span>}
+      {end < totalPages && (
+        <span className="px-2 text-gray-400 text-base">...</span>
+      )}
 
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        style={{
-          ...styles.pageBtn,
-          ...(currentPage === totalPages ? styles.disabledBtn : {}),
-        }}
+        className={`px-3 py-2 border border-gray-300 bg-white text-base rounded-md ${
+          currentPage === totalPages
+            ? "opacity-50 cursor-not-allowed"
+            : "hover:bg-gray-50"
+        }`}
       >
         {">"}
       </button>
       <button
         onClick={() => onPageChange(totalPages)}
         disabled={currentPage === totalPages}
-        style={{
-          ...styles.pageBtn,
-          ...(currentPage === totalPages ? styles.disabledBtn : {}),
-        }}
+        className={`px-3 py-2 border border-gray-300 bg-white text-base rounded-md ${
+          currentPage === totalPages
+            ? "opacity-50 cursor-not-allowed"
+            : "hover:bg-gray-50"
+        }`}
       >
         {">>"}
       </button>
@@ -259,52 +1119,29 @@ const AddNatureOfBusiness = () => {
   };
 
   return (
-    <div
-      className="w-full"
-      style={{
-        backgroundColor: "#ecf0f5",
-        minHeight: "100vh",
-        padding: "0",
-        marginTop: "30px",
-      }}
-    >
+    <div className="w-full min-h-screen bg-[#ecf0f5] mt-[30px]">
       {/* Header Section */}
-      <div
-        className="w-full bg-white"
-        style={{ borderBottom: "1px solid #e0e0e0" }}
-      >
-        <div className="flex items-center justify-between px-6 py-3">
-          <h1
-            className="text-lg font-normal uppercase"
-            style={{ color: "#666" }}
-          >
+      <div className="w-full bg-white border-b border-gray-200">
+        <div className="flex items-center justify-between px-8 py-3">
+          <h1 className="text-2xl font-normal uppercase text-gray-600">
             Nature of Business
           </h1>
         </div>
       </div>
 
       {/* Main Content */}
-      <div style={{ padding: "20px" }}>
+      <div className="p-6 space-y-6">
         {/* Notification message */}
         {message && (
-          <div style={styles.messageBox}>
-            <span>{message}</span>
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-md">
+            {message}
           </div>
         )}
 
         {/* Add/Edit Nature of Business Section */}
-        <div className="bg-white mb-5" style={{ border: "1px solid #ddd" }}>
-          <div
-            className="px-5 py-3"
-            style={{
-              backgroundColor: "#f9f9f9",
-              borderBottom: "1px solid #ddd",
-            }}
-          >
-            <h2
-              className="text-base font-semibold uppercase"
-              style={{ color: "#555", margin: 0 }}
-            >
+        <div className="bg-white border border-gray-200 rounded-md">
+          <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
+            <h2 className="text-xl font-semibold uppercase text-gray-600">
               {editingNature
                 ? "EDIT NATURE OF BUSINESS"
                 : "ADD NATURE OF BUSINESS"}
@@ -312,27 +1149,18 @@ const AddNatureOfBusiness = () => {
           </div>
 
           <div className="p-6">
-            <div
-              className="flex items-start gap-8"
-              style={{ alignItems: "flex-end" }}
-            >
+            <div className="flex flex-wrap items-end gap-6">
               {/* Name Field */}
-              <div style={{ flex: 1 }}>
-                <label
-                  className="block text-sm font-medium mb-2"
-                  style={{ color: "#333" }}
-                >
-                  Name <span style={{ color: "#f44336" }}>*</span>
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-base font-medium text-gray-700 mb-1">
+                  Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 text-sm"
-                  style={{
-                    ...styles.input,
-                  }}
+                  className="w-full px-4 py-2 text-base border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter name"
                   required
                   onKeyDown={(e) => {
@@ -344,50 +1172,41 @@ const AddNatureOfBusiness = () => {
               </div>
 
               {/* Status Field */}
-              <div style={{ width: 280 }}>
-                <label
-                  className="block text-sm font-medium mb-2"
-                  style={{ color: "#333" }}
-                >
-                  Status <span style={{ color: "#f44336" }}>*</span>
+              <div className="w-72">
+                <label className="block text-base font-medium text-gray-700 mb-1">
+                  Status <span className="text-red-500">*</span>
                 </label>
-                <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-                  <label style={styles.radioLabel}>
+                <div className="flex items-center gap-6">
+                  <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="radio"
                       name="status"
                       value="Active"
                       checked={formData.status === "Active"}
                       onChange={handleChange}
-                      style={{ marginRight: 8 }}
+                      className="w-4 h-4 text-blue-600"
                     />
-                    <span style={{ color: "#333" }}>Active</span>
+                    <span className="text-base text-gray-700">Active</span>
                   </label>
-                  <label style={styles.radioLabel}>
+                  <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="radio"
                       name="status"
                       value="Inactive"
                       checked={formData.status === "Inactive"}
                       onChange={handleChange}
-                      style={{ marginRight: 8 }}
+                      className="w-4 h-4 text-blue-600"
                     />
-                    <span style={{ color: "#333" }}>Inactive</span>
+                    <span className="text-base text-gray-700">Inactive</span>
                   </label>
                 </div>
               </div>
 
               {/* Add / Update Button */}
-              <div style={{ display: "flex", alignItems: "flex-end" }}>
+              <div>
                 <button
                   onClick={handleAddNature}
-                  className="px-6 py-2 text-sm text-white"
-                  style={{
-                    backgroundColor: "#5bc0de",
-                    border: "none",
-                    borderRadius: 3,
-                    cursor: "pointer",
-                  }}
+                  className="px-8 py-2 text-base text-white bg-[#5bc0de] rounded-md hover:bg-[#46b8da]"
                   title={editingNature ? "Update" : "Add"}
                 >
                   {editingNature ? "Update" : "Add"}
@@ -396,17 +1215,10 @@ const AddNatureOfBusiness = () => {
 
               {/* Cancel (visible when editing) */}
               {editingNature && (
-                <div style={{ display: "flex", alignItems: "flex-end" }}>
+                <div>
                   <button
                     onClick={resetForm}
-                    className="px-4 py-2 text-sm"
-                    style={{
-                      backgroundColor: "#e0e0e0",
-                      color: "#333",
-                      borderRadius: 3,
-                      border: "none",
-                      cursor: "pointer",
-                    }}
+                    className="px-6 py-2 text-base text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
                   >
                     Cancel
                   </button>
@@ -417,50 +1229,37 @@ const AddNatureOfBusiness = () => {
         </div>
 
         {/* List Section */}
-        <div className="bg-white" style={{ border: "1px solid #ddd" }}>
+        <div className="bg-white border border-gray-200 rounded-md">
           {/* Filter / Search / Sort Row */}
-          <div
-            className="px-5 py-3"
-            style={{
-              backgroundColor: "#f9f9f9",
-              borderBottom: "1px solid #ddd",
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-            }}
-          >
-            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-              <label
-                style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
-              >
-                <span style={{ color: "#333", fontSize: 13 }}>Show</span>
+          <div className="px-6 py-3 bg-gray-50 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2">
+                <span className="text-base text-gray-700">Show</span>
                 <select
                   value={rowsPerPage}
                   onChange={(e) => {
                     setRowsPerPage(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  style={styles.smallSelect}
+                  className="px-3 py-2 border border-gray-300 text-base rounded-md"
                 >
                   <option value={5}>5</option>
                   <option value={10}>10</option>
                   <option value={20}>20</option>
                   <option value={50}>50</option>
                 </select>
-                <span style={{ color: "#333", fontSize: 13 }}>entries</span>
+                <span className="text-base text-gray-700">entries</span>
               </label>
 
-              <label
-                style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
-              >
-                <span style={{ color: "#333", fontSize: 13 }}>Status</span>
+              <label className="flex items-center gap-2">
+                <span className="text-base text-gray-700">Status</span>
                 <select
                   value={statusFilter}
                   onChange={(e) => {
                     setStatusFilter(e.target.value);
                     setCurrentPage(1);
                   }}
-                  style={styles.smallSelect}
+                  className="px-3 py-2 border border-gray-300 text-base rounded-md"
                 >
                   <option value="All">All</option>
                   <option value="Active">Active</option>
@@ -470,14 +1269,7 @@ const AddNatureOfBusiness = () => {
             </div>
 
             {/* Search box */}
-            <div
-              style={{
-                marginLeft: "auto",
-                display: "flex",
-                gap: 8,
-                alignItems: "center",
-              }}
-            >
+            <div className="flex items-center gap-2">
               <input
                 type="text"
                 placeholder="Search..."
@@ -486,53 +1278,33 @@ const AddNatureOfBusiness = () => {
                   setSearchText(e.target.value);
                   setCurrentPage(1);
                 }}
-                style={styles.searchInput}
+                className="px-4 py-2 text-base border border-gray-300 rounded-md w-64"
               />
               <button
                 onClick={() => {
                   setSearchText("");
                   setStatusFilter("All");
                   setRowsPerPage(10);
-                  setSortBy({ key: "id", dir: "asc" });
+                  setSortBy({ key: "nature_id", dir: "asc" });
                 }}
-                style={styles.clearBtn}
+                className="px-4 py-2 text-base border border-gray-300 bg-white rounded-md hover:bg-gray-50"
               >
                 Reset
               </button>
             </div>
           </div>
 
-          {/* Table header */}
-          <div style={{ maxHeight: "500px", overflowY: "auto" }}>
-            <table
-              className="w-full"
-              style={{ borderCollapse: "collapse", width: "100%" }}
-            >
-              <thead
-                style={{
-                  position: "sticky",
-                  top: 0,
-                  backgroundColor: "#f9f9f9",
-                  zIndex: 1,
-                }}
-              >
-                <tr style={{ borderBottom: "2px solid #ddd" }}>
-                  <th
-                    className="px-4 py-3 text-sm font-semibold text-center"
-                    style={thStyle(80)}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 8,
-                      }}
-                    >
+          {/* Table */}
+          <div className="overflow-auto max-h-[550px]">
+            <table className="w-full border-collapse">
+              <thead className="sticky top-0 bg-gray-50 z-10">
+                <tr className="border-b-2 border-gray-200">
+                  <th className="px-5 py-3 text-base font-semibold text-gray-700 text-center w-20">
+                    <div className="flex items-center justify-center gap-2">
                       No.
                       <button
                         onClick={() => toggleSort("nature_id")}
-                        style={styles.sortBtn}
+                        className="bg-transparent border-none cursor-pointer text-sm"
                       >
                         {sortBy.key === "nature_id"
                           ? sortBy.dir === "asc"
@@ -542,17 +1314,12 @@ const AddNatureOfBusiness = () => {
                       </button>
                     </div>
                   </th>
-                  <th
-                    className="px-4 py-3 text-sm font-semibold text-left"
-                    style={thStyle()}
-                  >
-                    <div
-                      style={{ display: "flex", alignItems: "center", gap: 8 }}
-                    >
+                  <th className="px-5 py-3 text-base font-semibold text-gray-700 text-left">
+                    <div className="flex items-center gap-2">
                       Name
                       <button
                         onClick={() => toggleSort("nature_name")}
-                        style={styles.sortBtn}
+                        className="bg-transparent border-none cursor-pointer text-sm"
                       >
                         {sortBy.key === "nature_name"
                           ? sortBy.dir === "asc"
@@ -562,22 +1329,12 @@ const AddNatureOfBusiness = () => {
                       </button>
                     </div>
                   </th>
-                  <th
-                    className="px-4 py-3 text-sm font-semibold text-center"
-                    style={thStyle(150)}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 8,
-                      }}
-                    >
+                  <th className="px-5 py-3 text-base font-semibold text-gray-700 text-center w-32">
+                    <div className="flex items-center justify-center gap-2">
                       Status
                       <button
                         onClick={() => toggleSort("nature_status")}
-                        style={styles.sortBtn}
+                        className="bg-transparent border-none cursor-pointer text-sm"
                       >
                         {sortBy.key === "nature_status"
                           ? sortBy.dir === "asc"
@@ -587,10 +1344,7 @@ const AddNatureOfBusiness = () => {
                       </button>
                     </div>
                   </th>
-                  <th
-                    className="px-4 py-3 text-sm font-semibold text-center"
-                    style={thStyle(120)}
-                  >
+                  <th className="px-5 py-3 text-base font-semibold text-gray-700 text-center w-28">
                     Action
                   </th>
                 </tr>
@@ -601,65 +1355,48 @@ const AddNatureOfBusiness = () => {
                   <tr>
                     <td
                       colSpan={4}
-                      style={{
-                        padding: 24,
-                        textAlign: "center",
-                        color: "#777",
-                      }}
+                      className="py-8 text-center text-gray-500 text-base"
                     >
                       Loading...
                     </td>
                   </tr>
                 )}
 
-                {currentPageData.length === 0 ? (
+                {!isLoading && currentPageData.length === 0 && (
                   <tr>
                     <td
                       colSpan={4}
-                      style={{
-                        padding: 24,
-                        textAlign: "center",
-                        color: "#777",
-                      }}
+                      className="py-8 text-center text-gray-500 text-base"
                     >
                       No entries found.
                     </td>
                   </tr>
-                ) : (
+                )}
+
+                {!isLoading &&
                   currentPageData.map((nature, index) => (
                     <tr
                       key={nature._id}
-                      style={{
-                        borderBottom: "1px solid #ddd",
-                        backgroundColor:
-                          index % 2 === 0 ? "#ffffff" : "#f9f9f9",
-                      }}
+                      className={`border-b border-gray-200 ${
+                        index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      }`}
                     >
-                      <td
-                        className="px-4 py-3 text-sm text-center"
-                        style={{ color: "#333", width: 80 }}
-                      >
+                      <td className="px-5 py-3 text-base text-center text-gray-700">
                         {(currentPage - 1) * rowsPerPage + index + 1}
                       </td>
 
-                      <td
-                        className="px-4 py-3 text-sm"
-                        style={{ color: "#333" }}
-                      >
+                      <td className="px-5 py-3 text-base text-gray-700">
                         {nature?.nature_name || ""}
                       </td>
 
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-5 py-3 text-center">
                         {nature?.nature_status ? (
                           <span
-                            className="inline-block px-3 py-1 text-xs text-white"
-                            style={{
-                              backgroundColor:
-                                nature.nature_status.toLowerCase() === "active"
-                                  ? "#337ab7"
-                                  : "#d9534f",
-                              borderRadius: 3,
-                            }}
+                            className={`inline-block px-3 py-1 text-sm text-white rounded ${
+                              nature.nature_status.toLowerCase() === "active"
+                                ? "bg-[#337ab7]"
+                                : "bg-[#d9534f]"
+                            }`}
                           >
                             {nature.nature_status.charAt(0).toUpperCase() +
                               nature.nature_status.slice(1)}
@@ -667,71 +1404,49 @@ const AddNatureOfBusiness = () => {
                         ) : null}
                       </td>
 
-                      <td className="px-4 py-3" style={{ textAlign: "center" }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            gap: 8,
-                          }}
-                        >
+                      <td className="px-5 py-3 text-center">
+                        <div className="flex justify-center gap-3">
                           <button
                             onClick={() => handleEdit(nature._id)}
-                            style={{
-                              ...styles.iconBtn,
-                              borderColor: "#337ab7",
-                              color: "#337ab7",
-                            }}
+                            className="p-2 border border-[#337ab7] text-[#337ab7] rounded-md hover:bg-[#337ab7]/10"
                             title="Edit"
                           >
-                            <Pencil size={14} />
+                            <Pencil size={16} />
                           </button>
 
                           <button
                             onClick={() => handleDelete(nature._id)}
-                            style={{
-                              ...styles.iconBtn,
-                              borderColor: "#d9534f",
-                              color: "#d9534f",
-                            }}
+                            className="p-2 border border-[#d9534f] text-[#d9534f] rounded-md hover:bg-[#d9534f]/10"
                             title="Delete"
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       </td>
                     </tr>
-                  ))
-                )}
+                  ))}
               </tbody>
             </table>
           </div>
 
           {/* Footer: Pagination and summary */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: 12,
-            }}
-          >
-            <div style={{ color: "#666", fontSize: 13 }}>
+          <div className="flex flex-wrap items-center justify-between p-4 border-t border-gray-200">
+            <div className="text-base text-gray-600">
               Showing{" "}
-              <strong style={{ color: "#333" }}>
+              <strong className="text-gray-800">
                 {filteredAndSortedNatures.length === 0
                   ? 0
                   : (currentPage - 1) * rowsPerPage + 1}
               </strong>{" "}
               to{" "}
-              <strong style={{ color: "#333" }}>
+              <strong className="text-gray-800">
                 {Math.min(
                   currentPage * rowsPerPage,
                   filteredAndSortedNatures.length,
                 )}
               </strong>{" "}
               of{" "}
-              <strong style={{ color: "#333" }}>
+              <strong className="text-gray-800">
                 {filteredAndSortedNatures.length}
               </strong>{" "}
               entries
@@ -748,106 +1463,5 @@ const AddNatureOfBusiness = () => {
     </div>
   );
 };
-
-const styles = {
-  input: {
-    border: "1px solid #d2d6de",
-    borderRadius: 3,
-    padding: "8px 10px",
-    fontSize: 14,
-    width: "100%",
-    boxSizing: "border-box",
-  },
-  radioLabel: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 6,
-    cursor: "pointer",
-  },
-  smallActionBtn: {
-    backgroundColor: "#f7f7f7",
-    border: "1px solid #ddd",
-    padding: "6px 10px",
-    borderRadius: 3,
-    cursor: "pointer",
-    fontSize: 13,
-  },
-  searchInput: {
-    padding: "8px 10px",
-    borderRadius: 3,
-    border: "1px solid #d2d6de",
-    width: 280,
-  },
-  clearBtn: {
-    padding: "8px 10px",
-    borderRadius: 3,
-    border: "1px solid #ddd",
-    backgroundColor: "#fff",
-    cursor: "pointer",
-    fontSize: 13,
-  },
-  smallSelect: {
-    padding: "6px 8px",
-    borderRadius: 3,
-    border: "1px solid #d2d6de",
-  },
-  iconBtn: {
-    padding: 6,
-    borderRadius: 4,
-    border: "1px solid #ccc",
-    backgroundColor: "white",
-    cursor: "pointer",
-  },
-  sortBtn: {
-    background: "transparent",
-    border: "none",
-    cursor: "pointer",
-    padding: 2,
-    fontSize: 12,
-  },
-  messageBox: {
-    backgroundColor: "#e9f7ef",
-    border: "1px solid #c7efd9",
-    padding: "8px 12px",
-    borderRadius: 4,
-    marginBottom: 12,
-    color: "#2f7a4b",
-    display: "inline-block",
-  },
-  pagination: {
-    display: "flex",
-    gap: 6,
-    alignItems: "center",
-  },
-  pageBtn: {
-    padding: "6px 9px",
-    border: "1px solid #ddd",
-    borderRadius: 4,
-    cursor: "pointer",
-    background: "white",
-  },
-  disabledBtn: {
-    opacity: 0.5,
-    cursor: "not-allowed",
-  },
-  activePageBtn: {
-    backgroundColor: "#3598dc",
-    color: "white",
-    borderColor: "#2f82c4",
-  },
-  pageGap: {
-    padding: "0 6px",
-    color: "#999",
-  },
-};
-
-/* Helper to produce th style with fixed width optional */
-const thStyle = (width) => ({
-  color: "#333",
-  borderRight: "1px solid #ddd",
-  textAlign: "center",
-  width: width ? width : "auto",
-  padding: "12px 8px",
-});
 
 export default AddNatureOfBusiness;

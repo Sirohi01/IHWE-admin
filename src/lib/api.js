@@ -4,13 +4,13 @@ const getBaseUrl = () => {
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL.replace(/\/api$/, "");
   }
-  
-  const { hostname, protocol } = window.location;
+
+  const { hostname } = window.location;
+
   if (hostname === "localhost" || hostname === "127.0.0.1") {
     return "http://localhost:5000";
   }
 
-  // Handle common VPS subdomain patterns (admin.domain.com -> domain.com)
   return window.location.origin.replace(/:\/\/admin\./, "://");
 };
 
@@ -21,53 +21,51 @@ const api = axios.create({
   baseURL: SERVER_URL,
 });
 
-// ✅ REQUEST INTERCEPTOR - Token add karne ke liye
+// ✅ REQUEST INTERCEPTOR
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("adminToken") || sessionStorage.getItem("adminToken");
+    const token =
+      localStorage.getItem("adminToken") ||
+      sessionStorage.getItem("adminToken");
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log("✅ Token Added:", token.substring(0, 30) + "...");
-      console.log("📤 API Request:", config.method.toUpperCase(), config.url);
+      console.log("✅ Token Added");
     } else {
-      // Silence warning for login/register to avoid confusion
       if (!config.url.includes("/login") && !config.url.includes("/register")) {
-        console.warn("ℹ️ No token found for this request (might be public or first-time login)");
+        console.warn("ℹ️ No token found");
       }
-      console.log("📤 API Request (No Auth):", config.method.toUpperCase(), config.url);
     }
+
+    console.log("📤 API Request:", config.method.toUpperCase(), config.url);
 
     return config;
   },
-  (error) => {
-    console.error("❌ Request Interceptor Error:", error);
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error),
 );
 
-// ✅ RESPONSE INTERCEPTOR - Token validation
+// ✅ RESPONSE INTERCEPTOR (FIXED)
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      console.error("🔒 Session Expired or Unauthorized. Logging out...");
+    const isAuthRoute =
+      error.config?.url.includes("/login") ||
+      error.config?.url.includes("/register") ||
+      error.config?.url.includes("/verify-otp");
 
-      // ✅ Clear storage
+    if (error.response?.status === 401 && !isAuthRoute) {
+      console.error("🔒 Session Expired. Logging out...");
+
       localStorage.removeItem("adminToken");
       localStorage.removeItem("adminInfo");
       sessionStorage.removeItem("adminToken");
       sessionStorage.removeItem("adminInfo");
 
-      // Redirect if not already on login page
-      if (!window.location.pathname.includes("/login")) {
-        window.location.replace("/login");
-      }
+      window.location.replace("/login");
     }
+
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;

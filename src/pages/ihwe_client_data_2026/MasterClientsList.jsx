@@ -89,7 +89,7 @@ const MasterClientsList = () => {
       accessor: "company.name",
       render: (value, row) => (
         <Link
-          to={`/clientOverview1/${row.id}`}
+          to={`/client-overview/${row.id}`}
           className="text-blue-500 hover:underline"
         >
           {value}
