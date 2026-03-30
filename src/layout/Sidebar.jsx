@@ -1,5 +1,6 @@
 import { ChevronDown, X, Menu } from "lucide-react";
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { menuItems } from "../data/menuItems";
 import { NavLink, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -231,7 +232,7 @@ export default function Sidebar({
         )}
 
         {/* MENU */}
-        <div className="h-[calc(100vh-140px)] overflow-y-auto sidebar-scroll p-3 space-y-2 text-[13px]">
+        <div className="h-[calc(100vh-140px)] overflow-y-auto sidebar-scroll p-3 space-y-1 text-[13px]">
           {menuItems.map((item, index) => {
             /* ===== HEADING ===== */
             if (item.type === "heading") {
@@ -239,7 +240,7 @@ export default function Sidebar({
                 sidebarOpen && (
                   <p
                     key={index}
-                    className="sb-heading px-3 mt-5 mb-2 text-[11px] font-semibold uppercase"
+                    className="sb-heading px-3 mt-3 mb-0.5 text-[11px] font-semibold uppercase"
                   >
                     {item.label}
                   </p>
@@ -256,7 +257,7 @@ export default function Sidebar({
                   to={item.path}
                   onClick={() => setMobileMenuOpen(false)}
                   className={({ isActive }) =>
-                    `sb-item flex items-center gap-3 px-3 py-2 rounded-md border border-transparent
+                    `sb-item flex items-center gap-3 px-3 py-1.5 rounded-md border border-transparent
                     ${isActive ? "active" : ""}
                     ${!sidebarOpen && "justify-center"}`
                   }
@@ -282,7 +283,7 @@ export default function Sidebar({
                     onClick={() =>
                       sidebarOpen && setOpenDropdown(isOpen ? null : item.label)
                     }
-                    className={`sb-dropdown-btn w-full flex items-center justify-between px-3 py-2 rounded-md
+                    className={`sb-dropdown-btn w-full flex items-center justify-between px-3 py-1.5 rounded-md
                       ${!sidebarOpen && "justify-center"}`}
                   >
                     <div className="flex items-center gap-3">
@@ -302,23 +303,31 @@ export default function Sidebar({
                     )}
                   </button>
 
-                  {sidebarOpen && isOpen && (
-                    <div className="sb-sub-border ml-5 mt-1 space-y-1 border-l pl-3">
-                      {item.children.map((sub) => (
-                        <NavLink
-                          key={sub.path}
-                          to={sub.path}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={({ isActive }) =>
-                            `sb-sub-item block px-3 py-1.5 rounded-md sb-label
-                            ${isActive ? "active" : ""}`
-                          }
-                        >
-                          {sub.label}
-                        </NavLink>
-                      ))}
-                    </div>
-                  )}
+                  <AnimatePresence>
+                    {sidebarOpen && isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="sb-sub-border ml-5 mt-1 space-y-1 border-l pl-3 overflow-hidden"
+                      >
+                        {item.children.map((sub) => (
+                          <NavLink
+                            key={sub.path}
+                            to={sub.path}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={({ isActive }) =>
+                              `sb-sub-item block px-3 py-1.5 rounded-md sb-label
+                              ${isActive ? "active" : ""}`
+                            }
+                          >
+                            {sub.label}
+                          </NavLink>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             }

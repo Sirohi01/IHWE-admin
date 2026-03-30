@@ -37,6 +37,7 @@ import StatsManage from "../pages/StatsManage";
 import GalleryCategory from "../pages/portfolio-gallery/GalleryCategory";
 import GalleryList from "../pages/portfolio-gallery/GalleryList";
 import AddGalleryImages from "../pages/portfolio-gallery/AddGalleryImages";
+import ManageGalleryImages from "../pages/portfolio-gallery/ManageGalleryImages";
 
 /* testimonials */
 import TestimonialsManage from "../pages/TestimonialsManage";
@@ -154,6 +155,7 @@ export default function AppRoutes() {
           <Route path="gallery-category" element={<GalleryCategory />} />
           <Route path="gallery-list" element={<GalleryList />} />
           <Route path="add-gallery-images" element={<AddGalleryImages />} />
+          <Route path="manage-gallery-images" element={<ManageGalleryImages />} />
 
           <Route path="testimonials-manage" element={<TestimonialsManage />} />
 

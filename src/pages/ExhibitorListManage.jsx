@@ -264,7 +264,7 @@ const ExhibitorListManage = () => {
                                             <td className="py-2.5 px-4">
                                                 <div className="w-16 h-10 bg-white border border-gray-200 p-1 flex items-center justify-center rounded">
                                                     <img 
-                                                        src={`${SERVER_URL}/${ex.image}`} 
+                                                    src={ex.image.startsWith('http') ? ex.image : `${SERVER_URL}${ex.image}`} 
                                                         alt={ex.altText} 
                                                         className="max-w-full max-h-full object-contain"
                                                     />

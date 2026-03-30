@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Eye, Trash2, Image as ImageIcon, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import api, { API_URL, SERVER_URL } from "../../lib/api";
 import Table from "../../components/table/Table";
@@ -8,10 +8,12 @@ import Pagination from "../../components/Pagination";
 
 const GalleryList = () => {
     const [galleries, setGalleries] = useState([]);
+    const [categories, setCategories] = useState([]); // New state for categories
     const [filteredGalleries, setFilteredGalleries] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
+    const navigate = useNavigate();
     const itemsPerPage = 10;
 
     // Modal State for Viewing Images
@@ -20,6 +22,68 @@ const GalleryList = () => {
     const [currentGalleryTitle, setCurrentGalleryTitle] = useState("");
 
     const apiUrl = SERVER_URL;
+
+    const fetchGalleries = async () => {
+        setIsLoading(true);
+        try {
+            // Fetch both categories and gallery items
+            const [catRes, galleryRes] = await Promise.all([
+                api.get("/api/gallery-category"),
+                api.get("/api/gallery")
+            ]);
+
+            let categoryMap = {};
+            if (catRes.data.success) {
+                setCategories(catRes.data.data);
+                catRes.data.data.forEach(cat => {
+                    categoryMap[cat.title] = cat;
+                });
+            }
+
+            if (galleryRes.data.success) {
+                const items = galleryRes.data.data;
+                // Group by title
+                const groups = {};
+                items.forEach(item => {
+                    const title = item.title || "General Gallery";
+                    if (!groups[title]) {
+                        const catData = categoryMap[title];
+                        groups[title] = {
+                            _id: catData?._id || title, 
+                            title: title,
+                            category: item.category,
+                            status: "active",
+                            createdAt: catData?.createdAt || item.createdAt,
+                            coverImage: catData?.coverImage || "",
+                            images: []
+                        };
+                    }
+                    groups[title].images.push(item);
+                });
+                
+                // Add categories that have NO images yet but have a cover image
+                Object.values(categoryMap).forEach(cat => {
+                    if (!groups[cat.title]) {
+                        groups[cat.title] = {
+                            _id: cat._id,
+                            title: cat.title,
+                            category: "photo", // Default
+                            status: "active",
+                            createdAt: cat.createdAt,
+                            coverImage: cat.coverImage,
+                            images: []
+                        };
+                    }
+                });
+
+                setGalleries(Object.values(groups));
+            }
+        } catch (error) {
+            console.error("Failed to fetch galleries", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
         fetchGalleries();
@@ -35,21 +99,6 @@ const GalleryList = () => {
         setCurrentPage(1); // Reset to first page on search
     }, [searchTerm, galleries]);
 
-    const fetchGalleries = async () => {
-        try {
-            setIsLoading(true);
-            const response = await api.get("/api/portfolio-gallery/all");
-            if (response.data.success) {
-                setGalleries(response.data.data);
-                setFilteredGalleries(response.data.data);
-            }
-        } catch (error) {
-            console.error("Error fetching galleries:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     const handleDelete = async (row) => {
         const result = await Swal.fire({
             title: "Are you sure?",
@@ -63,12 +112,25 @@ const GalleryList = () => {
 
         if (result.isConfirmed) {
             try {
+                // When deleting a grouped gallery, we need to delete all individual images within that group
+                // This assumes the backend delete endpoint can handle deleting by title or multiple IDs
+                // For now, let's assume we delete all images belonging to this title.
+                // This part might need adjustment based on actual backend API for grouped deletion.
+                // If the backend expects individual image IDs, this logic needs to be more complex.
+                // For simplicity, we'll assume a delete by title or a similar mechanism.
+                // If `row._id` is the title, then we can use that.
+                // If `row.images` contains individual image IDs, we'd iterate and delete each.
+                // Given the instruction "Use title as ID for now", we'll use `row.title` for deletion.
+                // This is a placeholder and might need refinement based on backend API.
                 const response = await api.delete(
-                    `/api/portfolio-gallery/delete/${row._id}`
+                    `/api/gallery/delete-by-title/${row.title}` // Assuming a new endpoint for deleting by title
                 );
                 if (response.data.success) {
                     Swal.fire("Deleted!", "Gallery has been deleted.", "success");
-                    fetchGalleries();
+                    // Re-fetch galleries to update the list
+                    const updatedGalleries = galleries.filter(g => g.title !== row.title);
+                    setGalleries(updatedGalleries);
+                    setFilteredGalleries(updatedGalleries);
                 }
             } catch (error) {
                 Swal.fire("Error", "Failed to delete gallery", "error");
@@ -78,7 +140,8 @@ const GalleryList = () => {
 
     const openImageModal = (gallery) => {
         setCurrentGalleryTitle(gallery.title);
-        setCurrentGalleryImages(gallery.galleryImages || []);
+        // The images are now directly in gallery.images, and each item in images has an 'image' property
+        setCurrentGalleryImages(gallery.images || []);
         setViewModalOpen(true);
     };
 
@@ -115,7 +178,7 @@ const GalleryList = () => {
                     <span className="bg-blue-50 text-[#134698] px-2 py-1 rounded text-xs font-bold">
                         {row.category}
                     </span>
-                    {row.subCategory && (
+                    {row.subCategory && ( // subCategory might not be present in grouped data
                         <span className="block text-xs mt-1 text-gray-500">
                             {row.subCategory}
                         </span>
@@ -128,7 +191,7 @@ const GalleryList = () => {
             label: "MAIN IMAGE",
             render: (row) => (
                 <img
-                    src={`${apiUrl}${row.mainImage}`}
+                    src={`${apiUrl}${row.coverImage || row.images[0]?.image}`} // Use coverImage if available
                     alt={row.title}
                     className="w-16 h-10 object-cover rounded-md border border-gray-200"
                     onError={(e) => {
@@ -146,7 +209,7 @@ const GalleryList = () => {
                     className="flex -space-x-2 overflow-hidden cursor-pointer hover:scale-105 transition-transform"
                     onClick={() => openImageModal(row)}
                 >
-                    {row.galleryImages?.slice(0, 4).map((img, i) => (
+                    {row.images?.slice(0, 4).map((img, i) => ( // Use row.images
                         <img
                             key={i}
                             src={`${apiUrl}${img.image}`}
@@ -158,12 +221,12 @@ const GalleryList = () => {
                             }}
                         />
                     ))}
-                    {row.galleryImages?.length > 4 && (
+                    {row.images?.length > 4 && (
                         <div className="h-8 w-8 rounded-full bg-gray-200 ring-2 ring-white flex items-center justify-center text-xs font-bold text-gray-600">
-                            +{row.galleryImages.length - 4}
+                            +{row.images.length - 4}
                         </div>
                     )}
-                    {(row.galleryImages?.length === 0 || !row.galleryImages) && (
+                    {(row.images?.length === 0 || !row.images) && (
                         <span className="text-xs text-gray-400">0 images</span>
                     )}
                 </div>
@@ -242,38 +305,100 @@ const GalleryList = () => {
 
             <div className="bg-white border-2 border-gray-200 overflow-hidden shadow-lg">
                 <div className="px-6 py-4 border-b bg-[#1e3a8a]">
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                         <div>
-                            <h2 className="text-lg font-semibold text-white">Gallery List</h2>
+                            <h2 className="text-lg font-semibold text-white">Event Gallery Hub</h2>
                             <p className="text-sm text-blue-100 mt-0.5">
-                                Showing {filteredGalleries.length} galleries
+                                Showing {filteredGalleries.length} active collection(s)
                             </p>
                         </div>
 
-                        <div className="relative w-72">
+                        <div className="relative w-full md:w-80">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
                                 type="text"
-                                placeholder="Search galleries..."
+                                placeholder="Search events or categories..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full h-10 pl-10 pr-4 text-sm border-2 border-gray-300 focus:outline-none focus:border-white transition-colors shadow-lg"
+                                className="w-full h-10 pl-10 pr-4 text-sm border-2 border-gray-300 focus:outline-none focus:border-white transition-colors shadow-lg rounded-md"
                             />
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white">
+                <div className="p-6 bg-gray-50/50">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-20">
                             <div className="w-12 h-12 border-4 border-[#134698] border-t-transparent rounded-full animate-spin"></div>
                         </div>
+                    ) : filteredGalleries.length === 0 ? (
+                        <div className="py-20 text-center text-gray-400 italic">
+                            No gallery categories found matches your search.
+                        </div>
                     ) : (
-                        <Table columns={columns} data={paginatedGalleries} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {paginatedGalleries.map((gallery) => ( // Changed row to gallery for clarity
+                                <div key={gallery._id} className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden group hover:shadow-2xl transition-all duration-300">
+                                    <div className="relative aspect-video overflow-hidden">
+                                        <img
+                                            src={`${SERVER_URL}${gallery.coverImage || gallery.images[0]?.image || gallery.mainImage}`} // Use coverImage first
+                                            alt={gallery.title}
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                            onError={(e) => { e.target.src = "https://placehold.co/400x225?text=No+Preview"; }}
+                                        />
+                                        <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={() => handleDelete(gallery)} // Use gallery for handleDelete
+                                                className="p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-colors"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm">
+                                            <span className="text-[10px] font-bold text-[#1A3263] uppercase tracking-wider">
+                                                {gallery.images?.length || 0} Images
+                                            </span>
+                                        </div>
+                                        <div className="absolute bottom-3 left-3">
+                                            <span className="bg-[#1e3a8a] text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-md uppercase">
+                                                {gallery.category}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-4">
+                                        <h3 className="font-bold text-gray-800 text-sm line-clamp-1 mb-1 uppercase tracking-tight">
+                                            {gallery.title}
+                                        </h3>
+                                        <div className="flex items-center justify-between text-[10px] text-gray-400 font-medium mb-4">
+                                            <span>Created: {new Date(gallery.createdAt).toLocaleDateString()}</span>
+                                            <span className={`px-2 py-0.5 rounded-full ${gallery.status === 'active' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                                                {gallery.status}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="flex gap-2 mt-auto">
+                                            <button 
+                                                onClick={() => navigate('/manage-gallery-images', { state: { categoryId: gallery.title, categoryTitle: gallery.title } })}
+                                                className="flex-1 bg-gray-900 text-white py-2 rounded-lg text-xs font-bold hover:bg-[#1e3a8a] transition-all flex items-center justify-center gap-2"
+                                            >
+                                                <ImageIcon size={14} /> Manage Images
+                                            </button>
+                                            <button 
+                                                onClick={() => navigate('/gallery-category', { state: { editItem: gallery } })}
+                                                className="px-3 bg-gray-100 text-gray-600 py-2 rounded-lg text-xs font-bold hover:bg-gray-200 transition-all"
+                                            >
+                                                Edit
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     )}
                 </div>
 
-                <div className="mt-4 px-4 pb-4 bg-white">
+                <div className="px-6 py-4 border-t border-gray-100 bg-white">
                     <Pagination
                         currentPage={currentPage}
                         totalItems={filteredGalleries.length}

@@ -57,80 +57,60 @@ export const menuItems = [
     type: "heading",
     label: "Home Section",
   },
-
   {
-    type: "item",
-    label: "Home Slider",
-    icon: Images,
-    path: "/carousel",
-  },
-
-  {
-    type: "item",
-    label: "Event Highlights",
-    icon: CalendarCheck,
-    path: "/event-highlights",
-  },
-
-  {
-    type: "item",
-    label: "About Us",
-    icon: Info,
-    path: "/about-us",
-  },
-  {
-    type: "item",
-    label: "Add PDF",
-    icon: FileText,
-    path: "/add-pdf",
-  },
-  {
-    type: "item",
-    label: "Marquee Text",
-    icon: Type,
-    path: "/marquee-text",
-  },
-  {
-    type: "item",
-    label: "Who We Are",
-    icon: HelpCircle,
-    path: "/who-we-are",
-  },
-  {
-    type: "item",
-    label: "Featured Services",
-    icon: Briefcase,
-    path: "/featured-services",
-  },
-  {
-    type: "item",
-    label: "Glimpse",
-    icon: Images,
-    path: "/glimpse",
-  },
-  {
-    type: "item",
-    label: "Our Clients",
-    icon: Building2,
-    path: "/clients",
-  },
-  {
-    type: "item",
-    label: "Parallax Image",
-    icon: LayoutDashboard,
-    path: "/parallax-manage",
-  },
-  {
-    type: "item",
-    label: "Testimonials",
-    icon: MessageSquare,
-    path: "/testimonials-manage",
-  },
-  {
-    type: "item",
-    label: "Counters",
-    icon: TrendingUp,
-    path: "/stats-manage",
+    type: "dropdown",
+    label: "Home Page",
+    icon: Globe,
+    children: [
+      {
+        label: "Home Slider",
+        path: "/carousel",
+      },
+      {
+        label: "Event Highlights",
+        path: "/event-highlights",
+      },
+      {
+        label: "About Us",
+        path: "/about-us",
+      },
+      {
+        label: "Add PDF",
+        path: "/add-pdf",
+      },
+      {
+        label: "Marquee Text",
+        path: "/marquee-text",
+      },
+      {
+        label: "Who We Are",
+        path: "/who-we-are",
+      },
+      {
+        label: "Featured Services",
+        path: "/featured-services",
+      },
+      {
+        label: "Glimpse",
+        path: "/glimpse",
+      },
+      {
+        label: "Our Clients",
+        path: "/clients",
+      },
+      {
+        label: "Parallax Image",
+        path: "/parallax-manage",
+      },
+      {
+        label: "Testimonials",
+        path: "/testimonials-manage",
+      },
+      {
+        label: "Counters",
+        path: "/stats-manage",
+      },
+    ],
   },
 
   {
@@ -138,35 +118,31 @@ export const menuItems = [
     label: "About Section",
   },
   {
-    type: "item",
-    label: "Global Platform",
-    icon: HelpCircle,
-    path: "/global-platform",
-  },
-  {
-    type: "item",
-    label: "Vision & Mission",
-    icon: Target,
-    path: "/vision-mission",
-  },
-  {
-    type: "item",
-    label: "Why Attend",
-    icon: CalendarCheck,
-    path: "/why-attend",
-  },
-
-  {
-    type: "item",
-    label: "Target Audience",
-    icon: UserCheck,
-    path: "/target-audience",
-  },
-  {
-    type: "item",
-    label: "Organized By",
-    icon: Building2,
-    path: "/organized-by",
+    type: "dropdown",
+    label: "About Page",
+    icon: Info,
+    children: [
+      {
+        label: "Global Platform",
+        path: "/global-platform",
+      },
+      {
+        label: "Vision & Mission",
+        path: "/vision-mission",
+      },
+      {
+        label: "Why Attend",
+        path: "/why-attend",
+      },
+      {
+        label: "Target Audience",
+        path: "/target-audience",
+      },
+      {
+        label: "Organized By",
+        path: "/organized-by",
+      },
+    ],
   },
 
 
@@ -177,28 +153,27 @@ export const menuItems = [
     label: "Exhibit Section",
   },
   {
-    type: "item",
-    label: "Why Exhibit",
+    type: "dropdown",
+    label: "Exhibit Page",
     icon: Rocket,
-    path: "/why-exhibit-manage",
-  },
-  {
-    type: "item",
-    label: "Exhibitor Profile",
-    icon: UserCheck,
-    path: "/exhibitor-profile-manage",
-  },
-  {
-    type: "item",
-    label: "E-Promotion Management",
-    icon: Rocket,
-    path: "/e-promotion-manage",
-  },
-  {
-    type: "item",
-    label: "Stall Designing Vendor",
-    icon: Palette,
-    path: "/stall-vendor-manage",
+    children: [
+      {
+        label: "Why Exhibit",
+        path: "/why-exhibit-manage",
+      },
+      {
+        label: "Exhibitor Profile",
+        path: "/exhibitor-profile-manage",
+      },
+      {
+        label: "E-Promotion Management",
+        path: "/e-promotion-manage",
+      },
+      {
+        label: "Stall Designing Vendor",
+        path: "/stall-vendor-manage",
+      },
+    ],
   },
 
   /* ================= VISIT SECTION ================= */
@@ -211,6 +186,18 @@ export const menuItems = [
     label: "Why Visit",
     icon: Rocket,
     path: "/why-visit-manage",
+  },
+
+  /* ================= EXHIBITORS SECTION ================= */
+  {
+    type: "heading",
+    label: "Exhibitors Section",
+  },
+  {
+    type: "item",
+    label: "Exhibitor List",
+    icon: List,
+    path: "/exhibitor-list-manage",
   },
 
   /* ================= PARTNERS SECTION ================= */
@@ -243,22 +230,31 @@ export const menuItems = [
     label: "Gallery Section",
   },
   {
-    type: "item",
-    label: "Add Images",
+    type: "dropdown",
+    label: "Gallery Page",
     icon: Images,
-    path: "/gallery-images",
-  },
-  {
-    type: "item",
-    label: "Add Video",
-    icon: Play,
-    path: "/gallery-videos",
-  },
-  {
-    type: "item",
-    label: "Add Media photo",
-    icon: Globe,
-    path: "/gallery-media",
+    children: [
+      {
+        label: "Add Category",
+        path: "/gallery-category",
+      },
+      {
+        label: "View All Categories",
+        path: "/gallery-list",
+      },
+      {
+        label: "Add Images",
+        path: "/add-gallery-images",
+      },
+      {
+        label: "Add Video",
+        path: "/gallery-videos",
+      },
+      {
+        label: "Add Media photo",
+        path: "/gallery-media",
+      },
+    ],
   },
 
 
@@ -346,6 +342,26 @@ export const menuItems = [
     icon: Users,
   },
 
+  /* ================= CLIENT DATA SECTION ================= */
+  {
+    type: "heading",
+    label: "Client Data Section",
+  },
+  {
+    type: "dropdown",
+    label: "IHWE Client Data 2026",
+    icon: FileText,
+    children: [
+      { label: "Add New Clients", path: "/addnewclient" },
+      { label: "New Leads List", path: "/new-leads-list" },
+      { label: "Warm Client List", path: "/warm-client-list" },
+      { label: "Not Client List", path: "/not-client-list" },
+      { label: "Confirmed Client List", path: "/confirmed-client-list" },
+      { label: "Cold Client List", path: "/cold-client-list" },
+      { label: "Master Data", path: "/master-data" },
+      { label: "Raw Data List", path: "/raw-data-list" },
+    ],
+  },
   /* ================= SETTINGS SECTION ================= */
   {
     type: "heading",
