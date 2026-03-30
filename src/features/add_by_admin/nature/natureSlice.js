@@ -9,10 +9,7 @@ export const fetchNatures = createAsyncThunk(
   "natures/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
-      const response = await axios.get(`${BASE_URL}/nature-of-business`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(`${BASE_URL}/nature-of-business`);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -25,10 +22,7 @@ export const fetchNatureById = createAsyncThunk(
   "natures/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
-      const response = await axios.get(`${BASE_URL}/nature-of-business/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(`${BASE_URL}/nature-of-business/${id}`);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -40,9 +34,6 @@ export const fetchNatureById = createAsyncThunk(
 export const createNature = createAsyncThunk(
   "natures/create",
   async (natureData, { dispatch, rejectWithValue }) => {
-    const token = sessionStorage.getItem("token");
-    if (!token) return rejectWithValue("No token provided");
-
     try {
       const response = await axios.post(
         `${BASE_URL}/nature-of-business`,
@@ -50,7 +41,6 @@ export const createNature = createAsyncThunk(
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         },
       );
@@ -89,14 +79,12 @@ export const updateNature = createAsyncThunk(
   "natures/update",
   async ({ id, updates }, { dispatch, rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
       const response = await axios.put(
         `${BASE_URL}/nature-of-business/${id}`,
         updates,
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         },
       );
@@ -136,15 +124,11 @@ export const deleteNature = createAsyncThunk(
   "natures/delete",
   async (id, { dispatch, getState, rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
-
       // ✅ FIX: delete se pehle name save karo
       const { natures } = getState().natures;
       const natureToDelete = natures.find((n) => n._id === id);
 
-      await axios.delete(`${BASE_URL}/nature-of-business/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(`${BASE_URL}/nature-of-business/${id}`);
 
       const userStr = sessionStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : {};

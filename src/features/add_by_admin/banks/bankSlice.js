@@ -9,11 +9,8 @@ export const fetchBanks = createAsyncThunk(
   "banks/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
-      const response = await axios.get(`${BASE_URL}/banks`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return response.data;
+      const response = await axios.get(`${BASE_URL}/banks`);
+      return response.data.data || response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }
@@ -24,14 +21,10 @@ export const fetchBanks = createAsyncThunk(
 export const addBank = createAsyncThunk(
   "banks/create",
   async (bankData, { dispatch, rejectWithValue }) => {
-    const token = sessionStorage.getItem("token");
-    if (!token) return rejectWithValue("No token provided");
-
     try {
       const response = await axios.post(`${BASE_URL}/banks`, bankData, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -46,7 +39,7 @@ export const addBank = createAsyncThunk(
         dispatch(
           createActivityLogThunk({
             user_id: userId,
-            message: `Bank '${created.bank_name || created.name || ""}' created by ${userName}`,
+            message: `Bank '${created.bankname || created.name || ""}' created by ${userName}`,
             link: `/banks`,
             section: "banks",
             data: {
@@ -71,7 +64,6 @@ export const updateBank = createAsyncThunk(
   "banks/update",
   async ({ id, updatedData }, { dispatch, rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
 
       const userStr = sessionStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : {};
@@ -90,7 +82,6 @@ export const updateBank = createAsyncThunk(
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         },
       );
@@ -101,13 +92,13 @@ export const updateBank = createAsyncThunk(
         dispatch(
           createActivityLogThunk({
             user_id: userId,
-            message: `Bank '${updated.bank_name || updated.name || updatedData.bank_name || id}' updated by ${userName}`,
+            message: `Bank '${updated.bankname || updated.name || updatedData.bankname || id}' updated by ${userName}`,
             link: `/banks`,
             section: "banks",
             data: {
               action: "UPDATE",
               bank_id: id,
-              bank_name: updated.bank_name || updated.name,
+              bank_name: updated.bankname || updated.name,
               updated_fields: updatedData,
               updated_data: updated,
             },
@@ -127,14 +118,11 @@ export const deleteBank = createAsyncThunk(
   "banks/delete",
   async (id, { dispatch, getState, rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
 
       const { banks } = getState().banks;
       const bankToDelete = banks.find((b) => b._id === id);
 
-      await axios.delete(`${BASE_URL}/banks/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(`${BASE_URL}/banks/${id}`);
 
       const userStr = sessionStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : {};

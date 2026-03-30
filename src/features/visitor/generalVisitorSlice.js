@@ -10,7 +10,6 @@ const getUserInfo = () => {
   return {
     userId: sessionStorage.getItem("user_id") || user._id,
     userName: user.name || sessionStorage.getItem("user_name") || "User",
-    token: sessionStorage.getItem("token"),
   };
 };
 
@@ -18,10 +17,7 @@ export const fetchGeneralVisitors = createAsyncThunk(
   "generalVisitors/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const { token } = getUserInfo();
-      const res = await axios.get(`${BASE_URL}/general-visitors`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(`${BASE_URL}/general-visitors`);
       return res.data.data ?? res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -32,7 +28,7 @@ export const fetchGeneralVisitors = createAsyncThunk(
 export const createGeneralVisitor = createAsyncThunk(
   "generalVisitors/create",
   async (data, { dispatch, rejectWithValue }) => {
-    const { token, userId, userName } = getUserInfo();
+    const { userId, userName } = getUserInfo();
     try {
       const res = await axios.post(
         `${BASE_URL}/general-visitors`,
@@ -43,7 +39,6 @@ export const createGeneralVisitor = createAsyncThunk(
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         },
       );
@@ -73,7 +68,7 @@ export const createGeneralVisitor = createAsyncThunk(
 export const updateGeneralVisitor = createAsyncThunk(
   "generalVisitors/update",
   async ({ id, data }, { dispatch, rejectWithValue }) => {
-    const { token, userId, userName } = getUserInfo();
+    const { userId, userName } = getUserInfo();
     try {
       const res = await axios.put(
         `${BASE_URL}/general-visitors/${id}`,
@@ -84,7 +79,6 @@ export const updateGeneralVisitor = createAsyncThunk(
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         },
       );
@@ -110,14 +104,12 @@ export const updateGeneralVisitor = createAsyncThunk(
 export const deleteGeneralVisitor = createAsyncThunk(
   "generalVisitors/delete",
   async (id, { dispatch, getState, rejectWithValue }) => {
-    const { token, userId, userName } = getUserInfo();
+    const { userId, userName } = getUserInfo();
     try {
       const { generalVisitors } = getState().generalVisitors;
       const toDelete = generalVisitors.find((v) => v._id === id);
 
-      await axios.delete(`${BASE_URL}/general-visitors/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(`${BASE_URL}/general-visitors/${id}`);
 
       if (userId) {
         dispatch(

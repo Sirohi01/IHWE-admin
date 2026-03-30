@@ -10,7 +10,6 @@ const getUserInfo = () => {
   return {
     userId: sessionStorage.getItem("user_id") || user._id,
     userName: user.name || sessionStorage.getItem("user_name") || "User",
-    token: sessionStorage.getItem("token"),
   };
 };
 
@@ -18,10 +17,7 @@ export const fetchCorporateVisitors = createAsyncThunk(
   "corporateVisitors/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const { token } = getUserInfo();
-      const res = await axios.get(`${BASE_URL}/corporate-visitors`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(`${BASE_URL}/corporate-visitors`);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -32,7 +28,7 @@ export const fetchCorporateVisitors = createAsyncThunk(
 export const createCorporateVisitor = createAsyncThunk(
   "corporateVisitors/create",
   async (data, { dispatch, rejectWithValue }) => {
-    const { token, userId, userName } = getUserInfo();
+    const { userId, userName } = getUserInfo();
     try {
       const res = await axios.post(
         `${BASE_URL}/corporate-visitors`,
@@ -43,7 +39,6 @@ export const createCorporateVisitor = createAsyncThunk(
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         },
       );
@@ -73,7 +68,7 @@ export const createCorporateVisitor = createAsyncThunk(
 export const updateCorporateVisitor = createAsyncThunk(
   "corporateVisitors/update",
   async ({ id, data }, { dispatch, rejectWithValue }) => {
-    const { token, userId, userName } = getUserInfo();
+    const { userId, userName } = getUserInfo();
     try {
       const res = await axios.put(
         `${BASE_URL}/corporate-visitors/${id}`,
@@ -84,7 +79,6 @@ export const updateCorporateVisitor = createAsyncThunk(
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         },
       );
@@ -110,14 +104,12 @@ export const updateCorporateVisitor = createAsyncThunk(
 export const deleteCorporateVisitor = createAsyncThunk(
   "corporateVisitors/delete",
   async (id, { dispatch, getState, rejectWithValue }) => {
-    const { token, userId, userName } = getUserInfo();
+    const { userId, userName } = getUserInfo();
     try {
       const { corporateVisitors } = getState().corporateVisitors;
       const toDelete = corporateVisitors.find((v) => v._id === id);
 
-      await axios.delete(`${BASE_URL}/corporate-visitors/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(`${BASE_URL}/corporate-visitors/${id}`);
 
       if (userId) {
         dispatch(

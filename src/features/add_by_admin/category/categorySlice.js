@@ -11,11 +11,9 @@ export const fetchCategories = createAsyncThunk(
   "categories/fetchCategories",
   async (_, { rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
       const response = await axios.get(`${BASE_URL}/crm-exhibitor-categories`, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
       });
       return response.data;
@@ -30,13 +28,11 @@ export const fetchCategoryById = createAsyncThunk(
   "categories/fetchCategoryById",
   async (id, { rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
       const response = await axios.get(
         `${BASE_URL}/crm-exhibitor-categories/${id}`,
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         },
       );
@@ -51,8 +47,6 @@ export const fetchCategoryById = createAsyncThunk(
 export const createCategory = createAsyncThunk(
   "categories/createCategory",
   async (categoryData, { dispatch, rejectWithValue }) => {
-    const token = sessionStorage.getItem("token");
-    if (!token) return rejectWithValue("No token provided");
     try {
       const response = await axios.post(
         `${BASE_URL}/crm-exhibitor-categories`,
@@ -60,7 +54,6 @@ export const createCategory = createAsyncThunk(
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         },
       );
@@ -99,14 +92,12 @@ export const updateCategory = createAsyncThunk(
   "categories/updateCategory",
   async ({ id, updates }, { dispatch, rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
       const response = await axios.put(
         `${BASE_URL}/crm-exhibitor-categories/${id}`,
         updates,
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         },
       );
@@ -145,19 +136,12 @@ export const deleteCategory = createAsyncThunk(
   "categories/deleteCategory",
   async (id, { dispatch, getState, rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
-
       // Get category details before deleting
       const { categories } = getState().categories;
       const categoryToDelete = categories.find((c) => c._id === id);
 
       const response = await axios.delete(
-        `${BASE_URL}/crm-exhibitor-categories/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+        `${BASE_URL}/crm-exhibitor-categories/${id}`
       );
 
       // Log Activity

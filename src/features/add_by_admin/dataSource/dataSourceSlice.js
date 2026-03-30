@@ -9,10 +9,7 @@ export const fetchDataSources = createAsyncThunk(
   "dataSources/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
-      const res = await axios.get(`${BASE_URL}/data-source`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(`${BASE_URL}/data-source`);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -25,10 +22,7 @@ export const fetchDataSourceById = createAsyncThunk(
   "dataSources/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
-      const res = await axios.get(`${BASE_URL}/data-source/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(`${BASE_URL}/data-source/${id}`);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -40,14 +34,10 @@ export const fetchDataSourceById = createAsyncThunk(
 export const createDataSource = createAsyncThunk(
   "dataSources/create",
   async (data, { dispatch, rejectWithValue }) => {
-    const token = sessionStorage.getItem("token");
-    if (!token) return rejectWithValue("No token provided");
-
     try {
       const res = await axios.post(`${BASE_URL}/data-source`, data, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -85,14 +75,11 @@ export const updateDataSource = createAsyncThunk(
   "dataSources/update",
   async ({ id, updates }, { dispatch, rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
-
       const userStr = sessionStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : {};
       const userId = sessionStorage.getItem("user_id") || user._id;
       const userName = user.name || "User";
 
-      // ✅ FIX: updated_by pehle add karo, phir API call karo
       const updatesWithUser = {
         ...updates,
         updated_by: userId || null,
@@ -100,11 +87,10 @@ export const updateDataSource = createAsyncThunk(
 
       const res = await axios.put(
         `${BASE_URL}/data-source/${id}`,
-        updatesWithUser, // ✅ updated_by ke saath bhejo
+        updatesWithUser,
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         },
       );
@@ -139,14 +125,10 @@ export const deleteDataSource = createAsyncThunk(
   "dataSources/delete",
   async (id, { dispatch, getState, rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
-
       const { dataSources } = getState().dataSources;
       const sourceToDelete = dataSources.find((s) => s._id === id);
 
-      await axios.delete(`${BASE_URL}/data-source/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(`${BASE_URL}/data-source/${id}`);
 
       const userStr = sessionStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : {};

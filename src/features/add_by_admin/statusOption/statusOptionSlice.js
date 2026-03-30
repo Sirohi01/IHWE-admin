@@ -9,10 +9,7 @@ export const fetchStatusOptions = createAsyncThunk(
   "statusOptions/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
-      const res = await axios.get(`${BASE_URL}/status-option`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(`${BASE_URL}/status-option`);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -24,14 +21,10 @@ export const fetchStatusOptions = createAsyncThunk(
 export const createStatusOption = createAsyncThunk(
   "statusOptions/create",
   async (data, { dispatch, rejectWithValue }) => {
-    const token = sessionStorage.getItem("token");
-    if (!token) return rejectWithValue("No token provided");
-
     try {
       const res = await axios.post(`${BASE_URL}/status-option`, data, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -72,8 +65,6 @@ export const updateStatusOption = createAsyncThunk(
   "statusOptions/update",
   async ({ id, data }, { dispatch, rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
-
       const userStr = sessionStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : {};
       const userId = sessionStorage.getItem("user_id") || user._id;
@@ -91,7 +82,6 @@ export const updateStatusOption = createAsyncThunk(
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         },
       );
@@ -128,14 +118,10 @@ export const deleteStatusOption = createAsyncThunk(
   "statusOptions/delete",
   async (id, { dispatch, getState, rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
-
       const { statusOptions } = getState().statusOptions;
       const statusToDelete = statusOptions.find((s) => s._id === id);
 
-      await axios.delete(`${BASE_URL}/status-option/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(`${BASE_URL}/status-option/${id}`);
 
       const userStr = sessionStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : {};

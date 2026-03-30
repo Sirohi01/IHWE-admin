@@ -9,12 +9,7 @@ export const fetchMessages = createAsyncThunk(
   "crmMessages/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
-      const response = await axios.get(`${BASE_URL}/crm-messages`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get(`${BASE_URL}/crm-messages`);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -27,12 +22,7 @@ export const fetchMessageById = createAsyncThunk(
   "crmMessages/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
-      const response = await axios.get(`${BASE_URL}/crm-messages/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get(`${BASE_URL}/crm-messages/${id}`);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -44,16 +34,8 @@ export const fetchMessageById = createAsyncThunk(
 export const createMessage = createAsyncThunk(
   "crmMessages/create",
   async (formData, { dispatch, rejectWithValue }) => {
-    const token = sessionStorage.getItem("token");
-    if (!token) return rejectWithValue("No token provided");
-
     try {
-      const response = await axios.post(`${BASE_URL}/crm-messages`, formData, {
-        headers: {
-          // Content-Type set mat karo — axios khud multipart set karega
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.post(`${BASE_URL}/crm-messages`, formData);
 
       const userStr = sessionStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : {};
@@ -89,15 +71,9 @@ export const updateMessage = createAsyncThunk(
   "crmMessages/update",
   async ({ id, formData }, { dispatch, rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
       const response = await axios.put(
         `${BASE_URL}/crm-messages/${id}`,
         formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
       );
 
       const userStr = sessionStorage.getItem("user");
@@ -134,16 +110,10 @@ export const deleteMessage = createAsyncThunk(
   "crmMessages/delete",
   async (id, { dispatch, getState, rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
-
       const { messages } = getState().crmMessages;
       const messageToDelete = messages.find((m) => m._id === id);
 
-      await axios.delete(`${BASE_URL}/crm-messages/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await axios.delete(`${BASE_URL}/crm-messages/${id}`);
 
       const userStr = sessionStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : {};

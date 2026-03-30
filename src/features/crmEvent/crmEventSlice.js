@@ -9,11 +9,9 @@ export const fetchEvents = createAsyncThunk(
   "crmEvents/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
       const response = await axios.get(`${BASE_URL}/crm-events`, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
       });
       return response.data;
@@ -28,11 +26,9 @@ export const fetchEventById = createAsyncThunk(
   "crmEvents/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
       const response = await axios.get(`${BASE_URL}/crm-events/${id}`, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
       });
       return response.data;
@@ -46,14 +42,10 @@ export const fetchEventById = createAsyncThunk(
 export const createEvent = createAsyncThunk(
   "crmEvents/create",
   async (eventData, { dispatch, rejectWithValue }) => {
-    const token = sessionStorage.getItem("token");
-    if (!token) return rejectWithValue("No token provided");
-
     try {
       const response = await axios.post(`${BASE_URL}/crm-events`, eventData, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -91,18 +83,16 @@ export const updateEvent = createAsyncThunk(
   "crmEvents/update",
   async ({ id, updates }, { dispatch, rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
-      const response = await axios.put(`${BASE_URL}/crm-events/${id}`, updates, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
       const userStr = sessionStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : {};
       const userId = sessionStorage.getItem("user_id") || user._id;
       const userName = user.name || "User";
+
+      const response = await axios.put(`${BASE_URL}/crm-events/${id}`, updates, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       if (userId) {
         dispatch(
@@ -134,15 +124,12 @@ export const deleteEvent = createAsyncThunk(
   "crmEvents/delete",
   async (id, { dispatch, getState, rejectWithValue }) => {
     try {
-      const token = sessionStorage.getItem("token");
-
       const { events } = getState().crmEvents;
       const eventToDelete = events.find((e) => e._id === id);
 
       await axios.delete(`${BASE_URL}/crm-events/${id}`, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
       });
 

@@ -8,7 +8,6 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 
 const getAuthHeaders = () => ({
   "Content-Type": "application/json",
-  Authorization: `Bearer ${sessionStorage.getItem("token")}`,
 });
 
 const getUserInfo = () => {
@@ -73,9 +72,6 @@ export const fetchVisitorReviewById = createAsyncThunk(
 export const createVisitorReview = createAsyncThunk(
   "visitorReview/create",
   async (reviewData, { dispatch, rejectWithValue }) => {
-    const token = sessionStorage.getItem("token");
-    if (!token) return rejectWithValue("No token provided");
-
     try {
       const response = await axios.post(
         `${BASE_URL}/visitor-reviews`,
