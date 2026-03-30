@@ -8,8 +8,9 @@ import {
 import PageHeader from '../components/PageHeader';
 
 const EMPTY_FORM = {
-    title: '', // Not strictly required for press but can be used for label
+    title: '', 
     category: 'press',
+    galleryCategoryId: '', 
     mediaType: 'image',
     image: '',
     imageAlt: '',
@@ -17,6 +18,7 @@ const EMPTY_FORM = {
 
 const MediaGalleryManagement = () => {
     const [items, setItems] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [form, setForm] = useState({ ...EMPTY_FORM });
     const [isEditing, setIsEditing] = useState(null);
@@ -26,7 +28,19 @@ const MediaGalleryManagement = () => {
 
     useEffect(() => {
         fetchData();
+        fetchCategories();
     }, []);
+
+    const fetchCategories = async () => {
+        try {
+            const response = await api.get('/api/gallery-category?type=media');
+            if (response.data.success) {
+                setCategories(response.data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching media categories:', error);
+        }
+    };
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -63,6 +77,11 @@ const MediaGalleryManagement = () => {
     const handleSubmit = async () => {
         if (!imageFile && !form.image) {
             Swal.fire('Warning', 'Please upload a media photo', 'warning');
+            return;
+        }
+
+        if (!form.galleryCategoryId) {
+            Swal.fire('Warning', 'Please select a media category', 'warning');
             return;
         }
 
@@ -134,6 +153,7 @@ const MediaGalleryManagement = () => {
         setForm({
             title: item.title || '',
             category: item.category,
+            galleryCategoryId: item.galleryCategoryId?._id || item.galleryCategoryId || '',
             mediaType: item.mediaType,
             image: item.image,
             imageAlt: item.imageAlt || '',
@@ -203,6 +223,21 @@ const MediaGalleryManagement = () => {
                                         />
                                     </label>
                                 )}
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Select Media Category *</label>
+                                <select
+                                    value={form.galleryCategoryId}
+                                    onChange={(e) => setForm({ ...form, galleryCategoryId: e.target.value })}
+                                    className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#d26019] outline-none shadow-sm text-sm bg-white"
+                                    required
+                                >
+                                    <option value="">Choose Category...</option>
+                                    {categories.map(cat => (
+                                        <option key={cat._id} value={cat._id}>{cat.title}</option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div>
@@ -290,7 +325,9 @@ const MediaGalleryManagement = () => {
                                             </td>
                                             <td className="py-3 px-4">
                                                 <div className="flex flex-col gap-1">
-                                                    <span className="text-[10px] font-black text-[#23471d] uppercase tracking-[0.1em]">Media / Press Photo</span>
+                                                    <span className="text-[10px] font-black text-[#23471d] uppercase tracking-[0.1em]">
+                                                        {item.galleryCategoryId?.title || 'Uncategorized Media'}
+                                                    </span>
                                                     <p className="text-xs text-gray-600 font-bold uppercase tracking-tight line-clamp-1">{item.imageAlt || 'Untitled Media Photo'}</p>
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-[9px] text-gray-400">ID: {item._id}</span>

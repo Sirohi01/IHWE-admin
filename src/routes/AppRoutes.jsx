@@ -88,6 +88,7 @@ import AdvisoryManagement from "../pages/AdvisoryManagement";
 import ImageGalleryManagement from "../pages/ImageGalleryManagement";
 import VideoGalleryManagement from "../pages/VideoGalleryManagement";
 import MediaGalleryManagement from "../pages/MediaGalleryManagement";
+import MediaCategoryManagement from "../pages/gallery/MediaCategoryManagement";
 import ClickAnalytics from "../pages/ClickAnalytics";
 import ManageStalls from "../pages/ManageStalls";
 import ManageRegistrations from "../pages/ManageRegistrations";
@@ -242,6 +243,7 @@ export default function AppRoutes() {
           <Route path="advisory-manage" element={<AdvisoryManagement />} />
           <Route path="gallery-images" element={<ImageGalleryManagement />} />
           <Route path="gallery-videos" element={<VideoGalleryManagement />} />
+          <Route path="media-category" element={<MediaCategoryManagement />} />
           <Route path="gallery-media" element={<MediaGalleryManagement />} />
           <Route path="profiles" element={<IndividualProfile />} />
           <Route path="change-password" element={<ChangePassword />} />

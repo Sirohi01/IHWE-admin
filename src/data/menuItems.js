@@ -173,11 +173,12 @@ export const menuItems = [
     label: "Gallery Page",
     icon: Images,
     children: [
-      { label: "Add Category", path: "/gallery-category" },
-      { label: "View All Categories", path: "/gallery-list" },
-      { label: "Add Images", path: "/add-gallery-images" },
+      { label: "Gallery Categories", path: "/gallery-category" },
+      { label: "View All Listings", path: "/gallery-list" },
+      { label: "Add Gallery Images", path: "/add-gallery-images" },
       { label: "Add Video", path: "/gallery-videos" },
-      { label: "Add Media photo", path: "/gallery-media" },
+      { label: "Media Categories", path: "/media-category" },
+      { label: "Media Photo Management", path: "/gallery-media" },
     ],
   },
 
