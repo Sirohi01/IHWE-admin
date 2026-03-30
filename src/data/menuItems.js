@@ -11,11 +11,10 @@ import {
   Lock,
   Settings,
   CalendarCheck,
-  Ticket,
-  UserCheck,
   Building2,
   Info,
   ShieldCheck,
+  UserCheck,
   Rocket,
   MessageSquare,
   HelpCircle,
@@ -24,47 +23,48 @@ import {
   List,
   Palette,
   Type,
+  Ticket,
   Target,
   Handshake,
   Play,
   Globe,
-  Sparkles,
-  ClipboardList,
+  Plus,
   Clock,
   BriefcaseBusiness,
-  Building,
-  Database,
-  ShoppingBag,
+  Sparkles,
+  ClipboardList,
 } from "lucide-react";
 
 export const menuItems = [
-  /* ================= CORE DASHBOARD ================= */
+  /* ================= DASHBOARD ================= */
   {
     type: "item",
     label: "Dashboard",
     icon: LayoutDashboard,
     path: "/dashboard",
-    roles: ["super-admin", "accountant-admin", "accountant-employee", "marketing-admin", "marketing-employee", "digital-admin", "digital-employee", "employee"]
+  },
+
+  /* ================= ANALYTICS SECTION ================= */
+  {
+    type: "heading",
+    label: "Analytics Section",
   },
   {
     type: "item",
     label: "Click Analytics",
     icon: TrendingUp,
     path: "/click-analytics",
-    roles: ["super-admin", "marketing-admin", "marketing-employee"]
   },
 
-  /* ================= WEBSITE CONTENT ================= */
+  /* ================= HOME SECTION ================= */
   {
     type: "heading",
-    label: "Website Content",
-    roles: ["super-admin", "marketing-admin", "marketing-employee"]
+    label: "Home Section",
   },
   {
     type: "dropdown",
     label: "Home Page",
     icon: Globe,
-    roles: ["super-admin", "marketing-admin", "marketing-employee"],
     children: [
       { label: "Home Slider", path: "/carousel" },
       { label: "Event Highlights", path: "/event-highlights" },
@@ -80,11 +80,15 @@ export const menuItems = [
       { label: "Counters", path: "/stats-manage" },
     ],
   },
+
+  {
+    type: "heading",
+    label: "About Section",
+  },
   {
     type: "dropdown",
     label: "About Page",
     icon: Info,
-    roles: ["super-admin", "marketing-admin", "marketing-employee"],
     children: [
       { label: "Global Platform", path: "/global-platform" },
       { label: "Vision & Mission", path: "/vision-mission" },
@@ -94,17 +98,15 @@ export const menuItems = [
     ],
   },
 
-  /* ================= EVENT MANAGEMENT ================= */
+  /* ================= EXHIBIT SECTION ================= */
   {
     type: "heading",
-    label: "Event Management",
-    roles: ["super-admin", "marketing-admin", "marketing-employee", "accountant-admin", "accountant-employee", "employee"]
+    label: "Exhibit Section",
   },
   {
     type: "dropdown",
     label: "Exhibit Page",
     icon: Rocket,
-    roles: ["super-admin", "marketing-admin", "marketing-employee"],
     children: [
       { label: "Why Exhibit", path: "/why-exhibit-manage" },
       { label: "Exhibitor Profile", path: "/exhibitor-profile-manage" },
@@ -112,142 +114,170 @@ export const menuItems = [
       { label: "Stall Designing Vendor", path: "/stall-vendor-manage" },
     ],
   },
-  {
-    type: "item",
-    label: "Stall Inventory",
-    icon: LayoutDashboard,
-    path: "/stalls",
-    roles: ["super-admin", "marketing-admin", "marketing-employee"]
-  },
-  {
-    type: "item",
-    label: "Exhibition Events",
-    icon: CalendarCheck,
-    path: "/events",
-    roles: ["super-admin", "marketing-admin", "marketing-employee"]
-  },
-  {
-    type: "item",
-    label: "Stall Pricing Rates",
-    icon: Ticket,
-    path: "/stall-rates",
-    roles: ["super-admin", "marketing-admin", "marketing-employee", "accountant-admin", "accountant-employee"]
-  },
-  {
-    type: "item",
-    label: "Exhibitor Bookings",
-    icon: ClipboardList,
-    path: "/exhibitor-bookings",
-    roles: ["super-admin", "marketing-admin", "marketing-employee", "accountant-admin", "accountant-employee"]
-  },
-  {
-    type: "item",
-    label: "Book A Stand",
-    icon: CalendarCheck,
-    path: "/book-a-stand",
-    roles: ["super-admin", "marketing-admin", "marketing-employee", "accountant-admin", "accountant-employee"]
-  },
 
-  /* ================= CONNECT & NETWORK ================= */
+  /* ================= VISIT SECTION ================= */
   {
     type: "heading",
-    label: "Connect & Network",
-    roles: ["super-admin", "marketing-admin", "marketing-employee"]
+    label: "Visit Section",
   },
   {
     type: "item",
     label: "Why Visit",
     icon: Rocket,
-    path: "/why-visit-manage"
+    path: "/why-visit-manage",
+  },
+
+  /* ================= EXHIBITORS SECTION ================= */
+  {
+    type: "heading",
+    label: "Exhibitors Section",
   },
   {
     type: "item",
     label: "Exhibitor List",
     icon: List,
-    path: "/exhibitor-list-manage"
+    path: "/exhibitor-list-manage",
+  },
+
+  /* ================= PARTNERS SECTION ================= */
+  {
+    type: "heading",
+    label: "Partners Section",
   },
   {
     type: "item",
-    label: "Partners",
+    label: "Add Partners",
     icon: Handshake,
-    path: "/partners-manage"
+    path: "/partners-manage",
+  },
+
+  /* ================= ADVISORY SECTION ================= */
+  {
+    type: "heading",
+    label: "Advisory Section",
   },
   {
     type: "item",
-    label: "Advisory Board",
+    label: "Add Advisory member",
     icon: Users,
-    path: "/advisory-manage"
+    path: "/advisory-manage",
   },
 
   /* ================= GALLERY SECTION ================= */
   {
     type: "heading",
     label: "Gallery Section",
-    roles: ["super-admin", "digital-admin", "digital-employee"]
   },
   {
     type: "dropdown",
     label: "Gallery Page",
     icon: Images,
-    roles: ["super-admin", "digital-admin", "digital-employee"],
     children: [
       { label: "Add Category", path: "/gallery-category" },
       { label: "View All Categories", path: "/gallery-list" },
       { label: "Add Images", path: "/add-gallery-images" },
-      { label: "Manage Project Images", path: "/manage-gallery-images" },
       { label: "Add Video", path: "/gallery-videos" },
       { label: "Add Media photo", path: "/gallery-media" },
-      { label: "Background Images", path: "/hero-images" },
     ],
   },
 
-  /* ================= DIGITAL MARKETING ================= */
+  /* ================= BLOGS SECTION ================= */
   {
     type: "heading",
-    label: "Digital Marketing",
-    roles: ["super-admin", "digital-admin", "digital-employee"]
+    label: "Blogs Section",
   },
   {
     type: "dropdown",
-    label: "Blogs Section",
+    label: "Blogs",
     icon: FileText,
     children: [
       { label: "Add Blogs", path: "/add-blogs" },
       { label: "Blogs List", path: "/blogs-list" },
     ],
   },
+
+  /* ================= BACKGROUND IMAGES SECTION ================= */
+  {
+    type: "heading",
+    label: "Background Images Section",
+  },
+  {
+    type: "item",
+    label: "Background Images",
+    icon: Images,
+    path: "/hero-images",
+  },
+
+  /* ================= SEO SECTION ================= */
+  {
+    type: "heading",
+    label: "SEO Section",
+  },
   {
     type: "dropdown",
     label: "SEO Manager",
-    icon: Share2,
+    icon: TrendingUp,
     children: [
-      { label: "Add Meta Tags", path: "/add-meta" },
+      { label: "Add Meta", path: "/add-meta" },
       { label: "Meta List", path: "/meta-list" },
       { label: "Advanced SEO", path: "/advanced-seo" },
-      { label: "Social Media", path: "/social-media" },
     ],
   },
+  {
+    type: "item",
+    label: "Social Media",
+    icon: Share2,
+    path: "/social-media",
+  },
 
-  /* ================= CLIENT DATA ECOSYSTEM ================= */
+  /* ================= REGISTRATION SECTION ================= */
   {
     type: "heading",
-    label: "Client Data Ecosystem",
-    roles: ["super-admin", "marketing-admin", "accountant-admin"]
+    label: "Registration Section",
+  },
+  {
+    type: "item",
+    label: "Book A Stand",
+    icon: Ticket,
+    path: "/book-a-stand",
+  },
+  {
+    type: "item",
+    label: "E-Promotion Registers",
+    icon: List,
+    path: "/e-promotion-registers",
+  },
+  {
+    type: "item",
+    label: "Contact Enquiry",
+    path: "/contact-enquiries",
+    icon: MessageSquare,
+  },
+  {
+    type: "item",
+    label: "Buyer Registration",
+    path: "/buyer-registrations",
+    icon: Users,
+  },
+
+  /* ================= CLIENT DATA SECTION ================= */
+  {
+    type: "heading",
+    label: "Client Data Section",
   },
   {
     type: "dropdown",
     label: "IHWE Client Data 2026",
-    icon: Database,
+    icon: FileText,
     children: [
       { label: "Add New Clients", path: "/ihweClientData2026/addNewClients" },
-      { label: "New Lead List", path: "/ihweClientData2026/newLeadList" },
+      { label: "New Leads List", path: "/ihweClientData2026/newLeadList" },
       { label: "Warm Client List", path: "/ihweClientData2026/warmClientList" },
       { label: "Hot Client List", path: "/ihweClientData2026/hotClientList" },
       { label: "Confirmed Client List", path: "/ihweClientData2026/confirmClientList" },
       { label: "Cold Client List", path: "/ihweClientData2026/coldClientList" },
       { label: "Master Data", path: "/ihweClientData2026/masterData" },
       { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
-      { label: "Upload Exhibitor", path: "/ihweClientData2026/uploadExhibitor" },
     ],
   },
   {
@@ -286,27 +316,44 @@ export const menuItems = [
     ],
   },
 
+  /* ================= STALLS & EVENTS ================= */
+  {
+    type: "heading",
+    label: "Stalls & Events",
+  },
+  {
+    type: "item",
+    label: "Stall Inventory",
+    icon: LayoutDashboard,
+    path: "/stalls",
+  },
+  {
+    type: "item",
+    label: "Exhibition Events",
+    icon: CalendarCheck,
+    path: "/events",
+  },
+  {
+    type: "item",
+    label: "Stall Pricing Rates",
+    icon: Ticket,
+    path: "/stall-rates",
+  },
+  {
+    type: "item",
+    label: "Exhibitor Bookings",
+    icon: ClipboardList,
+    path: "/exhibitor-bookings",
+  },
+
   /* ================= GENERAL OPERATIONS ================= */
   {
     type: "heading",
     label: "General Operations",
-    roles: ["super-admin", "marketing-admin", "accountant-admin"]
   },
   {
     type: "dropdown",
-    label: "Registration Analysis",
-    icon: ClipboardList,
-    children: [
-      { label: "Current Bookings", path: "/exhibitor-bookings?type=current" },
-      { label: "Incoming Bookings", path: "/exhibitor-bookings?type=incoming" },
-      { label: "E-Promotion Registers", path: "/e-promotion-registers" },
-      { label: "Contact Enquiries", path: "/contact-enquiries" },
-      { label: "Buyer Registrations", path: "/buyer-registrations" },
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "Dynamic Content",
+    label: "Content Hub",
     icon: BookOpen,
     children: [
       { label: "Create Page", path: "/create-a-page" },
@@ -324,7 +371,6 @@ export const menuItems = [
       { label: "Create Service", path: "/create-service" },
       { label: "Service List", path: "/service-list" },
       { label: "Add Facilities", path: "/add-facilities" },
-      { label: "Facilities List", path: "/facilities-list" },
     ],
   },
   {
@@ -333,7 +379,6 @@ export const menuItems = [
     icon: BriefcaseBusiness,
     children: [
       { label: "Post Vacancy", path: "/add-vacancy" },
-      { label: "Vacancy Registry", path: "/vacancy-list" },
       { label: "Applicants Registry", path: "/career-list" },
     ],
   },
@@ -345,7 +390,6 @@ export const menuItems = [
       { label: "Add Corporate Client", path: "/add-corporate-clients" },
       { label: "Corporate List", path: "/corporate-clients-list" },
       { label: "Add Individual Client", path: "/add-individual-clients" },
-      { label: "Individual List", path: "/individual-clients-list" },
       { label: "Profiles", path: "/profiles" },
     ],
   },
@@ -360,23 +404,45 @@ export const menuItems = [
     ],
   },
 
-  /* ================= ADMINISTRATIVE CONTROL ================= */
+  /* ================= ACCOUNT SECTION ================= */
   {
     type: "heading",
-    label: "Admin Control",
-    roles: ["super-admin"]
+    label: "Account Section",
   },
   {
-    type: "dropdown",
-    label: "System Management",
+    type: "item",
+    label: "User List",
+    icon: Users,
+    path: "/ihweClientData2026/userlist",
+  },
+  {
+    type: "item",
+    label: "Add User",
+    icon: UserCheck,
+    path: "/ihweClientData2026/adduser",
+  },
+  {
+    type: "item",
+    label: "Manage Admin Users",
     icon: ShieldCheck,
-    children: [
-      { label: "Add User", path: "/ihweClientData2026/adduser" },
-      { label: "User List", path: "/ihweClientData2026/userlist" },
-      { label: "Admin Users", path: "/admin-users" },
-      { label: "Change Password", path: "/change-password" },
-      { label: "Settings", path: "/settings" },
-      { label: "Sidebar Customize", path: "/sidebar-customize" },
-    ],
+    path: "/admin-users",
+  },
+  {
+    type: "item",
+    label: "Change Password",
+    icon: Lock,
+    path: "/change-password",
+  },
+  {
+    type: "item",
+    label: "Settings",
+    icon: Settings,
+    path: "/settings",
+  },
+  {
+    type: "item",
+    label: "Customize Sidebar",
+    icon: Palette,
+    path: "/sidebar-customize",
   },
 ];
