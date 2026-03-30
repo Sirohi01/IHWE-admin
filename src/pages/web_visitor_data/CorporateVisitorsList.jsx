@@ -295,6 +295,18 @@ const CorporateVisitorsList = () => {
     { label: "City & State", accessor: "location.city" },
     { label: "Created By", accessor: "meta.createdBy" },
     { label: "Updated By", accessor: "meta.updatedBy" },
+    {
+      label: "Action",
+      accessor: "_id",
+      render: (id) => (
+        <Link
+          to={`/webVisitorData/corporateVisitorDetails/${id}`}
+          className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition-colors"
+        >
+          View
+        </Link>
+      ),
+    },
   ];
 
   const handleClientClick = (clientData) => {

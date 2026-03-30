@@ -294,9 +294,6 @@ export const menuItems = [
       { label: "General Visitors List", path: "/ihweClientData2026/GeneralVisitorsList" },
       { label: "Health Camp Visitors List", path: "/ihweClientData2026/HealthCampVisitorsList" },
       { label: "Visitor Review", path: "/ihweClientData2026/VisitorReview" },
-      { label: "Corporate Overview", path: "/ihweClientData2026/CorporateOverview" },
-      { label: "General Overview", path: "/ihweClientData2026/GeneralOverview" },
-      { label: "Health Camp Overview", path: "/ihweClientData2026/HealthCampOverview" },
     ],
   },
   {
