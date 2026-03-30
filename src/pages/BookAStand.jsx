@@ -223,7 +223,9 @@ const BookAStand = () => {
             <div className="max-w-[1600px] mx-auto">
                 <div className="mb-8 flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                     <div>
-                        <h1 className="text-3xl font-black text-[#23471d] tracking-tight">MANUAL BOOKING</h1>
+                        <h1 className="text-3xl font-black text-[#23471d] tracking-tight uppercase">
+                            {events.find(e => e._id === selectedEventId)?.name || 'MANUAL BOOKING'}
+                        </h1>
                         <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest mt-1">Add a new exhibitor registration from Admin Panel</p>
                     </div>
                 </div>
@@ -241,7 +243,14 @@ const BookAStand = () => {
                             <label className={labelClasses}>Select Target Stall *</label>
                             <select value={formData.participation.stallNo} onChange={(e) => handleStallSelect(e.target.value)} className={inputClasses}>
                                 <option value="">-- Choose Available Stall --</option>
-                                {availableStalls.map(s => <option key={s._id} value={s._id}>{s.stallNumber} ({s.area} sqm - {s.plScheme})</option>)}
+                                {availableStalls.filter(s => 
+                                    (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId) || 
+                                    (typeof s.event === 'string' ? s.event === selectedEventId : s.event?._id === selectedEventId)
+                                ).map(s => (
+                                    <option key={s._id} value={s._id}>
+                                        {s.stallNumber} ({s.area} sqm - {s.plScheme})
+                                    </option>
+                                ))}
                             </select>
                         </div>
                     </div>
