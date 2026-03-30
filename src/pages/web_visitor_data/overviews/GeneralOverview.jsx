@@ -20,23 +20,15 @@ const GeneralOverview = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // ✅ Safely extract generalVisitors – ensure it's an array
-  const generalVisitorsState = useSelector((state) => state.generalVisitors);
-  const generalVisitors = Array.isArray(generalVisitorsState)
-    ? generalVisitorsState
-    : [];
-  const loading = generalVisitorsState?.loading ?? false;
+  const { generalVisitors, loading } = useSelector(
+    (state) => state.generalVisitors,
+  );
 
-  // ✅ Ensure events is an array
-  const eventsState = useSelector((state) => state.crmEvents);
-  const events = Array.isArray(eventsState) ? eventsState : [];
+  const { events } = useSelector((state) => state.crmEvents);
 
-  // ✅ Ensure visitorReviews is an array
-  const visitorReviewsState = useSelector((state) => state.visitorReview);
-  const visitorReviews = Array.isArray(visitorReviewsState)
-    ? visitorReviewsState
-    : [];
-  const reviewLoading = visitorReviewsState?.loading ?? false;
+  const { visitorReviews, loading: reviewLoading } = useSelector(
+    (state) => state.visitorReview,
+  );
 
   const [status, setStatus] = useState("");
   const [description, setDescription] = useState("");

@@ -29,7 +29,7 @@ export const fetchVisitorReviews = createAsyncThunk(
       const response = await axios.get(`${BASE_URL}/visitor-reviews`, {
         headers: getAuthHeaders(),
       });
-      return response.data.data;
+      return response.data.data ?? response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }

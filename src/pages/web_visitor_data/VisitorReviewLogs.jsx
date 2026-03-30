@@ -23,8 +23,10 @@ const VisitorReviewLogs = () => {
       const response = await api.get(
         `/api/visitor-reviews?search=${searchTerm}`
       );
-      if (response.data.success) {
+      if (response.data.data) {
         setReviews(response.data.data);
+      } else if (Array.isArray(response.data)) {
+        setReviews(response.data);
       }
     } catch (error) {
       toast.error("Failed to fetch visitor review logs");
@@ -53,35 +55,39 @@ const VisitorReviewLogs = () => {
       render: (row, index) => (currentPage - 1) * itemsPerPage + index + 1,
     },
     {
-      label: "Visitor ID / Name",
+      label: "Visitor ID",
       key: "visitor_id",
       render: (row) => (
-        <div>
-          <div className="font-bold">{row.visitor_id || "N/A"}</div>
-          <div className="text-xs text-gray-500">{row.name || "Anonymous"}</div>
-        </div>
+        <div className="font-medium text-blue-600">{row.visitor_id || "N/A"}</div>
       ),
     },
     {
-      label: "Rating",
-      key: "rating",
+      label: "Status",
+      key: "visitor_status",
       render: (row) => (
-        <div className="flex text-yellow-500">
-          {[...Array(5)].map((_, i) => (
-            <span key={i}>{i < row.rating ? "★" : "☆"}</span>
-          ))}
-        </div>
+        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+          {row.visitor_status}
+        </span>
       ),
     },
     {
-      label: "Message",
-      key: "message",
-      render: (row) => <div className="max-w-xs">{row.message}</div>,
+      label: "Event ID",
+      key: "visitor_event",
+      render: (row) => <div className="text-xs truncate w-24" title={row.visitor_event}>{row.visitor_event}</div>,
+    },
+    {
+      label: "Description/Message",
+      key: "visitor_desc",
+      render: (row) => <div className="max-w-xs truncate" title={row.visitor_desc}>{row.visitor_desc}</div>,
+    },
+    {
+      label: "Added By",
+      key: "added_by",
     },
     {
       label: "Date",
-      key: "createdAt",
-      render: (row) => new Date(row.createdAt).toLocaleDateString(),
+      key: "added",
+      render: (row) => row.added ? new Date(row.added).toLocaleDateString() : "N/A",
     },
   ];
 

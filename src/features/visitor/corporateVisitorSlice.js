@@ -18,7 +18,7 @@ export const fetchCorporateVisitors = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await axios.get(`${BASE_URL}/corporate-visitors`);
-      return res.data;
+      return res.data.data ?? res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
