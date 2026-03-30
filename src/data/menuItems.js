@@ -344,80 +344,80 @@ export const menuItems = [
   },
 
   /* ================= GENERAL OPERATIONS ================= */
-  {
-    type: "heading",
-    label: "General Operations",
-  },
-  {
-    type: "dropdown",
-    label: "Content Hub",
-    icon: BookOpen,
-    children: [
-      { label: "Create Page", path: "/create-a-page" },
-      { label: "Page List", path: "/page-list" },
-      { label: "Media Uploads (PDF)", path: "/upload-pdf" },
-      { label: "Create News/Post", path: "/create-a-post" },
-      { label: "News Registry", path: "/post-list" },
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "Services Hub",
-    icon: Sparkles,
-    children: [
-      { label: "Create Service", path: "/create-service" },
-      { label: "Service List", path: "/service-list" },
-      { label: "Add Facilities", path: "/add-facilities" },
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "HR & Recruitment",
-    icon: BriefcaseBusiness,
-    children: [
-      { label: "Post Vacancy", path: "/add-vacancy" },
-      { label: "Applicants Registry", path: "/career-list" },
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "CRM Client Relations",
-    icon: Building2,
-    children: [
-      { label: "Add Corporate Client", path: "/add-corporate-clients" },
-      { label: "Corporate List", path: "/corporate-clients-list" },
-      { label: "Add Individual Client", path: "/add-individual-clients" },
-      { label: "Profiles", path: "/profiles" },
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "Communications",
-    icon: MessageSquare,
-    children: [
-      { label: "Enquiry List", path: "/enquiry-list" },
-      { label: "Remainder List", path: "/remainder-list" },
-      { label: "Contact List", path: "/contact-list" },
-    ],
-  },
+  // {
+  //   type: "heading",
+  //   label: "General Operations",
+  // },
+  // {
+  //   type: "dropdown",
+  //   label: "Content Hub",
+  //   icon: BookOpen,
+  //   children: [
+  //     { label: "Create Page", path: "/create-a-page" },
+  //     { label: "Page List", path: "/page-list" },
+  //     { label: "Media Uploads (PDF)", path: "/upload-pdf" },
+  //     { label: "Create News/Post", path: "/create-a-post" },
+  //     { label: "News Registry", path: "/post-list" },
+  //   ],
+  // },
+  // {
+  //   type: "dropdown",
+  //   label: "Services Hub",
+  //   icon: Sparkles,
+  //   children: [
+  //     { label: "Create Service", path: "/create-service" },
+  //     { label: "Service List", path: "/service-list" },
+  //     { label: "Add Facilities", path: "/add-facilities" },
+  //   ],
+  // },
+  // {
+  //   type: "dropdown",
+  //   label: "HR & Recruitment",
+  //   icon: BriefcaseBusiness,
+  //   children: [
+  //     { label: "Post Vacancy", path: "/add-vacancy" },
+  //     { label: "Applicants Registry", path: "/career-list" },
+  //   ],
+  // },
+  // {
+  //   type: "dropdown",
+  //   label: "CRM Client Relations",
+  //   icon: Building2,
+  //   children: [
+  //     { label: "Add Corporate Client", path: "/add-corporate-clients" },
+  //     { label: "Corporate List", path: "/corporate-clients-list" },
+  //     { label: "Add Individual Client", path: "/add-individual-clients" },
+  //     { label: "Profiles", path: "/profiles" },
+  //   ],
+  // },
+  // {
+  //   type: "dropdown",
+  //   label: "Communications",
+  //   icon: MessageSquare,
+  //   children: [
+  //     { label: "Enquiry List", path: "/enquiry-list" },
+  //     { label: "Remainder List", path: "/remainder-list" },
+  //     { label: "Contact List", path: "/contact-list" },
+  //   ],
+  // },
 
   /* ================= ACCOUNT SECTION ================= */
   {
     type: "heading",
     label: "Account Section",
   },
-  {
-    type: "item",
-    label: "User List",
-    icon: Users,
-    path: "/ihweClientData2026/userlist",
-  },
-  {
-    type: "item",
-    label: "Add User",
-    icon: UserCheck,
-    path: "/ihweClientData2026/adduser",
-  },
+  // {
+  //   type: "item",
+  //   label: "User List",
+  //   icon: Users,
+  //   path: "/ihweClientData2026/userlist",
+  // },
+  // {
+  //   type: "item",
+  //   label: "Add User",
+  //   icon: UserCheck,
+  //   path: "/ihweClientData2026/adduser",
+  // },
   {
     type: "item",
     label: "Manage Admin Users",
