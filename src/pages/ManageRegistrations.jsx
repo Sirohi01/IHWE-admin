@@ -282,16 +282,19 @@ const ManageRegistrations = () => {
         },
         {
             key: "reference",
-            label: "SOURCE",
+            label: "SOURCE & LEAD",
             render: (row) => (
-                <div className="flex flex-col gap-1">
-                    <div className="text-[10px] space-y-0.5">
-                        <p className="text-slate-400 font-bold uppercase tracking-widest">Referred By</p>
-                        <p className="font-black text-slate-700">{row.referredBy || 'Direct'}</p>
-                    </div>
+                <div className="flex flex-col gap-1.5">
                     <div className="text-[9px] space-y-0.5">
-                        <p className="text-slate-400 font-bold uppercase tracking-widest">Filled By</p>
-                        <p className="font-bold text-blue-600">{row.filledBy || 'System'}</p>
+                        <p className="text-slate-400 font-bold uppercase tracking-widest">Referred By</p>
+                        <p className="font-black text-slate-700 leading-none">{row.referredBy || 'Direct'}</p>
+                    </div>
+                    <div className="text-[9px] space-y-0.5 border-t border-slate-100 pt-1">
+                        <p className="text-amber-500/60 font-bold uppercase tracking-[0.05em]">Spoken With</p>
+                        <p className="font-black text-amber-600 leading-none">{row.spokenWith || 'Direct'}</p>
+                    </div>
+                    <div className="text-[8px] space-y-0.5 border-t border-slate-100 pt-1">
+                        <p className="text-slate-300 font-bold uppercase tracking-widest leading-none">Filled By: {row.filledBy || 'System'}</p>
                     </div>
                 </div>
             )
@@ -630,6 +633,10 @@ const ManageRegistrations = () => {
                                         <span className="text-[10px] font-black text-blue-400">{selectedReg.referredBy || 'Organic Lead'}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
+                                        <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Spoken With</span>
+                                        <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">{selectedReg.spokenWith || 'Direct'}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center border-t border-white/10 pt-2 lg:pt-0 lg:border-0 font-bold">
                                         <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Data Controller</span>
                                         <span className="text-[10px] font-black text-green-400 uppercase">{selectedReg.filledBy || 'System Terminal'}</span>
                                     </div>

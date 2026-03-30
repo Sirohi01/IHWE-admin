@@ -66,6 +66,7 @@ const BookAStand = () => {
         },
         selectedSectors: [],
         referredBy: 'Direct Website',
+        spokenWith: '',
         filledBy: 'Admin',
         status: 'pending',
         paymentMode: 'manual',
@@ -435,16 +436,27 @@ const BookAStand = () => {
                                 </div>
                             </div>
 
-                            <div className="space-y-4 pt-4 border-t">
-                                <h3 className={labelClasses}>Referral Logic / Person *</h3>
-                                <select value={formData.referredBy} onChange={(e) => handleSelectChange('referredBy', e.target.value)} className={inputClasses}>
-                                    <option value="Direct Website">Direct Website</option>
-                                    <option value="Email Marketing">Email Marketing</option>
-                                    <option value="Social Media">Social Media</option>
-                                    {marketingStaff.map(staff => (
-                                        <option key={staff._id} value={staff.username}>Staff: {staff.username}</option>
-                                    ))}
-                                </select>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+                                <div className="space-y-4">
+                                    <h3 className={labelClasses}>Marketing Attribution (Referred By)</h3>
+                                    <select value={formData.referredBy} onChange={(e) => handleSelectChange('referredBy', e.target.value)} className={inputClasses}>
+                                        <option value="Direct Website">Direct Website</option>
+                                        <option value="Email Marketing">Email Marketing</option>
+                                        <option value="Social Media">Social Media</option>
+                                        {marketingStaff.map(staff => (
+                                            <option key={staff._id} value={staff.username}>Staff: {staff.username}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="space-y-4">
+                                    <h3 className={labelClasses}>Communication Source (Spoken With) *</h3>
+                                    <select required value={formData.spokenWith} onChange={(e) => handleSelectChange('spokenWith', e.target.value)} className={inputClasses}>
+                                        <option value="">-- Who Spoke With Them? --</option>
+                                        {marketingStaff.map(staff => (
+                                            <option key={staff._id} value={staff.username}>{staff.username} ({staff.role})</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
