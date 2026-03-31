@@ -163,6 +163,15 @@ const VideoGalleryManagement = () => {
         if (videoInputRef.current) videoInputRef.current.value = '';
     };
 
+    const getYouTubeThumbnail = (url) => {
+        let videoId = "";
+        if (url.includes("youtube.com/watch?v=")) videoId = url.split("v=")[1].split("&")[0];
+        else if (url.includes("youtu.be/")) videoId = url.split("youtu.be/")[1].split("?")[0];
+        else if (url.includes("youtube.com/embed/")) videoId = url.split("embed/")[1].split("?")[0];
+        else if (url.includes("youtube.com/shorts/")) videoId = url.split("shorts/")[1].split("?")[0];
+        return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
+    };
+
     return (
         <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
             <PageHeader
@@ -337,11 +346,23 @@ const VideoGalleryManagement = () => {
                                             <td className="py-3 px-4 text-center font-black text-gray-300">{idx + 1}</td>
                                             <td className="py-3 px-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-[#23471d]">
-                                                        <Play className="w-5 h-5 fill-current" />
+                                                    <div className="w-16 h-10 rounded-lg overflow-hidden bg-gray-100 border border-gray-100 flex items-center justify-center text-[#23471d] relative group/preview">
+                                                        {item.videoUrl && (item.videoUrl.startsWith('http') || item.videoUrl.includes('youtube.com') || item.videoUrl.includes('youtu.be')) ? (
+                                                            <img 
+                                                                src={getYouTubeThumbnail(item.videoUrl)} 
+                                                                className="w-full h-full object-cover" 
+                                                                alt={item.title}
+                                                                onError={(e) => { e.target.src = "https://placehold.co/64x40?text=NA"; }}
+                                                            />
+                                                        ) : (
+                                                            <Play className="w-5 h-5 fill-current" />
+                                                        )}
+                                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/preview:opacity-100 transition-opacity">
+                                                            <Play className="w-4 h-4 text-white fill-current" />
+                                                        </div>
                                                     </div>
                                                     <div>
-                                                        <h3 className="font-bold text-slate-800 uppercase tracking-tight">{item.title}</h3>
+                                                        <h3 className="font-bold text-slate-800 uppercase tracking-tight line-clamp-1">{item.title}</h3>
                                                         <p className="text-[10px] text-slate-400 italic line-clamp-1">{item.videoUrl}</p>
                                                     </div>
                                                 </div>

@@ -1,74 +1,88 @@
 import Table from "../../components/table/Table";
-import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { SearchBar } from '../../components/SearchBar';
-import Pagination from '../../components/Pagination';
-import EmptyState from '../../components/EmptyState';
+import { useState, useEffect } from "react";
+import { Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { SearchBar } from "../../components/SearchBar";
+import Pagination from "../../components/Pagination";
+import EmptyState from "../../components/EmptyState";
 import { toast } from "react-toastify";
-import PageHeader from '../../components/PageHeader';
-
+import PageHeader from "../../components/PageHeader";
+import api from "../../lib/api";
 
 const FacilitiesList = () => {
   const navigate = useNavigate();
   const [rowsPerPage, setRowsPerPage] = useState(25);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [facilities, setFacilities] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Load from localStorage on component mount
   useEffect(() => {
-    const savedFacilities = localStorage.getItem('facilities');
-    if (savedFacilities) {
-      setFacilities(JSON.parse(savedFacilities));
-    }
+    fetchFacilities();
   }, []);
 
-  // Save to localStorage whenever facilities change
-  useEffect(() => {
-    localStorage.setItem('facilities', JSON.stringify(facilities));
-  }, [facilities]);
+  const fetchFacilities = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/api/facilities");
+      if (response.data.success) {
+        setFacilities(response.data.data);
+      }
+    } catch (error) {
+      toast.error("Failed to fetch facilities");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Status badge component
   const StatusBadge = ({ status }) => (
-    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${status === 'Active' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-800 border border-red-200'}`}>
+    <span
+      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+        status === "Active"
+          ? "bg-green-100 text-green-800 border border-green-200"
+          : "bg-red-100 text-red-800 border border-red-200"
+      }`}
+    >
       {status}
     </span>
   );
 
-  const filteredFacilities = facilities.filter(facility =>
+  const filteredFacilities = facilities.filter((facility) =>
     facility.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalPages = Math.ceil(filteredFacilities.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
-  const paginatedFacilities = filteredFacilities.slice(startIndex, startIndex + rowsPerPage);
+  const paginatedFacilities = filteredFacilities.slice(
+    startIndex,
+    startIndex + rowsPerPage
+  );
 
   const handleEdit = (facility) => {
-    localStorage.setItem("editFacility", JSON.stringify(facility));
-    toast.info("Edit mode enabled");
-    navigate("/add-facilities");
+    navigate("/add-facilities", { state: { facility } });
   };
 
-  const handleDelete = (id) => {
-    setFacilities(prev =>
-      prev.filter(facility => facility.id !== id)
-    );
-
-    toast.success("Facility deleted successfully");
-  };
-
-  const handleRowsPerPageChange = (value) => {
-    setRowsPerPage(parseInt(value));
-    setCurrentPage(1);
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this facility?"))
+      return;
+    try {
+      const response = await api.delete(`/api/facilities/${id}`);
+      if (response.data.success) {
+        toast.success("Facility deleted successfully");
+        fetchFacilities();
+      }
+    } catch (error) {
+      toast.error("Failed to delete facility");
+    }
   };
 
   const columns = [
     {
-      label: "ID",
-      key: "id",
-      render: (row) => (
-        <span className="font-semibold text-gray-900">#{row.id}</span>
+      label: "S.NO",
+      key: "sno",
+      render: (row, index) => (
+        <span className="font-semibold text-gray-900">
+          {startIndex + index + 1}
+        </span>
       ),
     },
     {
@@ -93,7 +107,6 @@ const FacilitiesList = () => {
           buttonPath="/add-facilities"
         />
 
-        {/* Controls */}
         <SearchBar
           rowsPerPage={rowsPerPage}
           totalItems={filteredFacilities.length}
@@ -110,14 +123,19 @@ const FacilitiesList = () => {
         />
 
         <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
-          <Table
-            columns={columns}
-            data={paginatedFacilities}
-            onEdit={(row) => handleEdit(row)}
-            onDelete={(row) => handleDelete(row.id)}
-          />
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : (
+            <Table
+              columns={columns}
+              data={paginatedFacilities}
+              onEdit={(row) => handleEdit(row)}
+              onDelete={(row) => handleDelete(row._id)}
+            />
+          )}
 
-          {/* Table Footer */}
           <div className="px-6 py-4 border-t border-gray-200 bg-blue-50">
             <Pagination
               currentPage={currentPage}
@@ -128,8 +146,7 @@ const FacilitiesList = () => {
           </div>
         </div>
 
-        {/* Empty State */}
-        {filteredFacilities.length === 0 && (
+        {!loading && filteredFacilities.length === 0 && (
           <EmptyState
             title="No Facility found"
             description="You haven't added any Facility yet."

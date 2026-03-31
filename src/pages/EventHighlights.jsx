@@ -269,7 +269,7 @@ const EventHighlightsPage = () => {
                                         onChange={handleImageChange}
                                         className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-[#23471d] file:text-white hover:file:bg-[#d26019] file:cursor-pointer cursor-pointer"
                                     />
-                                    <p className="text-xs text-gray-400 mt-2">Recommended: 1200×800px, JPG/PNG/WebP, Max 10MB</p>
+                                    <p className="text-xs text-gray-400 mt-2">Recommended: 807x398px, JPG/PNG/WebP, Max 10MB</p>
                                 </div>
                             </div>
                             <InputField label="Image Alt Text" name="imageAlt" value={formData.imageAlt} placeholder="IHWE 2026" onChange={handleChange} />

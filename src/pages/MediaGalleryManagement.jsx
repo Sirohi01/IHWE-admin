@@ -3,13 +3,14 @@ import Swal from 'sweetalert2';
 import api, { SERVER_URL } from "../lib/api";
 import {
     Save, ImageIcon, Plus, Trash2, Edit,
-    Package, Type, Globe, Search
+    Package, Type, Globe, Search, UploadCloud, Camera, X
 } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 
 const EMPTY_FORM = {
-    title: '', // Not strictly required for press but can be used for label
+    title: '', 
     category: 'press',
+    galleryCategoryId: '', 
     mediaType: 'image',
     image: '',
     imageAlt: '',
@@ -17,16 +18,32 @@ const EMPTY_FORM = {
 
 const MediaGalleryManagement = () => {
     const [items, setItems] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [form, setForm] = useState({ ...EMPTY_FORM });
     const [isEditing, setIsEditing] = useState(null);
-    const [imageFile, setImageFile] = useState(null);
-    const [imagePreview, setImagePreview] = useState('');
+    
+    // Multiple upload states
+    const [images, setImages] = useState([]);
+    const [altTexts, setAltTexts] = useState({});
+    
     const fileInputRef = useRef(null);
 
     useEffect(() => {
         fetchData();
+        fetchCategories();
     }, []);
+
+    const fetchCategories = async () => {
+        try {
+            const response = await api.get('/api/gallery-category?type=media');
+            if (response.data.success) {
+                setCategories(response.data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching media categories:', error);
+        }
+    };
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -43,59 +60,122 @@ const MediaGalleryManagement = () => {
     };
 
     const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        setImageFile(file);
-        setImagePreview(URL.createObjectURL(file));
+        const files = Array.from(e.target.files);
+        if (isEditing) {
+            // If editing, only handle single image
+            const file = files[0];
+            if (!file) return;
+            setImages([file]);
+            setAltTexts({ 0: form.imageAlt });
+        } else {
+            // Bulk upload
+            if (files.length + images.length > 20) {
+                Swal.fire("Warning", "Max 20 images at a time", "warning");
+                return;
+            }
+            setImages((prev) => [...prev, ...files]);
+        }
     };
 
-    const uploadImage = async () => {
-        if (!imageFile) return form.image;
-        const formData = new FormData();
-        formData.append('file', imageFile);
-        const res = await api.post('/api/gallery/upload', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
+    const removeImage = (index) => {
+        setImages((prev) => prev.filter((_, i) => i !== index));
+        setAltTexts((prev) => {
+            const next = { ...prev };
+            delete next[index];
+            // Re-index remaining alt texts to match new image array
+            const reindexed = {};
+            images.filter((_, i) => i !== index).forEach((_, i) => {
+                const oldIndex = i >= index ? i + 1 : i;
+                reindexed[i] = prev[oldIndex] || "";
+            });
+            return reindexed;
         });
-        if (res.data.success) return res.data.url;
-        throw new Error('Image upload failed');
+    };
+
+    const handleAltTextChange = (index, value) => {
+        setAltTexts((prev) => ({ ...prev, [index]: value }));
     };
 
     const handleSubmit = async () => {
-        if (!imageFile && !form.image) {
-            Swal.fire('Warning', 'Please upload a media photo', 'warning');
+        if (!form.galleryCategoryId) {
+            Swal.fire('Warning', 'Please select a media category', 'warning');
             return;
         }
 
-        setIsLoading(true);
-        try {
-            let imageUrl = form.image;
-            if (imageFile) {
-                imageUrl = await uploadImage();
+        if (isEditing) {
+            // Single update logic
+            if (images.length === 0 && !form.image) {
+                Swal.fire('Warning', 'Please upload a media photo', 'warning');
+                return;
             }
-
-            const payload = { ...form, image: imageUrl };
-            let response;
-            if (isEditing) {
-                response = await api.put(`/api/gallery/${isEditing}`, payload);
-            } else {
-                response = await api.post('/api/gallery', payload);
+            setIsLoading(true);
+            try {
+                let imageUrl = form.image;
+                if (images.length > 0) {
+                    const formData = new FormData();
+                    formData.append('file', images[0]);
+                    const res = await api.post('/api/gallery/upload', formData, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+                    imageUrl = res.data.url;
+                }
+                const payload = { ...form, image: imageUrl, imageAlt: altTexts[0] || form.imageAlt };
+                const response = await api.put(`/api/gallery/${isEditing}`, payload);
+                if (response.data.success) {
+                    Swal.fire({ icon: 'success', title: 'Photo Updated!', timer: 1500, showConfirmButton: false });
+                    resetForm();
+                    fetchData();
+                }
+            } catch (error) {
+                console.error('Error updating photo:', error);
+                Swal.fire('Error', 'Failed to update photo', 'error');
+            } finally {
+                setIsLoading(false);
             }
+        } else {
+            // Bulk upload logic
+            if (images.length === 0) {
+                Swal.fire('Warning', 'Please select at least one media photo', 'warning');
+                return;
+            }
+            setIsLoading(true);
+            try {
+                const selectedCat = categories.find(c => c._id === form.galleryCategoryId);
+                const categoryTitle = selectedCat ? selectedCat.title : "Media";
 
-            if (response.data.success) {
+                const uploadPromises = images.map(async (file, idx) => {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    const uploadRes = await api.post("/api/gallery/upload", formData, {
+                        headers: { "Content-Type": "multipart/form-data" }
+                    });
+                    
+                    return api.post('/api/gallery', {
+                        title: categoryTitle,
+                        category: 'press',
+                        galleryCategoryId: form.galleryCategoryId,
+                        mediaType: 'image',
+                        image: uploadRes.data.url,
+                        imageAlt: altTexts[idx] || ""
+                    });
+                });
+
+                await Promise.all(uploadPromises);
+
                 Swal.fire({
                     icon: 'success',
-                    title: isEditing ? 'Media Photo Updated!' : 'Media Photo Added!',
+                    title: `${images.length} Media Photos Added!`,
                     timer: 1500,
                     showConfirmButton: false
                 });
                 resetForm();
                 fetchData();
+            } catch (error) {
+                console.error('Error bulk uploading media photos:', error);
+                Swal.fire('Error', 'Failed to upload photos', 'error');
+            } finally {
+                setIsLoading(false);
             }
-        } catch (error) {
-            console.error('Error saving media photo:', error);
-            Swal.fire('Error', 'Failed to save photo', 'error');
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -131,23 +211,25 @@ const MediaGalleryManagement = () => {
 
     const startEdit = (item) => {
         setIsEditing(item._id);
+        const catId = item.galleryCategoryId?._id || item.galleryCategoryId || '';
         setForm({
             title: item.title || '',
             category: item.category,
+            galleryCategoryId: catId,
             mediaType: item.mediaType,
             image: item.image,
             imageAlt: item.imageAlt || '',
         });
-        setImagePreview(item.image);
-        setImageFile(null);
+        setImages([]); // Don't put the existing image in the `images` array for editing, use `form.image`
+        setAltTexts({ 0: item.imageAlt || '' });
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const resetForm = () => {
         setIsEditing(null);
         setForm({ ...EMPTY_FORM });
-        setImageFile(null);
-        setImagePreview('');
+        setImages([]);
+        setAltTexts({});
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
@@ -164,68 +246,119 @@ const MediaGalleryManagement = () => {
                     <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
                         <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[#d26019]">
                             {isEditing ? <Edit className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-                            {isEditing ? 'Edit Media Photo' : 'Add Media Photo'}
+                            {isEditing ? 'Edit Media Photo' : 'Bulk Media Upload'}
                         </h2>
                         
                         <div className="space-y-4">
-                            {/* Image Upload Area */}
+                            {/* Category Selection FIRST for bulk upload */}
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Media Image</label>
-                                {imagePreview ? (
-                                    <div className="relative h-48 border-2 border-gray-200 overflow-hidden mb-2 bg-gray-50">
-                                        <img 
-                                            src={imagePreview.startsWith('blob:') ? imagePreview : `${SERVER_URL}${imagePreview}`} 
-                                            className="w-full h-full object-contain" 
-                                            alt="Preview" 
-                                        />
-                                        <button
-                                            onClick={() => {
-                                                setImageFile(null);
-                                                setImagePreview('');
-                                                setForm({ ...form, image: '' });
-                                                if (fileInputRef.current) fileInputRef.current.value = '';
-                                            }}
-                                            className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full shadow-md hover:bg-red-600 transition-colors"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#d26019] hover:bg-gray-50 transition-all group">
-                                        <Globe className="w-10 h-10 text-gray-300 mb-2 group-hover:text-[#d26019]" />
-                                        <span className="text-xs text-gray-400 group-hover:text-[#d26019]">Click to upload press photo</span>
-                                        <input 
-                                            ref={fileInputRef} 
-                                            type="file" 
-                                            className="hidden" 
-                                            onChange={handleImageChange} 
-                                            accept="image/*" 
-                                        />
-                                    </label>
-                                )}
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Select Media Category *</label>
+                                <select
+                                    value={form.galleryCategoryId}
+                                    onChange={(e) => setForm({ ...form, galleryCategoryId: e.target.value })}
+                                    className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#d26019] outline-none shadow-sm text-sm bg-white"
+                                    required
+                                >
+                                    <option value="">Choose Category...</option>
+                                    {categories.map(cat => (
+                                        <option key={cat._id} value={cat._id}>{cat.title}</option>
+                                    ))}
+                                </select>
                             </div>
 
+                            {/* Multiple Image Upload Area */}
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Image Alt Text (SEO)</label>
-                                <input
-                                    type="text"
-                                    value={form.imageAlt}
-                                    onChange={(e) => setForm({ ...form, imageAlt: e.target.value })}
-                                    className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#d26019] outline-none shadow-sm text-sm"
-                                    placeholder="e.g. IHWE 2024 Press Release Image"
-                                />
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                    {isEditing ? 'Update Media Image' : 'Select Images to Upload'}
+                                </label>
+                                
+                                {isEditing && form.image && images.length === 0 ? (
+                                    <div className="relative h-48 border-2 border-gray-200 overflow-hidden mb-2 bg-gray-50">
+                                        <img 
+                                            src={`${SERVER_URL}${form.image}`} 
+                                            className="w-full h-full object-contain" 
+                                            alt="Current" 
+                                        />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                            <span className="text-white text-xs font-bold">Replace by clicking button below</span>
+                                        </div>
+                                    </div>
+                                ) : null}
+
+                                <div 
+                                    className="border-2 border-dashed border-gray-300 rounded-sm p-4 bg-gray-50 text-center hover:bg-gray-100 transition-all cursor-pointer group mb-4"
+                                    onClick={() => fileInputRef.current.click()}
+                                >
+                                    <div className="flex items-center justify-center gap-3">
+                                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-400 group-hover:text-[#d26019] transition-colors">
+                                            <Camera size={20} />
+                                        </div>
+                                        <div className="text-left">
+                                            <h3 className="text-xs font-bold text-gray-700">Click to {isEditing ? 'Change' : 'Upload'} Image{!isEditing && 's'}</h3>
+                                            <p className="text-gray-500 text-[9px] uppercase font-black tracking-tighter">MAX 20 IMAGES (JPG, PNG, WEBP)</p>
+                                        </div>
+                                    </div>
+                                    <input 
+                                        ref={fileInputRef} 
+                                        type="file" 
+                                        multiple={!isEditing}
+                                        className="hidden" 
+                                        onChange={handleImageChange} 
+                                        accept="image/*" 
+                                    />
+                                </div>
                             </div>
+
+                            {/* Previews and Alt Text Section */}
+                            {(images.length > 0 || isEditing) && (
+                                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                    {images.map((file, idx) => (
+                                        <div key={idx} className="bg-gray-50 border-2 border-gray-200 p-3 rounded-sm relative">
+                                            {!isEditing && (
+                                                <button 
+                                                    onClick={() => removeImage(idx)}
+                                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 z-10"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            )}
+                                            <div className="flex gap-4">
+                                                <div className="w-20 h-20 bg-white border border-gray-200 flex-shrink-0 overflow-hidden">
+                                                    <img 
+                                                        src={URL.createObjectURL(file)} 
+                                                        className="w-full h-full object-cover" 
+                                                        alt="preview" 
+                                                    />
+                                                </div>
+                                                <div className="flex-1 space-y-2">
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase truncate w-32">{file.name}</p>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="SEO Alt Text..."
+                                                        className="w-full px-3 py-1.5 border-2 border-gray-200 focus:border-[#d26019] outline-none text-xs"
+                                                        value={isEditing ? (altTexts[0] || form.imageAlt) : (altTexts[idx] || "")}
+                                                        onChange={(e) => handleAltTextChange(isEditing ? 0 : idx, e.target.value)}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
 
                             <div className="flex gap-2 pt-2">
                                 <button
                                     onClick={handleSubmit}
-                                    disabled={isLoading}
+                                    disabled={isLoading || (!isEditing && images.length === 0)}
                                     className="flex-1 py-3 bg-[#d26019] text-white font-bold hover:bg-orange-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-orange-500/10"
                                 >
                                     {isLoading ? (
-                                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        <>
+                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            UPLOADING...
+                                        </>
                                     ) : (
-                                        isEditing ? <><Edit className="w-5 h-5" /> Update Photo</> : <><Save className="w-5 h-5" /> Save Media Photo</>
+                                        isEditing ? <><Edit className="w-5 h-5" /> Update Photo</> : <><UploadCloud className="w-5 h-5" /> {images.length > 0 ? `Upload ${images.length} Photos` : 'Save Media Photos'}</>
                                     )}
                                 </button>
                                 {isEditing && (
@@ -290,7 +423,9 @@ const MediaGalleryManagement = () => {
                                             </td>
                                             <td className="py-3 px-4">
                                                 <div className="flex flex-col gap-1">
-                                                    <span className="text-[10px] font-black text-[#23471d] uppercase tracking-[0.1em]">Media / Press Photo</span>
+                                                    <span className="text-[10px] font-black text-[#23471d] uppercase tracking-[0.1em]">
+                                                        {item.galleryCategoryId?.title || 'Uncategorized Media'}
+                                                    </span>
                                                     <p className="text-xs text-gray-600 font-bold uppercase tracking-tight line-clamp-1">{item.imageAlt || 'Untitled Media Photo'}</p>
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-[9px] text-gray-400">ID: {item._id}</span>
@@ -323,6 +458,18 @@ const MediaGalleryManagement = () => {
                     </div>
                 </div>
             </div>
+            <style dangerouslySetInnerHTML={{ __html: `
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: #f1f1f1;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: #d26019;
+                    border-radius: 10px;
+                }
+            ` }} />
         </div>
     );
 };

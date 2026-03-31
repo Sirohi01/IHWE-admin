@@ -1,368 +1,342 @@
-import { useState, useEffect } from "react";
-import { List, Image, LayoutGrid, Type } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
-import api from "../../lib/api"; // Verify this path
-import PageHeader from "../../components/PageHeader";
-import RichTextEditor from "../../components/RichTextEditor";
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import {
+    Save, Image as ImageIcon, Plus, Trash2, Edit,
+    Layers, Images, Camera
+} from 'lucide-react';
+import api, { SERVER_URL } from '../../lib/api';
+import PageHeader from '../../components/PageHeader';
+
+const EMPTY_FORM = {
+    title: '',
+    heading: '',
+    coverImageAlt: '',
+};
 
 const GalleryCategory = () => {
     const navigate = useNavigate();
-
-    // Portfolio Structure from Navbar (Hardcoded for now as per user request context)
-    const portfolioStructure = [
-        {
-            label: "Interiors",
-            subItems: [
-                "Retail Interior",
-                "Corporate Interior",
-                "Restaurant Interior",
-                "Shop in Shops",
-            ],
-        },
-        {
-            label: "Merchandising",
-            subItems: [
-                "Retail Display Merchandising",
-                "Acrylic Display",
-                "Gondolas",
-                "Window Display",
-            ],
-        },
-        {
-            label: "Kiosk",
-            subItems: ["Retail Kiosk", "Mobile Booth"],
-        },
-        { label: "Signage", subItems: [] },
-        { label: "Exhibitions & Events", subItems: [] },
-        {
-            label: "Office Interior",
-            subItems: ["Modular Work Station", "MD Cabin", "Chairs"],
-        },
-        {
-            label: "Furniture",
-            subItems: ["Wardrobe", "Kitchen", "LCD Unit", "Dressing Table", "Sofas"],
-        },
-    ];
-
-    const [formData, setFormData] = useState({
-        category: "",
-        subCategory: "",
-        title: "",
-        highlightText: "",
-        description: "",
-        displayNumber: "",
-        buttonLabel: "View Details",
-        buttonUrl: "",
-        slug: "",
-        altText: "",
-    });
-
-    const [mainImage, setMainImage] = useState(null);
-    const [imagePreview, setImagePreview] = useState(null);
+    const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [availableSubCategories, setAvailableSubCategories] = useState([]);
+    const [form, setForm] = useState({ ...EMPTY_FORM });
+    const [isEditing, setIsEditing] = useState(null); // holds _id when editing
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState('');
+    const fileInputRef = useRef(null);
 
-    // Handle Category Change to populate SubCategories
-    const handleCategoryChange = (e) => {
-        const selectedCategory = e.target.value;
-        const categoryData = portfolioStructure.find(
-            (item) => item.label === selectedCategory
-        );
+    useEffect(() => { fetchCategories(); }, []);
 
-        setFormData((prev) => ({
-            ...prev,
-            category: selectedCategory,
-            subCategory: "", // Reset subcategory
-        }));
-
-        if (categoryData && categoryData.subItems.length > 0) {
-            setAvailableSubCategories(categoryData.subItems);
-        } else {
-            setAvailableSubCategories([]);
-        }
-    };
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setMainImage(file);
-            setImagePreview(URL.createObjectURL(file));
-        }
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        if (!formData.title || !formData.category || !mainImage) {
-            Swal.fire("Error", "Please fill all required fields", "error");
-            return;
-        }
-
-        const data = new FormData();
-        Object.keys(formData).forEach((key) => {
-            data.append(key, formData[key]);
-        });
-        data.append("mainImage", mainImage);
-
+    const fetchCategories = async () => {
+        setIsLoading(true);
         try {
-            setIsLoading(true);
-            const response = await api.post("/api/portfolio-gallery/create", data, {
-                headers: { "Content-Type": "multipart/form-data" },
-            });
-
-            if (response.data.success) {
-                Swal.fire("Success", "Gallery Category Created!", "success");
-                navigate("/gallery-list"); // Redirect to list
-            }
-        } catch (error) {
-            Swal.fire(
-                "Error",
-                error.response?.data?.message || "Something went wrong",
-                "error"
-            );
+            const res = await api.get('/api/gallery-category');
+            if (res.data.success) setCategories(res.data.data);
+        } catch (err) {
+            console.error('Failed to fetch categories', err);
         } finally {
             setIsLoading(false);
         }
     };
 
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setImageFile(file);
+        setImagePreview(URL.createObjectURL(file));
+    };
+
+    const handleSubmit = async () => {
+        if (!form.title) {
+            Swal.fire('Warning', 'Category title is required', 'warning');
+            return;
+        }
+        setIsLoading(true);
+        try {
+            const formData = new FormData();
+            formData.append('title', form.title);
+            formData.append('heading', form.heading);
+            formData.append('coverImageAlt', form.coverImageAlt);
+            if (imageFile) formData.append('coverImage', imageFile);
+
+            let res;
+            if (isEditing) {
+                res = await api.put(`/api/gallery-category/${isEditing}`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+            } else {
+                res = await api.post('/api/gallery-category', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+            }
+
+            if (res.data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: isEditing ? 'Category Updated!' : 'Category Created!',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                resetForm();
+                fetchCategories();
+            }
+        } catch (err) {
+            Swal.fire('Error', err.response?.data?.message || 'Something went wrong', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleDelete = async (catId) => {
+        const result = await Swal.fire({
+            title: 'Delete Category?',
+            text: 'This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete!'
+        });
+        if (!result.isConfirmed) return;
+        setIsLoading(true);
+        try {
+            await api.delete(`/api/gallery-category/${catId}`);
+            Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
+            fetchCategories();
+        } catch (err) {
+            Swal.fire('Error', 'Failed to delete category', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const startEdit = (cat) => {
+        setIsEditing(cat._id);
+        setForm({ title: cat.title, heading: cat.heading || '', coverImageAlt: cat.coverImageAlt || '' });
+        setImagePreview(cat.coverImage ? `${SERVER_URL}${cat.coverImage}` : '');
+        setImageFile(null);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const resetForm = () => {
+        setIsEditing(null);
+        setForm({ ...EMPTY_FORM });
+        setImageFile(null);
+        setImagePreview('');
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
     return (
-        <div className="bg-white shadow-md p-6 mt-6 min-h-screen">
+        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
             <PageHeader
-                title="PORTFOLIO EVENT GALLERY"
-                description="Manage your portfolio items with stunning visual layouts"
-                buttonText="View All Listings"
-                buttonPath="/gallery-list"
-                buttonIcon={List}
+                title="GALLERY CATEGORY MANAGEMENT"
+                description="Create and manage photo gallery event categories"
             />
 
-            <form
-                onSubmit={handleSubmit}
-                className="bg-white rounded-sm shadow-lg border-2 border-gray-200 p-6 md:p-8 space-y-6 mt-6"
-            >
-                {/* ROW 1: CATEGORY & TITLE */}
-                <div className="grid md:grid-cols-2 gap-5">
-                    <div>
-                        <label className="text-sm font-semibold text-gray-700 block mb-2">
-                            Select Portfolio Gallery <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            name="category"
-                            value={formData.category}
-                            onChange={handleCategoryChange}
-                            className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors shadow-sm"
-                            required
-                        >
-                            <option value="">Choose Category...</option>
-                            {portfolioStructure.map((item, idx) => (
-                                <option key={idx} value={item.label}>
-                                    {item.label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
 
-                    <div>
-                        <label className="text-sm font-semibold text-gray-700 block mb-2">
-                            Gallery Title <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            name="title"
-                            value={formData.title}
-                            onChange={handleInputChange}
-                            placeholder="e.g. Retail Kiosk"
-                            className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors shadow-sm"
-                            required
-                        />
-                    </div>
-                </div>
+                {/* ===== LEFT: FORM ===== */}
+                <div className="lg:col-span-1">
+                    <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
+                        <h2 className="text-lg font-bold mb-5 flex items-center gap-2 text-[#d26019]">
+                            {isEditing ? <Edit className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                            {isEditing ? 'Edit Category' : 'Add New Category'}
+                        </h2>
 
-                {/* ROW 2: SUBCATEGORY (IF AVAILABLE) */}
-                {availableSubCategories.length > 0 && (
-                    <div>
-                        <label className="text-sm font-semibold text-gray-700 block mb-2">
-                            Select Sub-Category
-                        </label>
-                        <select
-                            name="subCategory"
-                            value={formData.subCategory}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors shadow-sm"
-                        >
-                            <option value="">Choose Sub-Category...</option>
-                            {availableSubCategories.map((sub, idx) => (
-                                <option key={idx} value={sub}>
-                                    {sub}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                )}
-
-                {/* ROW 3: HIGHLIGHT & NUMBER */}
-                <div className="grid md:grid-cols-2 gap-5">
-                    <div>
-                        <label className="text-sm font-semibold text-gray-700 block mb-2">
-                            Highlight Text
-                        </label>
-                        <input
-                            type="text"
-                            name="highlightText"
-                            value={formData.highlightText}
-                            onChange={handleInputChange}
-                            placeholder="e.g. Interior Design"
-                            className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors shadow-sm"
-                        />
-                    </div>
-                    <div>
-                        <label className="text-sm font-semibold text-gray-700 block mb-2">
-                            Display Number
-                        </label>
-                        <input
-                            type="text"
-                            name="displayNumber"
-                            value={formData.displayNumber}
-                            onChange={handleInputChange}
-                            placeholder="e.g. 01"
-                            className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors shadow-sm"
-                        />
-                    </div>
-                </div>
-
-                {/* ROW 4: DESCRIPTION */}
-                <div>
-                    <label className="text-sm font-semibold text-gray-700 block mb-2">
-                        Short Description (Rich Text)
-                    </label>
-                    <RichTextEditor
-                        value={formData.description}
-                        onChange={(val) => setFormData(prev => ({ ...prev, description: val }))}
-                        placeholder="Enter description..."
-                        minHeight="200px"
-                    />
-                </div>
-
-                {/* IMAGE & ALT TEXT */}
-                <div className="grid md:grid-cols-2 gap-5">
-                    <div className="space-y-4">
-                        <label className="text-sm font-semibold text-gray-700 block mb-2">
-                            Main Display Image <span className="text-red-500">*</span>
-                        </label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 shadow-sm">
-                            {imagePreview ? (
-                                <div className="relative">
-                                    <img
-                                        src={imagePreview}
-                                        alt="Preview"
-                                        className="w-full h-48 object-cover rounded-md bg-white p-2 border-2 border-gray-200"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setMainImage(null);
-                                            setImagePreview(null);
-                                        }}
-                                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 shadow-md"
-                                    >
-                                        ✕
-                                    </button>
-                                </div>
-                            ) : (
-                                <label className="cursor-pointer text-blue-600 font-semibold flex flex-col items-center gap-2 py-4">
-                                    <Image size={40} className="text-gray-400" />
-                                    <span className="text-lg">Click to Upload</span>
-                                    <span className="text-sm text-gray-500">PNG, JPG, WEBP (Max 5MB)</span>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageChange}
-                                        className="hidden"
-                                    />
+                        <div className="space-y-4">
+                            {/* Title */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                    Category Title <span className="text-red-500">*</span>
                                 </label>
-                            )}
+                                <input
+                                    type="text"
+                                    value={form.title}
+                                    onChange={(e) => setForm({ ...form, title: e.target.value })}
+                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
+                                    placeholder="e.g. Event Collection"
+                                />
+                            </div>
+
+                            {/* Heading */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                    Gallery Heading
+                                </label>
+                                <input
+                                    type="text"
+                                    value={form.heading}
+                                    onChange={(e) => setForm({ ...form, heading: e.target.value })}
+                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
+                                    placeholder="e.g. General Gallery"
+                                />
+                            </div>
+
+                            {/* Cover Image */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
+                                    Cover Image
+                                </label>
+                                {imagePreview ? (
+                                    <div className="relative h-36 border-2 border-gray-200 overflow-hidden mb-2">
+                                        <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
+                                        <button
+                                            onClick={() => {
+                                                setImageFile(null);
+                                                setImagePreview('');
+                                                if (fileInputRef.current) fileInputRef.current.value = '';
+                                            }}
+                                            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full shadow-md"
+                                        >
+                                            <Trash2 size={12} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <label className="flex flex-col items-center justify-center h-28 border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#23471d] transition-colors mb-2">
+                                        <Camera className="w-7 h-7 text-gray-400 mb-1" />
+                                        <span className="text-xs text-gray-400">Click to upload cover image</span>
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            className="hidden"
+                                            onChange={handleImageChange}
+                                            accept="image/*"
+                                        />
+                                    </label>
+                                )}
+                                <input
+                                    type="text"
+                                    value={form.coverImageAlt}
+                                    onChange={(e) => setForm({ ...form, coverImageAlt: e.target.value })}
+                                    className="w-full px-3 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none text-xs shadow-sm"
+                                    placeholder="Image Alt Text (SEO)..."
+                                />
+                            </div>
+
+                            {/* Buttons */}
+                            <div className="flex gap-2 pt-2">
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={isLoading}
+                                    className="flex-1 py-2.5 bg-[#d26019] text-white font-bold hover:bg-orange-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    {isLoading
+                                        ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                        : isEditing
+                                            ? <><Edit className="w-4 h-4" /> Update</>
+                                            : <><Plus className="w-4 h-4" /> Add Category</>
+                                    }
+                                </button>
+                                {isEditing && (
+                                    <button
+                                        onClick={resetForm}
+                                        className="px-4 py-2.5 border-2 border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-colors text-sm"
+                                    >
+                                        Cancel
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                    <div className="flex flex-col justify-end">
-                        <label className="text-sm font-semibold text-gray-700 block mb-2">
-                            Image Alt Text
-                        </label>
-                        <input
-                            type="text"
-                            name="altText"
-                            value={formData.altText}
-                            onChange={handleInputChange}
-                            placeholder="SEO Alt Tags"
-                            className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors shadow-sm"
-                        />
                     </div>
                 </div>
 
-                {/* BUTTON SETTINGS & STATUS */}
-                <div className="grid md:grid-cols-3 gap-5">
-                    <div>
-                        <label className="text-sm font-semibold text-gray-700 block mb-2">
-                            Btn Label
-                        </label>
-                        <input
-                            type="text"
-                            name="buttonLabel"
-                            value={formData.buttonLabel}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors shadow-sm"
-                        />
-                    </div>
-                    <div>
-                        <label className="text-sm font-semibold text-gray-700 block mb-2">
-                            Btn URL/Slug
-                        </label>
-                        <input
-                            type="text"
-                            name="slug"
-                            value={formData.slug}
-                            onChange={handleInputChange}
-                            placeholder="Auto-generated if empty"
-                            className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors shadow-sm"
-                        />
-                    </div>
-                    <div>
-                        <label className="text-sm font-semibold text-gray-700 block mb-2">
-                            Display Status
-                        </label>
-                        <div className="flex items-center gap-4 h-[52px] px-4 border-2 border-gray-300 shadow-sm">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="status" value="Active" checked={formData.status !== "Inactive"} onChange={handleInputChange} className="h-4 w-4 text-blue-600" />
-                                <span className="text-sm font-medium text-gray-700">Active</span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="status" value="Inactive" checked={formData.status === "Inactive"} onChange={handleInputChange} className="h-4 w-4 text-red-600" />
-                                <span className="text-sm font-medium text-gray-700">Hidden</span>
-                            </label>
+                {/* ===== RIGHT: CATEGORIES TABLE ===== */}
+                <div className="lg:col-span-2">
+                    <div className="bg-white border-2 border-gray-200 shadow-sm">
+                        {/* Table Header */}
+                        <div className="bg-[#23471d] px-5 py-3 flex items-center justify-between">
+                            <h2 className="text-white font-bold flex items-center gap-2">
+                                <Layers className="w-4 h-4" /> Gallery Categories List
+                            </h2>
+                            <span className="bg-[#d26019] text-white text-xs font-black px-3 py-1 uppercase tracking-wider">
+                                {categories.length} CATEGORIES
+                            </span>
+                        </div>
+
+                        {/* Table */}
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b-2 border-gray-200 bg-gray-50">
+                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase w-10">NO.</th>
+                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">IMAGE</th>
+                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">TITLE</th>
+                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">HEADING</th>
+                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">ACTIONS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {isLoading ? (
+                                        <tr>
+                                            <td colSpan={5} className="text-center py-12">
+                                                <div className="w-8 h-8 border-4 border-[#23471d] border-t-transparent rounded-full animate-spin mx-auto" />
+                                            </td>
+                                        </tr>
+                                    ) : !categories.length ? (
+                                        <tr>
+                                            <td colSpan={5} className="text-center py-12 text-gray-400 italic">
+                                                No gallery categories found. Create your first category.
+                                            </td>
+                                        </tr>
+                                    ) : categories.map((cat, idx) => (
+                                        <tr key={cat._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                            <td className="py-3 px-4 text-gray-500 font-bold">{idx + 1}</td>
+                                            <td className="py-3 px-4">
+                                                {cat.coverImage ? (
+                                                    <img
+                                                        src={`${SERVER_URL}${cat.coverImage}`}
+                                                        alt={cat.coverImageAlt}
+                                                        className="w-16 h-11 object-cover rounded border border-gray-200"
+                                                        onError={(e) => { e.target.src = 'https://placehold.co/64x44?text=No+Img'; }}
+                                                    />
+                                                ) : (
+                                                    <div className="w-16 h-11 bg-gray-100 rounded border border-gray-200 flex items-center justify-center">
+                                                        <ImageIcon size={14} className="text-gray-400" />
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <p className="font-bold text-gray-800 text-sm">{cat.title}</p>
+                                                <p className="text-[10px] text-gray-400 mt-0.5">{cat.coverImageAlt}</p>
+                                            </td>
+                                            <td className="py-3 px-4 text-gray-600 text-xs">{cat.heading || '—'}</td>
+                                            <td className="py-3 px-4">
+                                                <div className="flex items-center gap-1">
+                                                    {/* Edit */}
+                                                    <button
+                                                        onClick={() => startEdit(cat)}
+                                                        className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                                                        title="Edit"
+                                                    >
+                                                        <Edit size={15} />
+                                                    </button>
+                                                    {/* Add Images */}
+                                                    <button
+                                                        onClick={() => navigate('/manage-gallery-images', {
+                                                            state: { categoryId: cat.title, categoryTitle: cat.title }
+                                                        })}
+                                                        className="p-1.5 text-[#23471d] hover:bg-green-50 rounded transition-colors"
+                                                        title="Manage Images in this Category"
+                                                    >
+                                                        <Images size={15} />
+                                                    </button>
+                                                    {/* Delete */}
+                                                    <button
+                                                        onClick={() => handleDelete(cat._id)}
+                                                        className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 size={15} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
 
-                {/* SUBMIT BUTTON */}
-                <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-[#1e3a8a] text-white font-bold py-4 shadow-lg hover:shadow-xl transition-all uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed mt-4"
-                >
-                    {isLoading ? (
-                        <div className="flex items-center justify-center gap-2">
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            <span>Creating...</span>
-                        </div>
-                    ) : (
-                        <span>Create Gallery Category</span>
-                    )}
-                </button>
-            </form>
+            </div>
         </div>
     );
 };

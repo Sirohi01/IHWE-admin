@@ -17,11 +17,20 @@ const AdminUser = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 25;
   const [isLoading, setIsLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const info = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
+    if (info) {
+      setCurrentUser(JSON.parse(info));
+    }
+  }, []);
 
   const [newAdmin, setNewAdmin] = useState({
     username: "",
     password: "",
-    role: "Editor"
+    role: "employee",
+    mobile: ""
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -85,14 +94,15 @@ const AdminUser = () => {
       const response = await api.post('/api/admin/create', {
         username: newAdmin.username,
         password: newAdmin.password,
-        role: newAdmin.role
+        role: newAdmin.role,
+        mobile: newAdmin.mobile
       });
 
       if (response.data.success) {
         await Swal.fire({
           icon: 'success',
           title: 'Success!',
-          text: 'Admin created successfully',
+          text: 'User created successfully',
           confirmButtonColor: '#134698',
           timer: 2000
         });
@@ -100,7 +110,8 @@ const AdminUser = () => {
         setNewAdmin({
           username: "",
           password: "",
-          role: "Editor"
+          role: currentUser?.role === 'super-admin' ? "super-admin" : "employee",
+          mobile: ""
         });
 
         fetchAdmins();
@@ -109,7 +120,7 @@ const AdminUser = () => {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: error.response?.data?.message || 'Failed to create admin',
+        text: error.response?.data?.message || 'Failed to create user',
         confirmButtonColor: '#134698'
       });
     } finally {
@@ -118,8 +129,11 @@ const AdminUser = () => {
   };
 
   const handleEditAdmin = async (admin) => {
+    const isSuper = currentUser?.role === 'super-admin';
+    const canChangeRole = isSuper;
+
     const { value: formValues } = await Swal.fire({
-      title: 'Edit Admin',
+      title: 'Edit User',
       html: `
         <div class="text-left space-y-4">
           <div>
@@ -128,10 +142,15 @@ const AdminUser = () => {
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
-            <select id="swal-role" class="w-full px-4 py-3 border-2 border-gray-300 focus:border-[#134698] focus:outline-none">
-              <option value="Editor" ${admin.role === 'Editor' ? 'selected' : ''}>Editor</option>
-              <option value="Content Manager" ${admin.role === 'Content Manager' ? 'selected' : ''}>Content Manager</option>
-              <option value="Super Admin" ${admin.role === 'Super Admin' ? 'selected' : ''}>Super Admin</option>
+            <select id="swal-role" class="w-full px-4 py-3 border-2 border-gray-300 focus:border-[#134698] focus:outline-none" ${!canChangeRole ? 'disabled' : ''}>
+              <option value="super-admin" ${admin.role === 'super-admin' ? 'selected' : ''}>Super Admin</option>
+              <option value="accountant-admin" ${admin.role === 'accountant-admin' ? 'selected' : ''}>Accountant Admin</option>
+              <option value="accountant-employee" ${admin.role === 'accountant-employee' ? 'selected' : ''}>Accountant Employee</option>
+              <option value="marketing-admin" ${admin.role === 'marketing-admin' ? 'selected' : ''}>Marketing Admin</option>
+              <option value="marketing-employee" ${admin.role === 'marketing-employee' ? 'selected' : ''}>Marketing Employee</option>
+              <option value="digital-admin" ${admin.role === 'digital-admin' ? 'selected' : ''}>Digital Admin</option>
+              <option value="digital-employee" ${admin.role === 'digital-employee' ? 'selected' : ''}>Digital Employee</option>
+              <option value="employee" ${admin.role === 'employee' ? 'selected' : ''}>General Employee</option>
             </select>
           </div>
           <div>
@@ -142,6 +161,10 @@ const AdminUser = () => {
             </select>
           </div>
           <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Mobile</label>
+            <input id="swal-mobile" class="w-full px-4 py-3 border-2 border-gray-300 focus:border-[#134698] focus:outline-none" value="${admin.mobile || ''}">
+          </div>
+          <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">New Password (optional)</label>
             <input id="swal-password" type="password" class="w-full px-4 py-3 border-2 border-gray-300 focus:border-[#134698] focus:outline-none" placeholder="Leave blank to keep current">
           </div>
@@ -149,7 +172,7 @@ const AdminUser = () => {
       `,
       focusConfirm: false,
       showCancelButton: true,
-      confirmButtonText: 'Update Admin',
+      confirmButtonText: 'Update User',
       cancelButtonText: 'Cancel',
       confirmButtonColor: '#134698',
       cancelButtonColor: '#6B7280',
@@ -163,6 +186,7 @@ const AdminUser = () => {
           username: document.getElementById('swal-username').value,
           role: document.getElementById('swal-role').value,
           status: document.getElementById('swal-status').value,
+          mobile: document.getElementById('swal-mobile').value,
           password: document.getElementById('swal-password').value
         };
       }
@@ -286,7 +310,7 @@ const AdminUser = () => {
       key: "role",
       label: "ROLE",
       render: (row) => (
-        <div className="text-gray-900 font-medium">{row.role}</div>
+        <div className="text-gray-900 font-medium capitalize">{row.role ? row.role.replace(/-/g, ' ') : 'N/A'}</div>
       )
     },
     {
@@ -347,7 +371,7 @@ const AdminUser = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Username <span className="text-red-500">*</span>
@@ -389,6 +413,47 @@ const AdminUser = () => {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Role <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="role"
+                  value={newAdmin.role}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-sm bg-white"
+                >
+                  {currentUser?.role === 'super-admin' ? (
+                    <>
+                      <option value="super-admin">Super Admin</option>
+                      <option value="accountant-admin">Accountant Admin</option>
+                      <option value="accountant-employee">Accountant Employee</option>
+                      <option value="marketing-admin">Marketing Admin</option>
+                      <option value="marketing-employee">Marketing Employee</option>
+                      <option value="digital-admin">Digital Admin</option>
+                      <option value="digital-employee">Digital Employee</option>
+                      <option value="employee">General Employee</option>
+                    </>
+                  ) : (
+                    <option value="employee">General Employee</option>
+                  )}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Mobile
+                </label>
+                <input
+                  type="text"
+                  name="mobile"
+                  value={newAdmin.mobile}
+                  onChange={handleInputChange}
+                  placeholder="Enter mobile"
+                  className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-sm"
+                />
+              </div>
+
               <button
                 onClick={handleCreateAdmin}
                 disabled={isLoading}
@@ -402,7 +467,7 @@ const AdminUser = () => {
                 ) : (
                   <>
                     <UserPlus className="w-4 h-4" />
-                    <span>Create Admin</span>
+                    <span>Create User</span>
                   </>
                 )}
               </button>

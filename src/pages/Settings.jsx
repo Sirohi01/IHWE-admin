@@ -16,7 +16,9 @@ import {
     Contact,
     Type,
     Calendar,
-    MessageSquare
+    MessageSquare,
+    CreditCard,
+    Banknote
 } from 'lucide-react';
 import api, { API_URL, SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
@@ -31,6 +33,7 @@ const Settings = () => {
     const [marqueeText, setMarqueeText] = useState("• 150+ Speakers confirmed • Early Bird discount ending soon! • Join 8,000+ Professionals from 25+ Countries");
     const [topbarDate, setTopbarDate] = useState("15–17 October 2026");
     const [supportDeskText, setSupportDeskText] = useState("For exhibitors and delegates traveling from abroad, our international support team is available 24/7 during the expo period for visa, travel, and logistics assistance.");
+
 
     // Email addresses state
     const [emails, setEmails] = useState([
@@ -91,6 +94,7 @@ const Settings = () => {
                     setSupportDeskText(savedSupportDeskText);
                 }
 
+
                 if (emails && emails.length > 0) {
                     setEmails(emails.map((e, index) => ({ ...e, id: Date.now() + index, isEditing: false })));
                 }
@@ -128,6 +132,7 @@ const Settings = () => {
             formData.append('marqueeText', marqueeText);
             formData.append('topbarDate', topbarDate);
             formData.append('supportDeskText', supportDeskText);
+
 
             const res = await api.put('/api/settings', formData, {
                 headers: {
@@ -430,6 +435,7 @@ const Settings = () => {
                                     placeholder="Enter support desk text for contact page..."
                                 />
                             </div>
+
                         </div>
                     </div>
 
