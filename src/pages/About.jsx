@@ -5,11 +5,11 @@ import {
   Heading,
   Target,
   Eye,
-  Video,
+  Image as ImageIcon,
   Upload,
   RefreshCw,
   FileText,
-  Play
+  Info
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api, { API_URL, SERVER_URL } from '../lib/api';
@@ -23,14 +23,23 @@ const About = () => {
     highlightedWord: "Healthcare Excellence",
     description: "The International Health & Wellness Expo stands as a premier global gathering where healthcare leaders, innovators, and visionaries converge to shape the future of medical science. From advanced diagnostics to AI-driven solutions and wellness technologies, the expo fosters meaningful dialogue and transformative partnerships.",
     vision: "To become the world's most influential healthcare exhibition platform, uniting medical pioneers, researchers, and global innovators under one transformative ecosystem.",
-    mission: "Empowering healthcare leaders with breakthrough technologies, fostering cross-border collaboration, and accelerating advancements in patient-centered care."
+    mission: "Empowering healthcare leaders with breakthrough technologies, fostering cross-border collaboration, and accelerating advancements in patient-centered care.",
+    image1Alt: "",
+    image2Alt: "",
+    image3Alt: ""
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [videoFile, setVideoFile] = useState(null);
-  const [videoPreview, setVideoPreview] = useState('');
-  const [currentVideo, setCurrentVideo] = useState('');
-  const [isSavingVideo, setIsSavingVideo] = useState(false);
+  const [imageFiles, setImageFiles] = useState({
+    image1: null, image2: null, image3: null
+  });
+  const [previews, setPreviews] = useState({
+    image1: '', image2: '', image3: ''
+  });
+  const [currentImages, setCurrentImages] = useState({
+    image1: '', image2: '', image3: ''
+  });
+  const [isSavingImages, setIsSavingImages] = useState(false);
 
   // Fetch about data on mount
   useEffect(() => {
@@ -49,12 +58,23 @@ const About = () => {
           highlightedWord: data.highlightedWord || "Healthcare Excellence",
           description: data.description || "",
           vision: data.vision || "",
-          mission: data.mission || ""
+          mission: data.mission || "",
+          image1Alt: data.image1Alt || "",
+          image2Alt: data.image2Alt || "",
+          image3Alt: data.image3Alt || ""
         });
-        if (data.video) {
-          setCurrentVideo(data.video);
-          setVideoPreview(`${SERVER_URL}${data.video}`);
-        }
+        
+        setCurrentImages({
+          image1: data.image1 || '',
+          image2: data.image2 || '',
+          image3: data.image3 || ''
+        });
+        
+        setPreviews({
+          image1: data.image1 ? `${SERVER_URL}${data.image1}` : '',
+          image2: data.image2 ? `${SERVER_URL}${data.image2}` : '',
+          image3: data.image3 ? `${SERVER_URL}${data.image3}` : ''
+        });
       }
     } catch (error) {
       console.error('Error fetching about data:', error);
@@ -99,40 +119,47 @@ const About = () => {
     }
   };
 
-  const handleVideoChange = (e) => {
+  const handleImageChange = (e, fieldName) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 100 * 1024 * 1024) {
+      if (file.size > 5 * 1024 * 1024) {
         Swal.fire({
           icon: 'error',
           title: 'File Too Large',
-          text: 'Please upload a video file smaller than 100MB',
+          text: 'Please upload an image smaller than 5MB',
           confirmButtonColor: '#23471d'
         });
-        e.target.value = '';
         return;
       }
-      setVideoFile(file);
-      setVideoPreview(URL.createObjectURL(file));
+      setImageFiles(prev => ({ ...prev, [fieldName]: file }));
+      setPreviews(prev => ({ ...prev, [fieldName]: URL.createObjectURL(file) }));
     }
   };
 
-  const handleUploadVideo = async () => {
-    if (!videoFile) return;
-    setIsSavingVideo(true);
+  const handleUploadImages = async () => {
+    const filesToUpload = Object.entries(imageFiles).filter(([_, file]) => file !== null);
+    if (filesToUpload.length === 0) return;
+
+    setIsSavingImages(true);
     try {
-      const formDataVideo = new FormData();
-      formDataVideo.append('video', videoFile);
-      const response = await api.post('/api/about/video', formDataVideo, {
+      const formDataImages = new FormData();
+      filesToUpload.forEach(([fieldName, file]) => {
+        formDataImages.append(fieldName, file);
+      });
+
+      const response = await api.post('/api/about/images', formDataImages, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+
       if (response.data.success) {
-        setCurrentVideo(response.data.videoPath);
-        setVideoFile(null);
+        const { imagePaths } = response.data;
+        setCurrentImages(prev => ({ ...prev, ...imagePaths }));
+        setImageFiles({ image1: null, image2: null, image3: null });
+        
         Swal.fire({
           icon: 'success',
           title: 'Uploaded!',
-          text: 'Video uploaded successfully',
+          text: 'Images updated successfully',
           timer: 2000,
           showConfirmButton: false
         });
@@ -141,11 +168,11 @@ const About = () => {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: error.response?.data?.message || 'Failed to upload video',
+        text: error.response?.data?.message || 'Failed to upload images',
         confirmButtonColor: '#23471d'
       });
     } finally {
-      setIsSavingVideo(false);
+      setIsSavingImages(false);
     }
   };
 
@@ -170,61 +197,92 @@ const About = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
           {/* Left side: Video Upload & Preview */}
           <div className="lg:col-span-12 xl:col-span-12">
-            <SectionCard title="About Video" icon={Video}>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <div className="border-2 border-dashed border-gray-300 hover:border-[#23471d] transition-colors p-8 text-center bg-gray-50">
-                    <input
-                      type="file"
-                      accept="video/*"
-                      id="video-upload"
-                      className="hidden"
-                      onChange={handleVideoChange}
-                    />
-                    <label htmlFor="video-upload" className="cursor-pointer">
-                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-sm font-semibold text-gray-700">Click to upload video</p>
-                      <p className="text-xs text-gray-400 mt-2">MP4, WebM, OGG (Max 100MB)</p>
-                    </label>
-                  </div>
-                  {videoFile && (
-                    <div className="bg-orange-50 border border-orange-200 p-3 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-[#d26019]" />
-                        <span className="text-xs font-semibold text-[#d26019] truncate max-w-[200px]">{videoFile.name}</span>
-                      </div>
-                      <button
-                        onClick={handleUploadVideo}
-                        disabled={isSavingVideo}
-                        className="bg-[#d26019] text-white px-4 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-[#b8521a] transition-colors disabled:opacity-50"
-                      >
-                        {isSavingVideo ? "Uploading..." : "Upload Now"}
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <div className="relative bg-black aspect-video flex items-center justify-center overflow-hidden border-2 border-gray-200">
-                  {videoPreview ? (
-                    <video
-                      key={videoPreview}
-                      src={videoPreview}
-                      controls
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="text-center text-gray-500">
-                      <Play className="w-12 h-12 mx-auto mb-2 opacity-20" />
-                      <p className="text-sm">No video uploaded</p>
-                    </div>
-                  )}
-                  {currentVideo && !videoFile && (
-                    <div className="absolute top-2 right-2 bg-green-600 text-white text-[10px] px-2 py-1 font-bold uppercase">
-                      Live
-                    </div>
-                  )}
-                </div>
+            <SectionCard title="About Section Images & SEO" icon={ImageIcon}>
+              <div className="flex items-center gap-2 mb-6 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                <Info className="w-4 h-4 text-blue-600" />
+                <p className="text-xs text-blue-700">
+                  Recommended sizes follow the <strong>Editorial Grid</strong> layout for a premium look. 
+                  Please provide <strong>Alt Text</strong> for each image to improve SEO ranking.
+                </p>
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[
+                  { id: 'image1', label: 'Image 1 (Main/Tall)', dimensions: '800x1200 px', altField: 'image1Alt' },
+                  { id: 'image2', label: 'Image 2 (Wide/Bottom)', dimensions: '1000x600 px', altField: 'image2Alt' },
+                  { id: 'image3', label: 'Image 3 (Square/Top)', dimensions: '800x800 px', altField: 'image3Alt' }
+                ].map((item) => (
+                  <div key={item.id} className="flex flex-col h-full bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
+                    <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-white">
+                      <span className="text-xs font-bold text-gray-700 uppercase tracking-tight">{item.label}</span>
+                      <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-500 font-medium">{item.dimensions}</span>
+                    </div>
+                    
+                    <div className="relative aspect-[4/5] bg-slate-100 flex items-center justify-center group">
+                      {previews[item.id] ? (
+                         <img 
+                          src={previews[item.id]} 
+                          className="w-full h-full object-cover" 
+                          alt="preview"
+                        />
+                      ) : (
+                        <div className="text-center p-4">
+                          <Upload className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                          <p className="text-[10px] text-gray-400">No Image</p>
+                        </div>
+                      )}
+                      
+                      <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          className="hidden" 
+                          onChange={(e) => handleImageChange(e, item.id)}
+                        />
+                        <div className="bg-white px-4 py-2 rounded text-xs font-bold text-gray-900 shadow-lg capitalize">
+                          Change Image
+                        </div>
+                      </label>
+
+                      {currentImages[item.id] && !imageFiles[item.id] && (
+                         <div className="absolute top-2 right-2 bg-[#23471d] text-white text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-widest shadow-sm">
+                           Live
+                         </div>
+                      )}
+                    </div>
+
+                    <div className="p-4 space-y-3 flex-grow flex flex-col justify-end bg-white">
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">SEO Alt Text</label>
+                        <input
+                          type="text"
+                          name={item.altField}
+                          value={formData[item.altField]}
+                          onChange={handleChange}
+                          placeholder="e.g. Healthcare networking event..."
+                          className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#23471d] text-[11px] rounded transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {Object.values(imageFiles).some(f => f !== null) && (
+                <div className="mt-8 pt-6 border-t border-gray-100 flex justify-center">
+                  <button
+                    onClick={handleUploadImages}
+                    disabled={isSavingImages}
+                    className="bg-[#d26019] hover:bg-[#b8521a] text-white px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.1em] shadow-lg flex items-center gap-2 transition-all"
+                  >
+                    {isSavingImages ? (
+                       <><RefreshCw className="w-4 h-4 animate-spin" /> Uploading...</>
+                    ) : (
+                      <><Upload className="w-4 h-4" /> Save All New Images</>
+                    )}
+                  </button>
+                </div>
+              )}
             </SectionCard>
           </div>
 

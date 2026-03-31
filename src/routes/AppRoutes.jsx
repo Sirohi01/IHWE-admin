@@ -22,6 +22,7 @@ import PostList from "../pages/PostList";
 import About from "../pages/About";
 import WhoWeAre from "../pages/WhoWeAre";
 import Services from "../pages/Services";
+import FAQManage from "../pages/FAQManage";
 import AddPdf from "../pages/AddPdf";
 import StatsCounter from "../pages/StatsCounter";
 import MarqueeManage from "../pages/MarqueeManage";
@@ -95,6 +96,7 @@ import ManageRegistrations from "../pages/ManageRegistrations";
 import ManageEvents from "../pages/ManageEvents";
 import ManageStallRates from "../pages/ManageStallRates";
 import ManageTerms from "../pages/ManageTerms";
+import TravelAccommodationManage from "../pages/TravelAccommodationManage";
 
 
 
@@ -155,6 +157,7 @@ export default function AppRoutes() {
             element={<Navigate to="/who-we-are" replace />}
           />
           <Route path="featured-services" element={<Services />} />
+          <Route path="faq-manage" element={<FAQManage />} />
           <Route path="add-pdf" element={<AddPdf />} />
           <Route path="stats-counter" element={<StatsCounter />} />
           <Route path="global-platform" element={<GlobalPlatform />} />
@@ -163,6 +166,7 @@ export default function AppRoutes() {
           <Route path="target-audience" element={<TargetAudience />} />
           <Route path="organized-by" element={<OrganizedBy />} />
           <Route path="why-exhibit-manage" element={<WhyExhibitManage />} />
+          <Route path="travel-accommodation-manage" element={<TravelAccommodationManage />} />
           <Route
             path="exhibitor-profile-manage"
             element={<ExhibitorProfileManage />}

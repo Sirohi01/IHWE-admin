@@ -54,6 +54,9 @@ const Services = () => {
         heading: 'Focused Industry Zones for Business',
         highlightText: 'Industry Zones',
         description: 'Navigating the future of healthcare through dedicated specialized zones, connecting buyers with the right global innovators.',
+        mainButtonText: 'Exhibit At India Health 2026',
+        mainButtonUrl: '/book-a-stand',
+        mainSubText: 'Join 2,500+ exhibiting brands from over 25 countries',
         cards: []
     });
     const [isLoading, setIsLoading] = useState(false);
@@ -86,7 +89,10 @@ const Services = () => {
                 subheading: data.subheading,
                 heading: data.heading,
                 highlightText: data.highlightText,
-                description: data.description
+                description: data.description,
+                mainButtonText: data.mainButtonText,
+                mainButtonUrl: data.mainButtonUrl,
+                mainSubText: data.mainSubText
             });
             if (response.data.success) {
                 Swal.fire({ icon: 'success', title: 'Headings Saved!', timer: 1500, showConfirmButton: false });
@@ -247,12 +253,47 @@ const Services = () => {
                                     className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none h-24 shadow-sm"
                                 />
                             </div>
+
+                            <div className="pt-4 border-t border-gray-100 space-y-4">
+                                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Bottom CTA Management</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-[#d26019] uppercase mb-1">Button Text</label>
+                                        <input
+                                            type="text"
+                                            value={data.mainButtonText}
+                                            onChange={(e) => setData({ ...data, mainButtonText: e.target.value })}
+                                            className="w-full px-3 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none text-xs"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-[#d26019] uppercase mb-1">Button URL</label>
+                                        <input
+                                            type="text"
+                                            value={data.mainButtonUrl}
+                                            onChange={(e) => setData({ ...data, mainButtonUrl: e.target.value })}
+                                            className="w-full px-3 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none text-xs"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-[#d26019] uppercase mb-1">Sub-Text (Brands/Countries)</label>
+                                    <input
+                                        type="text"
+                                        value={data.mainSubText}
+                                        onChange={(e) => setData({ ...data, mainSubText: e.target.value })}
+                                        className="w-full px-3 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none text-xs"
+                                    />
+                                </div>
+                            </div>
+
                             <button
                                 onClick={handleHeadingSave}
                                 disabled={isLoading}
-                                className="w-full py-2 bg-[#23471d] text-white font-bold hover:bg-[#1a3615] transition-colors flex items-center justify-center gap-2"
+                                className="w-full py-3 bg-[#23471d] text-white font-bold hover:bg-[#1a3615] transition-all flex items-center justify-center gap-3 shadow-lg hover:shadow-xl mt-2"
                             >
-                                <Save className="w-4 h-4" /> Save Headings
+                                {isLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                : <><Save className="w-5 h-5" /> Save Section Content</>}
                             </button>
                         </div>
                     </div>
@@ -329,9 +370,9 @@ const Services = () => {
 
                             {/* Image Upload */}
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Card Image</label>
+                                <label className="block text-xs font-bold text-[#d26019] uppercase mb-1">Card Image (363x192px)</label>
                                 {imagePreview ? (
-                                    <div className="relative h-32 border-2 border-gray-200 overflow-hidden mb-2">
+                                    <div className="relative w-full aspect-[363/192] border-2 border-gray-200 overflow-hidden mb-2">
                                         <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
                                         <button
                                             onClick={() => { setImageFile(null); setImagePreview(''); setCardForm({ ...cardForm, image: '' }); if (fileInputRef.current) fileInputRef.current.value = ''; }}
@@ -341,9 +382,9 @@ const Services = () => {
                                         </button>
                                     </div>
                                 ) : (
-                                    <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#23471d] transition-colors">
-                                        <ImageIcon className="w-6 h-6 text-gray-400 mb-1" />
-                                        <span className="text-xs text-gray-400">Click to upload image</span>
+                                    <label className="flex flex-col items-center justify-center w-full aspect-[363/192] border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#23471d] transition-colors group">
+                                        <ImageIcon className="w-6 h-6 text-gray-400 mb-1 group-hover:text-[#23471d] transition-colors" />
+                                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Click to upload image (363x192px)</span>
                                         <input ref={fileInputRef} type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
                                     </label>
                                 )}
@@ -410,7 +451,7 @@ const Services = () => {
                                             <td className="py-3 px-4 text-gray-500 font-bold">{idx + 1}</td>
                                             <td className="py-3 px-4">
                                                 {card.image ? (
-                                                    <img src={`${SERVER_URL}${card.image}`} alt={card.imageAlt} className="w-14 h-10 object-cover rounded border border-gray-200" />
+                                                    <img src={`${SERVER_URL}${card.image}`} alt={card.imageAlt} className="w-14 h-10 object-cover rounded-none border border-gray-200" />
                                                 ) : (
                                                     <div className="w-14 h-10 bg-gray-100 rounded border border-gray-200 flex items-center justify-center">
                                                         <ImageIcon size={14} className="text-gray-400" />

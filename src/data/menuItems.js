@@ -73,6 +73,7 @@ export const menuItems = [
       { label: "Marquee Text", path: "/marquee-text" },
       { label: "Who We Are", path: "/who-we-are" },
       { label: "Featured Services", path: "/featured-services" },
+      { label: "FAQ Management", path: "/faq-manage" },
       { label: "Glimpse", path: "/glimpse" },
       { label: "Our Clients", path: "/clients" },
       { label: "Parallax Image", path: "/parallax-manage" },
@@ -112,6 +113,7 @@ export const menuItems = [
       { label: "Exhibitor Profile", path: "/exhibitor-profile-manage" },
       { label: "E-Promotion Management", path: "/e-promotion-manage" },
       { label: "Stall Designing Vendor", path: "/stall-vendor-manage" },
+      { label: "Travel & Accommodation", path: "/travel-accommodation-manage" },
     ],
   },
 
