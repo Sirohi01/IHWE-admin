@@ -90,6 +90,18 @@ const AddPdf = () => {
         const file = e.target.files[0];
         if (!file) return;
 
+        // 100KB Size check for images
+        if (file.size > 100 * 1024) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Image Too Large',
+                text: 'Resource cover image should not exceed 100KB. Please compress and try again.',
+                confirmButtonColor: '#23471d'
+            });
+            e.target.value = null;
+            return;
+        }
+
         const formData = new FormData();
         formData.append('image', file);
 
@@ -113,6 +125,18 @@ const AddPdf = () => {
     const handlePdfUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        // 5MB Size check for PDFs
+        if (file.size > 5 * 1024 * 1024) {
+            Swal.fire({
+                icon: 'error',
+                title: 'PDF Too Large',
+                text: 'PDF file size should not exceed 5MB. Please optimize the file and try again.',
+                confirmButtonColor: '#d26019'
+            });
+            e.target.value = null;
+            return;
+        }
 
         const formData = new FormData();
         formData.append('pdf', file);
@@ -353,7 +377,7 @@ const AddPdf = () => {
                                 <label className="block text-xs font-bold text-gray-500 uppercase">Cover Image</label>
                                 <div className="border-2 border-dashed border-gray-300 hover:border-[#23471d] transition-colors p-4 flex flex-col items-center gap-2">
                                     {cardForm.image ? (
-                                        <div className="relative w-full h-32 border border-gray-200">
+                                        <div className="relative w-full aspect-video border border-gray-200 overflow-hidden">
                                             <img src={`${SERVER_URL}${cardForm.image}`} className="w-full h-full object-cover" alt="Cover Preview" />
                                             <button 
                                                 onClick={() => setCardForm({...cardForm, image: ''})}
@@ -363,7 +387,10 @@ const AddPdf = () => {
                                             </button>
                                         </div>
                                     ) : (
-                                        <ImageIcon className="w-8 h-8 text-gray-300" />
+                                        <div className="w-full aspect-video bg-gray-50 flex flex-col items-center justify-center border-2 border-dashed border-gray-200">
+                                            <ImageIcon className="w-8 h-8 text-gray-300" />
+                                            <span className="text-[10px] text-gray-400 font-bold mt-2">NO COVER SELECTED</span>
+                                        </div>
                                     )}
                                     <label className="w-full">
                                         <div className={`w-full py-2 flex items-center justify-center gap-2 text-white text-xs font-bold cursor-pointer transition-colors ${isUploadingImage ? 'bg-gray-400' : 'bg-[#23471d] hover:bg-[#1a3615]'}`}>
@@ -371,6 +398,9 @@ const AddPdf = () => {
                                         </div>
                                         <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={isUploadingImage} />
                                     </label>
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight text-center leading-tight mt-1">
+                                        Recommended: 1200 x 675 PX (16:9) | Max: 100KB
+                                    </p>
                                 </div>
                                 <input
                                     type="text"
@@ -388,7 +418,7 @@ const AddPdf = () => {
                                     {cardForm.pdf ? (
                                         <div className="w-full p-2 bg-orange-50 border border-orange-100 flex items-center gap-2 overflow-hidden">
                                             <FileText className="text-[#d26019] shrink-0" size={16} />
-                                            <span className="text-[10px] text-gray-600 truncate flex-1">{cardForm.pdf.split('/').pop()}</span>
+                                            <span className="text-[10px] text-gray-600 truncate flex-1 font-bold">{cardForm.pdf.split('/').pop()}</span>
                                             <button 
                                                 onClick={() => setCardForm({...cardForm, pdf: ''})}
                                                 className="text-red-500 hover:bg-red-50 p-1"
@@ -405,6 +435,9 @@ const AddPdf = () => {
                                         </div>
                                         <input type="file" accept="application/pdf" onChange={handlePdfUpload} className="hidden" disabled={isUploadingPdf} />
                                     </label>
+                                    <p className="text-[10px] text-[#d26019] font-bold uppercase tracking-tight text-center leading-tight mt-1">
+                                        Max File Size: 5MB
+                                    </p>
                                 </div>
                             </div>
 

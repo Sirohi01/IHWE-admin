@@ -88,6 +88,19 @@ const FAQManage = () => {
     const handleDefaultImageChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        // 100KB Size check
+        if (file.size > 100 * 1024) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Image Too Large',
+                text: 'Default visual image should not exceed 100KB. Please compress and try again.',
+                confirmButtonColor: '#23471d'
+            });
+            e.target.value = null;
+            return;
+        }
+
         setDefaultImageFile(file);
         setDefaultImagePreview(URL.createObjectURL(file));
     };
@@ -95,6 +108,19 @@ const FAQManage = () => {
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        // 100KB Size check
+        if (file.size > 100 * 1024) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Image Too Large',
+                text: 'FAQ Item image should not exceed 100KB. Please compress and try again.',
+                confirmButtonColor: '#23471d'
+            });
+            e.target.value = null;
+            return;
+        }
+
         setImageFile(file);
         setImagePreview(URL.createObjectURL(file));
     };
@@ -244,12 +270,12 @@ const FAQManage = () => {
                             {/* DEFAULT VISUAL UPLOAD */}
                             <div className="pt-4 border-t border-gray-100">
                                 <label className="block text-sm font-bold text-[#d26019] mb-2 uppercase tracking-tight">
-                                    Default Visual (800x600px)
+                                    Default Visual (Required 4:3)
                                 </label>
-                                <p className="text-[10px] text-gray-400 mb-3 italic">This image appears when no FAQ is selected.</p>
+                                <p className="text-[10px] text-gray-400 mb-3 font-bold uppercase tracking-tighter italic">Recommended: 800 x 600 PX | Max: 100KB</p>
                                 
                                 {defaultImagePreview ? (
-                                    <div className="relative h-40 border-2 border-gray-200 overflow-hidden mb-2 shadow-inner">
+                                    <div className="relative aspect-[4/3] border-2 border-white overflow-hidden mb-2 shadow-md bg-white">
                                         <img src={defaultImagePreview} className="w-full h-full object-cover" alt="Default Visual Preview" />
                                         <button
                                             onClick={() => { setDefaultImageFile(null); setDefaultImagePreview(''); setData({ ...data, defaultImage: '' }); if (defaultFileInputRef.current) defaultFileInputRef.current.value = ''; }}
@@ -259,9 +285,9 @@ const FAQManage = () => {
                                         </button>
                                     </div>
                                 ) : (
-                                    <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#23471d] hover:bg-gray-50 transition-all shadow-inner">
+                                    <label className="flex flex-col items-center justify-center aspect-[4/3] border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#23471d] hover:bg-gray-50 transition-all shadow-inner">
                                         <ImageIcon className="w-8 h-8 text-gray-300 mb-2" />
-                                        <span className="text-xs text-gray-400 font-medium">Upload Default SEO Image</span>
+                                        <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">Upload Default</span>
                                         <input ref={defaultFileInputRef} type="file" className="hidden" onChange={handleDefaultImageChange} accept="image/*" />
                                     </label>
                                 )}
@@ -319,33 +345,36 @@ const FAQManage = () => {
                             {/* Image Upload */}
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
-                                    FAQ Image <span className="text-gray-400 normal-case font-normal">(Recommended: 800×600px)</span>
+                                    Synced Visual (4:3)
                                 </label>
                                 {imagePreview ? (
-                                    <div className="relative h-32 border-2 border-gray-200 overflow-hidden mb-2">
+                                    <div className="relative aspect-[4/3] border-2 border-white overflow-hidden mb-2 shadow-md bg-white">
                                         <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
                                         <button
                                             onClick={() => { setImageFile(null); setImagePreview(''); setItemForm({ ...itemForm, image: '' }); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-                                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full"
+                                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full shadow-lg"
                                         >
                                             <Trash2 size={12} />
                                         </button>
                                     </div>
                                 ) : (
-                                    <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#23471d] transition-colors">
-                                        <ImageIcon className="w-6 h-6 text-gray-400 mb-1" />
-                                        <span className="text-xs text-gray-400">Click to upload image</span>
+                                    <label className="flex flex-col items-center justify-center aspect-[4/3] border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#23471d] transition-colors bg-gray-50">
+                                        <ImageIcon className="w-8 h-8 text-gray-300 mb-1" />
+                                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Upload Custom image</span>
                                         <input ref={fileInputRef} type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
                                     </label>
                                 )}
+                                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight text-center leading-tight mt-1 mb-2">
+                                    800 x 600 PX | MAX: 100KB
+                                </p>
                                 <input
                                     type="text"
                                     value={itemForm.imageAlt}
                                     onChange={(e) => setItemForm({ ...itemForm, imageAlt: e.target.value })}
-                                    className="w-full px-3 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none text-xs shadow-sm mt-2"
-                                    placeholder="Alt Text for SEO (describe the image)..."
+                                    className="w-full px-3 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none text-xs shadow-sm"
+                                    placeholder="Alt Text for SEO..."
                                 />
-            </div>
+                            </div>
 
                             <div className="flex gap-2">
                                 <button

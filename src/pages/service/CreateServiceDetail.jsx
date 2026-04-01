@@ -9,7 +9,8 @@ import {
     Code,
     FileText,
     Tag,
-    Briefcase
+    Briefcase,
+    Sparkles
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api, { SERVER_URL } from "../../lib/api";
@@ -167,6 +168,19 @@ const CreateServiceDetail = () => {
     const handleBgImageUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
+            // 🚨 100KB SIZE VALIDATION
+            if (file.size > 100 * 1024) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'IMAGE TOO HEAVY!',
+                    text: 'Bhai, image 100KB se badi hai. Please compress karke upload karo taaki site fast chale! 🚀',
+                    confirmButtonColor: '#23471d',
+                    background: '#fff'
+                });
+                if (e.target) e.target.value = '';
+                return;
+            }
+
             setFormData(prev => ({
                 ...prev,
                 bgImage: file,
@@ -497,30 +511,58 @@ const CreateServiceDetail = () => {
                             <div className="p-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     {/* Background Image Upload */}
-                                    <div className="space-y-4">
-                                        <label className="block text-[11px] font-bold text-gray-500 mb-2 uppercase tracking-widest">Page Background Image *</label>
-                                        <div className="border-4 border-dashed border-gray-100 p-4 text-center relative group min-h-[220px] flex items-center justify-center bg-gray-50/30 rounded-xl hover:border-blue-400 transition-all overflow-hidden shadow-inner">
-                                            <input
-                                                type="file"
-                                                onChange={handleBgImageUpload}
-                                                className="absolute inset-0 opacity-0 cursor-pointer z-20"
-                                                accept="image/*"
-                                            />
-                                            {formData.bgImagePreview ? (
-                                                <div className="relative w-full h-full">
-                                                    <img src={formData.bgImagePreview} alt="Hero Preview" className="w-full h-44 object-cover rounded shadow-md" />
-                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded z-10">
-                                                        <span className="text-white text-xs font-bold uppercase tracking-wider">Change Hero Image</span>
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between items-end mb-2">
+                                                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest leading-none">Hero Background Image *</label>
+                                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 border border-amber-100 rounded-full">
+                                                    <Sparkles className="w-3 h-3 text-amber-500" />
+                                                    <span className="text-[9px] font-black text-amber-700 uppercase tracking-wider">1600 x 400 PX Recommended</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="relative group overflow-hidden">
+                                                <div className="w-full h-44 overflow-hidden border-2 border-gray-200 shadow-sm relative group bg-slate-50">
+                                                    <input
+                                                        type="file"
+                                                        onChange={handleBgImageUpload}
+                                                        className="absolute inset-0 opacity-0 cursor-pointer z-20"
+                                                        accept="image/*"
+                                                    />
+                                                    
+                                                    {formData.bgImagePreview ? (
+                                                        <div className="w-full h-full">
+                                                            <img src={formData.bgImagePreview} alt="Hero Preview" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                                            <div className="absolute top-3 left-3 bg-[#23471d] text-white text-[10px] font-black px-3 py-1 uppercase tracking-[0.2em] shadow-lg">
+                                                                {formData.bgImage ? 'New Selection' : 'Current Banner'}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex flex-col items-center justify-center h-full text-slate-300">
+                                                            <ImageIcon className="w-12 h-12 mb-2 opacity-20" />
+                                                            <span className="text-[10px] font-black uppercase tracking-widest">No Background Uploaded</span>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                                        <div className="px-4 py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-full">
+                                                            <span className="text-white text-[10px] font-black uppercase tracking-[0.2em]">Upload New Asset</span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            ) : (
-                                                <div className="flex flex-col items-center py-6">
-                                                    <Upload className="w-12 h-12 text-blue-200 mb-2" />
-                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Click to Upload Background</p>
-                                                    <p className="text-[9px] text-gray-300 mt-1 italic">Resolution: 1920x1080 recommended</p>
+                                                
+                                                {/* 🚨 100KB POLICY BADGE */}
+                                                <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-0.5 bg-red-600 text-white rounded text-[10px] font-black uppercase tracking-widest shadow-xl">
+                                                    <X size={10} className="stroke-[4px]" />
+                                                    100KB LIMIT
                                                 </div>
-                                            )}
-                                        </div>
+                                            </div>
+
+                                            <div className="bg-slate-50 border border-slate-100 p-3 flex items-start gap-3">
+                                                <div className="mt-0.5"><Check className="w-4 h-4 text-green-600" /></div>
+                                                <p className="text-[10px] text-slate-500 leading-relaxed">
+                                                    <span className="font-bold text-slate-700 uppercase">Pro Tip:</span> Always compress your images before uploading. We recommend using <a href="https://tinypng.com" target="_blank" className="text-blue-600 underline font-bold">TinyPNG</a> to hit that 100KB target without losing quality.
+                                                </p>
+                                            </div>
                                         <input
                                             type="text"
                                             name="bgAltText"

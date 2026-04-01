@@ -402,11 +402,13 @@ const HeroSlider = () => {
       key: "image",
       label: "IMAGE",
       render: (row) => (
-        <img
-          src={`${SERVER_URL}${row.image}`}
-          alt={row.title}
-          className="w-16 h-16 object-cover border-2 border-gray-300 shadow-lg"
-        />
+        <div className="overflow-hidden border-2 border-gray-300 shadow-lg" style={{ width: '128px', aspectRatio: '16/6' }}>
+          <img
+            src={`${SERVER_URL}${row.image}`}
+            alt={row.title}
+            className="w-full h-full object-cover"
+          />
+        </div>
       )
     },
     {
@@ -619,7 +621,7 @@ const HeroSlider = () => {
 
             <div className="md:col-span-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Hero Image (1920 * 900) <span className="text-red-500">*</span>
+                Hero Image (1600 * 600 - 16:6 Ratio) <span className="text-red-500">*</span>
               </label>
               <input
                 type="file"
@@ -628,7 +630,9 @@ const HeroSlider = () => {
                 className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-sm shadow-lg"
               />
                 {imagePreview && (
-                  <img src={imagePreview} alt="Preview" className="mt-3 w-32 h-32 object-cover border-2 border-gray-300 shadow-lg" />
+                  <div className="mt-3 w-full border-2 border-[#23471d] shadow-lg overflow-hidden" style={{ aspectRatio: '16/6' }}>
+                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                  </div>
                 )}
             </div>
 

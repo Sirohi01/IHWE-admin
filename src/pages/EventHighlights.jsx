@@ -114,6 +114,16 @@ const EventHighlightsPage = () => {
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Check file size (100KB = 100 * 1024 bytes)
+            if (file.size > 100 * 1024) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Image Too Large',
+                    text: 'Image size should not exceed 100KB. Please compress the image (e.g., using TinyPNG or WebP format) and try again.',
+                    confirmButtonColor: '#d26019'
+                });
+                return;
+            }
             setImageFile(file);
             setImagePreview(URL.createObjectURL(file));
         }
@@ -269,7 +279,7 @@ const EventHighlightsPage = () => {
                                         onChange={handleImageChange}
                                         className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-[#23471d] file:text-white hover:file:bg-[#d26019] file:cursor-pointer cursor-pointer"
                                     />
-                                    <p className="text-xs text-gray-400 mt-2">Recommended: 807x398px, JPG/PNG/WebP, Max 10MB</p>
+                                    <p className="text-xs text-gray-400 mt-2">Recommended: 800 x 800 px (1:1 Ratio) | JPG/PNG/WebP | Max Size: 100KB</p>
                                 </div>
                             </div>
                             <InputField label="Image Alt Text" name="imageAlt" value={formData.imageAlt} placeholder="IHWE 2026" onChange={handleChange} />

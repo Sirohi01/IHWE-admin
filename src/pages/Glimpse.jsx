@@ -85,6 +85,18 @@ const Glimpse = () => {
     const file = e.target.files[0];
     if (!file) return;
 
+    // 100KB Size check
+    if (file.size > 100 * 1024) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Image Too Large',
+        text: 'Gallery image should not exceed 100KB. Please compress and try again.',
+        confirmButtonColor: '#23471d'
+      });
+      e.target.value = null;
+      return;
+    }
+
     const formData = new FormData();
     formData.append("image", file);
 
@@ -293,9 +305,9 @@ const Glimpse = () => {
                 <label className="block text-xs font-bold text-gray-500 uppercase">Gallery Image</label>
                 <div className="border-2 border-dashed border-gray-300 hover:border-[#23471d] transition-colors p-4 flex flex-col items-center gap-2">
                   {imagePreview ? (
-                    <div className="relative w-full h-32 border border-gray-200">
+                    <div className="relative w-full aspect-[3/2] border-2 border-white shadow-md overflow-hidden bg-white">
                       <img 
-                        src={imagePreview} 
+                        src={imagePreview.startsWith('http') ? imagePreview : `${SERVER_URL}${imagePreview}`} 
                         className="w-full h-full object-cover" 
                         alt="Preview" 
                       />
@@ -308,7 +320,10 @@ const Glimpse = () => {
                       </button>
                     </div>
                   ) : (
-                    <ImageIcon className="w-8 h-8 text-gray-300" />
+                    <div className="w-full aspect-[3/2] bg-gray-50 flex flex-col items-center justify-center border-2 border-dashed border-gray-100">
+                      <ImageIcon className="w-8 h-8 text-gray-300" />
+                      <span className="text-[10px] text-gray-400 font-bold mt-2">NO IMAGE SELECTED</span>
+                    </div>
                   )}
                   <label className="w-full">
                     <div className={`w-full py-2 flex items-center justify-center gap-2 text-white text-xs font-bold cursor-pointer transition-colors ${uploading ? 'bg-gray-400' : 'bg-[#23471d] hover:bg-[#1a3615]'}`}>
@@ -316,6 +331,9 @@ const Glimpse = () => {
                     </div>
                     <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" disabled={uploading} />
                   </label>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight text-center leading-tight mt-1">
+                    Recommended: 1200 x 800 PX (3:2 Ratio) | Max: 100KB
+                  </p>
                 </div>
               </div>
 

@@ -107,6 +107,19 @@ const Services = () => {
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        // Check file size (100KB = 100 * 1024 bytes)
+        if (file.size > 100 * 1024) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Image Too Large',
+                text: 'Image size should not exceed 100KB. Please compress the image (e.g., using TinyPNG or WebP) and try again.',
+                confirmButtonColor: '#d26019'
+            });
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
+
         setImageFile(file);
         setImagePreview(URL.createObjectURL(file));
     };
@@ -293,7 +306,7 @@ const Services = () => {
                                 className="w-full py-3 bg-[#23471d] text-white font-bold hover:bg-[#1a3615] transition-all flex items-center justify-center gap-3 shadow-lg hover:shadow-xl mt-2"
                             >
                                 {isLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                : <><Save className="w-5 h-5" /> Save Section Content</>}
+                                    : <><Save className="w-5 h-5" /> Save Section Content</>}
                             </button>
                         </div>
                     </div>
@@ -368,34 +381,51 @@ const Services = () => {
                                 </div>
                             </div>
 
-                            {/* Image Upload */}
-                            <div>
-                                <label className="block text-xs font-bold text-[#d26019] uppercase mb-1">Card Image (363x192px)</label>
-                                {imagePreview ? (
-                                    <div className="relative w-full aspect-[363/192] border-2 border-gray-200 overflow-hidden mb-2">
-                                        <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
-                                        <button
-                                            onClick={() => { setImageFile(null); setImagePreview(''); setCardForm({ ...cardForm, image: '' }); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-                                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full"
-                                        >
-                                            <Trash2 size={12} />
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <label className="flex flex-col items-center justify-center w-full aspect-[363/192] border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#23471d] transition-colors group">
-                                        <ImageIcon className="w-6 h-6 text-gray-400 mb-1 group-hover:text-[#23471d] transition-colors" />
-                                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Click to upload image (363x192px)</span>
-                                        <input ref={fileInputRef} type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
-                                    </label>
-                                )}
-                                <input
-                                    type="text"
-                                    value={cardForm.imageAlt}
-                                    onChange={(e) => setCardForm({ ...cardForm, imageAlt: e.target.value })}
-                                    className="w-full px-3 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none text-xs shadow-sm mt-1"
-                                    placeholder="Alt Text (SEO)..."
-                                />
-                            </div>
+                            {/* Image Upload - Event Highlights Style */}
+                             <div>
+                                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-tight">Card Image</label>
+                                <div className="grid grid-cols-1 gap-4">
+                                     <div className="border-2 border-dashed border-gray-300 hover:border-[#23471d] transition-colors p-3 bg-gray-50">
+                                         <input
+                                             type="file"
+                                             ref={fileInputRef}
+                                             accept="image/*"
+                                             onChange={handleImageChange}
+                                             className="w-full text-[10px] text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:border-0 file:text-[10px] file:font-bold file:bg-[#23471d] file:text-white hover:file:bg-[#d26019] file:cursor-pointer cursor-pointer uppercase tracking-tighter"
+                                         />
+                                         <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest">Recommended: 800 x 450 px (16:9) | Max: 100KB</p>
+                                     </div>
+
+                                     {imagePreview ? (
+                                         <div className="relative h-48 group">
+                                             <img src={imagePreview} className="w-full h-full object-cover border-2 border-gray-200 shadow-sm" alt="Preview" />
+                                             <div className="absolute top-2 right-2 bg-green-600 text-[10px] text-white px-2 py-0.5 font-black uppercase tracking-widest shadow-md">
+                                                 {imageFile ? 'New Image' : 'Current Image'}
+                                             </div>
+                                             <button
+                                                 onClick={() => { setImageFile(null); setImagePreview(''); setCardForm({ ...cardForm, image: '' }); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                                                 className="absolute bottom-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg transition-transform hover:scale-110"
+                                                 title="Remove Image"
+                                             >
+                                                 <Trash2 size={14} />
+                                             </button>
+                                         </div>
+                                     ) : (
+                                         <div className="w-full h-48 bg-gray-100 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400">
+                                             <ImageIcon className="w-8 h-8 mb-1 opacity-20" />
+                                             <p className="text-[10px] font-bold uppercase tracking-widest">No image selected</p>
+                                         </div>
+                                     )}
+
+                                     <input
+                                         type="text"
+                                         value={cardForm.imageAlt}
+                                         onChange={(e) => setCardForm({ ...cardForm, imageAlt: e.target.value })}
+                                         className="w-full px-3 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none text-xs shadow-sm bg-white"
+                                         placeholder="Image Alt Text (SEO)..."
+                                     />
+                                </div>
+                             </div>
 
                             <div className="flex gap-2">
                                 <button

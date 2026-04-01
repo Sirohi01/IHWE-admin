@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { 
     Search, Plus, Trash2, Edit, ImageIcon, Layout, Type, 
     Heading, AlignLeft, CheckCircle, XCircle, Save, 
-    ChevronLeft, Image as LucideImage, FileText, Settings, Layers
+    ChevronLeft, Image as LucideImage, FileText, Settings, Layers, Sparkles
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api, { API_URL, SERVER_URL } from "../lib/api";
@@ -115,11 +115,28 @@ const HeroImages = () => {
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            setImageFile(file);
-            setFormData(prev => ({ ...prev, backgroundImage: file }));
-            setImagePreview(URL.createObjectURL(file));
+        if (!file) return;
+
+        // 100KB Size check
+        if (file.size > 100 * 1024) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Image Too Large',
+                text: 'Hero image should not exceed 100KB to maintain loading speed. Please compress and try again.',
+                confirmButtonColor: '#23471d'
+            });
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
         }
+
+        setImagePreview(URL.createObjectURL(file));
+        setImageFile(file);
+    };
+
+    const isRegistrationPage = (name) => {
+        if (!name) return false;
+        const n = name.toLowerCase();
+        return n.includes("registration") || n.includes("book a stand");
     };
 
     const handleSubmit = async (e) => {
@@ -352,28 +369,41 @@ const HeroImages = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Background Image *</label>
-                                {imagePreview ? (
-                                    <div className="relative h-40 border-2 border-gray-200 overflow-hidden mb-2 group">
-                                        <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <button
-                                                type="button"
-                                                onClick={() => { setImageFile(null); setImagePreview(null); setFormData({...formData, backgroundImage: null}); if (fileInputRef.current) fileInputRef.current.value = ""; }}
-                                                className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
-                                            >
-                                                <Trash2 size={16} />
+                                <label className="block text-xs font-black text-[#23471d] uppercase tracking-widest mb-1 opacity-50">Upload Banner Image</label>
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div className="border-2 border-dashed border-gray-300 hover:border-[#23471d] transition-all p-4 bg-gray-50 flex items-center justify-between">
+                                        <div className="flex-1">
+                                            <input ref={fileInputRef} type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
+                                            <button type="button" onClick={() => fileInputRef.current?.click()} className="px-4 py-2 bg-[#23471d] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1a5b32] transition-colors shadow-sm">
+                                                {imageFile ? "Change Image" : "Choose File"}
                                             </button>
+                                            <p className="text-[10px] text-gray-400 mt-2 font-black uppercase tracking-widest leading-none">
+                                                Recommended: {isRegistrationPage(formData.pageName) ? '1600 x 500 PX (16:5)' : '1600 x 400 PX (16:4)'} | Max: 100KB
+                                            </p>
                                         </div>
+                                        <ImageIcon className="w-8 h-8 text-gray-200" />
                                     </div>
-                                ) : (
-                                    <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#1a5b32] transition-colors bg-gray-50 rounded">
-                                        <ImageIcon className="w-10 h-10 text-gray-300 mb-2" />
-                                        <span className="text-xs text-gray-400 font-medium">Click to upload High-Res Image</span>
-                                        <span className="text-[10px] text-gray-400 mt-1 uppercase tracking-tight">1920x450 (Recommended)</span>
-                                        <input ref={fileInputRef} type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
-                                    </label>
-                                )}
+                                    {imagePreview ? (
+                                        <div className="relative group overflow-hidden">
+                                            <div className={`w-full overflow-hidden border-2 border-gray-200 shadow-sm ${isRegistrationPage(formData.pageName) ? 'aspect-[16/5]' : 'aspect-[16/4]'}`}>
+                                                <img src={imagePreview} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Preview" />
+                                            </div>
+                                            <div className="absolute top-3 left-3 bg-[#23471d] text-white text-[10px] font-black px-3 py-1 uppercase tracking-[0.2em] shadow-lg">
+                                                {imageFile ? 'New Selection' : 'Current Hero'}
+                                            </div>
+                                            {imageFile && (
+                                                <button type="button" onClick={() => { setImageFile(null); setImagePreview(currentImage ? `${SERVER_URL}${currentImage}` : ''); if(fileInputRef.current) fileInputRef.current.value=''; }} className="absolute bottom-3 right-3 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-xl transition-transform hover:scale-110">
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className={`w-full bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300 ${isRegistrationPage(formData.pageName) ? 'aspect-[16/5]' : 'aspect-[16/4]'}`}>
+                                            <ImageIcon className="w-12 h-12 mb-2 opacity-20" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">No Banner Selected</span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="flex gap-2 pt-4">
@@ -399,16 +429,12 @@ const HeroImages = () => {
                     </div>
 
                     {/* Requirements Alert */}
-                    <div className="bg-orange-50 border-l-4 border-[#d26019] p-4 shadow-sm">
-                        <div className="flex">
-                            <div className="flex-shrink-0">
-                                <Settings className="h-4 h-4 text-[#d26019]" aria-hidden="true" />
-                            </div>
-                            <div className="ml-3">
-                                <h3 className="text-xs font-black text-[#d26019] uppercase tracking-wider">Image Policy</h3>
-                                <div className="mt-1 text-[10px] text-orange-700 uppercase leading-tight tracking-tight">
-                                    <p>Max size 100KB | WebP format recommended | Ensure Alt text is provided for all pages for SEO ranking.</p>
-                                </div>
+                    <div className="mt-6 flex bg-orange-50 border border-orange-100 p-4 shadow-sm items-start">
+                        <Sparkles className="w-5 h-5 text-[#d26019] mt-0.5" />
+                        <div className="ml-3">
+                            <h3 className="text-xs font-black text-[#d26019] uppercase tracking-[0.2em]">Image Policy</h3>
+                            <div className="mt-1 text-[10px] text-orange-700 uppercase leading-tight tracking-wider font-bold">
+                                <p>Max size 100KB | Recommended: {isRegistrationPage(formData.pageName) ? '1600 x 500 PX (16:5)' : '1600 x 400 PX (16:4)'} | WebP recommended.</p>
                             </div>
                         </div>
                     </div>

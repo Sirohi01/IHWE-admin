@@ -78,6 +78,18 @@ const WhoWeAre = () => {
         const file = e.target.files[0];
         if (!file) return;
 
+        // 100KB Size check
+        if (file.size > 100 * 1024) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Image Too Large',
+                text: 'Image should not exceed 100KB to maintain loading speed. Please compress and try again.',
+                confirmButtonColor: '#23471d'
+            });
+            e.target.value = null;
+            return;
+        }
+
         const formData = new FormData();
         formData.append('image', file);
 
@@ -124,6 +136,13 @@ const WhoWeAre = () => {
             setIsLoading(false);
         }
     };
+
+    const imageSlots = [
+        { label: 'Image 1 (Square)', aspect: 'aspect-square', dims: '800x800' },
+        { label: 'Image 2 (Portrait)', aspect: 'aspect-[4/5]', dims: '800x1000' },
+        { label: 'Image 3 (Portrait)', aspect: 'aspect-[4/5]', dims: '800x1000' },
+        { label: 'Image 4 (Square)', aspect: 'aspect-square', dims: '800x800' }
+    ];
 
     return (
         <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-poppins">
@@ -213,14 +232,19 @@ const WhoWeAre = () => {
                 {/* Right Side: Images */}
                 <div className="space-y-6">
                     <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
-                        <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d]">
+                        <h2 className="text-lg font-bold mb-2 flex items-center gap-2 text-[#23471d]">
                             <ImageIcon className="w-5 h-5 text-[#d26019]" /> Component Images (4 Slots)
                         </h2>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-6">Each Image MUST be under 100KB</p>
+                        
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {data.images.map((img, idx) => (
                                 <div key={idx} className="border-2 border-gray-100 p-4 rounded-lg bg-gray-50/30 space-y-4">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Image Slot 0{idx + 1}</span>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none">{imageSlots[idx].label}</span>
+                                            <span className="text-[9px] font-bold text-[#d26019] mt-1">{imageSlots[idx].dims} PX</span>
+                                        </div>
                                         {img.url && (
                                             <button 
                                                 onClick={() => handleImageChange(idx, 'url', '')}
@@ -232,18 +256,19 @@ const WhoWeAre = () => {
                                     </div>
 
                                     {img.url ? (
-                                        <div className="relative aspect-video rounded overflow-hidden border-2 border-white shadow-sm bg-white">
+                                        <div className={`relative ${imageSlots[idx].aspect} rounded overflow-hidden border-2 border-white shadow-sm bg-white`}>
                                             <img src={`${SERVER_URL}${img.url}`} className="w-full h-full object-cover" alt="Preview" />
                                         </div>
                                     ) : (
-                                        <div className="relative aspect-video rounded border-2 border-dashed border-gray-200 bg-white flex flex-col items-center justify-center group hover:border-[#23471d] transition-all">
+                                        <div className={`relative ${imageSlots[idx].aspect} rounded border-2 border-dashed border-gray-200 bg-white flex flex-col items-center justify-center group hover:border-[#23471d] transition-all`}>
                                             <input
                                                 type="file"
+                                                accept="image/*"
                                                 onChange={(e) => handleImageUpload(idx, e)}
                                                 className="absolute inset-0 opacity-0 cursor-pointer z-10"
                                             />
                                             <ImageIcon className="w-8 h-8 text-gray-300 group-hover:text-[#23471d] transition-colors mb-2" />
-                                            <span className="text-[10px] font-bold text-gray-400 group-hover:text-[#23471d]">CLICK TO UPLOAD</span>
+                                            <span className="text-[10px] font-bold text-gray-400 group-hover:text-[#23471d]">UPLOAD IMAGE</span>
                                         </div>
                                     )}
 

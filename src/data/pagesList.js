@@ -20,4 +20,5 @@ export const pagesList = [
     { name: "General / Exhibitors List", path: "/exhibitors" },
     { name: "General / Gallery", path: "/gallery" },
     { name: "General / Contact Us", path: "/contact" },
+    { name: "General / Blog", path: "/blog" },
 ];

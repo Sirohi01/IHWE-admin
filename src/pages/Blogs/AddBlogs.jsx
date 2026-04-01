@@ -98,6 +98,19 @@ const AddBlogs = () => {
   const handleImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+
+      // 100KB Size check
+      if (file.size > 100 * 1024) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Image Too Large',
+          text: 'Blog feature image should not exceed 100KB. Please compress and try again.',
+          confirmButtonColor: '#134698'
+        });
+        e.target.value = null;
+        return;
+      }
+
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
@@ -106,6 +119,19 @@ const AddBlogs = () => {
   const handleOgImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+
+      // 100KB Size check
+      if (file.size > 100 * 1024) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Image Too Large',
+          text: 'OG image should not exceed 100KB. Please compress and try again.',
+          confirmButtonColor: '#134698'
+        });
+        e.target.value = null;
+        return;
+      }
+
       setOgImageFile(file);
       setOgImagePreview(URL.createObjectURL(file));
     }
@@ -639,8 +665,8 @@ const AddBlogs = () => {
                 {/* Blog Image & Alt Text Horizontal */}
                 <div className="flex flex-col md:flex-row gap-6 p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
                   <div className="w-full md:w-1/3">
-                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3">Feature Image *</label>
-                    <div className="aspect-video flex items-center justify-center border-2 border-dashed border-gray-200 bg-white rounded-xl relative group overflow-hidden shadow-sm">
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3">Feature Image (16:5) *</label>
+                    <div className="aspect-[16/5] flex items-center justify-center border-2 border-dashed border-gray-200 bg-white rounded-xl relative group overflow-hidden shadow-sm">
                       {imagePreview ? (
                         <>
                           <img src={imagePreview} alt="Blog main preview" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
@@ -655,11 +681,14 @@ const AddBlogs = () => {
                       ) : (
                         <label className="cursor-pointer flex flex-col items-center">
                           <Upload className="w-8 h-8 text-gray-300 mb-2" />
-                          <span className="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Upload Main Image</span>
+                          <span className="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Upload Image</span>
                           <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                         </label>
                       )}
                     </div>
+                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight text-center mt-2 leading-none">
+                      Recommended: 1600 x 500 PX (16:5) | Max: 100KB
+                    </p>
                   </div>
                   <div className="flex flex-col justify-center space-y-3 text-left">
                     <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-widest">Image Alt Text (SEO)</label>

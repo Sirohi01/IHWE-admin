@@ -95,7 +95,7 @@ const StatsManage = () => {
     };
 
     const handleEdit = (item) => {
-        setIsEditing(item._id);
+        setIsEditing(item._id || item.id);
         setForm({
             icon: item.icon,
             end: item.end,
@@ -109,7 +109,13 @@ const StatsManage = () => {
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (origId) => {
+        // Support both _id and id (some serializers rename it)
+        const id = origId || null;
+        if (!id) {
+            Swal.fire("Error", "Missing Counter ID - this item cannot be deleted normally.", "error");
+            return;
+        }
         const result = await Swal.fire({
             title: "Are you sure?",
             text: "This will permanently delete this counter.",
@@ -128,12 +134,39 @@ const StatsManage = () => {
                     fetchCounters();
                 }
             } catch (error) {
-                Swal.fire("Error", "Failed to delete", "error");
+                Swal.fire("Error", error.response?.data?.message || "Failed to delete counter", "error");
             } finally {
                 setLoading(false);
             }
         }
     };
+
+    const handleCleanup = async () => {
+        const result = await Swal.fire({
+            title: "Corrupted Data Cleanup",
+            text: "This will remove all blank items without labels/numbers. Proceed?",
+            icon: "info",
+            showCancelButton: true,
+            confirmButtonColor: "#EF4444",
+            confirmButtonText: "Yes, Cleanup"
+        });
+
+        if (result.isConfirmed) {
+            setLoading(true);
+            try {
+                const res = await api.get("/api/counters/cleanup");
+                if (res.data.success) {
+                    Swal.fire({ icon: "success", title: "Cleanup Success!", text: res.data.message, timer: 1500, showConfirmButton: false });
+                    fetchCounters();
+                }
+            } catch (error) {
+                Swal.fire("Error", "Cleanup failed", "error");
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+
 
     const resetForm = () => {
         setIsEditing(null);
@@ -298,9 +331,18 @@ const StatsManage = () => {
                             <h2 className="text-white font-bold flex items-center gap-2 text-sm">
                                 <TrendingUp className="w-4 h-4" /> Counters List
                             </h2>
-                            <span className="bg-[#d26019] text-white text-[10px] font-black px-3 py-1 uppercase tracking-widest">
-                                {counters.length} ITEMS
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <button 
+                                    onClick={handleCleanup}
+                                    className="bg-red-500 hover:bg-red-600 text-white text-[10px] font-black px-3 py-1 uppercase tracking-widest transition-all"
+                                    title="Delete all blank/corrupted items"
+                                >
+                                    Cleanup
+                                </button>
+                                <span className="bg-[#d26019] text-white text-[10px] font-black px-3 py-1 uppercase tracking-widest">
+                                    {counters.length} ITEMS
+                                </span>
+                            </div>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-xs">
@@ -324,7 +366,7 @@ const StatsManage = () => {
                                     ) : counters.map((item, idx) => {
                                         const ItemIcon = ICON_OPTIONS.find(i => i.value === item.icon)?.icon || Globe;
                                         return (
-                                            <tr key={item._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                            <tr key={item._id || item.id || idx} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                                 <td className="py-4 px-4 font-bold text-gray-400">{idx + 1}</td>
                                                 <td className="py-4 px-4 text-[#23471d]">
                                                     <div className="w-8 h-8 rounded-full bg-[#23471d]/10 flex items-center justify-center">
@@ -350,7 +392,7 @@ const StatsManage = () => {
                                                         <button onClick={() => handleEdit(item)} className="text-blue-500 hover:text-blue-700 p-1.5 bg-blue-50 rounded-lg transition-colors">
                                                             <Edit size={14} />
                                                         </button>
-                                                        <button onClick={() => handleDelete(item._id)} className="text-red-500 hover:text-red-700 p-1.5 bg-red-50 rounded-lg transition-colors">
+                                                        <button onClick={() => handleDelete(item._id || item.id)} className="text-red-500 hover:text-red-700 p-1.5 bg-red-50 rounded-lg transition-colors">
                                                             <Trash2 size={14} />
                                                         </button>
                                                     </div>

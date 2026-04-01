@@ -122,11 +122,12 @@ const About = () => {
   const handleImageChange = (e, fieldName) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
+      // 100KB Size check
+      if (file.size > 100 * 1024) {
         Swal.fire({
           icon: 'error',
-          title: 'File Too Large',
-          text: 'Please upload an image smaller than 5MB',
+          title: 'Image Too Large',
+          text: 'This image should not exceed 100KB to maintain loading speed. Please compress and try again.',
           confirmButtonColor: '#23471d'
         });
         return;
@@ -200,17 +201,22 @@ const About = () => {
             <SectionCard title="About Section Images & SEO" icon={ImageIcon}>
               <div className="flex items-center gap-2 mb-6 p-3 bg-blue-50 border border-blue-100 rounded-lg">
                 <Info className="w-4 h-4 text-blue-600" />
-                <p className="text-xs text-blue-700">
-                  Recommended sizes follow the <strong>Editorial Grid</strong> layout for a premium look. 
-                  Please provide <strong>Alt Text</strong> for each image to improve SEO ranking.
-                </p>
+                <div className="flex flex-col">
+                  <p className="text-xs text-blue-700">
+                    Recommended sizes follow the <strong>Editorial Grid</strong> layout for a premium look. 
+                    Please provide <strong>Alt Text</strong> for each image to improve SEO ranking.
+                  </p>
+                  <p className="text-[10px] text-blue-600 font-bold uppercase mt-1">
+                    Wait! Each image MUST be under 100KB for best performance.
+                  </p>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
-                  { id: 'image1', label: 'Image 1 (Main/Tall)', dimensions: '800x1200 px', altField: 'image1Alt' },
-                  { id: 'image2', label: 'Image 2 (Wide/Bottom)', dimensions: '1000x600 px', altField: 'image2Alt' },
-                  { id: 'image3', label: 'Image 3 (Square/Top)', dimensions: '800x800 px', altField: 'image3Alt' }
+                  { id: 'image1', label: 'Image 1 (Main/Tall)', dimensions: '900x1200 px (3:4)', aspect: 'aspect-[3/4]', altField: 'image1Alt' },
+                  { id: 'image2', label: 'Image 3 (Wide/Bottom)', dimensions: '1200x675 px (16:9)', aspect: 'aspect-[16/9]', altField: 'image2Alt' },
+                  { id: 'image3', label: 'Image 2 (Square/Top)', dimensions: '800x800 px (1:1)', aspect: 'aspect-square', altField: 'image3Alt' }
                 ].map((item) => (
                   <div key={item.id} className="flex flex-col h-full bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
                     <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-white">
@@ -218,7 +224,7 @@ const About = () => {
                       <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-500 font-medium">{item.dimensions}</span>
                     </div>
                     
-                    <div className="relative aspect-[4/5] bg-slate-100 flex items-center justify-center group">
+                    <div className={`relative ${item.aspect} bg-slate-100 flex items-center justify-center group`}>
                       {previews[item.id] ? (
                          <img 
                           src={previews[item.id]} 
