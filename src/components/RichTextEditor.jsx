@@ -138,8 +138,11 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                     <div className="w-px h-6 bg-gray-300 mx-1"></div>
 
                     <select
-                        onChange={(e) => execCommand("formatBlock", e.target.value)}
-                        className="h-9 border-2 border-gray-300 text-[11px] font-bold px-2 bg-white rounded shadow-sm focus:outline-none min-w-[100px]"
+                        onChange={(e) => {
+                            execCommand("formatBlock", e.target.value);
+                            e.target.value = "p"; // Reset to Body Text after selection so it's ready for the next action
+                        }}
+                        className="h-9 border-2 border-gray-300 text-[11px] font-bold px-2 bg-white rounded shadow-sm focus:outline-none min-w-[100px] cursor-pointer"
                     >
                         <option value="p">Body Text</option>
                         <option value="h1">Heading 1</option>
@@ -190,6 +193,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                     color: #2563eb !important;
                     text-decoration: underline !important;
                     cursor: pointer;
+                    font-weight: 600 !important;
                 }
                 [contenteditable]:empty:before {
                     content: attr(placeholder);
@@ -208,8 +212,8 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                     margin: 1rem 0 !important;
                 }
                 [contenteditable] b, [contenteditable] strong {
-                    font-weight: 600 !important;
-                    color: #333333 !important;
+                    font-weight: 800 !important;
+                    color: #000000 !important;
                 }
                 [contenteditable] i, [contenteditable] em {
                     font-style: italic !important;
@@ -217,7 +221,15 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                 }
                 [contenteditable] h1, [contenteditable] h2, [contenteditable] h3, [contenteditable] h4, [contenteditable] h5, [contenteditable] h6 {
                     color: #000000 !important;
-                    font-weight: bold !important;
+                    font-weight: 800 !important;
+                    margin-top: 1rem !important;
+                    margin-bottom: 0.5rem !important;
+                }
+                [contenteditable] h2 {
+                    font-size: 1.5rem !important;
+                }
+                [contenteditable] h3 {
+                    font-size: 1.25rem !important;
                 }
             ` }} />
         </div>

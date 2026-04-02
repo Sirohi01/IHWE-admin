@@ -14,11 +14,6 @@ const CATEGORY_OPTIONS = [
   { label: "Healthcare", icon: Heart },
   { label: "Wellness", icon: Smile },
   { label: "Research", icon: Search },
-  { label: "News", icon: FileText },
-  { label: "Events", icon: Calendar },
-  { label: "Trends", icon: TrendingUp },
-  { label: "Global", icon: Globe },
-  { label: "Future", icon: Rocket },
   { label: "General", icon: Layers },
 ];
 
@@ -26,8 +21,6 @@ const CATEGORY_OPTIONS = [
 const AddBlogs = () => {
   const navigate = useNavigate();
   const editorRef = useRef(null);
-  const ogTagsRef = useRef(null);
-  const schemaRef = useRef(null);
 
   const [blogData, setBlogData] = useState({
     title: "",
@@ -274,8 +267,6 @@ const AddBlogs = () => {
         setOgImageFile(null);
         setOgImagePreview(null);
         if (editorRef.current) editorRef.current.innerHTML = "";
-        if (ogTagsRef.current) ogTagsRef.current.innerText = "";
-        if (schemaRef.current) schemaRef.current.innerText = "";
         setEditId(null);
 
         navigate("/blogs-list");
@@ -326,12 +317,6 @@ const AddBlogs = () => {
 
       if (editorRef.current && editBlog.content) {
         editorRef.current.innerHTML = editBlog.content;
-      }
-      if (ogTagsRef.current && editBlog.openGraphTags) {
-        ogTagsRef.current.innerText = editBlog.openGraphTags;
-      }
-      if (schemaRef.current && editBlog.schemaMarkup) {
-        schemaRef.current.innerText = editBlog.schemaMarkup;
       }
 
       localStorage.removeItem("editBlog");
@@ -499,13 +484,12 @@ const AddBlogs = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-gray-500 mb-1.5 uppercase tracking-widest">Additional OG Tags</label>
-                  <RichTextEditor
+                  <textarea
+                    name="openGraphTags"
                     value={blogData.openGraphTags}
-                    onChange={(val) => setBlogData(prev => ({ ...prev, openGraphTags: val }))}
+                    onChange={handleInputChange}
                     placeholder="Paste OG meta tags here..."
-                    minHeight="100px"
-                    isCodeEditor={true}
+                    className="w-full px-4 py-3 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-[#134698] text-xs font-mono bg-gray-50/50 resize-none h-24"
                   />
                 </div>
               </div>
@@ -519,12 +503,12 @@ const AddBlogs = () => {
                 </div>
                 <h2 className="text-lg font-semibold text-gray-900 uppercase">Schema Markup</h2>
               </div>
-              <RichTextEditor
+              <textarea
+                name="schemaMarkup"
                 value={blogData.schemaMarkup}
-                onChange={(val) => setBlogData(prev => ({ ...prev, schemaMarkup: val }))}
+                onChange={handleInputChange}
                 placeholder='{"@context": "https://schema.org", ...}'
-                minHeight="120px"
-                isCodeEditor={true}
+                className="w-full px-4 py-3 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-[#134698] text-xs font-mono bg-gray-50/50 resize-none h-40"
               />
             </div>
           </div>

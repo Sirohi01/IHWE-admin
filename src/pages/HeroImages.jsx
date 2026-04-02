@@ -48,7 +48,7 @@ const HeroImages = () => {
     const fetchHeroImages = async () => {
         try {
             setIsLoading(true);
-            const response = await api.get('/api/hero-background');
+            const response = await api.get(`/api/hero-background?t=${Date.now()}`);
             if (response.data.success) {
                 setData(response.data.data);
             }
@@ -62,7 +62,7 @@ const HeroImages = () => {
     const handleEditById = async (id) => {
         try {
             setIsLoading(true);
-            const response = await api.get(`/api/hero-background/${id}`);
+            const response = await api.get(`/api/hero-background/${id}?t=${Date.now()}`);
             if (response.data.success) {
                 const item = response.data.data;
                 populateForm(item);
