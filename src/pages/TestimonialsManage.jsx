@@ -287,8 +287,10 @@ const TestimonialsManage = () => {
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">CLIENT INFO</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">FEEDBACK</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">RATING</th>
+                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase text-center">LAST UPDATED BY</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase text-center w-24">ACTIONS</th>
                                     </tr>
+
                                 </thead>
                                 <tbody>
                                     {!data.cards?.length ? (
@@ -331,7 +333,21 @@ const TestimonialsManage = () => {
                                                     ))}
                                                 </div>
                                             </td>
+                                            <td className="py-3 px-4">
+                                                <div className="flex flex-col gap-1 items-center">
+                                                    <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                                                        {card.updatedBy || 'System'}
+                                                    </span>
+                                                    <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                                                        {card.updatedAt ? new Date(card.updatedAt).toLocaleString('en-GB', { 
+                                                            day: '2-digit', month: 'short', year: 'numeric', 
+                                                            hour: '2-digit', minute: '2-digit', hour12: true 
+                                                        }) : 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </td>
                                             <td className="py-3 px-4 text-center">
+
                                                 <div className="flex items-center justify-center gap-2">
                                                     <button onClick={() => startEdit(card)} className="text-blue-500 hover:text-blue-700 p-1.5 bg-blue-50 rounded-lg transition-colors">
                                                         <Edit size={14} />

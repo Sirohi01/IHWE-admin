@@ -305,7 +305,9 @@ const AdvisoryManagement = () => {
                                         <th className="text-left py-2.5 px-4 text-[10px] font-black text-gray-500 uppercase tracking-widest w-16">Photo</th>
                                         <th className="text-left py-2.5 px-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Member Details</th>
                                         <th className="text-left py-2.5 px-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Organization</th>
+                                        <th className="text-center py-2.5 px-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">LAST UPDATED BY</th>
                                         <th className="text-right py-2.5 px-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Actions</th>
+
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -337,7 +339,21 @@ const AdvisoryManagement = () => {
                                                     {member.organization}
                                                 </span>
                                             </td>
+                                            <td className="py-2.5 px-4 text-center">
+                                                <div className="flex flex-col gap-1 items-center">
+                                                    <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                                                        {member.updatedBy || 'System'}
+                                                    </span>
+                                                    <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                                                        {member.updatedAt ? new Date(member.updatedAt).toLocaleString('en-GB', { 
+                                                            day: '2-digit', month: 'short', year: 'numeric', 
+                                                            hour: '2-digit', minute: '2-digit', hour12: true 
+                                                        }) : 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </td>
                                             <td className="py-2.5 px-4 text-right">
+
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button 
                                                         onClick={() => startEdit(member)} 

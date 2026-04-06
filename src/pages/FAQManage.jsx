@@ -413,7 +413,9 @@ const FAQManage = () => {
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase w-10">NO.</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">IMAGE</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">QUESTION & ANSWER</th>
+                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">LAST UPDATED BY</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">ACTIONS</th>
+
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -443,6 +445,20 @@ const FAQManage = () => {
                                                 )}
                                             </td>
                                             <td className="py-3 px-4">
+                                                <div className="flex flex-col gap-1 items-center">
+                                                    <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                                                        {item.updatedBy || 'System'}
+                                                    </span>
+                                                    <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                                                        {item.updatedAt ? new Date(item.updatedAt).toLocaleString('en-GB', { 
+                                                            day: '2-digit', month: 'short', year: 'numeric', 
+                                                            hour: '2-digit', minute: '2-digit', hour12: true 
+                                                        }) : 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="py-3 px-4">
+
                                                 <div className="flex items-center gap-2">
                                                     <button onClick={() => startEdit(item)} className="text-blue-500 hover:text-blue-700 p-1 transition-colors" title="Edit">
                                                         <Edit size={16} />

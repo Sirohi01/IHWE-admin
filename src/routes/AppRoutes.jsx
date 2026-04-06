@@ -97,6 +97,8 @@ import ManageEvents from "../pages/ManageEvents";
 import ManageStallRates from "../pages/ManageStallRates";
 import ManageTerms from "../pages/ManageTerms";
 import TravelAccommodationManage from "../pages/TravelAccommodationManage";
+import ActivityLogs from "../pages/ActivityLogs";
+
 
 
 
@@ -140,6 +142,9 @@ import AddStatus from "../pages/add_by_admin/AddStatus";
 import AddTarget from "../pages/add_by_admin/AddTarget";
 import VisitorReviewLogs from "../pages/web_visitor_data/VisitorReviewLogs";
 import ClientOverview1 from "../pages/ihwe_client_data_2026/ClientOverview1";
+import EmailLogs from "../pages/EmailLogs";
+import WhatsAppLogs from "../pages/WhatsAppLogs";
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -260,6 +265,10 @@ export default function AppRoutes() {
           <Route path="settings" element={<Settings />} />
           <Route path="sidebar-customize" element={<SidebarCustomize />} />
           <Route path="addnewclient" element={<AddNewClients />} />
+          <Route path="email-logs" element={<EmailLogs />} />
+          <Route path="whatsapp-logs" element={<WhatsAppLogs />} />
+          <Route path="activity-logs" element={<ActivityLogs />} />
+
 
           <Route
             path="ihweClientData2026/addNewClients"

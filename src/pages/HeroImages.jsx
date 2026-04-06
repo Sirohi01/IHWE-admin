@@ -257,9 +257,28 @@ const HeroImages = () => {
             )
         },
         {
+            key: "updatedBy",
+            label: "LAST UPDATED BY",
+            className: "text-center",
+            render: (row) => (
+                <div className="flex flex-col gap-1 items-center">
+                    <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                        {row.updatedBy || 'System'}
+                    </span>
+                    <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                        {row.updatedAt ? new Date(row.updatedAt).toLocaleString('en-GB', { 
+                            day: '2-digit', month: 'short', year: 'numeric', 
+                            hour: '2-digit', minute: '2-digit', hour12: true 
+                        }) : 'N/A'}
+                    </span>
+                </div>
+            )
+        },
+        {
             key: "status",
             label: "STATUS",
             render: (row) => (
+
                 <div className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${row.status === "Active" ? "bg-green-100 text-green-700 border border-green-200" : "bg-red-100 text-red-700 border border-red-200"}`}>
                     {row.status === "Active" ? <CheckCircle className="w-2.5 h-2.5" /> : <XCircle className="w-2.5 h-2.5" />}
                     {row.status}

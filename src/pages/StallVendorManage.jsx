@@ -356,8 +356,10 @@ const StallVendorManage = () => {
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase font-inter">COMPANY</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase font-inter">CONTACT INFO</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase font-inter">ICON</th>
+                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase font-inter text-center">LAST UPDATED BY</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase font-inter">ACTIONS</th>
                                     </tr>
+
                                 </thead>
                                 <tbody>
                                     {!data.cards?.length ? (
@@ -399,8 +401,22 @@ const StallVendorManage = () => {
                                                     </div>
                                                 </div>
                                             </td>
+                                            <td className="py-4 px-4 text-center">
+                                                <div className="flex flex-col gap-1 items-center">
+                                                    <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                                                        {card.updatedBy || 'System'}
+                                                    </span>
+                                                    <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                                                        {card.updatedAt ? new Date(card.updatedAt).toLocaleString('en-GB', { 
+                                                            day: '2-digit', month: 'short', year: 'numeric', 
+                                                            hour: '2-digit', minute: '2-digit', hour12: true 
+                                                        }) : 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </td>
                                             <td className="py-4 px-4">
                                                 <div className="flex items-center gap-2">
+
                                                     <button onClick={() => startEdit(card)} className="text-blue-500 hover:text-blue-700 p-1.5 transition-colors border border-blue-100 rounded bg-blue-50" title="Edit">
                                                         <Edit size={16} />
                                                     </button>

@@ -466,7 +466,9 @@ const Services = () => {
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">TITLE</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">ICON</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">ACCENT</th>
+                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase text-center">LAST UPDATED BY</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">ACTIONS</th>
+
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -502,6 +504,20 @@ const Services = () => {
                                                 <span className="inline-block w-6 h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: card.accent }} title={card.accent}></span>
                                             </td>
                                             <td className="py-3 px-4">
+                                                <div className="flex flex-col gap-1 items-center">
+                                                    <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                                                        {card.updatedBy || 'System'}
+                                                    </span>
+                                                    <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                                                        {card.updatedAt ? new Date(card.updatedAt).toLocaleString('en-GB', { 
+                                                            day: '2-digit', month: 'short', year: 'numeric', 
+                                                            hour: '2-digit', minute: '2-digit', hour12: true 
+                                                        }) : 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="py-3 px-4">
+
                                                 <div className="flex items-center gap-2">
                                                     <button onClick={() => startEdit(card)} className="text-blue-500 hover:text-blue-700 p-1 transition-colors" title="Edit">
                                                         <Edit size={16} />

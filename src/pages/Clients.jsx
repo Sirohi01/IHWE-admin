@@ -335,7 +335,9 @@ const Clients = () => {
                     <th className="px-6 py-4 border-b">No.</th>
                     <th className="px-6 py-4 border-b">Logo</th>
                     <th className="px-6 py-4 border-b">Alt Text / Name</th>
+                    <th className="px-6 py-4 border-b text-center">LAST UPDATED BY</th>
                     <th className="px-6 py-4 border-b text-center">Actions</th>
+
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -362,6 +364,20 @@ const Clients = () => {
                           <p className="font-bold text-gray-900 text-sm leading-tight">{img.altText || "Untitled Logo"}</p>
                         </td>
                         <td className="px-6 py-4">
+                            <div className="flex flex-col gap-1 items-center">
+                                <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                                    {img.updatedBy || 'System'}
+                                </span>
+                                <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                                    {img.updatedAt ? new Date(img.updatedAt).toLocaleString('en-GB', { 
+                                        day: '2-digit', month: 'short', year: 'numeric', 
+                                        hour: '2-digit', minute: '2-digit', hour12: true 
+                                    }) : 'N/A'}
+                                </span>
+                            </div>
+                        </td>
+                        <td className="px-6 py-4">
+
                           <div className="flex items-center justify-center gap-1.5">
                             <button 
                               onClick={() => startEdit(img)} 

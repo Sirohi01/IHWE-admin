@@ -482,13 +482,14 @@ const AddPdf = () => {
                                         <th className="px-6 py-4">Cover</th>
                                         <th className="px-6 py-4">Details</th>
                                         <th className="px-6 py-4">Badge/Tag</th>
+                                        <th className="px-6 py-4">Last Updated By</th>
                                         <th className="px-6 py-4 text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {!data.cards || data.cards.length === 0 ? (
                                         <tr>
-                                            <td colSpan="5" className="px-6 py-12 text-center text-gray-500 italic">
+                                            <td colSpan="6" className="px-6 py-12 text-center text-gray-500 italic">
                                                 No PDF resources found. Add your first resource using the form on the left.
                                             </td>
                                         </tr>
@@ -523,6 +524,20 @@ const AddPdf = () => {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
+                                                    <div className="flex flex-col gap-1 items-center">
+                                                        <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                                                            {card.updatedBy || 'System'}
+                                                        </span>
+                                                        <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                                                            {card.updatedAt ? new Date(card.updatedAt).toLocaleString('en-GB', { 
+                                                                day: '2-digit', month: 'short', year: 'numeric', 
+                                                                hour: '2-digit', minute: '2-digit', hour12: true 
+                                                            }) : 'N/A'}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+
                                                     <div className="flex items-center justify-center gap-1.5">
                                                         <button
                                                             onClick={() => startEdit(card)}

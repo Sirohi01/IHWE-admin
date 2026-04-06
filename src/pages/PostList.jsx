@@ -146,9 +146,28 @@ const PostList = () => {
             )
         },
         {
+            key: "updatedBy",
+            label: "Last Updated By",
+            className: "text-center",
+            render: (row) => (
+                <div className="flex flex-col gap-1 items-center">
+                    <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                        {row.updatedBy || 'System'}
+                    </span>
+                    <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                        {row.updatedAt ? new Date(row.updatedAt).toLocaleString('en-GB', { 
+                            day: '2-digit', month: 'short', year: 'numeric', 
+                            hour: '2-digit', minute: '2-digit', hour12: true 
+                        }) : row.date || 'N/A'}
+                    </span>
+                </div>
+            )
+        },
+        {
             key: "actions",
             label: "Actions",
             render: (row) => (
+
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => togglePostStatus(row.id)}

@@ -405,7 +405,9 @@ const PartnerManagement = () => {
                                                 <th className="py-3 px-4 text-left w-12 font-black uppercase text-[10px]">No.</th>
                                                 <th className="py-3 px-4 text-left w-32 font-black uppercase text-[10px]">Logo</th>
                                                 <th className="py-3 px-4 text-left font-black uppercase text-[10px]">Brand Name / Alt</th>
+                                                <th className="py-3 px-4 text-center font-black uppercase text-[10px]">LAST UPDATED BY</th>
                                                 <th className="py-3 px-4 text-right font-black uppercase text-[10px]">Action</th>
+
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
@@ -427,7 +429,21 @@ const PartnerManagement = () => {
                                                         <div>{partner.name || <span className="text-slate-300 font-normal">N/A</span>}</div>
                                                         <div className="text-[10px] text-slate-400 font-normal">Alt: {partner.imageAlt || 'N/A'}</div>
                                                     </td>
+                                                    <td className="py-3 px-4 font-semibold text-slate-700 text-center">
+                                                        <div className="flex flex-col gap-1 items-center">
+                                                            <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                                                                {partner.updatedBy || 'System'}
+                                                            </span>
+                                                            <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                                                                {partner.updatedAt ? new Date(partner.updatedAt).toLocaleString('en-GB', { 
+                                                                    day: '2-digit', month: 'short', year: 'numeric', 
+                                                                    hour: '2-digit', minute: '2-digit', hour12: true 
+                                                                }) : 'N/A'}
+                                                            </span>
+                                                        </div>
+                                                    </td>
                                                     <td className="py-3 px-4 text-right">
+
                                                         <div className="flex items-center justify-end gap-2">
                                                             <button 
                                                                 onClick={() => startEditPartner(group, partner)}

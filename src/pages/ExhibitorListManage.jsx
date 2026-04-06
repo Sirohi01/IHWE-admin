@@ -249,7 +249,9 @@ const ExhibitorListManage = () => {
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase font-inter">Logo</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase font-inter">Brand Info</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase font-inter">Location</th>
+                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase font-inter text-center">LAST UPDATED BY</th>
                                         <th className="text-center py-3 px-4 text-xs font-bold text-gray-500 uppercase font-inter w-28">Actions</th>
+
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -284,8 +286,22 @@ const ExhibitorListManage = () => {
                                                     <span className="text-[10px] font-bold uppercase tracking-tight font-inter">{ex.location}</span>
                                                 </div>
                                             </td>
+                                            <td className="py-2.5 px-4 text-center">
+                                                <div className="flex flex-col gap-1 items-center">
+                                                    <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                                                        {ex.updatedBy || 'System'}
+                                                    </span>
+                                                    <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                                                        {ex.updatedAt ? new Date(ex.updatedAt).toLocaleString('en-GB', { 
+                                                            day: '2-digit', month: 'short', year: 'numeric', 
+                                                            hour: '2-digit', minute: '2-digit', hour12: true 
+                                                        }) : 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </td>
                                             <td className="py-2.5 px-4">
                                                 <div className="flex items-center justify-center gap-2">
+
                                                     <button 
                                                         onClick={() => startEdit(ex)}
                                                         className="text-blue-500 hover:text-blue-700 p-1.5 transition-colors border border-blue-100 rounded bg-blue-50"

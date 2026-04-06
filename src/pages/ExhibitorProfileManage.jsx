@@ -265,7 +265,9 @@ const ExhibitorProfileManage = () => {
                                     <tr className="text-left">
                                         <th className="px-6 py-3 text-[10px] font-bold text-slate-500 uppercase">Title</th>
                                         <th className="px-6 py-3 text-[10px] font-bold text-slate-500 uppercase">BG Color</th>
+                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-500 uppercase text-center">LAST UPDATED BY</th>
                                         <th className="px-6 py-3 text-[10px] font-bold text-slate-500 uppercase text-center">Actions</th>
+
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 text-sm">
@@ -279,7 +281,21 @@ const ExhibitorProfileManage = () => {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
+                                                <div className="flex flex-col gap-1 items-center">
+                                                    <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                                                        {seg.updatedBy || 'System'}
+                                                    </span>
+                                                    <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                                                        {seg.updatedAt ? new Date(seg.updatedAt).toLocaleString('en-GB', { 
+                                                            day: '2-digit', month: 'short', year: 'numeric', 
+                                                            hour: '2-digit', minute: '2-digit', hour12: true 
+                                                        }) : 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
                                                 <div className="flex justify-center gap-3">
+
                                                     <button onClick={() => handleEditSegment(seg)} className="text-blue-500 hover:scale-110 transition-transform"><Edit2 size={16} /></button>
                                                     <button onClick={() => handleDeleteSegment(seg._id)} className="text-red-500 hover:scale-110 transition-transform"><Trash2 size={16} /></button>
                                                 </div>
@@ -304,15 +320,31 @@ const ExhibitorProfileManage = () => {
                                 <thead className="bg-slate-50 border-b-2 border-slate-100">
                                     <tr className="text-left">
                                         <th className="px-6 py-3 text-[10px] font-bold text-slate-500 uppercase">Category Title</th>
+                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-500 uppercase text-center">LAST UPDATED BY</th>
                                         <th className="px-6 py-3 text-[10px] font-bold text-slate-500 uppercase text-center">Actions</th>
+
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 text-sm">
                                     {data.productCategories.map((cat) => (
                                         <tr key={cat._id} className="hover:bg-slate-50 transition-colors">
                                             <td className="px-6 py-4 font-bold text-slate-900 uppercase tracking-tight">{cat.title}</td>
+                                            <td className="px-6 py-4 text-center">
+                                                <div className="flex flex-col gap-1 items-center">
+                                                    <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                                                        {cat.updatedBy || 'System'}
+                                                    </span>
+                                                    <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                                                        {cat.updatedAt ? new Date(cat.updatedAt).toLocaleString('en-GB', { 
+                                                            day: '2-digit', month: 'short', year: 'numeric', 
+                                                            hour: '2-digit', minute: '2-digit', hour12: true 
+                                                        }) : 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex justify-center gap-3">
+
                                                     <button onClick={() => handleEditCategory(cat)} className="text-blue-500 hover:scale-110 transition-transform"><Edit2 size={16} /></button>
                                                     <button onClick={() => handleDeleteCategory(cat._id)} className="text-red-500 hover:scale-110 transition-transform"><Trash2 size={16} /></button>
                                                 </div>

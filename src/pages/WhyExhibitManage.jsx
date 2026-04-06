@@ -283,7 +283,9 @@ const WhyExhibitManage = () => {
                                         <th className="px-6 py-3 text-[10px] font-bold text-slate-500 uppercase">Title</th>
                                         <th className="px-6 py-3 text-[10px] font-bold text-slate-500 uppercase">Icon</th>
                                         <th className="px-6 py-3 text-[10px] font-bold text-slate-500 uppercase">Accent</th>
+                                        <th className="px-6 py-3 text-[10px] font-bold text-slate-500 uppercase text-center">LAST UPDATED BY</th>
                                         <th className="px-6 py-3 text-[10px] font-bold text-slate-500 uppercase text-center">Actions</th>
+
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
@@ -307,8 +309,22 @@ const WhyExhibitManage = () => {
                                             <td className="px-6 py-4">
                                                 <div className="w-4 h-4 rounded-full shadow-inner" style={{ backgroundColor: card.accent }} />
                                             </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <div className="flex flex-col gap-1 items-center">
+                                                    <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                                                        {card.updatedBy || 'System'}
+                                                    </span>
+                                                    <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                                                        {card.updatedAt ? new Date(card.updatedAt).toLocaleString('en-GB', { 
+                                                            day: '2-digit', month: 'short', year: 'numeric', 
+                                                            hour: '2-digit', minute: '2-digit', hour12: true 
+                                                        }) : 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex justify-center gap-2">
+
                                                     <button onClick={() => editCard(card)} className="p-2 border border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-white transition-all">
                                                         <Edit2 size={14} />
                                                     </button>

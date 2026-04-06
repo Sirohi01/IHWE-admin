@@ -33,7 +33,9 @@ import {
   BriefcaseBusiness,
   Sparkles,
   ClipboardList,
+  Activity,
 } from "lucide-react";
+
 
 export const menuItems = [
   /* ================= DASHBOARD ================= */
@@ -42,6 +44,12 @@ export const menuItems = [
     label: "Dashboard",
     icon: LayoutDashboard,
     path: "/dashboard",
+  },
+  {
+    type: "item",
+    label: "Activity Logs",
+    icon: Activity,
+    path: "/activity-logs",
   },
 
   /* ================= ANALYTICS SECTION ================= */
@@ -403,6 +411,25 @@ export const menuItems = [
   //     { label: "Contact List", path: "/contact-list" },
   //   ],
   // },
+
+  /* ================= LOGS SECTION ================= */
+  {
+    type: "heading",
+    label: "Logs Section",
+  },
+  {
+    type: "item",
+    label: "Email Logs",
+    icon: ClipboardList,
+    path: "/email-logs",
+  },
+  {
+    type: "item",
+    label: "WhatsApp Logs",
+    icon: MessageSquare,
+    path: "/whatsapp-logs",
+  },
+
 
   /* ================= ACCOUNT SECTION ================= */
   {

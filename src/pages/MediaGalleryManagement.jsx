@@ -393,8 +393,10 @@ const MediaGalleryManagement = () => {
                                         <th className="text-left py-3 px-4 text-[10px] font-black text-gray-500 uppercase w-12 text-center">NO.</th>
                                         <th className="text-left py-3 px-4 text-[10px] font-black text-gray-500 uppercase w-24">IMAGE</th>
                                         <th className="text-left py-3 px-4 text-[10px] font-black text-gray-500 uppercase">IMAGE DETAILS</th>
+                                        <th className="text-center py-3 px-4 text-[10px] font-black text-gray-500 uppercase">LAST UPDATED BY</th>
                                         <th className="text-center py-3 px-4 text-[10px] font-black text-gray-500 uppercase w-24">ACTIONS</th>
                                     </tr>
+
                                 </thead>
                                 <tbody>
                                     {isLoading && items.length === 0 ? (
@@ -430,6 +432,19 @@ const MediaGalleryManagement = () => {
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-[9px] text-gray-400">ID: {item._id}</span>
                                                     </div>
+                                                </div>
+                                            </td>
+                                            <td className="py-3 px-4 text-center">
+                                                <div className="flex flex-col gap-1 items-center">
+                                                    <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                                                        {item.updatedBy || 'System'}
+                                                    </span>
+                                                    <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                                                        {item.updatedAt ? new Date(item.updatedAt).toLocaleString('en-GB', { 
+                                                            day: '2-digit', month: 'short', year: 'numeric', 
+                                                            hour: '2-digit', minute: '2-digit', hour12: true 
+                                                        }) : 'N/A'}
+                                                    </span>
                                                 </div>
                                             </td>
                                             <td className="py-3 px-4">

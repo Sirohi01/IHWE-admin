@@ -261,8 +261,10 @@ const MediaCategoryManagement = () => {
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">IMAGE</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">TITLE</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">HEADING</th>
+                                        <th className="text-center py-3 px-4 text-xs font-bold text-gray-500 uppercase">LAST UPDATED BY</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">ACTIONS</th>
                                     </tr>
+
                                 </thead>
                                 <tbody>
                                     {isLoading ? (
@@ -299,6 +301,19 @@ const MediaCategoryManagement = () => {
                                                 <p className="text-[10px] text-gray-400 mt-0.5">{cat.coverImageAlt}</p>
                                             </td>
                                             <td className="py-3 px-4 text-gray-600 text-xs">{cat.heading || '—'}</td>
+                                            <td className="py-3 px-4 text-center">
+                                                <div className="flex flex-col gap-1 items-center">
+                                                    <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                                                        {cat.updatedBy || 'System'}
+                                                    </span>
+                                                    <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                                                        {cat.updatedAt ? new Date(cat.updatedAt).toLocaleString('en-GB', { 
+                                                            day: '2-digit', month: 'short', year: 'numeric', 
+                                                            hour: '2-digit', minute: '2-digit', hour12: true 
+                                                        }) : 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </td>
                                             <td className="py-3 px-4">
                                                 <div className="flex items-center gap-1">
                                                     {/* Edit */}
