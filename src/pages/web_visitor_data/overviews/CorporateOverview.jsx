@@ -1,6 +1,27 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import {
+  FileText,
+  Printer,
+  ArrowLeft,
+  Briefcase,
+  History,
+  Shield,
+  MessageSquare,
+  UserCircle,
+  Plus,
+  ArrowRight,
+  UserCheck,
+  LayoutGrid,
+  FileDown,
+  Trash2,
+  Clock,
+  Navigation,
+  Save,
+  Pencil
+} from "lucide-react";
+import Swal from "sweetalert2";
 import {
   fetchCorporateVisitors,
   updateCorporateVisitor,
@@ -12,8 +33,63 @@ import {
   clearVisitorReviews,
   deleteVisitorReview,
 } from "../../../features/visitor/visitorReviewSlice";
-import { FaTrash, FaUser } from "react-icons/fa";
-import { showSuccess } from "../../../utils/toastMessage";
+import { fetchStatusOptions } from "../../../features/add_by_admin/statusOption/statusOptionSlice";
+import { fetchUsers } from "../../../features/auth/userSlice";
+
+/* ─── Shared cell styles ───────────────────────────────────────────────────── */
+const LC_CLS = "bg-[#fafafa] p-3 text-[11px] font-bold text-slate-600 uppercase tracking-tighter md:border-r border-slate-200 flex items-center min-w-[120px] order-none";
+const VC_CLS = "bg-white p-3 text-[12px] font-semibold text-slate-900 md:border-r border-slate-200 flex items-center break-all order-none";
+
+/* ─── Layout Rows — Responsive ─────────────────────────────────────────────── */
+function TR3({ l1, v1, l2, v2, l3, v3 }) {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-6 border-b border-slate-200 last:border-b-0">
+      <div className={LC_CLS}>{l1}</div>
+      <div className={VC_CLS}>{v1 || "—"}</div>
+      <div className={`${LC_CLS} border-t md:border-t-0`}>{l2}</div>
+      <div className={`${VC_CLS} border-t md:border-t-0`}>{v2 || "—"}</div>
+      <div className={`${LC_CLS} border-t md:border-t-0`}>{l3}</div>
+      <div className={`${VC_CLS} border-t md:border-t-0 border-r-0`}>{v3 || "—"}</div>
+    </div>
+  );
+}
+
+function TR2({ l1, v1, l2, v2 }) {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-6 border-b border-slate-200 last:border-b-0">
+      <div className={LC_CLS}>{l1}</div>
+      <div className={`${VC_CLS} col-span-1 md:col-span-2`}>{v1 || "—"}</div>
+      <div className={`${LC_CLS} border-t md:border-t-0`}>{l2}</div>
+      <div className={`${VC_CLS} col-span-1 md:col-span-2 border-r-0 border-t md:border-t-0`}>{v2 || "—"}</div>
+    </div>
+  );
+}
+
+function TR1({ label, value }) {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-6 border-b border-slate-200 last:border-b-0">
+      <div className={LC_CLS}>{label}</div>
+      <div className={`${VC_CLS} col-span-1 md:col-span-5 border-r-0`}>{value || "—"}</div>
+    </div>
+  );
+}
+
+/* ─── Section card ─────────────────────────────────────────────────────────── */
+function Section({ title, children }) {
+  return (
+    <div className="mb-8">
+      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100">
+        <div className="w-1.5 h-4 bg-[#23471d] rounded-full" />
+        <span className="font-extrabold text-[13px] text-[#23471d] uppercase tracking-wider">
+          {title}
+        </span>
+      </div>
+      <div className="border border-slate-300 rounded-[2px] shadow-sm bg-white overflow-hidden">
+        {children}
+      </div>
+    </div>
+  );
+}
 
 const CorporateOverview = () => {
   const { id } = useParams();
@@ -30,25 +106,24 @@ const CorporateOverview = () => {
     (state) => state.visitorReview,
   );
 
+  const { statusOptions } = useSelector((state) => state.statusOptions);
+  const { users } = useSelector((state) => state.users);
+
   const [status, setStatus] = useState("");
   const [description, setDescription] = useState("");
   const [selectedEvent, setSelectedEvent] = useState("");
-  const [postError, setPostError] = useState("");
-  const [postSuccess, setPostSuccess] = useState("");
-  const [showForm, setShowForm] = useState(false);
-
-  const statusOptions = [
-    "Data Send",
-    "Reminded 1 Sent",
-    "Reminded 2 Sent",
-    "Reminded 3 Sent",
-  ];
+  const [reminderDt, setReminderDt] = useState("");
+  const [forwardTo, setForwardTo] = useState("");
+  const [popUp, setPopUp] = useState(false);
+  const [Flip, setFlip] = useState(false);
 
   useEffect(() => {
     if (corporateVisitors.length === 0) {
       dispatch(fetchCorporateVisitors());
     }
     dispatch(fetchEvents());
+    dispatch(fetchStatusOptions());
+    dispatch(fetchUsers());
     dispatch(fetchReviewsByVisitorId(id));
     return () => {
       dispatch(clearVisitorReviews());
@@ -67,54 +142,92 @@ const CorporateOverview = () => {
   };
 
   const handlePost = async () => {
-    setPostError("");
-    setPostSuccess("");
-    if (!status) return setPostError("Please select a status.");
-    if (!selectedEvent) return setPostError("Please select an event.");
-    if (!description.trim()) return setPostError("Please enter a description.");
+    if (!status) {
+      Swal.fire({ title: "Status Required", text: "Please select a status.", icon: "warning", confirmButtonColor: "#23471d" });
+      return;
+    }
+    if (!selectedEvent) {
+      Swal.fire({ title: "Event Required", text: "Please select an event.", icon: "warning", confirmButtonColor: "#23471d" });
+      return;
+    }
+    if (!description.trim()) {
+      Swal.fire({ title: "Notes Required", text: "Please enter a description.", icon: "warning", confirmButtonColor: "#23471d" });
+      return;
+    }
 
     const userStr = sessionStorage.getItem("user");
     const user = userStr ? JSON.parse(userStr) : {};
     const userName = user.name || sessionStorage.getItem("user_name") || "User";
 
-    const reviewResult = await dispatch(
-      createVisitorReview({
-        visitor_id: id,
-        visitor_status: status,
-        visitor_event: selectedEvent,
-        visitor_desc: description.trim(),
-        added_by: userName,
-      }),
-    );
-    if (createVisitorReview.rejected.match(reviewResult)) {
-      return setPostError(reviewResult.payload || "Failed to create review.");
-    }
+    try {
+      const reviewResult = await dispatch(
+        createVisitorReview({
+          visitor_id: id,
+          visitor_status: status,
+          visitor_event: selectedEvent,
+          visitor_desc: description.trim(),
+          visitor_reminder_dt: reminderDt,
+          visitor_forward_to: forwardTo,
+          added_by: userName,
+        }),
+      ).unwrap();
 
-    const updateResult = await dispatch(
-      updateCorporateVisitor({
-        id,
-        data: { status, updated_by: userName },
-      }),
-    );
-    if (updateCorporateVisitor.rejected.match(updateResult)) {
-      return setPostError(
-        "Review created but failed to update visitor status.",
-      );
-    }
+      await dispatch(
+        updateCorporateVisitor({
+          id,
+          data: { status, updated_by: userName },
+        }),
+      ).unwrap();
 
-    dispatch(fetchReviewsByVisitorId(id));
-    setStatus("");
-    setDescription("");
-    setSelectedEvent("");
-    setShowForm(false);
-    setPostSuccess("Status updated and review posted successfully.");
-    setTimeout(() => setPostSuccess(""), 4000);
+      Swal.fire({
+        title: "Success",
+        text: "Status updated and review posted successfully.",
+        icon: "success",
+        confirmButtonColor: "#23471d"
+      });
+
+      dispatch(fetchReviewsByVisitorId(id));
+      setStatus("");
+      setDescription("");
+      setSelectedEvent("");
+      setReminderDt("");
+      setForwardTo("");
+      setPopUp(false);
+    } catch (err) {
+      Swal.fire({
+        title: "Error",
+        text: err?.message || "Failed to update status. Please try again.",
+        icon: "error",
+        confirmButtonColor: "#23471d"
+      });
+    }
   };
 
   const handleDelete = async (reviewId) => {
-    await dispatch(deleteVisitorReview(reviewId));
-    showSuccess("Review deleted successfully!");
-    dispatch(fetchReviewsByVisitorId(id));
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#23471d",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+      background: "#fff",
+      color: "#1e293b",
+      borderRadius: "2px"
+    });
+
+    if (result.isConfirmed) {
+      await dispatch(deleteVisitorReview(reviewId));
+      Swal.fire({
+        title: "Deleted!",
+        text: "Review has been removed.",
+        icon: "success",
+        confirmButtonColor: "#23471d",
+        borderRadius: "2px"
+      });
+      dispatch(fetchReviewsByVisitorId(id));
+    }
   };
 
   if (loading) {
@@ -139,461 +252,291 @@ const CorporateOverview = () => {
   const hasReviews = visitorReviews.length > 0;
 
   return (
-    <div
-      className="w-full min-h-screen bg-gray-100"
-      style={{ marginTop: "30px" }}
-    >
-      {/* Header */}
-      <div className="w-full bg-white shadow-md mb-6">
-        <div className="flex items-center justify-between px-4 py-2">
-          <h1 className="text-xl font-normal text-gray-700 uppercase">
-            Corporate Visitor Data
+    <div className="bg-white shadow-md mt-6 p-4 md:p-6 min-h-screen font-inter animate-fadeIn">
+      
+      {/* ── HEADER AREA Sync with AddNewClients ── */}
+      <div className="flex flex-col lg:flex-row justify-between items-center pb-4 border-b border-gray-100 gap-4">
+        <div className="flex flex-col items-center lg:items-start gap-1">
+          <h1 className="text-xl font-bold text-slate-500 uppercase tracking-tight leading-none text-center lg:text-left">
+            CORPORATE VISITOR DATA
           </h1>
-          {visitor.registrationId && (
-            <div className="bg-blue-50 border border-blue-200 px-4 py-1 rounded text-sm text-blue-700 font-normal">
-              Registration ID:{" "}
-              <span className="font-medium">{visitor.registrationId}</span>
-            </div>
-          )}
-          <button
-            onClick={() => navigate(-1)}
-            className="text-sm text-blue-500 hover:underline"
-          >
-            ← Back
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 text-center lg:text-left">
+            Visitor Registration Portal
+          </p>
+        </div>
+        <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
+          <button onClick={() => navigate("/ihweClientData2026/CorporateVisitorsList")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+            <LayoutGrid size={12} /> List View
+          </button>
+          <button onClick={() => window.print()} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+            <Printer size={12} /> Print
+          </button>
+          <button onClick={() => navigate(-1)} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-slate-800 hover:bg-slate-900 text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+            <ArrowLeft size={12} /> Back
           </button>
         </div>
       </div>
 
-      <div className="flex flex-col m-[22px] gap-4">
-        {/* Visitor Information Panel */}
-        <div className="bg-white rounded-md shadow border border-gray-200 p-4">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-base font-medium text-gray-700">
-              Visitor Information
+      <div className="mt-8 space-y-8">
+        
+        {/* ── SUB-HEADER ── */}
+        <div className="bg-slate-50/50 border border-slate-200 px-4 md:px-6 py-4 rounded-[2px] flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="text-center md:text-left">
+            <h2 className="text-[15px] font-bold text-slate-800 uppercase tracking-tight">
+              {fullName}
             </h2>
-            <button
-              className="p-2 hover:bg-gray-100 rounded"
-              title="Print"
-              onClick={() => window.print()}
-            >
-              <svg
-                className="w-5 h-5 text-gray-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                />
-              </svg>
-            </button>
+            <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-0.5 font-bold">
+              Corporate Registration • International Health & Wellness Expo 2026
+            </p>
           </div>
-
-          <table className="w-full text-sm border-collapse">
-            <tbody>
-              {/* Row 1 — Registration Id + Visitor Name + Contact No. */}
-              <tr className="border-b border-gray-200">
-                <td className="font-medium px-3 py-2 text-gray-500 w-[14%] whitespace-nowrap bg-gray-50">
-                  Registration Id
-                </td>
-                <td className="px-3 py-2 text-blue-600 font-medium w-[19%]">
-                  {visitor.registrationId || "N/A"}
-                </td>
-                <td className="font-medium px-3 py-2 text-gray-500 w-[14%] whitespace-nowrap bg-gray-50">
-                  Visitor Name
-                </td>
-                <td className="px-3 py-2 text-gray-700 w-[19%] font-medium">
-                  {fullName || "N/A"}
-                </td>
-                <td className="font-medium px-3 py-2 text-gray-500 w-[14%] whitespace-nowrap bg-gray-50">
-                  Contact No.
-                </td>
-                <td className="px-3 py-2 text-gray-700 w-[20%]">
-                  {visitor.mobile || "N/A"}
-                </td>
-              </tr>
-
-              {/* Row 2 — Email + Address + Registration For */}
-              <tr className="border-b border-gray-200">
-                <td className="font-medium px-3 py-2 text-gray-500 whitespace-nowrap bg-gray-50">
-                  Email Id
-                </td>
-                <td className="px-3 py-2 text-gray-700">
-                  {visitor.email || "N/A"}
-                </td>
-                <td className="font-medium px-3 py-2 text-gray-500 bg-gray-50">
-                  Address
-                </td>
-                <td className="px-3 py-2 text-gray-700">
-                  {[visitor.city, visitor.state, visitor.country]
-                    .filter(Boolean)
-                    .join(", ") || "N/A"}
-                </td>
-                <td className="font-medium px-3 py-2 text-gray-500 whitespace-nowrap bg-gray-50">
-                  Registration For
-                </td>
-                <td className="px-3 py-2 text-gray-700">
-                  {visitor.registrationFor || "N/A"}
-                </td>
-              </tr>
-
-              {/* Row 3 — Company + Website + Company Size */}
-              <tr className="border-b border-gray-200">
-                <td className="font-medium px-3 py-2 text-gray-500 whitespace-nowrap bg-gray-50">
-                  Company
-                </td>
-                <td className="px-3 py-2 text-gray-700">
-                  {visitor.companyName || "N/A"}
-                </td>
-                <td className="font-medium px-3 py-2 text-gray-500 bg-gray-50">
-                  Company Website
-                </td>
-                <td className="px-3 py-2 text-gray-700">
-                  {visitor.companyWebsite || "N/A"}
-                </td>
-                <td className="font-medium px-3 py-2 text-gray-500 whitespace-nowrap bg-gray-50">
-                  Company Size
-                </td>
-                <td className="px-3 py-2 text-gray-700">
-                  {visitor.companySize || "N/A"}
-                </td>
-              </tr>
-
-              {/* Row 4 — Designation + Industry/Sector + B2B Meeting */}
-              <tr className="border-b border-gray-200">
-                <td className="font-medium px-3 py-2 text-gray-500 whitespace-nowrap bg-gray-50">
-                  Designation
-                </td>
-                <td className="px-3 py-2 text-gray-700">
-                  {visitor.designation || "N/A"}
-                </td>
-                <td className="font-medium px-3 py-2 text-gray-500 bg-gray-50">
-                  Industry/Sector
-                </td>
-                <td className="px-3 py-2 text-gray-700">
-                  {visitor.industrySector || "N/A"}
-                </td>
-                <td className="font-medium px-3 py-2 text-gray-500 whitespace-nowrap bg-gray-50">
-                  B2B Meeting
-                </td>
-                <td className="px-3 py-2 text-gray-700 capitalize">
-                  {visitor.b2bMeeting || "N/A"}
-                </td>
-              </tr>
-
-              {/* Row 5 — WhatsApp Updates + Specific Requirement */}
-              <tr className="border-b border-gray-200">
-                <td className="font-medium px-3 py-2 text-gray-500 whitespace-nowrap bg-gray-50">
-                  WhatsApp Updates
-                </td>
-                <td className="px-3 py-2 text-gray-700 capitalize">
-                  {visitor.whatsappUpdates || "N/A"}
-                </td>
-                <td className="font-medium px-3 py-2 text-gray-500 bg-gray-50">
-                  Specific Requirement
-                </td>
-                <td colSpan="3" className="px-3 py-2 text-gray-700">
-                  {visitor.specificRequirement || "N/A"}
-                </td>
-              </tr>
-
-              {/* Row 6 — Purpose of Visit */}
-              <tr className="border-b border-gray-200">
-                <td className="font-medium px-3 py-2 text-gray-500 whitespace-nowrap bg-gray-50">
-                  Purpose of Visit
-                </td>
-                <td colSpan="5" className="px-3 py-2 text-gray-700">
-                  {[
-                    visitor.purposeOfVisit?.exploringBusiness &&
-                      "Exploring Business",
-                    visitor.purposeOfVisit?.meetingExhibitors &&
-                      "Meeting Exhibitors",
-                    visitor.purposeOfVisit?.attendingSeminar &&
-                      "Attending Seminar",
-                    visitor.purposeOfVisit?.networking && "Networking",
-                    visitor.purposeOfVisit?.learningTrends && "Learning Trends",
-                  ]
-                    .filter(Boolean)
-                    .join(", ") || "N/A"}
-                </td>
-              </tr>
-
-              {/* Row 7 — Area of Interest */}
-              <tr className="border-b border-gray-200">
-                <td className="font-medium px-3 py-2 text-gray-500 whitespace-nowrap bg-gray-50">
-                  Area of Interest
-                </td>
-                <td colSpan="5" className="px-3 py-2 text-gray-700">
-                  {[
-                    visitor.areaOfInterest?.ayushHerbal && "AYUSH & Herbal",
-                    visitor.areaOfInterest?.healthWellness &&
-                      "Health & Wellness",
-                    visitor.areaOfInterest?.organicFarming && "Organic Farming",
-                    visitor.areaOfInterest?.fitnessNutrition &&
-                      "Fitness & Nutrition",
-                    visitor.areaOfInterest?.bioMedicine && "Bio Medicine",
-                    visitor.areaOfInterest?.healthTech && "Health Tech",
-                  ]
-                    .filter(Boolean)
-                    .join(", ") || "N/A"}
-                </td>
-              </tr>
-
-              {/* Row 8 — Subscribe + Created By + Updated By */}
-              <tr className="border-b border-gray-200">
-                <td className="font-medium px-3 py-2 text-gray-500 whitespace-nowrap bg-gray-50">
-                  Subscribe
-                </td>
-                <td className="px-3 py-2 text-gray-700">
-                  {visitor.subscribe ? "✅ Yes" : "❌ No"}
-                </td>
-                <td className="font-medium px-3 py-2 text-gray-500 bg-gray-50">
-                  Created By
-                </td>
-                <td className="px-3 py-2 text-gray-700">
-                  {visitor.created_by || "N/A"}
-                  {visitor.createdAt
-                    ? ` | ${formatDate(visitor.createdAt)}`
-                    : ""}
-                </td>
-                <td className="font-medium px-3 py-2 text-gray-500 whitespace-nowrap bg-gray-50">
-                  Updated By
-                </td>
-                <td className="px-3 py-2 text-gray-700">
-                  {visitor.updated_by || "N/A"}
-                  {visitor.updatedAt
-                    ? ` | ${formatDate(visitor.updatedAt)}`
-                    : ""}
-                </td>
-              </tr>
-
-              {/* Row 9 — Current Status */}
-              <tr className="border-b border-gray-200">
-                <td className="font-medium px-3 py-2 text-gray-500 whitespace-nowrap bg-gray-50">
-                  Current Status
-                </td>
-                <td colSpan="5" className="px-3 py-2">
-                  {visitor.status ? (
-                    <span className="inline-block bg-blue-50 border border-blue-200 text-blue-700 text-xs px-3 py-1 rounded-full font-medium">
-                      {visitor.status}
-                    </span>
-                  ) : (
-                    <span className="text-gray-400 text-xs">No status yet</span>
-                  )}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          {visitor.registrationId && (
+            <div className="bg-[#23471d] text-white px-4 py-2 rounded-[2px] text-[11px] font-bold uppercase tracking-widest shadow-sm">
+              REG ID: {visitor.registrationId}
+            </div>
+          )}
         </div>
 
-        {/* Status Update Form */}
-        {(!hasReviews || showForm) && (
-          <div className="bg-white rounded-md shadow border border-gray-200 p-4 text-sm">
-            <h2 className="text-base font-medium text-gray-700 mb-3">
-              Update Status
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div>
-                <label className="font-medium text-gray-700 block mb-1">
-                  Status
-                </label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full border border-gray-300 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                >
-                  <option value="">-- Select Status --</option>
-                  {statusOptions.map((option, index) => (
-                    <option key={index} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="font-medium text-gray-700 block mb-1">
-                  Previous Status
-                </label>
-                <input
-                  type="text"
-                  value={visitor.status || ""}
-                  className="w-full border border-gray-300 px-2 py-1.5 bg-gray-100 text-sm"
-                  disabled
-                />
-              </div>
-              <div>
-                <label className="font-medium text-gray-700 block mb-1">
-                  Event <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={selectedEvent}
-                  onChange={(e) => setSelectedEvent(e.target.value)}
-                  className="w-full border border-gray-300 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                >
-                  <option value="">---- Select Event -----</option>
-                  {events.map((event, i) => (
-                    <option key={i} value={event._id}>
-                      {event.event_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+        {/* ── DETAILS AREA ── */}
+        <div className="space-y-2">
+          
+          <Section title="Visitor Information">
+            <TR3 
+              l1="Registration Id" v1={visitor.registrationId} 
+              l2="Visitor Name" v2={fullName} 
+              l3="Contact No." v3={visitor.mobile} 
+            />
+            <TR3 
+              l1="Email Id" v1={visitor.email} 
+              l2="Current Status" v2={<span className="text-green-700 font-bold uppercase tracking-tight">{visitor.status}</span>} 
+              l3="Registration For" v3={visitor.registrationFor} 
+            />
+          </Section>
+
+          <Section title="Company & Professional Bio">
+            <TR3 
+              l1="Company Name" v1={visitor.companyName} 
+              l2="Designation" v2={visitor.designation} 
+              l3="Industry/Sector" v3={visitor.industrySector} 
+            />
+            <TR2 
+              l1="Company Website" v1={<a href={visitor.companyWebsite} target="_blank" rel="noreferrer" className="text-blue-600 underline">{visitor.companyWebsite}</a>}
+              l2="Company Size" v2={visitor.companySize}
+            />
+            <TR3 
+              l1="WhatsApp Updates" v1={visitor.whatsappUpdates} 
+              l2="B2B Meeting" v2={visitor.b2bMeeting} 
+              l3="Subscribe" v3={visitor.subscribe ? "✅ Yes" : "❌ No"}
+            />
+          </Section>
+
+          <Section title="Requirements & Interests">
+            <TR1 label="Address" value={[visitor.city, visitor.state, visitor.country].filter(Boolean).join(", ")} />
+            <TR1 label="Purpose of Visit" value={[
+                    visitor.purposeOfVisit?.exploringBusiness && "Exploring Business",
+                    visitor.purposeOfVisit?.meetingExhibitors && "Meeting Exhibitors",
+                    visitor.purposeOfVisit?.attendingSeminar && "Attending Seminar",
+                    visitor.purposeOfVisit?.networking && "Networking",
+                    visitor.purposeOfVisit?.learningTrends && "Learning Trends",
+                  ].filter(Boolean).join(", ")} />
+            <TR1 label="Area of Interest" value={[
+                    visitor.areaOfInterest?.ayushHerbal && "AYUSH & Herbal",
+                    visitor.areaOfInterest?.healthWellness && "Health & Wellness",
+                    visitor.areaOfInterest?.organicFarming && "Organic Farming",
+                    visitor.areaOfInterest?.fitnessNutrition && "Fitness & Nutrition",
+                    visitor.areaOfInterest?.bioMedicine && "Bio Medicine",
+                    visitor.areaOfInterest?.healthTech && "Health Tech",
+                  ].filter(Boolean).join(", ")} />
+            <TR1 label="Specific Req." value={visitor.specificRequirement} />
+          </Section>
+
+          <Section title="Metadata">
+            <TR3 
+              l1="Created By" v1={`${visitor.created_by || "—"} | ${formatDate(visitor.createdAt)}`}
+              l2="Updated By" v2={`${visitor.updated_by || "—"} | ${formatDate(visitor.updatedAt)}`}
+              l3="Record ID" v3={<span className="text-[10px] font-mono break-all">{visitor._id}</span>}
+            />
+          </Section>
+
+        </div>
+
+        {/* ── CRM FORM (Pop-Up) ── */}
+        {(visitorReviews.length === 0 || popUp) && (
+          <div className="bg-white border-2 border-[#23471d]/20 p-6 rounded-[2px] shadow-lg animate-fadeIn text-left">
+            <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-2">
+              <History size={18} className="text-[#23471d]" />
+              <h3 className="text-[16px] font-bold text-[#23471d] uppercase tracking-tight">Post Status Update</h3>
             </div>
-            <div className="mb-4">
-              <label className="font-medium text-gray-700 block mb-1">
-                Description
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full border border-gray-300 px-2 py-1 h-24 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
-                placeholder="Update Status..."
-              />
-            </div>
-            {postError && (
-              <p className="text-red-500 text-xs mb-3">{postError}</p>
-            )}
-            {postSuccess && (
-              <p className="text-green-600 text-xs mb-3">{postSuccess}</p>
-            )}
-            <div className="flex justify-end">
-              <button
-                onClick={handlePost}
-                disabled={reviewLoading}
-                className="bg-[#337AB7] hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 font-medium text-sm"
-              >
-                {reviewLoading ? "Posting..." : "POST"}
-              </button>
+            
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div>
+                  <label className="text-[11px] font-bold text-slate-800 mb-1 block capitalize font-inter text-left">Select Status *</label>
+                  <select
+                    value={status}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const hideFor = ["Interested", "Hot Lead", "Cold Lead", "Hold", "Data Send"]; // Example logic
+                      setFlip(value !== ""); 
+                      setStatus(value);
+                    }}
+                    className="rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white text-slate-900 font-medium outline-none px-3 w-full"
+                  >
+                    <option value="">-- Select Status --</option>
+                    {Array.isArray(statusOptions) && statusOptions.filter(opt => opt.status === "active").map(opt => (
+                      <option key={opt._id} value={opt.name}>{opt.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {Flip && (
+                  <>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-800 mb-1 block capitalize font-inter text-left">Next Reminder</label>
+                      <input
+                        type="datetime-local"
+                        value={reminderDt}
+                        onChange={(e) => setReminderDt(e.target.value)}
+                        className="rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white text-slate-900 font-medium outline-none px-3 w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-800 mb-1 block capitalize font-inter text-left">Forward To</label>
+                      <select
+                        value={forwardTo}
+                        onChange={(e) => setForwardTo(e.target.value)}
+                        className="rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white text-slate-900 font-medium outline-none px-3 w-full"
+                      >
+                        <option value="">Select User</option>
+                        {Array.isArray(users) && users.filter(u => u.user_status === "Active").map(u => (
+                          <option key={u._id} value={u.user_fullname}>{u.user_fullname}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <label className="text-[11px] font-bold text-slate-800 mb-1 block capitalize font-inter text-left">Link to Event *</label>
+                  <select
+                    value={selectedEvent}
+                    onChange={(e) => setSelectedEvent(e.target.value)}
+                    className="rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white text-slate-900 font-medium outline-none px-3 w-full"
+                  >
+                    <option value="">-- Select Event --</option>
+                    {events.map((ev, i) => <option key={i} value={ev._id}>{ev.event_name}</option>)}
+                  </select>
+                </div>
+
+                {!Flip && (
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-800 mb-1 block capitalize font-inter text-left">Previous Status</label>
+                    <input type="text" value={visitor.status || "-"} readOnly className="rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-slate-50 text-slate-900 font-medium outline-none px-3 w-full" />
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-800 mb-1 block capitalize font-inter text-left">Description / Notes *</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                  className="rounded-[2px] border border-slate-400 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white px-3 py-2 w-full outline-none"
+                  placeholder="Type updates here..."
+                ></textarea>
+              </div>
+
+              <div className="flex justify-end gap-3 font-inter">
+                <button type="button" onClick={() => setPopUp(false)} className="px-6 py-2 border border-slate-300 text-slate-600 text-[11px] font-bold uppercase tracking-widest rounded-[2px] hover:bg-slate-50">
+                  Cancel
+                </button>
+                <button 
+                  onClick={handlePost} 
+                  disabled={reviewLoading}
+                  className="px-10 py-2 bg-[#23471d] text-white text-[11px] font-bold uppercase tracking-widest rounded-[2px] shadow hover:bg-[#1a3516] flex items-center gap-2 disabled:opacity-50"
+                >
+                  <Save size={14} /> Update Record
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Status History Panel */}
-        <div className="bg-gray-50 rounded-md border border-gray-200 p-3 shadow-sm">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-base font-medium text-gray-700 flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2 text-gray-700"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                />
-              </svg>
-              {fullName} Status History
-            </h2>
-            <div className="flex items-center gap-2">
-              {hasReviews && (
-                <button
-                  onClick={() => setShowForm((prev) => !prev)}
-                  className="text-xs bg-[#337AB7] hover:bg-blue-700 text-white px-3 py-1.5 font-medium"
-                >
-                  {showForm ? "Hide Form ▲" : "+ Update Status"}
+        {/* ── COMMUNICATION HISTORY ── */}
+        {visitorReviews.length > 0 && (
+          <div className="bg-white border border-slate-200 rounded-[2px] shadow-sm animate-fadeIn text-left">
+            <div className="flex items-center justify-between px-6 py-4 bg-slate-50/50 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <History size={18} className="text-[#23471d]" />
+                <h3 className="text-[15px] font-bold text-slate-800 uppercase tracking-tight">Communication History</h3>
+              </div>
+              {!popUp && (
+                <button onClick={() => setPopUp(true)} className="text-[11px] font-bold text-blue-600 uppercase border-b border-blue-600/30 hover:border-blue-600 transition-all font-inter">
+                  + Add New Remark
                 </button>
               )}
-              <button
-                className="p-2 hover:bg-gray-200 rounded"
-                title="Print"
-                onClick={() => window.print()}
-              >
-                <svg
-                  className="w-5 h-5 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                  />
-                </svg>
-              </button>
             </div>
-          </div>
-
-          {reviewLoading ? (
-            <p className="text-sm text-gray-400">Loading reviews...</p>
-          ) : hasReviews ? (
-            <div className="flex flex-col gap-3">
-              {visitorReviews.map((review, index) => {
-                const eventName =
-                  events.find((e) => e._id === review.visitor_event)
-                    ?.event_name || review.visitor_event;
+            
+            <div className="divide-y divide-slate-100">
+              {visitorReviews.map((rev) => {
+                const evName = events.find((e) => e._id === rev.visitor_event)?.event_name || rev.visitor_event;
                 return (
-                  <div
-                    key={review._id}
-                    className="flex items-start hover:bg-gray-200 gap-2 py-1.5 px-2 bg-white border border-gray-200 text-sm"
-                  >
-                    <FaUser className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
-                    <div className="flex-grow">
-                      <p className="font-medium text-xs sm:text-sm">
-                        <span className="text-blue-400 uppercase">
-                          {review.visitor_status} for {eventName}
-                        </span>
-                        <span
-                          onClick={() => {
-                            if (index === 0) setShowForm((prev) => !prev);
-                          }}
-                          className={`${
-                            index === 0
-                              ? "text-red-500 cursor-pointer hover:underline"
-                              : "text-gray-700"
-                          } uppercase`}
-                        >
-                          {" "}
-                          | ▲ Added on{" "}
-                          {review.added
-                            ? new Date(review.added).toLocaleString("en-IN", {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: true,
-                              })
-                            : "N/A"}
-                        </span>
-                      </p>
-                      <p className="text-xs text-gray-500 leading-tight">
-                        {review.visitor_desc} | By: {review.added_by} | On:{" "}
-                        {new Date(
-                          review.updated || review.added,
-                        ).toLocaleString("en-IN", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: true,
-                        })}
-                      </p>
+                  <div key={rev?._id} className="p-5 flex items-start gap-4 hover:bg-slate-50/30 transition-all">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400">
+                      <UserCircle size={24} />
                     </div>
-                    <button
-                      onClick={() => handleDelete(review._id)}
-                      className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
-                    >
-                      <FaTrash className="w-4 h-4" />
-                    </button>
+                    <div className="flex-grow">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-[13px] font-bold text-blue-700 uppercase tracking-tight font-inter">
+                            {rev?.visitor_status} <span className="text-slate-400 text-[11px] mx-1">/</span> {evName}
+                          </p>
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                              <Clock size={12} /> {rev?.added ? new Date(rev.added).toLocaleString() : "N/A"}
+                            </span>
+                            <span className="text-[10px] font-bold text-[#23471d] uppercase tracking-widest flex items-center gap-1">
+                              <Shield size={12} /> By {rev?.added_by}
+                            </span>
+                          </div>
+                        </div>
+                        <button onClick={() => handleDelete(rev?._id)} className="text-slate-300 hover:text-red-500 transition-colors">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                      <p className="text-[12px] font-medium text-slate-600 mt-2 bg-slate-50/80 p-3 rounded-[2px] border border-slate-100 italic font-inter shadow-inner">
+                        "{rev.visitor_desc}"
+                      </p>
+                      {(rev.visitor_reminder_dt || rev.visitor_forward_to) && (
+                        <div className="mt-2 flex gap-4">
+                           {rev.visitor_reminder_dt && (
+                             <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-[2px] font-bold border border-blue-100">Reminder: {new Date(rev.visitor_reminder_dt).toLocaleString()}</span>
+                           )}
+                           {rev.visitor_forward_to && (
+                             <span className="text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded-[2px] font-bold border border-green-100">Forward To: {rev.visitor_forward_to}</span>
+                           )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
-          ) : (
-            <p className="text-sm text-gray-400 mt-2">No status updates yet.</p>
-          )}
+          </div>
+        )}
+
+      </div>
+
+      {/* ── FOOTER AREA ── */}
+      <div className="mt-16 pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 text-gray-400">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-widest hover:text-[#23471d] transition-colors">
+          <ArrowLeft size={14} /> Back to Visitor List
+        </button>
+        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-tight">
+          <Shield size={14} className="text-green-600" /> Secure Administrative Portal
         </div>
       </div>
+
     </div>
   );
 };

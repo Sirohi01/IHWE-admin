@@ -1,8 +1,20 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Link as LinkIcon } from 'lucide-react';
 
 const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isCodeEditor = false }) => {
     const editorRef = useRef(null);
+    const [activeFormats, setActiveFormats] = useState({
+        bold: false,
+        italic: false,
+        underline: false,
+        justifyLeft: false,
+        justifyCenter: false,
+        justifyRight: false,
+        insertUnorderedList: false,
+        insertOrderedList: false,
+        formatBlock: 'p',
+        link: false
+    });
 
     // Sync from parent to editor (initial load or external updates)
     useEffect(() => {
@@ -11,12 +23,48 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
         }
     }, [value]);
 
+    const updateActiveFormats = useCallback(() => {
+        if (!isCodeEditor && editorRef.current) {
+            const formatBlockValue = document.queryCommandValue("formatBlock");
+            
+            // Check if selection is inside a link
+            const selection = window.getSelection();
+            let isLink = false;
+            if (selection.rangeCount > 0) {
+                let container = selection.getRangeAt(0).startContainer;
+                if (container.nodeType === 3) container = container.parentNode;
+                
+                let temp = container;
+                while (temp && temp !== editorRef.current) {
+                    if (temp.tagName === 'A') {
+                        isLink = true;
+                        break;
+                    }
+                    temp = temp.parentNode;
+                }
+            }
+
+            setActiveFormats({
+                bold: document.queryCommandState("bold"),
+                italic: document.queryCommandState("italic"),
+                underline: document.queryCommandState("underline"),
+                justifyLeft: document.queryCommandState("justifyLeft"),
+                justifyCenter: document.queryCommandState("justifyCenter"),
+                justifyRight: document.queryCommandState("justifyRight"),
+                insertUnorderedList: document.queryCommandState("insertUnorderedList"),
+                insertOrderedList: document.queryCommandState("insertOrderedList"),
+                formatBlock: formatBlockValue || 'p',
+                link: isLink
+            });
+        }
+    }, [isCodeEditor]);
+
     const execCommand = (command, val = null) => {
         if (editorRef.current) {
             editorRef.current.focus();
-            // Store current selection if possible
             document.execCommand(command, false, val);
             handleInput();
+            updateActiveFormats();
         }
     };
 
@@ -47,9 +95,31 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
 
     const insertLink = (e) => {
         e.preventDefault();
-        const url = prompt("Enter URL:");
-        if (url) {
-            execCommand("createLink", url);
+        
+        // Check if already in a link
+        const selection = window.getSelection();
+        let currentLink = null;
+        
+        if (selection.rangeCount > 0) {
+            let container = selection.getRangeAt(0).startContainer;
+            if (container.nodeType === 3) container = container.parentNode;
+            
+            while (container && container !== editorRef.current) {
+                if (container.tagName === 'A') {
+                    currentLink = container;
+                    break;
+                }
+                container = container.parentNode;
+            }
+        }
+
+        if (currentLink) {
+            execCommand("unlink");
+        } else {
+            const url = prompt("Enter URL:");
+            if (url) {
+                execCommand("createLink", url);
+            }
         }
     };
 
@@ -59,6 +129,11 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
         execCommand(command, val);
     };
 
+    // Styling for active state
+    const getActiveStyle = (isActive) => isActive 
+        ? "bg-blue-100 border-blue-400 text-blue-700 active:bg-blue-200" 
+        : "bg-white border-gray-300 active:bg-gray-100";
+
     return (
         <div className="border-2 border-gray-200 rounded overflow-hidden shadow-inner bg-white">
             {/* Standardized Toolbar - Hidden in code mode or customized if needed */}
@@ -67,7 +142,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                     <button
                         type="button"
                         onMouseDown={(e) => handleAction(e, "bold")}
-                        className="w-9 h-9 flex items-center justify-center hover:bg-white rounded font-bold border-2 border-gray-300 text-sm shadow-sm bg-white active:bg-gray-100"
+                        className={`w-9 h-9 flex items-center justify-center hover:bg-white rounded font-bold border-2 text-sm shadow-sm transition-colors ${getActiveStyle(activeFormats.bold)}`}
                         title="Bold"
                     >
                         B
@@ -75,7 +150,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                     <button
                         type="button"
                         onMouseDown={(e) => handleAction(e, "italic")}
-                        className="w-9 h-9 flex items-center justify-center hover:bg-white rounded italic border-2 border-gray-300 text-sm shadow-sm bg-white active:bg-gray-100"
+                        className={`w-9 h-9 flex items-center justify-center hover:bg-white rounded italic border-2 text-sm shadow-sm transition-colors ${getActiveStyle(activeFormats.italic)}`}
                         title="Italic"
                     >
                         I
@@ -83,7 +158,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                     <button
                         type="button"
                         onMouseDown={(e) => handleAction(e, "underline")}
-                        className="w-9 h-9 flex items-center justify-center hover:bg-white rounded underline border-2 border-gray-300 text-sm shadow-sm bg-white active:bg-gray-100"
+                        className={`w-9 h-9 flex items-center justify-center hover:bg-white rounded underline border-2 text-sm shadow-sm transition-colors ${getActiveStyle(activeFormats.underline)}`}
                         title="Underline"
                     >
                         U
@@ -94,7 +169,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                     <button
                         type="button"
                         onMouseDown={(e) => handleAction(e, "justifyLeft")}
-                        className="w-9 h-9 flex items-center justify-center hover:bg-white rounded border-2 border-gray-300 text-lg shadow-sm bg-white active:bg-gray-100"
+                        className={`w-9 h-9 flex items-center justify-center hover:bg-white rounded border-2 text-lg shadow-sm transition-colors ${getActiveStyle(activeFormats.justifyLeft)}`}
                         title="Align Left"
                     >
                         ≡
@@ -102,7 +177,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                     <button
                         type="button"
                         onMouseDown={(e) => handleAction(e, "justifyCenter")}
-                        className="w-9 h-9 flex items-center justify-center hover:bg-white rounded border-2 border-gray-300 text-lg shadow-sm bg-white active:bg-gray-100"
+                        className={`w-9 h-9 flex items-center justify-center hover:bg-white rounded border-2 text-lg shadow-sm transition-colors ${getActiveStyle(activeFormats.justifyCenter)}`}
                         title="Align Center"
                     >
                         ≡
@@ -110,7 +185,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                     <button
                         type="button"
                         onMouseDown={(e) => handleAction(e, "justifyRight")}
-                        className="w-9 h-9 flex items-center justify-center hover:bg-white rounded border-2 border-gray-300 text-lg shadow-sm bg-white active:bg-gray-100"
+                        className={`w-9 h-9 flex items-center justify-center hover:bg-white rounded border-2 text-lg shadow-sm transition-colors ${getActiveStyle(activeFormats.justifyRight)}`}
                         title="Align Right"
                     >
                         ≡
@@ -121,7 +196,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                     <button
                         type="button"
                         onMouseDown={(e) => handleAction(e, "insertUnorderedList")}
-                        className="px-3 h-9 flex items-center justify-center hover:bg-white rounded border-2 border-gray-300 text-[11px] font-bold shadow-sm bg-white gap-1 active:bg-gray-100"
+                        className={`px-3 h-9 flex items-center justify-center hover:bg-white rounded border-2 text-[11px] font-bold shadow-sm gap-1 transition-colors ${getActiveStyle(activeFormats.insertUnorderedList)}`}
                         title="Bullet List"
                     >
                         <span className="text-lg">●</span> List
@@ -129,7 +204,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                     <button
                         type="button"
                         onMouseDown={(e) => handleAction(e, "insertOrderedList")}
-                        className="px-3 h-9 flex items-center justify-center hover:bg-white rounded border-2 border-gray-300 text-[11px] font-bold shadow-sm bg-white gap-1 active:bg-gray-100"
+                        className={`px-3 h-9 flex items-center justify-center hover:bg-white rounded border-2 text-[11px] font-bold shadow-sm gap-1 transition-colors ${getActiveStyle(activeFormats.insertOrderedList)}`}
                         title="Numbered List"
                     >
                         1. List
@@ -138,11 +213,9 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                     <div className="w-px h-6 bg-gray-300 mx-1"></div>
 
                     <select
-                        onChange={(e) => {
-                            execCommand("formatBlock", e.target.value);
-                            e.target.value = "p"; // Reset to Body Text after selection so it's ready for the next action
-                        }}
-                        className="h-9 border-2 border-gray-300 text-[11px] font-bold px-2 bg-white rounded shadow-sm focus:outline-none min-w-[100px] cursor-pointer"
+                        onChange={(e) => execCommand("formatBlock", e.target.value)}
+                        value={activeFormats.formatBlock}
+                        className={`h-9 border-2 text-[11px] font-bold px-2 rounded shadow-sm focus:outline-none min-w-[100px] transition-colors ${activeFormats.formatBlock !== 'p' ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-300'}`}
                     >
                         <option value="p">Body Text</option>
                         <option value="h1">Heading 1</option>
@@ -156,8 +229,8 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                     <button
                         type="button"
                         onMouseDown={insertLink}
-                        className="w-9 h-9 flex items-center justify-center hover:bg-white rounded border-2 border-gray-300 text-sm shadow-sm bg-white text-blue-600 active:bg-gray-100"
-                        title="Insert Link"
+                        className={`w-9 h-9 flex items-center justify-center hover:bg-white rounded border-2 text-sm shadow-sm transition-colors ${getActiveStyle(activeFormats.link)} text-blue-600`}
+                        title="Insert/Remove Link"
                     >
                         <LinkIcon size={16} />
                     </button>
@@ -170,6 +243,9 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                 contentEditable
                 onInput={handleInput}
                 onPaste={handlePaste}
+                onMouseUp={updateActiveFormats}
+                onKeyUp={updateActiveFormats}
+                onFocus={updateActiveFormats}
                 className={`p-6 focus:outline-none max-w-none text-gray-700 bg-white overflow-y-auto leading-relaxed ${isCodeEditor ? 'font-mono text-sm' : 'prose'}`}
                 style={{
                     minHeight: minHeight,

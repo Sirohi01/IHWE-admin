@@ -4,6 +4,8 @@ import api, { SERVER_URL } from "../lib/api";
 import {
     Plus, Trash2, Edit, Building2, MapPin, Globe, Image as ImageIcon, Save, X
 } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { createActivityLogThunk } from '../features/activityLog/activityLogSlice';
 import PageHeader from '../components/PageHeader';
 
 const EMPTY_FORM = {
@@ -15,6 +17,7 @@ const EMPTY_FORM = {
 };
 
 const ExhibitorListManage = () => {
+    const dispatch = useDispatch();
     const [exhibitors, setExhibitors] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [form, setForm] = useState({ ...EMPTY_FORM });
@@ -72,6 +75,21 @@ const ExhibitorListManage = () => {
             }
 
             if (response.data.success) {
+                // Log the activity
+                const userId = sessionStorage.getItem("user_id");
+                if (userId) {
+                    dispatch(createActivityLogThunk({
+                        user_id: userId,
+                        message: `Exhibitor List: ${isEditing ? 'Updated' : 'Added'} brand '${form.title}' with location '${form.location}'`,
+                        section: "Exhibitors Section",
+                        data: { 
+                            action: isEditing ? "UPDATE" : "ADD", 
+                            brand: form.title, 
+                            location: form.location 
+                        }
+                    }));
+                }
+
                 Swal.fire({ icon: 'success', title: isEditing ? 'Updated!' : 'Added!', timer: 1500, showConfirmButton: false });
                 resetForm();
                 fetchExhibitors();
@@ -97,7 +115,20 @@ const ExhibitorListManage = () => {
 
         setIsLoading(true);
         try {
+            const exhibitorToDelete = exhibitors.find(ex => ex._id === id);
             await api.delete(`/api/exhibitor/${id}`);
+
+            // Log the activity
+            const userId = sessionStorage.getItem("user_id");
+            if (userId && exhibitorToDelete) {
+                dispatch(createActivityLogThunk({
+                    user_id: userId,
+                    message: `Exhibitor List: Deleted brand '${exhibitorToDelete.title}'`,
+                    section: "Exhibitors Section",
+                    data: { action: "DELETE", brand: exhibitorToDelete.title }
+                }));
+            }
+
             Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
             fetchExhibitors();
         } catch (error) {

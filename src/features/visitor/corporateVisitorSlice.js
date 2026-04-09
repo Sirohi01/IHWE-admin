@@ -1,8 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "../../lib/api";
 import { createActivityLogThunk } from "../activityLog/activityLogSlice";
-
-const BASE_URL = import.meta.env.VITE_API_URL;
 
 const getUserInfo = () => {
   const userStr = sessionStorage.getItem("user");
@@ -17,8 +15,8 @@ export const fetchCorporateVisitors = createAsyncThunk(
   "corporateVisitors/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${BASE_URL}/corporate-visitors`);
-      return res.data.data ?? res.data;
+      const res = await api.get("/api/corporate-visitors");
+      return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
@@ -30,30 +28,24 @@ export const createCorporateVisitor = createAsyncThunk(
   async (data, { dispatch, rejectWithValue }) => {
     const { userId, userName } = getUserInfo();
     try {
-      const res = await axios.post(
-        `${BASE_URL}/corporate-visitors`,
-        {
-          ...data,
-          created_by: userName,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      const res = await api.post("/api/corporate-visitors", {
+        ...data,
+        created_by: userName,
+      });
+
+      const visitorData = res.data.data || res.data;
 
       if (userId) {
         dispatch(
           createActivityLogThunk({
             user_id: userId,
-            message: `Corporate Visitor '${res.data.firstName} ${res.data.lastName}' created by ${userName}`,
-            link: `/corporate-visitors/${res.data._id}`,
+            message: `Corporate Visitor '${visitorData.firstName} ${visitorData.lastName}' created by ${userName}`,
+            link: `/corporate-visitors/${visitorData._id}`,
             section: "corporateVisitors",
             data: {
               action: "CREATE",
-              visitor_id: res.data._id,
-              created_data: res.data,
+              visitor_id: visitorData._id,
+              created_data: visitorData,
             },
           }),
         );
@@ -70,27 +62,21 @@ export const updateCorporateVisitor = createAsyncThunk(
   async ({ id, data }, { dispatch, rejectWithValue }) => {
     const { userId, userName } = getUserInfo();
     try {
-      const res = await axios.put(
-        `${BASE_URL}/corporate-visitors/${id}`,
-        {
-          ...data,
-          updated_by: userName,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      const res = await api.put(`/api/corporate-visitors/${id}`, {
+        ...data,
+        updated_by: userName,
+      });
+
+      const visitorData = res.data.data || res.data;
 
       if (userId) {
         dispatch(
           createActivityLogThunk({
             user_id: userId,
-            message: `Corporate Visitor '${res.data.firstName} ${res.data.lastName}' updated by ${userName}`,
+            message: `Corporate Visitor '${visitorData.firstName} ${visitorData.lastName}' updated by ${userName}`,
             link: `/corporate-visitors/${id}`,
             section: "corporateVisitors",
-            data: { action: "UPDATE", visitor_id: id, updated_data: res.data },
+            data: { action: "UPDATE", visitor_id: id, updated_data: visitorData },
           }),
         );
       }
@@ -109,7 +95,7 @@ export const deleteCorporateVisitor = createAsyncThunk(
       const { corporateVisitors } = getState().corporateVisitors;
       const toDelete = corporateVisitors.find((v) => v._id === id);
 
-      await axios.delete(`${BASE_URL}/corporate-visitors/${id}`);
+      await api.delete(`/api/corporate-visitors/${id}`);
 
       if (userId) {
         dispatch(
@@ -148,52 +134,32 @@ const corporateVisitorSlice = createSlice({
       })
       .addCase(fetchCorporateVisitors.fulfilled, (state, action) => {
         state.loading = false;
-        state.corporateVisitors = action.payload;
+        // ✅ Handle data structure safely
+        state.corporateVisitors = Array.isArray(action.payload)
+          ? action.payload
+          : action.payload?.data || [];
       })
       .addCase(fetchCorporateVisitors.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(createCorporateVisitor.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
       .addCase(createCorporateVisitor.fulfilled, (state, action) => {
         state.loading = false;
-        state.corporateVisitors.push(action.payload);
-      })
-      .addCase(createCorporateVisitor.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      .addCase(updateCorporateVisitor.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        const data = action.payload?.data || action.payload;
+        if (data?._id) state.corporateVisitors.push(data);
       })
       .addCase(updateCorporateVisitor.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.corporateVisitors.findIndex(
-          (v) => v._id === action.payload._id,
-        );
-        if (index !== -1) state.corporateVisitors[index] = action.payload;
-      })
-      .addCase(updateCorporateVisitor.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      .addCase(deleteCorporateVisitor.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        const data = action.payload?.data || action.payload;
+        if (!data?._id) return;
+        const index = state.corporateVisitors.findIndex((v) => v._id === data._id);
+        if (index !== -1) state.corporateVisitors[index] = data;
       })
       .addCase(deleteCorporateVisitor.fulfilled, (state, action) => {
         state.loading = false;
         state.corporateVisitors = state.corporateVisitors.filter(
           (v) => v._id !== action.payload,
         );
-      })
-      .addCase(deleteCorporateVisitor.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
       });
   },
 });

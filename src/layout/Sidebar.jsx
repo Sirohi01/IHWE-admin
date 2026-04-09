@@ -52,11 +52,73 @@ export default function Sidebar({
       .catch(err => console.error("Error fetching sidebar settings:", err));
   }, []);
 
-  const filteredMenuItems = menuItems.filter(item => {
-    if (!currentUser) return false;
-    if (!item.roles) return currentUser.role === 'super-admin';
-    return item.roles.includes(currentUser.role);
-  });
+  const [roleData, setRoleData] = useState(null);
+
+  useEffect(() => {
+    if (currentUser?.role) {
+      api.get("/api/roles")
+        .then(res => {
+          if (res.data.success) {
+            const role = res.data.data.find(r => r.name.toLowerCase() === currentUser.role.toLowerCase());
+            if (role) setRoleData(role);
+          }
+        })
+        .catch(err => console.error("Error fetching permissions:", err));
+    }
+  }, [currentUser]);
+
+  const filteredMenuItems = (() => {
+    if (!currentUser) return [];
+
+    const perms = roleData?.permissions || {};
+    const isSuperAdminFallback = currentUser.role === 'super-admin' && Object.keys(perms).length === 0;
+
+    // First pass: Determine visibility for items and dropdowns
+    const visibleResults = menuItems.map(item => {
+      if (item.type === "heading") return { ...item, isVisible: false }; // Placeholder
+      
+      if (isSuperAdminFallback) return { ...item, isVisible: true };
+
+      if (item.type === "item") {
+        return { ...item, isVisible: perms[item.label] === true };
+      }
+
+      if (item.type === "dropdown") {
+        const visibleChildren = item.children?.filter(child => perms[child.label] === true);
+        return { 
+          ...item, 
+          isVisible: visibleChildren && visibleChildren.length > 0,
+          children: visibleChildren
+        };
+      }
+
+      return { ...item, isVisible: false };
+    });
+
+    // Second pass: Show headings only if they are followed by visible items
+    const finalItems = [];
+    for (let i = 0; i < visibleResults.length; i++) {
+      const current = visibleResults[i];
+      if (current.type === "heading") {
+        // Look ahead to see if any items in this section are visible
+        let hasVisibleContent = false;
+        for (let j = i + 1; j < visibleResults.length; j++) {
+          if (visibleResults[j].type === "heading") break;
+          if (visibleResults[j].isVisible) {
+            hasVisibleContent = true;
+            break;
+          }
+        }
+        if (hasVisibleContent) {
+          finalItems.push(current);
+        }
+      } else if (current.isVisible) {
+        finalItems.push(current);
+      }
+    }
+
+    return finalItems;
+  })();
 
   useEffect(() => {
     filteredMenuItems.forEach((item) => {
@@ -151,10 +213,21 @@ export default function Sidebar({
           <button onClick={() => setSidebarOpen(true)} className="sb-toggle-btn mx-4 mt-4 p-2 rounded-lg text-white"><Menu size={18} /></button>
         )}
 
-        <div className="h-[calc(100vh-140px)] overflow-y-auto sidebar-scroll p-3 space-y-1 text-[13px]">
+        <div className="h-[calc(100vh-140px)] overflow-y-auto sidebar-scroll pt-1 p-3 space-y-1 text-[13px]">
           {filteredMenuItems.map((item, index) => {
             if (item.type === "heading") {
-              return sidebarOpen && <p key={index} className="sb-heading px-3 mt-3 mb-0.5 text-[11px] font-semibold uppercase">{item.label}</p>;
+              return (
+                sidebarOpen && (
+                  <p
+                    key={index}
+                    className={`sb-heading px-3 ${
+                      index === 0 ? "mt-0" : "mt-3"
+                    } mb-0.5 text-[11px] font-semibold uppercase`}
+                  >
+                    {item.label}
+                  </p>
+                )
+              );
             }
 
             if (item.type === "item") {

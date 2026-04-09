@@ -19,8 +19,11 @@ import {
 } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
+import { useDispatch } from "react-redux";
+import { createActivityLogThunk } from "../features/activityLog/activityLogSlice";
 
 const BookAStand = () => {
+    const dispatch = useDispatch();
     const [isLoading, setIsLoading] = useState(false);
     const [events, setEvents] = useState([]);
     const [selectedEventId, setSelectedEventId] = useState('');
@@ -160,9 +163,32 @@ const BookAStand = () => {
                 filledBy: currentUser?.username || 'Admin',
                 balanceAmount: formData.participation.total
             };
-            const response = await api.post('/api/registrations', finalData);
             if (response.data.success) {
-                Swal.fire('Success', 'Registration submitted and marked as PENDING!', 'success');
+                // Log the activity
+                const adminName = currentUser?.user_fullname || currentUser?.username || "Admin";
+                const userId = sessionStorage.getItem("user_id") || currentUser?._id;
+                
+                if (userId) {
+                    dispatch(createActivityLogThunk({
+                        user_id: userId,
+                        message: `Exhibitor: Manual booking created for '${formData.exhibitorName}' in '${events.find(e => e._id === selectedEventId)?.name || 'N/A'}' (Stall: ${formData.participation.stallFor}) by ${adminName}`,
+                        section: "Registration Section",
+                        data: {
+                            action: "ADD",
+                            exhibitor: formData.exhibitorName,
+                            event: events.find(e => e._id === selectedEventId)?.name,
+                            stall: formData.participation.stallFor,
+                            total: formData.participation.total
+                        }
+                    }));
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'REGISTRATION SUCCESSFUL',
+                    text: 'Manual booking has been recorded and marked as PENDING!',
+                    confirmButtonColor: '#23471d'
+                });
             }
         } catch (error) {
             Swal.fire('Error', error.response?.data?.message || 'Submission failed', 'error');
@@ -215,33 +241,55 @@ const BookAStand = () => {
         });
     };
 
-    const inputClasses = "w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#23471d]/20 focus:border-[#23471d] outline-none transition-all font-semibold text-slate-800 text-sm shadow-sm";
-    const labelClasses = "text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 block mb-1";
+    const inputClasses = "rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-900 font-medium shadow-none outline-none px-3 w-full text-left";
+    const labelClasses = "text-[11px] font-bold text-slate-800 mb-1 block capitalize font-inter";
+    const sectionHeaderClasses = "text-[16px] font-bold text-[#23471d] pb-1 border-b border-slate-100 mb-6 font-inter";
 
     return (
-        <div className="p-8 bg-slate-50 min-h-screen">
-            <div className="max-w-[1600px] mx-auto">
-                <div className="mb-8 flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-                    <div>
-                        <h1 className="text-3xl font-black text-[#23471d] tracking-tight uppercase">
-                            {events.find(e => e._id === selectedEventId)?.name || 'MANUAL BOOKING'}
-                        </h1>
-                        <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest mt-1">Add a new exhibitor registration from Admin Panel</p>
+        <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-inter animate-fadeIn">
+            {/* ── HEADER AREA ── */}
+            <div className="flex flex-col sm:flex-row justify-between items-center pb-4 border-b border-gray-100">
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-xl font-bold text-slate-500 uppercase tracking-tight leading-none">
+                        MANUAL REGISTRATION
+                    </h1>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+                        Book A Stand Admin Panel
+                    </p>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-4 sm:mt-0">
+                    <div className="px-3 py-1.5 text-[11px] font-black uppercase bg-slate-100 text-[#23471d] rounded-[2px] border border-slate-200">
+                        {events.find(e => e._id === selectedEventId)?.name || 'NO EVENT SELECTED'}
                     </div>
                 </div>
+            </div>
 
-                <form onSubmit={handleSubmit} className="space-y-8">
-                    {/* EVENT & STALL SELECTION */}
-                    <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-200 flex flex-wrap gap-8 items-end">
-                        <div className="flex-1 min-w-[300px]">
-                            <label className={labelClasses}>Select Exhibition Event *</label>
-                            <select value={selectedEventId} onChange={(e) => { setSelectedEventId(e.target.value); }} className={inputClasses}>
+            <form onSubmit={handleSubmit} className="mt-8 space-y-10">
+                
+                {/* ── SUB-HEADER ── */}
+                <div className="bg-slate-50/50 border-x border-y border-slate-200 px-6 py-3 rounded-[2px]">
+                    <h2 className="text-[16px] font-bold text-slate-800 uppercase tracking-tight">
+                        Manual Exhibitor Booking
+                    </h2>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-0.5 font-bold">
+                        International Health & Wellness Expo 2026
+                    </p>
+                </div>
+
+                {/* SECTION: EVENT & STALL SELECTION */}
+                <div className="space-y-4 px-2">
+                    <h3 className={sectionHeaderClasses}>Event & Stall Selection</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
+                        <div className="md:col-span-2">
+                            <label className={labelClasses}>Linked Exhibition Event *</label>
+                            <select required value={selectedEventId} onChange={(e) => setSelectedEventId(e.target.value)} className={inputClasses}>
+                                <option value="">Select Event</option>
                                 {events.map(ev => <option key={ev._id} value={ev._id}>{ev.name} ({new Date(ev.startDate).getFullYear()})</option>)}
                             </select>
                         </div>
-                        <div className="flex-1 min-w-[300px]">
-                            <label className={labelClasses}>Select Target Stall *</label>
-                            <select value={formData.participation.stallNo} onChange={(e) => handleStallSelect(e.target.value)} className={inputClasses}>
+                        <div className="md:col-span-2">
+                            <label className={labelClasses}>Stall Number *</label>
+                            <select required value={formData.participation.stallNo} onChange={(e) => handleStallSelect(e.target.value)} className={inputClasses}>
                                 <option value="">-- Choose Available Stall --</option>
                                 {availableStalls.filter(s => 
                                     (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId) || 
@@ -255,312 +303,271 @@ const BookAStand = () => {
                         </div>
                     </div>
 
-                    {/* EVENT STALL RATES DISPLAY */}
+                    {/* APPLICABLE RATES WIDGET */}
                     {selectedEventId && (
-                        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-                            <h2 className="text-sm font-black text-[#23471d] mb-4 flex items-center gap-2">
-                                <Banknote size={16} /> APPLICABLE STALL RATES
-                            </h2>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {allRates.filter(r => (r.eventId?._id || r.eventId) === selectedEventId).length > 0 ? (
-                                    allRates.filter(r => (r.eventId?._id || r.eventId) === selectedEventId).map(rate => (
-                                        <div key={rate._id} className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                            <div className="text-[10px] font-black text-slate-500 uppercase mb-1">{rate.stallType}</div>
-                                            <div className="text-lg font-black text-[#d26019]">{rate.currency} {rate.ratePerSqm.toLocaleString()} <span className="text-[10px] text-slate-400 font-bold">/ SQM</span></div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="col-span-4 text-xs text-slate-400 font-bold uppercase">No pre-configured rates found for this event.</div>
-                                )}
+                        <div className="mt-6 p-4 bg-slate-50/50 border border-slate-200 rounded-[2px]">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <Banknote size={12} className="text-[#23471d]" />
+                                Live Market Rates
+                            </p>
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                                {allRates.filter(r => (r.eventId?._id || r.eventId) === selectedEventId).map(rate => (
+                                    <div key={rate._id} className="bg-white p-2 border border-slate-200 rounded-[2px] shadow-sm">
+                                        <p className="text-[8px] font-black text-slate-400 uppercase leading-none mb-1">{rate.stallType}</p>
+                                        <p className="text-[11px] font-black text-[#d26019]">{rate.currency} {rate.ratePerSqm.toLocaleString()}</p>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}
+                </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* LEFT COLUMN: COMPANY DETAILS */}
-                        <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-200 space-y-6">
-                            <h2 className="text-lg font-black text-[#23471d] flex items-center gap-2 border-b pb-4">
-                                <Briefcase size={20} /> COMPANY INFORMATION
-                            </h2>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className={labelClasses}>Exhibitor Name (Company) *</label>
-                                    <input required type="text" value={formData.exhibitorName} onChange={(e) => handleSelectChange('exhibitorName', e.target.value)} className={inputClasses} placeholder="Enter full brand name" />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className={labelClasses}>Type of Business</label>
-                                        <select value={formData.typeOfBusiness} onChange={(e) => handleSelectChange('typeOfBusiness', e.target.value)} className={inputClasses}>
-                                            <option value="">Select...</option>
-                                            <option value="Manufacturer">Manufacturer</option>
-                                            <option value="Distributor">Distributor</option>
-                                            <option value="Exporter">Exporter</option>
-                                            <option value="Service Provider">Service Provider</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className={labelClasses}>Industry Sector</label>
-                                        <input type="text" value={formData.industrySector} onChange={(e) => handleSelectChange('industrySector', e.target.value)} className={inputClasses} placeholder="e.g. Pharma" />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className={labelClasses}>Company Website</label>
-                                        <input type="text" value={formData.website} onChange={(e) => handleSelectChange('website', e.target.value)} className={inputClasses} placeholder="www.example.com" />
-                                    </div>
-                                    <div>
-                                        <label className={labelClasses}>Landline No.</label>
-                                        <input type="text" value={formData.landlineNo} onChange={(e) => handleSelectChange('landlineNo', e.target.value)} className={inputClasses} placeholder="+91..." />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className={labelClasses}>Full Address *</label>
-                                    <textarea required rows={2} value={formData.address} onChange={(e) => handleSelectChange('address', e.target.value)} className={inputClasses} placeholder="Registered address..." />
-                                </div>
-                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <div>
-                                        <label className={labelClasses}>Country</label>
-                                        <input type="text" value={formData.country} onChange={(e) => handleSelectChange('country', e.target.value)} className={inputClasses} />
-                                    </div>
-                                    <div>
-                                        <label className={labelClasses}>State</label>
-                                        <input type="text" value={formData.state} onChange={(e) => handleSelectChange('state', e.target.value)} className={inputClasses} />
-                                    </div>
-                                    <div>
-                                        <label className={labelClasses}>City</label>
-                                        <input type="text" value={formData.city} onChange={(e) => handleSelectChange('city', e.target.value)} className={inputClasses} />
-                                    </div>
-                                    <div>
-                                        <label className={labelClasses}>Pincode</label>
-                                        <input type="text" value={formData.pincode} onChange={(e) => handleSelectChange('pincode', e.target.value)} className={inputClasses} />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className={labelClasses}>Fascia Name (For Stall)</label>
-                                        <input type="text" value={formData.fasciaName} onChange={(e) => handleSelectChange('fasciaName', e.target.value)} className={inputClasses} />
-                                    </div>
-                                    <div>
-                                        <label className={labelClasses}>Nature of Business</label>
-                                        <input type="text" value={formData.natureOfBusiness} onChange={(e) => handleSelectChange('natureOfBusiness', e.target.value)} className={inputClasses} />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className={labelClasses}>PAN Number</label>
-                                        <input type="text" value={formData.panNo} onChange={(e) => handleSelectChange('panNo', e.target.value)} className={inputClasses} />
-                                    </div>
-                                    <div>
-                                        <label className={labelClasses}>GST Number</label>
-                                        <input type="text" value={formData.gstNo} onChange={(e) => handleSelectChange('gstNo', e.target.value)} className={inputClasses} />
-                                    </div>
-                                </div>
+                {/* SECTION: COMPANY INFORMATION */}
+                <div className="space-y-4 px-2">
+                    <h3 className={sectionHeaderClasses}>Company Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
+                        <div>
+                            <label className={labelClasses}>Exhibitor Name *</label>
+                            <input required type="text" value={formData.exhibitorName} onChange={(e) => handleSelectChange('exhibitorName', e.target.value)} className={inputClasses} placeholder="Brand Name" />
+                        </div>
+                        <div>
+                            <label className={labelClasses}>Business Type</label>
+                            <select value={formData.typeOfBusiness} onChange={(e) => handleSelectChange('typeOfBusiness', e.target.value)} className={inputClasses}>
+                                <option value="">Select Option</option>
+                                <option value="Manufacturer">Manufacturer</option>
+                                <option value="Distributor">Distributor</option>
+                                <option value="Exporter">Exporter</option>
+                                <option value="Service Provider">Service Provider</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className={labelClasses}>Industry Sector</label>
+                            <input type="text" value={formData.industrySector} onChange={(e) => handleSelectChange('industrySector', e.target.value)} className={inputClasses} placeholder="Sector" />
+                        </div>
+                        <div>
+                            <label className={labelClasses}>Company Website</label>
+                            <input type="text" value={formData.website} onChange={(e) => handleSelectChange('website', e.target.value)} className={inputClasses} placeholder="www.example.com" />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
+                        <div className="md:col-span-2">
+                            <label className={labelClasses}>Full Address *</label>
+                            <input required type="text" value={formData.address} onChange={(e) => handleSelectChange('address', e.target.value)} className={inputClasses} placeholder="Office Address" />
+                        </div>
+                        <div>
+                            <label className={labelClasses}>Country</label>
+                            <input type="text" value={formData.country} onChange={(e) => handleSelectChange('country', e.target.value)} className={inputClasses} placeholder="Country" />
+                        </div>
+                        <div>
+                            <label className={labelClasses}>State</label>
+                            <input type="text" value={formData.state} onChange={(e) => handleSelectChange('state', e.target.value)} className={inputClasses} placeholder="State" />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
+                        <div>
+                            <label className={labelClasses}>City</label>
+                            <input type="text" value={formData.city} onChange={(e) => handleSelectChange('city', e.target.value)} className={inputClasses} placeholder="City" />
+                        </div>
+                        <div>
+                            <label className={labelClasses}>Pincode</label>
+                            <input type="text" value={formData.pincode} onChange={(e) => handleSelectChange('pincode', e.target.value)} className={inputClasses} placeholder="Pincode" />
+                        </div>
+                        <div>
+                            <label className={labelClasses}>Fascia Name (On Stall)</label>
+                            <input type="text" value={formData.fasciaName} onChange={(e) => handleSelectChange('fasciaName', e.target.value)} className={inputClasses} placeholder="Branding Name" />
+                        </div>
+                        <div>
+                            <label className={labelClasses}>Nature of Business</label>
+                            <input type="text" value={formData.natureOfBusiness} onChange={(e) => handleSelectChange('natureOfBusiness', e.target.value)} className={inputClasses} placeholder="Business Nature" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* SECTION: FINANCIALS & CALCULATION */}
+                <div className="space-y-4 px-2">
+                    <h3 className={sectionHeaderClasses}>Financials & Participation</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
+                        <div>
+                            <label className={labelClasses}>Stall Selection Type</label>
+                            <select value={formData.participation.stallType} onChange={(e) => handleSelectChange('participation.stallType', e.target.value)} className={inputClasses}>
+                                <option value="Shell Space">Shell Space</option>
+                                <option value="Raw Space">Raw Space</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className={labelClasses}>Currency</label>
+                            <select value={formData.participation.currency} onChange={(e) => handleSelectChange('participation.currency', e.target.value)} className={inputClasses}>
+                                <option value="INR">INR (₹)</option>
+                                <option value="USD">USD ($)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className={labelClasses}>Base Rate (/sqm)</label>
+                            <input readOnly type="text" value={formData.participation.rate} className={`${inputClasses} bg-slate-50 cursor-not-allowed`} />
+                        </div>
+                        <div>
+                            <label className={labelClasses}>Total Calculated Area</label>
+                            <p className="h-8 flex items-center font-black text-[#23471d] text-[13px] border-b border-slate-200">
+                                {formData.participation.stallSize} SQ METER
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-900 rounded-[2px] p-6 text-white overflow-hidden relative group">
+                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-125 transition-transform">
+                            <CreditCard size={100} />
+                        </div>
+                        <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                            <div className="space-y-1">
+                                <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">Base Amount</p>
+                                <p className="text-sm font-bold">{formData.participation.currency} {Math.round(formData.participation.amount / 1.18)}</p>
+                            </div>
+                            <div className="space-y-1 border-l border-white/10 pl-4">
+                                <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">GST (18%)</p>
+                                <p className="text-sm font-bold">{formData.participation.currency} {Math.round(formData.participation.total - (formData.participation.amount / 1.18))}</p>
+                            </div>
+                            <div className="space-y-1 border-l border-white/10 pl-4 md:col-span-1 lg:col-span-3">
+                                <p className="text-[10px] font-black text-slate-100 uppercase tracking-widest mb-1 flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                                    Contract Total Summary
+                                </p>
+                                <p className="text-2xl font-black text-green-400 tracking-tighter">
+                                    {formData.participation.currency} {formData.participation.total?.toLocaleString()}
+                                </p>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        {/* RIGHT COLUMN: PARTICIPATION & SECTORS */}
-                        <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-200 space-y-6">
-                            <h2 className="text-lg font-black text-[#23471d] flex items-center gap-2 border-b pb-4">
-                                <Layout size={20} /> STALL & RATE CALCULATION
-                            </h2>
+                {/* SECTION: CONTACT PERSONS */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 px-2">
+                    <div className="space-y-4">
+                        <h3 className={sectionHeaderClasses}>Primary Contact Person</h3>
+                        <div className="bg-slate-50/40 p-6 border border-slate-200 rounded-[2px] space-y-4">
+                            <div className="grid grid-cols-4 gap-3">
+                                <div>
+                                    <label className={labelClasses}>Title</label>
+                                    <select value={formData.contact1.title} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, title: e.target.value } }))} className={inputClasses}>
+                                        <option value="Mr.">Mr.</option><option value="Ms.">Ms.</option><option value="Dr.">Dr.</option>
+                                    </select>
+                                </div>
+                                <div className="col-span-3">
+                                    <label className={labelClasses}>Full Name *</label>
+                                    <input required type="text" value={`${formData.contact1.firstName} ${formData.contact1.lastName}`.trim()} onChange={(e) => {
+                                        const names = e.target.value.split(" ");
+                                        setFormData(p => ({ ...p, contact1: { ...p.contact1, firstName: names[0] || "", lastName: names.slice(1).join(" ") || "" } }));
+                                    }} className={inputClasses} placeholder="First & Last Name" />
+                                </div>
+                            </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className={labelClasses}>Stall Type</label>
-                                    <select value={formData.participation.stallType} onChange={(e) => handleSelectChange('participation.stallType', e.target.value)} className={inputClasses}>
-                                        <option value="Shell Space">Shell Space</option>
-                                        <option value="Raw Space">Raw Space</option>
-                                    </select>
+                                    <label className={labelClasses}>Official Email *</label>
+                                    <input required type="email" value={formData.contact1.email} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, email: e.target.value } }))} className={inputClasses} placeholder="email@company.com" />
                                 </div>
                                 <div>
-                                    <label className={labelClasses}>Currency</label>
-                                    <select value={formData.participation.currency} onChange={(e) => handleSelectChange('participation.currency', e.target.value)} className={inputClasses}>
-                                        <option value="INR">INR (₹)</option>
-                                        <option value="USD">USD ($)</option>
-                                    </select>
+                                    <label className={labelClasses}>Designation *</label>
+                                    <input required type="text" value={formData.contact1.designation} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, designation: e.target.value } }))} className={inputClasses} placeholder="Designation" />
                                 </div>
                             </div>
-                            
-                            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
-                                <div className="flex justify-between items-center text-xs font-bold text-slate-500">
-                                    <span>STALL SIZE</span>
-                                    <span className="text-slate-900 uppercase">{formData.participation.stallSize} SQM.</span>
-                                </div>
-                                <div className="flex justify-between items-center text-xs font-bold text-slate-500">
-                                    <span>UNIT RATE</span>
-                                    <span className="text-slate-900 uppercase">{formData.participation.currency} {formData.participation.rate} / SQM</span>
-                                </div>
-                                <hr className="border-slate-200" />
-                                {(() => {
-                                    const stall = availableStalls.find(s => s._id === formData.participation.stallNo);
-                                    const inc = stall ? stall.incrementPercentage : 0;
-                                    const disc = stall ? stall.discountPercentage : 0;
-                                    const baseValue = (stall ? stall.area : 0) * (Number(formData.participation.rate) || 0);
-                                    const incValue = baseValue * (inc / 100);
-                                    const discValue = baseValue * (disc / 100);
-
-                                    return (
-                                        <>
-                                            <div className="flex justify-between items-center text-sm font-bold text-slate-500">
-                                                <span>BASE AMOUNT</span>
-                                                <span>{formData.participation.currency} {baseValue}</span>
-                                            </div>
-                                            {inc > 0 && (
-                                                <div className="flex justify-between items-center text-sm font-bold text-red-500">
-                                                    <span>INCREMENT ({inc}%)</span>
-                                                    <span>+ {formData.participation.currency} {Math.round(incValue)}</span>
-                                                </div>
-                                            )}
-                                            {disc > 0 && (
-                                                <div className="flex justify-between items-center text-sm font-bold text-green-600">
-                                                    <span>DISCOUNT ({disc}%)</span>
-                                                    <span>- {formData.participation.currency} {Math.round(discValue)}</span>
-                                                </div>
-                                            )}
-                                            <div className={`flex justify-between items-center text-sm font-black ${(inc > 0 || disc > 0) ? "text-[#d26019] pt-2 border-t" : "text-[#d26019]"}`}>
-                                                <span>STALL SUBTOTAL</span>
-                                                <span>{formData.participation.currency} {formData.participation.amount}</span>
-                                            </div>
-                                        </>
-                                    );
-                                })()}
-                                <div className="flex justify-between items-center text-xs font-bold text-slate-400 mt-2">
-                                    <span>GST (18%)</span>
-                                    <span>{formData.participation.currency} {Math.round(formData.participation.amount * 0.18)}</span>
-                                </div>
-                                <div className="pt-2 flex justify-between items-center text-xl font-black text-[#23471d]">
-                                    <span>TOTAL PAYABLE</span>
-                                    <span>{formData.participation.currency} {formData.participation.total}</span>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4 pt-4 border-t">
-                                <h3 className={labelClasses}>Industry Sectors Selection</h3>
-                                <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                                    {["Medical Device", "Pharma & Drugs", "Ayurvedic & Herbal", "Fitness & Yoga", "Hospital & Clinics", "Diagnostics", "Nutrition & Wellness", "Technology", "Organic Products", "Beauty & Care", "Research & Education", "Other"].map(sector => (
-                                        <label key={sector} className="flex items-center gap-3 cursor-pointer group">
-                                            <input type="checkbox" checked={formData.selectedSectors.includes(sector)} onChange={() => handleSectorToggle(sector)} className="w-4 h-4 rounded border-slate-300 text-[#23471d] focus:ring-[#23471d]/20" />
-                                            <span className="text-[11px] font-bold text-slate-600 group-hover:text-[#23471d] transition-colors uppercase">{sector}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
-                                <div className="space-y-4">
-                                    <h3 className={labelClasses}>Marketing Attribution (Referred By)</h3>
-                                    <select value={formData.referredBy} onChange={(e) => handleSelectChange('referredBy', e.target.value)} className={inputClasses}>
-                                        <option value="Direct Website">Direct Website</option>
-                                        <option value="Email Marketing">Email Marketing</option>
-                                        <option value="Social Media">Social Media</option>
-                                        {marketingStaff.map(staff => (
-                                            <option key={staff._id} value={staff.username}>Staff: {staff.username}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="space-y-4">
-                                    <h3 className={labelClasses}>Communication Source (Spoken With) *</h3>
-                                    <select required value={formData.spokenWith} onChange={(e) => handleSelectChange('spokenWith', e.target.value)} className={inputClasses}>
-                                        <option value="">-- Who Spoke With Them? --</option>
-                                        {marketingStaff.map(staff => (
-                                            <option key={staff._id} value={staff.username}>{staff.username} ({staff.role})</option>
-                                        ))}
-                                    </select>
-                                </div>
+                            <div>
+                                <label className={labelClasses}>Mobile Number *</label>
+                                <input required type="text" maxLength={10} value={formData.contact1.mobile} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, mobile: e.target.value.replace(/\D/g, "") } }))} className={inputClasses} placeholder="Mobile No." />
                             </div>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                        {/* CONTACT PERSON 1 */}
-                        <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-200">
-                             <h2 className="text-lg font-black text-[#23471d] mb-6 flex items-center gap-2 border-b pb-4">
-                                <User size={20} /> PRIMARY CONTACT PERSON
-                            </h2>
-                            <div className="space-y-4">
+                    <div className="space-y-4">
+                        <h3 className={sectionHeaderClasses}>Secondary Reference (Optional)</h3>
+                        <div className="bg-white p-6 border border-slate-200 rounded-[2px] space-y-4 shadow-sm">
+                             <div className="grid grid-cols-4 gap-3">
                                 <div>
-                                    <label className={labelClasses}>Full Name *</label>
-                                    <div className="flex gap-2">
-                                        <select value={formData.contact1.title} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, title: e.target.value } }))} className="w-24 px-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm">
-                                            <option value="Mr.">Mr.</option>
-                                            <option value="Ms.">Ms.</option>
-                                            <option value="Dr.">Dr.</option>
-                                            <option value="Prof.">Prof.</option>
-                                        </select>
-                                        <input required type="text" value={formData.contact1.firstName} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, firstName: e.target.value } }))} className={inputClasses} placeholder="First Name" />
-                                        <input required type="text" value={formData.contact1.lastName} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, lastName: e.target.value } }))} className={inputClasses} placeholder="Last Name" />
-                                    </div>
+                                    <label className={labelClasses}>Title</label>
+                                    <select value={formData.contact2.title} onChange={(e) => setFormData(p => ({ ...p, contact2: { ...p.contact2, title: e.target.value } }))} className={inputClasses}>
+                                        <option value="Mr.">Mr.</option><option value="Ms.">Ms.</option><option value="Dr.">Dr.</option>
+                                    </select>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className={labelClasses}>Email Address *</label>
-                                        <input required type="email" value={formData.contact1.email} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, email: e.target.value } }))} className={inputClasses} placeholder="email@company.com" />
-                                    </div>
-                                    <div>
-                                        <label className={labelClasses}>Designation *</label>
-                                        <input required type="text" value={formData.contact1.designation} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, designation: e.target.value } }))} className={inputClasses} placeholder="e.g. Director" />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className={labelClasses}>Mobile Number *</label>
-                                        <input required type="text" value={formData.contact1.mobile} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, mobile: e.target.value } }))} className={inputClasses} placeholder="9876543210" />
-                                    </div>
-                                    <div>
-                                        <label className={labelClasses}>Alternate No.</label>
-                                        <input type="text" value={formData.contact1.alternateNo} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, alternateNo: e.target.value } }))} className={inputClasses} placeholder="Secondary no." />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* CONTACT PERSON 2 */}
-                        <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-200">
-                             <h2 className="text-lg font-black text-slate-400 mb-6 flex items-center gap-2 border-b pb-4">
-                                <UserPlus size={20} /> SECONDARY CONTACT PERSON (OPTIONAL)
-                            </h2>
-                            <div className="space-y-4">
-                                <div>
+                                <div className="col-span-3">
                                     <label className={labelClasses}>Full Name</label>
-                                    <div className="flex gap-2">
-                                        <select value={formData.contact2.title} onChange={(e) => setFormData(p => ({ ...p, contact2: { ...p.contact2, title: e.target.value } }))} className="w-24 px-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm">
-                                            <option value="Mr.">Mr.</option>
-                                            <option value="Ms.">Ms.</option>
-                                            <option value="Dr.">Dr.</option>
-                                        </select>
-                                        <input type="text" value={formData.contact2.firstName} onChange={(e) => setFormData(p => ({ ...p, contact2: { ...p.contact2, firstName: e.target.value } }))} className={inputClasses} placeholder="First Name" />
-                                        <input type="text" value={formData.contact2.lastName} onChange={(e) => setFormData(p => ({ ...p, contact2: { ...p.contact2, lastName: e.target.value } }))} className={inputClasses} placeholder="Last Name" />
-                                    </div>
+                                    <input type="text" value={`${formData.contact2.firstName} ${formData.contact2.lastName}`.trim()} onChange={(e) => {
+                                        const names = e.target.value.split(" ");
+                                        setFormData(p => ({ ...p, contact2: { ...p.contact2, firstName: names[0] || "", lastName: names.slice(1).join(" ") || "" } }));
+                                    }} className={inputClasses} placeholder="First & Last Name" />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className={labelClasses}>Email Address</label>
-                                        <input type="email" value={formData.contact2.email} onChange={(e) => setFormData(p => ({ ...p, contact2: { ...p.contact2, email: e.target.value } }))} className={inputClasses} placeholder="email2@company.com" />
-                                    </div>
-                                    <div>
-                                        <label className={labelClasses}>Designation</label>
-                                        <input type="text" value={formData.contact2.designation} onChange={(e) => setFormData(p => ({ ...p, contact2: { ...p.contact2, designation: e.target.value } }))} className={inputClasses} placeholder="Designation" />
-                                    </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className={labelClasses}>Mobile</label>
+                                    <input type="text" maxLength={10} value={formData.contact2.mobile} onChange={(e) => setFormData(p => ({ ...p, contact2: { ...p.contact2, mobile: e.target.value.replace(/\D/g, "") } }))} className={inputClasses} placeholder="Mobile No." />
                                 </div>
                                 <div>
-                                    <label className={labelClasses}>Mobile Number</label>
-                                    <input type="text" value={formData.contact2.mobile} onChange={(e) => setFormData(p => ({ ...p, contact2: { ...p.contact2, mobile: e.target.value } }))} className={inputClasses} placeholder="9876543210" />
+                                    <label className={labelClasses}>Email</label>
+                                    <input type="email" value={formData.contact2.email} onChange={(e) => setFormData(p => ({ ...p, contact2: { ...p.contact2, email: e.target.value } }))} className={inputClasses} placeholder="email2@company.com" />
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    {/* SUBMIT */}
-                    <button type="submit" disabled={isLoading} className="w-full py-5 bg-[#23471d] text-white rounded-[2rem] font-black text-xl hover:bg-[#1a3516] transition-all shadow-2xl shadow-[#23471d]/20 flex items-center justify-center gap-4 uppercase tracking-tighter active:scale-95 disabled:opacity-50">
-                        {isLoading ? 'Processing Registration...' : (
-                            <>
-                                <span>Proceed to manual registration</span>
-                                <ChevronRight size={24} />
-                            </>
-                        )}
-                    </button>
-                    <p className="text-center text-slate-400 text-[9px] font-bold uppercase tracking-[0.2em] pb-12">Authorized Admin Submission Protocol v2.5</p>
-                </form>
-            </div>
+                {/* SECTION: CRM ATTRIBUTION */}
+                <div className="space-y-4 px-2 pb-16">
+                    <h3 className={sectionHeaderClasses}>CRM Attribution</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-x-6 gap-y-4">
+                        <div>
+                            <label className={labelClasses}>Marketing Attribution (Referred By)</label>
+                            <select value={formData.referredBy} onChange={(e) => handleSelectChange('referredBy', e.target.value)} className={inputClasses}>
+                                <option value="Direct Website">Direct Website</option>
+                                <option value="Email Marketing">Email Marketing</option>
+                                <option value="Social Media">Social Media</option>
+                                {marketingStaff.map(staff => (
+                                    <option key={staff._id} value={staff.username}>Staff: {staff.username}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className={labelClasses}>Account Executive (Spoken With) *</label>
+                            <select required value={formData.spokenWith} onChange={(e) => handleSelectChange('spokenWith', e.target.value)} className={inputClasses}>
+                                <option value="">Select Staff</option>
+                                {marketingStaff.map(staff => (
+                                    <option key={staff._id} value={staff.username}>{staff.username} ({staff.role})</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {/* FOOTER ACTIONS ── STICKY VIBE */}
+                <div className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center mt-12 bg-white pb-6">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center gap-2 mb-4 sm:mb-0">
+                        <ShieldCheck size={14} className="text-[#23471d]" />
+                        SECURE ADMIN MANUAL BOOKING
+                    </p>
+                    <div className="flex gap-4">
+                        <button 
+                            type="button" 
+                            onClick={() => window.location.reload()}
+                            className="px-10 py-2.5 bg-slate-50 border border-slate-200 text-slate-400 text-[11px] font-bold uppercase tracking-widest hover:bg-slate-100 transition-all rounded-[2px]"
+                        >
+                            Reset
+                        </button>
+                        <button 
+                            type="submit" 
+                            disabled={isLoading}
+                            className="px-12 py-2.5 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-lg flex items-center gap-3 group"
+                        >
+                            {isLoading ? (
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                                <>
+                                    PROCEED REGISTRATION
+                                    <ChevronRight size={15} className="group-hover:translate-x-1.5 transition-transform" />
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
     );
 };

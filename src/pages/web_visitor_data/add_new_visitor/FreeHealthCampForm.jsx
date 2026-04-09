@@ -1,538 +1,3 @@
-// import { useState } from "react";
-// import { useDispatch, useSelector } from "react-redux";
-// import { createHealthCampVisitor } from "../../../features/visitor/freeHealthCampSlice";
-// import { showError, showSuccess } from "../../../utils/toastMessage";
-
-// const FreeHealthCampForm = ({
-//   countries = [],
-//   states = [],
-//   cities = [],
-//   genders = [],
-//   timeSlots = [],
-// }) => {
-//   const dispatch = useDispatch();
-//   const { loading } = useSelector((state) => state.healthCampVisitors);
-
-//   const [healthCampData, setHealthCampData] = useState({
-//     firstName: "",
-//     lastName: "",
-//     email: "",
-//     mobile: "",
-//     alternateNo: "",
-//     dateOfBirth: "",
-//     gender: "Select Here",
-//     residenceAddress: "",
-//     country: "Select Country",
-//     state: "Select Country first",
-//     city: "Select State first",
-//     existingMedicalConditions: "",
-//     isTakingMedications: "",
-//     medicationNames: "",
-//     hasAllergies: "",
-//     allergyDetails: "",
-//     isExperiencingSymptoms: "",
-//     symptomDetails: "",
-//     healthCheckupServices: {
-//       generalHealth: false,
-//       bloodSugar: false,
-//       bloodPressure: false,
-//       eyeCheckup: false,
-//       dentalCheckup: false,
-//       ayurvedaConsultation: false,
-//       nutritionConsultation: false,
-//       other: false,
-//     },
-//     preferredDate: "",
-//     preferredTimeSlot: "09:00 AM - 12:00 PM",
-//     consentMedicalData: "",
-//     agreeToUpdates: "",
-//     specificHealthConcerns: "",
-//     subscribe: false,
-//   });
-
-//   const resetForm = () => {
-//     setHealthCampData({
-//       firstName: "",
-//       lastName: "",
-//       email: "",
-//       mobile: "",
-//       alternateNo: "",
-//       dateOfBirth: "",
-//       gender: "Select Here",
-//       residenceAddress: "",
-//       country: "Select Country",
-//       state: "Select Country first",
-//       city: "Select State first",
-//       existingMedicalConditions: "",
-//       isTakingMedications: "",
-//       medicationNames: "",
-//       hasAllergies: "",
-//       allergyDetails: "",
-//       isExperiencingSymptoms: "",
-//       symptomDetails: "",
-//       healthCheckupServices: {
-//         generalHealth: false,
-//         bloodSugar: false,
-//         bloodPressure: false,
-//         eyeCheckup: false,
-//         dentalCheckup: false,
-//         ayurvedaConsultation: false,
-//         nutritionConsultation: false,
-//         other: false,
-//       },
-//       preferredDate: "",
-//       preferredTimeSlot: "09:00 AM - 12:00 PM",
-//       consentMedicalData: "",
-//       agreeToUpdates: "",
-//       specificHealthConcerns: "",
-//       subscribe: false,
-//     });
-//   };
-
-//   const handleHealthServiceChange = (key) => {
-//     setHealthCampData((prev) => ({
-//       ...prev,
-//       healthCheckupServices: {
-//         ...prev.healthCheckupServices,
-//         [key]: !prev.healthCheckupServices[key],
-//       },
-//     }));
-//   };
-
-//   const validate = () => {
-//     if (!healthCampData.firstName.trim()) {
-//       showError("First Name is required");
-//       return false;
-//     }
-//     if (!healthCampData.lastName.trim()) {
-//       showError("Last Name is required");
-//       return false;
-//     }
-//     if (!healthCampData.email.trim()) {
-//       showError("Email is required");
-//       return false;
-//     }
-//     if (!healthCampData.mobile.trim()) {
-//       showError("Mobile is required");
-//       return false;
-//     }
-//     if (!healthCampData.consentMedicalData) {
-//       showError("Please answer the consent question");
-//       return false;
-//     }
-//     if (!healthCampData.agreeToUpdates) {
-//       showError("Please answer the agreement question");
-//       return false;
-//     }
-//     return true;
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     if (!validate()) return;
-//     try {
-//       await dispatch(createHealthCampVisitor(healthCampData)).unwrap();
-//       showSuccess("Health Camp registration successful!");
-//       resetForm();
-//     } catch (err) {
-//       showError(
-//         typeof err === "string" ? err : err?.message || "Registration failed",
-//       );
-//     }
-//   };
-
-//   return (
-//     <form
-//       className="visitor-form space-y-6"
-//       onSubmit={handleSubmit}
-//       style={{ marginTop: "30px" }}
-//     >
-//       <h3 className="font-semibold text-gray-900">
-//         Free Health Camp Registration
-//       </h3>
-
-//       <h4 className="font-medium text-gray-900">Basic Personal Details</h4>
-//       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-//         {[
-//           {
-//             label: "First Name",
-//             key: "firstName",
-//             type: "text",
-//             placeholder: "Enter First Name",
-//             required: true,
-//           },
-//           {
-//             label: "Last Name",
-//             key: "lastName",
-//             type: "text",
-//             placeholder: "Enter Last Name",
-//             required: true,
-//           },
-//           {
-//             label: "Email",
-//             key: "email",
-//             type: "email",
-//             placeholder: "Enter Email",
-//             required: true,
-//           },
-//           {
-//             label: "Mobile No.",
-//             key: "mobile",
-//             type: "tel",
-//             placeholder: "Enter Telephone/Mobile",
-//             required: true,
-//           },
-//           {
-//             label: "Alternate No.",
-//             key: "alternateNo",
-//             type: "tel",
-//             placeholder: "Enter Alternate No.",
-//           },
-//           {
-//             label: "Date of Birth",
-//             key: "dateOfBirth",
-//             type: "date",
-//             required: true,
-//           },
-//           {
-//             label: "Gender",
-//             key: "gender",
-//             type: "select",
-//             options: genders,
-//             required: true,
-//           },
-//           {
-//             label: "Residence Address",
-//             key: "residenceAddress",
-//             type: "text",
-//             placeholder: "Write Here",
-//           },
-//           {
-//             label: "Country",
-//             key: "country",
-//             type: "select",
-//             options: countries,
-//             required: true,
-//             onChange: (e) =>
-//               setHealthCampData({
-//                 ...healthCampData,
-//                 country: e.target.value,
-//                 state: "Select Country first",
-//                 city: "Select State first",
-//               }),
-//           },
-//           {
-//             label: "State",
-//             key: "state",
-//             type: "select",
-//             options: states,
-//             required: true,
-//             disabled:
-//               !healthCampData.country ||
-//               healthCampData.country === "Select Country",
-//             onChange: (e) =>
-//               setHealthCampData({
-//                 ...healthCampData,
-//                 state: e.target.value,
-//                 city: "Select State first",
-//               }),
-//           },
-//           {
-//             label: "City",
-//             key: "city",
-//             type: "select",
-//             options: cities,
-//             required: true,
-//             disabled:
-//               !healthCampData.state ||
-//               healthCampData.state === "Select Country first",
-//           },
-//         ].map(
-//           ({
-//             label,
-//             key,
-//             type,
-//             placeholder,
-//             options,
-//             required,
-//             disabled,
-//             onChange,
-//           }) => (
-//             <div key={key}>
-//               <label className="block font-medium text-gray-900 mb-1">
-//                 {label} {required && <span className="text-red-500">*</span>}
-//               </label>
-//               {type === "select" ? (
-//                 <select
-//                   value={healthCampData[key]}
-//                   onChange={
-//                     onChange ||
-//                     ((e) =>
-//                       setHealthCampData({
-//                         ...healthCampData,
-//                         [key]: e.target.value,
-//                       }))
-//                   }
-//                   disabled={disabled}
-//                   className="block w-full"
-//                 >
-//                   {/* ✅ Safe map with optional chaining */}
-//                   {options?.map((option, index) => (
-//                     <option key={index} value={option}>
-//                       {option}
-//                     </option>
-//                   ))}
-//                 </select>
-//               ) : (
-//                 <input
-//                   type={type}
-//                   value={healthCampData[key]}
-//                   onChange={
-//                     onChange ||
-//                     ((e) =>
-//                       setHealthCampData({
-//                         ...healthCampData,
-//                         [key]: e.target.value,
-//                       }))
-//                   }
-//                   placeholder={placeholder}
-//                   className="block w-full"
-//                 />
-//               )}
-//             </div>
-//           ),
-//         )}
-//       </div>
-
-//       <h4 className="font-medium text-gray-900">Health-Related Information</h4>
-//       <div className="space-y-3">
-//         {[
-//           {
-//             label:
-//               "Do you have any existing medical conditions? (If yes, specify)",
-//             key: "existingMedicalConditions",
-//             textareaKey: "existingMedicalConditions",
-//           },
-//           {
-//             label:
-//               "Are you currently taking any medications? (If yes, mention the medication names)",
-//             key: "isTakingMedications",
-//             textareaKey: "medicationNames",
-//           },
-//           {
-//             label: "Do you have any allergies? (If yes, specify)",
-//             key: "hasAllergies",
-//             textareaKey: "allergyDetails",
-//           },
-//           {
-//             label:
-//               "Are you experiencing any symptoms currently? (If yes, specify)",
-//             key: "isExperiencingSymptoms",
-//             textareaKey: "symptomDetails",
-//           },
-//         ].map(({ label, key, textareaKey }) => (
-//           <div key={key} className="flex flex-col gap-1">
-//             <label className="font-medium text-gray-900">{label}</label>
-//             <div className="flex items-center gap-4">
-//               {["yes", "no"].map((value) => (
-//                 <label
-//                   key={value}
-//                   className="flex items-center gap-2 cursor-pointer"
-//                 >
-//                   <input
-//                     type="radio"
-//                     name={key}
-//                     value={value}
-//                     checked={healthCampData[key] === value}
-//                     onChange={(e) =>
-//                       setHealthCampData({
-//                         ...healthCampData,
-//                         [key]: e.target.value,
-//                       })
-//                     }
-//                   />
-//                   <span>{value.charAt(0).toUpperCase() + value.slice(1)}</span>
-//                 </label>
-//               ))}
-//             </div>
-//             {healthCampData[key] === "yes" && (
-//               <textarea
-//                 value={healthCampData[textareaKey]}
-//                 onChange={(e) =>
-//                   setHealthCampData({
-//                     ...healthCampData,
-//                     [textareaKey]: e.target.value,
-//                   })
-//                 }
-//                 placeholder={`Specify ${key.replace(/([A-Z])/g, " $1").toLowerCase()}`}
-//                 rows="2"
-//                 className="block w-full"
-//               />
-//             )}
-//           </div>
-//         ))}
-//       </div>
-
-//       <h4 className="font-medium text-gray-900">Health Check-Up Preferences</h4>
-//       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-//         {[
-//           { key: "generalHealth", label: "General Health Check-up" },
-//           { key: "bloodSugar", label: "Blood Sugar Test" },
-//           { key: "bloodPressure", label: "Blood Pressure Check" },
-//           { key: "eyeCheckup", label: "Eye Check-up" },
-//           { key: "dentalCheckup", label: "Dental Check-up" },
-//           { key: "ayurvedaConsultation", label: "Ayurveda Consultation" },
-//           {
-//             key: "nutritionConsultation",
-//             label: "Nutrition & Diet Consultation",
-//           },
-//           { key: "other", label: "Other" },
-//         ].map(({ key, label }) => (
-//           <label key={key} className="flex items-center gap-2 cursor-pointer">
-//             <input
-//               type="checkbox"
-//               checked={healthCampData.healthCheckupServices[key]}
-//               onChange={() => handleHealthServiceChange(key)}
-//             />
-//             <span>{label}</span>
-//           </label>
-//         ))}
-//       </div>
-
-//       <h4 className="font-medium text-gray-900">Appointment & Availability</h4>
-//       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-//         <div>
-//           <label className="block font-medium text-gray-900 mb-1">
-//             Preferred Date <span className="text-red-500">*</span>
-//           </label>
-//           <input
-//             type="date"
-//             value={healthCampData.preferredDate}
-//             onChange={(e) =>
-//               setHealthCampData({
-//                 ...healthCampData,
-//                 preferredDate: e.target.value,
-//               })
-//             }
-//             className="block w-full border border-gray-300 rounded px-2"
-//           />
-//         </div>
-//         <div>
-//           <label className="block font-medium text-gray-900 mb-1">
-//             Preferred Time Slot <span className="text-red-500">*</span>
-//           </label>
-//           <select
-//             value={healthCampData.preferredTimeSlot}
-//             onChange={(e) =>
-//               setHealthCampData({
-//                 ...healthCampData,
-//                 preferredTimeSlot: e.target.value,
-//               })
-//             }
-//             className="block w-full"
-//           >
-//             {/* ✅ Safe map with optional chaining */}
-//             {timeSlots?.map((slot, index) => (
-//               <option key={index} value={slot}>
-//                 {slot}
-//               </option>
-//             ))}
-//           </select>
-//         </div>
-//       </div>
-
-//       <h4 className="font-medium text-gray-900">Consent & Agreement</h4>
-//       <div className="space-y-3">
-//         {[
-//           {
-//             label:
-//               "Do you consent to share your medical data with healthcare professionals for analysis?",
-//             key: "consentMedicalData",
-//           },
-//           {
-//             label:
-//               "Do you agree to receive health-related updates and event reminders?",
-//             key: "agreeToUpdates",
-//           },
-//         ].map(({ label, key }) => (
-//           <div key={key} className="flex flex-col gap-1">
-//             <label className="font-medium text-gray-900">
-//               {label} <span className="text-red-500">*</span>
-//             </label>
-//             <div className="flex items-center gap-4">
-//               {["yes", "no"].map((value) => (
-//                 <label
-//                   key={value}
-//                   className="flex items-center gap-2 cursor-pointer"
-//                 >
-//                   <input
-//                     type="radio"
-//                     name={key}
-//                     value={value}
-//                     checked={healthCampData[key] === value}
-//                     onChange={(e) =>
-//                       setHealthCampData({
-//                         ...healthCampData,
-//                         [key]: e.target.value,
-//                       })
-//                     }
-//                   />
-//                   <span>{value.charAt(0).toUpperCase() + value.slice(1)}</span>
-//                 </label>
-//               ))}
-//             </div>
-//           </div>
-//         ))}
-//       </div>
-
-//       <div>
-//         <label className="block font-medium text-gray-900 mb-1">
-//           Any specific health concerns or questions for the doctors?
-//         </label>
-//         <textarea
-//           value={healthCampData.specificHealthConcerns}
-//           onChange={(e) =>
-//             setHealthCampData({
-//               ...healthCampData,
-//               specificHealthConcerns: e.target.value,
-//             })
-//           }
-//           placeholder="Write Here"
-//           rows="2"
-//           className="block w-full"
-//         />
-//       </div>
-
-//       <div>
-//         <label className="flex items-center gap-2 cursor-pointer">
-//           <input
-//             type="checkbox"
-//             checked={healthCampData.subscribe}
-//             onChange={(e) =>
-//               setHealthCampData({
-//                 ...healthCampData,
-//                 subscribe: e.target.checked,
-//               })
-//             }
-//           />
-//           <span>Subscribe to Event Updates & Newsletters</span>
-//         </label>
-//       </div>
-
-//       <div className="flex justify-start">
-//         <button
-//           type="submit"
-//           disabled={loading}
-//           className="bg-[#3598dc] hover:bg-[#2980b9] text-white rounded uppercase disabled:opacity-60 disabled:cursor-not-allowed"
-//         >
-//           {loading ? "Submitting..." : "Submit Registration"}
-//         </button>
-//       </div>
-//     </form>
-//   );
-// };
-
-// export default FreeHealthCampForm;
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createHealthCampVisitor } from "../../../features/visitor/freeHealthCampSlice";
@@ -540,6 +5,9 @@ import { fetchCountries } from "../../../features/add_by_admin/country/countrySl
 import { fetchStates } from "../../../features/state/stateSlice";
 import { fetchCities } from "../../../features/city/citySlice";
 import { showError, showSuccess } from "../../../utils/toastMessage";
+import Swal from "sweetalert2";
+import { createActivityLogThunk } from "../../../features/activityLog/activityLogSlice";
+import { User, MapPin, Heart, Activity, Calendar, Clock, CheckSquare, Send, Thermometer, ShieldCheck } from "lucide-react";
 
 const FreeHealthCampForm = ({
   countries: propCountries = [],
@@ -551,38 +19,30 @@ const FreeHealthCampForm = ({
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.healthCampVisitors);
 
-  // Redux data
   const { countries: reduxCountries } = useSelector((state) => state.countries);
   const { states: reduxStates } = useSelector((state) => state.states);
   const { cities: reduxCities } = useSelector((state) => state.cities);
 
-  // Fetch data if missing
   useEffect(() => {
     if (!reduxCountries || reduxCountries.length === 0) dispatch(fetchCountries());
     if (!reduxStates || reduxStates.length === 0) dispatch(fetchStates());
     if (!reduxCities || reduxCities.length === 0) dispatch(fetchCities());
-  }, [dispatch, reduxCountries?.length, reduxStates?.length, reduxCities?.length]);
+  }, [dispatch]);
 
-  // Derived options
-  const countriesArr = propCountries.length > 0
+  const countriesArr = propCountries.length > 1
     ? propCountries
     : ["Select Country", ...(reduxCountries || []).map(c => c.name).filter(Boolean)];
 
-  const statesArr = propStates.length > 0
+  const statesArr = propStates.length > 1
     ? propStates
-    : ["Select Country first", ...(reduxStates || []).map(s => s.name).filter(Boolean)];
+    : ["Select State", ...(reduxStates || []).map(s => s.name).filter(Boolean)];
 
-  const citiesArr = propCities.length > 0
+  const citiesArr = propCities.length > 1
     ? propCities
-    : ["Select State first", ...(reduxCities?.data || reduxCities || []).map(c => c.name).filter(Boolean)];
+    : ["Select City", ...(reduxCities?.data || reduxCities || []).map(c => c.name).filter(Boolean)];
 
-  const genders = propGenders.length > 0
-    ? propGenders
-    : ["Select Here", "Male", "Female", "Other"];
-
-  const timeSlots = propTimeSlots.length > 0
-    ? propTimeSlots
-    : ["09:00 AM - 12:00 PM", "12:00 PM - 03:00 PM", "03:00 PM - 06:00 PM"];
+  const genders = propGenders.length > 1 ? propGenders : ["Select Gender", "Male", "Female", "Other"];
+  const timeSlots = propTimeSlots.length > 0 ? propTimeSlots : ["09:00 AM - 12:00 PM", "12:00 PM - 03:00 PM", "03:00 PM - 06:00 PM"];
 
   const [healthCampData, setHealthCampData] = useState({
     firstName: "",
@@ -591,11 +51,11 @@ const FreeHealthCampForm = ({
     mobile: "",
     alternateNo: "",
     dateOfBirth: "",
-    gender: "Select Here",
+    gender: "Select Gender",
     residenceAddress: "",
     country: "Select Country",
-    state: "Select Country first",
-    city: "Select State first",
+    state: "Select State",
+    city: "Select City",
     existingMedicalConditions: "",
     isTakingMedications: "",
     medicationNames: "",
@@ -629,11 +89,11 @@ const FreeHealthCampForm = ({
       mobile: "",
       alternateNo: "",
       dateOfBirth: "",
-      gender: "Select Here",
+      gender: "Select Gender",
       residenceAddress: "",
       country: "Select Country",
-      state: "Select Country first",
-      city: "Select State first",
+      state: "Select State",
+      city: "Select City",
       existingMedicalConditions: "",
       isTakingMedications: "",
       medicationNames: "",
@@ -661,40 +121,22 @@ const FreeHealthCampForm = ({
   };
 
   const handleHealthServiceChange = (key) => {
-    setHealthCampData((prev) => ({
+    setHealthCampData(prev => ({
       ...prev,
       healthCheckupServices: {
         ...prev.healthCheckupServices,
-        [key]: !prev.healthCheckupServices[key],
-      },
+        [key]: !prev.healthCheckupServices[key]
+      }
     }));
   };
 
   const validate = () => {
-    if (!healthCampData.firstName.trim()) {
-      showError("First Name is required");
-      return false;
-    }
-    if (!healthCampData.lastName.trim()) {
-      showError("Last Name is required");
-      return false;
-    }
-    if (!healthCampData.email.trim()) {
-      showError("Email is required");
-      return false;
-    }
-    if (!healthCampData.mobile.trim()) {
-      showError("Mobile is required");
-      return false;
-    }
-    if (!healthCampData.consentMedicalData) {
-      showError("Please answer the consent question");
-      return false;
-    }
-    if (!healthCampData.agreeToUpdates) {
-      showError("Please answer the agreement question");
-      return false;
-    }
+    if (!healthCampData.firstName.trim()) return showError("First Name is required");
+    if (!healthCampData.lastName.trim()) return showError("Last Name is required");
+    if (!healthCampData.email.trim()) return showError("Email is required");
+    if (!healthCampData.mobile.trim()) return showError("Mobile is required");
+    if (!healthCampData.consentMedicalData) return showError("Please answer the consent question");
+    if (!healthCampData.agreeToUpdates) return showError("Please answer the agreement question");
     return true;
   };
 
@@ -703,427 +145,350 @@ const FreeHealthCampForm = ({
     if (!validate()) return;
     try {
       await dispatch(createHealthCampVisitor(healthCampData)).unwrap();
-      showSuccess("Health Camp registration successful!");
+      
+      // Log the activity
+      const userId = sessionStorage.getItem("user_id");
+      if (userId) {
+        dispatch(createActivityLogThunk({
+          user_id: userId,
+          message: `Visitor Management: Registered Health Camp Visitor '${healthCampData.firstName} ${healthCampData.lastName}'`,
+          section: "Client Data Section",
+          data: { action: "ADD_VISITOR", type: "HEALTH_CAMP", visitor: `${healthCampData.firstName} ${healthCampData.lastName}` }
+        }));
+      }
+
+      Swal.fire({
+        title: "Registration Success!",
+        text: `Medical registration for ${healthCampData.firstName} has been confirmed.`,
+        icon: "success",
+        confirmButtonColor: "#23471d",
+      });
       resetForm();
     } catch (err) {
-      showError(
-        typeof err === "string" ? err : err?.message || "Registration failed",
-      );
+      Swal.fire({
+        title: "Registration Error",
+        text: typeof err === "string" ? err : err?.message || "Something went wrong during health camp registration.",
+        icon: "error",
+        confirmButtonColor: "#23471d",
+      });
     }
   };
 
+  const inputClass = "rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-900 font-medium shadow-none outline-none px-3 w-full text-left";
+  const labelClass = "text-[11px] font-bold text-slate-800 mb-1 block capitalize font-inter";
+  const sectionHeaderClass = "text-[16px] font-bold text-[#23471d] pb-1 border-b border-slate-100 mb-6 font-inter flex items-center gap-2";
+
   return (
-    <form
-      className="visitor-form space-y-6 bg-white px-4 py-6 rounded-md shadow-md"
-      onSubmit={handleSubmit}
-      style={{ marginTop: "30px" }}
-    >
-      <h3 className="text-xl font-semibold text-gray-900 mb-4">
-        Free Health Camp Registration
-      </h3>
-
-      {/* Basic Personal Details */}
-      <h4 className="text-lg font-medium text-gray-900">
-        Basic Personal Details
-      </h4>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          {
-            label: "First Name",
-            key: "firstName",
-            type: "text",
-            placeholder: "Enter First Name",
-            required: true,
-          },
-          {
-            label: "Last Name",
-            key: "lastName",
-            type: "text",
-            placeholder: "Enter Last Name",
-            required: true,
-          },
-          {
-            label: "Email",
-            key: "email",
-            type: "email",
-            placeholder: "Enter Email",
-            required: true,
-          },
-          {
-            label: "Mobile No.",
-            key: "mobile",
-            type: "tel",
-            placeholder: "Enter Telephone/Mobile",
-            required: true,
-          },
-          {
-            label: "Alternate No.",
-            key: "alternateNo",
-            type: "tel",
-            placeholder: "Enter Alternate No.",
-          },
-          {
-            label: "Date of Birth",
-            key: "dateOfBirth",
-            type: "date",
-            required: true,
-          },
-          {
-            label: "Gender",
-            key: "gender",
-            type: "select",
-            options: genders,
-            required: true,
-          },
-          {
-            label: "Residence Address",
-            key: "residenceAddress",
-            type: "text",
-            placeholder: "Write Here",
-          },
-          {
-            label: "Country",
-            key: "country",
-            type: "select",
-            options: countriesArr,
-            required: true,
-            onChange: (e) =>
-              setHealthCampData({
-                ...healthCampData,
-                country: e.target.value,
-                state: "Select Country first",
-                city: "Select State first",
-              }),
-          },
-          {
-            label: "State",
-            key: "state",
-            type: "select",
-            options: statesArr,
-            required: true,
-            disabled:
-              !healthCampData.country ||
-              healthCampData.country === "Select Country",
-            onChange: (e) =>
-              setHealthCampData({
-                ...healthCampData,
-                state: e.target.value,
-                city: "Select State first",
-              }),
-          },
-          {
-            label: "City",
-            key: "city",
-            type: "select",
-            options: citiesArr,
-            required: true,
-            disabled:
-              !healthCampData.state ||
-              healthCampData.state === "Select Country first",
-          },
-        ].map(
-          ({
-            label,
-            key,
-            type,
-            placeholder,
-            options,
-            required,
-            disabled,
-            onChange,
-          }) => (
-            <div key={key}>
-              <label className="block text-base font-medium text-gray-900 mb-1">
-                {label} {required && <span className="text-red-500">*</span>}
-              </label>
-              {type === "select" ? (
-                <select
-                  value={healthCampData[key]}
-                  onChange={
-                    onChange ||
-                    ((e) =>
-                      setHealthCampData({
-                        ...healthCampData,
-                        [key]: e.target.value,
-                      }))
-                  }
-                  disabled={disabled}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-base disabled:bg-gray-100"
-                >
-                  {options?.map((option, index) => (
-                    <option key={index} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  type={type}
-                  value={healthCampData[key]}
-                  onChange={
-                    onChange ||
-                    ((e) =>
-                      setHealthCampData({
-                        ...healthCampData,
-                        [key]: e.target.value,
-                      }))
-                  }
-                  placeholder={placeholder}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-base"
-                />
-              )}
-            </div>
-          ),
-        )}
-      </div>
-
-      {/* Health-Related Information */}
-      <h4 className="text-lg font-medium text-gray-900">
-        Health-Related Information
-      </h4>
-      <div className="space-y-4">
-        {[
-          {
-            label:
-              "Do you have any existing medical conditions? (If yes, specify)",
-            key: "existingMedicalConditions",
-            textareaKey: "existingMedicalConditions",
-          },
-          {
-            label:
-              "Are you currently taking any medications? (If yes, mention the medication names)",
-            key: "isTakingMedications",
-            textareaKey: "medicationNames",
-          },
-          {
-            label: "Do you have any allergies? (If yes, specify)",
-            key: "hasAllergies",
-            textareaKey: "allergyDetails",
-          },
-          {
-            label:
-              "Are you experiencing any symptoms currently? (If yes, specify)",
-            key: "isExperiencingSymptoms",
-            textareaKey: "symptomDetails",
-          },
-        ].map(({ label, key, textareaKey }) => (
-          <div key={key} className="flex flex-col gap-2">
-            <label className="text-base font-medium text-gray-900">
-              {label}
-            </label>
-            <div className="flex items-center gap-6">
-              {["yes", "no"].map((value) => (
-                <label
-                  key={value}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <input
-                    type="radio"
-                    name={key}
-                    value={value}
-                    checked={healthCampData[key] === value}
-                    onChange={(e) =>
-                      setHealthCampData({
-                        ...healthCampData,
-                        [key]: e.target.value,
-                      })
-                    }
-                    className="w-5 h-5 text-[#3598dc] focus:ring-[#3598dc] border-gray-300"
-                  />
-                  <span className="text-base text-gray-700">
-                    {value.charAt(0).toUpperCase() + value.slice(1)}
-                  </span>
-                </label>
-              ))}
-            </div>
-            {healthCampData[key] === "yes" && (
-              <textarea
-                value={healthCampData[textareaKey]}
-                onChange={(e) =>
-                  setHealthCampData({
-                    ...healthCampData,
-                    [textareaKey]: e.target.value,
-                  })
-                }
-                placeholder={`Specify ${key.replace(/([A-Z])/g, " $1").toLowerCase()}`}
-                rows="2"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-base"
-              />
-            )}
+    <form onSubmit={handleSubmit} className="space-y-10 animate-fadeIn">
+      {/* SECTION 1: PERSONAL DETAILS */}
+      <section>
+        <h3 className={sectionHeaderClass}>
+          <User className="w-5 h-5 text-[#d26019]" /> Patient Information
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5">
+          <div>
+            <label className={labelClass}>First Name <span className="text-red-500">*</span></label>
+            <input
+              type="text"
+              className={inputClass}
+              placeholder="First Name"
+              value={healthCampData.firstName}
+              onChange={(e) => setHealthCampData({ ...healthCampData, firstName: e.target.value })}
+            />
           </div>
-        ))}
+          <div>
+            <label className={labelClass}>Last Name <span className="text-red-500">*</span></label>
+            <input
+              type="text"
+              className={inputClass}
+              placeholder="Last Name"
+              value={healthCampData.lastName}
+              onChange={(e) => setHealthCampData({ ...healthCampData, lastName: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Email Address <span className="text-red-500">*</span></label>
+            <input
+              type="email"
+              className={inputClass}
+              placeholder="Email"
+              value={healthCampData.email}
+              onChange={(e) => setHealthCampData({ ...healthCampData, email: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Mobile Number <span className="text-red-500">*</span></label>
+            <input
+              type="tel"
+              className={inputClass}
+              placeholder="Mobile No."
+              value={healthCampData.mobile}
+              onChange={(e) => setHealthCampData({ ...healthCampData, mobile: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Alternate No.</label>
+            <input
+              type="tel"
+              className={inputClass}
+              placeholder="Optional"
+              value={healthCampData.alternateNo}
+              onChange={(e) => setHealthCampData({ ...healthCampData, alternateNo: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Date of Birth <span className="text-red-500">*</span></label>
+            <input
+              type="date"
+              className={inputClass}
+              value={healthCampData.dateOfBirth}
+              onChange={(e) => setHealthCampData({ ...healthCampData, dateOfBirth: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Gender <span className="text-red-500">*</span></label>
+            <select
+              className={inputClass}
+              value={healthCampData.gender}
+              onChange={(e) => setHealthCampData({ ...healthCampData, gender: e.target.value })}
+            >
+              {genders.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+          <div className="lg:col-span-2">
+            <label className={labelClass}>Residence Address</label>
+            <input
+              type="text"
+              className={inputClass}
+              placeholder="Full Address"
+              value={healthCampData.residenceAddress}
+              onChange={(e) => setHealthCampData({ ...healthCampData, residenceAddress: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Country</label>
+            <select
+              className={inputClass}
+              value={healthCampData.country}
+              onChange={(e) => setHealthCampData({ ...healthCampData, country: e.target.value, state: "Select State", city: "Select City" })}
+            >
+              {countriesArr.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>State</label>
+            <select
+              className={inputClass}
+              value={healthCampData.state}
+              onChange={(e) => setHealthCampData({ ...healthCampData, state: e.target.value, city: "Select City" })}
+            >
+              {statesArr.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>City</label>
+            <select
+              className={inputClass}
+              value={healthCampData.city}
+              onChange={(e) => setHealthCampData({ ...healthCampData, city: e.target.value })}
+            >
+              {citiesArr.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 2: HEALTH INFO */}
+      <section>
+        <h3 className={sectionHeaderClass}>
+          <Heart className="w-5 h-5 text-[#d26019]" /> Medical Background
+        </h3>
+        <div className="space-y-6 bg-slate-50 p-6 border border-slate-200">
+          {[
+            { label: "Existing Medical Conditions?", key: "existingMedicalConditions", area: "existingMedicalConditions" },
+            { label: "Currently taking medications?", key: "isTakingMedications", area: "medicationNames" },
+            { label: "Do you have any allergies?", key: "hasAllergies", area: "allergyDetails" },
+            { label: "Experiencing any symptoms currently?", key: "isExperiencingSymptoms", area: "symptomDetails" }
+          ].map(({ label, key, area }) => (
+            <div key={key} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+              <div className="md:col-span-1">
+                <label className="text-[13px] font-bold text-gray-700 uppercase">{label}</label>
+                <div className="flex gap-4 mt-2">
+                  {["yes", "no"].map(val => (
+                    <label key={val} className="flex items-center gap-2 cursor-pointer text-[12px] font-bold text-gray-600 uppercase">
+                      <input
+                        type="radio"
+                        name={key}
+                        checked={healthCampData[key] === val}
+                        onChange={() => setHealthCampData({ ...healthCampData, [key]: val })}
+                        className="w-4 h-4 text-[#23471d]"
+                      /> {val}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                {healthCampData[key] === "yes" && (
+                  <textarea
+                    className="w-full h-16 p-2 border border-slate-400 focus:border-[#23471d] outline-none text-[12.5px] rounded-[2px] bg-white resize-none shadow-inner"
+                    placeholder="Provide details here..."
+                    value={healthCampData[area]}
+                    onChange={(e) => setHealthCampData({ ...healthCampData, [area]: e.target.value })}
+                  />
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* SECTION 3: SERVICES & PREFERENCES */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <section>
+          <h3 className={sectionHeaderClass}>
+            <Activity className="w-5 h-5 text-[#d26019]" /> Health Check-Up Services
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 bg-[#f0f4f0] p-4 border border-[#23471d]/20 rounded-sm">
+            {[
+              { key: "generalHealth", label: "General Check-up" },
+              { key: "bloodSugar", label: "Blood Sugar Test" },
+              { key: "bloodPressure", label: "Blood Pressure" },
+              { key: "eyeCheckup", label: "Eye Check-up" },
+              { key: "dentalCheckup", label: "Dental Check-up" },
+              { key: "ayurvedaConsultation", label: "Ayurveda Consultation" },
+              { key: "nutritionConsultation", label: "Nutrition Consultation" },
+              { key: "other", label: "Other" }
+            ].map(({ key, label }) => (
+              <label key={key} className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={healthCampData.healthCheckupServices[key]}
+                  onChange={() => handleHealthServiceChange(key)}
+                  className="w-4 h-4 rounded border-slate-400 text-[#23471d] focus:ring-[#23471d]"
+                />
+                <span className="text-[13px] font-medium text-gray-600 group-hover:text-[#23471d] transition-colors">{label}</span>
+              </label>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <h3 className={sectionHeaderClass}>
+            <Calendar className="w-5 h-5 text-[#d26019]" /> Appointment Schedule
+          </h3>
+          <div className="space-y-5 bg-slate-50 p-6 border border-slate-200">
+            <div>
+              <label className={labelClass}>Preferred Date <span className="text-red-500">*</span></label>
+              <input
+                type="date"
+                className={inputClass}
+                value={healthCampData.preferredDate}
+                onChange={(e) => setHealthCampData({ ...healthCampData, preferredDate: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Preferred Time Slot <span className="text-red-500">*</span></label>
+              <select
+                className={inputClass}
+                value={healthCampData.preferredTimeSlot}
+                onChange={(e) => setHealthCampData({ ...healthCampData, preferredTimeSlot: e.target.value })}
+              >
+                {timeSlots.map((slot, i) => <option key={i} value={slot}>{slot}</option>)}
+              </select>
+            </div>
+          </div>
+        </section>
       </div>
 
-      {/* Health Check-Up Preferences */}
-      <h4 className="text-lg font-medium text-gray-900">
-        Health Check-Up Preferences
-      </h4>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[
-          { key: "generalHealth", label: "General Health Check-up" },
-          { key: "bloodSugar", label: "Blood Sugar Test" },
-          { key: "bloodPressure", label: "Blood Pressure Check" },
-          { key: "eyeCheckup", label: "Eye Check-up" },
-          { key: "dentalCheckup", label: "Dental Check-up" },
-          { key: "ayurvedaConsultation", label: "Ayurveda Consultation" },
-          {
-            key: "nutritionConsultation",
-            label: "Nutrition & Diet Consultation",
-          },
-          { key: "other", label: "Other" },
-        ].map(({ key, label }) => (
-          <label key={key} className="flex items-center gap-2 cursor-pointer">
+      {/* SECTION 4: CONSENT & SUBMISSION */}
+      <section className="bg-orange-50 p-6 border-l-4 border-[#d26019] space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <div>
+              <label className="text-[13px] font-bold text-gray-700 uppercase block mb-2 leading-tight">Consent to share medical data for analysis? <span className="text-red-500">*</span></label>
+              <div className="flex gap-6">
+                {["yes", "no"].map(val => (
+                  <label key={val} className="flex items-center gap-2 cursor-pointer text-[13px] font-bold text-gray-700 uppercase">
+                    <input
+                      type="radio"
+                      name="consent"
+                      checked={healthCampData.consentMedicalData === val}
+                      onChange={() => setHealthCampData({ ...healthCampData, consentMedicalData: val })}
+                      className="w-4 h-4 text-[#23471d]"
+                    /> {val}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-[13px] font-bold text-gray-700 uppercase block mb-2 leading-tight">Agree to health updates & reminders? <span className="text-red-500">*</span></label>
+              <div className="flex gap-6">
+                {["yes", "no"].map(val => (
+                  <label key={val} className="flex items-center gap-2 cursor-pointer text-[13px] font-bold text-gray-700 uppercase">
+                    <input
+                      type="radio"
+                      name="updates"
+                      checked={healthCampData.agreeToUpdates === val}
+                      onChange={() => setHealthCampData({ ...healthCampData, agreeToUpdates: val })}
+                      className="w-4 h-4 text-[#23471d]"
+                    /> {val}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div>
+            <label className={labelClass}>Specific health concerns or questions?</label>
+            <textarea
+              className="w-full h-24 p-2 border border-slate-400 focus:border-[#23471d] outline-none text-[12.5px] rounded-[2px] bg-white resize-none"
+              placeholder="Mention any specific concerns for the doctors..."
+              value={healthCampData.specificHealthConcerns}
+              onChange={(e) => setHealthCampData({ ...healthCampData, specificHealthConcerns: e.target.value })}
+            />
+          </div>
+        </div>
+        <div className="pt-4 border-t border-orange-100">
+           <label className="flex items-center gap-3 cursor-pointer group">
             <input
               type="checkbox"
-              checked={healthCampData.healthCheckupServices[key]}
-              onChange={() => handleHealthServiceChange(key)}
-              className="w-5 h-5 text-[#3598dc] focus:ring-[#3598dc] border-gray-300 rounded"
+              checked={healthCampData.subscribe}
+              onChange={(e) => setHealthCampData({ ...healthCampData, subscribe: e.target.checked })}
+              className="w-5 h-5 rounded border-slate-400 text-[#23471d] focus:ring-[#23471d]"
             />
-            <span className="text-base text-gray-700">{label}</span>
+            <span className="text-sm font-bold text-gray-700 uppercase tracking-tight">Subscribe to Event Updates & Wellness Newsletters</span>
           </label>
-        ))}
-      </div>
-
-      {/* Appointment & Availability */}
-      <h4 className="text-lg font-medium text-gray-900">
-        Appointment & Availability
-      </h4>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-base font-medium text-gray-900 mb-1">
-            Preferred Date <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="date"
-            value={healthCampData.preferredDate}
-            onChange={(e) =>
-              setHealthCampData({
-                ...healthCampData,
-                preferredDate: e.target.value,
-              })
-            }
-            className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-base"
-          />
         </div>
-        <div>
-          <label className="block text-base font-medium text-gray-900 mb-1">
-            Preferred Time Slot <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={healthCampData.preferredTimeSlot}
-            onChange={(e) =>
-              setHealthCampData({
-                ...healthCampData,
-                preferredTimeSlot: e.target.value,
-              })
-            }
-            className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-base"
+      </section>
+
+      {/* FOOTER ACTIONS ── STICKY VIBE */}
+      <div className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center mt-12 bg-white pb-6">
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center gap-2 mb-4 sm:mb-0">
+          <ShieldCheck size={14} className="text-[#23471d]" />
+          SECURE VISITOR PORTAL
+        </p>
+        <div className="flex gap-4">
+          <button 
+            type="button" 
+            onClick={resetForm}
+            className="px-10 py-2.5 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all rounded-[2px] shadow-sm"
           >
-            {timeSlots?.map((slot, index) => (
-              <option key={index} value={slot}>
-                {slot}
-              </option>
-            ))}
-          </select>
+            Reset Form
+          </button>
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="px-12 py-2.5 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-lg flex items-center gap-3 group"
+          >
+            {loading ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <>
+                SUBMIT REGISTRATION
+                <Send size={15} className="group-hover:translate-x-1.5 transition-transform" />
+              </>
+            )}
+          </button>
         </div>
-      </div>
-
-      {/* Consent & Agreement */}
-      <h4 className="text-lg font-medium text-gray-900">Consent & Agreement</h4>
-      <div className="space-y-4">
-        {[
-          {
-            label:
-              "Do you consent to share your medical data with healthcare professionals for analysis?",
-            key: "consentMedicalData",
-          },
-          {
-            label:
-              "Do you agree to receive health-related updates and event reminders?",
-            key: "agreeToUpdates",
-          },
-        ].map(({ label, key }) => (
-          <div key={key} className="flex flex-col gap-2">
-            <label className="text-base font-medium text-gray-900">
-              {label} <span className="text-red-500">*</span>
-            </label>
-            <div className="flex items-center gap-6">
-              {["yes", "no"].map((value) => (
-                <label
-                  key={value}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <input
-                    type="radio"
-                    name={key}
-                    value={value}
-                    checked={healthCampData[key] === value}
-                    onChange={(e) =>
-                      setHealthCampData({
-                        ...healthCampData,
-                        [key]: e.target.value,
-                      })
-                    }
-                    className="w-5 h-5 text-[#3598dc] focus:ring-[#3598dc] border-gray-300"
-                  />
-                  <span className="text-base text-gray-700">
-                    {value.charAt(0).toUpperCase() + value.slice(1)}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Specific Health Concerns */}
-      <div>
-        <label className="block text-base font-medium text-gray-900 mb-1">
-          Any specific health concerns or questions for the doctors?
-        </label>
-        <textarea
-          value={healthCampData.specificHealthConcerns}
-          onChange={(e) =>
-            setHealthCampData({
-              ...healthCampData,
-              specificHealthConcerns: e.target.value,
-            })
-          }
-          placeholder="Write Here"
-          rows="3"
-          className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-base"
-        />
-      </div>
-
-      {/* Subscribe */}
-      <div>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={healthCampData.subscribe}
-            onChange={(e) =>
-              setHealthCampData({
-                ...healthCampData,
-                subscribe: e.target.checked,
-              })
-            }
-            className="w-5 h-5 text-[#3598dc] focus:ring-[#3598dc] border-gray-300 rounded"
-          />
-          <span className="text-base text-gray-700">
-            Subscribe to Event Updates & Newsletters
-          </span>
-        </label>
-      </div>
-
-      {/* Submit Button */}
-      <div className="flex justify-start mt-6">
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-[#3598dc] hover:bg-[#2980b9] text-white px-6 py-2 text-base rounded-md uppercase disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-        >
-          {loading ? "Submitting..." : "Submit Registration"}
-        </button>
       </div>
     </form>
   );

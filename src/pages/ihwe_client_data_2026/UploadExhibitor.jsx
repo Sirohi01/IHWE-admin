@@ -1,11 +1,19 @@
 import React, { useState } from "react";
 import { FaFileExcel, FaUpload, FaListAlt, FaCheckCircle, FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { showSuccess } from "../../utils/toastMessage";
+import { useDispatch } from "react-redux";
+import { createActivityLogThunk } from "../../features/activityLog/activityLogSlice";
+import Swal from "sweetalert2";
 
 const UploadExhibitor = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [file, setFile] = useState(null);
+
+  const getUserInfo = () => {
+    const admin = JSON.parse(sessionStorage.getItem("admin"));
+    return { userId: admin?.admin_id, userName: admin?.admin_name };
+  };
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -13,11 +21,30 @@ const UploadExhibitor = () => {
 
   const handleImport = () => {
     if (!file) {
-      alert("Please choose a CSV file first!");
+      Swal.fire({
+        title: "No File Selected",
+        text: "Please choose a CSV file first!",
+        icon: "warning",
+        confirmButtonColor: "#23471d"
+      });
       return;
     }
+    const { userId } = getUserInfo();
     console.log("Importing:", file.name);
-    showSuccess(`Import process started for: ${file.name}`);
+    
+    dispatch(createActivityLogThunk({
+      user_id: userId,
+      message: `Client Data: Started CSV import for exhibitors (File: ${file.name})`,
+      section: "Client Data",
+      data: { action: "import", fileName: file.name }
+    }));
+
+    Swal.fire({
+      title: "Import Started",
+      text: `Processing file: ${file.name}`,
+      icon: "success",
+      confirmButtonColor: "#23471d"
+    });
   };
 
   const handleMasterList = () => {

@@ -38,7 +38,11 @@ import {
 
 
 export const menuItems = [
-  /* ================= DASHBOARD ================= */
+  /* ================= ANALYTICS SECTION ================= */
+  {
+    type: "heading",
+    label: "Analytics Section",
+  },
   {
     type: "item",
     label: "Dashboard",
@@ -50,12 +54,6 @@ export const menuItems = [
     label: "Activity Logs",
     icon: Activity,
     path: "/activity-logs",
-  },
-
-  /* ================= ANALYTICS SECTION ================= */
-  {
-    type: "heading",
-    label: "Analytics Section",
   },
   {
     type: "item",
@@ -431,6 +429,19 @@ export const menuItems = [
   },
 
 
+  /* ================= MESSAGE SECTION ================= */
+  {
+    type: "heading",
+    label: "Message Section",
+  },
+  {
+    type: "item",
+    label: "Response Templates",
+    icon: MessageSquare,
+    path: "/response-templates",
+  },
+
+
   /* ================= ACCOUNT SECTION ================= */
   {
     type: "heading",
@@ -454,6 +465,19 @@ export const menuItems = [
     icon: ShieldCheck,
     path: "/admin-users",
   },
+  {
+    type: "item",
+    label: "Manage Roles",
+    icon: Users,
+    path: "/manage-roles",
+  },
+  {
+    type: "item",
+    label: "Role Permissions",
+    icon: ShieldCheck,
+    path: "/role-permissions",
+  },
+
   {
     type: "item",
     label: "Change Password",

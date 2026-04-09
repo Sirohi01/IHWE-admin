@@ -26,7 +26,7 @@ import {
     ArrowRight,
     Shield
 } from "lucide-react";
-import { showSuccess } from "../../utils/toastMessage";
+import Swal from "sweetalert2";
 import { fetchUsers } from "../../features/auth/userSlice";
 import { fetchCategories } from "../../features/add_by_admin/category/categorySlice";
 import { fetchNatures } from "../../features/add_by_admin/nature/natureSlice";
@@ -40,6 +40,7 @@ import {
     fetchCompanies,
     updateCompany,
 } from "../../features/company/companySlice";
+import { createActivityLogThunk } from "../../features/activityLog/activityLogSlice";
 
 // Helper function to safely extract an array from any Redux slice
 const getArrayFromSlice = (sliceState, fallbackKey) => {
@@ -206,11 +207,45 @@ const AddNewClients = () => {
             const dataToSave = { ...formData, updated_by: userName || formData.updated_by };
             if (id) {
                 await dispatch(updateCompany({ id, data: dataToSave })).unwrap();
-                showSuccess("Company updated successfully!");
-                navigate(`/clientOverview1/${id}`);
+                
+                // Log the activity
+                const userId = sessionStorage.getItem("user_id");
+                if (userId) {
+                    dispatch(createActivityLogThunk({
+                        user_id: userId,
+                        message: `Client Data: Updated company details for '${formData.companyName}'`,
+                        section: "Client Data Section",
+                        data: { action: "UPDATE", company: formData.companyName, id }
+                    }));
+                }
+
+                Swal.fire({
+                    title: "Success!",
+                    text: "Company updated successfully!",
+                    icon: "success",
+                    confirmButtonColor: "#23471d"
+                });
+                navigate(`/client-overview/${id}`);
             } else {
-                await dispatch(addCompany(dataToSave)).unwrap();
-                showSuccess("New company added successfully!");
+                const response = await dispatch(addCompany(dataToSave)).unwrap();
+                
+                // Log the activity
+                const userId = sessionStorage.getItem("user_id");
+                if (userId) {
+                    dispatch(createActivityLogThunk({
+                        user_id: userId,
+                        message: `Client Data: Added new company '${formData.companyName}'`,
+                        section: "Client Data Section",
+                        data: { action: "ADD", company: formData.companyName }
+                    }));
+                }
+
+                Swal.fire({
+                    title: "Registered!",
+                    text: "New company added successfully!",
+                    icon: "success",
+                    confirmButtonColor: "#23471d"
+                });
                 handleReset();
                 navigate("/ihweClientData2026/newLeadList");
             }

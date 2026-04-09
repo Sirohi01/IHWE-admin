@@ -3,12 +3,12 @@ import Swal from 'sweetalert2';
 import api from "../lib/api";
 import {
     Layout, Plus, Trash2, Edit,
-    Maximize, Hash, Ruler, CreditCard,
-    CheckCircle2, XCircle, Info, Filter,
-    Search, Download
+    Ruler, Hash, CheckCircle2, XCircle,
+    Info, Search, Download, Filter
 } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
-import Table from '../components/table/Table';
+import { useDispatch } from 'react-redux';
+import { createActivityLogThunk } from '../features/activityLog/activityLogSlice';
 
 const EMPTY_STALL = {
     eventId: '',
@@ -28,6 +28,15 @@ const ManageStalls = () => {
     const [stallForm, setStallForm] = useState({ ...EMPTY_STALL });
     const [isEditing, setIsEditing] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const dispatch = useDispatch();
+
+    const getUserInfo = () => {
+        const userStr = sessionStorage.getItem("user");
+        const user = userStr ? JSON.parse(userStr) : {};
+        const userId = sessionStorage.getItem("user_id") || user._id;
+        const userName = user.name || "User";
+        return { userId, userName };
+    };
 
     useEffect(() => {
         fetchStalls();
@@ -38,11 +47,8 @@ const ManageStalls = () => {
         setIsLoading(true);
         try {
             const response = await api.get('/api/stalls');
-            if (response.data.success) {
-                setStalls(response.data.data);
-            }
+            if (response.data.success) setStalls(response.data.data);
         } catch (error) {
-            console.error('Error fetching stalls:', error);
             Swal.fire('Error', 'Failed to fetch stalls', 'error');
         } finally {
             setIsLoading(false);
@@ -52,15 +58,13 @@ const ManageStalls = () => {
     const fetchEvents = async () => {
         try {
             const response = await api.get('/api/events');
-            if (response.data.success) {
-                setEvents(response.data.data);
-            }
+            if (response.data.success) setEvents(response.data.data);
         } catch (error) {
             console.error('Error fetching events:', error);
         }
     };
 
-    // Auto calculate area when length or width changes
+    // Auto-calculate area
     useEffect(() => {
         if (stallForm.length && stallForm.width) {
             const area = parseFloat(stallForm.length) * parseFloat(stallForm.width);
@@ -70,12 +74,10 @@ const ManageStalls = () => {
 
     const handleStallSubmit = async (e) => {
         e.preventDefault();
-        
         if (!stallForm.stallNumber || !stallForm.area || !stallForm.eventId) {
             Swal.fire('Warning', 'Please fill all required fields (Event, Stall No, Area)', 'warning');
             return;
         }
-
         setIsLoading(true);
         try {
             let response;
@@ -84,19 +86,29 @@ const ManageStalls = () => {
             } else {
                 response = await api.post('/api/stalls', stallForm);
             }
-
             if (response.data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: isEditing ? 'Stall Updated!' : 'Stall Added!',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
+                const { userId, userName } = getUserInfo();
+                const eventName = events.find(e => e._id === stallForm.eventId)?.name || "Event";
+                if (userId) {
+                    dispatch(createActivityLogThunk({
+                        user_id: userId,
+                        message: `Stalls: ${isEditing ? 'Updated' : 'Created'} Stall ${stallForm.stallNumber} in ${eventName} by ${userName}`,
+                        section: "Stalls",
+                        data: {
+                            action: isEditing ? "UPDATE" : "CREATE",
+                            stall_id: isEditing || response.data.data?._id,
+                            stall_number: stallForm.stallNumber,
+                            event_name: eventName,
+                            details: stallForm
+                        }
+                    }));
+                }
+
+                Swal.fire({ icon: 'success', title: isEditing ? 'Stall Updated!' : 'Stall Added!', timer: 1500, showConfirmButton: false });
                 resetForm();
                 fetchStalls();
             }
         } catch (error) {
-            console.error('Error saving stall:', error);
             Swal.fire('Error', error.response?.data?.message || 'Failed to save stall', 'error');
         } finally {
             setIsLoading(false);
@@ -112,13 +124,27 @@ const ManageStalls = () => {
             confirmButtonColor: '#d33',
             confirmButtonText: 'Yes, delete!'
         });
-
         if (!result.isConfirmed) return;
-
         setIsLoading(true);
         try {
             const response = await api.delete(`/api/stalls/${id}`);
             if (response.data.success) {
+                const stallToDelete = stalls.find(s => s._id === id);
+                const eventName = stallToDelete?.eventId?.name || "Event";
+                const { userId, userName } = getUserInfo();
+                if (userId) {
+                    dispatch(createActivityLogThunk({
+                        user_id: userId,
+                        message: `Stalls: Deleted Stall ${stallToDelete?.stallNumber} (${eventName}) by ${userName}`,
+                        section: "Stalls",
+                        data: {
+                            action: "DELETE",
+                            stall_id: id,
+                            stall_number: stallToDelete?.stallNumber,
+                            event_name: eventName
+                        }
+                    }));
+                }
                 Swal.fire('Deleted!', 'Stall has been deleted.', 'success');
                 fetchStalls();
             }
@@ -149,301 +175,275 @@ const ManageStalls = () => {
         setStallForm({ ...EMPTY_STALL });
     };
 
-    const columns = [
-        {
-            key: "stallNumber",
-            label: "STALL NO.",
-            render: (row) => (
-                <div className="space-y-0.5">
-                    <div className="font-black text-[#23471d] text-lg">{row.stallNumber}</div>
-                    <div className="text-[10px] font-bold text-slate-400 uppercase">{row.eventId?.name || 'No Event'}</div>
-                </div>
-            )
-        },
-        {
-            key: "details",
-            label: "SPECIFICATIONS",
-            render: (row) => (
-                <div className="space-y-1">
-                    <p className="text-xs text-slate-500 font-medium tracking-tight">
-                        <span className="font-bold text-[#d26019]">{row.length}m x {row.width}m</span> | {row.area} sqm.
-                    </p>
-                    <p className="text-[10px] uppercase font-black text-blue-600 tracking-wider">PL: {row.plScheme}</p>
-                </div>
-            )
-        },
-        {
-            key: "pricing",
-            label: "ADJUSTMENTS",
-            render: (row) => {
-                return (
-                    <div className="space-y-1">
-                         <div className="flex items-center gap-1.5 flex-wrap">
-                            {row.incrementPercentage > 0 && <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-md font-black">INC: +{row.incrementPercentage}%</span>}
-                            {row.discountPercentage > 0 && <span className="text-[10px] bg-green-100 text-green-600 px-2 py-0.5 rounded-md font-black">DISC: -{row.discountPercentage}%</span>}
-                            {!row.incrementPercentage && !row.discountPercentage && <span className="text-[10px] text-slate-400 font-bold italic">Standard Rate</span>}
-                        </div>
-                    </div>
-                );
-            }
-        },
-        {
-            key: "status",
-            label: "STATUS",
-            render: (row) => (
-                <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 w-fit ${
-                    row.status === 'available' ? 'bg-green-100 text-green-700 border border-green-200' :
-                    row.status === 'booked' ? 'bg-red-100 text-red-700 border border-red-200' :
-                    'bg-amber-100 text-amber-700 border border-amber-200'
-                }`}>
-                    {row.status === 'available' ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                    {row.status}
-                </div>
-            )
-        },
-        {
-            key: "actions",
-            label: "ACTIONS",
-            render: (row) => (
-                <div className="flex items-center gap-2">
-                    <button 
-                        onClick={() => startEdit(row)} 
-                        className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100 shadow-sm"
-                    >
-                        <Edit size={16} />
-                    </button>
-                    <button 
-                        onClick={() => handleDelete(row._id)} 
-                        className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors border border-red-100 shadow-sm"
-                    >
-                        <Trash2 size={16} />
-                    </button>
-                </div>
-            )
-        }
-    ];
-
-    const filteredStalls = stalls.filter(s => 
+    const filteredStalls = stalls.filter(s =>
         s.stallNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.eventId?.name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const inputCls = "w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px] appearance-none bg-white uppercase";
+    const labelCls = "block text-[11px] font-medium text-black mb-1 uppercase tracking-tight";
+
     return (
-        <div className="p-6 bg-slate-50 min-h-screen font-inter">
+        <div className="bg-white shadow-md p-6 min-h-screen font-inter uppercase">
             <PageHeader
                 title="STALL INVENTORY MANAGEMENT"
                 description="Create and manage exhibition stalls, sizes, and events"
             />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-                {/* FORM SECTION */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
+                {/* LEFT: Form Panel */}
                 <div className="lg:col-span-1 space-y-6">
-                    <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-                        <div className={`px-6 py-4 flex items-center gap-3 border-b border-slate-100 ${isEditing ? 'bg-amber-50' : 'bg-[#23471d]'}`}>
-                            <div className={`p-2 rounded-xl ${isEditing ? 'bg-amber-100 text-amber-600' : 'bg-white/10 text-white'}`}>
+                    <div className="bg-white border-2 border-gray-200 shadow-sm">
+                        {/* Form Header */}
+                        <div className={`px-6 py-4 flex items-center gap-3 text-white ${isEditing ? 'bg-amber-500' : 'bg-[#23471d]'}`}>
+                            <div className="p-2 bg-white/10 text-white">
                                 {isEditing ? <Edit size={20} /> : <Plus size={20} />}
                             </div>
                             <div>
-                                <h2 className={`text-lg font-bold tracking-tight ${isEditing ? 'text-amber-800' : 'text-white'}`}>
+                                <h2 className="text-sm font-bold text-white tracking-tight uppercase">
                                     {isEditing ? 'Edit Stall Details' : 'Add New Stall'}
                                 </h2>
-                                <p className={`text-[10px] uppercase font-bold tracking-widest ${isEditing ? 'text-amber-600/70' : 'text-white/60'}`}>Stall Master Creation</p>
+                                <p className="text-[10px] uppercase font-bold tracking-widest text-white/50">Stall Master Creation</p>
                             </div>
                         </div>
 
-                        <form onSubmit={handleStallSubmit} className="p-6 space-y-5">
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Linked Exhibition Event *</label>
-                                <select 
-                                    required 
-                                    value={stallForm.eventId} 
-                                    onChange={(e) => setStallForm({...stallForm, eventId: e.target.value})} 
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#23471d]/20 outline-none font-bold"
-                                >
-                                    <option value="">Select Event</option>
-                                    {events.map(e => <option key={e._id} value={e._id}>{e.name}</option>)}
-                                </select>
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Stall Number *</label>
-                                <div className="relative">
-                                    <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                                    <input
-                                        type="text"
+                        <div className="p-6 space-y-4">
+                            <form onSubmit={handleStallSubmit}>
+                                {/* Event */}
+                                <div className="mb-4">
+                                    <label className={labelCls}>Linked Exhibition Event *</label>
+                                    <select
                                         required
-                                        value={stallForm.stallNumber}
-                                        onChange={(e) => setStallForm({...stallForm, stallNumber: e.target.value})}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#23471d]/20 focus:border-[#23471d] outline-none transition-all font-bold text-slate-800"
-                                        placeholder="e.g. A-101"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">PL Scheme *</label>
-                                <select
-                                    value={stallForm.plScheme}
-                                    onChange={(e) => setStallForm({...stallForm, plScheme: e.target.value})}
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-sm"
-                                >
-                                    <option value="One Side Open">One Side Open</option>
-                                    <option value="Two Side Open">Two Side Open</option>
-                                    <option value="Three Side Open">Three Side Open</option>
-                                    <option value="Four Side Open">Four Side Open</option>
-                                </select>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Length (m) *</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        value={stallForm.length}
-                                        onChange={(e) => setStallForm({...stallForm, length: e.target.value})}
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold"
-                                        placeholder="3"
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Width (m) *</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        value={stallForm.width}
-                                        onChange={(e) => setStallForm({...stallForm, width: e.target.value})}
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold"
-                                        placeholder="3"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">Total Calculated Area (Sq m)</label>
-                                <div className="relative">
-                                    <Ruler className="absolute left-3 top-1/2 -translate-y-1/2 text-[#23471d]" size={16} />
-                                    <input
-                                        type="number"
-                                        readOnly
-                                        value={stallForm.area}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl font-black text-[#23471d]"
-                                    />
-                                    <p className="text-[9px] text-slate-400 mt-1 pl-1 italic">* Calculated automatically from Length x Width</p>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-[#d26019] uppercase tracking-widest px-1">Increment %</label>
-                                    <input
-                                        type="number"
-                                        value={stallForm.incrementPercentage}
-                                        onChange={(e) => setStallForm({...stallForm, incrementPercentage: e.target.value})}
-                                        className="w-full px-4 py-2 bg-red-50 border border-red-100 rounded-xl text-red-700 font-bold"
-                                        placeholder="0"
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-green-600 uppercase tracking-widest px-1">Discount %</label>
-                                    <input
-                                        type="number"
-                                        value={stallForm.discountPercentage}
-                                        onChange={(e) => setStallForm({...stallForm, discountPercentage: e.target.value})}
-                                        className="w-full px-4 py-2 bg-green-50 border border-green-100 rounded-xl text-green-700 font-bold"
-                                        placeholder="0"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="pt-4 flex gap-3">
-                                <button
-                                    type="submit"
-                                    disabled={isLoading}
-                                    className={`flex-1 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg ${
-                                        isEditing 
-                                        ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-200' 
-                                        : 'bg-[#23471d] hover:bg-[#1a3516] text-white shadow-[#23471d]/20'
-                                    }`}
-                                >
-                                    {isLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : (isEditing ? 'Update Stall' : 'Create Stall')}
-                                </button>
-                                {isEditing && (
-                                    <button
-                                        type="button"
-                                        onClick={resetForm}
-                                        className="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-all border border-slate-200"
+                                        value={stallForm.eventId}
+                                        onChange={(e) => setStallForm({ ...stallForm, eventId: e.target.value })}
+                                        className={inputCls}
                                     >
-                                        Cancel
-                                    </button>
-                                )}
-                            </div>
-                        </form>
-                    </div>
+                                        <option value="">Select Event</option>
+                                        {events.map(e => <option key={e._id} value={e._id}>{e.name}</option>)}
+                                    </select>
+                                </div>
 
-                    {/* Summary Info Card */}
-                    <div className="bg-gradient-to-br from-[#23471d] to-[#1a3516] p-6 rounded-3xl text-white shadow-xl shadow-[#23471d]/20">
-                        <div className="flex items-center gap-3 mb-4">
-                            <Info size={20} className="text-white/80" />
-                            <h3 className="font-bold tracking-tight">Inventory Tips</h3>
+                                {/* Stall Number */}
+                                <div className="mb-4">
+                                    <label className={labelCls}>Stall Number *</label>
+                                    <div className="relative">
+                                        <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                        <input
+                                            type="text"
+                                            required
+                                            value={stallForm.stallNumber}
+                                            onChange={(e) => setStallForm({ ...stallForm, stallNumber: e.target.value })}
+                                            className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px] uppercase"
+                                            placeholder="e.g. A-101"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* PL Scheme */}
+                                <div className="mb-4">
+                                    <label className={labelCls}>PL Scheme *</label>
+                                    <select
+                                        value={stallForm.plScheme}
+                                        onChange={(e) => setStallForm({ ...stallForm, plScheme: e.target.value })}
+                                        className={inputCls}
+                                    >
+                                        <option value="One Side Open">One Side Open</option>
+                                        <option value="Two Side Open">Two Side Open</option>
+                                        <option value="Three Side Open">Three Side Open</option>
+                                        <option value="Four Side Open">Four Side Open</option>
+                                    </select>
+                                </div>
+
+                                {/* Length / Width */}
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label className={labelCls}>Length (M) *</label>
+                                        <input
+                                            type="number"
+                                            required
+                                            value={stallForm.length}
+                                            onChange={(e) => setStallForm({ ...stallForm, length: e.target.value })}
+                                            className={inputCls}
+                                            placeholder="3"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={labelCls}>Width (M) *</label>
+                                        <input
+                                            type="number"
+                                            required
+                                            value={stallForm.width}
+                                            onChange={(e) => setStallForm({ ...stallForm, width: e.target.value })}
+                                            className={inputCls}
+                                            placeholder="3"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Auto Area */}
+                                <div className="mb-4">
+                                    <label className={labelCls}>Total Calculated Area (Sq M)</label>
+                                    <div className="relative">
+                                        <Ruler className="absolute left-3 top-1/2 -translate-y-1/2 text-[#23471d]" size={16} />
+                                        <input
+                                            type="number"
+                                            readOnly
+                                            value={stallForm.area}
+                                            className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 bg-gray-50 outline-none text-xs font-bold text-[#23471d] rounded-[2px]"
+                                        />
+                                        <p className="text-[9px] text-black font-medium mt-1 opacity-50 italic capitalize">* Calculated automatically from Length x Width</p>
+                                    </div>
+                                </div>
+
+                                {/* Increment / Discount */}
+                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                    <div>
+                                        <label className="block text-[11px] font-medium text-black uppercase mb-1 tracking-tight">Increment %</label>
+                                        <input
+                                            type="number"
+                                            value={stallForm.incrementPercentage}
+                                            onChange={(e) => setStallForm({ ...stallForm, incrementPercentage: e.target.value })}
+                                            className="w-full px-4 py-2 border-2 border-red-50 focus:border-red-500 outline-none text-red-700 font-bold text-xs rounded-[2px] bg-red-50/30"
+                                            placeholder="0"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-medium text-black uppercase mb-1 tracking-tight">Discount %</label>
+                                        <input
+                                            type="number"
+                                            value={stallForm.discountPercentage}
+                                            onChange={(e) => setStallForm({ ...stallForm, discountPercentage: e.target.value })}
+                                            className="w-full px-4 py-2 border-2 border-green-50 focus:border-green-600 outline-none text-green-700 font-bold text-xs rounded-[2px] bg-green-50/30"
+                                            placeholder="0"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Submit */}
+                                <div className="flex gap-2">
+                                    <button
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className="flex-1 py-3 bg-[#23471d] text-white text-[11px] font-bold hover:bg-[#1a3615] transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 uppercase rounded-[2px]"
+                                    >
+                                        {isLoading
+                                            ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            : isEditing ? <><Edit className="w-4 h-4" /> Update Stall</> : <><Plus className="w-4 h-4" /> Create Stall</>
+                                        }
+                                    </button>
+                                    {isEditing && (
+                                        <button
+                                            type="button"
+                                            onClick={resetForm}
+                                            className="px-5 py-3 border-2 border-gray-200 text-black font-medium hover:bg-gray-50 transition-colors text-[11px] uppercase rounded-[2px]"
+                                        >
+                                            Cancel
+                                        </button>
+                                    )}
+                                </div>
+                            </form>
                         </div>
-                        <ul className="space-y-3 text-xs font-medium text-white/80">
-                            <li className="flex items-start gap-2">
-                                <div className="w-1.5 h-1.5 rounded-full bg-[#d26019] mt-1 shrink-0"></div>
-                                Keep Stall numbers unique to avoid booking conflicts.
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <div className="w-1.5 h-1.5 rounded-full bg-[#d26019] mt-1 shrink-0"></div>
-                                Area and Rate are used to calculate total booking amount.
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <div className="w-1.5 h-1.5 rounded-full bg-[#d26019] mt-1 shrink-0"></div>
-                                Status will auto-change to "Booked" once an exhibitor pays.
-                            </li>
-                        </ul>
                     </div>
                 </div>
 
-                {/* TABLE SECTION */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-                        <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                {/* RIGHT: Stall Table */}
+                <div className="lg:col-span-2">
+                    <div className="bg-white border-2 border-gray-200 shadow-sm">
+                        <div className="bg-[#23471d] px-5 py-3 flex items-center justify-between">
+                            <h2 className="text-white font-bold flex items-center gap-2 uppercase tracking-tight">
+                                <Layout className="w-4 h-4" /> Active Inventory
+                            </h2>
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-slate-100 rounded-xl text-slate-600">
-                                    <Filter size={20} />
-                                </div>
-                                <h2 className="text-xl font-bold text-slate-800 tracking-tight">Active Inventory</h2>
-                            </div>
-                            <div className="flex gap-3">
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold" size={16} />
-                                    <input 
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60" size={12} />
+                                    <input
                                         type="text"
                                         placeholder="Search stall..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#23471d]/10 focus:border-[#23471d] outline-none transition-all text-sm font-bold"
+                                        className="pl-8 pr-4 py-1.5 bg-white/10 border border-white/20 text-white placeholder:text-white/50 outline-none text-[10px] font-bold focus:bg-white/20 transition-all uppercase tracking-widest"
                                     />
                                 </div>
-                                <button className="p-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors border border-slate-200">
-                                    <Download size={20} />
-                                </button>
+                                <span className="bg-[#d26019] text-white text-[10px] font-black px-3 py-1 uppercase tracking-wider shadow-sm">
+                                    {filteredStalls.length} STALLS
+                                </span>
                             </div>
                         </div>
 
                         <div className="overflow-x-auto">
-                            <Table 
-                                columns={columns}
-                                data={filteredStalls}
-                            />
-                            {!isLoading && filteredStalls.length === 0 && (
-                                <div className="p-20 text-center space-y-3">
-                                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300">
-                                        <Search size={32} />
-                                    </div>
-                                    <p className="text-slate-400 font-bold tracking-tight">No stalls found matching your search.</p>
-                                </div>
-                            )}
+                            <table className="w-full text-sm font-inter">
+                                <thead>
+                                    <tr className="border-b-2 border-gray-200 bg-gray-50/50">
+                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center w-16 tracking-tight">No.</th>
+                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-left tracking-tight">Stall Detail</th>
+                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-left tracking-tight">Specifications</th>
+                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Status</th>
+                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {isLoading ? (
+                                        <tr><td colSpan={5} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">Loading inventory...</td></tr>
+                                    ) : filteredStalls.length === 0 ? (
+                                        <tr><td colSpan={5} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">No stalls found matching criteria</td></tr>
+                                    ) : filteredStalls.map((stall, index) => (
+                                        <tr key={stall._id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
+                                            <td className="py-4 px-4 text-black font-medium text-center text-xs">{index + 1}</td>
+                                            <td className="py-4 px-4 min-w-[180px]">
+                                                <p className="font-semibold text-red-600 text-sm uppercase tracking-tight leading-none mb-1.5">
+                                                    {stall.stallNumber}
+                                                </p>
+                                                <p className="text-[10px] text-black font-medium uppercase tracking-widest opacity-60">
+                                                    {stall.eventId?.name || 'No Event Assigned'}
+                                                </p>
+                                            </td>
+                                            <td className="py-4 px-4 min-w-[200px]">
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="text-black font-semibold text-xs uppercase tracking-tight">
+                                                        {stall.length}M X {stall.width}M | <span className="text-red-500 font-bold">{stall.area} SQM</span>
+                                                    </span>
+                                                    <span className="text-[10px] font-medium text-black uppercase tracking-tight opacity-40">
+                                                        PL: {stall.plScheme}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-4 text-center">
+                                                <span className={`inline-block px-3 py-1 rounded-[2px] text-[9px] font-bold uppercase tracking-widest shadow-sm ${
+                                                    stall.status === 'available' ? 'bg-green-500 text-white' :
+                                                    stall.status === 'booked' ? 'bg-red-500 text-white' :
+                                                    'bg-amber-500 text-white'
+                                                }`}>
+                                                    {stall.status}
+                                                </span>
+                                            </td>
+                                            <td className="py-4 px-4">
+                                                <div className="flex items-center justify-center gap-3">
+                                                    <button 
+                                                        onClick={() => startEdit(stall)} 
+                                                        className="text-blue-600 hover:bg-blue-50 p-1.5 transition-all rounded-[2px] border border-blue-100 bg-blue-50/30" 
+                                                        title="Edit"
+                                                    >
+                                                        <Edit size={16} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleDelete(stall._id)} 
+                                                        className="text-red-600 hover:bg-red-50 p-1.5 transition-all rounded-[2px] border border-red-100 bg-red-50/30" 
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="bg-white px-5 py-3 border-t border-gray-200 flex justify-between items-center bg-gray-50/30">
+                            <div className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">Total Inventory Statistics</div>
+                            <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                                Showing <span className="text-red-600">{filteredStalls.length}</span> Active Stall Records
+                            </div>
                         </div>
                     </div>
                 </div>

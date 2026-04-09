@@ -1,8 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "../../lib/api";
 import { createActivityLogThunk } from "../activityLog/activityLogSlice";
-
-const BASE_URL = import.meta.env.VITE_API_URL;
 
 const getUserInfo = () => {
   const userStr = sessionStorage.getItem("user");
@@ -17,8 +15,8 @@ export const fetchGeneralVisitors = createAsyncThunk(
   "generalVisitors/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${BASE_URL}/general-visitors`);
-      return res.data.data ?? res.data;
+      const res = await api.get("/api/general-visitors");
+      return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
@@ -30,30 +28,24 @@ export const createGeneralVisitor = createAsyncThunk(
   async (data, { dispatch, rejectWithValue }) => {
     const { userId, userName } = getUserInfo();
     try {
-      const res = await axios.post(
-        `${BASE_URL}/general-visitors`,
-        {
-          ...data,
-          created_by: userName,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      const res = await api.post("/api/general-visitors", {
+        ...data,
+        created_by: userName,
+      });
+
+      const visitorData = res.data.data || res.data;
 
       if (userId) {
         dispatch(
           createActivityLogThunk({
             user_id: userId,
-            message: `General Visitor '${res.data.firstName} ${res.data.lastName}' created by ${userName}`,
-            link: `/general-visitors/${res.data._id}`,
+            message: `General Visitor '${visitorData.firstName} ${visitorData.lastName}' created by ${userName}`,
+            link: `/general-visitors/${visitorData._id}`,
             section: "generalVisitors",
             data: {
               action: "CREATE",
-              visitor_id: res.data._id,
-              created_data: res.data,
+              visitor_id: visitorData._id,
+              created_data: visitorData,
             },
           }),
         );
@@ -70,27 +62,21 @@ export const updateGeneralVisitor = createAsyncThunk(
   async ({ id, data }, { dispatch, rejectWithValue }) => {
     const { userId, userName } = getUserInfo();
     try {
-      const res = await axios.put(
-        `${BASE_URL}/general-visitors/${id}`,
-        {
-          ...data,
-          updated_by: userName,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      const res = await api.put(`/api/general-visitors/${id}`, {
+        ...data,
+        updated_by: userName,
+      });
+
+      const visitorData = res.data.data || res.data;
 
       if (userId) {
         dispatch(
           createActivityLogThunk({
             user_id: userId,
-            message: `General Visitor '${res.data.firstName} ${res.data.lastName}' updated by ${userName}`,
+            message: `General Visitor '${visitorData.firstName} ${visitorData.lastName}' updated by ${userName}`,
             link: `/general-visitors/${id}`,
             section: "generalVisitors",
-            data: { action: "UPDATE", visitor_id: id, updated_data: res.data },
+            data: { action: "UPDATE", visitor_id: id, updated_data: visitorData },
           }),
         );
       }
@@ -109,7 +95,7 @@ export const deleteGeneralVisitor = createAsyncThunk(
       const { generalVisitors } = getState().generalVisitors;
       const toDelete = generalVisitors.find((v) => v._id === id);
 
-      await axios.delete(`${BASE_URL}/general-visitors/${id}`);
+      await api.delete(`/api/general-visitors/${id}`);
 
       if (userId) {
         dispatch(
@@ -148,52 +134,32 @@ const generalVisitorSlice = createSlice({
       })
       .addCase(fetchGeneralVisitors.fulfilled, (state, action) => {
         state.loading = false;
-        state.generalVisitors = action.payload;
+        // ✅ Handle data structure safely
+        state.generalVisitors = Array.isArray(action.payload)
+          ? action.payload
+          : action.payload?.data || [];
       })
       .addCase(fetchGeneralVisitors.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(createGeneralVisitor.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
       .addCase(createGeneralVisitor.fulfilled, (state, action) => {
         state.loading = false;
-        state.generalVisitors.push(action.payload);
-      })
-      .addCase(createGeneralVisitor.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      .addCase(updateGeneralVisitor.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        const data = action.payload?.data || action.payload;
+        if (data?._id) state.generalVisitors.push(data);
       })
       .addCase(updateGeneralVisitor.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.generalVisitors.findIndex(
-          (v) => v._id === action.payload._id,
-        );
-        if (index !== -1) state.generalVisitors[index] = action.payload;
-      })
-      .addCase(updateGeneralVisitor.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      .addCase(deleteGeneralVisitor.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        const data = action.payload?.data || action.payload;
+        if (!data?._id) return;
+        const index = state.generalVisitors.findIndex((v) => v._id === data._id);
+        if (index !== -1) state.generalVisitors[index] = data;
       })
       .addCase(deleteGeneralVisitor.fulfilled, (state, action) => {
         state.loading = false;
         state.generalVisitors = state.generalVisitors.filter(
           (v) => v._id !== action.payload,
         );
-      })
-      .addCase(deleteGeneralVisitor.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
       });
   },
 });

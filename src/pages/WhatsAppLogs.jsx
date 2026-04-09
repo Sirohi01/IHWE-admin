@@ -14,7 +14,8 @@ import {
     ArrowRight,
     ShieldCheck,
     Users,
-    Lock
+    Lock,
+    Info
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api from '../lib/api';
@@ -209,7 +210,8 @@ const WhatsAppLogs = () => {
             key: "message",
             label: "WHATSAPP MESSAGE",
             render: (row) => (
-                <div className="max-w-[300px] text-sm font-normal line-clamp-2 text-gray-500">
+                <div className="flex items-center gap-2 text-gray-900 font-semibold text-sm truncate max-w-[220px]">
+                    <Info className="w-4 h-4 text-[#d26019]" />
                     {row.message}
                 </div>
             )

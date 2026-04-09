@@ -1,5 +1,15 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import { createActivityLogThunk } from "../activityLog/activityLogSlice";
+
+const getUserInfo = () => {
+  const userStr = sessionStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : {};
+  return {
+    userId: sessionStorage.getItem("user_id") || user._id,
+    userName: user.name || "User",
+  };
+};
 
 // Base API URL (.env file se)
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -33,9 +43,25 @@ export const fetchUserById = createAsyncThunk(
 // 3️⃣ CREATE user
 export const createUser = createAsyncThunk(
   "users/createUser",
-  async (userData, { rejectWithValue }) => {
+  async (userData, { dispatch, rejectWithValue }) => {
     try {
       const response = await axios.post(`${BASE_URL}/users`, userData);
+      const { userId, userName } = getUserInfo();
+
+      if (userId) {
+        dispatch(
+          createActivityLogThunk({
+            user_id: userId,
+            message: `Admin User '${userData.user_fullname}' created by ${userName}`,
+            section: "Admin Management",
+            data: {
+              action: "CREATE",
+              new_user: userData.user_fullname,
+              role: userData.user_role
+            }
+          })
+        );
+      }
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -46,9 +72,25 @@ export const createUser = createAsyncThunk(
 // 4️⃣ UPDATE user
 export const updateUser = createAsyncThunk(
   "users/updateUser",
-  async ({ id, updates }, { rejectWithValue }) => {
+  async ({ id, updates }, { dispatch, rejectWithValue }) => {
     try {
       const response = await axios.put(`${BASE_URL}/users/${id}`, updates);
+      const { userId, userName } = getUserInfo();
+
+      if (userId) {
+        dispatch(
+          createActivityLogThunk({
+            user_id: userId,
+            message: `Admin User '${updates.user_fullname || id}' updated by ${userName}`,
+            section: "Admin Management",
+            data: {
+              action: "UPDATE",
+              user_id: id,
+              updates: updates
+            }
+          })
+        );
+      }
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -59,9 +101,28 @@ export const updateUser = createAsyncThunk(
 // 5️⃣ DELETE user
 export const deleteUser = createAsyncThunk(
   "users/deleteUser",
-  async (id, { rejectWithValue }) => {
+  async (id, { dispatch, getState, rejectWithValue }) => {
     try {
+      const { users } = getState().users;
+      const userToDelete = users.find(u => u._id === id);
+
       await axios.delete(`${BASE_URL}/users/${id}`);
+      const { userId, userName } = getUserInfo();
+
+      if (userId) {
+        dispatch(
+          createActivityLogThunk({
+            user_id: userId,
+            message: `Admin User '${userToDelete?.user_fullname || id}' deleted by ${userName}`,
+            section: "Admin Management",
+            data: {
+              action: "DELETE",
+              user_id: id,
+              user_name: userToDelete?.user_fullname
+            }
+          })
+        );
+      }
       return id;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);

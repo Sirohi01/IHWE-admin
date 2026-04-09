@@ -1,617 +1,106 @@
-// import React, { useState, useEffect, useMemo } from "react";
-// import Swal from "sweetalert2";
-// import { FaTrash, FaUser, FaBuilding, FaPencilAlt } from "react-icons/fa";
-// import {
-//   fetchCompanies,
-//   updateCompany,
-// } from "../../features/company/companySlice";
-// import { useSelector, useDispatch } from "react-redux";
-// import { useNavigate } from "react-router-dom";
-// import { useParams } from "react-router-dom";
-// import { fetchStatusOptions } from "../../features/add_by_admin/statusOption/statusOptionSlice";
-// import { fetchUsers } from "../../features/auth/userSlice";
-// import {
-//   fetchEvents,
-//   fetchEventById,
-// } from "../../features/crmEvent/crmEventSlice";
-// import {
-//   fetchReviews,
-//   deleteReview,
-//   createReview,
-// } from "../../features/crm-exhibator-reviews/crmExhibatorReviewSlice";
-// import { showError, showSuccess } from "../../utils/toastMessage";
-
-// const ClientOverview1 = () => {
-//   const navigate = useNavigate();
-//   const dispatch = useDispatch();
-//   const { id } = useParams();
-//   const [popUp, setPopUp] = useState(false);
-//   const [Flip, setFlip] = useState(false);
-
-//   // company redux
-//   const { companies, loading, error } = useSelector((state) => state.companies);
-//   const [company, setCompany] = useState(null);
-//   const companyId = company?._id;
-//   const updateBy = sessionStorage.getItem("user_name");
-//   console.log("companyId...", companyId);
-//   const [reviewData, setReviewData] = useState({
-//     cmpny_id: companyId || "",
-//     evnt_id: "",
-//     status_short: "",
-//     reminder_dt: "",
-//     forward_to: "",
-//     re_msg: "",
-//     updated_by: updateBy || "",
-//   });
-
-//   // status redux
-//   const {
-//     statusOptions,
-//     loading: statusLoading,
-//     error: statusError,
-//   } = useSelector((state) => state.statusOptions);
-
-//   // user redux
-//   const {
-//     users,
-//     loading: userLoading,
-//     error: userError,
-//   } = useSelector((state) => state.users);
-
-//   // event redux
-//   const {
-//     events,
-//     loading: eventLoading,
-//     error: eventError,
-//   } = useSelector((state) => state.crmEvents);
-
-//   // review redux
-//   const {
-//     reviews,
-//     loading: reviewLoading,
-//     error: reviewError,
-//   } = useSelector((state) => state.reviews);
-
-//   // Filter reviews for this company only
-//   const filteredReviews = useMemo(
-//     () => reviews.filter((rev) => rev?.cmpny_id === companyId),
-//     [reviews, companyId],
-//   );
-
-//   // console.log("events..", events);
-//   console.log("ClientOverview1...", companyId);
-//   // console.log("reviews///", filteredReviews);
-//   useEffect(() => {
-//     if (companies.length === 0) {
-//       dispatch(fetchCompanies());
-//     }
-//     dispatch(fetchStatusOptions());
-//     dispatch(fetchUsers());
-//     dispatch(fetchEvents());
-//     dispatch(fetchReviews());
-//   }, [dispatch, companies]);
-
-//   useEffect(() => {
-//     if (companies.length > 0) {
-//       const matched = companies.find((c) => c._id === id);
-//       setCompany(matched);
-//       if (matched) {
-//         setReviewData((prev) => ({
-//           ...prev,
-//           cmpny_id: matched._id,
-//         }));
-//       }
-//     }
-//   }, [companies, id]);
-
-//   const handleEdit = () => {
-//     if (!company) return;
-//     navigate(`/ihweClientData2026/addNewClients/${company._id}`, {
-//       state: { heading: "Edit Client Details" },
-//     });
-//   };
-
-//   if (loading) return <p>Loading...</p>;
-//   if (error) return <p>Error: {error}</p>;
-//   if (!company) return <p>No company found with ID: {id}</p>;
-
-//   // यह फ़ंक्शन events array में से ID के आधार पर Event Name ढूंढता है।
-//   const getEventName = (eventId) => {
-//     const event = events.find((e) => e._id === eventId);
-//     return event ? event.event_name : eventId; // अगर नाम मिला तो नाम, वरना ID ही दिखा दो।
-//   };
-
-//   // ✅ Handle all input changes
-//   const handleChange = (e) => {
-//     const { id, value } = e.target;
-
-//     // match field names to state keys
-//     const keyMap = {
-//       ClientStatus: "status_short",
-//       EventName: "evnt_id",
-//       ReminderDateTime: "reminder_dt",
-//       ForwardTo: "forward_to",
-//       Remark: "re_msg",
-//       cmpny_id: "cmpny_id",
-//     };
-
-//     setReviewData((prev) => ({
-//       ...prev,
-//       [keyMap[id] || id]: value,
-//     }));
-//   };
-
-//   // ✅ Handle submit
-//   const handleAddReview = async (e) => {
-//     e.preventDefault();
-
-//     if (!reviewData.cmpny_id) {
-//       showError("Company ID is missing. Please select a company.");
-//       console.error("Validation failed: Company ID is missing.");
-//       return;
-//     }
-
-//     if (!reviewData.status_short || !reviewData.evnt_id || !reviewData.re_msg) {
-//       showError(
-//         "Status, Event Name, and Remark are required. Please fill them in.",
-//       );
-//       return;
-//     }
-
-//     try {
-//       await dispatch(createReview(reviewData)).unwrap();
-
-//       // update company status
-//       await dispatch(
-//         updateCompany({
-//           id: companyId,
-//           data: { companyStatus: reviewData.status_short },
-//         }),
-//       ).unwrap();
-
-//       showSuccess("Review added and company status updated successfully!");
-//       setPopUp(false);
-//       // console.log("New Review:", reviewData);
-//       dispatch(fetchReviews()); // refresh list
-//       dispatch(fetchCompanies()); // refresh companies to show updated status
-//       // console.log("status Update", companyId);
-//       // Reset form
-//       setReviewData({
-//         cmpny_id: companyId || "",
-//         evnt_id: "",
-//         status_short: "",
-//         reminder_dt: "",
-//         forward_to: "",
-//         re_msg: "",
-//         updated_by: updateBy || "",
-//       });
-//     } catch (err) {
-//       showError(
-//         "Failed to add review or update company status. Please try again.",
-//       );
-//       console.error("Add review or update error:", err);
-//     }
-//   };
-
-//   const handleDelete = async (id) => {
-//     if (!id) return;
-
-//     try {
-//       await dispatch(deleteReview(id)).unwrap(); // redux toolkit async thunk
-//       showSuccess("Review deleted successfully!");
-//       dispatch(fetchReviews()); // refresh the list
-//     } catch (err) {
-//       showError("Failed to delete review. Please try again.");
-//       console.error("Delete review error:", err);
-//     }
-//   };
-//   const handleSendWhatsapp = () => {
-//     Swal.fire({
-//       title: "Send WhatsApp Message",
-//       text: "This is a demo popup (functionality removed).",
-//       icon: "info",
-//       confirmButtonText: "OK",
-//     });
-//   };
-//   const handleAccount = () => {
-//     if (!company) return;
-//     navigate(`/ihweClientData2026/accountSection1/${company._id}`, {});
-//   };
-//   // const handlePayments = () => {
-//   //   navigate("/ihweClientData2026/payments");
-//   // };
-
-//   return (
-//     <div className="w-full h-auto bg-[#eef1f5]" style={{ marginTop: "30px" }}>
-//       {/* Header */}
-//       <div className="w-full bg-white  flex flex-col sm:flex-row justify-between items-center px-4 py-1 ">
-//         <h2 className="text-xl text-gray-500 mb-2 lg:mb-0 uppercase">
-//           CLIENT OVERVIEW
-//         </h2>
-//         <div className="flex gap-2">
-//           {/* <button
-//             onClick={handleCancel} className="hover:bg-gray-200 border border-gray-600  text-gray-600 px-1 py-0.5  text-xs font-normal">
-//             Back to List
-//           </button> */}
-//           <button
-//             onClick={() => navigate("/ihweClientData2026/addNewClients")}
-//             className="hover:bg-gray-200 border border-gray-600  text-gray-600 px-1 py-0.5  text-xs font-normal cursor-pointer"
-//           >
-//             Add Client
-//           </button>
-//           <button
-//             onClick={() => navigate("/ihweClientData2026/masterData")}
-//             className="hover:bg-gray-200 border border-gray-600  text-gray-600 px-1 py-0.5  text-xs font-normal cursor-pointer"
-//           >
-//             Master List
-//           </button>
-//         </div>
-//       </div>
-
-//       {/* Main Content */}
-//       <div className="flex flex-col m-[22px] gap-4">
-//         <div className="bg-white shadow-md px-5 pb-4 pt-2 w-full">
-//           <div className="flex justify-between items-center mb-1 ">
-//             <h2 className="text-lg font-normal text-gray-600">
-//               {company.companyName} | Details
-//             </h2>
-//             <div className="flex gap-2">
-//               <button
-//                 onClick={handleSendWhatsapp}
-//                 className="bg-white text-gray-600 px-2 py-0.5  text-xs  cursor-pointer border border-gray-400 hover:bg-gray-100 transition-colors"
-//               >
-//                 Send Whatsapp
-//               </button>
-//               <button
-//                 onClick={handleAccount}
-//                 className="bg-white text-gray-600 px-2 py-0.5  text-xs  cursor-pointer border border-gray-300 hover:bg-gray-100 transition-colors"
-//               >
-//                 Account
-//               </button>
-//               {/* <button
-//                 onClick={handlePayments}
-//                 className="bg-white text-black px-2 py-0.5  text-xs  cursor-pointer border border-gray-300 hover:bg-gray-100 transition-colors"
-//               >
-//                 Payments
-//               </button> */}
-//               <button
-//                 onClick={handleEdit}
-//                 className="flex items-center justify-center w-6 h-6  text-gray-600 border border-gray-300 hover:bg-gray-100 transition-colors cursor-pointer"
-//                 aria-label="Edit"
-//               >
-//                 <FaPencilAlt className="w-3 h-3" />
-//               </button>
-//             </div>
-//           </div>
-//           <hr className="w-full opacity-10 mb-3" />
-//           {/* Client Info */}
-//           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-6 text-sm text-gray-600 px-2 py-3 mb-4">
-//             <div className="flex gap-11">
-//               <p className="font-semibold text-gray-800">
-//                 Company <br /> Details
-//               </p>
-//               <p>
-//                 {company.companyName} | {company.businessNature} |{" "}
-//                 {company.category}
-//               </p>
-//             </div>
-//             <div className="flex gap-10">
-//               <p className="font-semibold text-gray-800">Data Source</p>
-//               <p>{company.dataSource || "-"}</p>
-//             </div>
-//             <div className="flex gap-16">
-//               <p className="font-semibold text-gray-800">Website</p>
-//               <p>{company.website || "-"}</p>
-//             </div>
-//             <div className="flex gap-12.5">
-//               <p className="font-semibold text-gray-800">Address</p>
-//               <p>{company.address}</p>
-//             </div>
-//             <div className="flex gap-16.5">
-//               <p className="font-semibold text-gray-800">Email Id</p>
-//               <p className="text-blue-600">{company.email}</p>
-//             </div>
-//             <div className="flex gap-9">
-//               <p className="font-semibold text-gray-800">Landline No.</p>
-//               <p>{company.landline || "-"}</p>
-//             </div>
-//             <div className="flex gap-13">
-//               <p className="font-semibold text-gray-800">
-//                 Contact <br /> Person
-//               </p>
-//               <p>
-//                 {company.contacts
-//                   ?.map((c) => `${c.firstName} ${c.surname} | ${c.mobile}`)
-//                   .join(", ")}
-//               </p>
-//             </div>
-//             <div className="flex gap-11.5">
-//               <p className="font-semibold text-gray-800">
-//                 Added / <br /> Updated By
-//               </p>
-//               <p>{company.updated_by || "-"}</p>
-//             </div>
-//             <div className="flex gap-9">
-//               <p className="font-semibold text-gray-800">Client Status</p>
-//               <p className="text-green-700">{company?.companyStatus}</p>
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Pop-Up Form — Show only when no history or when manually toggled */}
-//         {(filteredReviews.length === 0 || popUp) && (
-//           <form
-//             onSubmit={handleAddReview}
-//             className="w-full h-auto bg-white  shadow-md px-4 py-4 gap-4"
-//           >
-//             <div className="flex items-end justify-between gap-4 overflow-x-auto">
-//               {/* Hidden Company ID Field */}
-//               <input
-//                 type="hidden"
-//                 id="cmpny_id"
-//                 value={companyId}
-//                 onChange={handleChange}
-//               />
-
-//               {/* Client Status */}
-//               <div className="flex flex-col flex-1 ">
-//                 <label
-//                   htmlFor="ClientStatus"
-//                   className="block text-sm font-normal text-gray-900"
-//                 >
-//                   Client Status
-//                 </label>
-//                 <select
-//                   id="ClientStatus"
-//                   value={reviewData.status_short}
-//                   onChange={(e) => {
-//                     const value = e.target.value;
-//                     const hideFor = ["Not Interested"];
-//                     setFlip(!hideFor.includes(value));
-//                     handleChange(e);
-//                   }}
-//                   className="  block w-full mt-1 px-2 py-1 border border-gray-300 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-xs sm:text-sm"
-//                 >
-//                   <option value="">Select Current Status</option>
-//                   {statusOptions
-//                     .filter((opt) => opt.status === "active")
-//                     .map((opt) => (
-//                       <option key={opt._id} value={opt.name}>
-//                         {opt.name}
-//                       </option>
-//                     ))}
-//                 </select>
-//               </div>
-
-//               {/* Reminder & Forward Fields */}
-//               {Flip && (
-//                 <>
-//                   <div className="flex flex-col flex-1">
-//                     <label
-//                       htmlFor="ReminderDateTime"
-//                       className="block text-sm font-normal text-gray-900 "
-//                     >
-//                       Reminder Date & Time{" "}
-//                       <span className="text-red-700">*</span>
-//                     </label>
-//                     <input
-//                       type="datetime-local"
-//                       id="ReminderDateTime"
-//                       value={reviewData.reminder_dt}
-//                       onChange={handleChange}
-//                       className="mt-1 block w-full px-2 py-1 border border-gray-300 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-xs sm:text-sm"
-//                     />
-//                   </div>
-
-//                   <div className="flex flex-col flex-1 ">
-//                     <label
-//                       htmlFor="ForwardTo"
-//                       className="block text-sm font-normal text-gray-900"
-//                     >
-//                       Forward To <span className="text-red-700">*</span>
-//                     </label>
-
-//                     <select
-//                       id="ForwardTo"
-//                       value={reviewData.forward_to}
-//                       onChange={handleChange}
-//                       className=" mt-1 block w-full px-2 py-1 font-normal border border-gray-300 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
-//                     >
-//                       <option value="">Select Here</option>
-//                       {users.length > 0 ? (
-//                         users
-//                           .filter((user) => user.user_status === "Active")
-//                           .map((user) => (
-//                             <option key={user._id} value={user.user_fullname}>
-//                               {user.user_fullname}
-//                             </option>
-//                           ))
-//                       ) : (
-//                         <option disabled>No Users Found</option>
-//                       )}
-//                     </select>
-//                   </div>
-//                 </>
-//               )}
-
-//               {/* Previous Status */}
-//               <div className="flex flex-col flex-1">
-//                 <label
-//                   htmlFor="PreviousStatus"
-//                   className="block text-sm font-normal text-gray-900"
-//                 >
-//                   Previous Status
-//                 </label>
-//                 <input
-//                   type="text"
-//                   id="PreviousStatus"
-//                   value={company?.companyStatus || " "}
-//                   readOnly
-//                   className="mt-1 block w-full px-2 py-1 bg-gray-100 border border-gray-300 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-xs sm:text-sm"
-//                 />
-//               </div>
-
-//               {/* Event Name */}
-//               <div className="flex flex-col flex-1 min-w-[200px]">
-//                 <label
-//                   htmlFor="EventName"
-//                   className="block text-sm font-normal text-gray-900"
-//                 >
-//                   Event Name <span className="text-red-700">*</span>
-//                 </label>
-
-//                 <select
-//                   id="EventName"
-//                   value={reviewData.evnt_id}
-//                   onChange={handleChange}
-//                   className=" mt-1 block w-full px-2 py-1 border border-gray-300 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-xs sm:text-sm"
-//                 >
-//                   <option value="">Select Event</option>
-//                   {events.length > 0 ? (
-//                     events
-//                       .filter((event) => event.event_status === "active")
-//                       .map((event) => (
-//                         <option key={event._id} value={event._id}>
-//                           {event.event_name}
-//                         </option>
-//                       ))
-//                   ) : (
-//                     <option disabled>No Events Found</option>
-//                   )}
-//                 </select>
-//               </div>
-//             </div>
-
-//             {/* Remark */}
-//             <div className="mt-4">
-//               <label
-//                 htmlFor="Remark"
-//                 className="flex gap-2 text-sm font-normal text-gray-900"
-//               >
-//                 Any Remark <span className="text-red-600">*</span>
-//               </label>
-//               <div className="flex flex-col md:flex-row gap-2 mt-1">
-//                 <textarea
-//                   id="Remark"
-//                   value={reviewData.re_msg}
-//                   onChange={handleChange}
-//                   className="w-full border px-2 py-1.5 text-sm"
-//                   placeholder="update status"
-//                 ></textarea>
-//               </div>
-//               <div className="flex justify-end mt-4">
-//                 <button
-//                   type="submit"
-//                   className="w-full md:w-auto px-4 py-2 text-xs bg-[#3598dc] text-white hover:bg-[#246a99] transition"
-//                 >
-//                   SAVE
-//                 </button>
-//               </div>
-//             </div>
-//           </form>
-//         )}
-
-//         {/* Communication History */}
-//         {filteredReviews.length > 0 && (
-//           <div className="bg-white shadow-md  w-full">
-//             <h3 className="text-lg font-semibold text-gray-700 py-3 px-4 bg-gray-100 border border-gray-300">
-//               <p className="flex items-center gap-2">
-//                 <FaBuilding className="text-lg text-gray-600" /> Communication
-//                 Status History
-//               </p>
-//             </h3>
-//             <div className="space-y-0.5 p-2 ">
-//               {filteredReviews.map((entry, index) => (
-//                 <div
-//                   key={entry?._id}
-//                   className="flex items-start hover:bg-gray-200 gap-2 py-1.5 px-2 bg-white  border border-gray-200 text-sm"
-//                 >
-//                   <FaUser className="w-4 h-4 text-gray-500 mt-1" />
-//                   <div className="flex-grow">
-//                     <p className="font-medium text-xs sm:text-sm">
-//                       <span className="text-blue-400 uppercase">
-//                         {entry?.status_short} for {getEventName(entry?.evnt_id)}
-//                       </span>
-//                       <span
-//                         onClick={() => {
-//                           if (index === 0) setPopUp(!popUp);
-//                         }}
-//                         className={`${
-//                           index === 0
-//                             ? "text-red-500 cursor-pointer hover:underline"
-//                             : "text-gray-700"
-//                         } uppercase`}
-//                       >
-//                         | ▲ call the client on{" "}
-//                         {entry?.reminder_dt
-//                           ? new Date(entry.reminder_dt).toLocaleString(
-//                               "en-IN",
-//                               {
-//                                 day: "2-digit",
-//                                 month: "short",
-//                                 year: "numeric",
-//                                 hour: "2-digit",
-//                                 minute: "2-digit",
-//                                 hour12: true,
-//                               },
-//                             )
-//                           : "N/A"}
-//                       </span>
-//                     </p>
-//                     <p className="text-xs text-gray-500 leading-tight">
-//                       {entry?.re_msg} | By: {entry?.updated_by} | On:{" "}
-//                       {entry?.re_updated
-//                         ? new Date(entry.re_updated).toLocaleString("en-IN", {
-//                             day: "2-digit",
-//                             month: "short",
-//                             year: "numeric",
-//                             hour: "2-digit",
-//                             minute: "2-digit",
-//                             hour12: true,
-//                           })
-//                         : "N/A"}
-//                     </p>
-//                   </div>
-//                   <button
-//                     onClick={() => handleDelete(entry?._id)}
-//                     className="text-gray-400 hover:text-red-500 transition-colors"
-//                   >
-//                     <FaTrash className="w-4 h-4" />
-//                   </button>
-//                 </div>
-//               ))}
-//             </div>
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default ClientOverview1;
-
 import React, { useState, useEffect, useMemo } from "react";
 import Swal from "sweetalert2";
-import { FaTrash, FaUser, FaBuilding, FaPencilAlt } from "react-icons/fa";
+import { 
+  Building2, 
+  MapPin, 
+  Phone, 
+  Mail, 
+  UserPlus, 
+  Save, 
+  RotateCcw, 
+  ArrowLeft, 
+  Plus, 
+  Trash2, 
+  Globe, 
+  Calendar, 
+  UserCheck,
+  Briefcase,
+  LayoutGrid,
+  Navigation,
+  Clock,
+  UserCircle,
+  ChevronRight,
+  ArrowRightCircle,
+  Upload,
+  ArrowRight,
+  Shield,
+  Pencil,
+  Printer,
+  History,
+  MessageSquare
+} from "lucide-react";
 import {
   fetchCompanies,
   updateCompany,
 } from "../../features/company/companySlice";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { fetchStatusOptions } from "../../features/add_by_admin/statusOption/statusOptionSlice";
 import { fetchUsers } from "../../features/auth/userSlice";
 import {
   fetchEvents,
-  fetchEventById,
 } from "../../features/crmEvent/crmEventSlice";
 import {
   fetchReviews,
   deleteReview,
   createReview,
 } from "../../features/crm-exhibator-reviews/crmExhibatorReviewSlice";
-import { showError, showSuccess } from "../../utils/toastMessage";
+
+
+/* ─── Shared cell styles ───────────────────────────────────────────────────── */
+const LC_CLS = "bg-[#fafafa] p-3 text-[11px] font-bold text-slate-600 uppercase tracking-tighter md:border-r border-slate-200 flex items-center min-w-[120px] order-none";
+const VC_CLS = "bg-white p-3 text-[12px] font-semibold text-slate-900 md:border-r border-slate-200 flex items-center break-all order-none";
+
+/* ─── Layout Rows — Responsive ─────────────────────────────────────────────── */
+function TR3({ l1, v1, l2, v2, l3, v3 }) {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-6 border-b border-slate-200 last:border-b-0">
+      <div className={LC_CLS}>{l1}</div>
+      <div className={VC_CLS}>{v1 || "—"}</div>
+      <div className={`${LC_CLS} border-t md:border-t-0`}>{l2}</div>
+      <div className={`${VC_CLS} border-t md:border-t-0`}>{v2 || "—"}</div>
+      <div className={`${LC_CLS} border-t md:border-t-0`}>{l3}</div>
+      <div className={`${VC_CLS} border-t md:border-t-0 border-r-0`}>{v3 || "—"}</div>
+    </div>
+  );
+}
+
+function TR2({ l1, v1, l2, v2 }) {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-6 border-b border-slate-200 last:border-b-0">
+      <div className={LC_CLS}>{l1}</div>
+      <div className={`${VC_CLS} col-span-1 md:col-span-2`}>{v1 || "—"}</div>
+      <div className={`${LC_CLS} border-t md:border-t-0`}>{l2}</div>
+      <div className={`${VC_CLS} col-span-1 md:col-span-2 border-r-0 border-t md:border-t-0`}>{v2 || "—"}</div>
+    </div>
+  );
+}
+
+function TR1({ label, value }) {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-6 border-b border-slate-200 last:border-b-0">
+      <div className={LC_CLS}>{label}</div>
+      <div className={`${VC_CLS} col-span-1 md:col-span-5 border-r-0`}>{value || "—"}</div>
+    </div>
+  );
+}
+
+/* ─── Section card ─────────────────────────────────────────────────────────── */
+function Section({ title, children }) {
+  return (
+    <div className="mb-8">
+      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100">
+        <div className="w-1.5 h-4 bg-[#23471d] rounded-full" />
+        <span className="font-extrabold text-[13px] text-[#23471d] uppercase tracking-wider">
+          {title}
+        </span>
+      </div>
+      <div className="border border-slate-300 rounded-[2px] shadow-sm bg-white overflow-hidden">
+        {children}
+      </div>
+    </div>
+  );
+}
 
 const ClientOverview1 = () => {
   const navigate = useNavigate();
@@ -666,7 +155,7 @@ const ClientOverview1 = () => {
 
   // Filter reviews for this company only
   const filteredReviews = useMemo(
-    () => reviews.filter((rev) => rev?.cmpny_id === companyId),
+    () => (Array.isArray(reviews) ? reviews : []).filter((rev) => rev?.cmpny_id === companyId),
     [reviews, companyId],
   );
 
@@ -674,7 +163,7 @@ const ClientOverview1 = () => {
   console.log("ClientOverview1...", companyId);
   // console.log("reviews///", filteredReviews);
   useEffect(() => {
-    if (companies.length === 0) {
+    if (Array.isArray(companies) && companies.length === 0) {
       dispatch(fetchCompanies());
     }
     dispatch(fetchStatusOptions());
@@ -684,7 +173,7 @@ const ClientOverview1 = () => {
   }, [dispatch, companies]);
 
   useEffect(() => {
-    if (companies.length > 0) {
+    if (Array.isArray(companies) && companies.length > 0) {
       const matched = companies.find((c) => c._id === id);
       setCompany(matched);
       if (matched) {
@@ -709,7 +198,7 @@ const ClientOverview1 = () => {
 
   // यह फ़ंक्शन events array में से ID के आधार पर Event Name ढूंढता है।
   const getEventName = (eventId) => {
-    const event = events.find((e) => e._id === eventId);
+    const event = (Array.isArray(events) ? events : []).find((e) => e._id === eventId);
     return event ? event.event_name : eventId; // अगर नाम मिला तो नाम, वरना ID ही दिखा दो।
   };
 
@@ -738,15 +227,23 @@ const ClientOverview1 = () => {
     e.preventDefault();
 
     if (!reviewData.cmpny_id) {
-      showError("Company ID is missing. Please select a company.");
+      Swal.fire({
+        title: "Error",
+        text: "Company ID is missing. Please select a company.",
+        icon: "error",
+        confirmButtonColor: "#23471d"
+      });
       console.error("Validation failed: Company ID is missing.");
       return;
     }
 
     if (!reviewData.status_short || !reviewData.evnt_id || !reviewData.re_msg) {
-      showError(
-        "Status, Event Name, and Remark are required. Please fill them in.",
-      );
+      Swal.fire({
+        title: "Incomplete Data",
+        text: "Status, Event Name, and Remark are required.",
+        icon: "warning",
+        confirmButtonColor: "#23471d"
+      });
       return;
     }
 
@@ -761,7 +258,12 @@ const ClientOverview1 = () => {
         }),
       ).unwrap();
 
-      showSuccess("Review added and company status updated successfully!");
+      Swal.fire({
+        title: "Success",
+        text: "Review added and company status updated successfully!",
+        icon: "success",
+        confirmButtonColor: "#23471d"
+      });
       setPopUp(false);
       // console.log("New Review:", reviewData);
       dispatch(fetchReviews()); // refresh list
@@ -778,23 +280,48 @@ const ClientOverview1 = () => {
         updated_by: updateBy || "",
       });
     } catch (err) {
-      showError(
-        "Failed to add review or update company status. Please try again.",
-      );
+      Swal.fire({
+        title: "Error",
+        text: "Failed to add review or update company status. Please try again.",
+        icon: "error",
+        confirmButtonColor: "#23471d"
+      });
       console.error("Add review or update error:", err);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!id) return;
+  const handleDelete = async (reviewId) => {
+    if (!reviewId) return;
 
-    try {
-      await dispatch(deleteReview(id)).unwrap(); // redux toolkit async thunk
-      showSuccess("Review deleted successfully!");
-      dispatch(fetchReviews()); // refresh the list
-    } catch (err) {
-      showError("Failed to delete review. Please try again.");
-      console.error("Delete review error:", err);
+    const result = await Swal.fire({
+      title: "Confirm Deletion",
+      text: "Permanent removal of this history record?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#23471d",
+      cancelButtonColor: "#dc2626",
+      confirmButtonText: "DELETE"
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await dispatch(deleteReview(reviewId)).unwrap();
+        Swal.fire({
+          title: "Deleted!",
+          text: "Review record has been deleted.",
+          icon: "success",
+          confirmButtonColor: "#23471d"
+        });
+        dispatch(fetchReviews());
+      } catch (err) {
+        Swal.fire({
+          title: "Error",
+          text: "Failed to delete review. Please try again.",
+          icon: "error",
+          confirmButtonColor: "#23471d"
+        });
+        console.error("Delete review error:", err);
+      }
     }
   };
   const handleSendWhatsapp = () => {
@@ -813,373 +340,309 @@ const ClientOverview1 = () => {
   //   navigate("/ihweClientData2026/payments");
   // };
 
+  const labelClasses = "text-[11px] font-bold text-slate-800 mb-1 block capitalize font-inter";
+  const inputClasses = "rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-900 font-medium shadow-none outline-none px-3 w-full text-left";
+
   return (
-    <div className="w-full h-auto bg-[#eef1f5]" style={{ marginTop: "30px" }}>
-      {/* Header */}
-      <div className="w-full bg-white border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center px-6 py-3">
-        <h2 className="text-3xl text-gray-500 mb-2 lg:mb-0 uppercase">
-          CLIENT OVERVIEW
-        </h2>
-        <div className="flex gap-3">
-          <button
-            onClick={() => navigate("/ihweClientData2026/addNewClients")}
-            className="hover:bg-gray-200 border border-gray-300 text-gray-600 px-4 py-2 text-base font-medium cursor-pointer rounded"
-          >
-            Add Client
+    <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-inter animate-fadeIn">
+      
+      {/* ── HEADER AREA Sync with AddNewClients ── */}
+      <div className="flex flex-col lg:flex-row justify-between items-center pb-4 border-b border-gray-100 gap-4">
+        <div className="flex flex-col items-center lg:items-start gap-1">
+          <h1 className="text-xl font-bold text-slate-500 uppercase tracking-tight leading-none text-center lg:text-left">
+            COMPANY DETAILS
+          </h1>
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 text-center lg:text-left">
+            Client Registration Portal
+          </p>
+        </div>
+        <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
+          <button onClick={() => navigate("/ihweClientData2026/uploadExhibitor")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+            <Upload size={12} /> Upload
           </button>
-          <button
-            onClick={() => navigate("/ihweClientData2026/masterData")}
-            className="hover:bg-gray-200 border border-gray-300 text-gray-600 px-4 py-2 text-base font-medium cursor-pointer rounded"
-          >
-            Master List
+          <button onClick={() => navigate("/ihweClientData2026/masterData")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+            <LayoutGrid size={12} /> Master
+          </button>
+          <button onClick={() => navigate("/ihweClientData2026/confirmClientList")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+            <UserCheck size={12} /> List
+          </button>
+          <button onClick={() => navigate("/ihweClientData2026/addNewClients")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#23471d] hover:bg-[#1a3516] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+            <Plus size={12} /> Add New
           </button>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex flex-col m-6 gap-6">
-        {/* Company Details Card */}
-        <div className="bg-white border border-gray-200 rounded-md px-6 pb-5 pt-3 w-full">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-2xl font-normal text-gray-600">
-              {company.companyName} | Details
+      {/* ── PAGE CONTENT ── */}
+      <div className="mt-8 space-y-8">
+        
+        {/* ── SUB-HEADER ── */}
+        <div className="bg-slate-50/50 border border-slate-200 px-4 md:px-6 py-4 rounded-[2px] flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="text-center md:text-left">
+            <h2 className="text-[15px] font-bold text-slate-800 uppercase tracking-tight">
+              CLIENT OVERVIEW
             </h2>
-            <div className="flex gap-3">
-              <button
-                onClick={handleSendWhatsapp}
-                className="bg-white text-gray-600 px-4 py-2 text-base cursor-pointer border border-gray-300 rounded hover:bg-gray-100 transition-colors"
-              >
-                Send Whatsapp
-              </button>
-              <button
-                onClick={handleAccount}
-                className="bg-white text-gray-600 px-4 py-2 text-base cursor-pointer border border-gray-300 rounded hover:bg-gray-100 transition-colors"
-              >
-                Account
-              </button>
-              <button
-                onClick={handleEdit}
-                className="flex items-center justify-center w-10 h-10 text-gray-600 border border-gray-300 rounded hover:bg-gray-100 transition-colors cursor-pointer"
-                aria-label="Edit"
-              >
-                <FaPencilAlt className="w-5 h-5" />
-              </button>
-            </div>
+            <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-0.5 font-bold">
+              International Health & Wellness Expo 2026
+            </p>
           </div>
-          <hr className="w-full border-t border-gray-200 mb-5" />
-          {/* Client Info - Table-like grid with borders */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 border border-gray-200 divide-y divide-gray-200 rounded-md">
-            <div className="flex px-5 py-4 border-b border-gray-200 md:border-b-0 md:border-r">
-              <p className="font-semibold text-gray-800 w-1/3 text-base">
-                Company Details
-              </p>
-              <p className="w-2/3 text-base">
-                {company.companyName} | {company.businessNature} |{" "}
-                {company.category}
-              </p>
-            </div>
-            <div className="flex px-5 py-4 border-b border-gray-200 md:border-b-0 md:border-r">
-              <p className="font-semibold text-gray-800 w-1/3 text-base">
-                Data Source
-              </p>
-              <p className="w-2/3 text-base">{company.dataSource || "-"}</p>
-            </div>
-            <div className="flex px-5 py-4 border-b border-gray-200 md:border-b-0">
-              <p className="font-semibold text-gray-800 w-1/3 text-base">
-                Website
-              </p>
-              <p className="w-2/3 text-base">{company.website || "-"}</p>
-            </div>
-
-            <div className="flex px-5 py-4 border-b border-gray-200 md:border-b-0 md:border-r">
-              <p className="font-semibold text-gray-800 w-1/3 text-base">
-                Address
-              </p>
-              <p className="w-2/3 text-base">{company.address}</p>
-            </div>
-            <div className="flex px-5 py-4 border-b border-gray-200 md:border-b-0 md:border-r">
-              <p className="font-semibold text-gray-800 w-1/3 text-base">
-                Email Id
-              </p>
-              <p className="w-2/3 text-base text-blue-600">{company.email}</p>
-            </div>
-            <div className="flex px-5 py-4 border-b border-gray-200 md:border-b-0">
-              <p className="font-semibold text-gray-800 w-1/3 text-base">
-                Landline No.
-              </p>
-              <p className="w-2/3 text-base">{company.landline || "-"}</p>
-            </div>
-
-            <div className="flex px-5 py-4 border-b border-gray-200 md:border-b-0 md:border-r">
-              <p className="font-semibold text-gray-800 w-1/3 text-base">
-                Contact Person
-              </p>
-              <p className="w-2/3 text-base">
-                {company.contacts
-                  ?.map((c) => `${c.firstName} ${c.surname} | ${c.mobile}`)
-                  .join(", ")}
-              </p>
-            </div>
-            <div className="flex px-5 py-4 border-b border-gray-200 md:border-b-0 md:border-r">
-              <p className="font-semibold text-gray-800 w-1/3 text-base">
-                Added / Updated By
-              </p>
-              <p className="w-2/3 text-base">{company.updated_by || "-"}</p>
-            </div>
-            <div className="flex px-5 py-4">
-              <p className="font-semibold text-gray-800 w-1/3 text-base">
-                Client Status
-              </p>
-              <p className="w-2/3 text-base text-green-700">
-                {company?.companyStatus}
-              </p>
-            </div>
+          <div className="flex flex-wrap justify-center gap-2 w-full md:w-auto">
+            <button
+              onClick={handleSendWhatsapp}
+              className="flex-1 md:flex-none px-3 py-1.5 bg-green-50 text-green-700 text-[10px] font-bold uppercase tracking-widest border border-green-200 rounded-[2px] hover:bg-green-100 transition-all flex items-center justify-center gap-2"
+            >
+              <MessageSquare size={14} /> WhatsApp
+            </button>
+            <button
+              onClick={handleAccount}
+              className="flex-1 md:flex-none px-3 py-1.5 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-widest border border-blue-200 rounded-[2px] hover:bg-blue-100 transition-all flex items-center justify-center gap-2"
+            >
+              <Shield size={14} /> Account
+            </button>
+            <button
+              onClick={handleEdit}
+              className="flex-1 md:flex-none px-3 py-1.5 bg-slate-800 text-white text-[10px] font-bold uppercase tracking-widest border border-slate-800 rounded-[2px] hover:bg-slate-900 transition-all flex items-center justify-center gap-2"
+            >
+              <Pencil size={14} /> Edit
+            </button>
           </div>
         </div>
 
-        {/* Pop-Up Form — Show only when no history or when manually toggled */}
+        {/* ── DETAILS AREA ── */}
+        <div className="space-y-2">
+          
+          <Section title="Company Information">
+            <TR3 
+              l1="Company Name" v1={company.companyName} 
+              l2="Category" v2={company.category} 
+              l3="Nature of Business" v3={company.businessNature} 
+            />
+            <TR3 
+              l1="Company Website" v1={company.website} 
+              l2="Official Email" v2={company.email} 
+              l3="Landline No." v3={company.landline} 
+            />
+            <TR3 
+              l1="Data Source" v1={company.dataSource} 
+              l2="Client Status" v2={<span className="text-green-700 font-bold uppercase tracking-tight">{company?.companyStatus}</span>} 
+              l3="Added By" v3={company.updated_by} 
+            />
+          </Section>
+
+          <Section title="Location & Address">
+            <TR1 label="Full Address" value={company.address} />
+            <TR3 
+              l1="Country" v1={company.country} 
+              l2="State" v2={company.state} 
+              l3="City / Town" v3={company.city} 
+            />
+            <TR3 
+              l1="Pin Code" v1={company.pincode} 
+              l2="Last Updated" v2={company.updatedAt ? new Date(company.updatedAt).toLocaleDateString('en-IN') : "-"}
+              l3="Company ID" v3={<span className="text-[10px] font-mono break-all">{company._id}</span>}
+            />
+          </Section>
+
+          <Section title="Registration Contacts">
+            {Array.isArray(company.contacts) && company.contacts.length > 0 ? (
+              company.contacts.map((contact, idx) => (
+                <div key={idx} className="border-b border-slate-200 last:border-b-0">
+                  <div className="bg-slate-50 p-2 text-[11px] font-extrabold text-[#23471d] uppercase tracking-widest border-b border-slate-200">
+                    Contact Person #{idx + 1}
+                  </div>
+                  <TR3 
+                    l1="Full Name" v1={`${contact.title || ""} ${contact.firstName || ""} ${contact.surname || ""}`}
+                    l2="Designation" v2={contact.designation}
+                    l3="Email Address" v3={<span className="text-blue-600 underline break-all">{contact.email}</span>}
+                  />
+                  <TR2 
+                    l1="Mobile Number" v1={contact.mobile}
+                    l2="WhatsApp Number" v2={contact.alternate}
+                  />
+                </div>
+              ))
+            ) : (
+              <TR1 label="Contacts" value="No contact persons found" />
+            )}
+          </Section>
+
+        </div>
+
+        {/* ── CRM FORM (Pop-Up) ── */}
         {(filteredReviews.length === 0 || popUp) && (
-          <form
-            onSubmit={handleAddReview}
-            className="w-full h-auto bg-white border border-gray-200 rounded-md px-6 py-5 gap-4"
-          >
-            <div className="flex flex-wrap items-end justify-between gap-4 overflow-x-auto">
-              {/* Hidden Company ID Field */}
-              <input
-                type="hidden"
-                id="cmpny_id"
-                value={companyId}
-                onChange={handleChange}
-              />
-
-              {/* Client Status */}
-              <div className="flex flex-col flex-1 min-w-[180px]">
-                <label
-                  htmlFor="ClientStatus"
-                  className="block text-base font-normal text-gray-900 mb-1"
-                >
-                  Client Status
-                </label>
-                <select
-                  id="ClientStatus"
-                  value={reviewData.status_short}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    const hideFor = ["Not Interested"];
-                    setFlip(!hideFor.includes(value));
-                    handleChange(e);
-                  }}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
-                >
-                  <option value="">Select Current Status</option>
-                  {statusOptions
-                    .filter((opt) => opt.status === "active")
-                    .map((opt) => (
-                      <option key={opt._id} value={opt.name}>
-                        {opt.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-
-              {/* Reminder & Forward Fields */}
-              {Flip && (
-                <>
-                  <div className="flex flex-col flex-1 min-w-[200px]">
-                    <label
-                      htmlFor="ReminderDateTime"
-                      className="block text-base font-normal text-gray-900 mb-1"
-                    >
-                      Reminder Date & Time{" "}
-                      <span className="text-red-700">*</span>
-                    </label>
-                    <input
-                      type="datetime-local"
-                      id="ReminderDateTime"
-                      value={reviewData.reminder_dt}
-                      onChange={handleChange}
-                      className="block w-full px-4 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
-                    />
-                  </div>
-
-                  <div className="flex flex-col flex-1 min-w-[180px]">
-                    <label
-                      htmlFor="ForwardTo"
-                      className="block text-base font-normal text-gray-900 mb-1"
-                    >
-                      Forward To <span className="text-red-700">*</span>
-                    </label>
-                    <select
-                      id="ForwardTo"
-                      value={reviewData.forward_to}
-                      onChange={handleChange}
-                      className="block w-full px-4 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
-                    >
-                      <option value="">Select Here</option>
-                      {users.length > 0 ? (
-                        users
-                          .filter((user) => user.user_status === "Active")
-                          .map((user) => (
-                            <option key={user._id} value={user.user_fullname}>
-                              {user.user_fullname}
-                            </option>
-                          ))
-                      ) : (
-                        <option disabled>No Users Found</option>
-                      )}
-                    </select>
-                  </div>
-                </>
-              )}
-
-              {/* Previous Status */}
-              <div className="flex flex-col flex-1 min-w-[180px]">
-                <label
-                  htmlFor="PreviousStatus"
-                  className="block text-base font-normal text-gray-900 mb-1"
-                >
-                  Previous Status
-                </label>
-                <input
-                  type="text"
-                  id="PreviousStatus"
-                  value={company?.companyStatus || " "}
-                  readOnly
-                  className="block w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
-                />
-              </div>
-
-              {/* Event Name */}
-              <div className="flex flex-col flex-1 min-w-[200px]">
-                <label
-                  htmlFor="EventName"
-                  className="block text-base font-normal text-gray-900 mb-1"
-                >
-                  Event Name <span className="text-red-700">*</span>
-                </label>
-                <select
-                  id="EventName"
-                  value={reviewData.evnt_id}
-                  onChange={handleChange}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base"
-                >
-                  <option value="">Select Event</option>
-                  {events.length > 0 ? (
-                    events
-                      .filter((event) => event.event_status === "active")
-                      .map((event) => (
-                        <option key={event._id} value={event._id}>
-                          {event.event_name}
-                        </option>
-                      ))
-                  ) : (
-                    <option disabled>No Events Found</option>
-                  )}
-                </select>
-              </div>
+          <div className="bg-white border-2 border-[#23471d]/20 p-6 rounded-[2px] shadow-lg animate-fadeIn">
+            <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-2">
+              <History size={18} className="text-[#23471d]" />
+              <h3 className="text-[16px] font-bold text-[#23471d] uppercase tracking-tight">Post New Follow-up / Remark</h3>
             </div>
+            
+            <form onSubmit={handleAddReview} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div>
+                  <label className={labelClasses}>Current Status *</label>
+                  <select
+                    id="ClientStatus"
+                    value={reviewData.status_short}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const hideFor = ["Not Interested"];
+                      setFlip(!hideFor.includes(value));
+                      handleChange(e);
+                    }}
+                    className={inputClasses}
+                  >
+                    <option value="">Select Status</option>
+                    {Array.isArray(statusOptions) && statusOptions.filter(opt => opt.status === "active").map(opt => (
+                      <option key={opt._id} value={opt.name}>{opt.name}</option>
+                    ))}
+                  </select>
+                </div>
 
-            {/* Remark */}
-            <div className="mt-5">
-              <label
-                htmlFor="Remark"
-                className="flex gap-2 text-base font-normal text-gray-900 mb-1"
-              >
-                Any Remark <span className="text-red-600">*</span>
-              </label>
-              <textarea
-                id="Remark"
-                value={reviewData.re_msg}
-                onChange={handleChange}
-                rows={4}
-                className="w-full border border-gray-300 rounded px-4 py-2 text-base"
-                placeholder="update status"
-              ></textarea>
-              <div className="flex justify-end mt-4">
-                <button
-                  type="submit"
-                  className="w-full md:w-auto px-6 py-2 text-base bg-[#3598dc] text-white hover:bg-[#246a99] transition rounded"
-                >
-                  SAVE
+                {Flip && (
+                  <>
+                    <div>
+                      <label className={labelClasses}>Next Reminder *</label>
+                      <input
+                        type="datetime-local"
+                        id="ReminderDateTime"
+                        value={reviewData.reminder_dt}
+                        onChange={handleChange}
+                        className={inputClasses}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClasses}>Forward To *</label>
+                      <select id="ForwardTo" value={reviewData.forward_to} onChange={handleChange} className={inputClasses}>
+                        <option value="">Select User</option>
+                        {Array.isArray(users) && users.filter(u => u.user_status === "Active").map(u => (
+                          <option key={u._id} value={u.user_fullname}>{u.user_fullname}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <label className={labelClasses}>Event Attribution *</label>
+                  <select id="EventName" value={reviewData.evnt_id} onChange={handleChange} className={inputClasses}>
+                    <option value="">Select Event</option>
+                    {Array.isArray(events) && events.filter(e => e.event_status === "active").map(e => (
+                      <option key={e._id} value={e._id}>{e.event_name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className={labelClasses}>Previous Status</label>
+                  <input type="text" value={company?.companyStatus || "-"} readOnly className={`${inputClasses} bg-slate-50`} />
+                </div>
+              </div>
+
+              <div>
+                <label className={labelClasses}>Communication Note / Remark *</label>
+                <textarea
+                  id="Remark"
+                  value={reviewData.re_msg}
+                  onChange={handleChange}
+                  rows={3}
+                  className="rounded-[2px] border border-slate-400 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white px-3 py-2 w-full outline-none"
+                  placeholder="Enter detailed conversation notes..."
+                ></textarea>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={() => setPopUp(false)} className="px-6 py-2 border border-slate-300 text-slate-600 text-[11px] font-bold uppercase tracking-widest rounded-[2px] hover:bg-slate-50">
+                  Cancel
+                </button>
+                <button type="submit" className="px-10 py-2 bg-[#23471d] text-white text-[11px] font-bold uppercase tracking-widest rounded-[2px] shadow hover:bg-[#1a3516] flex items-center gap-2">
+                  <Save size={14} /> Save Follow-up
                 </button>
               </div>
-            </div>
-          </form>
+            </form>
+          </div>
         )}
 
-        {/* Communication History */}
+        {/* ── COMMUNICATION HISTORY ── */}
         {filteredReviews.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-md w-full">
-            <h3 className="text-xl font-semibold text-gray-700 py-3 px-4 bg-gray-50 border-b border-gray-200 rounded-t-md">
-              <p className="flex items-center gap-2">
-                <FaBuilding className="text-xl text-gray-600" /> Communication
-                Status History
-              </p>
-            </h3>
-            <div className="space-y-0.5 p-2">
+          <div className="bg-white border border-slate-200 rounded-[2px] shadow-sm animate-fadeIn">
+            <div className="flex items-center justify-between px-6 py-4 bg-slate-50/50 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <History size={18} className="text-[#23471d]" />
+                <h3 className="text-[15px] font-bold text-slate-800 uppercase tracking-tight">Communication Status History</h3>
+              </div>
+              {!popUp && (
+                <button onClick={() => setPopUp(true)} className="text-[11px] font-bold text-blue-600 uppercase border-b border-blue-600/30 hover:border-blue-600 transition-all">
+                  + Add New Remark
+                </button>
+              )}
+            </div>
+            
+            <div className="divide-y divide-slate-100">
               {filteredReviews.map((entry, index) => (
-                <div
-                  key={entry?._id}
-                  className="flex items-start hover:bg-gray-50 gap-4 py-3 px-4 bg-white border border-gray-200 rounded text-base"
-                >
-                  <FaUser className="w-6 h-6 text-gray-500 mt-1" />
-                  <div className="flex-grow">
-                    <p className="font-medium text-base">
-                      <span className="text-blue-400 uppercase">
-                        {entry?.status_short} for {getEventName(entry?.evnt_id)}
-                      </span>
-                      <span
-                        onClick={() => {
-                          if (index === 0) setPopUp(!popUp);
-                        }}
-                        className={`${
-                          index === 0
-                            ? "text-red-500 cursor-pointer hover:underline"
-                            : "text-gray-700"
-                        } uppercase ml-1`}
-                      >
-                        | ▲ call the client on{" "}
-                        {entry?.reminder_dt
-                          ? new Date(entry.reminder_dt).toLocaleString(
-                              "en-IN",
-                              {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: true,
-                              },
-                            )
-                          : "N/A"}
-                      </span>
-                    </p>
-                    <p className="text-sm text-gray-500 leading-tight mt-0.5">
-                      {entry?.re_msg} | By: {entry?.updated_by} | On:{" "}
-                      {entry?.re_updated
-                        ? new Date(entry.re_updated).toLocaleString("en-IN", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: true,
-                          })
-                        : "N/A"}
-                    </p>
+                <div key={entry?._id} className="p-5 flex items-start gap-4 hover:bg-slate-50/30 transition-all">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400">
+                    <UserCircle size={24} />
                   </div>
-                  <button
-                    onClick={() => handleDelete(entry?._id)}
-                    className="text-gray-400 hover:text-red-500 transition-colors"
-                  >
-                    <FaTrash className="w-5 h-5" />
-                  </button>
+                  <div className="flex-grow">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-[13px] font-bold text-blue-700 uppercase tracking-tight">
+                          {entry?.status_short} <span className="text-slate-400 text-[11px] mx-1">/</span> {getEventName(entry?.evnt_id)}
+                        </p>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                            <Clock size={12} /> {entry?.re_updated ? new Date(entry.re_updated).toLocaleString() : "N/A"}
+                          </span>
+                          <span className="text-[10px] font-bold text-[#23471d] uppercase tracking-widest flex items-center gap-1">
+                            <Shield size={12} /> By {entry?.updated_by}
+                          </span>
+                        </div>
+                      </div>
+                      <button onClick={() => handleDelete(entry?._id)} className="text-slate-300 hover:text-red-500 transition-colors">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                    
+                    <div className="mt-3 bg-slate-50/60 p-3 rounded-[2px] border border-slate-100">
+                      <p className="text-[12px] text-slate-700 leading-relaxed italic font-medium">"{entry?.re_msg}"</p>
+                    </div>
+                    
+                    {entry?.reminder_dt && (
+                      <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-red-50 text-red-600 rounded-[2px] border border-red-100">
+                        <Calendar size={12} />
+                        <span className="text-[10px] font-bold uppercase tracking-tight">
+                          Next Action: {new Date(entry.reminder_dt).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
+
+        {/* ── FOOTER ── */}
+        <div className="pt-8 border-t border-slate-100 flex justify-between items-center bg-white pb-6">
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center gap-2">
+            <Shield size={14} className="text-[#23471d]" />
+            CLIENT SECURE DATA PORTAL
+          </p>
+          <button onClick={() => navigate(-1)} className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-2 hover:text-slate-800 transition-all">
+            <ArrowLeft size={14} /> Back to List
+          </button>
+        </div>
+
       </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(5px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.4s ease-out forwards;
+        }
+      `}</style>
     </div>
   );
 };

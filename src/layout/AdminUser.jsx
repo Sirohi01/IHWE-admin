@@ -18,6 +18,8 @@ const AdminUser = () => {
   const itemsPerPage = 25;
   const [isLoading, setIsLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [roles, setRoles] = useState([]);
+
 
   useEffect(() => {
     const info = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
@@ -29,7 +31,7 @@ const AdminUser = () => {
   const [newAdmin, setNewAdmin] = useState({
     username: "",
     password: "",
-    role: "employee",
+    role: "",
     mobile: ""
   });
 
@@ -38,7 +40,20 @@ const AdminUser = () => {
 
   useEffect(() => {
     fetchAdmins();
+    fetchRoles();
   }, []);
+
+  const fetchRoles = async () => {
+    try {
+      const response = await api.get('/api/roles');
+      if (response.data.success) {
+        setRoles(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+    }
+  };
+
 
   const fetchAdmins = async () => {
     try {
@@ -89,6 +104,16 @@ const AdminUser = () => {
       return;
     }
 
+    if (!newAdmin.role) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Missing Field',
+        text: 'Please select a role',
+        confirmButtonColor: '#134698'
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
       const response = await api.post('/api/admin/create', {
@@ -110,7 +135,7 @@ const AdminUser = () => {
         setNewAdmin({
           username: "",
           password: "",
-          role: currentUser?.role === 'super-admin' ? "super-admin" : "employee",
+          role: "",
           mobile: ""
         });
 
@@ -143,15 +168,11 @@ const AdminUser = () => {
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
             <select id="swal-role" class="w-full px-4 py-3 border-2 border-gray-300 focus:border-[#134698] focus:outline-none" ${!canChangeRole ? 'disabled' : ''}>
-              <option value="super-admin" ${admin.role === 'super-admin' ? 'selected' : ''}>Super Admin</option>
-              <option value="accountant-admin" ${admin.role === 'accountant-admin' ? 'selected' : ''}>Accountant Admin</option>
-              <option value="accountant-employee" ${admin.role === 'accountant-employee' ? 'selected' : ''}>Accountant Employee</option>
-              <option value="marketing-admin" ${admin.role === 'marketing-admin' ? 'selected' : ''}>Marketing Admin</option>
-              <option value="marketing-employee" ${admin.role === 'marketing-employee' ? 'selected' : ''}>Marketing Employee</option>
-              <option value="digital-admin" ${admin.role === 'digital-admin' ? 'selected' : ''}>Digital Admin</option>
-              <option value="digital-employee" ${admin.role === 'digital-employee' ? 'selected' : ''}>Digital Employee</option>
-              <option value="employee" ${admin.role === 'employee' ? 'selected' : ''}>General Employee</option>
+              ${roles.map(r => `
+                <option value="${r.name}" ${admin.role === r.name ? 'selected' : ''}>${r.name}</option>
+              `).join('')}
             </select>
+
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
@@ -423,21 +444,12 @@ const AdminUser = () => {
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-sm bg-white"
                 >
-                  {currentUser?.role === 'super-admin' ? (
-                    <>
-                      <option value="super-admin">Super Admin</option>
-                      <option value="accountant-admin">Accountant Admin</option>
-                      <option value="accountant-employee">Accountant Employee</option>
-                      <option value="marketing-admin">Marketing Admin</option>
-                      <option value="marketing-employee">Marketing Employee</option>
-                      <option value="digital-admin">Digital Admin</option>
-                      <option value="digital-employee">Digital Employee</option>
-                      <option value="employee">General Employee</option>
-                    </>
-                  ) : (
-                    <option value="employee">General Employee</option>
-                  )}
+                  <option value="">Select Role</option>
+                  {roles.map(r => (
+                    <option key={r._id} value={r.name}>{r.name}</option>
+                  ))}
                 </select>
+
               </div>
 
               <div>

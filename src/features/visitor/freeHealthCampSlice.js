@@ -1,8 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "../../lib/api";
 import { createActivityLogThunk } from "../activityLog/activityLogSlice";
-
-const BASE_URL = import.meta.env.VITE_API_URL;
 
 const getUserInfo = () => {
   const userStr = sessionStorage.getItem("user");
@@ -17,8 +15,8 @@ export const fetchHealthCampVisitors = createAsyncThunk(
   "healthCampVisitors/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${BASE_URL}/health-camp-visitors`);
-      return res.data.data ?? res.data;
+      const res = await api.get("/api/health-camp-visitors");
+      return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
@@ -30,30 +28,24 @@ export const createHealthCampVisitor = createAsyncThunk(
   async (data, { dispatch, rejectWithValue }) => {
     const { userId, userName } = getUserInfo();
     try {
-      const res = await axios.post(
-        `${BASE_URL}/health-camp-visitors`,
-        {
-          ...data,
-          created_by: userName,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      const res = await api.post("/api/health-camp-visitors", {
+        ...data,
+        created_by: userName,
+      });
+
+      const visitorData = res.data.data || res.data;
 
       if (userId) {
         dispatch(
           createActivityLogThunk({
             user_id: userId,
-            message: `Health Camp Visitor '${res.data.firstName} ${res.data.lastName}' created by ${userName}`,
-            link: `/health-camp-visitors/${res.data._id}`,
+            message: `Health Camp Visitor '${visitorData.firstName} ${visitorData.lastName}' created by ${userName}`,
+            link: `/health-camp-visitors/${visitorData._id}`,
             section: "healthCampVisitors",
             data: {
               action: "CREATE",
-              visitor_id: res.data._id,
-              created_data: res.data,
+              visitor_id: visitorData._id,
+              created_data: visitorData,
             },
           }),
         );
@@ -70,27 +62,21 @@ export const updateHealthCampVisitor = createAsyncThunk(
   async ({ id, data }, { dispatch, rejectWithValue }) => {
     const { userId, userName } = getUserInfo();
     try {
-      const res = await axios.put(
-        `${BASE_URL}/health-camp-visitors/${id}`,
-        {
-          ...data,
-          updated_by: userName,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      const res = await api.put(`/api/health-camp-visitors/${id}`, {
+        ...data,
+        updated_by: userName,
+      });
+
+      const visitorData = res.data.data || res.data;
 
       if (userId) {
         dispatch(
           createActivityLogThunk({
             user_id: userId,
-            message: `Health Camp Visitor '${res.data.firstName} ${res.data.lastName}' updated by ${userName}`,
+            message: `Health Camp Visitor '${visitorData.firstName} ${visitorData.lastName}' updated by ${userName}`,
             link: `/health-camp-visitors/${id}`,
             section: "healthCampVisitors",
-            data: { action: "UPDATE", visitor_id: id, updated_data: res.data },
+            data: { action: "UPDATE", visitor_id: id, updated_data: visitorData },
           }),
         );
       }
@@ -109,7 +95,7 @@ export const deleteHealthCampVisitor = createAsyncThunk(
       const { healthCampVisitors } = getState().healthCampVisitors;
       const toDelete = healthCampVisitors.find((v) => v._id === id);
 
-      await axios.delete(`${BASE_URL}/health-camp-visitors/${id}`);
+      await api.delete(`/api/health-camp-visitors/${id}`);
 
       if (userId) {
         dispatch(
@@ -148,52 +134,32 @@ const freeHealthCampSlice = createSlice({
       })
       .addCase(fetchHealthCampVisitors.fulfilled, (state, action) => {
         state.loading = false;
-        state.healthCampVisitors = action.payload;
+        // ✅ Handle data structure safely
+        state.healthCampVisitors = Array.isArray(action.payload)
+          ? action.payload
+          : action.payload?.data || [];
       })
       .addCase(fetchHealthCampVisitors.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(createHealthCampVisitor.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
       .addCase(createHealthCampVisitor.fulfilled, (state, action) => {
         state.loading = false;
-        state.healthCampVisitors.push(action.payload);
-      })
-      .addCase(createHealthCampVisitor.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      .addCase(updateHealthCampVisitor.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        const data = action.payload?.data || action.payload;
+        if (data?._id) state.healthCampVisitors.push(data);
       })
       .addCase(updateHealthCampVisitor.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.healthCampVisitors.findIndex(
-          (v) => v._id === action.payload._id,
-        );
-        if (index !== -1) state.healthCampVisitors[index] = action.payload;
-      })
-      .addCase(updateHealthCampVisitor.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      .addCase(deleteHealthCampVisitor.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        const data = action.payload?.data || action.payload;
+        if (!data?._id) return;
+        const index = state.healthCampVisitors.findIndex((v) => v._id === data._id);
+        if (index !== -1) state.healthCampVisitors[index] = data;
       })
       .addCase(deleteHealthCampVisitor.fulfilled, (state, action) => {
         state.loading = false;
         state.healthCampVisitors = state.healthCampVisitors.filter(
           (v) => v._id !== action.payload,
         );
-      })
-      .addCase(deleteHealthCampVisitor.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
       });
   },
 });

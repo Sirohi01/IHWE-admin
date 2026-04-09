@@ -1,16 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-
-// Base API URL
-// const API_URL = "http://localhost:5000/api/crm-cities";
-const BASE_URL = import.meta.env.VITE_API_URL;
+import api from "../../lib/api";
 
 // FETCH all cities
 export const fetchCities = createAsyncThunk(
   "cities/fetchCities",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${BASE_URL}/crm-cities`);
+      const response = await api.get("/api/crm-cities");
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -23,7 +19,7 @@ export const fetchCityById = createAsyncThunk(
   "cities/fetchCityById",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${BASE_URL}/crm-cities/${id}`);
+      const response = await api.get(`/api/crm-cities/${id}`);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -36,7 +32,7 @@ export const createCity = createAsyncThunk(
   "cities/createCity",
   async (cityData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${BASE_URL}/crm-cities`, cityData);
+      const response = await api.post("/api/crm-cities", cityData);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -49,7 +45,7 @@ export const updateCity = createAsyncThunk(
   "cities/updateCity",
   async ({ id, updates }, { rejectWithValue }) => {
     try {
-      const response = await axios.put(`${BASE_URL}/crm-cities/${id}`, updates);
+      const response = await api.put(`/api/crm-cities/${id}`, updates);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -62,22 +58,20 @@ export const deleteCity = createAsyncThunk(
   "cities/deleteCity",
   async (id, { rejectWithValue }) => {
     try {
-      await axios.delete(`${BASE_URL}/crm-cities/${id}`);
-      return id; // return deleted id for state update
+      await api.delete(`/api/crm-cities/${id}`);
+      return id;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
   }
 );
 
-// **Initial State**
 const initialState = {
   cities: [],
   loading: false,
   error: null,
 };
 
-// **Slice**
 const citySlice = createSlice({
   name: "cities",
   initialState,
@@ -88,67 +82,38 @@ const citySlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // FETCH ALL
       .addCase(fetchCities.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchCities.fulfilled, (state, action) => {
         state.loading = false;
-        state.cities = action.payload.data;
+        state.cities = Array.isArray(action.payload)
+          ? action.payload
+          : action.payload?.data || [];
       })
       .addCase(fetchCities.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-
-      // CREATE
-      .addCase(createCity.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
       .addCase(createCity.fulfilled, (state, action) => {
         state.loading = false;
-        state.cities.push(action.payload);
-      })
-      .addCase(createCity.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // UPDATE
-      .addCase(updateCity.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        const data = action.payload?.data || action.payload;
+        if (data?._id) state.cities.push(data);
       })
       .addCase(updateCity.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.cities.findIndex(
-          (c) => c._id === action.payload._id
-        );
-        if (index !== -1) state.cities[index] = action.payload;
-      })
-      .addCase(updateCity.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-
-      // DELETE
-      .addCase(deleteCity.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        const data = action.payload?.data || action.payload;
+        if (!data?._id) return;
+        const index = state.cities.findIndex((c) => c._id === data._id);
+        if (index !== -1) state.cities[index] = data;
       })
       .addCase(deleteCity.fulfilled, (state, action) => {
         state.loading = false;
         state.cities = state.cities.filter((c) => c._id !== action.payload);
-      })
-      .addCase(deleteCity.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
       });
   },
 });
 
 export const { clearCityError } = citySlice.actions;
-
 export default citySlice.reducer;

@@ -1,30 +1,40 @@
 // utils/toastMessage.js
-import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 
 export const showSuccess = (message) => {
-    toast.success(message, {
-        position: "top-right",
-        autoClose: 2000,
+    Swal.fire({
+        title: "Success!",
+        text: message,
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+        confirmButtonColor: "#23471d",
     });
 };
 
 export const showError = (message) => {
-    toast.error(message, {
-        position: "top-right",
-        autoClose: 2000,
+    Swal.fire({
+        title: "Error!",
+        text: message,
+        icon: "error",
+        confirmButtonColor: "#23471d",
     });
 };
 
 export const showInfo = (message) => {
-    toast.info(message, {
-        position: "top-right",
-        autoClose: 2000,
+    Swal.fire({
+        title: "Info",
+        text: message,
+        icon: "info",
+        confirmButtonColor: "#23471d",
     });
 };
 
 export const showWarning = (message) => {
-    toast.warn(message, {
-        position: "top-right",
-        autoClose: 2000,
+    Swal.fire({
+        title: "Warning!",
+        text: message,
+        icon: "warning",
+        confirmButtonColor: "#23471d",
     });
 };

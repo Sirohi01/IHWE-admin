@@ -1,420 +1,3 @@
-// import { useState } from "react";
-// import { useDispatch, useSelector } from "react-redux";
-// import { createGeneralVisitor } from "../../../features/visitor/generalVisitorSlice";
-// import { showError, showSuccess } from "../../../utils/toastMessage";
-
-// const GeneralVisitorForm = ({
-//   registrationOptions = [],
-//   industrySectors = [],
-//   countries = [],
-//   states = [],
-//   cities = [],
-//   genders = [],
-// }) => {
-//   const dispatch = useDispatch();
-//   const { loading } = useSelector((state) => state.generalVisitors);
-
-//   const [generalData, setGeneralData] = useState({
-//     registrationFor: "",
-//     firstName: "",
-//     lastName: "",
-//     email: "",
-//     mobile: "",
-//     alternateNo: "",
-//     dateOfBirth: "",
-//     gender: "Select Here",
-//     companyName: "",
-//     designation: "",
-//     industrySector: "Select Here",
-//     country: "Select Country",
-//     state: "Select Country first",
-//     city: "Select State first",
-//     purposeOfVisit: {
-//       businessNetworking: false,
-//       exploringProducts: false,
-//       buyingProducts: false,
-//       learningTrends: false,
-//       others: false,
-//     },
-//     areaOfInterest: {
-//       ayushHerbal: false,
-//       organicProducts: false,
-//       fitnessWellness: false,
-//       healthSupplements: false,
-//       healthcareServices: false,
-//       agricultureFarming: false,
-//       researchInnovations: false,
-//       others: false,
-//     },
-//     subscribe: false,
-//   });
-
-//   const resetForm = () => {
-//     setGeneralData({
-//       registrationFor: "",
-//       firstName: "",
-//       lastName: "",
-//       email: "",
-//       mobile: "",
-//       alternateNo: "",
-//       dateOfBirth: "",
-//       gender: "Select Here",
-//       companyName: "",
-//       designation: "",
-//       industrySector: "Select Here",
-//       country: "Select Country",
-//       state: "Select Country first",
-//       city: "Select State first",
-//       purposeOfVisit: {
-//         businessNetworking: false,
-//         exploringProducts: false,
-//         buyingProducts: false,
-//         learningTrends: false,
-//         others: false,
-//       },
-//       areaOfInterest: {
-//         ayushHerbal: false,
-//         organicProducts: false,
-//         fitnessWellness: false,
-//         healthSupplements: false,
-//         healthcareServices: false,
-//         agricultureFarming: false,
-//         researchInnovations: false,
-//         others: false,
-//       },
-//       subscribe: false,
-//     });
-//   };
-
-//   const handleGeneralPurposeChange = (key) => {
-//     setGeneralData((prev) => ({
-//       ...prev,
-//       purposeOfVisit: {
-//         ...prev.purposeOfVisit,
-//         [key]: !prev.purposeOfVisit[key],
-//       },
-//     }));
-//   };
-
-//   const handleGeneralInterestChange = (key) => {
-//     setGeneralData((prev) => ({
-//       ...prev,
-//       areaOfInterest: {
-//         ...prev.areaOfInterest,
-//         [key]: !prev.areaOfInterest[key],
-//       },
-//     }));
-//   };
-
-//   const validate = () => {
-//     if (
-//       !generalData.registrationFor ||
-//       generalData.registrationFor === "Select Here"
-//     ) {
-//       showError("Please select Registration For");
-//       return false;
-//     }
-//     if (!generalData.firstName.trim()) {
-//       showError("First Name is required");
-//       return false;
-//     }
-//     if (!generalData.lastName.trim()) {
-//       showError("Last Name is required");
-//       return false;
-//     }
-//     if (!generalData.email.trim()) {
-//       showError("Email is required");
-//       return false;
-//     }
-//     if (!generalData.mobile.trim()) {
-//       showError("Mobile is required");
-//       return false;
-//     }
-//     if (!generalData.country || generalData.country === "Select Country") {
-//       showError("Please select Country");
-//       return false;
-//     }
-//     return true;
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     if (!validate()) return;
-//     try {
-//       await dispatch(createGeneralVisitor(generalData)).unwrap();
-//       showSuccess("General Visitor registered successfully!");
-//       resetForm();
-//     } catch (err) {
-//       showError(
-//         typeof err === "string" ? err : err?.message || "Registration failed",
-//       );
-//     }
-//   };
-
-//   return (
-//     <div className="visitor-form space-y-6" style={{ marginTop: "30px" }}>
-//       <h3 className="font-semibold text-gray-900">
-//         General Visitor Registration
-//       </h3>
-
-//       <form onSubmit={handleSubmit}>
-//         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-//           {[
-//             {
-//               label: "Registration For",
-//               key: "registrationFor",
-//               type: "select",
-//               options: registrationOptions,
-//               required: true,
-//             },
-//             {
-//               label: "First Name",
-//               key: "firstName",
-//               type: "text",
-//               placeholder: "Enter First Name",
-//               required: true,
-//             },
-//             {
-//               label: "Last Name",
-//               key: "lastName",
-//               type: "text",
-//               placeholder: "Enter Last Name",
-//               required: true,
-//             },
-//             {
-//               label: "Email",
-//               key: "email",
-//               type: "email",
-//               placeholder: "Enter Email",
-//               required: true,
-//             },
-//             {
-//               label: "Mobile No.",
-//               key: "mobile",
-//               type: "tel",
-//               placeholder: "Enter Telephone/Mobile",
-//               required: true,
-//             },
-//             {
-//               label: "Alternate No.",
-//               key: "alternateNo",
-//               type: "tel",
-//               placeholder: "Enter Alternate No.",
-//             },
-//             { label: "Date of Birth", key: "dateOfBirth", type: "date" },
-//             {
-//               label: "Gender",
-//               key: "gender",
-//               type: "select",
-//               options: genders,
-//               required: true,
-//             },
-//             {
-//               label: "Company Name",
-//               key: "companyName",
-//               type: "text",
-//               placeholder: "Enter Company Name",
-//             },
-//             {
-//               label: "Designation",
-//               key: "designation",
-//               type: "text",
-//               placeholder: "Enter Designation",
-//             },
-//             {
-//               label: "Industry/Sector",
-//               key: "industrySector",
-//               type: "select",
-//               options: industrySectors,
-//             },
-//             {
-//               label: "Country",
-//               key: "country",
-//               type: "select",
-//               options: countries,
-//               required: true,
-//               onChange: (e) =>
-//                 setGeneralData({
-//                   ...generalData,
-//                   country: e.target.value,
-//                   state: "Select Country first",
-//                   city: "Select State first",
-//                 }),
-//             },
-//             {
-//               label: "State",
-//               key: "state",
-//               type: "select",
-//               options: states,
-//               required: true,
-//               disabled:
-//                 !generalData.country ||
-//                 generalData.country === "Select Country",
-//               onChange: (e) =>
-//                 setGeneralData({
-//                   ...generalData,
-//                   state: e.target.value,
-//                   city: "Select State first",
-//                 }),
-//             },
-//             {
-//               label: "City",
-//               key: "city",
-//               type: "select",
-//               options: cities,
-//               required: true,
-//               disabled:
-//                 !generalData.state ||
-//                 generalData.state === "Select Country first",
-//             },
-//           ].map(
-//             ({
-//               label,
-//               key,
-//               type,
-//               placeholder,
-//               options,
-//               required,
-//               disabled,
-//               onChange,
-//             }) => (
-//               <div key={key}>
-//                 <label className="block font-medium text-gray-900 mb-1">
-//                   {label} {required && <span className="text-red-500">*</span>}
-//                 </label>
-//                 {type === "select" ? (
-//                   <select
-//                     value={generalData[key]}
-//                     onChange={
-//                       onChange ||
-//                       ((e) =>
-//                         setGeneralData({
-//                           ...generalData,
-//                           [key]: e.target.value,
-//                         }))
-//                     }
-//                     disabled={disabled}
-//                     className="block w-full"
-//                   >
-//                     {/* ✅ Safe map with optional chaining */}
-//                     {options?.map((option, index) => (
-//                       <option key={index} value={option}>
-//                         {option}
-//                       </option>
-//                     ))}
-//                   </select>
-//                 ) : (
-//                   <input
-//                     type={type}
-//                     value={generalData[key]}
-//                     onChange={
-//                       onChange ||
-//                       ((e) =>
-//                         setGeneralData({
-//                           ...generalData,
-//                           [key]: e.target.value,
-//                         }))
-//                     }
-//                     placeholder={placeholder}
-//                     className="block w-full"
-//                   />
-//                 )}
-//               </div>
-//             ),
-//           )}
-//         </div>
-
-//         <div className="mt-4">
-//           <label className="block font-semibold text-gray-900 mb-2">
-//             Purpose of Visit <span className="text-red-500">*</span>
-//           </label>
-//           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-//             {[
-//               { key: "businessNetworking", label: "Business Networking" },
-//               { key: "exploringProducts", label: "Exploring New Products" },
-//               { key: "buyingProducts", label: "Buying Products & Services" },
-//               { key: "learningTrends", label: "Learning Industry Trends" },
-//               { key: "others", label: "Others" },
-//             ].map(({ key, label }) => (
-//               <label
-//                 key={key}
-//                 className="flex items-center gap-2 cursor-pointer"
-//               >
-//                 <input
-//                   type="checkbox"
-//                   checked={generalData.purposeOfVisit[key]}
-//                   onChange={() => handleGeneralPurposeChange(key)}
-//                 />
-//                 <span>{label}</span>
-//               </label>
-//             ))}
-//           </div>
-//         </div>
-
-//         <div className="mt-4">
-//           <label className="block font-semibold text-gray-900 mb-2">
-//             Area of Interest <span className="text-red-500">*</span>
-//           </label>
-//           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-//             {[
-//               { key: "ayushHerbal", label: "AYUSH & Herbal Products" },
-//               { key: "organicProducts", label: "Organic & Natural Products" },
-//               { key: "fitnessWellness", label: "Fitness & Wellness Equipment" },
-//               { key: "healthSupplements", label: "Health Supplements" },
-//               {
-//                 key: "healthcareServices",
-//                 label: "Hospitals & Healthcare Services",
-//               },
-//               {
-//                 key: "agricultureFarming",
-//                 label: "Agriculture & Organic Farming",
-//               },
-//               { key: "researchInnovations", label: "R&D & Innovations" },
-//               { key: "others", label: "Others" },
-//             ].map(({ key, label }) => (
-//               <label
-//                 key={key}
-//                 className="flex items-center gap-2 cursor-pointer"
-//               >
-//                 <input
-//                   type="checkbox"
-//                   checked={generalData.areaOfInterest[key]}
-//                   onChange={() => handleGeneralInterestChange(key)}
-//                 />
-//                 <span>{label}</span>
-//               </label>
-//             ))}
-//           </div>
-//         </div>
-
-//         <div className="mt-4">
-//           <label className="flex items-center gap-2 cursor-pointer">
-//             <input
-//               type="checkbox"
-//               checked={generalData.subscribe}
-//               onChange={(e) =>
-//                 setGeneralData({ ...generalData, subscribe: e.target.checked })
-//               }
-//             />
-//             <span>Subscribe to Event Updates & Newsletters</span>
-//           </label>
-//         </div>
-
-//         <div className="flex justify-start mt-4">
-//           <button
-//             type="submit"
-//             disabled={loading}
-//             className="bg-[#3598dc] hover:bg-[#2980b9] text-white rounded uppercase disabled:opacity-60 disabled:cursor-not-allowed"
-//           >
-//             {loading ? "Submitting..." : "Submit Registration"}
-//           </button>
-//         </div>
-//       </form>
-//     </div>
-//   );
-// };
-
-// export default GeneralVisitorForm;
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createGeneralVisitor } from "../../../features/visitor/generalVisitorSlice";
@@ -424,6 +7,9 @@ import { fetchCities } from "../../../features/city/citySlice";
 import { fetchEvents } from "../../../features/crmEvent/crmEventSlice";
 import { fetchNatures } from "../../../features/add_by_admin/nature/natureSlice";
 import { showError, showSuccess } from "../../../utils/toastMessage";
+import Swal from "sweetalert2";
+import { createActivityLogThunk } from "../../../features/activityLog/activityLogSlice";
+import { User, Building2, MapPin, CheckSquare, Send, Calendar, Heart, Briefcase } from "lucide-react";
 
 const GeneralVisitorForm = ({
   registrationOptions: propRegistrationOptions = [],
@@ -436,46 +22,41 @@ const GeneralVisitorForm = ({
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.generalVisitors);
 
-  // Redux data
   const { countries: reduxCountries } = useSelector((state) => state.countries);
   const { states: reduxStates } = useSelector((state) => state.states);
   const { cities: reduxCities } = useSelector((state) => state.cities);
   const { events: reduxEvents } = useSelector((state) => state.crmEvents);
   const { natures: reduxNatures } = useSelector((state) => state.natures);
 
-  // Fetch data if missing
   useEffect(() => {
     if (!reduxCountries || reduxCountries.length === 0) dispatch(fetchCountries());
     if (!reduxStates || reduxStates.length === 0) dispatch(fetchStates());
     if (!reduxCities || reduxCities.length === 0) dispatch(fetchCities());
     if (!reduxEvents || reduxEvents.length === 0) dispatch(fetchEvents());
     if (!reduxNatures || reduxNatures.length === 0) dispatch(fetchNatures());
-  }, [dispatch, reduxCountries?.length, reduxStates?.length, reduxCities?.length, reduxEvents?.length, reduxNatures?.length]);
+  }, [dispatch]);
 
-  // Derived options
-  const registrationOptions = propRegistrationOptions.length > 0 
+  const registrationOptions = propRegistrationOptions.length > 1 
     ? propRegistrationOptions 
-    : ["Select Here", ...(reduxEvents || []).map(e => e.event_name).filter(Boolean)];
+    : ["Select Event", ...(reduxEvents || []).map(e => e.event_name).filter(Boolean)];
 
-  const industrySectors = propIndustrySectors.length > 0
+  const industrySectors = propIndustrySectors.length > 1
     ? propIndustrySectors
-    : ["Select Here", ...(reduxNatures || []).map(n => n.nature_name).filter(Boolean)];
+    : ["Select Sector", ...(reduxNatures || []).map(n => n.nature_name).filter(Boolean)];
 
-  const countriesArr = propCountries.length > 0
+  const countriesArr = propCountries.length > 1
     ? propCountries
     : ["Select Country", ...(reduxCountries || []).map(c => c.name).filter(Boolean)];
 
-  const statesArr = propStates.length > 0
+  const statesArr = propStates.length > 1
     ? propStates
-    : ["Select Country first", ...(reduxStates || []).map(s => s.name).filter(Boolean)];
+    : ["Select State", ...(reduxStates || []).map(s => s.name).filter(Boolean)];
 
-  const citiesArr = propCities.length > 0
+  const citiesArr = propCities.length > 1
     ? propCities
-    : ["Select State first", ...(reduxCities?.data || reduxCities || []).map(c => c.name).filter(Boolean)];
+    : ["Select City", ...(reduxCities?.data || reduxCities || []).map(c => c.name).filter(Boolean)];
 
-  const genders = propGenders.length > 0
-    ? propGenders
-    : ["Select Here", "Male", "Female", "Other"];
+  const genders = propGenders.length > 1 ? propGenders : ["Select Gender", "Male", "Female", "Other"];
 
   const [generalData, setGeneralData] = useState({
     registrationFor: "",
@@ -485,13 +66,13 @@ const GeneralVisitorForm = ({
     mobile: "",
     alternateNo: "",
     dateOfBirth: "",
-    gender: "Select Here",
+    gender: "Select Gender",
     companyName: "",
     designation: "",
-    industrySector: "Select Here",
+    industrySector: "Select Sector",
     country: "Select Country",
-    state: "Select Country first",
-    city: "Select State first",
+    state: "Select State",
+    city: "Select City",
     purposeOfVisit: {
       businessNetworking: false,
       exploringProducts: false,
@@ -521,13 +102,13 @@ const GeneralVisitorForm = ({
       mobile: "",
       alternateNo: "",
       dateOfBirth: "",
-      gender: "Select Here",
+      gender: "Select Gender",
       companyName: "",
       designation: "",
-      industrySector: "Select Here",
+      industrySector: "Select Sector",
       country: "Select Country",
-      state: "Select Country first",
-      city: "Select State first",
+      state: "Select State",
+      city: "Select City",
       purposeOfVisit: {
         businessNetworking: false,
         exploringProducts: false,
@@ -549,54 +130,23 @@ const GeneralVisitorForm = ({
     });
   };
 
-  const handleGeneralPurposeChange = (key) => {
-    setGeneralData((prev) => ({
+  const handleCheckboxChange = (section, key) => {
+    setGeneralData(prev => ({
       ...prev,
-      purposeOfVisit: {
-        ...prev.purposeOfVisit,
-        [key]: !prev.purposeOfVisit[key],
-      },
-    }));
-  };
-
-  const handleGeneralInterestChange = (key) => {
-    setGeneralData((prev) => ({
-      ...prev,
-      areaOfInterest: {
-        ...prev.areaOfInterest,
-        [key]: !prev.areaOfInterest[key],
-      },
+      [section]: {
+        ...prev[section],
+        [key]: !prev[section][key]
+      }
     }));
   };
 
   const validate = () => {
-    if (
-      !generalData.registrationFor ||
-      generalData.registrationFor === "Select Here"
-    ) {
-      showError("Please select Registration For");
-      return false;
-    }
-    if (!generalData.firstName.trim()) {
-      showError("First Name is required");
-      return false;
-    }
-    if (!generalData.lastName.trim()) {
-      showError("Last Name is required");
-      return false;
-    }
-    if (!generalData.email.trim()) {
-      showError("Email is required");
-      return false;
-    }
-    if (!generalData.mobile.trim()) {
-      showError("Mobile is required");
-      return false;
-    }
-    if (!generalData.country || generalData.country === "Select Country") {
-      showError("Please select Country");
-      return false;
-    }
+    if (!generalData.registrationFor || generalData.registrationFor.includes("Select")) return showError("Please select Event");
+    if (!generalData.firstName.trim()) return showError("First Name is required");
+    if (!generalData.lastName.trim()) return showError("Last Name is required");
+    if (!generalData.email.trim()) return showError("Email is required");
+    if (!generalData.mobile.trim()) return showError("Mobile is required");
+    if (!generalData.country || generalData.country.includes("Select")) return showError("Please select Country");
     return true;
   };
 
@@ -605,287 +155,297 @@ const GeneralVisitorForm = ({
     if (!validate()) return;
     try {
       await dispatch(createGeneralVisitor(generalData)).unwrap();
-      showSuccess("General Visitor registered successfully!");
+      
+      // Log the activity
+      const userId = sessionStorage.getItem("user_id");
+      if (userId) {
+        dispatch(createActivityLogThunk({
+          user_id: userId,
+          message: `Visitor Management: Registered General Visitor '${generalData.firstName} ${generalData.lastName}'`,
+          section: "Client Data Section",
+          data: { action: "ADD_VISITOR", type: "GENERAL", visitor: `${generalData.firstName} ${generalData.lastName}` }
+        }));
+      }
+
+      Swal.fire({
+        title: "Registration Success!",
+        text: `${generalData.firstName} has been registered as a General Visitor.`,
+        icon: "success",
+        confirmButtonColor: "#23471d",
+      });
       resetForm();
     } catch (err) {
-      showError(
-        typeof err === "string" ? err : err?.message || "Registration failed",
-      );
+      Swal.fire({
+        title: "Registration Error",
+        text: typeof err === "string" ? err : err?.message || "Something went wrong during registration.",
+        icon: "error",
+        confirmButtonColor: "#23471d",
+      });
     }
   };
 
+  const inputClass = "rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-900 font-medium shadow-none outline-none px-3 w-full text-left";
+  const labelClass = "text-[11px] font-bold text-slate-800 mb-1 block capitalize font-inter";
+  const sectionHeaderClass = "text-[16px] font-bold text-[#23471d] pb-1 border-b border-slate-100 mb-6 font-inter flex items-center gap-2";
+
   return (
-    <div
-      className="visitor-form space-y-6 bg-white px-4"
-      style={{ marginTop: "30px" }}
-    >
-      <h3 className="text-xl font-semibold text-gray-900 mb-4">
-        General Visitor Registration
-      </h3>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            {
-              label: "Registration For",
-              key: "registrationFor",
-              type: "select",
-              options: registrationOptions,
-              required: true,
-            },
-            {
-              label: "First Name",
-              key: "firstName",
-              type: "text",
-              placeholder: "Enter First Name",
-              required: true,
-            },
-            {
-              label: "Last Name",
-              key: "lastName",
-              type: "text",
-              placeholder: "Enter Last Name",
-              required: true,
-            },
-            {
-              label: "Email",
-              key: "email",
-              type: "email",
-              placeholder: "Enter Email",
-              required: true,
-            },
-            {
-              label: "Mobile No.",
-              key: "mobile",
-              type: "tel",
-              placeholder: "Enter Telephone/Mobile",
-              required: true,
-            },
-            {
-              label: "Alternate No.",
-              key: "alternateNo",
-              type: "tel",
-              placeholder: "Enter Alternate No.",
-            },
-            { label: "Date of Birth", key: "dateOfBirth", type: "date" },
-            {
-              label: "Gender",
-              key: "gender",
-              type: "select",
-              options: genders,
-              required: true,
-            },
-            {
-              label: "Company Name",
-              key: "companyName",
-              type: "text",
-              placeholder: "Enter Company Name",
-            },
-            {
-              label: "Designation",
-              key: "designation",
-              type: "text",
-              placeholder: "Enter Designation",
-            },
-            {
-              label: "Industry/Sector",
-              key: "industrySector",
-              type: "select",
-              options: industrySectors,
-            },
-            {
-              label: "Country",
-              key: "country",
-              type: "select",
-              options: countriesArr,
-              required: true,
-              onChange: (e) =>
-                setGeneralData({
-                  ...generalData,
-                  country: e.target.value,
-                  state: "Select Country first",
-                  city: "Select State first",
-                }),
-            },
-            {
-              label: "State",
-              key: "state",
-              type: "select",
-              options: statesArr,
-              required: true,
-              disabled:
-                !generalData.country ||
-                generalData.country === "Select Country",
-              onChange: (e) =>
-                setGeneralData({
-                  ...generalData,
-                  state: e.target.value,
-                  city: "Select State first",
-                }),
-            },
-            {
-              label: "City",
-              key: "city",
-              type: "select",
-              options: citiesArr,
-              required: true,
-              disabled:
-                !generalData.state ||
-                generalData.state === "Select Country first",
-            },
-          ].map(
-            ({
-              label,
-              key,
-              type,
-              placeholder,
-              options,
-              required,
-              disabled,
-              onChange,
-            }) => (
-              <div key={key}>
-                <label className="block text-base font-medium text-gray-900 mb-1">
-                  {label} {required && <span className="text-red-500">*</span>}
-                </label>
-                {type === "select" ? (
-                  <select
-                    value={generalData[key]}
-                    onChange={
-                      onChange ||
-                      ((e) =>
-                        setGeneralData({
-                          ...generalData,
-                          [key]: e.target.value,
-                        }))
-                    }
-                    disabled={disabled}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-base disabled:bg-gray-100"
-                  >
-                    {options?.map((option, index) => (
-                      <option key={index} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type={type}
-                    value={generalData[key]}
-                    onChange={
-                      onChange ||
-                      ((e) =>
-                        setGeneralData({
-                          ...generalData,
-                          [key]: e.target.value,
-                        }))
-                    }
-                    placeholder={placeholder}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-base"
-                  />
-                )}
-              </div>
-            ),
-          )}
+    <form onSubmit={handleSubmit} className="space-y-10 animate-fadeIn">
+      {/* SECTION 1: PERSONAL DETAILS */}
+      <section>
+        <h3 className={sectionHeaderClass}>
+          <User className="w-5 h-5 text-[#d26019]" /> Personal Information
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5">
+          <div>
+            <label className={labelClass}>Event Name <span className="text-red-500">*</span></label>
+            <select
+              className={inputClass}
+              value={generalData.registrationFor}
+              onChange={(e) => setGeneralData({ ...generalData, registrationFor: e.target.value })}
+            >
+              {registrationOptions.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>First Name <span className="text-red-500">*</span></label>
+            <input
+              type="text"
+              className={inputClass}
+              placeholder="First Name"
+              value={generalData.firstName}
+              onChange={(e) => setGeneralData({ ...generalData, firstName: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Last Name <span className="text-red-500">*</span></label>
+            <input
+              type="text"
+              className={inputClass}
+              placeholder="Last Name"
+              value={generalData.lastName}
+              onChange={(e) => setGeneralData({ ...generalData, lastName: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Email Address <span className="text-red-500">*</span></label>
+            <input
+              type="email"
+              className={inputClass}
+              placeholder="Email"
+              value={generalData.email}
+              onChange={(e) => setGeneralData({ ...generalData, email: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Mobile Number <span className="text-red-500">*</span></label>
+            <input
+              type="tel"
+              className={inputClass}
+              placeholder="Mobile No."
+              value={generalData.mobile}
+              onChange={(e) => setGeneralData({ ...generalData, mobile: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Alternate No.</label>
+            <input
+              type="tel"
+              className={inputClass}
+              placeholder="Optional"
+              value={generalData.alternateNo}
+              onChange={(e) => setGeneralData({ ...generalData, alternateNo: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Date of Birth</label>
+            <input
+              type="date"
+              className={inputClass}
+              value={generalData.dateOfBirth}
+              onChange={(e) => setGeneralData({ ...generalData, dateOfBirth: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Gender</label>
+            <select
+              className={inputClass}
+              value={generalData.gender}
+              onChange={(e) => setGeneralData({ ...generalData, gender: e.target.value })}
+            >
+              {genders.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+            </select>
+          </div>
         </div>
+      </section>
 
-        {/* Purpose of Visit */}
-        <div className="mt-4">
-          <label className="block text-base font-semibold text-gray-900 mb-2">
-            Purpose of Visit <span className="text-red-500">*</span>
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* SECTION 2: PROFESSIONAL & LOCATION */}
+      <section>
+        <h3 className={sectionHeaderClass}>
+          <Briefcase className="w-5 h-5 text-[#d26019]" /> Occupation & Address
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5">
+          <div>
+            <label className={labelClass}>Company Name</label>
+            <input
+              type="text"
+              className={inputClass}
+              placeholder="Company"
+              value={generalData.companyName}
+              onChange={(e) => setGeneralData({ ...generalData, companyName: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Designation</label>
+            <input
+              type="text"
+              className={inputClass}
+              placeholder="Designation"
+              value={generalData.designation}
+              onChange={(e) => setGeneralData({ ...generalData, designation: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Industry/Sector</label>
+            <select
+              className={inputClass}
+              value={generalData.industrySector}
+              onChange={(e) => setGeneralData({ ...generalData, industrySector: e.target.value })}
+            >
+              {industrySectors.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Country <span className="text-red-500">*</span></label>
+            <select
+              className={inputClass}
+              value={generalData.country}
+              onChange={(e) => setGeneralData({ ...generalData, country: e.target.value, state: "Select State", city: "Select City" })}
+            >
+              {countriesArr.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>State</label>
+            <select
+              className={inputClass}
+              value={generalData.state}
+              onChange={(e) => setGeneralData({ ...generalData, state: e.target.value, city: "Select City" })}
+            >
+              {statesArr.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>City</label>
+            <select
+              className={inputClass}
+              value={generalData.city}
+              onChange={(e) => setGeneralData({ ...generalData, city: e.target.value })}
+            >
+              {citiesArr.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 3: INTERESTS */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <section>
+          <h3 className={sectionHeaderClass}>
+            <CheckSquare className="w-5 h-5 text-[#d26019]" /> Purpose of Visit
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 bg-slate-50 p-4 border border-slate-200 rounded-sm">
             {[
               { key: "businessNetworking", label: "Business Networking" },
-              { key: "exploringProducts", label: "Exploring New Products" },
-              { key: "buyingProducts", label: "Buying Products & Services" },
-              { key: "learningTrends", label: "Learning Industry Trends" },
-              { key: "others", label: "Others" },
+              { key: "exploringProducts", label: "Exploring Products" },
+              { key: "buyingProducts", label: "Buying Products" },
+              { key: "learningTrends", label: "Learning Trends" },
+              { key: "others", label: "Others" }
             ].map(({ key, label }) => (
-              <label
-                key={key}
-                className="flex items-center gap-2 cursor-pointer"
-              >
+              <label key={key} className="flex items-center gap-3 cursor-pointer group">
                 <input
                   type="checkbox"
                   checked={generalData.purposeOfVisit[key]}
-                  onChange={() => handleGeneralPurposeChange(key)}
-                  className="w-5 h-5 text-[#3598dc] focus:ring-[#3598dc] border-gray-300 rounded"
+                  onChange={() => handleCheckboxChange("purposeOfVisit", key)}
+                  className="w-4 h-4 rounded border-slate-400 text-[#23471d] focus:ring-[#23471d]"
                 />
-                <span className="text-base text-gray-700">{label}</span>
+                <span className="text-[13px] font-medium text-gray-600 group-hover:text-[#23471d] transition-colors">{label}</span>
               </label>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* Area of Interest */}
-        <div className="mt-4">
-          <label className="block text-base font-semibold text-gray-900 mb-2">
-            Area of Interest <span className="text-red-500">*</span>
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <section>
+          <h3 className={sectionHeaderClass}>
+            <Heart className="w-5 h-5 text-[#d26019]" /> Areas of Interest
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 bg-slate-50 p-4 border border-slate-200 rounded-sm">
             {[
-              { key: "ayushHerbal", label: "AYUSH & Herbal Products" },
-              { key: "organicProducts", label: "Organic & Natural Products" },
-              { key: "fitnessWellness", label: "Fitness & Wellness Equipment" },
+              { key: "ayushHerbal", label: "AYUSH & Herbal" },
+              { key: "organicProducts", label: "Organic Products" },
+              { key: "fitnessWellness", label: "Fitness & Wellness" },
               { key: "healthSupplements", label: "Health Supplements" },
-              {
-                key: "healthcareServices",
-                label: "Hospitals & Healthcare Services",
-              },
-              {
-                key: "agricultureFarming",
-                label: "Agriculture & Organic Farming",
-              },
-              { key: "researchInnovations", label: "R&D & Innovations" },
-              { key: "others", label: "Others" },
+              { key: "healthcareServices", label: "Healthcare Services" },
+              { key: "agricultureFarming", label: "Agriculture" },
+              { key: "researchInnovations", label: "Innovations" }
             ].map(({ key, label }) => (
-              <label
-                key={key}
-                className="flex items-center gap-2 cursor-pointer"
-              >
+              <label key={key} className="flex items-center gap-3 cursor-pointer group">
                 <input
                   type="checkbox"
                   checked={generalData.areaOfInterest[key]}
-                  onChange={() => handleGeneralInterestChange(key)}
-                  className="w-5 h-5 text-[#3598dc] focus:ring-[#3598dc] border-gray-300 rounded"
+                  onChange={() => handleCheckboxChange("areaOfInterest", key)}
+                  className="w-4 h-4 rounded border-slate-400 text-[#23471d] focus:ring-[#23471d]"
                 />
-                <span className="text-base text-gray-700">{label}</span>
+                <span className="text-[13px] font-medium text-gray-600 group-hover:text-[#23471d] transition-colors">{label}</span>
               </label>
             ))}
           </div>
-        </div>
+        </section>
+      </div>
 
-        {/* Subscribe */}
-        <div className="mt-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={generalData.subscribe}
-              onChange={(e) =>
-                setGeneralData({ ...generalData, subscribe: e.target.checked })
-              }
-              className="w-5 h-5 text-[#3598dc] focus:ring-[#3598dc] border-gray-300 rounded"
-            />
-            <span className="text-base text-gray-700">
-              Subscribe to Event Updates & Newsletters
-            </span>
-          </label>
-        </div>
+      {/* FOOTER OPTIONS */}
+      <section className="bg-[#f9f9f9] p-6 border-l-4 border-[#23471d]">
+        <label className="flex items-center gap-3 cursor-pointer group">
+          <input
+            type="checkbox"
+            checked={generalData.subscribe}
+            onChange={(e) => setGeneralData({ ...generalData, subscribe: e.target.checked })}
+            className="w-5 h-5 rounded border-slate-400 text-[#23471d] focus:ring-[#23471d]"
+          />
+          <span className="text-sm font-bold text-gray-700 uppercase tracking-tight">Subscribe to Event Updates & Newsletters</span>
+        </label>
+      </section>
 
-        {/* Submit Button */}
-        <div className="flex justify-start mt-6">
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-[#3598dc] hover:bg-[#2980b9] text-white px-6 py-2 text-base rounded-md uppercase disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+      {/* FOOTER ACTIONS ── STICKY VIBE */}
+      <div className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center mt-12 bg-white pb-6">
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center gap-2 mb-4 sm:mb-0">
+          <Heart size={14} className="text-[#23471d]" />
+          SECURE VISITOR PORTAL
+        </p>
+        <div className="flex gap-4">
+          <button 
+            type="button" 
+            onClick={resetForm}
+            className="px-10 py-2.5 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all rounded-[2px] shadow-sm"
           >
-            {loading ? "Submitting..." : "Submit Registration"}
+            Reset Form
+          </button>
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="px-12 py-2.5 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-lg flex items-center gap-3 group"
+          >
+            {loading ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <>
+                SUBMIT REGISTRATION
+                <Send size={15} className="group-hover:translate-x-1.5 transition-transform" />
+              </>
+            )}
           </button>
         </div>
-      </form>
-    </div>
+      </div>
+    </form>
   );
 };
 

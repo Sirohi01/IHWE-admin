@@ -1,8 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import { API_URL } from "../../../lib/api";
 import { createActivityLogThunk } from "../../activityLog/activityLogSlice";
 
-const BASE_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = API_URL;
 
 // ✅ Fetch All Banks
 export const fetchBanks = createAsyncThunk(

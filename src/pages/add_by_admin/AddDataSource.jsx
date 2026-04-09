@@ -1,939 +1,41 @@
-// import React, { useEffect, useMemo, useState } from "react";
-// import { Pencil, Trash2 } from "lucide-react";
-// import { useSelector, useDispatch } from "react-redux";
-// import {
-//   fetchDataSources,
-//   createDataSource,
-//   updateDataSource,
-//   deleteDataSource,
-// } from "../../features/add_by_admin/dataSource/dataSourceSlice";
-// import { showError, showSuccess } from "../../utils/toastMessage";
-
-// /** Simple Pagination component */
-// const Pagination = ({ currentPage, totalPages, onPageChange }) => {
-//   const pages = [];
-//   const start = Math.max(1, currentPage - 2);
-//   const end = Math.min(totalPages, currentPage + 2);
-//   for (let p = start; p <= end; p++) pages.push(p);
-
-//   return (
-//     <div style={styles.pagination}>
-//       <button
-//         onClick={() => onPageChange(1)}
-//         disabled={currentPage === 1}
-//         style={{
-//           ...styles.pageBtn,
-//           ...(currentPage === 1 ? styles.disabledBtn : {}),
-//         }}
-//       >
-//         {"<<"}
-//       </button>
-//       <button
-//         onClick={() => onPageChange(currentPage - 1)}
-//         disabled={currentPage === 1}
-//         style={{
-//           ...styles.pageBtn,
-//           ...(currentPage === 1 ? styles.disabledBtn : {}),
-//         }}
-//       >
-//         {"<"}
-//       </button>
-
-//       {start > 1 && <span style={styles.pageGap}>...</span>}
-
-//       {pages.map((p) => (
-//         <button
-//           key={p}
-//           onClick={() => onPageChange(p)}
-//           style={{
-//             ...styles.pageBtn,
-//             ...(p === currentPage ? styles.activePageBtn : {}),
-//           }}
-//         >
-//           {p}
-//         </button>
-//       ))}
-
-//       {end < totalPages && <span style={styles.pageGap}>...</span>}
-
-//       <button
-//         onClick={() => onPageChange(currentPage + 1)}
-//         disabled={currentPage === totalPages}
-//         style={{
-//           ...styles.pageBtn,
-//           ...(currentPage === totalPages ? styles.disabledBtn : {}),
-//         }}
-//       >
-//         {">"}
-//       </button>
-//       <button
-//         onClick={() => onPageChange(totalPages)}
-//         disabled={currentPage === totalPages}
-//         style={{
-//           ...styles.pageBtn,
-//           ...(currentPage === totalPages ? styles.disabledBtn : {}),
-//         }}
-//       >
-//         {">>"}
-//       </button>
-//     </div>
-//   );
-// };
-
-// const AddDataSource = () => {
-//   const dispatch = useDispatch();
-//   const [editingSource, setEditingSource] = useState(null);
-//   const [formData, setFormData] = useState({
-//     name: "",
-//     status: "Active",
-//   });
-
-//   const [searchText, setSearchText] = useState("");
-//   const [statusFilter, setStatusFilter] = useState("All");
-//   const [sortBy, setSortBy] = useState({ key: "source_id", dir: "asc" });
-
-//   const [currentPage, setCurrentPage] = useState(1);
-//   const [rowsPerPage, setRowsPerPage] = useState(10);
-//   const [message, setMessage] = useState(null);
-
-//   // ✅ Safe extraction from Redux slice
-//   const dataSourcesState = useSelector((state) => state.dataSources);
-//   const dataSources = Array.isArray(dataSourcesState?.dataSources)
-//     ? dataSourcesState.dataSources
-//     : [];
-//   const isLoading = dataSourcesState?.loading ?? false;
-//   const error = dataSourcesState?.error ?? null;
-
-//   useEffect(() => {
-//     dispatch(fetchDataSources());
-//   }, [dispatch]);
-
-//   const handleChange = (e) => {
-//     const { name, value } = e.target;
-//     setFormData((prevData) => ({
-//       ...prevData,
-//       [name]: value,
-//     }));
-//   };
-
-//   const resetForm = () => {
-//     setFormData({ name: "", status: "Active" });
-//     setEditingSource(null);
-//   };
-
-//   const handleAddDataSource = async () => {
-//     if (!formData.name || !formData.name.trim()) {
-//       showError("Please enter a source name!");
-//       return;
-//     }
-
-//     const trimmedName = formData.name.trim();
-//     const duplicate = dataSources.find(
-//       (s) =>
-//         (s?.source_name || "").trim().toLowerCase() ===
-//           trimmedName.toLowerCase() &&
-//         (!editingSource || s._id !== editingSource._id),
-//     );
-//     if (duplicate) {
-//       showError("A data source with that name already exists!");
-//       return;
-//     }
-
-//     const newSourceId =
-//       dataSources.length > 0
-//         ? Math.max(...dataSources.map((s) => s.source_id || 0)) + 1
-//         : 1;
-
-//     const dataSourceData = {
-//       source_id: newSourceId,
-//       source_name: trimmedName,
-//       source_status: formData.status.toLowerCase(),
-//       added: new Date().toISOString(),
-//     };
-
-//     try {
-//       if (editingSource) {
-//         await dispatch(
-//           updateDataSource({ id: editingSource._id, updates: dataSourceData }),
-//         ).unwrap();
-//         showSuccess("Data Source updated successfully!");
-//       } else {
-//         await dispatch(createDataSource(dataSourceData)).unwrap();
-//         showSuccess("Data Source added successfully!");
-//       }
-//       resetForm();
-//       dispatch(fetchDataSources());
-//     } catch (err) {
-//       const action = editingSource ? "update" : "create";
-//       showError(`Failed to ${action} Data Source. Please try again.`);
-//       console.error(`Failed to ${action} Data Source:`, err);
-//     }
-//   };
-
-//   const handleEdit = (sourceId) => {
-//     const sourceToEdit = dataSources.find((src) => src?._id === sourceId);
-//     if (sourceToEdit) {
-//       setFormData({
-//         name: sourceToEdit.source_name,
-//         status: sourceToEdit.source_status
-//           ? sourceToEdit.source_status.charAt(0).toUpperCase() +
-//             sourceToEdit.source_status.slice(1)
-//           : "Active",
-//       });
-//       setEditingSource(sourceToEdit);
-//       window.scrollTo({ top: 0, behavior: "smooth" });
-//     }
-//   };
-
-//   const handleDelete = async (sourceId) => {
-//     const sourceToDelete = dataSources.find((s) => s?._id === sourceId);
-//     if (!sourceToDelete) return;
-
-//     try {
-//       await dispatch(deleteDataSource(sourceId)).unwrap();
-//       showSuccess("Data Source deleted successfully!");
-//       dispatch(fetchDataSources());
-//     } catch (err) {
-//       showError("Failed to delete Data Source. Please try again.", 3000);
-//       console.error("Failed to delete Data Source:", err);
-//     }
-//   };
-
-//   // ✅ Filtering and sorting with bug fixes
-//   const filteredAndSortedDataSources = useMemo(() => {
-//     let list = [...dataSources]; // already guaranteed array
-
-//     // 1. Apply search filter
-//     if (searchText.trim()) {
-//       const s = searchText.trim().toLowerCase();
-//       list = list.filter((item) =>
-//         (item?.source_name || "").toLowerCase().includes(s),
-//       );
-//     }
-
-//     // 2. Apply status filter
-//     if (statusFilter !== "All") {
-//       const filterStatus = statusFilter.toLowerCase();
-//       list = list.filter(
-//         (item) => (item?.source_status || "").toLowerCase() === filterStatus,
-//       );
-//     }
-
-//     // 3. Apply sorting
-//     const { key, dir } = sortBy;
-//     list.sort((a, b) => {
-//       let av = a[key];
-//       let bv = b[key];
-//       if (key === "source_id") {
-//         av = Number(av);
-//         bv = Number(bv);
-//       } else {
-//         av = (av || "").toString().toLowerCase();
-//         bv = (bv || "").toString().toLowerCase();
-//       }
-//       if (av < bv) return dir === "asc" ? -1 : 1;
-//       if (av > bv) return dir === "asc" ? 1 : -1;
-//       return 0;
-//     });
-
-//     return list;
-//   }, [dataSources, searchText, statusFilter, sortBy]);
-
-//   const totalPages = Math.max(
-//     1,
-//     Math.ceil(filteredAndSortedDataSources.length / rowsPerPage),
-//   );
-//   useEffect(() => {
-//     if (currentPage > totalPages) setCurrentPage(totalPages);
-//   }, [totalPages, currentPage]);
-
-//   const currentPageData = useMemo(() => {
-//     const start = (currentPage - 1) * rowsPerPage;
-//     return filteredAndSortedDataSources.slice(start, start + rowsPerPage);
-//   }, [filteredAndSortedDataSources, currentPage, rowsPerPage]);
-
-//   const toggleSort = (key) => {
-//     setSortBy((prev) => {
-//       if (prev.key === key) {
-//         return { ...prev, dir: prev.dir === "asc" ? "desc" : "asc" };
-//       } else {
-//         return { key, dir: "asc" };
-//       }
-//     });
-//   };
-
-//   return (
-//     <div
-//       className="w-full"
-//       style={{
-//         backgroundColor: "#ecf0f5",
-//         minHeight: "100vh",
-//         padding: "0",
-//         marginTop: "30px",
-//       }}
-//     >
-//       {/* Header Section */}
-//       <div
-//         className="w-full bg-white"
-//         style={{ borderBottom: "1px solid #e0e0e0" }}
-//       >
-//         <div className="flex items-center justify-between px-6 py-3">
-//           <h1 className="text-lg font-normal" style={{ color: "#666" }}>
-//             DATA SOURCE
-//           </h1>
-//         </div>
-//       </div>
-
-//       {/* Main Content */}
-//       <div style={{ padding: "20px" }}>
-//         {/* Notification message */}
-//         {message && (
-//           <div style={styles.messageBox}>
-//             <span>{message}</span>
-//           </div>
-//         )}
-
-//         {/* Add/Edit Data Source Section */}
-//         <div className="bg-white mb-5" style={{ border: "1px solid #ddd" }}>
-//           <div
-//             className="px-5 py-3"
-//             style={{
-//               backgroundColor: "#f9f9f9",
-//               borderBottom: "1px solid #ddd",
-//             }}
-//           >
-//             <h2
-//               className="text-base font-semibold"
-//               style={{ color: "#555", margin: 0 }}
-//             >
-//               {editingSource ? "EDIT DATA SOURCE" : "ADD DATA SOURCE"}
-//             </h2>
-//           </div>
-
-//           <div className="p-6">
-//             <div
-//               className="flex items-start gap-8"
-//               style={{ alignItems: "flex-end" }}
-//             >
-//               {/* Name Field */}
-//               <div style={{ flex: 1 }}>
-//                 <label
-//                   className="block text-sm font-medium mb-2"
-//                   style={{ color: "#333" }}
-//                 >
-//                   Name <span style={{ color: "#f44336" }}>*</span>
-//                 </label>
-//                 <input
-//                   type="text"
-//                   name="name"
-//                   value={formData.name}
-//                   onChange={handleChange}
-//                   className="w-full px-3 py-2 text-sm"
-//                   style={styles.input}
-//                   placeholder="Enter source name"
-//                   required
-//                   onKeyDown={(e) => {
-//                     if (e.key === "Enter") {
-//                       handleAddDataSource();
-//                     }
-//                   }}
-//                 />
-//               </div>
-
-//               {/* Status Field */}
-//               <div style={{ width: 280 }}>
-//                 <label
-//                   className="block text-sm font-medium mb-2"
-//                   style={{ color: "#333" }}
-//                 >
-//                   Status <span style={{ color: "#f44336" }}>*</span>
-//                 </label>
-//                 <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-//                   <label style={styles.radioLabel}>
-//                     <input
-//                       type="radio"
-//                       name="status"
-//                       value="Active"
-//                       checked={formData.status === "Active"}
-//                       onChange={handleChange}
-//                       style={{ marginRight: 8 }}
-//                     />
-//                     <span style={{ color: "#333" }}>Active</span>
-//                   </label>
-//                   <label style={styles.radioLabel}>
-//                     <input
-//                       type="radio"
-//                       name="status"
-//                       value="Inactive"
-//                       checked={formData.status === "Inactive"}
-//                       onChange={handleChange}
-//                       style={{ marginRight: 8 }}
-//                     />
-//                     <span style={{ color: "#333" }}>Inactive</span>
-//                   </label>
-//                 </div>
-//               </div>
-
-//               {/* Add / Update Button */}
-//               <div style={{ display: "flex", alignItems: "flex-end" }}>
-//                 <button
-//                   onClick={handleAddDataSource}
-//                   className="px-6 py-2 text-sm text-white"
-//                   style={{
-//                     backgroundColor: "#5bc0de",
-//                     border: "none",
-//                     borderRadius: 3,
-//                     cursor: "pointer",
-//                   }}
-//                   title={editingSource ? "Update Source" : "Add Source"}
-//                 >
-//                   {editingSource ? "Update Source" : "Add Source"}
-//                 </button>
-//               </div>
-
-//               {/* Cancel (visible when editing) */}
-//               {editingSource && (
-//                 <div style={{ display: "flex", alignItems: "flex-end" }}>
-//                   <button
-//                     onClick={resetForm}
-//                     className="px-4 py-2 text-sm"
-//                     style={{
-//                       backgroundColor: "#e0e0e0",
-//                       color: "#333",
-//                       borderRadius: 3,
-//                       border: "none",
-//                       cursor: "pointer",
-//                     }}
-//                   >
-//                     Cancel
-//                   </button>
-//                 </div>
-//               )}
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* List Section */}
-//         <div className="bg-white" style={{ border: "1px solid #ddd" }}>
-//           {/* Filter / Search / Sort Row */}
-//           <div
-//             className="px-5 py-3"
-//             style={{
-//               backgroundColor: "#f9f9f9",
-//               borderBottom: "1px solid #ddd",
-//               display: "flex",
-//               alignItems: "center",
-//               gap: 12,
-//             }}
-//           >
-//             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-//               <label
-//                 style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
-//               >
-//                 <span style={{ color: "#333", fontSize: 13 }}>Show</span>
-//                 <select
-//                   value={rowsPerPage}
-//                   onChange={(e) => {
-//                     setRowsPerPage(Number(e.target.value));
-//                     setCurrentPage(1);
-//                   }}
-//                   style={styles.smallSelect}
-//                 >
-//                   <option value={5}>5</option>
-//                   <option value={10}>10</option>
-//                   <option value={20}>20</option>
-//                   <option value={50}>50</option>
-//                 </select>
-//                 <span style={{ color: "#333", fontSize: 13 }}>entries</span>
-//               </label>
-
-//               <label
-//                 style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
-//               >
-//                 <span style={{ color: "#333", fontSize: 13 }}>Status</span>
-//                 <select
-//                   value={statusFilter}
-//                   onChange={(e) => {
-//                     setStatusFilter(e.target.value);
-//                     setCurrentPage(1);
-//                   }}
-//                   style={styles.smallSelect}
-//                 >
-//                   <option value="All">All</option>
-//                   <option value="Active">Active</option>
-//                   <option value="Inactive">Inactive</option>
-//                 </select>
-//               </label>
-//             </div>
-
-//             {/* Search box */}
-//             <div
-//               style={{
-//                 marginLeft: "auto",
-//                 display: "flex",
-//                 gap: 8,
-//                 alignItems: "center",
-//               }}
-//             >
-//               <input
-//                 type="text"
-//                 placeholder="Search sources..."
-//                 value={searchText}
-//                 onChange={(e) => {
-//                   setSearchText(e.target.value);
-//                   setCurrentPage(1);
-//                 }}
-//                 style={styles.searchInput}
-//               />
-//               <button
-//                 onClick={() => {
-//                   setSearchText("");
-//                   setStatusFilter("All");
-//                   setRowsPerPage(10);
-//                   setSortBy({ key: "source_id", dir: "asc" });
-//                 }}
-//                 style={styles.clearBtn}
-//               >
-//                 Reset
-//               </button>
-//             </div>
-//           </div>
-
-//           {/* Table header */}
-//           <div style={{ maxHeight: "500px", overflowY: "auto" }}>
-//             <table
-//               className="w-full"
-//               style={{ borderCollapse: "collapse", width: "100%" }}
-//             >
-//               <thead
-//                 style={{
-//                   position: "sticky",
-//                   top: 0,
-//                   backgroundColor: "#f9f9f9",
-//                   zIndex: 1,
-//                 }}
-//               >
-//                 <tr style={{ borderBottom: "2px solid #ddd" }}>
-//                   <th
-//                     className="px-4 py-3 text-sm font-semibold text-center"
-//                     style={thStyle(80)}
-//                   >
-//                     <div
-//                       style={{
-//                         display: "flex",
-//                         alignItems: "center",
-//                         justifyContent: "center",
-//                         gap: 8,
-//                       }}
-//                     >
-//                       No.
-//                       <button
-//                         onClick={() => toggleSort("source_id")}
-//                         style={styles.sortBtn}
-//                       >
-//                         {sortBy.key === "source_id"
-//                           ? sortBy.dir === "asc"
-//                             ? "▲"
-//                             : "▼"
-//                           : "↕"}
-//                       </button>
-//                     </div>
-//                   </th>
-//                   <th
-//                     className="px-4 py-3 text-sm font-semibold text-left"
-//                     style={thStyle()}
-//                   >
-//                     <div
-//                       style={{ display: "flex", alignItems: "center", gap: 8 }}
-//                     >
-//                       Source Name
-//                       <button
-//                         onClick={() => toggleSort("source_name")}
-//                         style={styles.sortBtn}
-//                       >
-//                         {sortBy.key === "source_name"
-//                           ? sortBy.dir === "asc"
-//                             ? "▲"
-//                             : "▼"
-//                           : "↕"}
-//                       </button>
-//                     </div>
-//                   </th>
-//                   <th
-//                     className="px-4 py-3 text-sm font-semibold text-center"
-//                     style={thStyle(150)}
-//                   >
-//                     <div
-//                       style={{
-//                         display: "flex",
-//                         alignItems: "center",
-//                         justifyContent: "center",
-//                         gap: 8,
-//                       }}
-//                     >
-//                       Status
-//                       <button
-//                         onClick={() => toggleSort("source_status")}
-//                         style={styles.sortBtn}
-//                       >
-//                         {sortBy.key === "source_status"
-//                           ? sortBy.dir === "asc"
-//                             ? "▲"
-//                             : "▼"
-//                           : "↕"}
-//                       </button>
-//                     </div>
-//                   </th>
-//                   <th
-//                     className="px-4 py-3 text-sm font-semibold text-center"
-//                     style={thStyle(120)}
-//                   >
-//                     Action
-//                   </th>
-//                 </tr>
-//               </thead>
-
-//               <tbody>
-//                 {isLoading && (
-//                   <tr>
-//                     <td
-//                       colSpan={4}
-//                       style={{
-//                         padding: 24,
-//                         textAlign: "center",
-//                         color: "#777",
-//                       }}
-//                     >
-//                       Loading data sources...
-//                     </td>
-//                   </tr>
-//                 )}
-
-//                 {!isLoading && currentPageData.length === 0 && (
-//                   <tr>
-//                     <td
-//                       colSpan={4}
-//                       style={{
-//                         padding: 24,
-//                         textAlign: "center",
-//                         color: "#777",
-//                       }}
-//                     >
-//                       No data sources found.
-//                     </td>
-//                   </tr>
-//                 )}
-
-//                 {!isLoading &&
-//                   currentPageData.map((source, index) => (
-//                     <tr
-//                       key={source._id}
-//                       style={{
-//                         borderBottom: "1px solid #ddd",
-//                         backgroundColor:
-//                           index % 2 === 0 ? "#ffffff" : "#f9f9f9",
-//                       }}
-//                     >
-//                       <td
-//                         className="px-4 py-3 text-sm text-center"
-//                         style={{ color: "#333", width: 80 }}
-//                       >
-//                         {(currentPage - 1) * rowsPerPage + index + 1}
-//                       </td>
-
-//                       <td
-//                         className="px-4 py-3 text-sm"
-//                         style={{ color: "#333" }}
-//                       >
-//                         {source?.source_name || ""}
-//                       </td>
-
-//                       <td className="px-4 py-3 text-center">
-//                         {source?.source_status ? (
-//                           <span
-//                             className="inline-block px-3 py-1 text-xs text-white"
-//                             style={{
-//                               backgroundColor:
-//                                 source.source_status.toLowerCase() === "active"
-//                                   ? "#337ab7"
-//                                   : "#d9534f",
-//                               borderRadius: 3,
-//                             }}
-//                           >
-//                             {source.source_status.charAt(0).toUpperCase() +
-//                               source.source_status.slice(1)}
-//                           </span>
-//                         ) : null}
-//                       </td>
-
-//                       <td className="px-4 py-3" style={{ textAlign: "center" }}>
-//                         <div
-//                           style={{
-//                             display: "flex",
-//                             justifyContent: "center",
-//                             gap: 8,
-//                           }}
-//                         >
-//                           <button
-//                             onClick={() => handleEdit(source._id)}
-//                             style={{
-//                               ...styles.iconBtn,
-//                               borderColor: "#337ab7",
-//                               color: "#337ab7",
-//                             }}
-//                             title="Edit"
-//                           >
-//                             <Pencil size={14} />
-//                           </button>
-
-//                           <button
-//                             onClick={() => handleDelete(source._id)}
-//                             style={{
-//                               ...styles.iconBtn,
-//                               borderColor: "#d9534f",
-//                               color: "#d9534f",
-//                             }}
-//                             title="Delete"
-//                           >
-//                             <Trash2 size={14} />
-//                           </button>
-//                         </div>
-//                       </td>
-//                     </tr>
-//                   ))}
-//               </tbody>
-//             </table>
-//           </div>
-
-//           {/* Footer: Pagination and summary */}
-//           <div
-//             style={{
-//               display: "flex",
-//               alignItems: "center",
-//               justifyContent: "space-between",
-//               padding: 12,
-//             }}
-//           >
-//             <div style={{ color: "#666", fontSize: 13 }}>
-//               Showing{" "}
-//               <strong style={{ color: "#333" }}>
-//                 {filteredAndSortedDataSources.length === 0
-//                   ? 0
-//                   : (currentPage - 1) * rowsPerPage + 1}
-//               </strong>{" "}
-//               to{" "}
-//               <strong style={{ color: "#333" }}>
-//                 {Math.min(
-//                   currentPage * rowsPerPage,
-//                   filteredAndSortedDataSources.length,
-//                 )}
-//               </strong>{" "}
-//               of{" "}
-//               <strong style={{ color: "#333" }}>
-//                 {filteredAndSortedDataSources.length}
-//               </strong>{" "}
-//               entries
-//             </div>
-
-//             <Pagination
-//               currentPage={currentPage}
-//               totalPages={totalPages}
-//               onPageChange={setCurrentPage}
-//             />
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// const styles = {
-//   input: {
-//     border: "1px solid #d2d6de",
-//     borderRadius: 3,
-//     padding: "8px 10px",
-//     fontSize: 14,
-//     width: "100%",
-//     boxSizing: "border-box",
-//   },
-//   radioLabel: {
-//     display: "inline-flex",
-//     alignItems: "center",
-//     gap: 6,
-//     cursor: "pointer",
-//   },
-//   smallActionBtn: {
-//     backgroundColor: "#f7f7f7",
-//     border: "1px solid #ddd",
-//     padding: "6px 10px",
-//     borderRadius: 3,
-//     cursor: "pointer",
-//     fontSize: 13,
-//   },
-//   searchInput: {
-//     padding: "8px 10px",
-//     borderRadius: 3,
-//     border: "1px solid #d2d6de",
-//     width: 280,
-//   },
-//   clearBtn: {
-//     padding: "8px 10px",
-//     borderRadius: 3,
-//     border: "1px solid #ddd",
-//     backgroundColor: "#fff",
-//     cursor: "pointer",
-//     fontSize: 13,
-//   },
-//   smallSelect: {
-//     padding: "6px 8px",
-//     borderRadius: 3,
-//     border: "1px solid #d2d6de",
-//   },
-//   iconBtn: {
-//     padding: 6,
-//     borderRadius: 4,
-//     border: "1px solid #ccc",
-//     backgroundColor: "white",
-//     cursor: "pointer",
-//   },
-//   sortBtn: {
-//     background: "transparent",
-//     border: "none",
-//     cursor: "pointer",
-//     padding: 2,
-//     fontSize: 12,
-//   },
-//   messageBox: {
-//     backgroundColor: "#e9f7ef",
-//     border: "1px solid #c7efd9",
-//     padding: "8px 12px",
-//     borderRadius: 4,
-//     marginBottom: 12,
-//     color: "#2f7a4b",
-//     display: "inline-block",
-//   },
-//   pagination: {
-//     display: "flex",
-//     gap: 6,
-//     alignItems: "center",
-//   },
-//   pageBtn: {
-//     padding: "6px 9px",
-//     border: "1px solid #ddd",
-//     borderRadius: 4,
-//     cursor: "pointer",
-//     background: "white",
-//   },
-//   disabledBtn: {
-//     opacity: 0.5,
-//     cursor: "not-allowed",
-//   },
-//   activePageBtn: {
-//     backgroundColor: "#3598dc",
-//     color: "white",
-//     borderColor: "#2f82c4",
-//   },
-//   pageGap: {
-//     padding: "0 6px",
-//     color: "#999",
-//   },
-// };
-
-// /* Helper to produce th style with fixed width optional */
-// const thStyle = (width) => ({
-//   color: "#333",
-//   borderRight: "1px solid #ddd",
-//   textAlign: "center",
-//   width: width ? width : "auto",
-//   padding: "12px 8px",
-// });
-
-// export default AddDataSource;
 import React, { useEffect, useMemo, useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  fetchDataSources,
-  createDataSource,
-  updateDataSource,
-  deleteDataSource,
-} from "../../features/add_by_admin/dataSource/dataSourceSlice";
-import { showError, showSuccess } from "../../utils/toastMessage";
+import { fetchDataSources, createDataSource, updateDataSource, deleteDataSource } from "../../features/add_by_admin/dataSource/dataSourceSlice";
+import Swal from "sweetalert2";
+import { createActivityLogThunk } from "../../features/activityLog/activityLogSlice";
 
-/** Simple Pagination component */
+/** Standardized Pagination component */
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   const pages = [];
   const start = Math.max(1, currentPage - 2);
   const end = Math.min(totalPages, currentPage + 2);
   for (let p = start; p <= end; p++) pages.push(p);
 
-  return (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={() => onPageChange(1)}
-        disabled={currentPage === 1}
-        className={`px-3 py-2 border border-gray-300 bg-white text-base rounded-md ${
-          currentPage === 1
-            ? "opacity-50 cursor-not-allowed"
-            : "hover:bg-gray-50"
-        }`}
-      >
-        {"<<"}
-      </button>
-      <button
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className={`px-3 py-2 border border-gray-300 bg-white text-base rounded-md ${
-          currentPage === 1
-            ? "opacity-50 cursor-not-allowed"
-            : "hover:bg-gray-50"
-        }`}
-      >
-        {"<"}
-      </button>
+  const btnCls = "w-8 h-8 flex items-center justify-center border border-slate-300 bg-white text-[11px] font-bold rounded-[2px] hover:bg-slate-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed";
+  const activeBtnCls = "w-8 h-8 flex items-center justify-center border border-[#23471d] bg-[#23471d] text-white text-[11px] font-bold rounded-[2px] transition-colors";
 
-      {start > 1 && <span className="px-2 text-gray-400 text-base">...</span>}
+  return (
+    <div className="flex items-center gap-1.5 mt-2">
+      <button onClick={() => onPageChange(1)} disabled={currentPage === 1} className={btnCls}>{"<<"}</button>
+      <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className={btnCls}>{"<"}</button>
+
+      {start > 1 && <span className="px-1 text-slate-400 text-[10px] font-bold">...</span>}
 
       {pages.map((p) => (
         <button
           key={p}
           onClick={() => onPageChange(p)}
-          className={`px-3 py-2 border text-base rounded-md ${
-            p === currentPage
-              ? "bg-blue-500 text-white border-blue-600"
-              : "border-gray-300 bg-white hover:bg-gray-50"
-          }`}
+          className={p === currentPage ? activeBtnCls : btnCls}
         >
           {p}
         </button>
       ))}
 
-      {end < totalPages && (
-        <span className="px-2 text-gray-400 text-base">...</span>
-      )}
+      {end < totalPages && <span className="px-1 text-slate-400 text-[10px] font-bold">...</span>}
 
-      <button
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className={`px-3 py-2 border border-gray-300 bg-white text-base rounded-md ${
-          currentPage === totalPages
-            ? "opacity-50 cursor-not-allowed"
-            : "hover:bg-gray-50"
-        }`}
-      >
-        {">"}
-      </button>
-      <button
-        onClick={() => onPageChange(totalPages)}
-        disabled={currentPage === totalPages}
-        className={`px-3 py-2 border border-gray-300 bg-white text-base rounded-md ${
-          currentPage === totalPages
-            ? "opacity-50 cursor-not-allowed"
-            : "hover:bg-gray-50"
-        }`}
-      >
-        {">>"}
-      </button>
+      <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className={btnCls}>{">"}</button>
+      <button onClick={() => onPageChange(totalPages)} disabled={currentPage === totalPages} className={btnCls}>{">>"}</button>
     </div>
   );
 };
@@ -952,14 +54,12 @@ const AddDataSource = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [message, setMessage] = useState(null);
 
   const dataSourcesState = useSelector((state) => state.dataSources);
   const dataSources = Array.isArray(dataSourcesState?.dataSources)
     ? dataSourcesState.dataSources
     : [];
   const isLoading = dataSourcesState?.loading ?? false;
-  const error = dataSourcesState?.error ?? null;
 
   useEffect(() => {
     dispatch(fetchDataSources());
@@ -978,9 +78,15 @@ const AddDataSource = () => {
     setEditingSource(null);
   };
 
-  const handleAddDataSource = async () => {
+  const handleAddDataSource = async (e) => {
+    if (e) e.preventDefault();
     if (!formData.name || !formData.name.trim()) {
-      showError("Please enter a source name!");
+      Swal.fire({
+        title: "Error",
+        text: "Please enter a source name!",
+        icon: "error",
+        confirmButtonColor: "#23471d",
+      });
       return;
     }
 
@@ -992,7 +98,12 @@ const AddDataSource = () => {
         (!editingSource || s._id !== editingSource._id),
     );
     if (duplicate) {
-      showError("A data source with that name already exists!");
+      Swal.fire({
+        title: "Duplicate",
+        text: "A data source with that name already exists!",
+        icon: "warning",
+        confirmButtonColor: "#23471d",
+      });
       return;
     }
 
@@ -1013,17 +124,54 @@ const AddDataSource = () => {
         await dispatch(
           updateDataSource({ id: editingSource._id, updates: dataSourceData }),
         ).unwrap();
-        showSuccess("Data Source updated successfully!");
+        
+        // Log activity
+        const userId = sessionStorage.getItem("user_id");
+        if (userId) {
+          dispatch(createActivityLogThunk({
+            user_id: userId,
+            message: `System Config: Updated data source '${formData.name}'`,
+            section: "System Configuration",
+            data: { action: "UPDATE", type: "DATA_SOURCE", name: formData.name }
+          }));
+        }
+
+        Swal.fire({
+          title: "Success!",
+          text: "Data Source updated successfully!",
+          icon: "success",
+          confirmButtonColor: "#23471d",
+        });
       } else {
         await dispatch(createDataSource(dataSourceData)).unwrap();
-        showSuccess("Data Source added successfully!");
+        
+        // Log activity
+        const userId = sessionStorage.getItem("user_id");
+        if (userId) {
+          dispatch(createActivityLogThunk({
+            user_id: userId,
+            message: `System Config: Added new data source '${formData.name}'`,
+            section: "System Configuration",
+            data: { action: "ADD", type: "DATA_SOURCE", name: formData.name }
+          }));
+        }
+
+        Swal.fire({
+          title: "Success!",
+          text: "Data Source added successfully!",
+          icon: "success",
+          confirmButtonColor: "#23471d",
+        });
       }
       resetForm();
       dispatch(fetchDataSources());
     } catch (err) {
-      const action = editingSource ? "update" : "create";
-      showError(`Failed to ${action} Data Source. Please try again.`);
-      console.error(`Failed to ${action} Data Source:`, err);
+      Swal.fire({
+        title: "Error",
+        text: err?.message || `Failed to ${editingSource ? "update" : "create"} Data Source.`,
+        icon: "error",
+        confirmButtonColor: "#23471d",
+      });
     }
   };
 
@@ -1043,20 +191,52 @@ const AddDataSource = () => {
   };
 
   const handleDelete = async (sourceId) => {
-    const sourceToDelete = dataSources.find((s) => s?._id === sourceId);
+    const sourceToDelete = dataSources.find((s) => s._id === sourceId);
     if (!sourceToDelete) return;
 
-    try {
-      await dispatch(deleteDataSource(sourceId)).unwrap();
-      showSuccess("Data Source deleted successfully!");
-      dispatch(fetchDataSources());
-    } catch (err) {
-      showError("Failed to delete Data Source. Please try again.", 3000);
-      console.error("Failed to delete Data Source:", err);
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: `Do you want to delete data source '${sourceToDelete.source_name}'?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#23471d",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await dispatch(deleteDataSource(sourceId)).unwrap();
+        
+        // Log activity
+        const userId = sessionStorage.getItem("user_id");
+        if (userId) {
+          dispatch(createActivityLogThunk({
+            user_id: userId,
+            message: `System Config: Deleted data source '${sourceToDelete.source_name}'`,
+            section: "System Configuration",
+            data: { action: "DELETE", type: "DATA_SOURCE", name: sourceToDelete.source_name }
+          }));
+        }
+
+        Swal.fire({
+          title: "Deleted!",
+          text: "Data Source has been deleted.",
+          icon: "success",
+          confirmButtonColor: "#23471d",
+        });
+        dispatch(fetchDataSources());
+      } catch (err) {
+        Swal.fire({
+          title: "Error",
+          text: err?.message || "Failed to delete Data Source.",
+          icon: "error",
+          confirmButtonColor: "#23471d",
+        });
+      }
     }
   };
 
-  // Filtering and sorting
   const filteredAndSortedDataSources = useMemo(() => {
     let list = [...dataSources];
 
@@ -1116,301 +296,173 @@ const AddDataSource = () => {
     });
   };
 
+  const inputCls = "rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-900 font-medium shadow-none outline-none px-3 w-full text-left";
+  const labelCls = "text-[11px] font-bold text-slate-800 mb-1 block capitalize font-inter";
+
   return (
-    <div className="w-full min-h-screen bg-[#ecf0f5] mt-[30px]">
-      {/* Header Section */}
-      <div className="w-full bg-white border-b border-gray-200">
-        <div className="flex items-center justify-between px-8 py-3">
-          <h1 className="text-2xl font-normal text-gray-600">DATA SOURCE</h1>
+    <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-inter animate-fadeIn">
+      {/* ── HEADER AREA ── */}
+      <div className="flex flex-col sm:flex-row justify-between items-center pb-4 border-b border-gray-100 bg-white px-2 py-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-bold text-slate-500 uppercase tracking-tight leading-none">
+            DATA SOURCE CONFIGURATION
+          </h1>
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+            Capture Channels | Lead Management
+          </p>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="p-6 space-y-6">
-        {/* Notification message */}
-        {message && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-md">
-            {message}
-          </div>
-        )}
-
-        {/* Add/Edit Data Source Section */}
-        <div className="bg-white border border-gray-200 rounded-md">
-          <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-600">
-              {editingSource ? "EDIT DATA SOURCE" : "ADD DATA SOURCE"}
+      <div className="max-w-[1400px] mx-auto p-6 space-y-8">
+        {/* Form Container */}
+        <div className="bg-white shadow-md border border-gray-200 rounded-[2px] overflow-hidden">
+          {/* ── SUB-HEADER ── */}
+          <div className="bg-slate-50/50 border-b border-slate-200 px-6 py-3">
+            <h2 className="text-[16px] font-bold text-slate-800 uppercase tracking-tight">
+              {editingSource ? "Edit Data Source" : "Add New Data Source"}
             </h2>
+            <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-0.5 font-bold">
+              International Health & Wellness Expo 2026
+            </p>
           </div>
 
-          <div className="p-6">
-            <div className="flex flex-wrap items-end gap-6">
-              {/* Name Field */}
-              <div className="flex-1 min-w-[200px]">
-                <label className="block text-base font-medium text-gray-700 mb-1">
-                  Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 text-base border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter source name"
-                  required
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleAddDataSource();
-                    }
-                  }}
-                />
-              </div>
+          <div className="p-6 lg:p-10">
+            <form onSubmit={handleAddDataSource}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+                {/* Name */}
+                <div>
+                  <label className={labelCls}>Source Name <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className={inputCls}
+                    placeholder="e.g., Website, Social Media, referral"
+                    required
+                  />
+                </div>
 
-              {/* Status Field */}
-              <div className="w-72">
-                <label className="block text-base font-medium text-gray-700 mb-1">
-                  Status <span className="text-red-500">*</span>
-                </label>
-                <div className="flex items-center gap-6">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="status"
-                      value="Active"
-                      checked={formData.status === "Active"}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-blue-600"
-                    />
-                    <span className="text-base text-gray-700">Active</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="status"
-                      value="Inactive"
-                      checked={formData.status === "Inactive"}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-blue-600"
-                    />
-                    <span className="text-base text-gray-700">Inactive</span>
-                  </label>
+                {/* Status */}
+                <div>
+                  <label className={labelCls}>Source Status <span className="text-red-500">*</span></label>
+                  <div className="flex items-center gap-6 h-8">
+                    <label className="flex items-center gap-2 text-[12px] text-slate-700 font-bold cursor-pointer">
+                      <input
+                        type="radio"
+                        name="status"
+                        value="Active"
+                        checked={formData.status === "Active"}
+                        onChange={handleChange}
+                        className="accent-[#23471d]"
+                      />
+                      Active
+                    </label>
+                    <label className="flex items-center gap-2 text-[12px] text-slate-700 font-bold cursor-pointer">
+                      <input
+                        type="radio"
+                        name="status"
+                        value="Inactive"
+                        checked={formData.status === "Inactive"}
+                        onChange={handleChange}
+                        className="accent-[#23471d]"
+                      />
+                      Inactive
+                    </label>
+                  </div>
                 </div>
               </div>
 
-              {/* Add / Update Button */}
-              <div>
+              {/* FOOTER ACTIONS */}
+              <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end gap-3">
+                {editingSource && (
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="px-8 py-2 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all rounded-[2px] shadow-sm"
+                  >
+                    Cancel Edit
+                  </button>
+                )}
                 <button
-                  onClick={handleAddDataSource}
-                  className="px-8 py-2 text-base text-white bg-[#5bc0de] rounded-md hover:bg-[#46b8da]"
-                  title={editingSource ? "Update Source" : "Add Source"}
+                  type="submit"
+                  className="px-12 py-2.5 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-lg flex items-center gap-3"
+                  disabled={isLoading}
                 >
-                  {editingSource ? "Update Source" : "Add Source"}
+                  {isLoading ? "Processing..." : editingSource ? "Update Source" : "Save Source"}
                 </button>
               </div>
-
-              {/* Cancel (visible when editing) */}
-              {editingSource && (
-                <div>
-                  <button
-                    onClick={resetForm}
-                    className="px-6 py-2 text-base text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
-            </div>
+            </form>
           </div>
         </div>
 
-        {/* List Section */}
-        <div className="bg-white border border-gray-200 rounded-md">
-          {/* Filter / Search / Sort Row */}
-          <div className="px-6 py-3 bg-gray-50 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2">
-                <span className="text-base text-gray-700">Show</span>
-                <select
-                  value={rowsPerPage}
-                  onChange={(e) => {
-                    setRowsPerPage(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="px-3 py-2 border border-gray-300 text-base rounded-md"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
-                <span className="text-base text-gray-700">entries</span>
-              </label>
-
-              <label className="flex items-center gap-2">
-                <span className="text-base text-gray-700">Status</span>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => {
-                    setStatusFilter(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="px-3 py-2 border border-gray-300 text-base rounded-md"
-                >
-                  <option value="All">All</option>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </label>
-            </div>
-
-            {/* Search box */}
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Search sources..."
-                value={searchText}
-                onChange={(e) => {
-                  setSearchText(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="px-4 py-2 text-base border border-gray-300 rounded-md w-64"
-              />
-              <button
-                onClick={() => {
-                  setSearchText("");
-                  setStatusFilter("All");
-                  setRowsPerPage(10);
-                  setSortBy({ key: "source_id", dir: "asc" });
-                }}
-                className="px-4 py-2 text-base border border-gray-300 bg-white rounded-md hover:bg-gray-50"
-              >
-                Reset
-              </button>
+        {/* LIST AREA */}
+        <div className="bg-white border-2 border-gray-200 overflow-hidden shadow-lg">
+          <div className="px-6 py-4 border-b bg-[#23471d]">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold text-white uppercase tracking-tight">
+                  Data Source Registry
+                </h2>
+                <p className="text-sm text-green-100 mt-0.5">
+                  Showing {filteredAndSortedDataSources.length} sources
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Table */}
-          <div className="overflow-auto max-h-[550px]">
+          <div className="overflow-x-auto font-inter bg-white">
             <table className="w-full border-collapse">
-              <thead className="sticky top-0 bg-gray-50 z-10">
-                <tr className="border-b-2 border-gray-200">
-                  <th className="px-5 py-3 text-base font-semibold text-gray-700 text-center w-20">
-                    <div className="flex items-center justify-center gap-2">
-                      No.
-                      <button
-                        onClick={() => toggleSort("source_id")}
-                        className="bg-transparent border-none cursor-pointer text-sm"
-                      >
-                        {sortBy.key === "source_id"
-                          ? sortBy.dir === "asc"
-                            ? "▲"
-                            : "▼"
-                          : "↕"}
-                      </button>
-                    </div>
+              <thead>
+                <tr className="bg-black">
+                  <th className="px-6 py-4 text-xs font-bold text-white uppercase text-center w-20">
+                    <button onClick={() => toggleSort("source_id")} className="flex items-center gap-1 mx-auto hover:text-gray-300 uppercase">No. {sortBy.key === "source_id" ? (sortBy.dir === "asc" ? "▲" : "▼") : "↕"}</button>
                   </th>
-                  <th className="px-5 py-3 text-base font-semibold text-gray-700 text-left">
-                    <div className="flex items-center gap-2">
-                      Source Name
-                      <button
-                        onClick={() => toggleSort("source_name")}
-                        className="bg-transparent border-none cursor-pointer text-sm"
-                      >
-                        {sortBy.key === "source_name"
-                          ? sortBy.dir === "asc"
-                            ? "▲"
-                            : "▼"
-                          : "↕"}
-                      </button>
-                    </div>
+                  <th className="px-6 py-4 text-xs font-bold text-white uppercase text-left">
+                    <button onClick={() => toggleSort("source_name")} className="flex items-center gap-1 hover:text-gray-300 uppercase">Source Name {sortBy.key === "source_name" ? (sortBy.dir === "asc" ? "▲" : "▼") : "↕"}</button>
                   </th>
-                  <th className="px-5 py-3 text-base font-semibold text-gray-700 text-center w-32">
-                    <div className="flex items-center justify-center gap-2">
-                      Status
-                      <button
-                        onClick={() => toggleSort("source_status")}
-                        className="bg-transparent border-none cursor-pointer text-sm"
-                      >
-                        {sortBy.key === "source_status"
-                          ? sortBy.dir === "asc"
-                            ? "▲"
-                            : "▼"
-                          : "↕"}
-                      </button>
-                    </div>
+                  <th className="px-6 py-4 text-xs font-bold text-white uppercase text-center w-[150px]">
+                    <button onClick={() => toggleSort("source_status")} className="flex items-center gap-1 mx-auto hover:text-gray-300 uppercase">Status {sortBy.key === "source_status" ? (sortBy.dir === "asc" ? "▲" : "▼") : "↕"}</button>
                   </th>
-                  <th className="px-5 py-3 text-base font-semibold text-gray-700 text-center w-28">
-                    Action
-                  </th>
+                  <th className="px-6 py-4 text-xs font-bold text-white uppercase text-center w-[120px]">Action</th>
                 </tr>
               </thead>
-
-              <tbody>
-                {isLoading && (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="py-8 text-center text-gray-500 text-base"
-                    >
-                      Loading data sources...
-                    </td>
-                  </tr>
-                )}
-
-                {!isLoading && currentPageData.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="py-8 text-center text-gray-500 text-base"
-                    >
-                      No data sources found.
-                    </td>
-                  </tr>
-                )}
-
-                {!isLoading &&
-                  currentPageData.map((source, index) => (
-                    <tr
-                      key={source._id}
-                      className={`border-b border-gray-200 ${
-                        index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                      }`}
-                    >
-                      <td className="px-5 py-3 text-base text-center text-gray-700">
-                        {(currentPage - 1) * rowsPerPage + index + 1}
+              <tbody className="divide-y divide-gray-200">
+                {isLoading && filteredAndSortedDataSources.length === 0 ? (
+                  <tr><td colSpan={4} className="py-10 text-center text-gray-400 text-sm italic">Loading sources...</td></tr>
+                ) : filteredAndSortedDataSources.length === 0 ? (
+                  <tr><td colSpan={4} className="py-10 text-center text-gray-400 text-sm italic">No entries found</td></tr>
+                ) : (
+                  currentPageData.map((item, index) => (
+                    <tr key={item._id} className="hover:bg-blue-50 transition-colors border-b border-gray-100">
+                      <td className="px-6 py-4 text-sm text-gray-900 text-center font-bold">{(currentPage - 1) * rowsPerPage + index + 1}</td>
+                      <td 
+                        onClick={() => handleEdit(item._id)}
+                        className="px-6 py-4 text-sm text-red-600 hover:text-red-800 cursor-pointer hover:underline font-medium uppercase tracking-tight"
+                      >
+                        {item.source_name}
                       </td>
-
-                      <td className="px-5 py-3 text-base text-gray-700">
-                        {source?.source_name || ""}
+                      <td className="px-6 py-4 text-center">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          item.source_status?.toLowerCase() === "active" 
+                          ? "bg-green-50 text-green-700 border border-green-200" 
+                          : "bg-red-50 text-red-700 border border-red-200"
+                        }`}>
+                          {item.source_status}
+                        </span>
                       </td>
-
-                      <td className="px-5 py-3 text-center">
-                        {source?.source_status ? (
-                          <span
-                            className={`inline-block px-3 py-1 text-sm text-white rounded ${
-                              source.source_status.toLowerCase() === "active"
-                                ? "bg-[#337ab7]"
-                                : "bg-[#d9534f]"
-                            }`}
-                          >
-                            {source.source_status.charAt(0).toUpperCase() +
-                              source.source_status.slice(1)}
-                          </span>
-                        ) : null}
-                      </td>
-
-                      <td className="px-5 py-3 text-center">
-                        <div className="flex justify-center gap-3">
-                          <button
-                            onClick={() => handleEdit(source._id)}
-                            className="p-2 border border-[#337ab7] text-[#337ab7] rounded-md hover:bg-[#337ab7]/10"
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex justify-center gap-2">
+                          <button 
+                            onClick={() => handleEdit(item._id)} 
+                            className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition" 
                             title="Edit"
                           >
                             <Pencil size={16} />
                           </button>
-
-                          <button
-                            onClick={() => handleDelete(source._id)}
-                            className="p-2 border border-[#d9534f] text-[#d9534f] rounded-md hover:bg-[#d9534f]/10"
+                          <button 
+                            onClick={() => handleDelete(item._id)} 
+                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition" 
                             title="Delete"
                           >
                             <Trash2 size={16} />
@@ -1418,39 +470,18 @@ const AddDataSource = () => {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  ))
+                )}
               </tbody>
             </table>
           </div>
 
-          {/* Footer: Pagination and summary */}
-          <div className="flex flex-wrap items-center justify-between p-4 border-t border-gray-200">
-            <div className="text-base text-gray-600">
-              Showing{" "}
-              <strong className="text-gray-800">
-                {filteredAndSortedDataSources.length === 0
-                  ? 0
-                  : (currentPage - 1) * rowsPerPage + 1}
-              </strong>{" "}
-              to{" "}
-              <strong className="text-gray-800">
-                {Math.min(
-                  currentPage * rowsPerPage,
-                  filteredAndSortedDataSources.length,
-                )}
-              </strong>{" "}
-              of{" "}
-              <strong className="text-gray-800">
-                {filteredAndSortedDataSources.length}
-              </strong>{" "}
-              entries
+          {/* Footer Card */}
+          <div className="bg-white px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="text-sm text-gray-500">
+              Showing <span className="text-gray-900 font-bold">{filteredAndSortedDataSources.length === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1}</span> to <span className="text-gray-900 font-bold">{Math.min(currentPage * rowsPerPage, filteredAndSortedDataSources.length)}</span> of <span className="text-gray-900 font-bold">{filteredAndSortedDataSources.length}</span> data sources
             </div>
-
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
+            {totalPages > 1 && <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />}
           </div>
         </div>
       </div>

@@ -3,7 +3,7 @@ import Table from "../../components/table/Table";
 import Pagination from "../../components/Pagination";
 import PageHeader from "../../components/PageHeader";
 import api from "../../lib/api";
-import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 import { Search, Calendar, RefreshCw } from "lucide-react";
 
 const VisitorReviewLogs = () => {
@@ -29,22 +29,48 @@ const VisitorReviewLogs = () => {
         setReviews(response.data);
       }
     } catch (error) {
-      toast.error("Failed to fetch visitor review logs");
+      Swal.fire({
+        title: "Error!",
+        text: "Failed to fetch visitor review logs",
+        icon: "error",
+        confirmButtonColor: "#23471d",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this log?")) return;
-    try {
-      const response = await api.delete(`/api/visitor-reviews/${id}`);
-      if (response.data.success) {
-        toast.success("Review log deleted");
-        fetchReviews();
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You will not be able to recover this review log!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#23471d",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!"
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await api.delete(`/api/visitor-reviews/${id}`);
+        if (response.data.success) {
+          Swal.fire({
+            title: "Deleted!",
+            text: "Review log has been deleted.",
+            icon: "success",
+            confirmButtonColor: "#23471d",
+          });
+          fetchReviews();
+        }
+      } catch (error) {
+        Swal.fire({
+          title: "Error!",
+          text: "Failed to delete review log",
+          icon: "error",
+          confirmButtonColor: "#23471d",
+        });
       }
-    } catch (error) {
-      toast.error("Failed to delete review log");
     }
   };
 

@@ -98,6 +98,9 @@ import ManageStallRates from "../pages/ManageStallRates";
 import ManageTerms from "../pages/ManageTerms";
 import TravelAccommodationManage from "../pages/TravelAccommodationManage";
 import ActivityLogs from "../pages/ActivityLogs";
+import RoleManagement from "../pages/RoleManagement";
+import RolePermissions from "../pages/RolePermissions";
+
 
 
 
@@ -144,6 +147,7 @@ import VisitorReviewLogs from "../pages/web_visitor_data/VisitorReviewLogs";
 import ClientOverview1 from "../pages/ihwe_client_data_2026/ClientOverview1";
 import EmailLogs from "../pages/EmailLogs";
 import WhatsAppLogs from "../pages/WhatsAppLogs";
+import ResponseTemplates from "../pages/ResponseTemplates";
 
 export default function AppRoutes() {
   return (
@@ -153,6 +157,7 @@ export default function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<AdminLayout />}>
           <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="role-permissions" element={<RolePermissions />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="click-analytics" element={<ClickAnalytics />} />
           <Route path="about-us" element={<About />} />
@@ -268,6 +273,9 @@ export default function AppRoutes() {
           <Route path="email-logs" element={<EmailLogs />} />
           <Route path="whatsapp-logs" element={<WhatsAppLogs />} />
           <Route path="activity-logs" element={<ActivityLogs />} />
+          <Route path="manage-roles" element={<RoleManagement />} />
+          <Route path="response-templates" element={<ResponseTemplates />} />
+
 
 
           <Route
@@ -312,19 +320,19 @@ export default function AppRoutes() {
           />
           <Route
             path="ihweClientData2026/AddNewVisitor"
-            element={<AddNewVisitor />}
+            element={<VisitorRegistration />}
           />
           <Route
             path="ihweClientData2026/CorporateVisitorForm"
-            element={<CorporateVisitorForm />}
+            element={<VisitorRegistration initialType="corporate" hideTabs={true} />}
           />
           <Route
             path="ihweClientData2026/FreeHealthCampForm"
-            element={<FreeHealthCampForm />}
+            element={<VisitorRegistration initialType="freeHealth" hideTabs={true} />}
           />
           <Route
             path="ihweClientData2026/GeneralVisitorForm"
-            element={<GeneralVisitorForm />}
+            element={<VisitorRegistration initialType="general" hideTabs={true} />}
           />
           <Route
             path="ihweClientData2026/VisitorRegistration"

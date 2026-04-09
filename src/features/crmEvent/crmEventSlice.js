@@ -1,19 +1,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "../../lib/api";
 import { createActivityLogThunk } from "../activityLog/activityLogSlice";
-
-const BASE_URL = import.meta.env.VITE_API_URL;
 
 // GET All Events
 export const fetchEvents = createAsyncThunk(
   "crmEvents/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${BASE_URL}/crm-events`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await api.get("/api/crm-events");
+      console.log("FETCH_EVENTS_RESPONSE:", response.data);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -26,11 +21,7 @@ export const fetchEventById = createAsyncThunk(
   "crmEvents/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${BASE_URL}/crm-events/${id}`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await api.get(`/api/crm-events/${id}`);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -43,11 +34,7 @@ export const createEvent = createAsyncThunk(
   "crmEvents/create",
   async (eventData, { dispatch, rejectWithValue }) => {
     try {
-      const response = await axios.post(`${BASE_URL}/crm-events`, eventData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await api.post("/api/crm-events", eventData);
 
       const userStr = sessionStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : {};
@@ -58,14 +45,14 @@ export const createEvent = createAsyncThunk(
         dispatch(
           createActivityLogThunk({
             user_id: userId,
-            message: `Event '${response.data.event_name || ""}' created by ${userName}`,
-            link: `/crm-events/${response.data._id}`,
+            message: `Event '${response.data.data?.event_name || response.data.event_name || ""}' created by ${userName}`,
+            link: `/crm-events/${response.data.data?._id || response.data._id}`,
             section: "crmEvents",
             data: {
               action: "CREATE",
-              event_id: response.data._id,
-              event_name: response.data.event_name,
-              created_data: response.data,
+              event_id: response.data.data?._id || response.data._id,
+              event_name: response.data.data?.event_name || response.data.event_name,
+              created_data: response.data.data || response.data,
             },
           }),
         );
@@ -88,25 +75,21 @@ export const updateEvent = createAsyncThunk(
       const userId = sessionStorage.getItem("user_id") || user._id;
       const userName = user.name || "User";
 
-      const response = await axios.put(`${BASE_URL}/crm-events/${id}`, updates, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await api.put(`/api/crm-events/${id}`, updates);
 
       if (userId) {
         dispatch(
           createActivityLogThunk({
             user_id: userId,
-            message: `Event '${response.data.event_name || updates.event_name || id}' updated by ${userName}`,
+            message: `Event '${response.data.data?.event_name || updates.event_name || id}' updated by ${userName}`,
             link: `/crm-events/${id}`,
             section: "crmEvents",
             data: {
               action: "UPDATE",
               event_id: id,
-              event_name: response.data.event_name || updates.event_name,
+              event_name: response.data.data?.event_name || updates.event_name,
               updated_fields: updates,
-              updated_data: response.data,
+              updated_data: response.data.data || response.data,
             },
           }),
         );
@@ -125,13 +108,9 @@ export const deleteEvent = createAsyncThunk(
   async (id, { dispatch, getState, rejectWithValue }) => {
     try {
       const { events } = getState().crmEvents;
-      const eventToDelete = events.find((e) => e._id === id);
+      const eventToDelete = events.find((e) => (e._id || e.id) === id);
 
-      await axios.delete(`${BASE_URL}/crm-events/${id}`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      await api.delete(`/api/crm-events/${id}`);
 
       const userStr = sessionStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : {};
@@ -185,7 +164,10 @@ const crmEventSlice = createSlice({
       })
       .addCase(fetchEvents.fulfilled, (state, action) => {
         state.loading = false;
-        state.events = action.payload;
+        // Handle BOTH direct array and { success: true, data: [] }
+        state.events = Array.isArray(action.payload)
+          ? action.payload
+          : action.payload?.data || [];
       })
       .addCase(fetchEvents.rejected, (state, action) => {
         state.loading = false;
@@ -199,13 +181,14 @@ const crmEventSlice = createSlice({
       })
       .addCase(fetchEventById.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.events.findIndex(
-          (e) => e._id === action.payload._id,
-        );
+        const eventData = action.payload?.data || action.payload;
+        if (!eventData?._id) return;
+
+        const index = state.events.findIndex((e) => e._id === eventData._id);
         if (index !== -1) {
-          state.events[index] = action.payload;
+          state.events[index] = eventData;
         } else {
-          state.events.push(action.payload);
+          state.events.push(eventData);
         }
       })
       .addCase(fetchEventById.rejected, (state, action) => {
@@ -220,7 +203,8 @@ const crmEventSlice = createSlice({
       })
       .addCase(createEvent.fulfilled, (state, action) => {
         state.loading = false;
-        state.events.push(action.payload);
+        const newEvent = action.payload?.data || action.payload;
+        if (newEvent?._id) state.events.push(newEvent);
       })
       .addCase(createEvent.rejected, (state, action) => {
         state.loading = false;
@@ -234,10 +218,11 @@ const crmEventSlice = createSlice({
       })
       .addCase(updateEvent.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.events.findIndex(
-          (event) => event._id === action.payload._id,
-        );
-        if (index !== -1) state.events[index] = action.payload;
+        const updatedEvent = action.payload?.data || action.payload;
+        if (!updatedEvent?._id) return;
+        
+        const index = state.events.findIndex((e) => e._id === updatedEvent._id);
+        if (index !== -1) state.events[index] = updatedEvent;
       })
       .addCase(updateEvent.rejected, (state, action) => {
         state.loading = false;

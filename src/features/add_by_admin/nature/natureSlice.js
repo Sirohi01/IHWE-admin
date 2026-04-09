@@ -1,15 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "../../../lib/api";
 import { createActivityLogThunk } from "../../activityLog/activityLogSlice";
-
-const BASE_URL = import.meta.env.VITE_API_URL;
 
 // ✅ Fetch All Natures
 export const fetchNatures = createAsyncThunk(
   "natures/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${BASE_URL}/nature-of-business`);
+      const response = await api.get("/api/nature-of-business");
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -22,7 +20,7 @@ export const fetchNatureById = createAsyncThunk(
   "natures/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${BASE_URL}/nature-of-business/${id}`);
+      const response = await api.get(`/api/nature-of-business/${id}`);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -35,15 +33,7 @@ export const createNature = createAsyncThunk(
   "natures/create",
   async (natureData, { dispatch, rejectWithValue }) => {
     try {
-      const response = await axios.post(
-        `${BASE_URL}/nature-of-business`,
-        natureData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      const response = await api.post("/api/nature-of-business", natureData);
 
       const userStr = sessionStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : {};
@@ -54,14 +44,14 @@ export const createNature = createAsyncThunk(
         dispatch(
           createActivityLogThunk({
             user_id: userId,
-            message: `Nature of Business '${response.data.nature_name || ""}' created by ${userName}`,
+            message: `Nature of Business '${response.data.data?.nature_name || response.data.nature_name || ""}' created by ${userName}`,
             link: `/nature-of-business`,
             section: "natureOfBusiness",
             data: {
               action: "CREATE",
-              nature_id: response.data._id,
-              nature_name: response.data.nature_name,
-              created_data: response.data,
+              nature_id: response.data.data?._id || response.data._id,
+              nature_name: response.data.data?.nature_name || response.data.nature_name,
+              created_data: response.data.data || response.data,
             },
           }),
         );
@@ -79,15 +69,7 @@ export const updateNature = createAsyncThunk(
   "natures/update",
   async ({ id, updates }, { dispatch, rejectWithValue }) => {
     try {
-      const response = await axios.put(
-        `${BASE_URL}/nature-of-business/${id}`,
-        updates,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      const response = await api.put(`/api/nature-of-business/${id}`, updates);
 
       const userStr = sessionStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : {};
@@ -98,15 +80,15 @@ export const updateNature = createAsyncThunk(
         dispatch(
           createActivityLogThunk({
             user_id: userId,
-            message: `Nature of Business '${response.data.nature_name || updates.nature_name || id}' updated by ${userName}`,
+            message: `Nature of Business '${response.data.data?.nature_name || updates.nature_name || id}' updated by ${userName}`,
             link: `/nature-of-business`,
             section: "natureOfBusiness",
             data: {
               action: "UPDATE",
               nature_id: id,
-              nature_name: response.data.nature_name || updates.nature_name,
+              nature_name: response.data.data?.nature_name || updates.nature_name,
               updated_fields: updates,
-              updated_data: response.data,
+              updated_data: response.data.data || response.data,
             },
           }),
         );
@@ -124,11 +106,10 @@ export const deleteNature = createAsyncThunk(
   "natures/delete",
   async (id, { dispatch, getState, rejectWithValue }) => {
     try {
-      // ✅ FIX: delete se pehle name save karo
       const { natures } = getState().natures;
       const natureToDelete = natures.find((n) => n._id === id);
 
-      await axios.delete(`${BASE_URL}/nature-of-business/${id}`);
+      await api.delete(`/api/nature-of-business/${id}`);
 
       const userStr = sessionStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : {};
@@ -152,7 +133,6 @@ export const deleteNature = createAsyncThunk(
         );
       }
 
-      // ✅ FIX: id return karo — component filter ke liye
       return id;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -183,7 +163,9 @@ const natureSlice = createSlice({
       })
       .addCase(fetchNatures.fulfilled, (state, action) => {
         state.loading = false;
-        state.natures = action.payload;
+        state.natures = Array.isArray(action.payload)
+          ? action.payload
+          : action.payload?.data || [];
       })
       .addCase(fetchNatures.rejected, (state, action) => {
         state.loading = false;
@@ -197,13 +179,14 @@ const natureSlice = createSlice({
       })
       .addCase(fetchNatureById.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.natures.findIndex(
-          (n) => n._id === action.payload._id,
-        );
+        const natureData = action.payload?.data || action.payload;
+        if (!natureData?._id) return;
+
+        const index = state.natures.findIndex((n) => n._id === natureData._id);
         if (index !== -1) {
-          state.natures[index] = action.payload;
+          state.natures[index] = natureData;
         } else {
-          state.natures.push(action.payload);
+          state.natures.push(natureData);
         }
       })
       .addCase(fetchNatureById.rejected, (state, action) => {
@@ -218,7 +201,8 @@ const natureSlice = createSlice({
       })
       .addCase(createNature.fulfilled, (state, action) => {
         state.loading = false;
-        state.natures.push(action.payload);
+        const newNature = action.payload?.data || action.payload;
+        if (newNature?._id) state.natures.push(newNature);
       })
       .addCase(createNature.rejected, (state, action) => {
         state.loading = false;
@@ -232,10 +216,11 @@ const natureSlice = createSlice({
       })
       .addCase(updateNature.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.natures.findIndex(
-          (n) => n._id === action.payload._id,
-        );
-        if (index !== -1) state.natures[index] = action.payload;
+        const updatedNature = action.payload?.data || action.payload;
+        if (!updatedNature?._id) return;
+
+        const index = state.natures.findIndex((n) => n._id === updatedEvent._id);
+        if (index !== -1) state.natures[index] = updatedNature;
       })
       .addCase(updateNature.rejected, (state, action) => {
         state.loading = false;
@@ -249,7 +234,6 @@ const natureSlice = createSlice({
       })
       .addCase(deleteNature.fulfilled, (state, action) => {
         state.loading = false;
-        // ✅ FIX: ab id return hota hai — direct filter karo
         state.natures = state.natures.filter((n) => n._id !== action.payload);
       })
       .addCase(deleteNature.rejected, (state, action) => {

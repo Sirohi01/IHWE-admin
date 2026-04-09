@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import Swal from 'sweetalert2';
 import api from "../lib/api";
 import { motion } from "framer-motion";
@@ -6,19 +7,19 @@ import {
     Users, Search, Download, Eye, 
     Trash2, Edit, CheckCircle, Clock, 
     XCircle, Filter, Mail, Phone, Building,
-    CreditCard, MapPin, Calendar
+    CreditCard, MapPin, Calendar, X, User, Layout
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
-import Table from '../components/table/Table';
+import { createActivityLogThunk } from '../features/activityLog/activityLogSlice';
 
 const DetailItem = ({ label, value, highlight = false, isLink = false }) => (
-    <div className="min-w-0">
-        <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">{label}</p>
+    <div className="min-w-0 font-inter">
+        <p className={`block text-[11px] font-medium uppercase tracking-tight mb-1 ${label === 'Highlight Text (Orange)' ? 'text-[#d26019]' : 'text-black'}`}>{label}</p>
         {isLink ? (
             <a href={value?.startsWith('http') ? value : `https://${value}`} target="_blank" rel="noreferrer" className="text-sm font-bold text-blue-600 hover:underline break-all">{value || 'N/A'}</a>
         ) : (
-            <p className={`text-sm break-words ${highlight ? 'font-black text-slate-900' : 'font-bold text-slate-700'}`}>{value || 'N/A'}</p>
+            <p className={`text-sm font-semibold uppercase ${highlight ? 'text-red-600' : 'text-gray-700'} break-words`}>{value || 'N/A'}</p>
         )}
     </div>
 );
@@ -37,6 +38,15 @@ const ManageRegistrations = () => {
     const [selectedReg, setSelectedReg] = useState(null);
     const [searchParams] = useSearchParams();
     const filterType = searchParams.get('type'); // 'current' or 'incoming'
+    const dispatch = useDispatch();
+
+    const getUserInfo = () => {
+        const userStr = sessionStorage.getItem("user");
+        const user = userStr ? JSON.parse(userStr) : {};
+        const userId = sessionStorage.getItem("user_id") || user._id;
+        const userName = user.name || "User";
+        return { userId, userName };
+    };
 
     useEffect(() => {
         fetchRegistrations();
@@ -190,6 +200,22 @@ const ManageRegistrations = () => {
                         };
                         const response = await api.put(`/api/exhibitor-registration/${id}`, updateData);
                         if (response.data.success) {
+                            const { userId, userName } = getUserInfo();
+                            if (userId) {
+                                dispatch(createActivityLogThunk({
+                                    user_id: userId,
+                                    message: `Exhibitor: Updated payment for '${regData.exhibitorName}' in ${regData.eventId?.name || 'N/A'} (Status: ${newStatus}) by ${userName}`,
+                                    section: "Book A Stand",
+                                    data: {
+                                        action: "UPDATE",
+                                        booking_id: id,
+                                        exhibitor: regData.exhibitorName,
+                                        new_status: newStatus,
+                                        payment_details: updateData
+                                    }
+                                }));
+                            }
+
                             Swal.fire({
                                 icon: 'success',
                                 title: isAdvance ? 'ADVANCE PAYMENT RECORDED' : 'PAYMENT VERIFIED',
@@ -211,6 +237,21 @@ const ManageRegistrations = () => {
         try {
             const response = await api.put(`/api/exhibitor-registration/${id}`, { status: newStatus });
             if (response.data.success) {
+                const reg = registrations.find(r => r._id === id);
+                const { userId, userName } = getUserInfo();
+                if (userId) {
+                    dispatch(createActivityLogThunk({
+                        user_id: userId,
+                        message: `Exhibitor: Updated status for '${reg?.exhibitorName || id}' to '${newStatus}' by ${userName}`,
+                        section: "Book A Stand",
+                        data: {
+                            action: "UPDATE",
+                            booking_id: id,
+                            exhibitor: reg?.exhibitorName,
+                            new_status: newStatus
+                        }
+                    }));
+                }
                 Swal.fire('Updated!', `Status changed to ${newStatus}`, 'success');
                 fetchRegistrations();
             }
@@ -226,11 +267,11 @@ const ManageRegistrations = () => {
             key: "exhibitor",
             label: "EXHIBITOR",
             render: (row) => (
-                <div className="flex flex-col">
-                    <span className="font-bold text-[#23471d]">{row.exhibitorName}</span>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{row.natureOfBusiness}</span>
-                    <div className="mt-1 flex items-center gap-1.5">
-                        <span className="text-[9px] bg-slate-100 px-1.5 py-0.5 rounded font-black text-slate-500 uppercase tracking-tighter">Event: {row.eventId?.name || 'N/A'}</span>
+                <div className="flex flex-col font-inter">
+                    <span className="font-semibold text-red-600 text-sm uppercase tracking-tight leading-none mb-1">{row.exhibitorName}</span>
+                    <span className="text-[10px] text-black font-medium uppercase tracking-widest leading-none">{row.natureOfBusiness}</span>
+                    <div className="mt-1.5 flex items-center gap-1.5">
+                        <span className="text-[9px] bg-slate-100 px-1.5 py-0.5 rounded font-medium text-black uppercase tracking-tighter border border-slate-200">Event: <span className="text-red-500 font-bold">{row.eventId?.name || 'N/A'}</span></span>
                     </div>
                 </div>
             )
@@ -239,9 +280,9 @@ const ManageRegistrations = () => {
             key: "stall",
             label: "STALL DETAILS",
             render: (row) => (
-                <div className="flex flex-col">
-                    <span className="font-black text-[#d26019]">STALL: {row.participation?.stallFor || 'N/A'}</span>
-                    <span className="text-[10px] text-slate-500 font-bold">{row.participation?.stallType} | {row.participation?.stallSize} sqm</span>
+                <div className="flex flex-col font-inter">
+                    <span className="font-semibold text-[#d26019] text-xs uppercase tracking-tight">STALL: {row.participation?.stallFor || 'A/A'}</span>
+                    <span className="text-[10px] text-black font-medium uppercase tracking-tighter mt-1">{row.participation?.stallType} | {row.participation?.stallSize} sqm</span>
                 </div>
             )
         },
@@ -249,12 +290,12 @@ const ManageRegistrations = () => {
             key: "contacts",
             label: "CONTACT",
             render: (row) => (
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                <div className="space-y-1 font-inter">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-black">
                         <Mail size={12} className="text-[#23471d]" />
                         {row.contact1?.email}
                     </div>
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-black">
                         <Phone size={12} className="text-[#23471d]" />
                         {row.contact1?.mobile}
                     </div>
@@ -265,16 +306,16 @@ const ManageRegistrations = () => {
             key: "payment",
             label: "FINANCIALS",
             render: (row) => (
-                <div className="flex flex-col">
+                <div className="flex flex-col font-inter">
                     <div className="flex items-center gap-1 mb-1">
-                        <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                        <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-[2px] border ${
                             row.paymentMode === 'online' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-slate-50 text-slate-700 border-slate-200'
                         }`}>
                             {row.paymentMode}
                         </span>
                     </div>
-                    <span className="text-sm font-black text-slate-800">Total: {row.currency === 'USD' ? '$' : '₹'} {row.participation?.total?.toLocaleString()}</span>
-                    <div className="flex flex-col mt-1 space-y-0.5">
+                    <span className="text-xs font-bold text-black uppercase tracking-tight">Total: {row.currency === 'USD' ? '$' : '₹'} {row.participation?.total?.toLocaleString()}</span>
+                    <div className="flex flex-col mt-1.5 space-y-0.5">
                         <span className="text-[10px] text-green-600 font-bold tracking-tight">Paid: {row.currency === 'USD' ? '$' : '₹'} {(row.amountPaid || 0).toLocaleString()}</span>
                         {(row.balanceAmount > 0) && (
                             <span className="text-[10px] text-red-500 font-bold tracking-tight">Balance: {row.currency === 'USD' ? '$' : '₹'} {row.balanceAmount.toLocaleString()}</span>
@@ -287,17 +328,17 @@ const ManageRegistrations = () => {
             key: "reference",
             label: "SOURCE & LEAD",
             render: (row) => (
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1.5 font-inter">
                     <div className="text-[9px] space-y-0.5">
-                        <p className="text-slate-400 font-bold uppercase tracking-widest">Referred By</p>
-                        <p className="font-black text-slate-700 leading-none">{row.referredBy || 'Direct'}</p>
+                        <p className="text-black font-medium uppercase tracking-widest leading-none">Referred By</p>
+                        <p className="font-bold text-black uppercase">{row.referredBy || 'Direct'}</p>
                     </div>
                     <div className="text-[9px] space-y-0.5 border-t border-slate-100 pt-1">
-                        <p className="text-amber-500/60 font-bold uppercase tracking-[0.05em]">Spoken With</p>
-                        <p className="font-black text-amber-600 leading-none">{row.spokenWith || 'Direct'}</p>
+                        <p className="text-[#d26019] font-medium uppercase tracking-[0.05em] leading-none">Spoken With</p>
+                        <p className="font-bold text-[#d26019] uppercase">{row.spokenWith || 'Direct'}</p>
                     </div>
                     <div className="text-[8px] space-y-0.5 border-t border-slate-100 pt-1">
-                        <p className="text-slate-300 font-bold uppercase tracking-widest leading-none">Filled By: {row.filledBy || 'System'}</p>
+                        <p className="text-black font-medium uppercase tracking-widest leading-none opacity-40">Filled By: {row.filledBy || 'System'}</p>
                     </div>
                 </div>
             )
@@ -325,13 +366,13 @@ const ManageRegistrations = () => {
                 <div className="flex items-center gap-2">
                     <button 
                         onClick={() => setSelectedReg(row)}
-                        className="p-2 bg-[#23471d]/5 text-[#23471d] hover:bg-[#23471d]/10 rounded-lg transition-all border border-[#23471d]/20"
+                        className="p-2 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-[2px] transition-all border border-gray-200"
                     >
                         <Eye size={16} />
                     </button>
                     <select 
                         onChange={(e) => handleStatusUpdate(row._id, e.target.value, row)}
-                        className="text-[10px] font-bold border rounded-lg px-2 py-1 outline-none bg-white"
+                        className="text-[10px] font-bold border-2 border-gray-200 rounded-[2px] px-2 py-1 outline-none bg-white focus:border-[#23471d]"
                         value={row.status}
                     >
                         <option value="pending">Pending</option>
@@ -372,299 +413,340 @@ const ManageRegistrations = () => {
     });
 
     return (
-        <div className="p-6 bg-slate-50 min-h-screen">
+        <div className="p-6 bg-white min-h-screen">
             <PageHeader
                 title={filterType === 'current' ? "CURRENT EXHIBITOR BOOKINGS" : filterType === 'incoming' ? "INCOMING EXHIBITOR BOOKINGS" : "ALL EXHIBITOR BOOKINGS"}
                 description={filterType === 'current' ? "Monitor active registrations for upcoming or ongoing shows" : "Preview bookings for future exhibition cycles"}
             />
 
-            <div className="mt-8 space-y-6">
-                {/* FILTERS BAR */}
-                <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-4 w-full md:w-auto">
-                        <div className="relative flex-1 md:w-80">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                            <input
-                                type="text"
-                                placeholder="Search by company or stall..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#23471d]/20 outline-none transition-all font-bold text-slate-800"
-                            />
-                        </div>
+            <div className="mt-6 space-y-4">
+                {/* SEARCH BAR */}
+                <div className="bg-white shadow-md border-2 border-gray-200 rounded-[2px] px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
+                    <div className="relative flex-1 md:w-80">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Search by company or stall..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-[2px] text-sm outline-none focus:border-[#23471d] transition-all font-medium text-slate-800"
+                        />
                     </div>
-                    <div className="flex items-center gap-3">
-                        <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
-                            <Download size={18} />
-                            Export Data
-                        </button>
-                    </div>
+                    <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-[2px] text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all">
+                        <Download size={16} />
+                        Export Data
+                    </button>
                 </div>
 
                 {/* TABLE CONTAINER */}
-                <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-                    <Table 
-                        columns={columns}
-                        data={filteredRegs}
-                        isLoading={isLoading}
-                    />
+                <div className="bg-white border-2 border-gray-200 shadow-sm overflow-hidden">
+                    <div className="bg-[#23471d] px-5 py-3 flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                            <Users className="w-5 h-5 text-white/80" />
+                            <h2 className="text-white font-bold text-base uppercase tracking-tight font-inter">Exhibitor Bookings</h2>
+                        </div>
+                        <span className="bg-[#d26019] text-white text-[10px] font-black px-3 py-1 uppercase tracking-wider shadow-sm">
+                            {filteredRegs.length} RECORDS
+                        </span>
+                    </div>
+                    
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b-2 border-gray-200 bg-gray-50/50">
+                                    <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center w-12 tracking-tight">No.</th>
+                                    {columns.map((col, idx) => (
+                                        <th key={idx} className={`py-4 px-4 text-[11px] font-medium text-black uppercase tracking-tight ${col.key === 'actions' || col.key === 'status' ? 'text-center' : 'text-left'}`}>
+                                            {col.label}
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 font-inter">
+                                {isLoading ? (
+                                    <tr><td colSpan={columns.length + 1} className="py-12 text-center text-gray-400 font-bold uppercase tracking-widest text-xs italic">Loading bookings...</td></tr>
+                                ) : filteredRegs.length === 0 ? (
+                                    <tr><td colSpan={columns.length + 1} className="py-12 text-center text-gray-400 font-bold uppercase tracking-widest text-xs italic">No registrations found</td></tr>
+                                ) : (
+                                    filteredRegs.map((row, idx) => (
+                                        <tr key={row._id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0 group">
+                                            <td className="py-3 px-4 text-gray-400 font-bold text-center text-xs">{idx + 1}</td>
+                                            {columns.map((col, colIdx) => (
+                                                <td key={colIdx} className={`py-3 px-4 ${col.key === 'actions' || col.key === 'status' ? 'text-center' : 'text-left'}`}>
+                                                    {col.render ? col.render(row) : row[col.key]}
+                                                </td>
+                                            ))}
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div className="bg-white px-5 py-3 border-t border-gray-200 flex justify-between items-center bg-gray-50/30">
+                        <div className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">Exhibitor Finance & Stand Management</div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                            Showing <span className="text-red-600 font-black">{filteredRegs.length}</span> Active Registrations
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* DETAIL MODAL - ULTIMATE REDESIGN */}
+            {/* DETAIL MODAL - PROFESSIONAL REDESIGN */}
             {selectedReg && (
-                <div className="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
                     <motion.div 
-                        initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        className="bg-slate-50 w-full max-w-7xl h-[85vh] overflow-hidden rounded-[3rem] shadow-2xl flex flex-col lg:flex-row border border-white/20"
+                        className="bg-white max-w-6xl w-full h-[90vh] overflow-hidden rounded-[2px] shadow-2xl flex flex-col border-2 border-gray-200"
                     >
-                        {/* LEFT SIDEBAR: STATUS & QUICK ACTIONS */}
-                        <div className="w-full lg:w-[380px] bg-white border-r border-slate-200 flex flex-col">
-                            <div className="p-10 flex-1 space-y-8 overflow-y-auto">
-                                <div className="space-y-4">
-                                    <button 
-                                        onClick={() => setSelectedReg(null)}
-                                        className="mb-4 flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-colors text-[10px] font-black uppercase tracking-widest group"
-                                    >
-                                        <XCircle size={18} className="group-hover:rotate-90 transition-transform" /> 
-                                        Close Details
-                                    </button>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Exhibitor Branding</p>
-                                        <h2 className="text-3xl font-black text-slate-900 tracking-tighter leading-none">{selectedReg.exhibitorName}</h2>
-                                    </div>
-                                    <div className="flex flex-wrap gap-2 pt-2">
-                                        <span className={`px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${
-                                            selectedReg.status === 'approved' ? 'bg-green-500 text-white' :
-                                            selectedReg.status === 'pending' ? 'bg-amber-500 text-white' :
-                                            'bg-slate-900 text-white'
-                                        }`}>
-                                            {selectedReg.status}
-                                        </span>
-                                        <span className="px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-[9px] font-black uppercase tracking-widest border border-blue-200">
-                                            {selectedReg.paymentMode}
-                                        </span>
-                                    </div>
+                        {/* TOP HEADER BAR */}
+                        <div className="bg-gray-100 border-b border-gray-300 px-8 py-4 flex items-center justify-between sticky top-0 z-10">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-[#23471d]/10 rounded-[2px]">
+                                    <Building className="w-5 h-5 text-[#23471d]" />
                                 </div>
-
-                                <hr className="border-slate-100" />
-
-                                {/* STALL TILE - COMPACT */}
-                                <div className="p-6 bg-[#d26019] rounded-[2rem] text-white shadow-xl shadow-[#d26019]/20">
-                                    <p className="text-[10px] font-black text-white/60 uppercase tracking-widest mb-4">Allocated Stand</p>
-                                    <div className="flex justify-between items-center">
-                                        <div>
-                                            <p className="text-sm font-bold opacity-80">{selectedReg.participation?.stallType}</p>
-                                            <p className="text-4xl font-black tracking-tighter">{selectedReg.participation?.stallFor || selectedReg.participation?.stallNo}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-lg font-black">{selectedReg.participation?.stallSize} <span className="text-xs opacity-60">SQM</span></p>
-                                            <p className="text-[10px] uppercase font-bold opacity-60">{selectedReg.participation?.dimension}</p>
-                                        </div>
-                                    </div>
+                                <div>
+                                    <h2 className="text-[#23471d] font-bold text-base uppercase tracking-tight font-inter">Exhibitor Booking Dossier</h2>
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-none mt-1">Ref: {selectedReg._id?.slice(-8).toUpperCase()}</p>
                                 </div>
+                            </div>
+                            <button 
+                                onClick={() => setSelectedReg(null)}
+                                className="p-2 bg-red-50 text-red-500 hover:bg-red-100 transition-all rounded-[2px] border border-red-100"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
 
-                                {/* FINANCIAL TILE */}
-                                <div className="p-6 bg-[#23471d] rounded-[2rem] text-white shadow-xl shadow-[#23471d]/20 relative overflow-hidden group">
-                                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform">
-                                        <CreditCard size={80} />
-                                    </div>
-                                    <div className="relative z-10 space-y-6">
-                                        <div>
-                                            <p className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-1">Contract Total</p>
-                                            <p className="text-3xl font-black tracking-tight">{selectedReg.currency === 'USD' ? '$' : '₹'} {selectedReg.participation?.total?.toLocaleString()}</p>
+                        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+                            {/* LEFT SIDEBAR: SUMMARY & QUICK ACTIONS */}
+                            <div className="w-full lg:w-[320px] bg-gray-50/50 border-r border-gray-200 flex flex-col overflow-y-auto">
+                                <div className="p-8 space-y-8">
+                                    {/* Company Identity */}
+                                    <div className="space-y-4 font-inter">
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] font-medium text-black uppercase tracking-[0.2em] mb-2">Primary Entity</p>
+                                            <h3 className="text-2xl font-bold text-gray-900 tracking-tight leading-none uppercase">{selectedReg.exhibitorName}</h3>
                                         </div>
-                                        <div className="flex justify-between items-center pt-4 border-t border-white/10">
+                                        <div className="flex flex-wrap gap-2 pt-2">
+                                            <span className={`px-3 py-1 rounded-[2px] text-[9px] font-black uppercase tracking-widest shadow-sm border ${
+                                                selectedReg.status === 'approved' ? 'bg-green-500 text-white border-green-600' :
+                                                selectedReg.status === 'pending' ? 'bg-amber-500 text-white border-amber-600' :
+                                                'bg-gray-900 text-white border-black'
+                                            }`}>
+                                                {selectedReg.status}
+                                            </span>
+                                            <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-[2px] text-[9px] font-black uppercase tracking-widest border border-blue-200 shadow-sm">
+                                                {selectedReg.paymentMode}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <hr className="border-gray-200" />
+
+                                    {/* Stand Information */}
+                                    <div className="p-6 bg-white border-2 border-gray-100 rounded-[2px] shadow-sm font-inter">
+                                        <p className="text-[10px] font-medium text-black uppercase tracking-widest mb-4 flex items-center gap-2">
+                                            <Layout className="w-3 h-3" /> Allocated Stand
+                                        </p>
+                                        <div className="flex justify-between items-end">
                                             <div>
-                                                <p className="text-[9px] font-black text-white/40 uppercase">Paid Amount</p>
-                                                <p className="text-sm font-black text-green-400">{selectedReg.currency === 'USD' ? '$' : '₹'} {(selectedReg.amountPaid || 0).toLocaleString()}</p>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">{selectedReg.participation?.stallType}</p>
+                                                <p className="text-4xl font-black text-[#d26019] tracking-tighter leading-none">{selectedReg.participation?.stallFor || selectedReg.participation?.stallNo}</p>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-[9px] font-black text-white/40 uppercase">Balance Due</p>
-                                                <p className={`text-sm font-black ${(selectedReg.balanceAmount || 0) > 0 ? 'text-red-400' : 'text-green-400'}`}>
-                                                    {selectedReg.currency === 'USD' ? '$' : '₹'} {(selectedReg.balanceAmount || 0).toLocaleString()}
-                                                </p>
+                                                <p className="text-lg font-black text-gray-800 leading-none">{selectedReg?.participation?.stallSize} <span className="text-[10px] text-gray-400">SQM</span></p>
+                                                <p className="text-[9px] uppercase font-bold text-gray-400">{selectedReg.participation?.dimension}</p>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* PAYMENT VERIFICATION DATA */}
-                                {(selectedReg.status === 'paid' || selectedReg.status === 'advance-paid') && selectedReg.manualPaymentDetails && (
-                                    <div className="p-6 bg-white rounded-[2rem] border border-slate-200 shadow-sm space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <CheckCircle size={14} className="text-green-600" />
-                                                <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest">
-                                                    {selectedReg.status === 'advance-paid' ? 'Advance Payment Recorded' : 'Full Payment Verified'}
-                                                </p>
+                                    {/* Financial Summary */}
+                                    <div className="p-6 bg-white border-2 border-gray-100 rounded-[2px] shadow-sm relative overflow-hidden font-inter">
+                                        <p className="text-[10px] font-medium text-black uppercase tracking-widest mb-4 flex items-center gap-2">
+                                            <CreditCard className="w-3 h-3" /> Contract Ledger
+                                        </p>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Total Fee</p>
+                                                <p className="text-2xl font-black text-[#23471d] tracking-tight">{selectedReg.currency === 'USD' ? '$' : '₹'} {selectedReg.participation?.total?.toLocaleString()}</p>
                                             </div>
-                                            {selectedReg.status === 'advance-paid' && (
-                                                <span className="px-3 py-1 bg-amber-100 text-amber-700 border border-amber-300 rounded-full text-[9px] font-black uppercase">
-                                                    {selectedReg.manualPaymentDetails.advancePercent || '?'}% Paid
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="space-y-2">
-                                            <DetailRow label="Method" value={selectedReg.manualPaymentDetails.method} />
-                                            <DetailRow label="Txn / Ref ID" value={selectedReg.manualPaymentDetails.transactionId} />
-                                            {selectedReg.manualPaymentDetails.notes && (
-                                                <DetailRow label="Admin Notes" value={selectedReg.manualPaymentDetails.notes} />
-                                            )}
-                                        </div>
-                                        {/* Balance Warning for Advance */}
-                                        {selectedReg.status === 'advance-paid' && selectedReg.balanceAmount > 0 && (
-                                            <div className="p-4 bg-red-50 rounded-2xl border border-red-200">
-                                                <p className="text-[9px] font-black uppercase text-red-500 tracking-widest mb-1">Pending Balance</p>
-                                                <p className="text-xl font-black text-red-600">
-                                                    {selectedReg.currency === 'USD' ? '$' : '₹'} {selectedReg.balanceAmount.toLocaleString()}
-                                                </p>
+                                            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                                                <div>
+                                                    <p className="text-[9px] font-medium text-black uppercase mb-1 tracking-tighter">Amount Paid</p>
+                                                    <p className="text-xs font-black text-green-600 font-inter">{selectedReg.currency === 'USD' ? '$' : '₹'} {(selectedReg.amountPaid || 0).toLocaleString()}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-[9px] font-medium text-black uppercase mb-1 tracking-tighter">Balance Due</p>
+                                                    <p className={`text-xs font-black font-inter ${(selectedReg.balanceAmount || 0) > 0 ? 'text-red-500' : 'text-green-600'}`}>
+                                                        {selectedReg.currency === 'USD' ? '$' : '₹'} {(selectedReg.balanceAmount || 0).toLocaleString()}
+                                                    </p>
+                                                </div>
                                             </div>
-                                        )}
-                                        {selectedReg.receiptUrl && (
+                                        </div>
+                                    </div>
+
+                                    {/* Receipt Display */}
+                                    {(selectedReg.status === 'paid' || selectedReg.status === 'advance-paid') && selectedReg.receiptUrl && (
+                                        <div className="p-6 bg-white border-2 border-gray-100 rounded-[2px] shadow-sm space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <CheckCircle size={14} className="text-green-600" />
+                                                    <p className="text-[9px] font-black text-gray-800 uppercase tracking-widest">
+                                                        {selectedReg.status === 'advance-paid' ? 'Advance Recorded' : 'Payment Verified'}
+                                                    </p>
+                                                </div>
+                                            </div>
                                             <a 
                                                 href={selectedReg.receiptUrl} 
                                                 target="_blank" 
                                                 rel="noreferrer"
-                                                className="flex items-center justify-center gap-2 w-full py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all"
+                                                className="flex items-center justify-center gap-2 w-full py-2.5 bg-gray-900 hover:bg-black text-white rounded-[2px] text-[9px] font-black uppercase tracking-widest transition-all shadow-md"
                                             >
                                                 <Download size={14} />
-                                                View Uploaded Receipt
+                                                Download Receipt
                                             </a>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+                                        </div>
+                                    )}
+                                </div>
 
-                            {/* UPDATE STATUS QUICK PANEL */}
-                            <div className="p-8 bg-slate-50 border-t border-slate-200">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Modify Booking Status</p>
-                                <div className="flex gap-2">
+                                {/* FOOTER STATUS CONTROLLER */}
+                                <div className="p-8 bg-gray-50 border-t border-gray-200 mt-auto sticky bottom-0 font-inter">
+                                    <p className="text-[10px] font-medium text-black uppercase tracking-[0.2em] mb-3">Booking Control Panel</p>
                                     <select 
                                         onChange={(e) => handleStatusUpdate(selectedReg._id, e.target.value, selectedReg)}
-                                        className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none shadow-sm focus:ring-2 focus:ring-[#23471d]/20"
+                                        className="w-full bg-white border-2 border-gray-200 rounded-[2px] px-4 py-2.5 text-xs font-bold outline-none focus:border-[#23471d] shadow-sm transition-all text-gray-700"
                                         value={selectedReg.status}
                                     >
-                                        <option value="pending">Pending Review</option>
-                                        <option value="approved">Approved</option>
-                                        <option value="paid">Paid (Full) ✓</option>
-                                        <option value="advance-paid">Advance Paid</option>
-                                        <option value="confirmed">Confirmed</option>
-                                        <option value="rejected">Rejected</option>
+                                        <option value="pending">Review Pending</option>
+                                        <option value="approved">Approved / Active</option>
+                                        <option value="paid">Fully Settled ✓</option>
+                                        <option value="advance-paid">Partial (Advance)</option>
+                                        <option value="confirmed">Confirmed Registry</option>
+                                        <option value="rejected">Rejected / Cancelled</option>
                                     </select>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* RIGHT MAIN CONTENT: DATA BLOCKS */}
-                        <div className="flex-1 overflow-y-auto bg-slate-50/50 p-10 space-y-12">
-                            {/* BLOCK 1: CORPORATE IDENTITY */}
-                            <section className="space-y-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-0.5 w-12 bg-[#23471d]"></div>
-                                    <h3 className="text-[11px] font-black text-[#23471d] uppercase tracking-[0.3em]">Corporate Identity</h3>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-8 bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200/50">
-                                    <DetailItem label="Fascia Name (On Stall)" value={selectedReg.fasciaName} highlight={true} />
-                                    <DetailItem label="Business Model" value={selectedReg.typeOfBusiness} />
-                                    <DetailItem label="Industry Sector" value={selectedReg.industrySector} />
-                                    <DetailItem label="Nature of Business" value={selectedReg.natureOfBusiness} />
-                                    <DetailItem label="Website Address" value={selectedReg.website} isLink={true} />
-                                    <DetailItem label="Landline Number" value={selectedReg.landlineNo} />
-                                    <DetailItem label="GST Number" value={selectedReg.gstNo} />
-                                    <DetailItem label="PAN Card No." value={selectedReg.panNo} />
-                                </div>
-                            </section>
-
-                            {/* BLOCK 2: LIAISON & CORRESPONDENCE */}
-                            <section className="space-y-6">
-                                <div className="flex items-center gap-3 text-blue-600">
-                                    <div className="h-0.5 w-12 bg-blue-600"></div>
-                                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Communication Channels</h3>
-                                </div>
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                    {/* Primary */}
-                                    <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200/50 space-y-6">
-                                        <div className="flex items-center gap-3 text-slate-400 border-b border-slate-50 pb-4">
-                                            <Users size={16} />
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Authorized Primary Contact</span>
+                            {/* RIGHT MAIN CONTENT: DATA BLOCKS */}
+                            <div className="flex-1 overflow-y-auto bg-white p-10 space-y-12">
+                                {/* Corporate Info */}
+                                <section className="space-y-6 font-inter">
+                                    <div className="flex items-center justify-between border-b-2 border-gray-100 pb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-4 w-1 bg-[#23471d]"></div>
+                                            <h3 className="text-lg font-bold text-[#23471d] uppercase tracking-tight">Corporate Profile</h3>
                                         </div>
-                                        <div className="grid grid-cols-1 gap-4">
-                                            <DetailItem label="Full Name" value={`${selectedReg.contact1?.title || ''} ${selectedReg.contact1?.firstName || ''} ${selectedReg.contact1?.lastName || ''}`.trim()} highlight={true} />
-                                            <DetailItem label="Designation" value={selectedReg.contact1?.designation} />
-                                            <DetailItem label="Official Email" value={selectedReg.contact1?.email} />
-                                            <DetailItem label="Mobile" value={selectedReg.contact1?.mobile} />
-                                        </div>
+                                        <span className="text-[11px] font-medium text-black uppercase tracking-widest whitespace-nowrap">Section 01 / Registry Data</span>
                                     </div>
-                                    {/* Secondary */}
-                                    <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200/50 space-y-6">
-                                        <div className="flex items-center gap-3 text-slate-400 border-b border-slate-50 pb-4">
-                                            <Users size={16} />
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Secondary Correspondence</span>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-8">
+                                        <DetailItem label="Heading" value={selectedReg.fasciaName} highlight={true} />
+                                        <DetailItem label="Ownership Model" value={selectedReg.typeOfBusiness} />
+                                        <DetailItem label="Industry Segment" value={selectedReg.industrySector} />
+                                        <DetailItem label="Business Nature" value={selectedReg.natureOfBusiness} />
+                                        <DetailItem label="Corporate Portal" value={selectedReg.website} isLink={true} />
+                                        <DetailItem label="Tax ID (GST)" value={selectedReg.gstNo} />
+                                        <DetailItem label="PAN Card Ref" value={selectedReg.panNo} />
+                                        <DetailItem label="Fixed Line" value={selectedReg.landlineNo} />
+                                    </div>
+                                </section>
+
+                                {/* Communication */}
+                                <section className="space-y-6 font-inter">
+                                    <div className="flex items-center justify-between border-b-2 border-gray-100 pb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-4 w-1 bg-red-600"></div>
+                                            <h3 className="text-lg font-bold text-red-600 uppercase tracking-tight">Communication Channels</h3>
                                         </div>
-                                        {selectedReg.contact2?.firstName ? (
-                                            <div className="grid grid-cols-1 gap-4">
-                                                <DetailItem label="Full Name" value={`${selectedReg.contact2?.title || ''} ${selectedReg.contact2?.firstName || ''} ${selectedReg.contact2?.lastName || ''}`.trim()} />
-                                                <DetailItem label="Designation" value={selectedReg.contact2?.designation} />
-                                                <DetailItem label="Official Email" value={selectedReg.contact2?.email} />
-                                                <DetailItem label="Mobile" value={selectedReg.contact2?.mobile} />
+                                        <span className="text-[11px] font-medium text-black uppercase tracking-widest whitespace-nowrap">Section 02 / Liaison</span>
+                                    </div>
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                        <div className="bg-gray-50/50 p-8 border border-gray-100 rounded-[2px] space-y-6 relative overflow-hidden group">
+                                            <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 transition-opacity text-black">
+                                                <User size={80} />
                                             </div>
-                                        ) : (
-                                            <div className="flex items-center justify-center p-8 border-2 border-dashed border-slate-100 rounded-3xl">
-                                                <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">No Secondary Contact Listed</p>
+                                            <div className="flex items-center gap-3 text-red-600 mb-2">
+                                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-1 bg-red-50 inline-block border border-red-100">Primary Liaison Officer</span>
                                             </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </section>
-
-                            {/* BLOCK 3: GEOGRAPHICAL ADDRESS */}
-                            <section className="space-y-6">
-                                <div className="flex items-center gap-3 text-slate-400">
-                                    <div className="h-0.5 w-12 bg-slate-400"></div>
-                                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Premise Location Control</h3>
-                                </div>
-                                <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200/50">
-                                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                                        <div className="lg:col-span-2">
-                                            <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">Registered HQ Address</p>
-                                            <p className="text-sm font-bold text-slate-800 leading-relaxed">{selectedReg.address}</p>
+                                            <div className="grid grid-cols-1 gap-5 relative z-10">
+                                                <DetailItem label="Main Title" value={`${selectedReg.contact1?.title || ''} ${selectedReg.contact1?.firstName || ''} ${selectedReg.contact1?.lastName || ''}`.trim()} highlight={true} />
+                                                <DetailItem label="Official Designation" value={selectedReg.contact1?.designation} />
+                                                <DetailItem label="Liaison Email" value={selectedReg.contact1?.email} />
+                                                <DetailItem label="Direct Mobile" value={selectedReg.contact1?.mobile} />
+                                            </div>
                                         </div>
-                                        <DetailItem label="State / Province" value={selectedReg.state} />
-                                        <DetailItem label="City / Region" value={selectedReg.city} />
-                                        <DetailItem label="Country" value={selectedReg.country} />
-                                        <DetailItem label="Pincode / ZIP" value={selectedReg.pincode} />
+                                        <div className="bg-gray-50/50 p-8 border border-gray-100 rounded-[2px] space-y-6 relative overflow-hidden group">
+                                            <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 transition-opacity text-black">
+                                                <Users size={80} />
+                                            </div>
+                                            <div className="flex items-center gap-3 text-black mb-2">
+                                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-1 bg-white inline-block border border-gray-200">Secondary Correspondence</span>
+                                            </div>
+                                            {selectedReg.contact2?.firstName ? (
+                                                <div className="grid grid-cols-1 gap-5 relative z-10">
+                                                    <DetailItem label="Coordinator 2" value={`${selectedReg.contact2?.title || ''} ${selectedReg.contact2?.firstName || ''} ${selectedReg.contact2?.lastName || ''}`.trim()} />
+                                                    <DetailItem label="Designation" value={selectedReg.contact2?.designation} />
+                                                    <DetailItem label="Mobile Ref" value={selectedReg.contact2?.mobile} />
+                                                </div>
+                                            ) : (
+                                                <div className="h-full flex items-center justify-center border-2 border-dashed border-gray-100 p-10">
+                                                    <span className="text-[11px] font-medium text-black uppercase tracking-widest">No Secondary Liaison Configured</span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            </section>
+                                </section>
 
-                            {/* BLOCK 4: LOGISTICS & ORIGIN */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="bg-[#23471d]/5 p-8 rounded-[2.5rem] border border-[#23471d]/10">
-                                    <h4 className="text-[10px] font-black text-[#23471d] uppercase tracking-widest mb-4">Target Market Sub-Sectors</h4>
-                                    <div className="flex flex-wrap gap-2">
-                                        {selectedReg.selectedSectors?.length > 0 ? selectedReg.selectedSectors.map((s, idx) => (
-                                            <span key={idx} className="px-3 py-1.5 bg-white border border-[#23471d]/10 rounded-xl text-[9px] font-black text-[#23471d] shadow-sm uppercase tracking-tighter">{s}</span>
-                                        )) : <span className="text-slate-400 font-bold italic text-xs">Unspecified Sectors</span>}
+                                {/* Premise Data */}
+                                <section className="space-y-6 font-inter">
+                                    <div className="flex items-center justify-between border-b-2 border-gray-100 pb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-4 w-1 bg-blue-600"></div>
+                                            <h3 className="text-lg font-bold text-blue-600 uppercase tracking-tight">Geographical HQ Control</h3>
+                                        </div>
+                                        <span className="text-[11px] font-medium text-black uppercase tracking-widest whitespace-nowrap">Section 03 / Premise Data</span>
                                     </div>
-                                </div>
-                                <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] flex flex-col justify-center gap-4 border border-white/5">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Operational Source</span>
-                                        <span className="text-[10px] font-black text-blue-400">{selectedReg.referredBy || 'Organic Lead'}</span>
+                                    <div className="bg-gray-50/30 p-8 border border-gray-100 rounded-[2px]">
+                                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
+                                            <div className="lg:col-span-2">
+                                                <p className="text-sm font-bold text-black mb-1 uppercase tracking-tight">Short Description</p>
+                                                <p className="text-sm font-semibold text-gray-600 leading-relaxed uppercase">{selectedReg.address}</p>
+                                            </div>
+                                            <DetailItem label="State / Province" value={selectedReg.state} />
+                                            <DetailItem label="City / Hub" value={selectedReg.city} />
+                                            <DetailItem label="Nation" value={selectedReg.country} />
+                                            <DetailItem label="ZIP / Pincode" value={selectedReg.pincode} />
+                                        </div>
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Spoken With</span>
-                                        <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">{selectedReg.spokenWith || 'Direct'}</span>
+                                </section>
+
+                                {/* Logistics Control */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-10">
+                                    <div className="bg-[#23471d]/5 p-8 border-l-4 border-[#23471d] space-y-4">
+                                        <h4 className="block text-sm font-bold text-[#d26019] uppercase tracking-tight mb-1">Highlight Text (Orange)</h4>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {selectedReg.selectedSectors?.length > 0 ? selectedReg.selectedSectors.map((s, idx) => (
+                                                <span key={idx} className="px-3 py-1 bg-white border border-[#23471d]/10 text-[9px] font-black text-[#23471d] uppercase shadow-sm">{s}</span>
+                                            )) : <span className="text-gray-400 font-bold italic text-xs uppercase">Unspecified Sectors</span>}
+                                        </div>
                                     </div>
-                                    <div className="flex justify-between items-center border-t border-white/10 pt-2 lg:pt-0 lg:border-0 font-bold">
-                                        <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Data Controller</span>
-                                        <span className="text-[10px] font-black text-green-400 uppercase">{selectedReg.filledBy || 'System Terminal'}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center pt-2 border-t border-white/10">
-                                        <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Timestamp Log</span>
-                                        <span className="text-[10px] font-bold text-slate-500">{new Date(selectedReg.createdAt).toLocaleString()}</span>
+                                    <div className="bg-gray-900 border-l-4 border-red-600 p-8 grid grid-cols-2 gap-y-4 font-inter">
+                                        <div className="space-y-1">
+                                            <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Entry Origin</p>
+                                            <p className="text-[10px] font-black text-white uppercase">{selectedReg.referredBy || 'Direct Lead'}</p>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Liaison Ref</p>
+                                            <p className="text-[10px] font-black text-amber-500 uppercase">{selectedReg.spokenWith || 'System Organic'}</p>
+                                        </div>
+                                        <div className="space-y-1 pt-2 border-t border-white/5">
+                                            <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Terminal Point</p>
+                                            <p className="text-[10px] font-black text-green-400 uppercase">{selectedReg.filledBy || 'Auto Logic'}</p>
+                                        </div>
+                                        <div className="space-y-1 pt-2 border-t border-white/5">
+                                            <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Timestamp Log</p>
+                                            <p className="text-[10px] font-bold text-gray-400">{new Date(selectedReg.createdAt).toLocaleDateString()}</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
