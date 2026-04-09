@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-    CheckCircle, 
-    Send, ChevronRight, 
-    ShieldCheck, 
-    CreditCard, 
-    Banknote, 
+import {
+    CheckCircle,
+    Send, ChevronRight,
+    ShieldCheck,
+    CreditCard,
+    Banknote,
     Lock,
     User,
     UserPlus,
@@ -31,6 +31,9 @@ const BookAStand = () => {
     const [marketingStaff, setMarketingStaff] = useState([]);
     const [allRates, setAllRates] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
+    const [countries, setCountries] = useState([]);
+    const [states, setStates] = useState([]);
+    const [cities, setCities] = useState([]);
 
     useEffect(() => {
         const info = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
@@ -84,7 +87,10 @@ const BookAStand = () => {
                 const eRes = await api.get('/api/events');
                 const staffRes = await api.get('/api/public/employees');
                 const ratesRes = await api.get('/api/stall-rates');
-                
+                const countryRes = await api.get('/api/crm-countries');
+                const stateRes = await api.get('/api/crm-states');
+                const cityRes = await api.get('/api/crm-cities');
+
                 if (eRes.data.success && eRes.data.data.length > 0) {
                     setEvents(eRes.data.data);
                     setSelectedEventId(eRes.data.data[0]._id);
@@ -92,6 +98,14 @@ const BookAStand = () => {
                 }
                 if (staffRes.data.success) setMarketingStaff(staffRes.data.data);
                 if (ratesRes.data.success) setAllRates(ratesRes.data.data);
+                if (countryRes.data.data) setCountries(countryRes.data.data);
+                else setCountries(countryRes.data);
+
+                if (stateRes.data.data) setStates(stateRes.data.data);
+                else setStates(stateRes.data);
+
+                if (cityRes.data.data) setCities(cityRes.data.data);
+                else setCities(cityRes.data);
             } catch (error) {
                 console.error("Error fetching initial data:", error);
             }
@@ -126,7 +140,7 @@ const BookAStand = () => {
                         participation: { ...prev.participation, rate: 0 }
                     }));
                 }
-            } catch (e) { 
+            } catch (e) {
                 console.error(e);
                 setFormData(prev => ({ ...prev, participation: { ...prev.participation, rate: 0 } }));
             }
@@ -153,12 +167,36 @@ const BookAStand = () => {
         }));
     }, [formData.participation.stallNo, formData.participation.rate, availableStalls]);
 
+    const filteredStates = useMemo(() => {
+        if (!formData.country || !countries.length) return [];
+        const selectedCountry = countries.find(c =>
+            c.name && c.name.trim().toLowerCase() === formData.country.trim().toLowerCase()
+        );
+        if (!selectedCountry) return [];
+        return states.filter(s =>
+            s.countryCode != null && selectedCountry.countryCode != null &&
+            String(s.countryCode) === String(selectedCountry.countryCode)
+        );
+    }, [formData.country, countries, states]);
+
+    const filteredCities = useMemo(() => {
+        if (!formData.state || !states.length) return [];
+        const selectedState = states.find(s =>
+            s.name && s.name.trim().toLowerCase() === formData.state.trim().toLowerCase()
+        );
+        if (!selectedState) return [];
+        return cities.filter(c =>
+            c.stateCode != null && selectedState.stateCode != null &&
+            String(c.stateCode) === String(selectedState.stateCode)
+        );
+    }, [formData.state, states, cities]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            const finalData = { 
-                ...formData, 
+            const finalData = {
+                ...formData,
                 eventId: selectedEventId,
                 filledBy: currentUser?.username || 'Admin',
                 balanceAmount: formData.participation.total
@@ -167,7 +205,7 @@ const BookAStand = () => {
                 // Log the activity
                 const adminName = currentUser?.user_fullname || currentUser?.username || "Admin";
                 const userId = sessionStorage.getItem("user_id") || currentUser?._id;
-                
+
                 if (userId) {
                     dispatch(createActivityLogThunk({
                         user_id: userId,
@@ -198,6 +236,14 @@ const BookAStand = () => {
     };
 
     const handleSelectChange = (name, value) => {
+        if (name === 'country') {
+            setFormData(prev => ({ ...prev, country: value, state: '', city: '' }));
+            return;
+        }
+        if (name === 'state') {
+            setFormData(prev => ({ ...prev, state: value, city: '' }));
+            return;
+        }
         if (name.includes('.')) {
             const [parent, child] = name.split('.');
             setFormData(prev => ({
@@ -265,7 +311,7 @@ const BookAStand = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-10">
-                
+
                 {/* ── SUB-HEADER ── */}
                 <div className="bg-slate-50/50 border-x border-y border-slate-200 px-6 py-3 rounded-[2px]">
                     <h2 className="text-[16px] font-bold text-slate-800 uppercase tracking-tight">
@@ -291,8 +337,8 @@ const BookAStand = () => {
                             <label className={labelClasses}>Stall Number *</label>
                             <select required value={formData.participation.stallNo} onChange={(e) => handleStallSelect(e.target.value)} className={inputClasses}>
                                 <option value="">-- Choose Available Stall --</option>
-                                {availableStalls.filter(s => 
-                                    (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId) || 
+                                {availableStalls.filter(s =>
+                                    (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId) ||
                                     (typeof s.event === 'string' ? s.event === selectedEventId : s.event?._id === selectedEventId)
                                 ).map(s => (
                                     <option key={s._id} value={s._id}>
@@ -356,19 +402,34 @@ const BookAStand = () => {
                             <input required type="text" value={formData.address} onChange={(e) => handleSelectChange('address', e.target.value)} className={inputClasses} placeholder="Office Address" />
                         </div>
                         <div>
-                            <label className={labelClasses}>Country</label>
-                            <input type="text" value={formData.country} onChange={(e) => handleSelectChange('country', e.target.value)} className={inputClasses} placeholder="Country" />
+                            <label className={labelClasses}>Country *</label>
+                            <select required value={formData.country} onChange={(e) => handleSelectChange('country', e.target.value)} className={inputClasses}>
+                                <option value="">Select Country</option>
+                                {countries.map((c, i) => (
+                                    <option key={i} value={c.name}>{c.name}</option>
+                                ))}
+                            </select>
                         </div>
                         <div>
-                            <label className={labelClasses}>State</label>
-                            <input type="text" value={formData.state} onChange={(e) => handleSelectChange('state', e.target.value)} className={inputClasses} placeholder="State" />
+                            <label className={labelClasses}>State *</label>
+                            <select required value={formData.state} onChange={(e) => handleSelectChange('state', e.target.value)} disabled={!formData.country} className={inputClasses}>
+                                <option value="">Select State</option>
+                                {filteredStates.map((s, i) => (
+                                    <option key={i} value={s.name}>{s.name}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
                         <div>
-                            <label className={labelClasses}>City</label>
-                            <input type="text" value={formData.city} onChange={(e) => handleSelectChange('city', e.target.value)} className={inputClasses} placeholder="City" />
+                            <label className={labelClasses}>City *</label>
+                            <select required value={formData.city} onChange={(e) => handleSelectChange('city', e.target.value)} disabled={!formData.state} className={inputClasses}>
+                                <option value="">Select City</option>
+                                {filteredCities.map((ct, i) => (
+                                    <option key={i} value={ct.name}>{ct.name}</option>
+                                ))}
+                            </select>
                         </div>
                         <div>
                             <label className={labelClasses}>Pincode</label>
@@ -481,7 +542,7 @@ const BookAStand = () => {
                     <div className="space-y-4">
                         <h3 className={sectionHeaderClasses}>Secondary Reference (Optional)</h3>
                         <div className="bg-white p-6 border border-slate-200 rounded-[2px] space-y-4 shadow-sm">
-                             <div className="grid grid-cols-4 gap-3">
+                            <div className="grid grid-cols-4 gap-3">
                                 <div>
                                     <label className={labelClasses}>Title</label>
                                     <select value={formData.contact2.title} onChange={(e) => setFormData(p => ({ ...p, contact2: { ...p.contact2, title: e.target.value } }))} className={inputClasses}>
@@ -544,15 +605,15 @@ const BookAStand = () => {
                         SECURE ADMIN MANUAL BOOKING
                     </p>
                     <div className="flex gap-4">
-                        <button 
-                            type="button" 
+                        <button
+                            type="button"
                             onClick={() => window.location.reload()}
                             className="px-10 py-2.5 bg-slate-50 border border-slate-200 text-slate-400 text-[11px] font-bold uppercase tracking-widest hover:bg-slate-100 transition-all rounded-[2px]"
                         >
                             Reset
                         </button>
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             disabled={isLoading}
                             className="px-12 py-2.5 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-lg flex items-center gap-3 group"
                         >

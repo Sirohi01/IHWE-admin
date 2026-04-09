@@ -56,7 +56,8 @@ const RawDataList = () => {
     (company) =>
       !company.companyStatus ||
       company.companyStatus.trim() === "" ||
-      company.companyStatus === "null",
+      company.companyStatus === "null" ||
+      company.companyStatus === "New Lead",
   );
 
   const rows = rawDataCompanies.map((c) => ({

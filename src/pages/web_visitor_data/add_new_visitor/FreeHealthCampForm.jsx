@@ -16,34 +16,6 @@ const FreeHealthCampForm = ({
   genders: propGenders = [],
   timeSlots: propTimeSlots = [],
 }) => {
-  const dispatch = useDispatch();
-  const { loading } = useSelector((state) => state.healthCampVisitors);
-
-  const { countries: reduxCountries } = useSelector((state) => state.countries);
-  const { states: reduxStates } = useSelector((state) => state.states);
-  const { cities: reduxCities } = useSelector((state) => state.cities);
-
-  useEffect(() => {
-    if (!reduxCountries || reduxCountries.length === 0) dispatch(fetchCountries());
-    if (!reduxStates || reduxStates.length === 0) dispatch(fetchStates());
-    if (!reduxCities || reduxCities.length === 0) dispatch(fetchCities());
-  }, [dispatch]);
-
-  const countriesArr = propCountries.length > 1
-    ? propCountries
-    : ["Select Country", ...(reduxCountries || []).map(c => c.name).filter(Boolean)];
-
-  const statesArr = propStates.length > 1
-    ? propStates
-    : ["Select State", ...(reduxStates || []).map(s => s.name).filter(Boolean)];
-
-  const citiesArr = propCities.length > 1
-    ? propCities
-    : ["Select City", ...(reduxCities?.data || reduxCities || []).map(c => c.name).filter(Boolean)];
-
-  const genders = propGenders.length > 1 ? propGenders : ["Select Gender", "Male", "Female", "Other"];
-  const timeSlots = propTimeSlots.length > 0 ? propTimeSlots : ["09:00 AM - 12:00 PM", "12:00 PM - 03:00 PM", "03:00 PM - 06:00 PM"];
-
   const [healthCampData, setHealthCampData] = useState({
     firstName: "",
     lastName: "",
@@ -80,6 +52,43 @@ const FreeHealthCampForm = ({
     specificHealthConcerns: "",
     subscribe: false,
   });
+
+  const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.healthCampVisitors);
+
+  const { countries: reduxCountries } = useSelector((state) => state.countries);
+  const { states: reduxStates } = useSelector((state) => state.states);
+  const { cities: reduxCities } = useSelector((state) => state.cities);
+
+  useEffect(() => {
+    if (!reduxCountries || reduxCountries.length === 0) dispatch(fetchCountries());
+    if (!reduxStates || reduxStates.length === 0) dispatch(fetchStates());
+    if (!reduxCities || reduxCities.length === 0) dispatch(fetchCities());
+  }, [dispatch]);
+
+  const countriesArr = propCountries.length > 1
+    ? propCountries
+    : ["Select Country", ...(reduxCountries || []).map(c => c.name).filter(Boolean)];
+
+  const filteredStatesArr = (() => {
+    if (!healthCampData.country || !reduxStates?.length) return ["Select State"];
+    const countryObj = reduxCountries.find(c => c.name && c.name.trim().toLowerCase() === healthCampData.country.trim().toLowerCase());
+    if (!countryObj) return ["Select State"];
+    const filtered = reduxStates.filter(s => String(s.countryCode) === String(countryObj.countryCode));
+    return ["Select State", ...filtered.map(s => s.name).filter(Boolean)];
+  })();
+
+  const filteredCitiesArr = (() => {
+    if (!healthCampData.state || !reduxCities?.length) return ["Select City"];
+    const stateObj = reduxStates.find(s => s.name && s.name.trim().toLowerCase() === healthCampData.state.trim().toLowerCase());
+    if (!stateObj) return ["Select City"];
+    const actualCities = reduxCities.data || reduxCities || [];
+    const filtered = actualCities.filter(c => String(c.stateCode) === String(stateObj.stateCode));
+    return ["Select City", ...filtered.map(c => c.name).filter(Boolean)];
+  })();
+
+  const genders = propGenders.length > 1 ? propGenders : ["Select Gender", "Male", "Female", "Other"];
+  const timeSlots = propTimeSlots.length > 0 ? propTimeSlots : ["09:00 AM - 12:00 PM", "12:00 PM - 03:00 PM", "03:00 PM - 06:00 PM"];
 
   const resetForm = () => {
     setHealthCampData({
@@ -281,8 +290,9 @@ const FreeHealthCampForm = ({
               className={inputClass}
               value={healthCampData.state}
               onChange={(e) => setHealthCampData({ ...healthCampData, state: e.target.value, city: "Select City" })}
+              disabled={!healthCampData.country || healthCampData.country.includes("Select")}
             >
-              {statesArr.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+              {filteredStatesArr.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
             </select>
           </div>
           <div>
@@ -291,8 +301,9 @@ const FreeHealthCampForm = ({
               className={inputClass}
               value={healthCampData.city}
               onChange={(e) => setHealthCampData({ ...healthCampData, city: e.target.value })}
+              disabled={!healthCampData.state || healthCampData.state.includes("Select")}
             >
-              {citiesArr.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+              {filteredCitiesArr.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
             </select>
           </div>
         </div>

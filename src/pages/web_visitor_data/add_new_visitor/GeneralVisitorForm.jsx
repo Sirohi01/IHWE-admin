@@ -19,45 +19,6 @@ const GeneralVisitorForm = ({
   cities: propCities = [],
   genders: propGenders = [],
 }) => {
-  const dispatch = useDispatch();
-  const { loading } = useSelector((state) => state.generalVisitors);
-
-  const { countries: reduxCountries } = useSelector((state) => state.countries);
-  const { states: reduxStates } = useSelector((state) => state.states);
-  const { cities: reduxCities } = useSelector((state) => state.cities);
-  const { events: reduxEvents } = useSelector((state) => state.crmEvents);
-  const { natures: reduxNatures } = useSelector((state) => state.natures);
-
-  useEffect(() => {
-    if (!reduxCountries || reduxCountries.length === 0) dispatch(fetchCountries());
-    if (!reduxStates || reduxStates.length === 0) dispatch(fetchStates());
-    if (!reduxCities || reduxCities.length === 0) dispatch(fetchCities());
-    if (!reduxEvents || reduxEvents.length === 0) dispatch(fetchEvents());
-    if (!reduxNatures || reduxNatures.length === 0) dispatch(fetchNatures());
-  }, [dispatch]);
-
-  const registrationOptions = propRegistrationOptions.length > 1 
-    ? propRegistrationOptions 
-    : ["Select Event", ...(reduxEvents || []).map(e => e.event_name).filter(Boolean)];
-
-  const industrySectors = propIndustrySectors.length > 1
-    ? propIndustrySectors
-    : ["Select Sector", ...(reduxNatures || []).map(n => n.nature_name).filter(Boolean)];
-
-  const countriesArr = propCountries.length > 1
-    ? propCountries
-    : ["Select Country", ...(reduxCountries || []).map(c => c.name).filter(Boolean)];
-
-  const statesArr = propStates.length > 1
-    ? propStates
-    : ["Select State", ...(reduxStates || []).map(s => s.name).filter(Boolean)];
-
-  const citiesArr = propCities.length > 1
-    ? propCities
-    : ["Select City", ...(reduxCities?.data || reduxCities || []).map(c => c.name).filter(Boolean)];
-
-  const genders = propGenders.length > 1 ? propGenders : ["Select Gender", "Male", "Female", "Other"];
-
   const [generalData, setGeneralData] = useState({
     registrationFor: "",
     firstName: "",
@@ -90,8 +51,64 @@ const GeneralVisitorForm = ({
       researchInnovations: false,
       others: false,
     },
-    subscribe: false,
+    sourceOfInformation: {
+      socialMedia: false,
+      friendsFamily: false,
+      newspaperAds: false,
+      website: false,
+      emailSms: false,
+      others: false,
+    },
+    subscribeTerms: false,
   });
+
+  const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.generalVisitors);
+
+  const { countries: reduxCountries } = useSelector((state) => state.countries);
+  const { states: reduxStates } = useSelector((state) => state.states);
+  const { cities: reduxCities } = useSelector((state) => state.cities);
+  const { events: reduxEvents } = useSelector((state) => state.crmEvents);
+  const { natures: reduxNatures } = useSelector((state) => state.natures);
+
+  useEffect(() => {
+    if (!reduxCountries || reduxCountries.length === 0) dispatch(fetchCountries());
+    if (!reduxStates || reduxStates.length === 0) dispatch(fetchStates());
+    if (!reduxCities || reduxCities.length === 0) dispatch(fetchCities());
+    if (!reduxEvents || reduxEvents.length === 0) dispatch(fetchEvents());
+    if (!reduxNatures || reduxNatures.length === 0) dispatch(fetchNatures());
+  }, [dispatch]);
+
+  const registrationOptions = propRegistrationOptions.length > 1 
+    ? propRegistrationOptions 
+    : ["Select Event", ...(reduxEvents || []).map(e => e.event_name).filter(Boolean)];
+
+  const industrySectors = propIndustrySectors.length > 1
+    ? propIndustrySectors
+    : ["Select Sector", ...(reduxNatures || []).map(n => n.nature_name).filter(Boolean)];
+
+  const countriesArr = propCountries.length > 1
+    ? propCountries
+    : ["Select Country", ...(reduxCountries || []).map(c => c.name).filter(Boolean)];
+
+  const filteredStatesArr = (() => {
+    if (!generalData.country || !reduxStates?.length) return ["Select State"];
+    const countryObj = reduxCountries.find(c => c.name && c.name.trim().toLowerCase() === generalData.country.trim().toLowerCase());
+    if (!countryObj) return ["Select State"];
+    const filtered = reduxStates.filter(s => String(s.countryCode) === String(countryObj.countryCode));
+    return ["Select State", ...filtered.map(s => s.name).filter(Boolean)];
+  })();
+
+  const filteredCitiesArr = (() => {
+    if (!generalData.state || !reduxCities?.length) return ["Select City"];
+    const stateObj = reduxStates.find(s => s.name && s.name.trim().toLowerCase() === generalData.state.trim().toLowerCase());
+    if (!stateObj) return ["Select City"];
+    const actualCities = reduxCities.data || reduxCities || [];
+    const filtered = actualCities.filter(c => String(c.stateCode) === String(stateObj.stateCode));
+    return ["Select City", ...filtered.map(c => c.name).filter(Boolean)];
+  })();
+
+  const genders = propGenders.length > 1 ? propGenders : ["Select Gender", "Male", "Female", "Other"];
 
   const resetForm = () => {
     setGeneralData({
@@ -330,8 +347,9 @@ const GeneralVisitorForm = ({
               className={inputClass}
               value={generalData.state}
               onChange={(e) => setGeneralData({ ...generalData, state: e.target.value, city: "Select City" })}
+              disabled={!generalData.country || generalData.country.includes("Select")}
             >
-              {statesArr.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+              {filteredStatesArr.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
             </select>
           </div>
           <div>
@@ -340,8 +358,9 @@ const GeneralVisitorForm = ({
               className={inputClass}
               value={generalData.city}
               onChange={(e) => setGeneralData({ ...generalData, city: e.target.value })}
+              disabled={!generalData.state || generalData.state.includes("Select")}
             >
-              {citiesArr.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+              {filteredCitiesArr.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
             </select>
           </div>
         </div>

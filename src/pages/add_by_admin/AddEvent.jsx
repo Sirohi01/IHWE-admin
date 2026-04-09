@@ -57,6 +57,34 @@ const AddEvent = () => {
     dispatch(fetchEvents()); dispatch(fetchCountries()); dispatch(fetchStates()); dispatch(fetchCities());
   }, [dispatch]);
 
+  const filteredStates = useMemo(() => {
+    if (!formData.event_country || !states?.length) return [];
+    const countryObj = countries.find(c => 
+      c.name && c.name.trim().toLowerCase() === formData.event_country.trim().toLowerCase()
+    );
+    if (!countryObj) return [];
+    return states.filter(s => String(s.countryCode) === String(countryObj.countryCode));
+  }, [formData.event_country, countries, states]);
+
+  const filteredCities = useMemo(() => {
+    if (!formData.event_state || !states?.length || !cities?.length) return [];
+    const stateObj = states.find(s => 
+      s.name && s.name.trim().toLowerCase() === formData.event_state.trim().toLowerCase()
+    );
+    if (!stateObj) return [];
+    return cities.filter(c => String(c.stateCode) === String(stateObj.stateCode));
+  }, [formData.event_state, states, cities]);
+
+  const handleCountryChange = (e) => {
+    const value = e.target.value;
+    setFormData(prev => ({ ...prev, event_country: value, event_state: "", event_city: "" }));
+  };
+
+  const handleStateChange = (e) => {
+    const value = e.target.value;
+    setFormData(prev => ({ ...prev, event_state: value, event_city: "" }));
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "event_pincode") {
@@ -261,23 +289,40 @@ const AddEvent = () => {
                 </div>
                 <div>
                   <label className={labelCls}>Country</label>
-                  <select name="event_country" value={formData.event_country} onChange={handleChange} className={selectCls}>
+                  <select 
+                    name="event_country" 
+                    value={formData.event_country} 
+                    onChange={handleCountryChange} 
+                    className={selectCls}
+                  >
                     <option value="">Select Country</option>
                     {countries?.map((c, i) => <option key={c._id || i} value={c.name}>{c.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className={labelCls}>State</label>
-                  <select name="event_state" value={formData.event_state} onChange={handleChange} className={selectCls}>
+                  <select 
+                    name="event_state" 
+                    value={formData.event_state} 
+                    onChange={handleStateChange} 
+                    className={selectCls}
+                    disabled={!formData.event_country}
+                  >
                     <option value="">Select State</option>
-                    {states?.map((s, i) => <option key={s._id || i} value={s?.name}>{s?.name}</option>)}
+                    {filteredStates?.map((s, i) => <option key={s._id || i} value={s?.name}>{s?.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className={labelCls}>City</label>
-                  <select name="event_city" value={formData.event_city} onChange={handleChange} className={selectCls}>
+                  <select 
+                    name="event_city" 
+                    value={formData.event_city} 
+                    onChange={handleChange} 
+                    className={selectCls}
+                    disabled={!formData.event_state}
+                  >
                     <option value="">Select City</option>
-                    {cities?.map((c, i) => <option key={c?._id || i} value={c?.name}>{c?.name}</option>)}
+                    {filteredCities?.map((c, i) => <option key={c?._id || i} value={c?.name}>{c?.name}</option>)}
                   </select>
                 </div>
               </div>

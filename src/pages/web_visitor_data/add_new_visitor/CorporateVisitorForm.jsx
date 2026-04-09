@@ -18,6 +18,42 @@ const CorporateVisitorForm = ({
   states: propStates = [],
   cities: propCities = [],
 }) => {
+  const [corporateData, setCorporateData] = useState({
+    registrationFor: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    mobile: "",
+    designation: "",
+    companyName: "",
+    companyWebsite: "",
+    industrySector: "",
+    companySize: "",
+    country: "",
+    state: "",
+    city: "",
+    b2bMeeting: "",
+    whatsappUpdates: "",
+    specificRequirement: "",
+    subscribe: false,
+    purposeOfVisit: {
+      exploringBusiness: false,
+      meetingExhibitors: false,
+      attendingSeminar: false,
+      networking: false,
+      learningTrends: false,
+      others: false,
+    },
+    areaOfInterest: {
+      ayushHerbal: false,
+      healthWellness: false,
+      organicFarming: false,
+      fitnessNutrition: false,
+      bioMedicine: false,
+      healthTech: false,
+    },
+  });
+
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.corporateVisitors);
 
@@ -47,48 +83,23 @@ const CorporateVisitorForm = ({
     ? propCountries
     : ["Select Country", ...(reduxCountries || []).map(c => c.name).filter(Boolean)];
 
-  const statesArr = propStates.length > 1
-    ? propStates
-    : ["Select State", ...(reduxStates || []).map(s => s.name).filter(Boolean)];
+  const filteredStatesArr = (() => {
+    if (!corporateData.country || !reduxStates?.length) return ["Select State"];
+    const countryObj = reduxCountries.find(c => c.name && c.name.trim().toLowerCase() === corporateData.country.trim().toLowerCase());
+    if (!countryObj) return ["Select State"];
+    const filtered = reduxStates.filter(s => String(s.countryCode) === String(countryObj.countryCode));
+    return ["Select State", ...filtered.map(s => s.name).filter(Boolean)];
+  })();
 
-  const citiesArr = propCities.length > 1
-    ? propCities
-    : ["Select City", ...(reduxCities?.data || reduxCities || []).map(c => c.name).filter(Boolean)];
+  const filteredCitiesArr = (() => {
+    if (!corporateData.state || !reduxCities?.length) return ["Select City"];
+    const stateObj = reduxStates.find(s => s.name && s.name.trim().toLowerCase() === corporateData.state.trim().toLowerCase());
+    if (!stateObj) return ["Select City"];
+    const actualCities = reduxCities.data || reduxCities || [];
+    const filtered = actualCities.filter(c => String(c.stateCode) === String(stateObj.stateCode));
+    return ["Select City", ...filtered.map(c => c.name).filter(Boolean)];
+  })();
 
-  const [corporateData, setCorporateData] = useState({
-    registrationFor: "",
-    firstName: "",
-    lastName: "",
-    email: "",
-    mobile: "",
-    designation: "",
-    companyName: "",
-    companyWebsite: "",
-    industrySector: "",
-    companySize: "",
-    country: "",
-    state: "",
-    city: "",
-    b2bMeeting: "",
-    whatsappUpdates: "",
-    specificRequirement: "",
-    subscribe: false,
-    purposeOfVisit: {
-      exploringBusiness: false,
-      meetingExhibitors: false,
-      attendingSeminar: false,
-      networking: false,
-      learningTrends: false,
-    },
-    areaOfInterest: {
-      ayushHerbal: false,
-      healthWellness: false,
-      organicFarming: false,
-      fitnessNutrition: false,
-      bioMedicine: false,
-      healthTech: false,
-    },
-  });
 
   const resetForm = () => {
     setCorporateData({
@@ -324,8 +335,20 @@ const CorporateVisitorForm = ({
               className={inputClass}
               value={corporateData.state}
               onChange={(e) => setCorporateData({ ...corporateData, state: e.target.value, city: "" })}
+              disabled={!corporateData.country || corporateData.country.includes("Select")}
             >
-              {statesArr.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+              {filteredStatesArr.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>City</label>
+            <select
+              className={inputClass}
+              value={corporateData.city}
+              onChange={(e) => setCorporateData({ ...corporateData, city: e.target.value })}
+              disabled={!corporateData.state || corporateData.state.includes("Select")}
+            >
+              {filteredCitiesArr.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
             </select>
           </div>
         </div>

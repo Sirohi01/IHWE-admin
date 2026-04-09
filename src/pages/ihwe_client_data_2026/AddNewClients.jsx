@@ -68,34 +68,6 @@ const AddNewClients = () => {
     const navigate = useNavigate();
     const { id } = useParams();
 
-    // ---------- Redux Selectors ----------
-    const usersState = useSelector((state) => state.users);
-    const users = getArrayFromSlice(usersState, "users");
-
-    const categoriesState = useSelector((state) => state.categories);
-    const categoriesArray = getArrayFromSlice(categoriesState, "categories");
-
-    const naturesState = useSelector((state) => state.natures);
-    const naturesArray = getArrayFromSlice(naturesState, "natures");
-
-    const countriesState = useSelector((state) => state.countries);
-    const countriesArray = getArrayFromSlice(countriesState, "countries");
-
-    const statesState = useSelector((state) => state.states);
-    const statesArray = getArrayFromSlice(statesState, "states");
-
-    const citiesState = useSelector((state) => state.cities);
-    const citiesArray = getArrayFromSlice(citiesState, "cities");
-
-    const dataSourcesState = useSelector((state) => state.dataSources);
-    const dataSourcesArray = getArrayFromSlice(dataSourcesState, "dataSources");
-
-    const eventsState = useSelector((state) => state.crmEvents);
-    const eventsArray = getArrayFromSlice(eventsState, "events");
-
-    const companiesState = useSelector((state) => state.companies);
-    const companiesArray = getArrayFromSlice(companiesState, "companies");
-
     // 🧩 Form State
     const [formData, setFormData] = useState({
         companyName: "",
@@ -126,6 +98,60 @@ const AddNewClients = () => {
             },
         ],
     });
+
+    // ---------- Redux Selectors ----------
+    const usersState = useSelector((state) => state.users);
+    const users = getArrayFromSlice(usersState, "users");
+
+    const categoriesState = useSelector((state) => state.categories);
+    const categoriesArray = getArrayFromSlice(categoriesState, "categories");
+
+    const naturesState = useSelector((state) => state.natures);
+    const naturesArray = getArrayFromSlice(naturesState, "natures");
+
+    const countriesState = useSelector((state) => state.countries);
+    const countriesArray = getArrayFromSlice(countriesState, "countries");
+
+    const statesState = useSelector((state) => state.states);
+    const statesArray = getArrayFromSlice(statesState, "states");
+
+    const citiesState = useSelector((state) => state.cities);
+    const citiesArray = getArrayFromSlice(citiesState, "cities");
+
+    const dataSourcesState = useSelector((state) => state.dataSources);
+    const dataSourcesArray = getArrayFromSlice(dataSourcesState, "dataSources");
+
+    const eventsState = useSelector((state) => state.crmEvents);
+    const eventsArray = getArrayFromSlice(eventsState, "events");
+
+    const companiesState = useSelector((state) => state.companies);
+    const companiesArray = getArrayFromSlice(companiesState, "companies");
+
+    // 🧩 Filtered Location Data
+    const filteredStates = React.useMemo(() => {
+        if (!formData.country || !countriesArray.length) return [];
+        const selectedCountry = countriesArray.find(c => 
+            c.name && c.name.trim().toLowerCase() === formData.country.trim().toLowerCase()
+        );
+        if (!selectedCountry) return [];
+        return statesArray.filter(s => 
+            s.countryCode != null && selectedCountry.countryCode != null &&
+            String(s.countryCode) === String(selectedCountry.countryCode)
+        );
+    }, [formData.country, countriesArray, statesArray]);
+
+    const filteredCities = React.useMemo(() => {
+        if (!formData.state || !statesArray.length) return [];
+        const selectedState = statesArray.find(s => 
+            s.name && s.name.trim().toLowerCase() === formData.state.trim().toLowerCase()
+        );
+        if (!selectedState) return [];
+        return citiesArray.filter(c => 
+            c.stateCode != null && selectedState.stateCode != null &&
+            String(c.stateCode) === String(selectedState.stateCode)
+        );
+    }, [formData.state, statesArray, citiesArray]);
+
 
     const [isSaving, setIsSaving] = useState(false);
 
@@ -372,7 +398,7 @@ const AddNewClients = () => {
                             <label className={labelClasses}>State *</label>
                             <select required value={formData.state} onChange={(e) => { handleChange("state", e.target.value); handleChange("city", ""); }} disabled={!formData.country} className={`${inputClasses} disabled:bg-slate-50`}>
                                 <option value="">Select State</option>
-                                {formData.country && statesArray.map((state, i) => (
+                                {filteredStates.map((state, i) => (
                                     <option key={i} value={state?.name}>{state?.name}</option>
                                 ))}
                             </select>
@@ -384,7 +410,7 @@ const AddNewClients = () => {
                             <label className={labelClasses}>City / Town *</label>
                             <select required value={formData.city} onChange={(e) => handleChange("city", e.target.value)} disabled={!formData.state} className={`${inputClasses} disabled:bg-slate-50`}>
                                 <option value="">Select City</option>
-                                {formData.country && formData.state && citiesArray.map((city, i) => (
+                                {filteredCities.map((city, i) => (
                                     <option key={i} value={city?.name}>{city?.name}</option>
                                 ))}
                             </select>
