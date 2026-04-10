@@ -347,7 +347,7 @@ export default function AppRoutes() {
             element={<GeneralVisitorsList />}
           />
           <Route
-            path="ihweClientData2026/HealthCampVisitorsList"
+            path="ihweClientData2026/FreeHealthCampVisitorsList"
             element={<HealthCampVisitorsList />}
           />
           <Route

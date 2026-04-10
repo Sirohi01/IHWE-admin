@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import api from "../../lib/api";
 import { createActivityLogThunk } from "../activityLog/activityLogSlice";
 
 const getUserInfo = () => {
@@ -21,6 +22,22 @@ export const fetchUsers = createAsyncThunk(
     try {
       const response = await axios.get(`${BASE_URL}/users`);
       return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
+// 1.1️⃣ GET all admin users
+export const fetchAdmins = createAsyncThunk(
+  "users/fetchAdmins",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/api/admin/all');
+      if (response.data.success) {
+        return response.data.data;
+      }
+      return rejectWithValue("Failed to fetch admins");
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }
@@ -167,6 +184,20 @@ const userSlice = createSlice({
         state.users = action.payload;
       })
       .addCase(fetchUsers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // 🟢 FETCH ALL ADMINS
+      .addCase(fetchAdmins.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAdmins.fulfilled, (state, action) => {
+        state.loading = false;
+        state.users = action.payload;
+      })
+      .addCase(fetchAdmins.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

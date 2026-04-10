@@ -301,7 +301,7 @@ export const menuItems = [
       { label: "Visitor Registration", path: "/ihweClientData2026/VisitorRegistration" },
       { label: "Corporate Visitors List", path: "/ihweClientData2026/CorporateVisitorsList" },
       { label: "General Visitors List", path: "/ihweClientData2026/GeneralVisitorsList" },
-      { label: "Health Camp Visitors List", path: "/ihweClientData2026/HealthCampVisitorsList" },
+      { label: "Health Camp Visitors List", path: "/ihweClientData2026/FreeHealthCampVisitorsList" },
       { label: "Visitor Review", path: "/ihweClientData2026/VisitorReview" },
     ],
   },

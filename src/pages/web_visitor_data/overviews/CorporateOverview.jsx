@@ -34,7 +34,7 @@ import {
   deleteVisitorReview,
 } from "../../../features/visitor/visitorReviewSlice";
 import { fetchStatusOptions } from "../../../features/add_by_admin/statusOption/statusOptionSlice";
-import { fetchUsers } from "../../../features/auth/userSlice";
+import { fetchUsers, fetchAdmins } from "../../../features/auth/userSlice";
 
 /* ─── Shared cell styles ───────────────────────────────────────────────────── */
 const LC_CLS = "bg-[#fafafa] p-3 text-[11px] font-bold text-slate-600 uppercase tracking-tighter md:border-r border-slate-200 flex items-center min-w-[120px] order-none";
@@ -123,7 +123,7 @@ const CorporateOverview = () => {
     }
     dispatch(fetchEvents());
     dispatch(fetchStatusOptions());
-    dispatch(fetchUsers());
+    dispatch(fetchAdmins());
     dispatch(fetchReviewsByVisitorId(id));
     return () => {
       dispatch(clearVisitorReviews());
@@ -407,8 +407,8 @@ const CorporateOverview = () => {
                         className="rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white text-slate-900 font-medium outline-none px-3 w-full"
                       >
                         <option value="">Select User</option>
-                        {Array.isArray(users) && users.filter(u => u.user_status === "Active").map(u => (
-                          <option key={u._id} value={u.user_fullname}>{u.user_fullname}</option>
+                        {Array.isArray(users) && users.filter(u => u.status === "Active").map(u => (
+                          <option key={u._id} value={u.username}>{u.username}</option>
                         ))}
                       </select>
                     </div>

@@ -6,6 +6,7 @@ import FreeHealthCampForm from "./FreeHealthCampForm";
 import { fetchCountries } from "../../../features/add_by_admin/country/countrySlice";
 import { fetchStates } from "../../../features/state/stateSlice";
 import { fetchCities } from "../../../features/city/citySlice";
+import { fetchEvents } from "../../../features/crmEvent/crmEventSlice";
 
 const VisitorRegistration = ({ onNavigateToList, initialType = "corporate", hideTabs = false }) => {
   const dispatch = useDispatch();
@@ -19,6 +20,7 @@ const VisitorRegistration = ({ onNavigateToList, initialType = "corporate", hide
   const { countries: countriesData } = useSelector((state) => state.countries);
   const { states: statesData } = useSelector((state) => state.states);
   const { cities: citiesData } = useSelector((state) => state.cities);
+  const { events: eventsData } = useSelector((state) => state.crmEvents);
 
   const countryNames = [
     "Select Country",
@@ -37,8 +39,10 @@ const VisitorRegistration = ({ onNavigateToList, initialType = "corporate", hide
 
   const registrationOptions = [
     "Select Here",
-    "4th Organic Expo 2026",
-    "9th International Health and Wellness Expo",
+    ...(eventsData || [])
+      .filter((ev) => ev.event_status === "active")
+      .map((ev) => ev.event_fullName)
+      .filter(Boolean),
   ];
   const genders = ["Select Here", "Male", "Female", "Other"];
   const timeSlots = [
@@ -63,6 +67,7 @@ const VisitorRegistration = ({ onNavigateToList, initialType = "corporate", hide
     dispatch(fetchCountries());
     dispatch(fetchStates());
     dispatch(fetchCities());
+    dispatch(fetchEvents());
   }, [dispatch]);
 
   return (
@@ -77,17 +82,7 @@ const VisitorRegistration = ({ onNavigateToList, initialType = "corporate", hide
             Visitor Registration Portal
           </p>
         </div>
-        <div className="flex flex-wrap gap-2 mt-4 sm:mt-0">
-          <button className="px-3 py-1.5 text-[11px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center gap-1.5 rounded-[2px] shadow-sm">
-            Master List
-          </button>
-          <button
-            onClick={onNavigateToList}
-            className="px-3 py-1.5 text-[11px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center gap-1.5 rounded-[2px] shadow-sm"
-          >
-            Visitor List
-          </button>
-        </div>
+        {/* Removed Master List and Visitor List buttons as requested */}
       </div>
 
       <div className="max-w-[1400px] mx-auto p-6 space-y-8">
@@ -154,6 +149,7 @@ const VisitorRegistration = ({ onNavigateToList, initialType = "corporate", hide
               )}
               {visitorType === "freeHealth" && (
                 <FreeHealthCampForm
+                  registrationOptions={registrationOptions}
                   countries={countryNames}
                   states={stateNames}
                   cities={cityNames}

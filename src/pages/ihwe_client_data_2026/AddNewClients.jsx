@@ -27,7 +27,7 @@ import {
     Shield
 } from "lucide-react";
 import Swal from "sweetalert2";
-import { fetchUsers } from "../../features/auth/userSlice";
+import { fetchUsers, fetchAdmins } from "../../features/auth/userSlice";
 import { fetchCategories } from "../../features/add_by_admin/category/categorySlice";
 import { fetchNatures } from "../../features/add_by_admin/nature/natureSlice";
 import { fetchCountries } from "../../features/add_by_admin/country/countrySlice";
@@ -158,7 +158,7 @@ const AddNewClients = () => {
     // Initial Data Fetch
     useEffect(() => {
         if (companiesArray.length === 0) dispatch(fetchCompanies());
-        dispatch(fetchUsers());
+        dispatch(fetchAdmins());
         dispatch(fetchCategories());
         dispatch(fetchNatures());
         dispatch(fetchCountries());
@@ -494,8 +494,8 @@ const AddNewClients = () => {
                             <label className={labelClasses}>Event Attribution *</label>
                             <select required value={formData.eventName} onChange={(e) => handleChange("eventName", e.target.value)} className={inputClasses}>
                                 <option value="">Select Event</option>
-                                {eventsArray.map((event, i) => (
-                                    <option key={i} value={event?.event_name}>{event?.event_name}</option>
+                                {eventsArray.filter(e => e.event_status === "active").map((event, i) => (
+                                    <option key={i} value={event?.event_fullName}>{event?.event_fullName}</option>
                                 ))}
                             </select>
                         </div>
@@ -508,7 +508,7 @@ const AddNewClients = () => {
                             <select required value={formData.forwardTo} onChange={(e) => handleChange("forwardTo", e.target.value)} disabled={!!id} className={`${inputClasses} ${id ? "bg-slate-50 cursor-not-allowed" : ""}`}>
                                 <option value="">Select User</option>
                                 {users?.map((user, i) => (
-                                    <option key={i} value={user?.user_fullname}>{user?.user_fullname}</option>
+                                    <option key={i} value={user?.username}>{user?.username}</option>
                                 ))}
                             </select>
                         </div>

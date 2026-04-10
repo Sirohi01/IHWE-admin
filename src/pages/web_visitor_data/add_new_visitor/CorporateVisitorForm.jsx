@@ -73,7 +73,7 @@ const CorporateVisitorForm = ({
 
   const registrationOptions = propRegistrationOptions.length > 1 
     ? propRegistrationOptions 
-    : ["Select Event", ...(reduxEvents || []).map(e => e.event_name).filter(Boolean)];
+    : ["Select Event", ...(reduxEvents || []).filter(e => e.event_status === "active").map(e => e.event_fullName).filter(Boolean)];
 
   const industrySectors = propIndustrySectors.length > 1
     ? propIndustrySectors

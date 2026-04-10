@@ -384,12 +384,7 @@ const HealthCampVisitorsList = () => {
                 >
                   SENT
                 </button>
-                <Link
-                  to="/history"
-                  className="px-5 py-2 text-base font-medium bg-[#3598dc] hover:bg-[#276b99] text-white rounded-md transition-colors flex items-center"
-                >
-                  HISTORY
-                </Link>
+
               </div>
 
               <div className="flex flex-wrap gap-3">

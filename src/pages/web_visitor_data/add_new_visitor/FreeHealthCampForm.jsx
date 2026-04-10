@@ -10,6 +10,7 @@ import { createActivityLogThunk } from "../../../features/activityLog/activityLo
 import { User, MapPin, Heart, Activity, Calendar, Clock, CheckSquare, Send, Thermometer, ShieldCheck } from "lucide-react";
 
 const FreeHealthCampForm = ({
+  registrationOptions: propRegistrationOptions = [],
   countries: propCountries = [],
   states: propStates = [],
   cities: propCities = [],
@@ -17,6 +18,7 @@ const FreeHealthCampForm = ({
   timeSlots: propTimeSlots = [],
 }) => {
   const [healthCampData, setHealthCampData] = useState({
+    registrationFor: "",
     firstName: "",
     lastName: "",
     email: "",
@@ -59,12 +61,19 @@ const FreeHealthCampForm = ({
   const { countries: reduxCountries } = useSelector((state) => state.countries);
   const { states: reduxStates } = useSelector((state) => state.states);
   const { cities: reduxCities } = useSelector((state) => state.cities);
+  const { events: reduxEvents } = useSelector((state) => state.crmEvents);
+  const { loading: eventsLoading } = useSelector((state) => state.crmEvents);
 
   useEffect(() => {
     if (!reduxCountries || reduxCountries.length === 0) dispatch(fetchCountries());
     if (!reduxStates || reduxStates.length === 0) dispatch(fetchStates());
     if (!reduxCities || reduxCities.length === 0) dispatch(fetchCities());
+    if (!reduxEvents || reduxEvents.length === 0) dispatch(fetchEvents());
   }, [dispatch]);
+
+  const registrationOptions = propRegistrationOptions.length > 1
+    ? propRegistrationOptions
+    : ["Select Event", ...(reduxEvents || []).filter(e => e.event_status === "active").map(e => e.event_fullName).filter(Boolean)];
 
   const countriesArr = propCountries.length > 1
     ? propCountries
@@ -92,6 +101,7 @@ const FreeHealthCampForm = ({
 
   const resetForm = () => {
     setHealthCampData({
+      registrationFor: "",
       firstName: "",
       lastName: "",
       email: "",
@@ -140,6 +150,7 @@ const FreeHealthCampForm = ({
   };
 
   const validate = () => {
+    if (!healthCampData.registrationFor || healthCampData.registrationFor.includes("Select")) return showError("Please select Event");
     if (!healthCampData.firstName.trim()) return showError("First Name is required");
     if (!healthCampData.lastName.trim()) return showError("Last Name is required");
     if (!healthCampData.email.trim()) return showError("Email is required");
@@ -195,6 +206,16 @@ const FreeHealthCampForm = ({
           <User className="w-5 h-5 text-[#d26019]" /> Patient Information
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5">
+          <div>
+            <label className={labelClass}>Event Name <span className="text-red-500">*</span></label>
+            <select
+              className={inputClass}
+              value={healthCampData.registrationFor}
+              onChange={(e) => setHealthCampData({ ...healthCampData, registrationFor: e.target.value })}
+            >
+              {registrationOptions.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+            </select>
+          </div>
           <div>
             <label className={labelClass}>First Name <span className="text-red-500">*</span></label>
             <input

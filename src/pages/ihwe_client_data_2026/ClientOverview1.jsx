@@ -36,7 +36,7 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchStatusOptions } from "../../features/add_by_admin/statusOption/statusOptionSlice";
-import { fetchUsers } from "../../features/auth/userSlice";
+import { fetchUsers, fetchAdmins } from "../../features/auth/userSlice";
 import {
   fetchEvents,
 } from "../../features/crmEvent/crmEventSlice";
@@ -167,7 +167,7 @@ const ClientOverview1 = () => {
       dispatch(fetchCompanies());
     }
     dispatch(fetchStatusOptions());
-    dispatch(fetchUsers());
+    dispatch(fetchAdmins());
     dispatch(fetchEvents());
     dispatch(fetchReviews());
   }, [dispatch, companies]);
@@ -199,7 +199,7 @@ const ClientOverview1 = () => {
   // यह फ़ंक्शन events array में से ID के आधार पर Event Name ढूंढता है।
   const getEventName = (eventId) => {
     const event = (Array.isArray(events) ? events : []).find((e) => e._id === eventId);
-    return event ? event.event_name : eventId; // अगर नाम मिला तो नाम, वरना ID ही दिखा दो।
+    return event ? event.event_fullName : eventId; // अगर नाम मिला तो नाम, वरना ID ही दिखा दो।
   };
 
   // ✅ Handle all input changes
@@ -513,8 +513,8 @@ const ClientOverview1 = () => {
                       <label className={labelClasses}>Forward To *</label>
                       <select id="ForwardTo" value={reviewData.forward_to} onChange={handleChange} className={inputClasses}>
                         <option value="">Select User</option>
-                        {Array.isArray(users) && users.filter(u => u.user_status === "Active").map(u => (
-                          <option key={u._id} value={u.user_fullname}>{u.user_fullname}</option>
+                        {Array.isArray(users) && users.filter(u => u.status === "Active").map(u => (
+                          <option key={u._id} value={u.username}>{u.username}</option>
                         ))}
                       </select>
                     </div>
@@ -526,7 +526,7 @@ const ClientOverview1 = () => {
                   <select id="EventName" value={reviewData.evnt_id} onChange={handleChange} className={inputClasses}>
                     <option value="">Select Event</option>
                     {Array.isArray(events) && events.filter(e => e.event_status === "active").map(e => (
-                      <option key={e._id} value={e._id}>{e.event_name}</option>
+                      <option key={e._id} value={e._id}>{e.event_fullName}</option>
                     ))}
                   </select>
                 </div>
