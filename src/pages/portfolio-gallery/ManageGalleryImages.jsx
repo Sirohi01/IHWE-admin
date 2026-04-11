@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import {
     Save, Image as ImageIcon, Trash2, Edit,
-    ChevronLeft, LayoutGrid, Camera
+    ChevronLeft, LayoutGrid, Camera, RefreshCw
 } from 'lucide-react';
 import api, { SERVER_URL } from '../../lib/api';
 import PageHeader from '../../components/PageHeader';
@@ -24,6 +24,8 @@ const ManageGalleryImages = () => {
     const [form, setForm] = useState({ ...EMPTY_FORM });
     const [isEditing, setIsEditing] = useState(false);
     const [imagePreview, setImagePreview] = useState('');
+    const [selectedFile, setSelectedFile] = useState(null);
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         if (!categoryTitle) {
@@ -57,7 +59,20 @@ const ManageGalleryImages = () => {
             image: img.image
         });
         setImagePreview(`${SERVER_URL}${img.image}`);
+        setSelectedFile(null);
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setSelectedFile(file);
+            setImagePreview(URL.createObjectURL(file));
+        }
+    };
+
+    const handleReplaceClick = () => {
+        fileInputRef.current?.click();
     };
 
     const handleDelete = async (id) => {
@@ -88,9 +103,25 @@ const ManageGalleryImages = () => {
         if (!isEditing) return;
         setIsLoading(true);
         try {
+            let imagePath = form.image;
+            
+            // If a new file is selected, upload it first
+            if (selectedFile) {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                const uploadRes = await api.post('/api/gallery/upload', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                if (uploadRes.data.success) {
+                    imagePath = uploadRes.data.url;
+                }
+            }
+
             const res = await api.put(`/api/gallery/${form._id}`, {
-                imageAlt: form.imageAlt
+                imageAlt: form.imageAlt,
+                image: imagePath
             });
+
             if (res.data.success) {
                 Swal.fire({ icon: 'success', title: 'Updated!', timer: 1200, showConfirmButton: false });
                 resetForm();
@@ -107,6 +138,8 @@ const ManageGalleryImages = () => {
         setForm({ ...EMPTY_FORM });
         setIsEditing(false);
         setImagePreview('');
+        setSelectedFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
     return (
@@ -141,9 +174,29 @@ const ManageGalleryImages = () => {
                             <div className="space-y-4">
                                 <div className="h-48 border-2 border-gray-200 rounded-lg overflow-hidden relative group">
                                     <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
-                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <span className="text-white text-[10px] font-bold uppercase tracking-widest">Preview</span>
+                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity gap-4">
+                                        <button 
+                                            onClick={handleReplaceClick}
+                                            className="w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center text-white backdrop-blur-sm transition-all"
+                                            title="Replace Image"
+                                        >
+                                            <RefreshCw className="w-5 h-5" />
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDelete(form._id)}
+                                            className="w-10 h-10 bg-red-500/80 hover:bg-red-600 rounded-full flex items-center justify-center text-white backdrop-blur-sm transition-all"
+                                            title="Delete Image"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
                                     </div>
+                                    <input 
+                                        type="file" 
+                                        ref={fileInputRef} 
+                                        className="hidden" 
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                    />
                                 </div>
 
                                 <div>

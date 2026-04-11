@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import api, { API_URL, SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
+import Table from '../components/table/Table';
 import PageHeader from '../components/PageHeader';
 
 const Settings = () => {
@@ -64,6 +65,32 @@ const Settings = () => {
         }
     ]);
 
+    // Quick Links state
+    const [quickLinks, setQuickLinks] = useState([
+        { id: 1, label: 'Home', href: '/', isEditing: false },
+        { id: 2, label: 'About Us', href: '/about', isEditing: false },
+        { id: 3, label: 'Conference', href: '/conference', isEditing: false },
+        { id: 4, label: 'Blog', href: '/blog', isEditing: false },
+        { id: 5, label: 'Contact', href: '/contact', isEditing: false },
+    ]);
+    const [newLinkLabel, setNewLinkLabel] = useState('');
+    const [newLinkHref, setNewLinkHref] = useState('');
+    const [editMode, setEditMode] = useState(false);
+    const [currentLinkId, setCurrentLinkId] = useState(null);
+ 
+    // Exhibition Links state
+    const [exhibitionLinks, setExhibitionLinks] = useState([
+        { id: 1, label: 'Why Exhibit', href: '/exhibition', isEditing: false },
+        { id: 2, label: 'Exhibitors', href: '/exhibitors', isEditing: false },
+        { id: 3, label: 'Partners', href: '/partners', isEditing: false },
+        { id: 4, label: 'Floor Plan', href: '/exhibition#floor', isEditing: false },
+        { id: 5, label: 'Book a Stand', href: '/book-a-stand', isEditing: false },
+    ]);
+    const [newExLinkLabel, setNewExLinkLabel] = useState('');
+    const [newExLinkHref, setNewExLinkHref] = useState('');
+    const [exEditMode, setExEditMode] = useState(false);
+    const [currentExLinkId, setCurrentExLinkId] = useState(null);
+ 
     const [isLoading, setIsLoading] = useState(false);
 
     // Fetch settings on mount
@@ -104,6 +131,12 @@ const Settings = () => {
                 if (addresses && addresses.length > 0) {
                     setAddresses(addresses.map((a, index) => ({ ...a, id: Date.now() + index, isEditing: false })));
                 }
+                if (quickLinks && quickLinks.length > 0) {
+                    setQuickLinks(quickLinks.map((l, index) => ({ ...l, id: Date.now() + index, isEditing: false })));
+                }
+                if (exhibitionLinks && exhibitionLinks.length > 0) {
+                    setExhibitionLinks(exhibitionLinks.map((l, index) => ({ ...l, id: Date.now() + index, isEditing: false })));
+                }
             }
         } catch (error) {
             console.error('Error fetching settings:', error);
@@ -124,10 +157,14 @@ const Settings = () => {
             const emailsToSave = emails.map(({ id, isEditing, ...rest }) => rest);
             const phonesToSave = phones.map(({ id, isEditing, ...rest }) => rest);
             const addressesToSave = addresses.map(({ id, isEditing, ...rest }) => rest);
+            const quickLinksToSave = quickLinks.map(({ id, isEditing, ...rest }) => rest);
+            const exhibitionLinksToSave = exhibitionLinks.map(({ id, isEditing, ...rest }) => rest);
 
             formData.append('emails', JSON.stringify(emailsToSave));
             formData.append('phones', JSON.stringify(phonesToSave));
             formData.append('addresses', JSON.stringify(addressesToSave));
+            formData.append('quickLinks', JSON.stringify(quickLinksToSave));
+            formData.append('exhibitionLinks', JSON.stringify(exhibitionLinksToSave));
             formData.append('mapIframe', mapIframe);
             formData.append('marqueeText', marqueeText);
             formData.append('topbarDate', topbarDate);
@@ -328,6 +365,80 @@ const Settings = () => {
             setAddresses(addresses.filter(address => address.id !== id));
         }
     };
+ 
+    const startEditingLink = (link) => {
+        setEditMode(true);
+        setCurrentLinkId(link.id);
+        setNewLinkLabel(link.label);
+        setNewLinkHref(link.href);
+    };
+ 
+    const handleLinkSubmit = () => {
+        if (newLinkLabel && newLinkHref) {
+            if (editMode) {
+                setQuickLinks(quickLinks.map(link =>
+                    link.id === currentLinkId ? { ...link, label: newLinkLabel, href: newLinkHref } : link
+                ));
+                setEditMode(false);
+                setCurrentLinkId(null);
+            } else {
+                setQuickLinks([...quickLinks, { id: Date.now(), label: newLinkLabel, href: newLinkHref, isEditing: false }]);
+            }
+            setNewLinkLabel('');
+            setNewLinkHref('');
+        }
+    };
+ 
+    const removeQuickLink = (link) => {
+        setQuickLinks(quickLinks.filter(l => l.id !== link.id));
+    };
+ 
+    // Exhibition Links logic
+    const startEditingExLink = (link) => {
+        setExEditMode(true);
+        setCurrentExLinkId(link.id);
+        setNewExLinkLabel(link.label);
+        setNewExLinkHref(link.href);
+    };
+ 
+    const handleExLinkSubmit = () => {
+        if (newExLinkLabel && newExLinkHref) {
+            if (exEditMode) {
+                setExhibitionLinks(exhibitionLinks.map(link =>
+                    link.id === currentExLinkId ? { ...link, label: newExLinkLabel, href: newExLinkHref } : link
+                ));
+                setExEditMode(false);
+                setCurrentExLinkId(null);
+            } else {
+                setExhibitionLinks([...exhibitionLinks, { id: Date.now(), label: newExLinkLabel, href: newExLinkHref, isEditing: false }]);
+            }
+            setNewExLinkLabel('');
+            setNewExLinkHref('');
+        }
+    };
+ 
+    const removeExLink = (link) => {
+        setExhibitionLinks(exhibitionLinks.filter(l => l.id !== link.id));
+    };
+ 
+    const linkColumns = [
+        {
+            key: "sno",
+            label: "S.NO",
+            width: "80px",
+            render: (row, index) => <div className="font-semibold">{index + 1}</div>
+        },
+        {
+            key: "label",
+            label: "LINK LABEL",
+            render: (row) => <div className="font-medium text-gray-800">{row.label}</div>
+        },
+        {
+            key: "href",
+            label: "URL / PATH",
+            render: (row) => <div className="text-gray-500 font-mono text-xs">{row.href}</div>
+        }
+    ];
 
     return (
         <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
@@ -632,6 +743,134 @@ const Settings = () => {
                                     )}
                                 </div>
                             ))}
+                        </div>
+                    </div>
+ 
+                    {/* Quick Links */}
+                    <div className="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
+                        <div className="px-6 py-4 border-b bg-[#23471d] flex justify-between items-center text-white">
+                            <div>
+                                <h2 className="text-sm font-semibold uppercase tracking-wider">Quick Links</h2>
+                                <p className="text-[10px] text-blue-100 uppercase mt-0.5 font-medium">{quickLinks.length} Links Listed</p>
+                            </div>
+                        </div>
+ 
+                        <div className="p-6">
+                            {/* Form to Add/Edit Link */}
+                            <div className="bg-gray-50 border border-gray-100 p-4 rounded-lg mb-6">
+                                <h3 className="text-[10px] font-bold text-gray-500 uppercase mb-3 tracking-widest">{editMode ? 'Edit' : 'Add New'} Quick Link</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase">Label</label>
+                                        <input
+                                            type="text"
+                                            value={newLinkLabel}
+                                            onChange={(e) => setNewLinkLabel(e.target.value)}
+                                            placeholder="e.g. Exhibitor Directory"
+                                            className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase">URL / Path</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={newLinkHref}
+                                                onChange={(e) => setNewLinkHref(e.target.value)}
+                                                placeholder="/services/..."
+                                                className="flex-1 px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                            />
+                                            <button
+                                                onClick={handleLinkSubmit}
+                                                disabled={!newLinkLabel || !newLinkHref}
+                                                className={`px-4 bg-[#23471d] text-white rounded hover:bg-[#1a3615] transition-colors disabled:opacity-50`}
+                                            >
+                                                {editMode ? <Save className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                            </button>
+                                            {editMode && (
+                                                <button
+                                                    onClick={() => { setEditMode(false); setNewLinkLabel(''); setNewLinkHref(''); setCurrentLinkId(null); }}
+                                                    className="px-4 bg-white border border-gray-200 text-gray-400 rounded hover:bg-gray-50"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+ 
+                            {/* Links Table */}
+                            <Table
+                                columns={linkColumns}
+                                data={quickLinks}
+                                onEdit={startEditingLink}
+                                onDelete={removeQuickLink}
+                            />
+                        </div>
+                    </div>
+ 
+                    {/* Exhibition Links */}
+                    <div className="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
+                        <div className="px-6 py-4 border-b bg-[#23471d] flex justify-between items-center text-white">
+                            <div>
+                                <h2 className="text-sm font-semibold uppercase tracking-wider">Exhibition</h2>
+                                <p className="text-[10px] text-blue-100 uppercase mt-0.5 font-medium">{exhibitionLinks.length} Links Listed</p>
+                            </div>
+                        </div>
+ 
+                        <div className="p-6">
+                            {/* Form to Add/Edit Link */}
+                            <div className="bg-gray-50 border border-gray-100 p-4 rounded-lg mb-6">
+                                <h3 className="text-[10px] font-bold text-gray-500 uppercase mb-3 tracking-widest">{exEditMode ? 'Edit' : 'Add New'} Exhibition Link</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase">Label</label>
+                                        <input
+                                            type="text"
+                                            value={newExLinkLabel}
+                                            onChange={(e) => setNewExLinkLabel(e.target.value)}
+                                            placeholder="e.g. Why Exhibit"
+                                            className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase">URL / Path</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={newExLinkHref}
+                                                onChange={(e) => setNewExLinkHref(e.target.value)}
+                                                placeholder="/exhibit/..."
+                                                className="flex-1 px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                            />
+                                            <button
+                                                onClick={handleExLinkSubmit}
+                                                disabled={!newExLinkLabel || !newExLinkHref}
+                                                className={`px-4 bg-[#23471d] text-white rounded hover:bg-[#1a3615] transition-colors disabled:opacity-50`}
+                                            >
+                                                {exEditMode ? <Save className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                            </button>
+                                            {exEditMode && (
+                                                <button
+                                                    onClick={() => { setExEditMode(false); setNewExLinkLabel(''); setNewExLinkHref(''); setCurrentExLinkId(null); }}
+                                                    className="px-4 bg-white border border-gray-200 text-gray-400 rounded hover:bg-gray-50"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+ 
+                            {/* Exhibition Table */}
+                            <Table
+                                columns={linkColumns}
+                                data={exhibitionLinks}
+                                onEdit={startEditingExLink}
+                                onDelete={removeExLink}
+                            />
                         </div>
                     </div>
                 </div>

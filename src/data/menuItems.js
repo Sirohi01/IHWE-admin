@@ -442,6 +442,19 @@ export const menuItems = [
   },
 
 
+  /* ================= POLICY SECTION ================= */
+  {
+    type: "heading",
+    label: "Policy Section",
+  },
+  {
+    type: "item",
+    label: "Policy Manager",
+    icon: ShieldCheck,
+    path: "/policy-manager",
+  },
+
+
   /* ================= ACCOUNT SECTION ================= */
   {
     type: "heading",

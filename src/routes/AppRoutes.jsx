@@ -100,6 +100,7 @@ import TravelAccommodationManage from "../pages/TravelAccommodationManage";
 import ActivityLogs from "../pages/ActivityLogs";
 import RoleManagement from "../pages/RoleManagement";
 import RolePermissions from "../pages/RolePermissions";
+import PolicyManager from "../pages/PolicyManager";
 
 
 
@@ -275,6 +276,7 @@ export default function AppRoutes() {
           <Route path="activity-logs" element={<ActivityLogs />} />
           <Route path="manage-roles" element={<RoleManagement />} />
           <Route path="response-templates" element={<ResponseTemplates />} />
+          <Route path="policy-manager" element={<PolicyManager />} />
 
 
 
