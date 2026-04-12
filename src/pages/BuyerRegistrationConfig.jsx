@@ -16,7 +16,10 @@ import {
     Globe,
     Clock,
     Briefcase,
-    Target
+    Target,
+    Award,
+    Tags,
+    Users
 } from 'lucide-react';
 import api from '../lib/api';
 import Swal from 'sweetalert2';
@@ -34,6 +37,9 @@ const BuyerRegistrationConfig = () => {
         buyingFrequencies: [],
         annualPurchaseValueRanges: [],
         primaryProductInterests: [],
+        budgetRanges: [],
+        companySizes: [],
+        certificationOptions: [],
         packages: []
     });
     const [isLoading, setIsLoading] = useState(true);
@@ -254,6 +260,9 @@ const BuyerRegistrationConfig = () => {
                         <ArrayEditor title="Buying Frequencies" field="buyingFrequencies" icon={Clock} />
                         <ArrayEditor title="Annual Purchase Value Ranges" field="annualPurchaseValueRanges" icon={Briefcase} />
                         <ArrayEditor title="Primary Product Interests" field="primaryProductInterests" icon={Target} />
+                        <ArrayEditor title="Budget Ranges" field="budgetRanges" icon={Tags} />
+                        <ArrayEditor title="Company Size Options" field="companySizes" icon={Users} />
+                        <ArrayEditor title="Certification Options" field="certificationOptions" icon={Award} />
                     </div>
                 ) : (
                     <div className="space-y-8 animate-fadeIn">
