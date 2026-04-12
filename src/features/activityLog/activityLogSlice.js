@@ -1,7 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-
-const BASE_URL = import.meta.env.VITE_API_URL;
+import api from "../../lib/api";
 
 export const createActivityLogThunk = createAsyncThunk(
   "activityLog/create",
@@ -10,14 +8,12 @@ export const createActivityLogThunk = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const res = await axios.post(`${BASE_URL}/activity-logs/create`, {
+      const res = await api.post(`/api/activity-logs/create`, {
         user_id,
         message,
         link,
         section,
         data,
-        // ✅ ip_address ab backend automatically capture karta hai
-        // frontend se bhejne ki zaroorat nahi
       });
       return res.data.data;
     } catch (err) {
@@ -30,7 +26,7 @@ export const fetchActivityLogs = createAsyncThunk(
   "activityLog/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${BASE_URL}/activity-logs`);
+      const res = await api.get(`/api/activity-logs`);
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message);

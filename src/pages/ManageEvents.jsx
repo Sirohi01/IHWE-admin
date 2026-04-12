@@ -10,9 +10,14 @@ const EMPTY_EVENT = {
     name: '',
     startDate: '',
     endDate: '',
-    venue: '',
+    location: '',
     advancePaymentPercentage: 50,
-    status: 'active'
+    status: 'active',
+    ticketsStatus: 'Few Remaining',
+    speakersCount: '100+',
+    description: '',
+    contactPhone: '',
+    order: 1
 };
 
 const ManageEvents = () => {
@@ -143,10 +148,23 @@ const ManageEvents = () => {
                             <h2 className="text-sm font-bold uppercase tracking-tight">{isEditing ? 'Edit Event' : 'Create Event'}</h2>
                         </div>
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                            <div className="mb-3">
-                                <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Event Name *</label>
-                                <input type="text" required value={eventForm.name} onChange={(e) => setEventForm({...eventForm, name: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="e.g. IHWE 2026" />
-                            </div>
+                             <div className="grid grid-cols-2 gap-3 mb-3">
+                                <div className="col-span-1">
+                                    <label className="block text-[11px] font-black text-black mb-1 uppercase tracking-tight">Sequence / Order</label>
+                                    <input type="number" value={eventForm.order} onChange={(e) => setEventForm({...eventForm, order: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="e.g. 1" />
+                                </div>
+                                <div className="col-span-1">
+                                    <label className="block text-[11px] font-black text-black mb-1 uppercase tracking-tight">Status</label>
+                                    <select value={eventForm.status} onChange={(e) => setEventForm({...eventForm, status: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]">
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                             </div>
+                             <div className="mb-3">
+                                 <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Event Name *</label>
+                                 <input type="text" required value={eventForm.name} onChange={(e) => setEventForm({...eventForm, name: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="e.g. IHWE 2026" />
+                             </div>
                             <div className="grid grid-cols-2 gap-3 mb-3">
                                 <div>
                                     <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Start Date *</label>
@@ -158,12 +176,30 @@ const ManageEvents = () => {
                                 </div>
                             </div>
                             <div className="mb-3">
-                                <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Venue</label>
-                                <input type="text" value={eventForm.venue} onChange={(e) => setEventForm({...eventForm, venue: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="Yashobhoomi, New Delhi" />
+                                <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Location / Venue</label>
+                                <input type="text" value={eventForm.location} onChange={(e) => setEventForm({...eventForm, location: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="Pragati Maidan, New Delhi" />
                             </div>
                             <div className="mb-3">
                                 <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Advance Payment % *</label>
                                 <input type="number" required value={eventForm.advancePaymentPercentage} onChange={(e) => setEventForm({...eventForm, advancePaymentPercentage: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="50" />
+                            </div>
+                            <div className="mb-3">
+                                <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Support Contact Number</label>
+                                <input type="text" value={eventForm.contactPhone} onChange={(e) => setEventForm({...eventForm, contactPhone: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="e.g. +91 98102XXXXX" />
+                            </div>
+                            <div className="mb-3">
+                                <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Event Description</label>
+                                <textarea rows={3} value={eventForm.description} onChange={(e) => setEventForm({...eventForm, description: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="Briefly describe the event..." />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Tickets Highlight</label>
+                                    <input type="text" value={eventForm.ticketsStatus} onChange={(e) => setEventForm({...eventForm, ticketsStatus: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="Few Remaining" />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Speakers Highlight</label>
+                                    <input type="text" value={eventForm.speakersCount} onChange={(e) => setEventForm({...eventForm, speakersCount: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="100+ Speakers" />
+                                </div>
                             </div>
                             <div className="pt-2 border-t border-slate-100 flex justify-end gap-2">
                                 {isEditing && <button type="button" onClick={() => { setIsEditing(null); setEventForm({...EMPTY_EVENT}); }} className="px-6 py-2 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all rounded-[2px]">Cancel</button>}
@@ -190,7 +226,7 @@ const ManageEvents = () => {
                             <table className="w-full text-sm font-inter">
                                 <thead>
                                     <tr className="border-b-2 border-gray-200 bg-gray-50/50">
-                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center w-16 tracking-tight">No.</th>
+                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center w-16 tracking-tight">Seq.</th>
                                         <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-left tracking-tight">Event Name</th>
                                         <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Duration / Dates</th>
                                         <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Actions</th>
@@ -203,13 +239,13 @@ const ManageEvents = () => {
                                         <tr><td colSpan={4} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">No events found</td></tr>
                                     ) : events.map((event, index) => (
                                         <tr key={event._id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
-                                            <td className="py-4 px-4 text-black font-medium text-center text-xs">{index + 1}</td>
+                                            <td className="py-4 px-4 text-black font-black text-center text-xs bg-slate-50 border-r border-slate-100">{event.order !== undefined ? event.order : index + 1}</td>
                                             <td className="py-4 px-4 min-w-[200px]">
                                                 <p className="font-semibold text-red-600 text-sm uppercase tracking-tight leading-none mb-1.5 cursor-pointer hover:underline">
                                                     {event.name}
                                                 </p>
                                                 <p className="text-[10px] text-black font-medium uppercase tracking-widest flex items-center gap-1 opacity-60">
-                                                    <MapPin size={10} /> {event.venue || 'TBA'}
+                                                    <MapPin size={10} /> {event.location || 'TBA'}
                                                 </p>
                                             </td>
                                             <td className="py-4 px-4 text-center">
@@ -225,7 +261,13 @@ const ManageEvents = () => {
                                             <td className="py-4 px-4">
                                                 <div className="flex items-center justify-center gap-3">
                                                     <button 
-                                                        onClick={() => { setIsEditing(event._id); setEventForm(event); }} 
+                                                        onClick={() => { 
+                                                            setIsEditing(event._id); 
+                                                            setEventForm({
+                                                                ...event,
+                                                                location: event.location || event.venue || ''
+                                                            }); 
+                                                        }} 
                                                         className="text-blue-600 hover:bg-blue-50 p-1.5 transition-all rounded-[2px] border border-blue-100 bg-blue-50/30" 
                                                         title="Edit"
                                                     >

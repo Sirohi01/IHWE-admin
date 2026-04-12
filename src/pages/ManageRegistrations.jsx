@@ -640,10 +640,10 @@ const ManageRegistrations = () => {
                                         <span className="text-[11px] font-medium text-black uppercase tracking-widest whitespace-nowrap">Section 01 / Registry Data</span>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-8">
-                                        <DetailItem label="Heading" value={selectedReg.fasciaName} highlight={true} />
+                                        <DetailItem label="Business Nature" value={selectedReg.natureOfBusiness} />
+                                        <DetailItem label="Fascia Name" value={selectedReg.fasciaName} highlight={true} />
                                         <DetailItem label="Ownership Model" value={selectedReg.typeOfBusiness} />
                                         <DetailItem label="Industry Segment" value={selectedReg.industrySector} />
-                                        <DetailItem label="Business Nature" value={selectedReg.natureOfBusiness} />
                                         <DetailItem label="Corporate Portal" value={selectedReg.website} isLink={true} />
                                         <DetailItem label="Tax ID (GST)" value={selectedReg.gstNo} />
                                         <DetailItem label="PAN Card Ref" value={selectedReg.panNo} />
