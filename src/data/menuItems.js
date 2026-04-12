@@ -319,6 +319,7 @@ export const menuItems = [
       { label: "Add Remark Length Fixed", path: "/ihweClientData2026/AddRemarkLengthFixed" },
       { label: "Add Status", path: "/ihweClientData2026/AddStatus" },
       { label: "Add Target", path: "/ihweClientData2026/AddTarget" },
+      { label: "Registration Settings", path: "/buyer-registration-config" },
     ],
   },
 

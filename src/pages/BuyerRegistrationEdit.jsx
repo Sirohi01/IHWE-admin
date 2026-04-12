@@ -11,10 +11,10 @@ const Button = ({ children, onClick, className, variant, disabled, type, ...prop
         danger: "bg-red-600 text-white hover:bg-red-700 border-2 border-red-600 shadow-sm"
     };
     return (
-        <button 
+        <button
             type={type}
             disabled={disabled}
-            onClick={onClick} 
+            onClick={onClick}
             className={`${baseStyles} ${variant === 'outline' ? variants.outline : variant === 'danger' ? variants.danger : variants.primary} ${className}`}
             {...props}
         >
@@ -131,7 +131,7 @@ const BuyerRegistrationEdit = () => {
             <div className="w-full">
                 <div className="mb-8 flex items-center justify-between gap-4">
                     <div>
-                        <button 
+                        <button
                             onClick={() => navigate(`/buyer-registration/${id}`)}
                             className="flex items-center gap-2 text-gray-500 hover:text-[#23471d] transition-colors mb-2 text-sm font-medium"
                         >
@@ -139,175 +139,99 @@ const BuyerRegistrationEdit = () => {
                             Back to Overview
                         </button>
                         <h1 className="text-3xl font-bold text-[#23471d] uppercase tracking-tight italic">Edit <span className="text-slate-900">Registration</span></h1>
-                        <p className="text-gray-500 text-base mt-2">Update the details for this buyer registration</p>
+                        <p className="text-gray-500 text-base mt-2">Update the details or override CRM tags for this registration</p>
                     </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-8 bg-white border-2 border-gray-100 p-8 shadow-lg rounded-none">
-                {/* Company Info */}
-                <div className="space-y-6">
-                    <h3 className="text-sm font-bold text-[#23471d] uppercase tracking-[0.2em] border-b pb-2">1. Company Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div>
-                            <label className={labelClasses}>Company Name *</label>
-                            <input required name="companyName" value={formData.companyName} onChange={handleChange} className={inputClasses} />
+                    {/* Admin Overrides */}
+                    <div className="space-y-6 bg-slate-50 p-6 border-l-4 border-orange-500">
+                        <h3 className="text-sm font-bold text-orange-600 uppercase tracking-[0.2em] flex items-center gap-2">
+                            Admin Control & CRM Tagging
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className={labelClasses}>Buyer CRM Tag</label>
+                                <select name="buyerTag" value={formData.buyerTag} onChange={handleChange} className={inputClasses}>
+                                    <option value="Hot">HOT Lead</option>
+                                    <option value="Warm">WARM Lead</option>
+                                    <option value="Cold">COLD Lead</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className={labelClasses}>Payment Status</label>
+                                <select name="paymentStatus" value={formData.paymentStatus} onChange={handleChange} className={inputClasses}>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Failed">Failed</option>
+                                </select>
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className={labelClasses}>Internal Remarks</label>
+                                <textarea name="remarks" value={formData.remarks} onChange={handleChange} rows={3} className={`${inputClasses} resize-none`} placeholder="Add internal notes about this buyer..." />
+                            </div>
                         </div>
-                        <div>
-                            <label className={labelClasses}>Country *</label>
-                            <select name="country" value={formData.country} onChange={handleChange} className={inputClasses}>
-                                <option value="">Select Country</option>
-                                {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                        </div>
-                        <div>
-                            <label className={labelClasses}>Website</label>
-                            <input name="companyWebsite" value={formData.companyWebsite} onChange={handleChange} className={inputClasses} />
-                        </div>
-                        <div>
-                            <label className={labelClasses}>Years in Business</label>
-                            <input name="yearsInBusiness" value={formData.yearsInBusiness} onChange={handleChange} className={inputClasses} />
-                        </div>
-                        <div>
-                            <label className={labelClasses}>Annual Import Volume</label>
-                            <input name="annualImportVolume" value={formData.annualImportVolume} onChange={handleChange} className={inputClasses} />
-                        </div>
-                        <div>
-                            <label className={labelClasses}>Markets Served</label>
-                            <input name="mainMarketsServed" value={formData.mainMarketsServed} onChange={handleChange} className={inputClasses} />
-                        </div>
-                    </div>
-                    
-                    <div className="bg-gray-50 p-6 border-l-4 border-[#23471d]">
-                        <label className={labelClasses}>Type of Company</label>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-3">
-                            {COMPANY_TYPES.map(type => (
-                                <label key={type} className="flex items-center gap-2 cursor-pointer group">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={formData.companyTypes?.includes(type)}
-                                        onChange={(e) => handleCheckboxChange('companyTypes', type, e.target.checked)}
-                                        className="w-4 h-4 rounded-none border-gray-300 text-[#23471d] focus:ring-[#23471d]"
-                                    />
-                                    <span className="text-xs font-semibold text-gray-600 group-hover:text-gray-900">{type}</span>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Contact Details */}
-                <div className="space-y-6">
-                    <h3 className="text-sm font-bold text-[#23471d] uppercase tracking-[0.2em] border-b pb-2">2. Contact Details</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div>
-                            <label className={labelClasses}>Contact Person *</label>
-                            <input required name="contactPerson" value={formData.contactPerson} onChange={handleChange} className={inputClasses} />
-                        </div>
-                        <div>
-                            <label className={labelClasses}>Designation *</label>
-                            <input required name="designation" value={formData.designation} onChange={handleChange} className={inputClasses} />
-                        </div>
-                        <div>
-                            <label className={labelClasses}>Email *</label>
-                            <input required type="email" name="email" value={formData.email} onChange={handleChange} className={inputClasses} />
-                        </div>
-                        <div>
-                            <label className={labelClasses}>WhatsApp *</label>
-                            <input required name="whatsapp" value={formData.whatsapp} onChange={handleChange} className={inputClasses} />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Interests & Meeting */}
-                <div className="space-y-6">
-                    <h3 className="text-sm font-bold text-[#23471d] uppercase tracking-[0.2em] border-b pb-2">3. Product Interest & Meeting</h3>
-                    <div className="bg-gray-50 p-6 border-l-4 border-[#23471d]">
-                        <label className={labelClasses}>Interested Categories</label>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-3">
-                            {PRODUCT_CATEGORIES.map(cat => (
-                                <label key={cat} className="flex items-center gap-2 cursor-pointer group">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={formData.interestedCategories?.includes(cat)}
-                                        onChange={(e) => handleCheckboxChange('interestedCategories', cat, e.target.checked)}
-                                        className="w-4 h-4 rounded-none border-gray-300 text-[#23471d] focus:ring-[#23471d]"
-                                    />
-                                    <span className="text-xs font-semibold text-gray-600 group-hover:text-gray-900">{cat}</span>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className={labelClasses}>Price Range</label>
-                            <input name="targetPriceRange" value={formData.targetPriceRange} onChange={handleChange} className={inputClasses} />
-                        </div>
-                        <div>
-                            <label className={labelClasses}>Preferred Meeting Type</label>
-                            <select name="preferredMeetingType" value={formData.preferredMeetingType} onChange={handleChange} className={inputClasses}>
-                                <option value="1:1">1:1 Scheduled Meetings</option>
-                                <option value="roundtable">Small Group Roundtable</option>
-                                <option value="both">Both</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label className={labelClasses}>Specific Exhibitors</label>
-                        <textarea 
-                            name="specificExhibitors" 
-                            value={formData.specificExhibitors} 
-                            onChange={handleChange} 
-                            rows={3}
-                            className={`${inputClasses} resize-none`}
-                        />
                     </div>
 
-                    <div className="flex items-center gap-3 bg-slate-50 p-4 border border-slate-200">
-                        <input 
-                            type="checkbox" 
-                            id="confirmed"
-                            checked={formData.confirmed}
-                            onChange={(e) => setFormData(prev => ({ ...prev, confirmed: e.target.checked }))}
-                            className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
-                        />
-                        <label htmlFor="confirmed" className="text-xs font-bold text-gray-700 uppercase cursor-pointer">
-                            Genuine Trade Buyer Confirmed
-                        </label>
+                    {/* Company Info */}
+                    <div className="space-y-6">
+                        <h3 className="text-sm font-bold text-[#23471d] uppercase tracking-[0.2em] border-b pb-2">1. Company Information</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div className="md:col-span-2">
+                                <label className={labelClasses}>Company Name *</label>
+                                <input required name="companyName" value={formData.companyName} onChange={handleChange} className={inputClasses} />
+                            </div>
+                            <div>
+                                <label className={labelClasses}>Business Type</label>
+                                <select name="businessType" value={formData.businessType} onChange={handleChange} className={inputClasses}>
+                                    {COMPANY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className={labelClasses}>Years in Operation</label>
+                                <input name="yearsInOperation" value={formData.yearsInOperation} onChange={handleChange} className={inputClasses} />
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <div className="pt-6 flex justify-end gap-4 border-t border-gray-100">
-                    <Button 
-                        type="button" 
-                        variant="danger"
-                        onClick={() => navigate(`/buyer-registration/${id}`)}
-                    >
-                        Cancel
-                    </Button>
-                    <Button 
-                        disabled={isSubmitting}
-                        type="submit"
-                        className="bg-[#23471d] hover:bg-[#1a3516] text-white px-10 shadow-xl shadow-[#23471d]/10"
-                    >
-                        {isSubmitting ? (
-                            <span className="flex items-center gap-2">
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Saving...
-                            </span>
-                        ) : (
-                            <span className="flex items-center gap-2">
-                                <Save className="w-4 h-4" />
-                                Save Changes
-                            </span>
-                        )}
-                    </Button>
-                </div>
-            </form>
+                    {/* Contact Details */}
+                    <div className="space-y-6">
+                        <h3 className="text-sm font-bold text-[#23471d] uppercase tracking-[0.2em] border-b pb-2">2. Contact Details</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div>
+                                <label className={labelClasses}>Full Name *</label>
+                                <input required name="fullName" value={formData.fullName || formData.contactPerson} onChange={handleChange} className={inputClasses} />
+                            </div>
+                            <div>
+                                <label className={labelClasses}>Designation *</label>
+                                <input required name="designation" value={formData.designation} onChange={handleChange} className={inputClasses} />
+                            </div>
+                            <div>
+                                <label className={labelClasses}>Email Address *</label>
+                                <input required type="email" name="emailAddress" value={formData.emailAddress || formData.email} onChange={handleChange} className={inputClasses} />
+                            </div>
+                            <div>
+                                <label className={labelClasses}>Mobile Number *</label>
+                                <input required name="mobileNumber" value={formData.mobileNumber || formData.whatsapp} onChange={handleChange} className={inputClasses} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="pt-6 flex justify-end gap-4 border-t border-gray-100">
+                        <Button type="button" variant="outline" onClick={() => navigate(`/buyer-registration/${id}`)}>Cancel</Button>
+                        <Button disabled={isSubmitting} type="submit" className="bg-[#23471d] hover:bg-[#1a3516] text-white px-10 shadow-xl shadow-[#23471d]/10">
+                            {isSubmitting ? (
+                                <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Saving...</span>
+                            ) : (
+                                <span className="flex items-center gap-2"><Save className="w-4 h-4" /> Save Changes</span>
+                            )}
+                        </Button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
     );
 };
 
 export default BuyerRegistrationEdit;
+
