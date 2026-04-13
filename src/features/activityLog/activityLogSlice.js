@@ -10,7 +10,7 @@ export const createActivityLogThunk = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const res = await axios.post(`${BASE_URL}/activity-logs/create`, {
+      const res = await axios.post(`${BASE_URL}/api/activity-logs/create`, {
         user_id,
         message,
         link,

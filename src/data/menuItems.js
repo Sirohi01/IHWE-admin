@@ -453,7 +453,29 @@ export const menuItems = [
     icon: ShieldCheck,
     path: "/policy-manager",
   },
-
+  /* ================= ADMIN MANAGEMENT SECTION ================= */
+  {
+    type: "heading",
+    label: "Admin Management Section",
+  },
+  {
+    type: "dropdown",
+    label: "Admin Management",
+    icon: TrendingUp,
+    children: [
+      { label: "Business Type", path: "/business-type" },
+      { label: "Annual Turnover", path: "/annual-turnover" },
+      { label: "Primary Product Interest", path: "/primary-product-interest" },
+      { label: "Secondary Product Categories", path: "/secondary-product-categories" },
+      { label: "Meeting Priority Level", path: "/meeting-priority-level" },
+    ],
+  },
+  {
+    type: "item",
+    label: "Social Media",
+    icon: Share2,
+    path: "/social-media",
+  },
 
   /* ================= ACCOUNT SECTION ================= */
   {

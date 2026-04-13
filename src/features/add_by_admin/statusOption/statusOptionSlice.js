@@ -41,15 +41,10 @@ export const createStatusOption = createAsyncThunk(
         dispatch(
           createActivityLogThunk({
             user_id: userId,
-            message: `Status '${created.name || ""}' created by ${userName}`,
-            link: `/status-option`,
-            section: "statusOptions",
-            data: {
-              action: "CREATE",
-              status_id: created._id,
-              name: created.name,
-              created_data: created,
-            },
+            user: userName,
+            action: "Created",
+            module: "Status Option",
+            details: `Status '${created.name || ""}' created`,
           }),
         );
       }
@@ -93,16 +88,10 @@ export const updateStatusOption = createAsyncThunk(
         dispatch(
           createActivityLogThunk({
             user_id: userId,
-            message: `Status '${updated.name || data.name || id}' updated by ${userName}`,
-            link: `/status-option`,
-            section: "statusOptions",
-            data: {
-              action: "UPDATE",
-              status_id: id,
-              name: updated.name || data.name,
-              updated_fields: data,
-              updated_data: updated,
-            },
+            user: userName,
+            action: "Updated",
+            module: "Status Option",
+            details: `Status '${updated.name || data.name || id}' updated`,
           }),
         );
       }
@@ -133,15 +122,10 @@ export const deleteStatusOption = createAsyncThunk(
         dispatch(
           createActivityLogThunk({
             user_id: userId,
-            message: `Status '${statusToDelete?.name || id}' deleted by ${userName}`,
-            link: `/status-option`,
-            section: "statusOptions",
-            data: {
-              action: "DELETE",
-              status_id: id,
-              name: statusToDelete?.name,
-              deleted_data: statusToDelete || {},
-            },
+            user: userName,
+            action: "Deleted",
+            module: "Status Option",
+            details: `Status '${statusToDelete?.name || id}' deleted`,
           }),
         );
       }
