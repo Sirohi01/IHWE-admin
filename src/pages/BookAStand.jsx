@@ -314,8 +314,8 @@ const BookAStand = () => {
     };
 
     const inputClasses = "rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-900 font-medium shadow-none outline-none px-3 w-full text-left";
-    const labelClasses = "text-[11px] font-bold text-slate-800 mb-1 block capitalize font-inter";
-    const sectionHeaderClasses = "text-[14px] font-bold text-[#23471d] pb-1 border-b border-slate-100 mb-3 font-inter";
+    const labelClasses = "text-[10px] font-bold uppercase tracking-[0.05em] text-slate-800 mb-1 block";
+    const sectionHeaderClasses = "text-sm font-bold text-[#d26019] uppercase tracking-[0.05em] border-b border-slate-100 pb-1.5 mb-3";
 
 
     return (
@@ -323,8 +323,8 @@ const BookAStand = () => {
             {/* HEADER */}
             <div className="flex flex-col sm:flex-row justify-between items-center pb-3 border-b border-gray-100">
                 <div>
-                    <h1 className="text-xl font-bold text-slate-500 uppercase tracking-tight leading-none">MANUAL REGISTRATION</h1>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Book A Stand — Admin Panel</p>
+                    <h1 className="text-xl font-bold text-slate-900 uppercase tracking-tight leading-none font-inter">MANUAL REGISTRATION</h1>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-0.5">Book A Stand — Admin Panel</p>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-3 sm:mt-0">
                     <div className="px-3 py-1.5 text-[11px] font-black uppercase bg-slate-100 text-[#23471d] rounded-[2px] border border-slate-200">
@@ -354,8 +354,8 @@ const BookAStand = () => {
             {/* DOMESTIC / INTERNATIONAL SELECTION */}
             {!exhibitorType ? (
                 <div className="mt-6 flex flex-col items-center justify-center text-center p-10 bg-white border border-dashed border-slate-300 rounded-[2px]">
-                    <h3 className="text-xl font-bold text-slate-800 mb-1">Select Exhibitor Type</h3>
-                    <p className="text-slate-400 text-sm mb-8 font-medium">Choose the exhibitor category to begin manual registration.</p>
+                    <h3 className="text-xl font-bold text-slate-900 mb-1 font-inter uppercase tracking-tight">Select Exhibitor Type</h3>
+                    <p className="text-slate-400 text-[12px] mb-8 font-medium">Choose the exhibitor category to begin manual registration.</p>
                     <div className="flex flex-col sm:flex-row gap-4">
                         <button type="button" onClick={() => handleExhibitorTypeChange('domestic')}
                             className="group px-10 py-4 bg-white border-2 border-[#23471d] text-[#23471d] rounded-[2px] hover:bg-[#23471d] hover:text-white transition-all flex items-center gap-3 font-bold text-sm uppercase tracking-widest">
@@ -375,7 +375,7 @@ const BookAStand = () => {
                     {/* SUB-HEADER */}
                     <div className="bg-slate-50/50 border border-slate-200 px-4 py-2 rounded-[2px] flex items-center justify-between">
                         <div>
-                            <h2 className="text-[14px] font-bold text-slate-800 uppercase tracking-tight">Manual Exhibitor Booking</h2>
+                            <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight font-inter">Manual Exhibitor Booking</h2>
                             <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-0.5 font-bold">International Health & Wellness Expo</p>
                         </div>
                         <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-[2px] border ${exhibitorType === 'domestic' ? 'bg-green-50 text-[#23471d] border-green-200' : 'bg-orange-50 text-[#d26019] border-orange-200'}`}>
@@ -488,19 +488,14 @@ const BookAStand = () => {
                                 <label className={labelClasses}>Industry / Sector *</label>
                                 <select required value={formData.industrySector} onChange={(e) => handleSelectChange('industrySector', e.target.value)} className={inputClasses}>
                                     <option value="">Select Here</option>
-                                    <option>AYUSH (Ayurveda, Yoga, Unani, Siddha, Homeopathy)</option>
-                                    <option>Agriculture, Horticulture & Medicinal Plants</option>
-                                    <option>Bio-Energy & Sustainable Living</option>
-                                    <option>Fitness & Wellness Industry</option>
-                                    <option>Health & Medical Services</option>
-                                    <option>Health & Wellness Tourism</option>
-                                    <option>Medical Equipment & Healthcare Technology</option>
-                                    <option>Medical Tourism</option>
-                                    <option>Nutrition & Health Supplements</option>
-                                    <option>Organic & Herbal Products</option>
-                                    <option>Pharmaceutical Companies</option>
-                                    <option>Research, Education & Government Bodies</option>
-                                    <option>Others</option>
+                                    <option>Medical &amp; Healthcare</option>
+                                    <option>AYUSH &amp; Traditional Medicine</option>
+                                    <option>Wellness, Fitness &amp; Lifestyle</option>
+                                    <option>Nutrition, Organic &amp; Health Foods</option>
+                                    <option>Beauty, Personal Care &amp; Aesthetic Wellness</option>
+                                    <option>Mental Health, Yoga &amp; Spiritual Wellness</option>
+                                    <option>Medical Technology, Diagnostics &amp; Devices</option>
+                                    <option>Institutions, Government Bodies &amp; Startups</option>
                                 </select>
                             </div>
                             <div>
