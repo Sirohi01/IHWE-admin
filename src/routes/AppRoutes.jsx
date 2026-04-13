@@ -149,6 +149,11 @@ import ClientOverview1 from "../pages/ihwe_client_data_2026/ClientOverview1";
 import EmailLogs from "../pages/EmailLogs";
 import WhatsAppLogs from "../pages/WhatsAppLogs";
 import ResponseTemplates from "../pages/ResponseTemplates";
+import BusinessType from "../pages/admin_management/BusinessType";
+import AnnualTurnover from "../pages/admin_management/AnnualTurnover";
+import PrimaryProductInterest from "../pages/admin_management/PrimaryProductInterest";
+import SecondaryProductCategories from "../pages/admin_management/SecondaryProductCategories";
+import MeetingPriorityLevel from "../pages/admin_management/MeetingPriorityLevel";
 
 export default function AppRoutes() {
   return (
@@ -407,6 +412,11 @@ export default function AppRoutes() {
           <Route path="ihweClientData2026/AddStatus" element={<AddStatus />} />
           <Route path="ihweClientData2026/AddTarget" element={<AddTarget />} />
           <Route path="/client-overview/:id" element={<ClientOverview1 />} />
+          <Route path="/business-type" element={<BusinessType />} />
+          <Route path="/annual-turnover" element={<AnnualTurnover />} />
+          <Route path="/primary-product-interest" element={<PrimaryProductInterest />} />
+          <Route path="/secondary-product-categories" element={<SecondaryProductCategories />} />
+          <Route path="/meeting-priority-level" element={<MeetingPriorityLevel />} />
         </Route>
       </Route>
     </Routes>
