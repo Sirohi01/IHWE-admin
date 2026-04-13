@@ -94,27 +94,41 @@ const BuyerRegistrationDetail = () => {
 
     const companyData = [
         { label: "Company Name", value: registration.companyName, icon: Building2 },
+        { label: "Business Type", value: registration.businessType, icon: Info },
+        { label: "Annual Turnover", value: registration.annualTurnover, icon: Info },
+        { label: "Years in Operation", value: registration.yearsInOperation, icon: Calendar },
         { label: "Country", value: registration.country, icon: Globe },
-        { label: "Website", value: registration.companyWebsite, icon: Globe },
-        { label: "Years in Business", value: registration.yearsInBusiness, icon: Calendar },
-        { label: "Annual Import Volume", value: registration.annualImportVolume, icon: Info },
-        { label: "Main Markets", value: registration.mainMarketsServed, icon: Globe },
-        { label: "Type of Company", value: registration.companyTypes, icon: Info },
-        { label: "Registration Date", value: new Date(registration.createdAt).toLocaleDateString(), icon: Calendar },
+        { label: "State/Province", value: registration.stateProvince, icon: Globe },
+        { label: "City", value: registration.city, icon: Globe },
+        { label: "Registered Date", value: new Date(registration.createdAt).toLocaleDateString(), icon: Calendar },
     ];
 
     const contactData = [
-        { label: "Full Name", value: registration.contactPerson, icon: User },
+        { label: "Full Name", value: registration.fullName || registration.contactPerson, icon: User },
         { label: "Designation", value: registration.designation, icon: Briefcase },
-        { label: "Email", value: registration.email, icon: Mail },
-        { label: "WhatsApp", value: registration.whatsapp, icon: Phone },
+        { label: "Email Address", value: registration.emailAddress || registration.email, icon: Mail },
+        { label: "Mobile Number", value: registration.mobileNumber || registration.whatsapp, icon: Phone },
     ];
 
-    const interestData = [
-        { label: "Categories", value: registration.interestedCategories, icon: Briefcase },
-        { label: "Price Range", value: registration.targetPriceRange, icon: Info },
-        { label: "Preferred Meeting", value: registration.preferredMeetingType, icon: Calendar },
-        { label: "Trade Buyer Confirmed", value: registration.confirmed ? 'YES' : 'NO', icon: CheckCircle2 },
+    const sourcingData = [
+        { label: "Primary Interest", value: registration.primaryProductInterest, icon: Target },
+        { label: "Secondary Categories", value: registration.secondaryProductCategories, icon: Briefcase },
+        { label: "Supplier Region", value: registration.preferredSupplierRegion, icon: Globe },
+        { label: "Supplier Type", value: registration.preferredSupplierType, icon: User },
+    ];
+
+    const purchaseData = [
+        { label: "Timeline", value: registration.purchaseTimeline, icon: Info },
+        { label: "Decision Role", value: registration.roleInPurchaseDecision, icon: User },
+        { label: "Priority", value: registration.meetingPriorityLevel, icon: Target },
+        { label: "B2B Scheduled", value: registration.requirePreScheduledB2B, icon: Calendar },
+    ];
+
+    const paymentData = [
+        { label: "Category", value: registration.registrationCategory, icon: CreditCard },
+        { label: "Fee Paid", value: registration.registrationFee, icon: CreditCard },
+        { label: "Status", value: registration.paymentStatus, icon: CheckCircle2 },
+        { label: "Payment ID", value: registration.razorpayPaymentId, icon: Info },
     ];
 
     return (
@@ -129,22 +143,25 @@ const BuyerRegistrationDetail = () => {
                             <ArrowLeft className="w-4 h-4" />
                             Back to Registrations
                         </button>
-                        <h1 className="text-3xl font-bold text-[#23471d] uppercase tracking-tight">Buyer Registration <span className="text-slate-900 italic">Overview</span></h1>
-                        <p className="text-gray-500 text-base mt-2">Manage and view detailed information for this registration</p>
-                    </div>
-                    <div className="flex gap-3">
-                        <Button 
-                            onClick={() => navigate(`/buyer-registration/edit/${id}`)}
-                            className="bg-[#23471d] text-white shadow-lg hover:bg-slate-800"
-                        >
-                            Edit Registration
-                        </Button>
+                        <div className="flex items-center gap-4">
+                            <h1 className="text-3xl font-bold text-[#23471d] uppercase tracking-tight">Buyer Registration <span className="text-slate-900 italic">Overview</span></h1>
+                            {registration.buyerTag && (
+                                <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase border ${
+                                    registration.buyerTag === 'Hot' ? 'bg-red-50 text-red-600 border-red-200' :
+                                    registration.buyerTag === 'Warm' ? 'bg-orange-50 text-orange-600 border-orange-200' :
+                                    'bg-blue-50 text-blue-600 border-blue-200'
+                                }`}>
+                                    {registration.buyerTag} LEAD
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-gray-500 text-base mt-2">ID: {registration._id} | Database Record</p>
                     </div>
                 </div>
 
-                <div className="space-y-10">
+                <div className="space-y-8">
                     <div className="bg-white shadow-lg border-2 border-gray-100 overflow-hidden">
-                        <SectionHeader title="Company Overview" icon={Building2} />
+                        <SectionHeader title="Company & Business Profile" icon={Building2} />
                         <CompactDetailGrid data={companyData} />
                     </div>
 
@@ -154,10 +171,28 @@ const BuyerRegistrationDetail = () => {
                     </div>
 
                     <div className="bg-white shadow-lg border-2 border-gray-100 overflow-hidden">
-                        <SectionHeader title="Interest & Logistics" icon={Briefcase} />
-                        <CompactDetailGrid data={interestData} />
-                        <div className="p-4 bg-gray-50 border-t border-gray-100">
-                             <DetailRow label="Specific Exhibitors" value={registration.specificExhibitors} icon={Info} />
+                        <SectionHeader title="Sourcing & Supplier Preferences" icon={Target} />
+                        <CompactDetailGrid data={sourcingData} />
+                    </div>
+
+                    <div className="bg-white shadow-lg border-2 border-gray-100 overflow-hidden">
+                        <SectionHeader title="Purchase Intent & B2B Logistics" icon={Calendar} />
+                        <CompactDetailGrid data={purchaseData} />
+                    </div>
+
+                    <div className="bg-white shadow-lg border-2 border-gray-100 overflow-hidden">
+                        <SectionHeader title="Registration & Payment Details" icon={CreditCard} />
+                        <CompactDetailGrid data={paymentData} />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="bg-slate-50 p-6 border rounded-lg">
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Registered Address</h4>
+                            <p className="text-slate-700 font-medium leading-relaxed">{registration.registeredAddress || 'No address provided'}</p>
+                        </div>
+                        <div className="bg-slate-50 p-6 border rounded-lg">
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Admin Remarks</h4>
+                            <p className="text-slate-700 font-medium leading-relaxed">{registration.remarks || 'No remarks added'}</p>
                         </div>
                     </div>
                 </div>

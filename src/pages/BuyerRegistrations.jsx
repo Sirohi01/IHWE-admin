@@ -59,8 +59,8 @@ const BuyerRegistrations = () => {
 
     const filteredRegistrations = registrations.filter(reg => 
         reg.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        reg.contactPerson?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        reg.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        reg.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        reg.emailAddress?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         reg.country?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -98,13 +98,30 @@ const BuyerRegistrations = () => {
             )
         },
         {
+            key: "tag",
+            label: "CRM TAG",
+            render: (row) => {
+                const tag = row.buyerTag || 'Cold';
+                const colors = {
+                    'Hot': 'bg-red-100 text-red-600 border-red-200',
+                    'Warm': 'bg-orange-100 text-orange-600 border-orange-200',
+                    'Cold': 'bg-blue-100 text-blue-600 border-blue-200'
+                };
+                return (
+                    <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase border ${colors[tag] || colors.Cold}`}>
+                        {tag}
+                    </span>
+                );
+            }
+        },
+        {
             key: "contact",
             label: "CONTACT PERSON",
             render: (row) => (
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-[#d26019]" />
-                        <div className="text-gray-900 font-medium">{row.contactPerson}</div>
+                        <div className="text-gray-900 font-medium">{row.fullName || row.contactPerson}</div>
                     </div>
                     <div className="text-[11px] text-slate-500 font-medium ml-6 uppercase">{row.designation}</div>
                 </div>
@@ -117,27 +134,24 @@ const BuyerRegistrations = () => {
                 <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs">
                         <Mail className="w-3 h-3 text-slate-400" />
-                        <span className="text-gray-600 italic">{row.email}</span>
+                        <span className="text-gray-600 italic">{row.emailAddress || row.email}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
                         <Phone className="w-3 h-3 text-slate-400" />
-                        <span className="text-gray-600 italic">{row.whatsapp}</span>
+                        <span className="text-gray-600 italic">{row.mobileNumber || row.whatsapp}</span>
                     </div>
                 </div>
             )
         },
         {
-            key: "interest",
-            label: "INTEREST",
+            key: "payment",
+            label: "PAYMENT",
             render: (row) => (
-                <div className="max-w-[200px] space-y-1">
-                    <div className="flex items-center gap-2">
-                        <Briefcase className="w-3.5 h-3.5 text-[#23471d]" />
-                        <span className="text-[11px] font-bold text-gray-700 uppercase">Meeting: {row.preferredMeetingType}</span>
+                <div className="space-y-1">
+                    <div className={`text-[10px] font-bold px-2 py-0.5 rounded border inline-block ${row.paymentStatus === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
+                        {row.paymentStatus || 'Pending'}
                     </div>
-                    <div className="text-[10px] text-slate-500 line-clamp-1 italic">
-                        {row.interestedCategories?.join(", ") || 'No categories selected'}
-                    </div>
+                    <div className="text-[9px] text-slate-400 font-mono">{row.registrationCategory || 'N/A'}</div>
                 </div>
             )
         },
@@ -145,7 +159,7 @@ const BuyerRegistrations = () => {
             key: "date",
             label: "DATE",
             render: (row) => (
-                <div className="flex items-center gap-2 text-gray-900 text-xs">
+                <div className="flex items-center gap-2 text-gray-900 text-xs text-nowrap">
                     <Calendar className="w-4 h-4 text-[#23471d]" />
                     {new Date(row.createdAt).toLocaleDateString()}
                 </div>

@@ -82,6 +82,7 @@ import ContactEnquiries from "../pages/ContactEnquiries";
 import BuyerRegistrations from "../pages/BuyerRegistrations";
 import BuyerRegistrationDetail from "../pages/BuyerRegistrationDetail";
 import BuyerRegistrationEdit from "../pages/BuyerRegistrationEdit";
+import BuyerRegistrationConfig from "../pages/BuyerRegistrationConfig";
 import StallVendorManage from "../pages/StallVendorManage";
 import ExhibitorListManage from "../pages/ExhibitorListManage";
 import PartnerManagement from "../pages/PartnerManagement";
@@ -228,6 +229,10 @@ export default function AppRoutes() {
           <Route
             path="buyer-registration/edit/:id"
             element={<BuyerRegistrationEdit />}
+          />
+          <Route
+            path="buyer-registration-config"
+            element={<BuyerRegistrationConfig />}
           />
           <Route path="stall-vendor-manage" element={<StallVendorManage />} />
           <Route
