@@ -326,23 +326,8 @@ const GeneralOverview = () => {
           </Section>
 
           <Section title="Interests & Feedback">
-            <TR1 label="Purpose of Visit" value={[
-                    visitor.purposeOfVisit?.businessNetworking && "Business Networking",
-                    visitor.purposeOfVisit?.exploringProducts && "Exploring New Products",
-                    visitor.purposeOfVisit?.buyingProducts && "Buying Products & Services",
-                    visitor.purposeOfVisit?.learningTrends && "Learning Trends",
-                    visitor.purposeOfVisit?.others && "Others",
-                  ].filter(Boolean).join(", ")} />
-            <TR1 label="Area of Interest" value={[
-                    visitor.areaOfInterest?.ayushHerbal && "AYUSH & Herbal Products",
-                    visitor.areaOfInterest?.organicProducts && "Organic & Natural Products",
-                    visitor.areaOfInterest?.fitnessWellness && "Fitness & Wellness",
-                    visitor.areaOfInterest?.healthSupplements && "Health Supplements",
-                    visitor.areaOfInterest?.healthcareServices && "Healthcare Services",
-                    visitor.areaOfInterest?.agricultureFarming && "Agriculture & Farming",
-                    visitor.areaOfInterest?.researchInnovations && "R&D & Innovations",
-                    visitor.areaOfInterest?.others && "Others",
-                  ].filter(Boolean).join(", ")} />
+            <TR1 label="Purpose of Visit" value={Array.isArray(visitor.purposeOfVisit) ? visitor.purposeOfVisit.join(", ") : "—"} />
+            <TR1 label="Area of Interest" value={Array.isArray(visitor.areaOfInterest) ? visitor.areaOfInterest.join(", ") : "—"} />
           </Section>
 
           <Section title="Metadata">

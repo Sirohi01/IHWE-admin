@@ -331,21 +331,8 @@ const CorporateOverview = () => {
 
           <Section title="Requirements & Interests">
             <TR1 label="Address" value={[visitor.city, visitor.state, visitor.country].filter(Boolean).join(", ")} />
-            <TR1 label="Purpose of Visit" value={[
-                    visitor.purposeOfVisit?.exploringBusiness && "Exploring Business",
-                    visitor.purposeOfVisit?.meetingExhibitors && "Meeting Exhibitors",
-                    visitor.purposeOfVisit?.attendingSeminar && "Attending Seminar",
-                    visitor.purposeOfVisit?.networking && "Networking",
-                    visitor.purposeOfVisit?.learningTrends && "Learning Trends",
-                  ].filter(Boolean).join(", ")} />
-            <TR1 label="Area of Interest" value={[
-                    visitor.areaOfInterest?.ayushHerbal && "AYUSH & Herbal",
-                    visitor.areaOfInterest?.healthWellness && "Health & Wellness",
-                    visitor.areaOfInterest?.organicFarming && "Organic Farming",
-                    visitor.areaOfInterest?.fitnessNutrition && "Fitness & Nutrition",
-                    visitor.areaOfInterest?.bioMedicine && "Bio Medicine",
-                    visitor.areaOfInterest?.healthTech && "Health Tech",
-                  ].filter(Boolean).join(", ")} />
+            <TR1 label="Purpose of Visit" value={Array.isArray(visitor.purposeOfVisit) ? visitor.purposeOfVisit.join(", ") : "—"} />
+            <TR1 label="Area of Interest" value={Array.isArray(visitor.areaOfInterest) ? visitor.areaOfInterest.join(", ") : "—"} />
             <TR1 label="Specific Req." value={visitor.specificRequirement} />
           </Section>
 
