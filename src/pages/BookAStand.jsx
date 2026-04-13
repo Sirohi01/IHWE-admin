@@ -324,7 +324,7 @@ const BookAStand = () => {
             <div className="flex flex-col sm:flex-row justify-between items-center pb-3 border-b border-gray-100">
                 <div>
                     <h1 className="text-xl font-bold text-slate-900 uppercase tracking-tight leading-none font-inter">MANUAL REGISTRATION</h1>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-0.5">Book A Stand — Admin Panel</p>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-0.5">Book A Stand � Admin Panel</p>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-3 sm:mt-0">
                     <div className="px-3 py-1.5 text-[11px] font-black uppercase bg-slate-100 text-[#23471d] rounded-[2px] border border-slate-200">
@@ -333,7 +333,7 @@ const BookAStand = () => {
                     {exhibitorType && (
                         <button type="button" onClick={() => setExhibitorType(null)}
                             className="px-3 py-1.5 text-[11px] font-black uppercase bg-slate-800 text-white rounded-[2px] border border-slate-700 hover:bg-slate-700 transition-all">
-                            ← Change Type
+                            BACK
                         </button>
                     )}
                 </div>
@@ -379,7 +379,7 @@ const BookAStand = () => {
                             <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-0.5 font-bold">International Health & Wellness Expo</p>
                         </div>
                         <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-[2px] border ${exhibitorType === 'domestic' ? 'bg-green-50 text-[#23471d] border-green-200' : 'bg-orange-50 text-[#d26019] border-orange-200'}`}>
-                            {exhibitorType === 'domestic' ? 'Domestic · INR' : 'International · USD'}
+                            {exhibitorType === 'domestic' ? 'Domestic � INR' : 'International � USD'}
                         </span>
                     </div>
 
@@ -395,7 +395,7 @@ const BookAStand = () => {
                                         (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId) ||
                                         (typeof s.event === 'string' ? s.event === selectedEventId : s.event?._id === selectedEventId)
                                     ).map(s => (
-                                        <option key={s._id} value={s._id}>{s.stallNumber} ({s.area} sqm — {s.plScheme})</option>
+                                        <option key={s._id} value={s._id}>{s.stallNumber} ({s.area} sqm � {s.plScheme})</option>
                                     ))}
                                 </select>
                             </div>
@@ -437,8 +437,8 @@ const BookAStand = () => {
                         <div className="p-4 bg-slate-50 border border-slate-200 rounded-[2px] flex flex-wrap gap-6 items-end">
                             <div className="flex flex-col gap-0.5">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stall</p>
-                                <p className="text-sm font-bold text-slate-900">{formData.participation.stallFor || '—'}</p>
-                                <p className="text-[11px] text-slate-500">{formData.participation.stallType} · {formData.participation.stallSize} sqm</p>
+                                <p className="text-sm font-bold text-slate-900">{formData.participation.stallFor || '�'}</p>
+                                <p className="text-[11px] text-slate-500">{formData.participation.stallType} � {formData.participation.stallSize} sqm</p>
                             </div>
                             <div className="flex flex-col gap-0.5 border-l border-slate-200 pl-4">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Base Rate</p>
@@ -457,7 +457,7 @@ const BookAStand = () => {
                                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block animate-pulse"></span>
                                     Total Payable
                                 </p>
-                                <p className="text-2xl font-black text-[#23471d]">{formData.participation.currency} {formData.participation.total?.toLocaleString()}</p>
+                                <p className="text-2xl font-black text-[#23471d]">{formData.participation.currency === 'INR' ? `\u20b9${formData.participation.total?.toLocaleString()}` : `$${formData.participation.total?.toLocaleString()}`}</p>
                             </div>
                         </div>
                     </div>
@@ -540,16 +540,6 @@ const BookAStand = () => {
                                 <input type="text" value={formData.landlineNo} onChange={(e) => handleSelectChange('landlineNo', e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
                             <div>
-                                <label className={labelClasses}>{exhibitorType === 'domestic' ? 'GST No. *' : 'VAT No. *'}</label>
-                                <input required type="text" value={formData.gstNo} onChange={(e) => handleSelectChange('gstNo', e.target.value)} className={inputClasses} placeholder="Write Here.." />
-                            </div>
-                            <div>
-                                <label className={labelClasses}>{exhibitorType === 'domestic' ? 'PAN No. *' : 'Reg. No. *'}</label>
-                                <input required type="text" value={formData.panNo} onChange={(e) => handleSelectChange('panNo', e.target.value)} className={inputClasses} placeholder="Write Here.." />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3">
-                            <div>
                                 <label className={labelClasses}>Nature of Business *</label>
                                 <select required value={formData.natureOfBusiness} onChange={(e) => handleSelectChange('natureOfBusiness', e.target.value)} className={inputClasses}>
                                     <option value="">Select Here</option>
@@ -559,10 +549,6 @@ const BookAStand = () => {
                                     <option>Print Media</option><option>Raw material Supplier</option><option>Research Organisation</option>
                                     <option>Retailer</option><option>Service Provider</option><option>University</option><option>Others</option>
                                 </select>
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className={labelClasses}>Fascia Name *</label>
-                                <input required type="text" value={formData.fasciaName} onChange={(e) => handleSelectChange('fasciaName', e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
                             <div>
                                 <label className={labelClasses}>Pincode</label>
@@ -687,7 +673,7 @@ const BookAStand = () => {
                             <div className="flex flex-col gap-0.5">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selected Stall</p>
                                 <p className="text-sm font-bold text-slate-900">{formData.participation.stallFor || 'Not Selected'}</p>
-                                <p className="text-[11px] text-slate-500">{formData.participation.stallType} · {formData.participation.stallSize} Sq M.</p>
+                                <p className="text-[11px] text-slate-500">{formData.participation.stallType} � {formData.participation.stallSize} Sq M.</p>
                             </div>
                             <div className="flex flex-col gap-0.5 border-l border-slate-200 pl-4">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Space Rental</p>
