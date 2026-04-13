@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, User, Mail, Phone, Globe, Briefcase, Calendar, CheckCircle2, Info } from 'lucide-react';
+import { ArrowLeft, Building2, User, Mail, Phone, Globe, Briefcase, Calendar, CheckCircle2, Info, Target, CreditCard } from 'lucide-react';
 import api from "../lib/api";
 
 const Button = ({ children, onClick, className, variant, ...props }) => {
