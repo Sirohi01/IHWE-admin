@@ -400,17 +400,24 @@ const ManageRegistrations = () => {
         const eventEndDate = r.eventId?.endDate ? new Date(r.eventId.endDate) : null;
 
         if (filterType === 'current') {
-            // Ideally, current means it hasn't ended yet
             return eventEndDate ? eventEndDate >= today : true;
         }
 
         if (filterType === 'incoming') {
-            // Incoming means it hasn't started yet
             return eventStartDate ? eventStartDate > today : false;
         }
 
         return true;
     });
+
+    const PAGE_SIZE = 10;
+    const [currentPage, setCurrentPage] = useState(1);
+
+    // Reset to page 1 when search changes
+    useEffect(() => { setCurrentPage(1); }, [searchTerm]);
+
+    const totalPages = Math.ceil(filteredRegs.length / PAGE_SIZE);
+    const paginatedRegs = filteredRegs.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
     return (
         <div className="p-6 bg-white min-h-screen">
@@ -468,9 +475,9 @@ const ManageRegistrations = () => {
                                 ) : filteredRegs.length === 0 ? (
                                     <tr><td colSpan={columns.length + 1} className="py-12 text-center text-gray-400 font-bold uppercase tracking-widest text-xs italic">No registrations found</td></tr>
                                 ) : (
-                                    filteredRegs.map((row, idx) => (
+                                    paginatedRegs.map((row, idx) => (
                                         <tr key={row._id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0 group">
-                                            <td className="py-3 px-4 text-gray-400 font-bold text-center text-xs">{idx + 1}</td>
+                                            <td className="py-3 px-4 text-gray-400 font-bold text-center text-xs">{(currentPage - 1) * PAGE_SIZE + idx + 1}</td>
                                             {columns.map((col, colIdx) => (
                                                 <td key={colIdx} className={`py-3 px-4 ${col.key === 'actions' || col.key === 'status' ? 'text-center' : 'text-left'}`}>
                                                     {col.render ? col.render(row) : row[col.key]}
@@ -482,11 +489,50 @@ const ManageRegistrations = () => {
                             </tbody>
                         </table>
                     </div>
-                    <div className="bg-white px-5 py-3 border-t border-gray-200 flex justify-between items-center bg-gray-50/30">
-                        <div className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">Exhibitor Finance & Stand Management</div>
-                        <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-                            Showing <span className="text-red-600 font-black">{filteredRegs.length}</span> Active Registrations
+                    <div className="bg-white px-5 py-3 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3 bg-gray-50/30">
+                        <div className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">
+                            Showing <span className="text-red-600 font-black">{Math.min((currentPage - 1) * PAGE_SIZE + 1, filteredRegs.length)}–{Math.min(currentPage * PAGE_SIZE, filteredRegs.length)}</span> of <span className="text-red-600 font-black">{filteredRegs.length}</span> registrations
                         </div>
+                        {totalPages > 1 && (
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => setCurrentPage(1)}
+                                    disabled={currentPage === 1}
+                                    className="px-2 py-1 text-[10px] font-black border border-gray-200 rounded-[2px] disabled:opacity-30 hover:bg-gray-100 transition-all"
+                                >«</button>
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                    className="px-2 py-1 text-[10px] font-black border border-gray-200 rounded-[2px] disabled:opacity-30 hover:bg-gray-100 transition-all"
+                                >‹</button>
+                                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                    .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                                    .reduce((acc, p, i, arr) => {
+                                        if (i > 0 && p - arr[i - 1] > 1) acc.push('...');
+                                        acc.push(p);
+                                        return acc;
+                                    }, [])
+                                    .map((p, i) => p === '...'
+                                        ? <span key={`ellipsis-${i}`} className="px-2 py-1 text-[10px] text-gray-400">…</span>
+                                        : <button
+                                            key={p}
+                                            onClick={() => setCurrentPage(p)}
+                                            className={`px-2.5 py-1 text-[10px] font-black border rounded-[2px] transition-all ${currentPage === p ? 'bg-[#23471d] text-white border-[#23471d]' : 'border-gray-200 hover:bg-gray-100'}`}
+                                        >{p}</button>
+                                    )
+                                }
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="px-2 py-1 text-[10px] font-black border border-gray-200 rounded-[2px] disabled:opacity-30 hover:bg-gray-100 transition-all"
+                                >›</button>
+                                <button
+                                    onClick={() => setCurrentPage(totalPages)}
+                                    disabled={currentPage === totalPages}
+                                    className="px-2 py-1 text-[10px] font-black border border-gray-200 rounded-[2px] disabled:opacity-30 hover:bg-gray-100 transition-all"
+                                >»</button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
