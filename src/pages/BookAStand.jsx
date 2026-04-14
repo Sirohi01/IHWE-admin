@@ -539,7 +539,7 @@ const BookAStand = () => {
                                 <label className={labelClasses}>Landline No.</label>
                                 <input type="text" value={formData.landlineNo} onChange={(e) => handleSelectChange('landlineNo', e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
-                            <div>
+                            {/* <div>
                                 <label className={labelClasses}>Nature of Business *</label>
                                 <select required value={formData.natureOfBusiness} onChange={(e) => handleSelectChange('natureOfBusiness', e.target.value)} className={inputClasses}>
                                     <option value="">Select Here</option>
@@ -549,7 +549,7 @@ const BookAStand = () => {
                                     <option>Print Media</option><option>Raw material Supplier</option><option>Research Organisation</option>
                                     <option>Retailer</option><option>Service Provider</option><option>University</option><option>Others</option>
                                 </select>
-                            </div>
+                            </div> */}
                             <div>
                                 <label className={labelClasses}>Pincode</label>
                                 <input type="text" value={formData.pincode} onChange={(e) => handleSelectChange('pincode', e.target.value)} className={inputClasses} placeholder="Write Here.." />
@@ -591,11 +591,35 @@ const BookAStand = () => {
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className={labelClasses}>Mobile *</label>
-                                        <input required type="text" maxLength={10} value={formData.contact1.mobile} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, mobile: e.target.value.replace(/\D/g, '') } }))} className={inputClasses} placeholder="WhatsApp Number" />
+                                        <input
+                                            required
+                                            type="text"
+                                            inputMode={exhibitorType === 'domestic' ? 'numeric' : 'tel'}
+                                            maxLength={exhibitorType === 'domestic' ? 10 : undefined}
+                                            value={formData.contact1.mobile}
+                                            onChange={(e) => {
+                                                const val = exhibitorType === 'domestic' ? e.target.value.replace(/\D/g, '').slice(0, 10) : e.target.value;
+                                                setFormData(p => ({ ...p, contact1: { ...p.contact1, mobile: val } }));
+                                            }}
+                                            className={inputClasses}
+                                            placeholder={exhibitorType === 'domestic' ? '10-digit number' : 'WhatsApp Number'}
+                                        />
                                     </div>
                                     <div>
-                                        <label className={labelClasses}>Alternate No.</label>
-                                        <input type="text" value={formData.contact1.alternateNo} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, alternateNo: e.target.value } }))} className={inputClasses} placeholder="Write Here.." />
+                                        <label className={labelClasses}>Alternate No. *</label>
+                                        <input
+                                            required
+                                            type="text"
+                                            inputMode={exhibitorType === 'domestic' ? 'numeric' : 'tel'}
+                                            maxLength={exhibitorType === 'domestic' ? 10 : undefined}
+                                            value={formData.contact1.alternateNo}
+                                            onChange={(e) => {
+                                                const val = exhibitorType === 'domestic' ? e.target.value.replace(/\D/g, '').slice(0, 10) : e.target.value;
+                                                setFormData(p => ({ ...p, contact1: { ...p.contact1, alternateNo: val } }));
+                                            }}
+                                            className={inputClasses}
+                                            placeholder={exhibitorType === 'domestic' ? '10-digit number' : 'Write Here..'}
+                                        />
                                     </div>
                                 </div>
                             </div>

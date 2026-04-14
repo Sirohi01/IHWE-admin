@@ -95,6 +95,7 @@ import ManageRegistrations from "../pages/ManageRegistrations";
 import ManageEvents from "../pages/ManageEvents";
 import ManageStallRates from "../pages/ManageStallRates";
 import ManageTerms from "../pages/ManageTerms";
+import ExhibitorBookingDetail from "../pages/ExhibitorBookingDetail";
 import TravelAccommodationManage from "../pages/TravelAccommodationManage";
 import ActivityLogs from "../pages/ActivityLogs";
 import RoleManagement from "../pages/RoleManagement";
@@ -146,6 +147,7 @@ import AnnualTurnover from "../pages/admin_management/AnnualTurnover";
 import PrimaryProductInterest from "../pages/admin_management/PrimaryProductInterest";
 import SecondaryProductCategories from "../pages/admin_management/SecondaryProductCategories";
 import MeetingPriorityLevel from "../pages/admin_management/MeetingPriorityLevel";
+import AddDomesticVisitor from "../pages/ihwe_client_data_2026/AddDomesticVisitor";
 
 export default function AppRoutes() {
   return (
@@ -232,6 +234,7 @@ export default function AppRoutes() {
           />
           <Route path="stalls" element={<ManageStalls />} />
           <Route path="exhibitor-bookings" element={<ManageRegistrations />} />
+          <Route path="exhibitor-booking/:id" element={<ExhibitorBookingDetail />} />
           <Route path="events" element={<ManageEvents />} />
           <Route path="stall-rates" element={<ManageStallRates />} />
           <Route path="terms-conditions" element={<ManageTerms />} />
@@ -278,9 +281,13 @@ export default function AppRoutes() {
           <Route path="manage-roles" element={<RoleManagement />} />
           <Route path="response-templates" element={<ResponseTemplates />} />
           <Route path="policy-manager" element={<PolicyManager />} />
-          <Route
+          {/* <Route
             path="ihweClientData2026/addNewClients"
             element={<AddNewClients />}
+          /> */}
+          <Route
+            path="ihweClientData2026/addNewClients"
+            element={<AddDomesticVisitor />}
           />
           <Route
             path="ihweClientData2026/addNewClients/:id"

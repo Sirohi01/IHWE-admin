@@ -9,7 +9,7 @@ import {
     XCircle, Filter, Mail, Phone, Building,
     CreditCard, MapPin, Calendar, X, User, Layout
 } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import { createActivityLogThunk } from '../features/activityLog/activityLogSlice';
 
@@ -37,6 +37,7 @@ const ManageRegistrations = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedReg, setSelectedReg] = useState(null);
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const filterType = searchParams.get('type'); // 'current' or 'incoming'
     const dispatch = useDispatch();
 
@@ -365,7 +366,7 @@ const ManageRegistrations = () => {
             render: (row) => (
                 <div className="flex items-center gap-2">
                     <button 
-                        onClick={() => setSelectedReg(row)}
+                        onClick={() => navigate(`/exhibitor-booking/${row._id}`)}
                         className="p-2 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-[2px] transition-all border border-gray-200"
                     >
                         <Eye size={16} />
