@@ -272,7 +272,7 @@ export const menuItems = [
     label: "IHWE Client Data 2026",
     icon: FileText,
     children: [
-      { label: "Add New Clients", path: "/ihweClientData2026/addNewClients" },
+      { label: "Add Domestic Visitor", path: "/ihweClientData2026/addNewClients" },
       { label: "New Leads List", path: "/ihweClientData2026/newLeadList" },
       { label: "Warm Client List", path: "/ihweClientData2026/warmClientList" },
       { label: "Hot Client List", path: "/ihweClientData2026/hotClientList" },
