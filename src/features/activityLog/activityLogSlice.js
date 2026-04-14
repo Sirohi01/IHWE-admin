@@ -22,10 +22,10 @@ export const createActivityLogThunk = createAsyncThunk(
         link: payload.link ? `${window.location.origin}${payload.link}` : `${window.location.origin}${defaultPath}`,
       };
 
-      const res = await axios.post(`${BASE_URL}/api/activity-logs/create`, finalPayload);
+      const res = await api.post(`/api/activity-logs/create`, finalPayload);
       return res.data.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message);
+      return rejectWithValue(err.response?.data?.message || err.message || "Failed to create activity log");
     }
   },
 );

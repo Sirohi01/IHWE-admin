@@ -1,50 +1,85 @@
-import { useState } from "react";
-
-const initialData = [
-    { id: 1, primary_product_interest: "Ayurveda", status: "Active" },
-    { id: 2, primary_product_interest: "Pharma", status: "Inactive" },
-    { id: 3, primary_product_interest: "Cosmetics", status: "Active" },
-    { id: 4, primary_product_interest: "Organic", status: "Inactive" },
-    { id: 5, primary_product_interest: "Wellness", status: "Active" },
-];
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+    fetchPrimaryProduct,
+    addPrimaryProduct,
+    updatePrimaryProduct,
+    deletePrimaryProduct,
+} from "../../features/add_by_admin/primary_product/PrimaryProductSlice";
 
 export default function PrimaryProductInterest() {
-    const [primaryProductInterests, setPrimaryProductInterests] = useState(initialData);
+    const dispatch = useDispatch();
+    const { primaryProduct = [], loading = false } = useSelector(
+        (state) => state.primaryProduct || {}
+    );
     const [form, setForm] = useState({ primary_product_interest: "", status: "" });
     const [editingId, setEditingId] = useState(null);
 
     const isEditing = editingId !== null;
 
+    useEffect(() => {
+        dispatch(fetchPrimaryProduct());
+    }, [dispatch]);
+
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = () => {
+    const getPrimaryProductLabel = (item) =>
+        item?.primary_product_interest || item?.primary_product || "";
+
+    const handleSubmit = async () => {
         if (!form.primary_product_interest || !form.status) return alert("Please fill all fields.");
 
+        let adminData = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
+        let adminId = sessionStorage.getItem("user_id");
+        if (adminData && !adminId) {
+            try {
+                adminId = JSON.parse(adminData)._id || JSON.parse(adminData).id;
+            } catch (e) { }
+        }
+
+        const payload = {
+            ...form,
+            primary_product: form.primary_product_interest,
+            added_by: adminId || "admin",
+        };
+
         if (isEditing) {
-            setPrimaryProductInterests((prev) =>
-                prev.map((b) => (b.id === editingId ? { ...b, ...form } : b))
-            );
-            resetForm();
+            try {
+                await dispatch(
+                    updatePrimaryProduct({ id: editingId, updatedData: payload })
+                ).unwrap();
+                resetForm();
+            } catch (error) {
+                alert(`Failed to update: ${error?.message || error}`);
+            }
         } else {
-            setPrimaryProductInterests((prev) => [
-                ...prev,
-                { id: Date.now(), ...form },
-            ]);
-            setForm({ primary_product_interest: "", status: "" });
+            try {
+                await dispatch(addPrimaryProduct(payload)).unwrap();
+                resetForm();
+            } catch (error) {
+                alert(`Failed to add: ${error?.message || error}`);
+            }
         }
     };
 
     const handleEdit = (item) => {
-        setEditingId(item.id);
-        setForm({ primary_product_interest: item.primary_product_interest, status: item.status });
+        setEditingId(item._id || item.id);
+        setForm({
+            primary_product_interest: getPrimaryProductLabel(item),
+            status: item.status,
+        });
     };
 
-    const handleDelete = (id) => {
-        if (!window.confirm("Delete this annual turnover?")) return;
-        setPrimaryProductInterests((prev) => prev.filter((b) => b.id !== id));
-        if (editingId === id) resetForm();
+    const handleDelete = async (id) => {
+        if (!window.confirm("Delete this primary product interest?")) return;
+        try {
+            await dispatch(deletePrimaryProduct(id)).unwrap();
+            if (editingId === id) resetForm();
+        } catch (error) {
+            alert("Failed to delete primary product interest");
+        }
     };
 
     const resetForm = () => {
@@ -128,10 +163,15 @@ export default function PrimaryProductInterest() {
                         </tr>
                     </thead>
                     <tbody>
-                        {primaryProductInterests.map((b, i) => (
-                            <tr key={b.id} className="border-t border-gray-100">
+                        {loading && (
+                            <tr>
+                                <td colSpan="4" className="px-4 py-3 text-center text-gray-500">Loading...</td>
+                            </tr>
+                        )}
+                        {!loading && primaryProduct.map((b, i) => (
+                            <tr key={b._id || b.id} className="border-t border-gray-100">
                                 <td className="px-4 py-3 text-gray-400">{i + 1}</td>
-                                <td className="px-4 py-3">{b.primary_product_interest}</td>
+                                <td className="px-4 py-3">{getPrimaryProductLabel(b)}</td>
                                 <td className="px-4 py-3">
                                     <span
                                         className={`px-2 py-0.5 rounded-full text-xs font-medium ${b.status === "Active"
@@ -150,7 +190,7 @@ export default function PrimaryProductInterest() {
                                         Edit
                                     </button>
                                     <button
-                                        onClick={() => handleDelete(b.id)}
+                                        onClick={() => handleDelete(b._id || b.id)}
                                         className="px-3 py-1 border border-red-200 rounded text-xs text-red-600 hover:bg-red-50"
                                     >
                                         Delete
