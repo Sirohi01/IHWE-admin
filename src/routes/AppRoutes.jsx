@@ -95,6 +95,7 @@ import ManageRegistrations from "../pages/ManageRegistrations";
 import ManageEvents from "../pages/ManageEvents";
 import ManageStallRates from "../pages/ManageStallRates";
 import ManageTerms from "../pages/ManageTerms";
+import ExhibitorBookingDetail from "../pages/ExhibitorBookingDetail";
 import TravelAccommodationManage from "../pages/TravelAccommodationManage";
 import ActivityLogs from "../pages/ActivityLogs";
 import RoleManagement from "../pages/RoleManagement";
@@ -232,6 +233,7 @@ export default function AppRoutes() {
           />
           <Route path="stalls" element={<ManageStalls />} />
           <Route path="exhibitor-bookings" element={<ManageRegistrations />} />
+          <Route path="exhibitor-booking/:id" element={<ExhibitorBookingDetail />} />
           <Route path="events" element={<ManageEvents />} />
           <Route path="stall-rates" element={<ManageStallRates />} />
           <Route path="terms-conditions" element={<ManageTerms />} />
