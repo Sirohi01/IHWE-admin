@@ -3,18 +3,26 @@ import api from "../../lib/api";
 
 export const createActivityLogThunk = createAsyncThunk(
   "activityLog/create",
-  async (
-    { user_id, message, link, section, data = {} },
-    { rejectWithValue },
-  ) => {
+  async (payload, { rejectWithValue }) => {
     try {
-      const res = await api.post(`/api/activity-logs/create`, {
-        user_id,
-        message,
-        link,
-        section,
-        data,
-      });
+      let formattedAction = payload.action || (payload.data && payload.data.action) || "Action";
+      if (formattedAction === "CREATE") formattedAction = "Created";
+      if (formattedAction === "UPDATE") formattedAction = "Updated";
+      if (formattedAction === "DELETE") formattedAction = "Deleted";
+
+      // Default fallback path agar link explicitly pass nahi kiya gaya ho
+      const defaultPath = `/${(payload.module || "dashboard").toLowerCase().replace(/\s+/g, "-")}`;
+
+      const finalPayload = {
+        user_id: payload.user_id,
+        user: payload.user || "Admin",
+        action: formattedAction,
+        module: payload.module || payload.section || "System",
+        details: payload.details || payload.message || "System action performed",
+        link: payload.link ? `${window.location.origin}${payload.link}` : `${window.location.origin}${defaultPath}`,
+      };
+
+      const res = await axios.post(`${BASE_URL}/api/activity-logs/create`, finalPayload);
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message);

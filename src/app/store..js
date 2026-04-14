@@ -24,6 +24,7 @@ import generalVisitorReducer from "../features/visitor/generalVisitorSlice";
 import healthCampVisitorReducer from "../features/visitor/freeHealthCampSlice";
 import visitorReviewReducer from "../features/visitor/visitorReviewSlice";
 import businessTypeReducer from "../features/add_by_admin/business/BusinessTypeSlice";
+import annualTurnoverReducer from "../features/add_by_admin/annual_turnover/AnnualTurnoverSlice";
 
 export const store = configureStore({
   reducer: {
@@ -52,6 +53,7 @@ export const store = configureStore({
     healthCampVisitors: healthCampVisitorReducer,
     visitorReview: visitorReviewReducer,
     businessTypes: businessTypeReducer,
+    annualTurnover: annualTurnoverReducer,
   },
 });
 

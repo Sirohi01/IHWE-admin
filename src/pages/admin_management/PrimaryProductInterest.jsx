@@ -54,18 +54,18 @@ export default function PrimaryProductInterest() {
 
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-bold text-[#23471d] mb-1">Manage Annual Turnover</h1>
-            <p className="text-gray-500 mb-6 text-sm">Manage annual turnover and their status</p>
+            <h1 className="text-2xl font-bold text-[#23471d] mb-1">Manage Primary Product Interest</h1>
+            <p className="text-gray-500 mb-6 text-sm">Manage primary product interest and their status</p>
 
             {/* Form Card */}
             <div className="bg-white border border-gray-200 rounded-lg p-5 mb-6 shadow-sm">
                 <p className="text-sm font-medium text-gray-600 mb-4">
-                    {isEditing ? `Editing: ${form.primary_product_interest}` : "Add new annual turnover"}
+                    {isEditing ? `Editing: ${form.primary_product_interest}` : "Add new primary product interest"}
                 </p>
                 <div className="flex flex-wrap gap-4 items-end">
                     <div className="flex-1 min-w-[180px]">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Annual Turnover <span className="text-red-500">*</span>
+                            Primary Product Interest <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
@@ -116,13 +116,13 @@ export default function PrimaryProductInterest() {
             {/* Table */}
             <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                 <div className="bg-[#23471d] px-5 py-3">
-                    <h2 className="text-white font-medium">Annual Turnover list</h2>
+                    <h2 className="text-white font-medium">Primary Product Interest list</h2>
                 </div>
                 <table className="w-full text-sm">
                     <thead className="bg-gray-50 text-gray-500">
                         <tr>
                             <th className="text-left px-4 py-3 font-medium">S.No</th>
-                            <th className="text-left px-4 py-3 font-medium">Annual Turnover</th>
+                            <th className="text-left px-4 py-3 font-medium">Primary Product Interest</th>
                             <th className="text-left px-4 py-3 font-medium">Status</th>
                             <th className="text-left px-4 py-3 font-medium">Actions</th>
                         </tr>
