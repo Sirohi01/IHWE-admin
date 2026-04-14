@@ -202,8 +202,8 @@ const BookAStand = () => {
                 ...formData,
                 eventId: selectedEventId,
                 filledBy: currentUser?.username || 'Admin',
-                amountPaid: formData.participation.total,
-                balanceAmount: 0,
+                amountPaid: 0,
+                balanceAmount: formData.participation.total,
                 status: 'pending',
                 paymentMode: 'manual'
             };
