@@ -1,50 +1,75 @@
-import { useState } from "react";
-
-const initialData = [
-    { id: 1, annual_turnover: "5-10 Lacs", status: "Active" },
-    { id: 2, annual_turnover: "10-25 Lacs", status: "Inactive" },
-    { id: 3, annual_turnover: "30-50 Lacs", status: "Active" },
-    { id: 4, annual_turnover: "50-1 Crore", status: "Inactive" },
-    { id: 5, annual_turnover: "1 Crore+", status: "Active" },
-];
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+    fetchAnnualTurnover,
+    addAnnualTurnover,
+    updateAnnualTurnover,
+    deleteAnnualTurnover,
+} from "../../features/add_by_admin/annual_turnover/AnnualTurnoverSlice";
 
 export default function AnnualTurnover() {
-    const [annualTurnovers, setAnnualTurnovers] = useState(initialData);
+    const dispatch = useDispatch();
+    const { annualTurnover = [], loading = false } = useSelector((state) => state.annualTurnover || {});
+
     const [form, setForm] = useState({ annual_turnover: "", status: "" });
     const [editingId, setEditingId] = useState(null);
 
     const isEditing = editingId !== null;
 
+    useEffect(() => {
+        dispatch(fetchAnnualTurnover());
+    }, [dispatch]);
+
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!form.annual_turnover || !form.status) return alert("Please fill all fields.");
 
+        let adminData = localStorage.getItem('adminInfo') || sessionStorage.getItem('adminInfo');
+        let adminId = sessionStorage.getItem('user_id');
+        if (adminData && !adminId) {
+            try {
+                adminId = JSON.parse(adminData)._id || JSON.parse(adminData).id;
+            } catch (e) { }
+        }
+
+        const payload = {
+            ...form,
+            added_by: adminId || "admin",
+        };
+
         if (isEditing) {
-            setAnnualTurnovers((prev) =>
-                prev.map((b) => (b.id === editingId ? { ...b, ...form } : b))
-            );
-            resetForm();
+            try {
+                await dispatch(updateAnnualTurnover({ id: editingId, updatedData: payload })).unwrap();
+                resetForm();
+            } catch (error) {
+                alert(`Failed to update: ${error?.message || error}`);
+            }
         } else {
-            setAnnualTurnovers((prev) => [
-                ...prev,
-                { id: Date.now(), ...form },
-            ]);
-            setForm({ annual_turnover: "", status: "" });
+            try {
+                await dispatch(addAnnualTurnover(payload)).unwrap();
+                resetForm();
+            } catch (error) {
+                alert(`Failed to add: ${error?.message || error}`);
+            }
         }
     };
 
     const handleEdit = (item) => {
-        setEditingId(item.id);
+        setEditingId(item._id);
         setForm({ annual_turnover: item.annual_turnover, status: item.status });
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (!window.confirm("Delete this annual turnover?")) return;
-        setAnnualTurnovers((prev) => prev.filter((b) => b.id !== id));
-        if (editingId === id) resetForm();
+        try {
+            await dispatch(deleteAnnualTurnover(id)).unwrap();
+            if (editingId === id) resetForm();
+        } catch (error) {
+            alert("Failed to delete annual turnover");
+        }
     };
 
     const resetForm = () => {
@@ -72,7 +97,7 @@ export default function AnnualTurnover() {
                             name="annual_turnover"
                             value={form.annual_turnover}
                             onChange={handleChange}
-                            placeholder="e.g. Retail, Manufacturing"
+                            placeholder="e.g. 5-10 Lacs"
                             className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-[#134698] text-sm"
                         />
                     </div>
@@ -99,7 +124,7 @@ export default function AnnualTurnover() {
                             className={`px-5 py-2 text-white text-sm font-medium rounded ${isEditing ? "bg-[#134698] hover:bg-[#0f3a7a]" : "bg-[#d26019] hover:bg-[#b04e14]"
                                 }`}
                         >
-                            {isEditing ? "Update Business" : "+ Add Business"}
+                            {isEditing ? "Update Turnover" : "+ Add Turnover"}
                         </button>
                         {isEditing && (
                             <button
@@ -128,8 +153,13 @@ export default function AnnualTurnover() {
                         </tr>
                     </thead>
                     <tbody>
-                        {annualTurnovers.map((b, i) => (
-                            <tr key={b.id} className="border-t border-gray-100">
+                        {loading && (
+                            <tr>
+                                <td colSpan="4" className="px-4 py-3 text-center text-gray-500">Loading...</td>
+                            </tr>
+                        )}
+                        {!loading && annualTurnover.map((b, i) => (
+                            <tr key={b._id} className="border-t border-gray-100">
                                 <td className="px-4 py-3 text-gray-400">{i + 1}</td>
                                 <td className="px-4 py-3">{b.annual_turnover}</td>
                                 <td className="px-4 py-3">
@@ -150,7 +180,7 @@ export default function AnnualTurnover() {
                                         Edit
                                     </button>
                                     <button
-                                        onClick={() => handleDelete(b.id)}
+                                        onClick={() => handleDelete(b._id)}
                                         className="px-3 py-1 border border-red-200 rounded text-xs text-red-600 hover:bg-red-50"
                                     >
                                         Delete

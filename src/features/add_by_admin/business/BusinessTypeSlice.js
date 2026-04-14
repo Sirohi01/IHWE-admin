@@ -29,10 +29,9 @@ export const addBusinessType = createAsyncThunk(
                 },
             });
 
-            const userStr = sessionStorage.getItem("user");
-            const user = userStr ? JSON.parse(userStr) : {};
-            const userId = sessionStorage.getItem("user_id") || user._id;
-            const userName = user.name || "User";
+            const adminData = JSON.parse(localStorage.getItem('adminInfo') || sessionStorage.getItem('adminInfo') || '{}');
+            const userId = adminData._id || adminData.id || sessionStorage.getItem("user_id") || 'admin';
+            const userName = adminData.name || adminData.username || "Admin";
 
             const created = response.data.data || response.data;
 
@@ -60,10 +59,9 @@ export const updateBusinessType = createAsyncThunk(
     "businessTypes/update",
     async ({ id, updatedData }, { dispatch, rejectWithValue }) => {
         try {
-            const userStr = sessionStorage.getItem("user");
-            const user = userStr ? JSON.parse(userStr) : {};
-            const userId = sessionStorage.getItem("user_id") || user._id;
-            const userName = user.name || "User";
+            const adminData = JSON.parse(localStorage.getItem('adminInfo') || sessionStorage.getItem('adminInfo') || '{}');
+            const userId = adminData._id || adminData.id || sessionStorage.getItem("user_id") || 'admin';
+            const userName = adminData.name || adminData.username || "Admin";
 
             const dataWithUser = {
                 ...updatedData,
@@ -71,7 +69,7 @@ export const updateBusinessType = createAsyncThunk(
             };
 
             const response = await axios.put(
-                `${BASE_URL}/business-type/${id}`,
+                `${BASE_URL}/business-types/${id}`,
                 dataWithUser,
                 {
                     headers: {
@@ -109,12 +107,11 @@ export const deleteBusinessType = createAsyncThunk(
             const { businessTypes } = getState().businessTypes;
             const itemToDelete = businessTypes.find((b) => b._id === id || b.id === id);
 
-            await axios.delete(`${BASE_URL}/business-type/${id}`);
+            await axios.delete(`${BASE_URL}/business-types/${id}`);
 
-            const userStr = sessionStorage.getItem("user");
-            const user = userStr ? JSON.parse(userStr) : {};
-            const userId = sessionStorage.getItem("user_id") || user._id;
-            const userName = user.name || "User";
+            const adminData = JSON.parse(localStorage.getItem('adminInfo') || sessionStorage.getItem('adminInfo') || '{}');
+            const userId = adminData._id || adminData.id || sessionStorage.getItem("user_id") || 'admin';
+            const userName = adminData.name || adminData.username || "Admin";
 
             if (userId) {
                 dispatch(

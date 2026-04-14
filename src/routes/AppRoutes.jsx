@@ -58,9 +58,7 @@ import CorporateList from "../pages/corporate-clients/CorporateClientsList";
 import AddIndividualClients from "../pages/individuals/AddIndividualClients";
 import IndividualClientList from "../pages/individuals/IndividualClientList";
 import IndividualProfile from "../pages/individuals/IndividualProfile";
-
 import ContactList from "../pages/ContactList";
-
 import AddSeo from "../pages/seo/AddSeo";
 import SeoList from "../pages/seo/SeoList";
 import AdvancedSeo from "../pages/seo/AdvancedSeo";
@@ -101,15 +99,8 @@ import ActivityLogs from "../pages/ActivityLogs";
 import RoleManagement from "../pages/RoleManagement";
 import RolePermissions from "../pages/RolePermissions";
 import PolicyManager from "../pages/PolicyManager";
-
-
-
-
-
-/* settings */
 import Settings from "../pages/Settings";
 import SidebarCustomize from "../pages/SidebarCustomize";
-
 import ProtectedRoute from "./ProtectedRoute";
 import AddNewClients from "../pages/ihwe_client_data_2026/AddNewClients";
 import ColdClientList from "../pages/ihwe_client_data_2026/ColdClientList";
@@ -282,9 +273,6 @@ export default function AppRoutes() {
           <Route path="manage-roles" element={<RoleManagement />} />
           <Route path="response-templates" element={<ResponseTemplates />} />
           <Route path="policy-manager" element={<PolicyManager />} />
-
-
-
           <Route
             path="ihweClientData2026/addNewClients"
             element={<AddNewClients />}
