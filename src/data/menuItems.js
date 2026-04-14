@@ -287,11 +287,11 @@ export const menuItems = [
     label: "Visitor Management",
     icon: Users,
     children: [
-      { label: "Add New Visitor", path: "/ihweClientData2026/AddNewVisitor" },
+      { label: "Add Domastic Visitor", path: "/ihweClientData2026/AddNewVisitor" },
       { label: "Corporate Visitor Form", path: "/ihweClientData2026/CorporateVisitorForm" },
       { label: "Free Health Camp Form", path: "/ihweClientData2026/FreeHealthCampForm" },
       { label: "General Visitor Form", path: "/ihweClientData2026/GeneralVisitorForm" },
-      { label: "Visitor Registration", path: "/ihweClientData2026/VisitorRegistration" },
+      { label: "Add International Visitor", path: "/ihweClientData2026/VisitorRegistration" },
       { label: "Corporate Visitors List", path: "/ihweClientData2026/CorporateVisitorsList" },
       { label: "General Visitors List", path: "/ihweClientData2026/GeneralVisitorsList" },
       { label: "Health Camp Visitors List", path: "/ihweClientData2026/FreeHealthCampVisitorsList" },

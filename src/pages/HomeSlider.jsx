@@ -5,6 +5,7 @@ import api, { API_URL, SERVER_URL } from "../lib/api";
 import Pagination from "../components/Pagination";
 import Table from '../components/table/Table';
 import PageHeader from '../components/PageHeader';
+import RichTextEditor from '../components/RichTextEditor';
 
 
 // Timer Component
@@ -75,7 +76,9 @@ const HeroSlider = () => {
     altText: "",
     subtitle: "",
     title: "",
+    titleFontSize: "45",
     description: "",
+    descriptionFontSize: "16",
     button1Name: "View Our Projects",
     button1Url: "/projects-list",
     button2Name: "Get Free Consultation",
@@ -167,7 +170,9 @@ const HeroSlider = () => {
       formDataToSend.append('altText', formData.altText);
       formDataToSend.append('subtitle', formData.subtitle);
       formDataToSend.append('title', formData.title);
+      formDataToSend.append('titleFontSize', formData.titleFontSize);
       formDataToSend.append('description', formData.description);
+      formDataToSend.append('descriptionFontSize', formData.descriptionFontSize);
       formDataToSend.append('button1Name', formData.button1Name);
       formDataToSend.append('button1Url', formData.button1Url);
       formDataToSend.append('button2Name', formData.button2Name);
@@ -219,7 +224,9 @@ const HeroSlider = () => {
       altText: "",
       subtitle: "",
       title: "",
+      titleFontSize: "45",
       description: "",
+      descriptionFontSize: "16",
       button1Name: "View Our Projects",
       button1Url: "/projects-list",
       button2Name: "Get Free Consultation",
@@ -245,7 +252,9 @@ const HeroSlider = () => {
       altText: slide.altText || "",
       subtitle: slide.subtitle,
       title: slide.title,
+      titleFontSize: slide.titleFontSize || "45",
       description: slide.description,
+      descriptionFontSize: slide.descriptionFontSize || "16",
       button1Name: slide.button1Name || "View Our Projects",
       button1Url: slide.button1Url || "/projects-list",
       button2Name: slide.button2Name || "Get Free Consultation",
@@ -340,7 +349,9 @@ const HeroSlider = () => {
         }
         formDataToSend.append('subtitle', formData.subtitle);
         formDataToSend.append('title', formData.title);
+        formDataToSend.append('titleFontSize', formData.titleFontSize);
         formDataToSend.append('description', formData.description);
+        formDataToSend.append('descriptionFontSize', formData.descriptionFontSize);
         formDataToSend.append('isActive', formData.isActive);
         formDataToSend.append('schedule', JSON.stringify(schedule));
 
@@ -422,7 +433,10 @@ const HeroSlider = () => {
       key: "title",
       label: "TITLE",
       render: (row) => (
-        <div className="font-medium text-gray-900">{row.title}</div>
+        <div 
+          className="font-medium text-gray-900 max-w-[250px] line-clamp-2" 
+          dangerouslySetInnerHTML={{ __html: row.title }}
+        />
       )
     },
     {
@@ -506,7 +520,7 @@ const HeroSlider = () => {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 Subtitle <span className="text-red-500">*</span>
               </label>
@@ -519,21 +533,6 @@ const HeroSlider = () => {
                 className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
               />
             </div>
-
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Hero Title (SEO H1) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                placeholder="Enter main title (H1 for SEO)"
-                className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
-              />
-            </div>
-
 
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -550,17 +549,116 @@ const HeroSlider = () => {
               </select>
             </div>
 
-            <div className="md:col-span-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description <span className="text-red-500">*</span>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Alt Text <span className="text-gray-400 text-[10px]">(SEO)</span>
               </label>
-              <textarea
-                name="description"
-                value={formData.description}
+              <input
+                type="text"
+                name="altText"
+                value={formData.altText}
                 onChange={handleInputChange}
+                placeholder="Image alt text..."
+                className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+              />
+            </div>
+
+            {/* Editors Row */}
+            <div className="md:col-span-2">
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-medium text-gray-700">
+                  Hero Title <span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase">Default: 45px</span>
+                  <div className="flex items-center border-2 border-gray-300 rounded overflow-hidden h-7 bg-white shadow-sm">
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        const newSize = Math.max(1, parseInt(formData.titleFontSize || 0) - 1);
+                        setFormData(prev => ({ ...prev, titleFontSize: newSize.toString() }));
+                      }}
+                      className="px-2 h-full hover:bg-gray-100 border-r border-gray-300 transition-colors text-xs font-bold"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      name="titleFontSize"
+                      value={formData.titleFontSize}
+                      onChange={handleInputChange}
+                      className="w-12 h-full text-center text-xs focus:outline-none border-0"
+                    />
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        const newSize = parseInt(formData.titleFontSize || 0) + 1;
+                        setFormData(prev => ({ ...prev, titleFontSize: newSize.toString() }));
+                      }}
+                      className="px-2 h-full hover:bg-gray-100 border-l border-gray-300 transition-colors text-xs font-bold"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <RichTextEditor
+                value={formData.title}
+                onChange={(content) => setFormData(prev => ({ ...prev, title: content }))}
+                placeholder="Enter Hero Title..."
+                minHeight="120px"
+                fontSize={formData.titleFontSize}
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-medium text-gray-700">
+                  Description <span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase">Default: 16px</span>
+                  <div className="flex items-center border-2 border-gray-300 rounded overflow-hidden h-7 bg-white shadow-sm">
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        const newSize = Math.max(1, parseInt(formData.descriptionFontSize || 0) - 1);
+                        setFormData(prev => ({ ...prev, descriptionFontSize: newSize.toString() }));
+                      }}
+                      className="px-2 h-full hover:bg-gray-100 border-r border-gray-300 transition-colors text-xs font-bold"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      name="descriptionFontSize"
+                      value={formData.descriptionFontSize}
+                      onChange={handleInputChange}
+                      className="w-12 h-full text-center text-xs focus:outline-none border-0"
+                    />
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        const newSize = parseInt(formData.descriptionFontSize || 0) + 1;
+                        setFormData(prev => ({ ...prev, descriptionFontSize: newSize.toString() }));
+                      }}
+                      className="px-2 h-full hover:bg-gray-100 border-l border-gray-300 transition-colors text-xs font-bold"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <RichTextEditor
+                value={formData.description}
+                onChange={(content) => setFormData(prev => ({ ...prev, description: content }))}
                 placeholder="Enter description..."
-                rows={3}
-                className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-sm shadow-lg"
+                minHeight="120px"
+                fontSize={formData.descriptionFontSize}
               />
             </div>
 
@@ -636,19 +734,6 @@ const HeroSlider = () => {
                 )}
             </div>
 
-            <div className="md:col-span-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Alt Text <span className="text-gray-400 text-xs">(SEO)</span>
-              </label>
-              <input
-                type="text"
-                name="altText"
-                value={formData.altText}
-                onChange={handleInputChange}
-                placeholder="e.g., Luxury Living Room Interior"
-                className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-sm shadow-lg"
-              />
-            </div>
           </div>
 
           <div className="flex items-center justify-end gap-3 mt-6">
