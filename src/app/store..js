@@ -25,6 +25,9 @@ import healthCampVisitorReducer from "../features/visitor/freeHealthCampSlice";
 import visitorReviewReducer from "../features/visitor/visitorReviewSlice";
 import businessTypeReducer from "../features/add_by_admin/business/BusinessTypeSlice";
 import annualTurnoverReducer from "../features/add_by_admin/annual_turnover/AnnualTurnoverSlice";
+import primaryProductReducer from "../features/add_by_admin/primary_product/PrimaryProductSlice";
+import secondaryProductReducer from "../features/add_by_admin/secondary_product/SecondaryProductSlice";
+import meetingPriorityReducer from "../features/add_by_admin/meeting-priority/MeetingPrioritySlice";
 
 export const store = configureStore({
   reducer: {
@@ -54,6 +57,9 @@ export const store = configureStore({
     visitorReview: visitorReviewReducer,
     businessTypes: businessTypeReducer,
     annualTurnover: annualTurnoverReducer,
+    primaryProduct: primaryProductReducer,
+    secondaryProduct: secondaryProductReducer,
+    meetingPriority: meetingPriorityReducer,
   },
 });
 

@@ -1,48 +1,85 @@
-import { useState } from "react";
-
-const initialData = [
-    { id: 1, meeting_priority_level: "High", status: "Active" },
-    { id: 2, meeting_priority_level: "Medium", status: "Inactive" },
-    { id: 3, meeting_priority_level: "Low", status: "Active" },
-];
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+    fetchMeetingPriorities,
+    addMeetingPriority,
+    updateMeetingPriority,
+    deleteMeetingPriority,
+} from "../../features/add_by_admin/meeting-priority/MeetingPrioritySlice";
 
 export default function MeetingPriorityLevel() {
-    const [meetingPriorityLevel, setMeetingPriorityLevel] = useState(initialData);
+    const dispatch = useDispatch();
+    const { meetingPriority = [], loading = false } = useSelector(
+        (state) => state.meetingPriority || {}
+    );
     const [form, setForm] = useState({ meeting_priority_level: "", status: "" });
     const [editingId, setEditingId] = useState(null);
 
     const isEditing = editingId !== null;
 
+    useEffect(() => {
+        dispatch(fetchMeetingPriorities());
+    }, [dispatch]);
+
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = () => {
+    const getMeetingPriorityLabel = (item) =>
+        item?.meeting_priority_level || item?.meeting_priority || item?.priority || "";
+
+    const handleSubmit = async () => {
         if (!form.meeting_priority_level || !form.status) return alert("Please fill all fields.");
 
+        let adminData = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
+        let adminId = sessionStorage.getItem("user_id");
+        if (adminData && !adminId) {
+            try {
+                adminId = JSON.parse(adminData)._id || JSON.parse(adminData).id;
+            } catch (e) { }
+        }
+
+        const payload = {
+            ...form,
+            meeting_priority: form.meeting_priority_level,
+            added_by: adminId || "admin",
+        };
+
         if (isEditing) {
-            setMeetingPriorityLevel((prev) =>
-                prev.map((b) => (b.id === editingId ? { ...b, ...form } : b))
-            );
-            resetForm();
+            try {
+                await dispatch(
+                    updateMeetingPriority({ id: editingId, updatedData: payload })
+                ).unwrap();
+                resetForm();
+            } catch (error) {
+                alert(`Failed to update: ${error?.message || error}`);
+            }
         } else {
-            setMeetingPriorityLevel((prev) => [
-                ...prev,
-                { id: Date.now(), ...form },
-            ]);
-            setForm({ meeting_priority_level: "", status: "" });
+            try {
+                await dispatch(addMeetingPriority(payload)).unwrap();
+                resetForm();
+            } catch (error) {
+                alert(`Failed to add: ${error?.message || error}`);
+            }
         }
     };
 
     const handleEdit = (item) => {
-        setEditingId(item.id);
-        setForm({ meeting_priority_level: item.meeting_priority_level, status: item.status });
+        setEditingId(item._id || item.id);
+        setForm({
+            meeting_priority_level: getMeetingPriorityLabel(item),
+            status: item.status,
+        });
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (!window.confirm("Delete this meeting priority level?")) return;
-        setMeetingPriorityLevel((prev) => prev.filter((b) => b.id !== id));
-        if (editingId === id) resetForm();
+        try {
+            await dispatch(deleteMeetingPriority(id)).unwrap();
+            if (editingId === id) resetForm();
+        } catch (error) {
+            alert("Failed to delete meeting priority level");
+        }
     };
 
     const resetForm = () => {
@@ -126,10 +163,15 @@ export default function MeetingPriorityLevel() {
                         </tr>
                     </thead>
                     <tbody>
-                        {meetingPriorityLevel.map((b, i) => (
-                            <tr key={b.id} className="border-t border-gray-100">
+                        {loading && (
+                            <tr>
+                                <td colSpan="4" className="px-4 py-3 text-center text-gray-500">Loading...</td>
+                            </tr>
+                        )}
+                        {!loading && meetingPriority.map((b, i) => (
+                            <tr key={b._id || b.id} className="border-t border-gray-100">
                                 <td className="px-4 py-3 text-gray-400">{i + 1}</td>
-                                <td className="px-4 py-3">{b.meeting_priority_level}</td>
+                                <td className="px-4 py-3">{getMeetingPriorityLabel(b)}</td>
                                 <td className="px-4 py-3">
                                     <span
                                         className={`px-2 py-0.5 rounded-full text-xs font-medium ${b.status === "Active"
@@ -148,7 +190,7 @@ export default function MeetingPriorityLevel() {
                                         Edit
                                     </button>
                                     <button
-                                        onClick={() => handleDelete(b.id)}
+                                        onClick={() => handleDelete(b._id || b.id)}
                                         className="px-3 py-1 border border-red-200 rounded text-xs text-red-600 hover:bg-red-50"
                                     >
                                         Delete
