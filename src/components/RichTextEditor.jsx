@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Link as LinkIcon } from 'lucide-react';
 
-const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isCodeEditor = false }) => {
+const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isCodeEditor = false, showColorPicker = true, fontSize }) => {
     const editorRef = useRef(null);
     const [activeFormats, setActiveFormats] = useState({
         bold: false,
@@ -13,7 +13,8 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
         insertUnorderedList: false,
         insertOrderedList: false,
         formatBlock: 'p',
-        link: false
+        link: false,
+        color: '#333333'
     });
 
     // Sync from parent to editor (initial load or external updates)
@@ -54,7 +55,8 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                 insertUnorderedList: document.queryCommandState("insertUnorderedList"),
                 insertOrderedList: document.queryCommandState("insertOrderedList"),
                 formatBlock: formatBlockValue || 'p',
-                link: isLink
+                link: isLink,
+                color: document.queryCommandValue("foreColor")
             });
         }
     }, [isCodeEditor]);
@@ -234,6 +236,21 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                     >
                         <LinkIcon size={16} />
                     </button>
+
+                    <div className="w-px h-6 bg-gray-300 mx-1"></div>
+
+                    {showColorPicker && (
+                        <div className="relative group/color flex items-center gap-1 border-2 border-gray-300 rounded px-1 h-9 bg-white shadow-sm hover:border-blue-400 transition-colors">
+                            <label className="text-[10px] font-bold text-gray-500 ml-1 uppercase">Color</label>
+                            <input
+                                type="color"
+                                value={activeFormats.color || "#333333"}
+                                onChange={(e) => execCommand("foreColor", e.target.value)}
+                                className="w-8 h-6 p-0 border-0 bg-transparent cursor-pointer"
+                                title="Text Color"
+                            />
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -249,6 +266,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                 className={`p-6 focus:outline-none max-w-none text-gray-700 bg-white overflow-y-auto leading-relaxed ${isCodeEditor ? 'font-mono text-sm' : 'prose'}`}
                 style={{
                     minHeight: minHeight,
+                    fontSize: fontSize ? `${fontSize}px` : undefined
                 }}
                 placeholder={placeholder}
             ></div>
@@ -276,6 +294,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                     color: #9ca3af;
                     font-style: italic;
                     pointer-events: none;
+                    font-size: 16px !important;
                 }
                 [contenteditable] ul {
                     list-style-type: disc !important;
