@@ -4,7 +4,8 @@ import {
     Briefcase, CalendarCheck, PhoneCall, Eye, 
     ChevronRight, Copy, Layout, Trash2, Edit,
     Users, Ticket, GraduationCap, Building2,
-    RefreshCw, Type, Smartphone, List, CheckCircle
+    RefreshCw, Type, Smartphone, List, CheckCircle,
+    Image as ImageIcon, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Swal from 'sweetalert2';
@@ -23,7 +24,7 @@ const FORM_TYPES = [
 ];
 
 const PLACEHOLDERS = {
-    'corporate-visitor': ['[[NAME]]', '[[REG_ID]]', '[[EMAIL]]', '[[MOBILE]]', '[[CITY]]', '[[COUNTRY]]', '[[PURPOSE]]', '[[INTEREST]]'],
+    'corporate-visitor': ['[[NAME]]', '[[REG_ID]]', '[[EMAIL]]', '[[MOBILE]]', '[[CITY]]', '[[COUNTRY]]', '[[PURPOSE]]', '[[INTEREST]]', '[[QR_CODE]]'],
     'general-visitor': ['[[NAME]]', '[[REG_ID]]', '[[EMAIL]]', '[[MOBILE]]', '[[CITY]]', '[[COUNTRY]]', '[[PURPOSE]]', '[[INTEREST]]'],
     'health-camp-visitor': ['[[NAME]]', '[[REG_ID]]', '[[EMAIL]]', '[[MOBILE]]', '[[CITY]]', '[[COUNTRY]]', '[[PURPOSE]]', '[[INTEREST]]'],
     'buyer-registration': ['[[NAME]]', '[[EMAIL]]', '[[PHONE]]', '[[COMPANY]]', '[[CITY]]', '[[COUNTRY]]'],
@@ -38,7 +39,15 @@ const ResponseTemplates = () => {
         emailSubject: '',
         emailBody: '',
         whatsappBody: '',
+        headerImage: null,
+        footerImage: null,
     });
+    const [headerImageFile, setHeaderImageFile] = useState(null);
+    const [footerImageFile, setFooterImageFile] = useState(null);
+    const [headerImagePreview, setHeaderImagePreview] = useState('');
+    const [footerImagePreview, setFooterImagePreview] = useState('');
+    const [removeHeaderImage, setRemoveHeaderImage] = useState(false);
+    const [removeFooterImage, setRemoveFooterImage] = useState(false);
     const [allTemplates, setAllTemplates] = useState([]);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -62,20 +71,33 @@ const ResponseTemplates = () => {
         try {
             const response = await api.get(`/api/message-templates/${type}`);
             if (response.data.success) {
+                const d = response.data.data;
                 setTemplate({
-                    emailSubject: response.data.data.emailSubject || '',
-                    emailBody: response.data.data.emailBody || '',
-                    whatsappBody: response.data.data.whatsappBody || '',
+                    emailSubject: d.emailSubject || '',
+                    emailBody: d.emailBody || '',
+                    whatsappBody: d.whatsappBody || '',
+                    headerImage: d.headerImage || null,
+                    footerImage: d.footerImage || null,
                 });
+                setHeaderImagePreview(d.headerImage ? `${SERVER_URL}${d.headerImage}` : '');
+                setFooterImagePreview(d.footerImage ? `${SERVER_URL}${d.footerImage}` : '');
             } else {
-                setTemplate({ emailSubject: '', emailBody: '', whatsappBody: '' });
+                setTemplate({ emailSubject: '', emailBody: '', whatsappBody: '', headerImage: null, footerImage: null });
+                setHeaderImagePreview('');
+                setFooterImagePreview('');
             }
         } catch (error) {
-            // If not found, that's okay, just reset
-            setTemplate({ emailSubject: '', emailBody: '', whatsappBody: '' });
+            setTemplate({ emailSubject: '', emailBody: '', whatsappBody: '', headerImage: null, footerImage: null });
+            setHeaderImagePreview('');
+            setFooterImagePreview('');
         } finally {
             setLoading(false);
         }
+        // Reset file inputs on type change
+        setHeaderImageFile(null);
+        setFooterImageFile(null);
+        setRemoveHeaderImage(false);
+        setRemoveFooterImage(false);
     };
 
     useEffect(() => {
@@ -94,19 +116,63 @@ const ResponseTemplates = () => {
 
         setSaving(true);
         try {
-            const response = await api.post('/api/message-templates/upsert', {
-                formType: selectedType,
-                ...template
+            const formData = new FormData();
+            formData.append('formType', selectedType);
+            formData.append('emailSubject', template.emailSubject);
+            formData.append('emailBody', template.emailBody);
+            formData.append('whatsappBody', template.whatsappBody || '');
+            if (headerImageFile) formData.append('headerImage', headerImageFile);
+            if (footerImageFile) formData.append('footerImage', footerImageFile);
+            if (removeHeaderImage) formData.append('removeHeaderImage', 'true');
+            if (removeFooterImage) formData.append('removeFooterImage', 'true');
+
+            const response = await api.post('/api/message-templates/upsert', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
 
             if (response.data.success) {
                 Swal.fire({ icon: 'success', title: 'Saved!', text: 'Response template updated successfully.', timer: 1500, showConfirmButton: false });
+                setHeaderImageFile(null);
+                setFooterImageFile(null);
+                setRemoveHeaderImage(false);
+                setRemoveFooterImage(false);
                 fetchAllTemplates();
+                fetchTemplate(selectedType);
             }
         } catch (error) {
             Swal.fire({ icon: 'error', title: 'Error', text: error.response?.data?.message || 'Failed to save template' });
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleImageSelect = (field, e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            if (field === 'header') {
+                setHeaderImageFile(file);
+                setHeaderImagePreview(reader.result);
+                setRemoveHeaderImage(false);
+            } else {
+                setFooterImageFile(file);
+                setFooterImagePreview(reader.result);
+                setRemoveFooterImage(false);
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleRemoveImage = (field) => {
+        if (field === 'header') {
+            setHeaderImageFile(null);
+            setHeaderImagePreview('');
+            setRemoveHeaderImage(true);
+        } else {
+            setFooterImageFile(null);
+            setFooterImagePreview('');
+            setRemoveFooterImage(true);
         }
     };
 
@@ -154,6 +220,13 @@ const ResponseTemplates = () => {
     };
 
     const renderEmailPreview = () => {
+        const headerSection = headerImagePreview
+            ? `<div style="line-height:0;"><img src="${headerImagePreview}" alt="Header" style="width:100%;display:block;" /></div>`
+            : `<div style="background:linear-gradient(135deg,#23471d,#3d6b33);padding:30px;text-align:center;color:white;"><h1 style="margin:0;font-size:22px;">IHWE 2026</h1></div>`;
+        const footerSection = footerImagePreview
+            ? `<div style="line-height:0;"><img src="${footerImagePreview}" alt="Footer" style="width:100%;display:block;" /></div>`
+            : `<div style="background:#f9fafb;padding:20px;text-align:center;font-size:12px;color:#6b7280;border-top:1px solid #f3f4f6;"><p>&copy; 2026 IHWE | Global Health Connect. All rights reserved.</p></div>`;
+
         const shell = `
             <!DOCTYPE html>
             <html>
@@ -161,22 +234,18 @@ const ResponseTemplates = () => {
                 <style>
                     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
                     .container { max-width: 600px; margin: 0 auto; border: 1px solid #e1e1e1; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-                    .header { background: linear-gradient(135deg, #23471d 0%, #3d6b33 100%); padding: 35px 30px; text-align: center; color: white; }
                     .content { padding: 40px; background: #ffffff; }
-                    .footer { background: #f9fafb; padding: 25px; text-align: center; font-size: 12px; color: #6b7280; border-top: 1px solid #f3f4f6; }
+                    .qr-section { text-align:center; margin:24px 0; padding:20px; background:#f9fafb; border-radius:8px; border:1px dashed #d1d5db; }
                 </style>
             </head>
             <body>
                 <div class="container">
-                    <div class="header">
-                        <h1 style="margin:0; font-size: 24px; letter-spacing: 1px;">IHWE 2026</h1>
-                    </div>
+                    ${headerSection}
                     <div class="content">
                         ${template.emailBody || '<p style="color: #999; font-style: italic;">No body content defined...</p>'}
+                        ${selectedType === 'corporate-visitor' ? `<div class="qr-section"><p style="font-weight:700;color:#23471d;margin:0 0 12px;font-size:14px;text-transform:uppercase;letter-spacing:1px;">QR Code will appear here</p><div style="width:150px;height:150px;background:#f3f4f6;border:2px dashed #d1d5db;margin:0 auto;display:flex;align-items:center;justify-content:center;border-radius:8px;"><span style="font-size:11px;color:#9ca3af;">QR CODE</span></div><p style="margin:10px 0 0;font-size:12px;color:#6b7280;">Registration ID: NGT/IH&WE/CV/100001</p></div>` : ''}
                     </div>
-                    <div class="bottom" style="padding: 20px; text-align:center; background:#f0f0f0;">
-                         <p style="font-size: 12px; color: #777;">9th International Health & Wellness Expo</p>
-                    </div>
+                    ${footerSection}
                 </div>
             </body>
             </html>
@@ -253,6 +322,66 @@ const ResponseTemplates = () => {
                                     className="w-full px-4 py-2 border-2 border-gray-200 focus:border-green-600 outline-none text-sm shadow-sm transition-all"
                                     placeholder="Enter whatsapp message text..."
                                 />
+                            </div>
+
+                            {/* Header Image Upload */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-tight flex items-center gap-2">
+                                    <ImageIcon size={14} className="text-blue-600" /> Email Header Image
+                                </label>
+                                <div className="border-2 border-dashed border-gray-200 rounded p-3 relative group hover:border-blue-400 transition-colors">
+                                    {headerImagePreview ? (
+                                        <div className="relative">
+                                            <img src={headerImagePreview} alt="Header" className="w-full h-20 object-cover rounded" />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveImage('header')}
+                                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <label className="flex flex-col items-center cursor-pointer py-2">
+                                            <ImageIcon size={24} className="text-gray-300 mb-1" />
+                                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Click to upload header image</span>
+                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageSelect('header', e)} />
+                                        </label>
+                                    )}
+                                    {!headerImagePreview && (
+                                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleImageSelect('header', e)} />
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Footer Image Upload */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-tight flex items-center gap-2">
+                                    <ImageIcon size={14} className="text-orange-600" /> Email Footer Image
+                                </label>
+                                <div className="border-2 border-dashed border-gray-200 rounded p-3 relative group hover:border-orange-400 transition-colors">
+                                    {footerImagePreview ? (
+                                        <div className="relative">
+                                            <img src={footerImagePreview} alt="Footer" className="w-full h-20 object-cover rounded" />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveImage('footer')}
+                                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <label className="flex flex-col items-center cursor-pointer py-2">
+                                            <ImageIcon size={24} className="text-gray-300 mb-1" />
+                                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Click to upload footer image</span>
+                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageSelect('footer', e)} />
+                                        </label>
+                                    )}
+                                    {!footerImagePreview && (
+                                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleImageSelect('footer', e)} />
+                                    )}
+                                </div>
                             </div>
 
                             <div className="pt-4 border-t border-gray-100 flex gap-2">
