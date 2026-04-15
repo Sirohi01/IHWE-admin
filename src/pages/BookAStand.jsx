@@ -1,4 +1,4 @@
-﻿import React,{ useState, useEffect, useMemo } from "react";
+﻿import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     CheckCircle,
@@ -323,16 +323,16 @@ const BookAStand = () => {
             {/* HEADER */}
             <div className="flex flex-col sm:flex-row justify-between items-center pb-3 border-b border-gray-100">
                 <div>
-                    <h1 className="text-xl font-bold text-slate-900 uppercase tracking-tight leading-none font-inter">MANUAL REGISTRATION</h1>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-0.5">Book A Stand � Admin Panel</p>
+                    <h1 className="text-xl font-medium text-slate-900 uppercase tracking-tight leading-none font-inter">MANUAL REGISTRATION</h1>
+                    <p className="text-[10px] text-slate-500 font-medium uppercase tracking-[0.2em] mt-0.5">Book A Stand  Admin Panel</p>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-3 sm:mt-0">
-                    <div className="px-3 py-1.5 text-[11px] font-black uppercase bg-slate-100 text-[#23471d] rounded-[2px] border border-slate-200">
+                    <div className="px-3 py-1.5 text-[11px] font-black uppercase bg-slate-100 text-[#23471d] rounded border border-slate-200">
                         {events.find(e => e._id === selectedEventId)?.name || 'NO EVENT SELECTED'}
                     </div>
                     {exhibitorType && (
                         <button type="button" onClick={() => setExhibitorType(null)}
-                            className="px-3 py-1.5 text-[11px] font-black uppercase bg-slate-800 text-white rounded-[2px] border border-slate-700 hover:bg-slate-700 transition-all">
+                            className="px-3 py-1.5 text-[11px] font-black uppercase bg-slate-800 text-white rounded border border-slate-700 hover:bg-slate-700 transition-all">
                             BACK
                         </button>
                     )}
@@ -340,7 +340,7 @@ const BookAStand = () => {
             </div>
 
             {/* EVENT SELECTOR */}
-            <div className="mt-3 flex flex-col md:flex-row gap-4 items-end bg-slate-50 border border-slate-200 rounded-[2px] px-4 py-3">
+            {/* <div className="mt-3 flex flex-col md:flex-row gap-4 items-end bg-slate-50 border border-slate-200 rounded-[2px] px-4 py-3">
                 <div className="w-full md:w-80">
                     <label className="text-[10px] font-bold text-[#23471d] uppercase mb-1 block tracking-widest">Select Exhibition Event *</label>
                     <select required value={selectedEventId} onChange={(e) => setSelectedEventId(e.target.value)} className={inputClasses}>
@@ -349,7 +349,7 @@ const BookAStand = () => {
                     </select>
                 </div>
                 <p className="text-[11px] text-slate-400 font-medium pb-1">Selecting an event updates pricing and stall availability below.</p>
-            </div>
+            </div> */}
 
             {/* DOMESTIC / INTERNATIONAL SELECTION */}
             {!exhibitorType ? (
@@ -358,12 +358,12 @@ const BookAStand = () => {
                     <p className="text-slate-400 text-[12px] mb-8 font-medium">Choose the exhibitor category to begin manual registration.</p>
                     <div className="flex flex-col sm:flex-row gap-4">
                         <button type="button" onClick={() => handleExhibitorTypeChange('domestic')}
-                            className="group px-10 py-4 bg-white border-2 border-[#23471d] text-[#23471d] rounded-[2px] hover:bg-[#23471d] hover:text-white transition-all flex items-center gap-3 font-bold text-sm uppercase tracking-widest">
+                            className="group px-10 py-2 bg-white border-2 border-[#23471d] text-[#23471d] rounded hover:bg-[#23471d] hover:text-white transition-all flex items-center gap-3 font-bold text-sm uppercase tracking-widest">
                             Domestic (India)
                             <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
                         </button>
                         <button type="button" onClick={() => handleExhibitorTypeChange('international')}
-                            className="group px-10 py-4 bg-white border-2 border-[#d26019] text-[#d26019] rounded-[2px] hover:bg-[#d26019] hover:text-white transition-all flex items-center gap-3 font-bold text-sm uppercase tracking-widest">
+                            className="group px-10 py-2  bg-white border-2 border-[#d26019] text-[#d26019] rounded hover:bg-[#d26019] hover:text-white transition-all flex items-center gap-3 font-bold text-sm uppercase tracking-widest">
                             International
                             <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
                         </button>
@@ -375,11 +375,11 @@ const BookAStand = () => {
                     {/* SUB-HEADER */}
                     <div className="bg-slate-50/50 border border-slate-200 px-4 py-2 rounded-[2px] flex items-center justify-between">
                         <div>
-                            <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight font-inter">Manual Exhibitor Booking</h2>
-                            <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-0.5 font-bold">International Health & Wellness Expo</p>
+                            <h2 className="text-xl font-medium text-slate-900 uppercase tracking-tight font-inter">Manual Exhibitor Booking</h2>
+                            <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-0.5 font-medium">International Health & Wellness Expo</p>
                         </div>
                         <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-[2px] border ${exhibitorType === 'domestic' ? 'bg-green-50 text-[#23471d] border-green-200' : 'bg-orange-50 text-[#d26019] border-orange-200'}`}>
-                            {exhibitorType === 'domestic' ? 'Domestic � INR' : 'International � USD'}
+                            {exhibitorType === 'domestic' ? 'Domestic  INR' : 'International  USD'}
                         </span>
                     </div>
 
@@ -417,15 +417,15 @@ const BookAStand = () => {
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
                                         <Banknote size={12} className="text-[#23471d]" />
                                         Live Market Rates
-                                        <span className={`ml-1 px-2 py-0.5 text-[8px] font-black uppercase rounded-[2px] ${exhibitorType === 'domestic' ? 'bg-green-50 text-[#23471d] border border-green-200' : 'bg-orange-50 text-[#d26019] border border-orange-200'}`}>
+                                        <span className={`ml-1 px-2 py-0.5 text-[8px] font-black uppercase rounded-[2px]  ${exhibitorType === 'domestic' ? 'bg-green-50 text-[#23471d] border border-green-200' : 'bg-orange-50 text-[#d26019] border border-orange-200'}`}>
                                             {currency}
                                         </span>
                                     </p>
                                     <div className="flex flex-wrap gap-2">
                                         {filtered.map(rate => (
                                             <div key={rate._id} className="bg-white px-3 py-1.5 border border-slate-200 rounded-[2px] shadow-sm">
-                                                <p className="text-[8px] font-black text-slate-400 uppercase leading-none mb-0.5">{rate.stallType}</p>
-                                                <p className="text-[11px] font-black text-[#d26019]">{rate.currency} {rate.ratePerSqm.toLocaleString()}/sqm</p>
+                                                <p className="text-[8px] font-black text-slate-400 uppercase leading-none mb-0.5 ">{rate.stallType}</p>
+                                                <p className="text-[11px] font-black text-[#d26019] font-semibold ">{rate.currency} {rate.ratePerSqm.toLocaleString()}/sqm</p>
                                             </div>
                                         ))}
                                     </div>
@@ -437,8 +437,8 @@ const BookAStand = () => {
                         <div className="p-4 bg-slate-50 border border-slate-200 rounded-[2px] flex flex-wrap gap-6 items-end">
                             <div className="flex flex-col gap-0.5">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stall</p>
-                                <p className="text-sm font-bold text-slate-900">{formData.participation.stallFor || '�'}</p>
-                                <p className="text-[11px] text-slate-500">{formData.participation.stallType} � {formData.participation.stallSize} sqm</p>
+                                <p className="text-sm font-bold text-slate-900">{formData.participation.stallFor || ''}</p>
+                                <p className="text-[11px] text-slate-500">{formData.participation.stallType}  {formData.participation.stallSize} sqm</p>
                             </div>
                             <div className="flex flex-col gap-0.5 border-l border-slate-200 pl-4">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Base Rate</p>

@@ -289,9 +289,9 @@ export const menuItems = [
     children: [
       // { label: "Add New Visitor", path: "/ihweClientData2026/AddNewVisitor" },
       { label: "Add Domestic Visitor", path: "/ihweClientData2026/AddNewVisitor" },
-      { label: "Corporate Visitor Form", path: "/ihweClientData2026/CorporateVisitorForm" },
-      { label: "Free Health Camp Form", path: "/ihweClientData2026/FreeHealthCampForm" },
-      { label: "General Visitor Form", path: "/ihweClientData2026/GeneralVisitorForm" },
+      // { label: "Corporate Visitor Form", path: "/ihweClientData2026/CorporateVisitorForm" },
+      // { label: "Free Health Camp Form", path: "/ihweClientData2026/FreeHealthCampForm" },
+      // { label: "General Visitor Form", path: "/ihweClientData2026/GeneralVisitorForm" },
       { label: "Add International Visitor", path: "/ihweClientData2026/VisitorRegistration" },
       { label: "Corporate Visitors List", path: "/ihweClientData2026/CorporateVisitorsList" },
       { label: "General Visitors List", path: "/ihweClientData2026/GeneralVisitorsList" },
