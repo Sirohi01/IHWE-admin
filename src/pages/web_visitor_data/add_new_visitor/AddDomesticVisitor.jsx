@@ -10,13 +10,13 @@ import {
     Upload,
     UserCheck,
 } from "lucide-react";
-import { fetchCountries } from "../../features/add_by_admin/country/countrySlice";
-import { fetchNatures } from "../../features/add_by_admin/nature/natureSlice";
-import { fetchCities } from "../../features/city/citySlice";
-import { fetchEvents } from "../../features/crmEvent/crmEventSlice";
-import { fetchStates } from "../../features/state/stateSlice";
-import { createCorporateVisitor } from "../../features/visitor/corporateVisitorSlice";
-import { createGeneralVisitor } from "../../features/visitor/generalVisitorSlice";
+import { fetchCountries } from "../../../features/add_by_admin/country/countrySlice";
+import { fetchNatures } from "../../../features/add_by_admin/nature/natureSlice";
+import { fetchCities } from "../../../features/city/citySlice";
+import { fetchEvents } from "../../../features/crmEvent/crmEventSlice";
+import { fetchStates } from "../../../features/state/stateSlice";
+import { createCorporateVisitor } from "../../../features/visitor/corporateVisitorSlice";
+import { createGeneralVisitor } from "../../../features/visitor/generalVisitorSlice";
 
 const PURPOSE_GENERAL = [
     { key: "businessNetworking", label: "Business Networking" },
@@ -78,7 +78,6 @@ const getInitialFormData = () => ({
     state: "",
     city: "",
     companyPincode: "",
-    b2bMeeting: "",
     purposeOfVisit: [],
     areaOfInterest: [],
     anyRequirement: "",
@@ -677,6 +676,45 @@ const AddDomesticVisitor = () => {
                             </div>
                         </div>
                     </div>
+
+                    {visitorType === "corporate" && (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4">
+                            <div className="space-y-2 text-left">
+                                <label className="text-[11px] font-bold text-slate-900 uppercase tracking-wider block">Would you like to schedule B2B meetings? *</label>
+                                <div className="flex gap-6 mt-1">
+                                    {["yes", "no"].map(val => (
+                                        <label key={val} className="flex items-center gap-2 cursor-pointer text-[13px] font-medium text-gray-700 capitalize">
+                                            <input
+                                                type="radio"
+                                                name="b2bMeeting"
+                                                value={val}
+                                                checked={formData.b2bMeeting === val}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, b2bMeeting: e.target.value }))}
+                                                className="w-4 h-4 accent-[#23471d]"
+                                            /> {val}
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                            {/* <div className="space-y-2 text-left">
+                                <label className="text-[11px] font-bold text-slate-900 uppercase tracking-wider block">Would you like updates via WhatsApp? *</label>
+                                <div className="flex gap-6 mt-1">
+                                    {["yes", "no"].map(val => (
+                                        <label key={val} className="flex items-center gap-2 cursor-pointer text-[13px] font-medium text-gray-700 capitalize">
+                                            <input
+                                                type="radio"
+                                                name="whatsappUpdates"
+                                                value={val}
+                                                checked={formData.whatsappUpdates === val}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, whatsappUpdates: e.target.value }))}
+                                                className="w-4 h-4 accent-[#23471d]"
+                                            /> {val}
+                                        </label>
+                                    ))}
+                                </div>
+                            </div> */}
+                        </div>
+                    )}
 
                     {visitorType === "corporate" && (
                         <div className="space-y-2">

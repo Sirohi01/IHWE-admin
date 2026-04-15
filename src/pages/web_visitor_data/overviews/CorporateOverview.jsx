@@ -253,7 +253,7 @@ const CorporateOverview = () => {
 
   return (
     <div className="bg-white shadow-md mt-6 p-4 md:p-6 min-h-screen font-inter animate-fadeIn">
-      
+
       {/* ── HEADER AREA Sync with AddNewClients ── */}
       <div className="flex flex-col lg:flex-row justify-between items-center pb-4 border-b border-gray-100 gap-4">
         <div className="flex flex-col items-center lg:items-start gap-1">
@@ -278,7 +278,7 @@ const CorporateOverview = () => {
       </div>
 
       <div className="mt-8 space-y-8">
-        
+
         {/* ── SUB-HEADER ── */}
         <div className="bg-slate-50/50 border border-slate-200 px-4 md:px-6 py-4 rounded-[2px] flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-center md:text-left">
@@ -298,33 +298,33 @@ const CorporateOverview = () => {
 
         {/* ── DETAILS AREA ── */}
         <div className="space-y-2">
-          
+
           <Section title="Visitor Information">
-            <TR3 
-              l1="Registration Id" v1={visitor.registrationId} 
-              l2="Visitor Name" v2={fullName} 
-              l3="Contact No." v3={visitor.mobile} 
+            <TR3
+              l1="Registration Id" v1={visitor.registrationId}
+              l2="Visitor Name" v2={fullName}
+              l3="Contact No." v3={visitor.mobile}
             />
-            <TR3 
-              l1="Email Id" v1={visitor.email} 
-              l2="Current Status" v2={<span className="text-green-700 font-bold uppercase tracking-tight">{visitor.status}</span>} 
-              l3="Registration For" v3={visitor.registrationFor} 
+            <TR3
+              l1="Email Id" v1={visitor.email}
+              l2="Current Status" v2={<span className="text-green-700 font-bold uppercase tracking-tight">{visitor.status}</span>}
+              l3="Registration For" v3={visitor.registrationFor}
             />
           </Section>
 
           <Section title="Company & Professional Bio">
-            <TR3 
-              l1="Company Name" v1={visitor.companyName} 
-              l2="Designation" v2={visitor.designation} 
-              l3="Industry/Sector" v3={visitor.industrySector} 
+            <TR3
+              l1="Company Name" v1={visitor.companyName}
+              l2="Designation" v2={visitor.designation}
+              l3="Industry/Sector" v3={visitor.industrySector}
             />
-            <TR2 
+            <TR2
               l1="Company Website" v1={<a href={visitor.companyWebsite} target="_blank" rel="noreferrer" className="text-blue-600 underline">{visitor.companyWebsite}</a>}
               l2="Company Size" v2={visitor.companySize}
             />
-            <TR3 
-              l1="WhatsApp Updates" v1={visitor.whatsappUpdates} 
-              l2="B2B Meeting" v2={visitor.b2bMeeting} 
+            <TR3
+              l1="WhatsApp Updates" v1={visitor.whatsappUpdates}
+              l2="B2B Meeting" v2={visitor.b2bMeeting}
               l3="Subscribe" v3={visitor.subscribe ? "✅ Yes" : "❌ No"}
             />
           </Section>
@@ -336,13 +336,13 @@ const CorporateOverview = () => {
             <TR1 label="Specific Req." value={visitor.specificRequirement} />
           </Section>
 
-          <Section title="Metadata">
+          {/* <Section title="Metadata">
             <TR3 
               l1="Created By" v1={`${visitor.created_by || "—"} | ${formatDate(visitor.createdAt)}`}
               l2="Updated By" v2={`${visitor.updated_by || "—"} | ${formatDate(visitor.updatedAt)}`}
               l3="Record ID" v3={<span className="text-[10px] font-mono break-all">{visitor._id}</span>}
             />
-          </Section>
+          </Section> */}
 
         </div>
 
@@ -353,7 +353,7 @@ const CorporateOverview = () => {
               <History size={18} className="text-[#23471d]" />
               <h3 className="text-[16px] font-bold text-[#23471d] uppercase tracking-tight">Post Status Update</h3>
             </div>
-            
+
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div>
@@ -363,7 +363,7 @@ const CorporateOverview = () => {
                     onChange={(e) => {
                       const value = e.target.value;
                       const hideFor = ["Interested", "Hot Lead", "Cold Lead", "Hold", "Data Send"]; // Example logic
-                      setFlip(value !== ""); 
+                      setFlip(value !== "");
                       setStatus(value);
                     }}
                     className="rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white text-slate-900 font-medium outline-none px-3 w-full"
@@ -437,8 +437,8 @@ const CorporateOverview = () => {
                 <button type="button" onClick={() => setPopUp(false)} className="px-6 py-2 border border-slate-300 text-slate-600 text-[11px] font-bold uppercase tracking-widest rounded-[2px] hover:bg-slate-50">
                   Cancel
                 </button>
-                <button 
-                  onClick={handlePost} 
+                <button
+                  onClick={handlePost}
                   disabled={reviewLoading}
                   className="px-10 py-2 bg-[#23471d] text-white text-[11px] font-bold uppercase tracking-widest rounded-[2px] shadow hover:bg-[#1a3516] flex items-center gap-2 disabled:opacity-50"
                 >
@@ -463,7 +463,7 @@ const CorporateOverview = () => {
                 </button>
               )}
             </div>
-            
+
             <div className="divide-y divide-slate-100">
               {visitorReviews.map((rev) => {
                 const evName = events.find((e) => e._id === rev.visitor_event)?.event_name || rev.visitor_event;
@@ -496,12 +496,12 @@ const CorporateOverview = () => {
                       </p>
                       {(rev.visitor_reminder_dt || rev.visitor_forward_to) && (
                         <div className="mt-2 flex gap-4">
-                           {rev.visitor_reminder_dt && (
-                             <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-[2px] font-bold border border-blue-100">Reminder: {new Date(rev.visitor_reminder_dt).toLocaleString()}</span>
-                           )}
-                           {rev.visitor_forward_to && (
-                             <span className="text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded-[2px] font-bold border border-green-100">Forward To: {rev.visitor_forward_to}</span>
-                           )}
+                          {rev.visitor_reminder_dt && (
+                            <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-[2px] font-bold border border-blue-100">Reminder: {new Date(rev.visitor_reminder_dt).toLocaleString()}</span>
+                          )}
+                          {rev.visitor_forward_to && (
+                            <span className="text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded-[2px] font-bold border border-green-100">Forward To: {rev.visitor_forward_to}</span>
+                          )}
                         </div>
                       )}
                     </div>
