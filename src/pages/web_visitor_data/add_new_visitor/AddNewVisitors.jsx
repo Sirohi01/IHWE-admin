@@ -1,5 +1,6 @@
 // import { useState } from "react";
-import VisitorRegistration from "./VisitorRegistration";
+import AddDomesticVisitor from "./AddDomesticVisitor";
+// import VisitorRegistration from "./VisitorRegistration";
 // import VisitorList from "./VisitorList";
 
 const AddNewVisitors = () => {
@@ -13,7 +14,8 @@ const AddNewVisitors = () => {
         // <VisitorList onBack={() => setCurrentView("registration")} />
         <h2>Hello</h2>
       )} */}
-      <VisitorRegistration />
+      {/* <VisitorRegistration /> */}
+      <AddDomesticVisitor/>
     </div>
   );
 };
