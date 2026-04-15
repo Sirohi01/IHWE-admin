@@ -272,7 +272,7 @@ export const menuItems = [
     label: "IHWE Client Data 2026",
     icon: FileText,
     children: [
-      { label: "Add Domestic Visitor", path: "/ihweClientData2026/addNewClients" },
+      { label: "Add New Client", path: "/ihweClientData2026/addNewClients" },
       { label: "New Leads List", path: "/ihweClientData2026/newLeadList" },
       { label: "Warm Client List", path: "/ihweClientData2026/warmClientList" },
       { label: "Hot Client List", path: "/ihweClientData2026/hotClientList" },
@@ -287,7 +287,8 @@ export const menuItems = [
     label: "Visitor Management",
     icon: Users,
     children: [
-      { label: "Add New Visitor", path: "/ihweClientData2026/AddNewVisitor" },
+      // { label: "Add New Visitor", path: "/ihweClientData2026/AddNewVisitor" },
+      { label: "Add Domestic Visitor", path: "/ihweClientData2026/AddNewVisitor" },
       { label: "Corporate Visitor Form", path: "/ihweClientData2026/CorporateVisitorForm" },
       { label: "Free Health Camp Form", path: "/ihweClientData2026/FreeHealthCampForm" },
       { label: "General Visitor Form", path: "/ihweClientData2026/GeneralVisitorForm" },

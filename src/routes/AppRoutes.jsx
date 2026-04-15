@@ -147,7 +147,7 @@ import AnnualTurnover from "../pages/admin_management/AnnualTurnover";
 import PrimaryProductInterest from "../pages/admin_management/PrimaryProductInterest";
 import SecondaryProductCategories from "../pages/admin_management/SecondaryProductCategories";
 import MeetingPriorityLevel from "../pages/admin_management/MeetingPriorityLevel";
-import AddDomesticVisitor from "../pages/ihwe_client_data_2026/AddDomesticVisitor";
+import AddDomesticVisitor from "../pages/web_visitor_data/add_new_visitor/AddDomesticVisitor";
 
 export default function AppRoutes() {
   return (
@@ -281,13 +281,9 @@ export default function AppRoutes() {
           <Route path="manage-roles" element={<RoleManagement />} />
           <Route path="response-templates" element={<ResponseTemplates />} />
           <Route path="policy-manager" element={<PolicyManager />} />
-          {/* <Route
-            path="ihweClientData2026/addNewClients"
-            element={<AddNewClients />}
-          /> */}
           <Route
             path="ihweClientData2026/addNewClients"
-            element={<AddDomesticVisitor />}
+            element={<AddNewClients />}
           />
           <Route
             path="ihweClientData2026/addNewClients/:id"
@@ -325,9 +321,13 @@ export default function AppRoutes() {
             path="ihweClientData2026/uploadExhibitor"
             element={<UploadExhibitor />}
           />
-          <Route
+          {/* <Route
             path="ihweClientData2026/AddNewVisitor"
             element={<VisitorRegistration />}
+          /> */}
+          <Route
+            path="ihweClientData2026/AddNewVisitor"
+            element={<AddDomesticVisitor />}
           />
           <Route
             path="ihweClientData2026/CorporateVisitorForm"

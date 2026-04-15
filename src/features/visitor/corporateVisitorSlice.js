@@ -3,11 +3,26 @@ import api from "../../lib/api";
 import { createActivityLogThunk } from "../activityLog/activityLogSlice";
 
 const getUserInfo = () => {
+  const adminData = JSON.parse(
+    localStorage.getItem("adminInfo") ||
+    sessionStorage.getItem("adminInfo") ||
+    "{}",
+  );
   const userStr = sessionStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : {};
   return {
-    userId: sessionStorage.getItem("user_id") || user._id,
-    userName: user.name || sessionStorage.getItem("user_name") || "User",
+    userId:
+      adminData._id ||
+      adminData.id ||
+      sessionStorage.getItem("user_id") ||
+      user._id ||
+      "admin",
+    userName:
+      adminData.name ||
+      adminData.username ||
+      user.name ||
+      sessionStorage.getItem("user_name") ||
+      "Admin",
   };
 };
 
