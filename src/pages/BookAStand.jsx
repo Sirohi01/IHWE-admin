@@ -536,6 +536,10 @@ const BookAStand = () => {
                                 </select>
                             </div>
                             <div>
+                                <label className={labelClasses}>Pincode *</label>
+                                <input required type="text" value={formData.pincode} onChange={(e) => handleSelectChange('pincode', e.target.value)} className={inputClasses} placeholder="Write Here.." inputMode="numeric" />
+                            </div>
+                            <div>
                                 <label className={labelClasses}>Landline No.</label>
                                 <input type="text" value={formData.landlineNo} onChange={(e) => handleSelectChange('landlineNo', e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
@@ -550,10 +554,6 @@ const BookAStand = () => {
                                     <option>Retailer</option><option>Service Provider</option><option>University</option><option>Others</option>
                                 </select>
                             </div> */}
-                            <div>
-                                <label className={labelClasses}>Pincode</label>
-                                <input type="text" value={formData.pincode} onChange={(e) => handleSelectChange('pincode', e.target.value)} className={inputClasses} placeholder="Write Here.." />
-                            </div>
                         </div>
                     </div>
 
