@@ -335,7 +335,7 @@ const HeroImages = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Hero Heading (e.g. About IH&WE)</label>
+                                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Hero Heading (e.g. About IHWE)</label>
                                 <div className="relative">
                                     <Heading className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                     <input

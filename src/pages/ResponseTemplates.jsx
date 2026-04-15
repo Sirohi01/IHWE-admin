@@ -243,7 +243,7 @@ const ResponseTemplates = () => {
                     ${headerSection}
                     <div class="content">
                         ${template.emailBody || '<p style="color: #999; font-style: italic;">No body content defined...</p>'}
-                        ${selectedType === 'corporate-visitor' ? `<div class="qr-section"><p style="font-weight:700;color:#23471d;margin:0 0 12px;font-size:14px;text-transform:uppercase;letter-spacing:1px;">QR Code will appear here</p><div style="width:150px;height:150px;background:#f3f4f6;border:2px dashed #d1d5db;margin:0 auto;display:flex;align-items:center;justify-content:center;border-radius:8px;"><span style="font-size:11px;color:#9ca3af;">QR CODE</span></div><p style="margin:10px 0 0;font-size:12px;color:#6b7280;">Registration ID: NGT/IH&WE/CV/100001</p></div>` : ''}
+                        ${selectedType === 'corporate-visitor' ? `<div class="qr-section"><p style="font-weight:700;color:#23471d;margin:0 0 12px;font-size:14px;text-transform:uppercase;letter-spacing:1px;">QR Code will appear here</p><div style="width:150px;height:150px;background:#f3f4f6;border:2px dashed #d1d5db;margin:0 auto;display:flex;align-items:center;justify-content:center;border-radius:8px;"><span style="font-size:11px;color:#9ca3af;">QR CODE</span></div><p style="margin:10px 0 0;font-size:12px;color:#6b7280;">Registration ID: NGT/IHWE/CV/100001</p></div>` : ''}
                     </div>
                     ${footerSection}
                 </div>
