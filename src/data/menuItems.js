@@ -256,12 +256,12 @@ export const menuItems = [
     path: "/contact-enquiries",
     icon: MessageSquare,
   },
-  {
-    type: "item",
-    label: "Buyer Registration",
-    path: "/buyer-registrations",
-    icon: Users,
-  },
+  // {
+  //   type: "item",
+  //   label: "Buyer Registration",
+  //   path: "/buyer-registrations",
+  //   icon: Users,
+  // },
 
   /* ================= CLIENT DATA SECTION ================= */
   {
@@ -281,6 +281,15 @@ export const menuItems = [
       { label: "Cold Client List", path: "/ihweClientData2026/coldClientList" },
       { label: "Master Data", path: "/ihweClientData2026/masterData" },
       { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Buyer Management",
+    icon: Users,
+    children: [
+      { label: "Buyer Registration", path: "/buyer-registration" },
+      { label: "Buyer List", path: "/buyer-list" },
     ],
   },
   {
@@ -472,12 +481,7 @@ export const menuItems = [
       { label: "Meeting Priority Level", path: "/meeting-priority-level" },
     ],
   },
-  {
-    type: "item",
-    label: "Social Media",
-    icon: Share2,
-    path: "/social-media",
-  },
+
 
   /* ================= ACCOUNT SECTION ================= */
   {

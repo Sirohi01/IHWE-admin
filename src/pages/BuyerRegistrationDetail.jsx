@@ -54,7 +54,7 @@ const BuyerRegistrationDetail = () => {
         return (
             <div className="p-8 text-center">
                 <h2 className="text-2xl font-bold text-gray-800">Registration not found</h2>
-                <Button onClick={() => navigate('/buyer-registrations')} className="mt-4">
+                <Button onClick={() => navigate('/buyer-list')} className="mt-4">
                     Back to List
                 </Button>
             </div>
@@ -127,8 +127,22 @@ const BuyerRegistrationDetail = () => {
     const paymentData = [
         { label: "Category", value: registration.registrationCategory, icon: CreditCard },
         { label: "Fee Paid", value: registration.registrationFee, icon: CreditCard },
-        { label: "Status", value: registration.paymentStatus, icon: CheckCircle2 },
-        { label: "Payment ID", value: registration.razorpayPaymentId, icon: Info },
+        { label: "Payment Status", value: registration.paymentStatus, icon: CheckCircle2 },
+        { label: "Transaction ID", value: registration.transactionId || registration.razorpayPaymentId, icon: Info },
+        { 
+            label: "Payment Proof", 
+            value: registration.paymentProof ? (
+                <a 
+                    href={registration.paymentProof.startsWith('http') ? registration.paymentProof : `${api.defaults.baseURL}${registration.paymentProof}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
+                >
+                    View Proof <Globe className="w-3 h-3" />
+                </a>
+            ) : "N/A", 
+            icon: CreditCard 
+        },
     ];
 
     return (
@@ -137,7 +151,7 @@ const BuyerRegistrationDetail = () => {
                 <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <button 
-                            onClick={() => navigate('/buyer-registrations')}
+                            onClick={() => navigate('/buyer-list')}
                             className="flex items-center gap-2 text-gray-500 hover:text-[#23471d] transition-colors mb-2 text-sm font-medium"
                         >
                             <ArrowLeft className="w-4 h-4" />
@@ -155,7 +169,11 @@ const BuyerRegistrationDetail = () => {
                                 </span>
                             )}
                         </div>
-                        <p className="text-gray-500 text-base mt-2">ID: {registration._id} | Database Record</p>
+                        <p className="text-gray-500 text-base mt-2">
+                            <span className="font-mono text-[#23471d] font-bold">{registration.registrationId || "ID PENDING"}</span>
+                            {" | "}
+                            <span className="text-xs">Database Ref: {registration._id}</span>
+                        </p>
                     </div>
                 </div>
 

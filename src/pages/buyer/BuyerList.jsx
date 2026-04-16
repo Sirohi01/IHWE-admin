@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Trash2, Mail, Phone, User, Calendar, Building2, Globe, Briefcase, Eye, Edit } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from "../lib/api";
+import api from "../../lib/api";
 import Swal from 'sweetalert2';
-import Table from '../components/table/Table';
-import Pagination from "../components/Pagination";
+import Table from '../../components/table/Table';
+import Pagination from "../../components/Pagination";
 
-const BuyerRegistrations = () => {
+const BuyerList = () => {
     const [registrations, setRegistrations] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -57,11 +57,12 @@ const BuyerRegistrations = () => {
         }
     };
 
-    const filteredRegistrations = registrations.filter(reg => 
+    const filteredRegistrations = registrations.filter(reg =>
         reg.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         reg.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         reg.emailAddress?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        reg.country?.toLowerCase().includes(searchTerm.toLowerCase())
+        reg.country?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        reg.registrationId?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -77,13 +78,22 @@ const BuyerRegistrations = () => {
             )
         },
         {
+            key: "registrationId",
+            label: "BUYER ID",
+            render: (row) => (
+                <div className="font-mono text-[11px] font-black text-[#23471d] uppercase tracking-wider">
+                    {row.registrationId || "PENDING"}
+                </div>
+            )
+        },
+        {
             key: "company",
             label: "COMPANY",
             render: (row) => (
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-[#23471d]" />
-                        <Link 
+                        <Link
                             to={`/buyer-registration/${row._id}`}
                             className="font-bold text-blue-600 hover:text-blue-800 uppercase underline decoration-blue-200 underline-offset-4 transition-colors"
                         >
@@ -228,4 +238,4 @@ const BuyerRegistrations = () => {
     );
 };
 
-export default BuyerRegistrations;
+export default BuyerList;
