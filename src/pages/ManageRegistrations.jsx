@@ -152,7 +152,7 @@ const ManageRegistrations = () => {
                 + '<input id="swal-txid" style="width:100%;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-weight:700;font-size:13px;box-sizing:border-box" placeholder="UTR / Ref No. / Cheque No."></div>'
                 + '<div style="margin-bottom:12px">'
                 + '<label style="display:block;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;margin-bottom:6px">Upload Receipt (PDF / Image) *</label>'
-                + '<input type="file" id="swal-file" style="width:100%;padding:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-size:12px;box-sizing:border-box" accept="image/*,.pdf"></div>'
+                + '<input type="file" id="swal-file" style="width:100%;padding:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-size:12px;box-sizing:border-box" accept="image/*"></div>'
                 + '<div><label style="display:block;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;margin-bottom:6px">Admin Notes</label>'
                 + '<textarea id="swal-notes" style="width:100%;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-weight:600;font-size:12px;box-sizing:border-box;resize:none;height:70px" placeholder="Internal notes..."></textarea></div>';
 

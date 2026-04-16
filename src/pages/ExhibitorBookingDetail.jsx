@@ -303,29 +303,77 @@ const ExhibitorBookingDetail = () => {
                         <Grid data={crmData} />
                     </div>
 
+                    {/* MSME */}
+                    {reg.msme?.udhyamRegNo && (
+                        <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
+                            <SectionHeader title="MSME / Udhyam Details" icon={Info} />
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 border-l border-t border-gray-200">
+                                {[
+                                    { label: 'Udhyam Reg. No.', value: reg.msme.udhyamRegNo },
+                                    { label: 'MSME Category', value: reg.msme.msmeCategory },
+                                    { label: 'Issue Date', value: reg.msme.udhyamIssueDate ? new Date(reg.msme.udhyamIssueDate).toLocaleDateString('en-IN') : null },
+                                    { label: 'Contact Person', value: reg.msme.udhyamContactPerson },
+                                    { label: 'Designation', value: reg.msme.udhyamDesignation },
+                                    { label: 'Mobile No.', value: reg.msme.udhyamMobileNo },
+                                    { label: 'Email ID', value: reg.msme.udhyamEmailId },
+                                    { label: 'Address', value: reg.msme.udhyamAddress },
+                                    { label: 'DFO Location', value: reg.msme.dfoLocation },
+                                    { label: 'DFO Email', value: reg.msme.dfoEmail },
+                                    { label: 'DFO Mobile', value: reg.msme.dfoMobileNo },
+                                    { label: 'Remark', value: reg.msme.msmeRemark },
+                                ].map((item, idx) => (
+                                    <div key={idx} className="border-r border-b border-gray-200 p-3">
+                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">{item.label}</p>
+                                        <p className="text-sm font-bold text-gray-800">{item.value || <span className="text-gray-300 font-normal italic">Not provided</span>}</p>
+                                    </div>
+                                ))}
+                            </div>
+                            {reg.msme.udhyamCertificateUrl && (
+                                <div className="px-5 py-3 border-t border-gray-200 bg-slate-50">
+                                    {(() => {
+                                        const url = reg.msme.udhyamCertificateUrl.startsWith('http') ? reg.msme.udhyamCertificateUrl : `${SERVER_URL}${reg.msme.udhyamCertificateUrl}`;
+                                        const finalUrl = url.includes('cloudinary') && !url.match(/\.(pdf|jpg|jpeg|png)$/i) ? url + '.pdf' : url;
+                                        return (
+                                            <a href={finalUrl} target="_blank" rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 px-4 py-2 bg-[#23471d] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1a3516] transition-all">
+                                                <ExternalLink size={12} /> View Udhyam Certificate
+                                            </a>
+                                        );
+                                    })()}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* DOCUMENTS */}
                     <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
                         <SectionHeader title="Documents & Downloads" icon={FileText} />
                         <div className="p-5 flex flex-wrap gap-3">
                             {reg.registrationPdfUrl && (
-                                <a href={reg.registrationPdfUrl} target="_blank" rel="noopener noreferrer"
+                                <a href={reg.registrationPdfUrl.includes('cloudinary') && !reg.registrationPdfUrl.endsWith('.pdf') ? reg.registrationPdfUrl + '.pdf' : reg.registrationPdfUrl}
+                                    target="_blank" rel="noopener noreferrer"
                                     className="flex items-center gap-2 px-4 py-2 bg-[#23471d] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1a3516] transition-all">
                                     <FileText size={12} /> Registration Form (PDF)
                                 </a>
                             )}
                             {reg.receiptPdfUrl && (
-                                <a href={reg.receiptPdfUrl} target="_blank" rel="noopener noreferrer"
+                                <a href={reg.receiptPdfUrl.includes('cloudinary') && !reg.receiptPdfUrl.endsWith('.pdf') ? reg.receiptPdfUrl + '.pdf' : reg.receiptPdfUrl}
+                                    target="_blank" rel="noopener noreferrer"
                                     className="flex items-center gap-2 px-4 py-2 bg-[#d26019] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#b8521a] transition-all">
                                     <Receipt size={12} /> Payment Receipt (PDF)
                                 </a>
                             )}
-                            {reg.receiptUrl && (
-                                <a href={reg.receiptUrl.startsWith('http') ? reg.receiptUrl : `${SERVER_URL}${reg.receiptUrl}`}
-                                    target="_blank" rel="noopener noreferrer"
-                                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all">
-                                    <ExternalLink size={12} /> Uploaded Invoice
-                                </a>
-                            )}
+                            {reg.receiptUrl && (() => {
+                                const url = reg.receiptUrl.startsWith('http') ? reg.receiptUrl : `${SERVER_URL}${reg.receiptUrl}`;
+                                const isPdf = url.toLowerCase().includes('.pdf') || url.includes('raw/upload');
+                                const finalUrl = isPdf && url.includes('cloudinary') && !url.endsWith('.pdf') ? url + '.pdf' : url;
+                                return (
+                                    <a href={finalUrl} target="_blank" rel="noopener noreferrer"
+                                        className="flex items-center gap-2 px-4 py-2 bg-slate-700 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all">
+                                        <ExternalLink size={12} /> Uploaded Invoice
+                                    </a>
+                                );
+                            })()}
                             {!reg.registrationPdfUrl && !reg.receiptPdfUrl && !reg.receiptUrl && (
                                 <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">No documents available</p>
                             )}
