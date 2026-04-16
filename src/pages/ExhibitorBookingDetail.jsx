@@ -1,43 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-    ArrowLeft, Building2, User, Mail, Phone, Globe,
-    Briefcase, Calendar, CreditCard, MapPin, Tag,
-    FileText, Users, Layers, CheckCircle2, Info,
-    Receipt, ExternalLink, Pencil, Save, X
+    ArrowLeft, Building2, User, CreditCard, Layers,
+    FileText, Info, Receipt, ExternalLink, Pencil, Save, X,
+    MapPin, Phone, Mail, Globe, Briefcase, Tag, Calendar,
+    CheckCircle2, Users, Award, History
 } from 'lucide-react';
 import api, { SERVER_URL } from "../lib/api";
-import PageHeader from '../components/PageHeader';
 import Swal from 'sweetalert2';
 
-const SectionHeader = ({ title, icon: Icon }) => (
-    <div className="flex items-center gap-2 px-5 py-3 bg-[#23471d] border-b border-gray-200">
-        {Icon && <Icon className="w-4 h-4 text-white" />}
-        <h3 className="text-xs font-bold text-white uppercase tracking-widest">{title}</h3>
-    </div>
-);
-
-const DetailRow = ({ label, value, icon: Icon }) => (
-    <div className="flex flex-col border-b border-gray-200 py-3 px-4 hover:bg-gray-50/50 transition-colors h-full">
-        <div className="flex items-center gap-1.5 mb-1">
-            {Icon && <Icon className="w-3 h-3 text-[#23471d]/50" />}
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{label}</span>
+// ─── Shared UI ────────────────────────────────────────────────────────────────
+const SH = ({ title, icon: Icon, actions }) => (
+    <div className="flex items-center justify-between px-4 py-2.5 bg-[#23471d] border-b border-gray-200">
+        <div className="flex items-center gap-2">
+            {Icon && <Icon className="w-3.5 h-3.5 text-white" />}
+            <h3 className="text-[11px] font-black text-white uppercase tracking-widest">{title}</h3>
         </div>
-        <span className="text-sm font-bold text-gray-800 leading-tight break-words">
-            {Array.isArray(value)
-                ? (value.length > 0 ? value.join(', ') : <span className="text-gray-300 font-normal italic">Not provided</span>)
-                : (value || <span className="text-gray-300 font-normal italic">Not provided</span>)}
-        </span>
+        {actions && <div className="flex gap-2">{actions}</div>}
     </div>
 );
 
-const Grid = ({ data }) => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 border-l border-t border-gray-200">
-        {data.map((item, idx) => (
-            <div key={idx} className="border-r border-b border-gray-200">
-                <DetailRow {...item} />
-            </div>
-        ))}
+const Field = ({ label, value }) => (
+    <div className="p-3 border-r border-b border-gray-100">
+        <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+        <p className="text-[12px] font-bold text-gray-800 break-words">
+            {Array.isArray(value) ? (value.length ? value.join(', ') : '—') : (value || '—')}
+        </p>
+    </div>
+);
+
+const Grid4 = ({ items }) => (
+    <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
+        {items.map((item, i) => <Field key={i} {...item} />)}
     </div>
 );
 
@@ -51,461 +45,431 @@ const STATUS_STYLES = {
     'payment-failed': 'bg-rose-100 text-rose-800 border-rose-300',
 };
 
-const ExhibitorBookingDetail = () => {
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const [reg, setReg] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [msmeEditing, setMsmeEditing] = useState(false);
-    const [msmeSaving, setMsmeSaving] = useState(false);
-    const [msmeForm, setMsmeForm] = useState({});
-    const [msmeCertFile, setMsmeCertFile] = useState(null);
+const TABS = [
+    { id: 'overview',  label: 'Overview',        icon: Building2 },
+    { id: 'contacts',  label: 'Contacts',         icon: User },
+    { id: 'payment',   label: 'Payment',          icon: CreditCard },
+    { id: 'documents', label: 'Documents',        icon: FileText },
+    { id: 'msme',      label: 'MSME',             icon: Award },
+];
 
-    const fetchReg = () => {
-        api.get(`/api/exhibitor-registration/${id}`)
-            .then(res => { if (res.data.success) { setReg(res.data.data); setMsmeForm(res.data.data.msme || {}); } })
-            .catch(err => console.error(err))
-            .finally(() => setIsLoading(false));
+// ─── Tab Components ───────────────────────────────────────────────────────────
+
+function OverviewTab({ reg, fmt }) {
+    return (
+        <div className="space-y-4">
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Company & Business" icon={Building2} />
+                <Grid4 items={[
+                    { label: 'Company Name', value: reg.exhibitorName },
+                    { label: 'Type of Business', value: reg.typeOfBusiness },
+                    { label: 'Industry Sector', value: reg.industrySector },
+                    { label: 'Fascia Name', value: reg.fasciaName },
+                    { label: 'Website', value: reg.website },
+                    { label: 'GST No.', value: reg.gstNo },
+                    { label: 'PAN No.', value: reg.panNo },
+                    { label: 'Landline', value: reg.landlineNo },
+                ]} />
+            </div>
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Address" icon={MapPin} />
+                <Grid4 items={[
+                    { label: 'Address', value: reg.address },
+                    { label: 'City', value: reg.city },
+                    { label: 'State', value: reg.state },
+                    { label: 'Country', value: reg.country },
+                    { label: 'Pincode', value: reg.pincode },
+                ]} />
+            </div>
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Stall & Event" icon={Layers} />
+                <Grid4 items={[
+                    { label: 'Event', value: reg.eventId?.name },
+                    { label: 'Stall No.', value: reg.participation?.stallFor },
+                    { label: 'Stall Type', value: reg.participation?.stallType },
+                    { label: 'Stall Size', value: reg.participation?.stallSize ? `${reg.participation.stallSize} sqm` : null },
+                    { label: 'Dimension', value: reg.participation?.dimension },
+                    { label: 'Scheme', value: reg.participation?.stallScheme },
+                    { label: 'Currency', value: reg.participation?.currency },
+                    { label: 'Rate / sqm', value: reg.participation?.rate ? fmt(reg.participation.rate) : null },
+                ]} />
+            </div>
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="CRM & Attribution" icon={Info} />
+                <Grid4 items={[
+                    { label: 'Registration ID', value: reg.registrationId },
+                    { label: 'Referred By', value: reg.referredBy },
+                    { label: 'Spoken With', value: reg.spokenWith },
+                    { label: 'Filled By', value: reg.filledBy },
+                    { label: 'Primary Category', value: reg.primaryCategory },
+                    { label: 'Sub Category', value: reg.subCategory },
+                    { label: 'Selected Sectors', value: reg.selectedSectors },
+                    { label: 'Registered On', value: reg.createdAt ? new Date(reg.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : null },
+                ]} />
+            </div>
+        </div>
+    );
+}
+
+function ContactsTab({ reg }) {
+    return (
+        <div className="space-y-4">
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Primary Contact Person" icon={User} />
+                <Grid4 items={[
+                    { label: 'Title', value: reg.contact1?.title },
+                    { label: 'First Name', value: reg.contact1?.firstName },
+                    { label: 'Last Name', value: reg.contact1?.lastName },
+                    { label: 'Designation', value: reg.contact1?.designation },
+                    { label: 'Email', value: reg.contact1?.email },
+                    { label: 'Mobile', value: reg.contact1?.mobile },
+                    { label: 'Alternate No.', value: reg.contact1?.alternateNo },
+                ]} />
+            </div>
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Secondary Contact Person" icon={Users} />
+                <Grid4 items={[
+                    { label: 'Title', value: reg.contact2?.title },
+                    { label: 'First Name', value: reg.contact2?.firstName },
+                    { label: 'Last Name', value: reg.contact2?.lastName },
+                    { label: 'Designation', value: reg.contact2?.designation },
+                    { label: 'Email', value: reg.contact2?.email },
+                    { label: 'Mobile', value: reg.contact2?.mobile },
+                    { label: 'Alternate No.', value: reg.contact2?.alternateNo },
+                ]} />
+            </div>
+        </div>
+    );
+}
+
+function PaymentTab({ reg, fmt }) {
+    return (
+        <div className="space-y-4">
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Financial Summary" icon={CreditCard} />
+                <Grid4 items={[
+                    { label: 'Base Amount', value: fmt(reg.participation?.amount) },
+                    { label: 'GST (18%)', value: fmt((reg.participation?.total || 0) - (reg.participation?.amount || 0)) },
+                    { label: 'Total Amount', value: fmt(reg.participation?.total) },
+                    { label: 'Amount Paid', value: fmt(reg.amountPaid) },
+                    { label: 'Balance Due', value: fmt(reg.balanceAmount) },
+                    { label: 'Payment Mode', value: reg.paymentMode },
+                    { label: 'Payment Type', value: reg.paymentType },
+                    { label: 'Transaction ID', value: reg.manualPaymentDetails?.transactionId || reg.paymentId },
+                ]} />
+                {reg.paymentId && (
+                    <div className="px-4 py-3 bg-indigo-50/40 border-t border-gray-100">
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Razorpay Payment ID</p>
+                        <p className="text-xs font-bold text-indigo-700 font-mono break-all">{reg.paymentId}</p>
+                    </div>
+                )}
+            </div>
+
+            {reg.paymentHistory?.length > 0 && (
+                <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                    <SH title="Payment History" icon={History} />
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="bg-gray-50 border-b border-gray-200">
+                                    {['#', 'Type', 'Amount', 'Mode / Method', 'Txn ID', 'Date'].map(h => (
+                                        <th key={h} className="py-2 px-4 text-[10px] font-black text-gray-500 uppercase text-left">{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {reg.paymentHistory.map((h, i) => (
+                                    <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
+                                        <td className="py-2 px-4 text-xs text-gray-400 font-bold">{i + 1}</td>
+                                        <td className="py-2 px-4 text-xs font-bold text-gray-700 capitalize">{h.paymentType || '—'}</td>
+                                        <td className="py-2 px-4 text-xs font-black text-emerald-700">{fmt(h.amount)}</td>
+                                        <td className="py-2 px-4 text-xs text-gray-600">{h.method || h.paymentMode || '—'}</td>
+                                        <td className="py-2 px-4 text-xs text-gray-600 font-mono">{h.transactionId || h.razorpayPaymentId || '—'}</td>
+                                        <td className="py-2 px-4 text-xs text-gray-500">
+                                            {h.paidAt ? new Date(h.paidAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function DocumentsTab({ reg }) {
+    const fixUrl = (url) => {
+        if (!url) return null;
+        return url.startsWith('http') ? url : `${SERVER_URL}${url}`;
     };
+    const docs = [
+        { label: 'Registration Form (PDF)', url: fixUrl(reg.registrationPdfUrl), color: 'bg-[#23471d] hover:bg-[#1a3516]' },
+        { label: 'Payment Receipt (PDF)', url: fixUrl(reg.receiptPdfUrl), color: 'bg-[#d26019] hover:bg-[#b8521a]' },
+        { label: 'Uploaded Invoice', url: fixUrl(reg.receiptUrl), color: 'bg-slate-700 hover:bg-slate-800' },
+    ].filter(d => d.url);
 
-    useEffect(() => { fetchReg(); }, []);
+    return (
+        <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+            <SH title="Documents & Downloads" icon={FileText} />
+            <div className="p-5">
+                {docs.length > 0 ? (
+                    <div className="flex flex-wrap gap-3">
+                        {docs.map((d, i) => (
+                            <a key={i} href={d.url} target="_blank" rel="noopener noreferrer"
+                                className={`flex items-center gap-2 px-4 py-2 text-white text-[10px] font-black uppercase tracking-widest transition-all ${d.color}`}>
+                                <ExternalLink size={12} /> {d.label}
+                            </a>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">No documents available</p>
+                )}
+            </div>
+        </div>
+    );
+}
 
-    const handleMsmeSave = async () => {
-        setMsmeSaving(true);
+function MSMETab({ reg, id, onRefresh }) {
+    const [editing, setEditing] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [form, setForm] = useState(reg.msme || {});
+    const [certFile, setCertFile] = useState(null);
+
+    const inp = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+    const handleSave = async () => {
+        if (!form.udhyamRegNo) { Swal.fire('Error', 'Udhyam Reg. No. is required', 'error'); return; }
+        setSaving(true);
         try {
             const fd = new FormData();
-            Object.entries(msmeForm).forEach(([k, v]) => { if (v != null) fd.append(k, v); });
-            if (msmeCertFile) fd.append('udhyamCertificate', msmeCertFile);
+            Object.entries(form).forEach(([k, v]) => { if (v != null && k !== 'udhyamCertificateUrl') fd.append(k, v); });
+            if (certFile) fd.append('udhyamCertificate', certFile);
             const res = await api.put(`/api/exhibitor-registration/${id}/msme`, fd, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             if (res.data.success) {
                 Swal.fire({ icon: 'success', title: 'MSME Details Saved', timer: 1500, showConfirmButton: false });
-                setMsmeEditing(false);
-                setMsmeCertFile(null);
-                fetchReg();
+                setEditing(false);
+                setCertFile(null);
+                onRefresh();
             }
-        } catch (err) {
-            Swal.fire('Error', 'Failed to save MSME details', 'error');
-        } finally {
-            setMsmeSaving(false);
-        }
+        } catch { Swal.fire('Error', 'Failed to save MSME details', 'error'); }
+        finally { setSaving(false); }
     };
 
-    if (isLoading) return (
+    const certUrl = reg.msme?.udhyamCertificateUrl
+        ? (reg.msme.udhyamCertificateUrl.startsWith('http') ? reg.msme.udhyamCertificateUrl : `${SERVER_URL}${reg.msme.udhyamCertificateUrl}`)
+        : null;
+
+    const iCls = "w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]";
+    const lCls = "text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block";
+
+    return (
+        <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+            <SH title="MSME / Udhyam Details" icon={Award} actions={
+                editing ? (
+                    <>
+                        <button onClick={() => { setEditing(false); setForm(reg.msme || {}); }}
+                            className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30">
+                            <X size={11} /> Cancel
+                        </button>
+                        <button onClick={handleSave} disabled={saving}
+                            className="flex items-center gap-1 px-3 py-1 bg-[#d26019] text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-[#b8521a] disabled:opacity-60">
+                            <Save size={11} /> {saving ? 'Saving...' : 'Save'}
+                        </button>
+                    </>
+                ) : (
+                    <button onClick={() => setEditing(true)}
+                        className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30">
+                        <Pencil size={11} /> {reg.msme?.udhyamRegNo ? 'Edit' : 'Add MSME'}
+                    </button>
+                )
+            } />
+
+            {editing ? (
+                <div className="p-5 space-y-4">
+                    <p className="text-[10px] font-black text-[#23471d] uppercase tracking-wider pb-1 border-b border-slate-100">Udhyam Registration</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {[
+                            { label: 'Udhyam Reg. No. *', key: 'udhyamRegNo', placeholder: 'UDYAM-XX-00-0000000' },
+                            { label: 'Mobile No.', key: 'udhyamMobileNo', placeholder: '10-digit' },
+                            { label: 'Email ID', key: 'udhyamEmailId', placeholder: 'email@example.com' },
+                            { label: 'Contact Person', key: 'udhyamContactPerson', placeholder: 'Name' },
+                            { label: 'Designation', key: 'udhyamDesignation', placeholder: 'Designation' },
+                            { label: 'Issue Date', key: 'udhyamIssueDate', type: 'date' },
+                        ].map(f => (
+                            <div key={f.key}>
+                                <label className={lCls}>{f.label}</label>
+                                <input type={f.type || 'text'}
+                                    value={f.key === 'udhyamIssueDate' && form[f.key] ? form[f.key].split('T')[0] : (form[f.key] || '')}
+                                    onChange={e => inp(f.key, e.target.value)}
+                                    placeholder={f.placeholder} className={iCls} />
+                            </div>
+                        ))}
+                        <div className="md:col-span-2">
+                            <label className={lCls}>Udhyam Address</label>
+                            <input value={form.udhyamAddress || ''} onChange={e => inp('udhyamAddress', e.target.value)} className={iCls} />
+                        </div>
+                        <div>
+                            <label className={lCls}>Certificate (Image) {certUrl && <span className="text-green-600 normal-case">✓ uploaded</span>}</label>
+                            <input type="file" accept="image/*" onChange={e => setCertFile(e.target.files?.[0] || null)}
+                                className="w-full text-xs border border-slate-300 rounded-[2px] px-2 py-1.5 bg-white" />
+                        </div>
+                    </div>
+                    <p className="text-[10px] font-black text-[#23471d] uppercase tracking-wider pb-1 border-b border-slate-100">DFO Details</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {[
+                            { label: 'DFO Location', key: 'dfoLocation' },
+                            { label: 'DFO Email', key: 'dfoEmail' },
+                            { label: 'DFO Mobile No.', key: 'dfoMobileNo' },
+                        ].map(f => (
+                            <div key={f.key}>
+                                <label className={lCls}>{f.label}</label>
+                                <input value={form[f.key] || ''} onChange={e => inp(f.key, e.target.value)} className={iCls} />
+                            </div>
+                        ))}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className={lCls}>MSME Category</label>
+                            <select value={form.msmeCategory || 'Manufacturer'} onChange={e => inp('msmeCategory', e.target.value)} className={iCls}>
+                                {['Manufacturer', 'Service Provider', 'Trader', 'Others'].map(c => <option key={c}>{c}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className={lCls}>MSME Remark</label>
+                            <input value={form.msmeRemark || ''} onChange={e => inp('msmeRemark', e.target.value)} className={iCls} />
+                        </div>
+                    </div>
+                </div>
+            ) : reg.msme?.udhyamRegNo ? (
+                <div>
+                    <Grid4 items={[
+                        { label: 'Udhyam Reg. No.', value: reg.msme.udhyamRegNo },
+                        { label: 'MSME Category', value: reg.msme.msmeCategory },
+                        { label: 'Issue Date', value: reg.msme.udhyamIssueDate ? new Date(reg.msme.udhyamIssueDate).toLocaleDateString('en-IN') : null },
+                        { label: 'Contact Person', value: reg.msme.udhyamContactPerson },
+                        { label: 'Designation', value: reg.msme.udhyamDesignation },
+                        { label: 'Mobile No.', value: reg.msme.udhyamMobileNo },
+                        { label: 'Email ID', value: reg.msme.udhyamEmailId },
+                        { label: 'Address', value: reg.msme.udhyamAddress },
+                        { label: 'DFO Location', value: reg.msme.dfoLocation },
+                        { label: 'DFO Email', value: reg.msme.dfoEmail },
+                        { label: 'DFO Mobile', value: reg.msme.dfoMobileNo },
+                        { label: 'Remark', value: reg.msme.msmeRemark },
+                    ]} />
+                    {certUrl && (
+                        <div className="px-4 py-3 border-t border-gray-100 bg-slate-50">
+                            <a href={certUrl} target="_blank" rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-[#23471d] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1a3516]">
+                                <ExternalLink size={12} /> View Certificate
+                            </a>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="p-8 text-center">
+                    <Award className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-3">No MSME details added yet</p>
+                    <button onClick={() => setEditing(true)}
+                        className="px-5 py-2 bg-[#23471d] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1a3516]">
+                        Add MSME Details
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+export default function ExhibitorBookingDetail() {
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const [reg, setReg] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('overview');
+
+    const fetchReg = () => {
+        setLoading(true);
+        api.get(`/api/exhibitor-registration/${id}`)
+            .then(res => { if (res.data.success) setReg(res.data.data); })
+            .catch(console.error)
+            .finally(() => setLoading(false));
+    };
+
+    useEffect(() => { fetchReg(); }, [id]);
+
+    if (loading) return (
         <div className="flex items-center justify-center min-h-screen">
-            <div className="w-12 h-12 border-4 border-[#23471d] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-[#23471d] border-t-transparent rounded-full animate-spin" />
         </div>
     );
 
     if (!reg) return (
         <div className="p-8 text-center">
-            <h2 className="text-xl font-bold text-gray-600">Booking not found</h2>
-            <button onClick={() => navigate('/exhibitor-bookings')} className="mt-4 px-4 py-2 bg-[#23471d] text-white font-bold rounded-sm text-sm">
-                Back to List
-            </button>
+            <p className="text-gray-500 font-bold mb-4">Booking not found</p>
+            <button onClick={() => navigate('/exhibitor-bookings')} className="px-4 py-2 bg-[#23471d] text-white text-sm font-bold rounded-sm">Back</button>
         </div>
     );
 
     const cur = reg.participation?.currency === 'USD' ? '$' : '₹';
-    const fmt = (n) => `${cur} ${Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
-
-    const companyData = [
-        { label: "Company / Exhibitor Name", value: reg.exhibitorName, icon: Building2 },
-        { label: "Type of Business", value: reg.typeOfBusiness, icon: Briefcase },
-        { label: "Industry Sector", value: reg.industrySector, icon: Layers },
-        { label: "Fascia Name", value: reg.fasciaName, icon: Tag },
-        { label: "Website", value: reg.website, icon: Globe },
-        { label: "Landline No.", value: reg.landlineNo, icon: Phone },
-        { label: "GST No.", value: reg.gstNo, icon: FileText },
-        { label: "PAN No.", value: reg.panNo, icon: FileText },
-    ];
-
-    const addressData = [
-        { label: "Address", value: reg.address, icon: MapPin },
-        { label: "City", value: reg.city, icon: MapPin },
-        { label: "State", value: reg.state, icon: MapPin },
-        { label: "Country", value: reg.country, icon: Globe },
-        { label: "Pincode", value: reg.pincode, icon: MapPin },
-    ];
-
-    const contact1Data = [
-        { label: "Title", value: reg.contact1?.title, icon: User },
-        { label: "First Name", value: reg.contact1?.firstName, icon: User },
-        { label: "Last Name", value: reg.contact1?.lastName, icon: User },
-        { label: "Designation", value: reg.contact1?.designation, icon: Briefcase },
-        { label: "Email", value: reg.contact1?.email, icon: Mail },
-        { label: "Mobile", value: reg.contact1?.mobile, icon: Phone },
-        { label: "Alternate No.", value: reg.contact1?.alternateNo, icon: Phone },
-    ];
-
-    const contact2Data = [
-        { label: "Title", value: reg.contact2?.title, icon: User },
-        { label: "First Name", value: reg.contact2?.firstName, icon: User },
-        { label: "Last Name", value: reg.contact2?.lastName, icon: User },
-        { label: "Designation", value: reg.contact2?.designation, icon: Briefcase },
-        { label: "Email", value: reg.contact2?.email, icon: Mail },
-        { label: "Mobile", value: reg.contact2?.mobile, icon: Phone },
-        { label: "Alternate No.", value: reg.contact2?.alternateNo, icon: Phone },
-    ];
-
-    const stallData = [
-        { label: "Event", value: reg.eventId?.name, icon: Calendar },
-        { label: "Stall No.", value: reg.participation?.stallFor, icon: Tag },
-        { label: "Stall Type", value: reg.participation?.stallType, icon: Layers },
-        { label: "Stall Size", value: reg.participation?.stallSize ? `${reg.participation.stallSize} sqm` : null, icon: Info },
-        { label: "Dimension", value: reg.participation?.dimension, icon: Info },
-        { label: "Stall Scheme", value: reg.participation?.stallScheme, icon: Info },
-        { label: "Currency", value: reg.participation?.currency, icon: CreditCard },
-        { label: "Rate / sqm", value: reg.participation?.rate ? fmt(reg.participation.rate) : null, icon: CreditCard },
-    ];
-
-    const paymentData = [
-        { label: "Base Amount", value: fmt(reg.participation?.amount), icon: CreditCard },
-        { label: "Discount", value: fmt(reg.participation?.discount), icon: CreditCard },
-        { label: "GST (18%)", value: fmt((reg.participation?.total || 0) - (reg.participation?.amount || 0)), icon: CreditCard },
-        { label: "Total Amount", value: fmt(reg.participation?.total), icon: CreditCard },
-        { label: "Amount Paid", value: fmt(reg.amountPaid), icon: CheckCircle2 },
-        { label: "Balance Due", value: fmt(reg.balanceAmount), icon: CreditCard },
-        { label: "Payment Mode", value: reg.paymentMode, icon: CreditCard },
-        { label: "Payment Type", value: reg.paymentType, icon: CreditCard },
-    ];
-
-    const crmData = [
-        { label: "Referred By", value: reg.referredBy, icon: User },
-        { label: "Spoken With", value: reg.spokenWith, icon: User },
-        { label: "Filled By", value: reg.filledBy, icon: User },
-        { label: "Registration ID", value: reg.registrationId, icon: FileText },
-        { label: "Registered On", value: reg.createdAt ? new Date(reg.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : null, icon: Calendar },
-        { label: "Primary Category", value: reg.primaryCategory, icon: Tag },
-        { label: "Sub Category", value: reg.subCategory, icon: Tag },
-        { label: "Selected Sectors", value: reg.selectedSectors, icon: Layers },
-    ];
+    const fmt = (n) => `${cur}${Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-inter">
-            <div className="w-full">
-                {/* HEADER */}
-                <div className="mb-6 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                    <div>
-                        <button
-                            onClick={() => navigate('/exhibitor-bookings')}
-                            className="flex items-center gap-2 text-gray-500 hover:text-[#23471d] transition-colors mb-3 text-sm font-medium"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            Back to Bookings
-                        </button>
-                        <h1 className="text-2xl font-bold text-[#23471d] uppercase tracking-tight">
-                            Exhibitor Booking <span className="text-slate-900 italic">Overview</span>
-                        </h1>
-                        <p className="text-gray-400 text-xs mt-1 font-medium">ID: {reg._id}</p>
-                    </div>
-                    <div className="flex items-center gap-3 flex-wrap">
-                        <span className={`px-4 py-1.5 text-xs font-black uppercase border rounded-full ${STATUS_STYLES[reg.status] || 'bg-slate-50 text-slate-700 border-slate-200'}`}>
-                            {reg.status}
-                        </span>
-                        <span className={`px-3 py-1.5 text-xs font-black uppercase border rounded-full ${reg.paymentMode === 'online' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-slate-50 text-slate-700 border-slate-200'}`}>
-                            {reg.paymentMode} payment
-                        </span>
-                    </div>
-                </div>
-
-                {/* PAYMENT SUMMARY BANNER */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    {[
-                        { label: "Total Amount", value: fmt(reg.participation?.total), color: "text-[#23471d]" },
-                        { label: "Amount Paid", value: fmt(reg.amountPaid), color: "text-emerald-600" },
-                        { label: "Balance Due", value: fmt(reg.balanceAmount), color: reg.balanceAmount > 0 ? "text-red-600" : "text-emerald-600" },
-                        { label: "Stall No.", value: reg.participation?.stallFor || 'N/A', color: "text-[#d26019]" },
-                    ].map((item, i) => (
-                        <div key={i} className="bg-slate-50 border border-slate-200 p-4 rounded-sm">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{item.label}</p>
-                            <p className={`text-lg font-black ${item.color}`}>{item.value}</p>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="space-y-6">
-                    {/* COMPANY */}
-                    <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
-                        <SectionHeader title="Company & Business Profile" icon={Building2} />
-                        <Grid data={companyData} />
-                    </div>
-
-                    {/* ADDRESS */}
-                    <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
-                        <SectionHeader title="Address Details" icon={MapPin} />
-                        <Grid data={addressData} />
-                    </div>
-
-                    {/* CONTACT 1 */}
-                    <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
-                        <SectionHeader title="Liaison Officer / Contact Person 1" icon={User} />
-                        <Grid data={contact1Data} />
-                    </div>
-
-                    {/* CONTACT 2 */}
-                    <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
-                        <SectionHeader title="Contact Person 2" icon={Users} />
-                        <Grid data={contact2Data} />
-                    </div>
-
-                    {/* STALL */}
-                    <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
-                        <SectionHeader title="Stall & Participation Details" icon={Layers} />
-                        <Grid data={stallData} />
-                    </div>
-
-                    {/* PAYMENT */}
-                    <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
-                        <SectionHeader title="Payment & Financial Details" icon={CreditCard} />
-                        <Grid data={paymentData} />
-                        {/* Manual payment details */}
-                        {reg.manualPaymentDetails?.transactionId && (
-                            <div className="px-5 py-4 bg-slate-50 border-t border-gray-200 grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Payment Method</p>
-                                    <p className="text-sm font-bold text-gray-800">{reg.manualPaymentDetails.method}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Transaction ID</p>
-                                    <p className="text-sm font-bold text-gray-800">{reg.manualPaymentDetails.transactionId}</p>
-                                </div>
-                                {reg.manualPaymentDetails.notes && (
-                                    <div className="col-span-2">
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Notes</p>
-                                        <p className="text-sm font-medium text-gray-700">{reg.manualPaymentDetails.notes}</p>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                       
-                        {/* Online payment IDs */}
-                        {reg.paymentId && (
-                            <div className="px-5 py-3 border-t border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-4 bg-indigo-50/30">
-                                <div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Razorpay Payment ID</p>
-                                    <p className="text-xs font-bold text-indigo-700 break-all">{reg.paymentId}</p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* PAYMENT HISTORY */}
-                    {reg.paymentHistory?.length > 0 && (
-                        <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
-                            <SectionHeader title="Payment History" icon={CreditCard} />
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm font-inter">
-                                    <thead>
-                                        <tr className="bg-gray-50 border-b-2 border-gray-200">
-                                            <th className="py-2 px-4 text-[10px] font-black text-gray-500 uppercase text-left">#</th>
-                                            <th className="py-2 px-4 text-[10px] font-black text-gray-500 uppercase text-left">Type</th>
-                                            <th className="py-2 px-4 text-[10px] font-black text-gray-500 uppercase text-left">Amount</th>
-                                            <th className="py-2 px-4 text-[10px] font-black text-gray-500 uppercase text-left">Mode / Method</th>
-                                            <th className="py-2 px-4 text-[10px] font-black text-gray-500 uppercase text-left">Txn ID</th>
-                                            <th className="py-2 px-4 text-[10px] font-black text-gray-500 uppercase text-left">Date</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        {reg.paymentHistory.map((h, i) => (
-                                            <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
-                                                <td className="py-2 px-4 text-xs text-gray-400 font-bold">{i + 1}</td>
-                                                <td className="py-2 px-4 text-xs font-bold text-gray-700 capitalize">{h.paymentType || '—'}</td>
-                                                <td className="py-2 px-4 text-xs font-black text-emerald-700">{fmt(h.amount)}</td>
-                                                <td className="py-2 px-4 text-xs text-gray-600">{h.method || h.paymentMode || '—'}</td>
-                                                <td className="py-2 px-4 text-xs text-gray-600 font-mono">{h.transactionId || h.razorpayPaymentId || '—'}</td>
-                                                <td className="py-2 px-4 text-xs text-gray-500">
-                                                    {h.paidAt ? new Date(h.paidAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* CRM */}
-                    <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
-                        <SectionHeader title="CRM & Attribution Details" icon={Info} />
-                        <Grid data={crmData} />
-                    </div>
-
-                    {/* MSME */}
-                    <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
-                        <div className="flex items-center justify-between px-5 py-3 bg-[#23471d] border-b border-gray-200">
-                            <div className="flex items-center gap-2">
-                                <Info className="w-4 h-4 text-white" />
-                                <h3 className="text-xs font-bold text-white uppercase tracking-widest">MSME / Udhyam Details</h3>
-                            </div>
-                            <div className="flex gap-2">
-                                {msmeEditing ? (
-                                    <>
-                                        <button onClick={() => { setMsmeEditing(false); setMsmeForm(reg.msme || {}); }}
-                                            className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30">
-                                            <X size={11} /> Cancel
-                                        </button>
-                                        <button onClick={handleMsmeSave} disabled={msmeSaving}
-                                            className="flex items-center gap-1 px-3 py-1 bg-[#d26019] text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-[#b8521a] disabled:opacity-60">
-                                            <Save size={11} /> {msmeSaving ? 'Saving...' : 'Save'}
-                                        </button>
-                                    </>
-                                ) : (
-                                    <button onClick={() => setMsmeEditing(true)}
-                                        className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30">
-                                        <Pencil size={11} /> {reg.msme?.udhyamRegNo ? 'Edit' : 'Add MSME'}
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
-                        {msmeEditing ? (
-                            <div className="p-5 space-y-4">
-                                {/* Udhyam Details */}
-                                <p className="text-[10px] font-black text-[#23471d] uppercase tracking-wider pb-1 border-b border-slate-100">Udhyam Registration</p>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    {[
-                                        { label: 'Udhyam Reg. No. *', key: 'udhyamRegNo', placeholder: 'UDYAM-XX-00-0000000' },
-                                        { label: 'Mobile No.', key: 'udhyamMobileNo', placeholder: '10-digit' },
-                                        { label: 'Email ID', key: 'udhyamEmailId', placeholder: 'email@example.com' },
-                                        { label: 'Contact Person', key: 'udhyamContactPerson', placeholder: 'Name' },
-                                        { label: 'Designation', key: 'udhyamDesignation', placeholder: 'Designation' },
-                                        { label: 'Issue Date', key: 'udhyamIssueDate', type: 'date' },
-                                    ].map(f => (
-                                        <div key={f.key}>
-                                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">{f.label}</label>
-                                            <input type={f.type || 'text'} value={f.key === 'udhyamIssueDate' && msmeForm[f.key] ? msmeForm[f.key].split('T')[0] : (msmeForm[f.key] || '')}
-                                                onChange={e => setMsmeForm(p => ({ ...p, [f.key]: e.target.value }))}
-                                                placeholder={f.placeholder}
-                                                className="w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]" />
-                                        </div>
-                                    ))}
-                                    <div className="md:col-span-2">
-                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Udhyam Address</label>
-                                        <input value={msmeForm.udhyamAddress || ''} onChange={e => setMsmeForm(p => ({ ...p, udhyamAddress: e.target.value }))}
-                                            placeholder="Registered address"
-                                            className="w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]" />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">
-                                            Udhyam Certificate (Image) {reg.msme?.udhyamCertificateUrl && <span className="text-green-600">✓ uploaded</span>}
-                                        </label>
-                                        <input type="file" accept="image/*" onChange={e => setMsmeCertFile(e.target.files?.[0] || null)}
-                                            className="w-full text-xs border border-slate-300 rounded-[2px] px-2 py-1.5 bg-white" />
-                                    </div>
-                                </div>
-                                <p className="text-[10px] font-black text-[#23471d] uppercase tracking-wider pb-1 border-b border-slate-100 mt-2">DFO Details</p>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    {[
-                                        { label: 'DFO Location', key: 'dfoLocation' },
-                                        { label: 'DFO Email', key: 'dfoEmail' },
-                                        { label: 'DFO Mobile No.', key: 'dfoMobileNo' },
-                                    ].map(f => (
-                                        <div key={f.key}>
-                                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">{f.label}</label>
-                                            <input value={msmeForm[f.key] || ''} onChange={e => setMsmeForm(p => ({ ...p, [f.key]: e.target.value }))}
-                                                className="w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]" />
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">MSME Category</label>
-                                        <select value={msmeForm.msmeCategory || 'Manufacturer'} onChange={e => setMsmeForm(p => ({ ...p, msmeCategory: e.target.value }))}
-                                            className="w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]">
-                                            {['Manufacturer', 'Service Provider', 'Trader', 'Others'].map(c => <option key={c}>{c}</option>)}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">MSME Remark</label>
-                                        <input value={msmeForm.msmeRemark || ''} onChange={e => setMsmeForm(p => ({ ...p, msmeRemark: e.target.value }))}
-                                            className="w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]" />
-                                    </div>
-                                </div>
-                            </div>
-                        ) : reg.msme?.udhyamRegNo ? (
-                            <div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 border-l border-t border-gray-200">
-                                    {[
-                                        { label: 'Udhyam Reg. No.', value: reg.msme.udhyamRegNo },
-                                        { label: 'MSME Category', value: reg.msme.msmeCategory },
-                                        { label: 'Issue Date', value: reg.msme.udhyamIssueDate ? new Date(reg.msme.udhyamIssueDate).toLocaleDateString('en-IN') : null },
-                                        { label: 'Contact Person', value: reg.msme.udhyamContactPerson },
-                                        { label: 'Designation', value: reg.msme.udhyamDesignation },
-                                        { label: 'Mobile No.', value: reg.msme.udhyamMobileNo },
-                                        { label: 'Email ID', value: reg.msme.udhyamEmailId },
-                                        { label: 'Address', value: reg.msme.udhyamAddress },
-                                        { label: 'DFO Location', value: reg.msme.dfoLocation },
-                                        { label: 'DFO Email', value: reg.msme.dfoEmail },
-                                        { label: 'DFO Mobile', value: reg.msme.dfoMobileNo },
-                                        { label: 'Remark', value: reg.msme.msmeRemark },
-                                    ].map((item, idx) => (
-                                        <div key={idx} className="border-r border-b border-gray-200 p-3">
-                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">{item.label}</p>
-                                            <p className="text-sm font-bold text-gray-800">{item.value || <span className="text-gray-300 font-normal italic">Not provided</span>}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                                {reg.msme.udhyamCertificateUrl && (
-                                    <div className="px-5 py-3 border-t border-gray-200 bg-slate-50">
-                                        {(() => {
-                                            const url = reg.msme.udhyamCertificateUrl.startsWith('http') ? reg.msme.udhyamCertificateUrl : `${SERVER_URL}${reg.msme.udhyamCertificateUrl}`;
-                                            return (
-                                                <a href={url} target="_blank" rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#23471d] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1a3516] transition-all">
-                                                    <ExternalLink size={12} /> View Udhyam Certificate
-                                                </a>
-                                            );
-                                        })()}
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="p-6 text-center text-[11px] text-slate-400 font-bold uppercase tracking-widest">
-                                No MSME details added yet. Click "Add MSME" to add.
-                            </div>
-                        )}
-                    </div>
-
-                    {/* DOCUMENTS */}
-                    <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
-                        <SectionHeader title="Documents & Downloads" icon={FileText} />
-                        <div className="p-5 flex flex-wrap gap-3">
-                            {reg.registrationPdfUrl && (
-                                <a href={reg.registrationPdfUrl.includes('cloudinary') && !reg.registrationPdfUrl.endsWith('.pdf') ? reg.registrationPdfUrl + '.pdf' : reg.registrationPdfUrl}
-                                    target="_blank" rel="noopener noreferrer"
-                                    className="flex items-center gap-2 px-4 py-2 bg-[#23471d] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1a3516] transition-all">
-                                    <FileText size={12} /> Registration Form (PDF)
-                                </a>
-                            )}
-                            {reg.receiptPdfUrl && (
-                                <a href={reg.receiptPdfUrl.includes('cloudinary') && !reg.receiptPdfUrl.endsWith('.pdf') ? reg.receiptPdfUrl + '.pdf' : reg.receiptPdfUrl}
-                                    target="_blank" rel="noopener noreferrer"
-                                    className="flex items-center gap-2 px-4 py-2 bg-[#d26019] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#b8521a] transition-all">
-                                    <Receipt size={12} /> Payment Receipt (PDF)
-                                </a>
-                            )}
-                            {reg.receiptUrl && (() => {
-                                const url = reg.receiptUrl.startsWith('http') ? reg.receiptUrl : `${SERVER_URL}${reg.receiptUrl}`;
-                                const isPdf = url.toLowerCase().includes('.pdf') || url.includes('raw/upload');
-                                const finalUrl = isPdf && url.includes('cloudinary') && !url.endsWith('.pdf') ? url + '.pdf' : url;
-                                return (
-                                    <a href={finalUrl} target="_blank" rel="noopener noreferrer"
-                                        className="flex items-center gap-2 px-4 py-2 bg-slate-700 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all">
-                                        <ExternalLink size={12} /> Uploaded Invoice
-                                    </a>
-                                );
-                            })()}
-                            {!reg.registrationPdfUrl && !reg.receiptPdfUrl && !reg.receiptUrl && (
-                                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">No documents available</p>
-                            )}
-                        </div>
-                    </div>
-                </div>
+        <div className="p-4 min-h-screen bg-gray-50 font-inter">
+            {/* Back + Title */}
+            <div className="flex items-center gap-3 mb-4">
+                <button onClick={() => navigate('/exhibitor-bookings')}
+                    className="flex items-center gap-1.5 text-gray-500 hover:text-[#23471d] text-sm font-medium transition-colors">
+                    <ArrowLeft className="w-4 h-4" /> Back
+                </button>
+                <div className="h-4 w-px bg-gray-300" />
+                <h1 className="text-base font-black text-[#23471d] uppercase tracking-tight">{reg.exhibitorName}</h1>
+                <span className={`ml-auto px-3 py-1 text-[10px] font-black uppercase border rounded-full ${STATUS_STYLES[reg.status] || 'bg-slate-50 text-slate-700 border-slate-200'}`}>
+                    {reg.status}
+                </span>
             </div>
+
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+                {[
+                    { label: 'Reg ID', value: reg.registrationId || '—', color: 'text-slate-700' },
+                    { label: 'Stall No.', value: reg.participation?.stallFor || '—', color: 'text-[#d26019]' },
+                    { label: 'Total', value: fmt(reg.participation?.total), color: 'text-[#23471d]' },
+                    { label: 'Paid', value: fmt(reg.amountPaid), color: 'text-emerald-600' },
+                    { label: 'Balance', value: fmt(reg.balanceAmount), color: reg.balanceAmount > 0 ? 'text-red-600' : 'text-emerald-600' },
+                ].map((s, i) => (
+                    <div key={i} className="bg-white border border-gray-200 px-4 py-3 rounded-sm shadow-sm">
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{s.label}</p>
+                        <p className={`text-sm font-black ${s.color}`}>{s.value}</p>
+                    </div>
+                ))}
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-1 mb-4 bg-white border border-gray-200 p-1 rounded-sm shadow-sm overflow-x-auto">
+                {TABS.map(tab => {
+                    const Icon = tab.icon;
+                    const active = activeTab === tab.id;
+                    return (
+                        <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                            className={`flex items-center gap-1.5 px-4 py-2 text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-all rounded-sm ${
+                                active ? 'bg-[#23471d] text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+                            }`}>
+                            <Icon size={13} /> {tab.label}
+                        </button>
+                    );
+                })}
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === 'overview'  && <OverviewTab reg={reg} fmt={fmt} />}
+            {activeTab === 'contacts'  && <ContactsTab reg={reg} />}
+            {activeTab === 'payment'   && <PaymentTab reg={reg} fmt={fmt} />}
+            {activeTab === 'documents' && <DocumentsTab reg={reg} />}
+            {activeTab === 'msme'      && <MSMETab reg={reg} id={id} onRefresh={fetchReg} />}
         </div>
     );
-};
-
-export default ExhibitorBookingDetail;
+}
