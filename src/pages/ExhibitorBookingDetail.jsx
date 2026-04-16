@@ -262,6 +262,41 @@ const ExhibitorBookingDetail = () => {
                         )}
                     </div>
 
+                    {/* PAYMENT HISTORY */}
+                    {reg.paymentHistory?.length > 0 && (
+                        <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
+                            <SectionHeader title="Payment History" icon={CreditCard} />
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm font-inter">
+                                    <thead>
+                                        <tr className="bg-gray-50 border-b-2 border-gray-200">
+                                            <th className="py-2 px-4 text-[10px] font-black text-gray-500 uppercase text-left">#</th>
+                                            <th className="py-2 px-4 text-[10px] font-black text-gray-500 uppercase text-left">Type</th>
+                                            <th className="py-2 px-4 text-[10px] font-black text-gray-500 uppercase text-left">Amount</th>
+                                            <th className="py-2 px-4 text-[10px] font-black text-gray-500 uppercase text-left">Mode / Method</th>
+                                            <th className="py-2 px-4 text-[10px] font-black text-gray-500 uppercase text-left">Txn ID</th>
+                                            <th className="py-2 px-4 text-[10px] font-black text-gray-500 uppercase text-left">Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {reg.paymentHistory.map((h, i) => (
+                                            <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
+                                                <td className="py-2 px-4 text-xs text-gray-400 font-bold">{i + 1}</td>
+                                                <td className="py-2 px-4 text-xs font-bold text-gray-700 capitalize">{h.paymentType || '—'}</td>
+                                                <td className="py-2 px-4 text-xs font-black text-emerald-700">{fmt(h.amount)}</td>
+                                                <td className="py-2 px-4 text-xs text-gray-600">{h.method || h.paymentMode || '—'}</td>
+                                                <td className="py-2 px-4 text-xs text-gray-600 font-mono">{h.transactionId || h.razorpayPaymentId || '—'}</td>
+                                                <td className="py-2 px-4 text-xs text-gray-500">
+                                                    {h.paidAt ? new Date(h.paidAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
                     {/* CRM */}
                     <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
                         <SectionHeader title="CRM & Attribution Details" icon={Info} />
