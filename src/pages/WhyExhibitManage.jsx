@@ -35,7 +35,7 @@ const WhyExhibitManage = () => {
         ctaButton2Name: 'Register as Visitor',
         ctaButton2Link: '/visitor-registration',
         ctaImage: '',
-        ctaImageAlt: 'Success at IH&WE'
+        ctaImageAlt: 'Success at IHWE'
     });
     const [isLoading, setIsLoading] = useState(false);
     const [isEditing, setIsEditing] = useState(null);

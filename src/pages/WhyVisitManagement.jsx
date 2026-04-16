@@ -54,7 +54,7 @@ const WhyVisitManagement = () => {
         subheading: 'Empower Your Journey',
         heading: 'Discover Why You Should Join Us',
         highlightText: 'Join Us',
-        shortDescription: 'Join IH&WE 2026 to experience the latest innovations and build lasting connections. okh!',
+        shortDescription: 'Join IHWE 2026 to experience the latest innovations and build lasting connections. okh!',
         reasons: []
     });
     const [isLoading, setIsLoading] = useState(false);
