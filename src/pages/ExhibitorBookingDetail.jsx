@@ -4,10 +4,11 @@ import {
     ArrowLeft, Building2, User, Mail, Phone, Globe,
     Briefcase, Calendar, CreditCard, MapPin, Tag,
     FileText, Users, Layers, CheckCircle2, Info,
-    Receipt, ExternalLink
+    Receipt, ExternalLink, Pencil, Save, X
 } from 'lucide-react';
 import api, { SERVER_URL } from "../lib/api";
 import PageHeader from '../components/PageHeader';
+import Swal from 'sweetalert2';
 
 const SectionHeader = ({ title, icon: Icon }) => (
     <div className="flex items-center gap-2 px-5 py-3 bg-[#23471d] border-b border-gray-200">
@@ -55,13 +56,41 @@ const ExhibitorBookingDetail = () => {
     const navigate = useNavigate();
     const [reg, setReg] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [msmeEditing, setMsmeEditing] = useState(false);
+    const [msmeSaving, setMsmeSaving] = useState(false);
+    const [msmeForm, setMsmeForm] = useState({});
+    const [msmeCertFile, setMsmeCertFile] = useState(null);
 
-    useEffect(() => {
+    const fetchReg = () => {
         api.get(`/api/exhibitor-registration/${id}`)
-            .then(res => { if (res.data.success) setReg(res.data.data); })
+            .then(res => { if (res.data.success) { setReg(res.data.data); setMsmeForm(res.data.data.msme || {}); } })
             .catch(err => console.error(err))
             .finally(() => setIsLoading(false));
-    }, [id]);
+    };
+
+    useEffect(() => { fetchReg(); }, []);
+
+    const handleMsmeSave = async () => {
+        setMsmeSaving(true);
+        try {
+            const fd = new FormData();
+            Object.entries(msmeForm).forEach(([k, v]) => { if (v != null) fd.append(k, v); });
+            if (msmeCertFile) fd.append('udhyamCertificate', msmeCertFile);
+            const res = await api.put(`/api/exhibitor-registration/${id}/msme`, fd, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            if (res.data.success) {
+                Swal.fire({ icon: 'success', title: 'MSME Details Saved', timer: 1500, showConfirmButton: false });
+                setMsmeEditing(false);
+                setMsmeCertFile(null);
+                fetchReg();
+            }
+        } catch (err) {
+            Swal.fire('Error', 'Failed to save MSME details', 'error');
+        } finally {
+            setMsmeSaving(false);
+        }
+    };
 
     if (isLoading) return (
         <div className="flex items-center justify-center min-h-screen">
@@ -304,46 +333,140 @@ const ExhibitorBookingDetail = () => {
                     </div>
 
                     {/* MSME */}
-                    {reg.msme?.udhyamRegNo && (
-                        <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
-                            <SectionHeader title="MSME / Udhyam Details" icon={Info} />
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 border-l border-t border-gray-200">
-                                {[
-                                    { label: 'Udhyam Reg. No.', value: reg.msme.udhyamRegNo },
-                                    { label: 'MSME Category', value: reg.msme.msmeCategory },
-                                    { label: 'Issue Date', value: reg.msme.udhyamIssueDate ? new Date(reg.msme.udhyamIssueDate).toLocaleDateString('en-IN') : null },
-                                    { label: 'Contact Person', value: reg.msme.udhyamContactPerson },
-                                    { label: 'Designation', value: reg.msme.udhyamDesignation },
-                                    { label: 'Mobile No.', value: reg.msme.udhyamMobileNo },
-                                    { label: 'Email ID', value: reg.msme.udhyamEmailId },
-                                    { label: 'Address', value: reg.msme.udhyamAddress },
-                                    { label: 'DFO Location', value: reg.msme.dfoLocation },
-                                    { label: 'DFO Email', value: reg.msme.dfoEmail },
-                                    { label: 'DFO Mobile', value: reg.msme.dfoMobileNo },
-                                    { label: 'Remark', value: reg.msme.msmeRemark },
-                                ].map((item, idx) => (
-                                    <div key={idx} className="border-r border-b border-gray-200 p-3">
-                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">{item.label}</p>
-                                        <p className="text-sm font-bold text-gray-800">{item.value || <span className="text-gray-300 font-normal italic">Not provided</span>}</p>
-                                    </div>
-                                ))}
+                    <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
+                        <div className="flex items-center justify-between px-5 py-3 bg-[#23471d] border-b border-gray-200">
+                            <div className="flex items-center gap-2">
+                                <Info className="w-4 h-4 text-white" />
+                                <h3 className="text-xs font-bold text-white uppercase tracking-widest">MSME / Udhyam Details</h3>
                             </div>
-                            {reg.msme.udhyamCertificateUrl && (
-                                <div className="px-5 py-3 border-t border-gray-200 bg-slate-50">
-                                    {(() => {
-                                        const url = reg.msme.udhyamCertificateUrl.startsWith('http') ? reg.msme.udhyamCertificateUrl : `${SERVER_URL}${reg.msme.udhyamCertificateUrl}`;
-                                        const finalUrl = url.includes('cloudinary') && !url.match(/\.(pdf|jpg|jpeg|png)$/i) ? url + '.pdf' : url;
-                                        return (
-                                            <a href={finalUrl} target="_blank" rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-2 px-4 py-2 bg-[#23471d] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1a3516] transition-all">
-                                                <ExternalLink size={12} /> View Udhyam Certificate
-                                            </a>
-                                        );
-                                    })()}
-                                </div>
-                            )}
+                            <div className="flex gap-2">
+                                {msmeEditing ? (
+                                    <>
+                                        <button onClick={() => { setMsmeEditing(false); setMsmeForm(reg.msme || {}); }}
+                                            className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30">
+                                            <X size={11} /> Cancel
+                                        </button>
+                                        <button onClick={handleMsmeSave} disabled={msmeSaving}
+                                            className="flex items-center gap-1 px-3 py-1 bg-[#d26019] text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-[#b8521a] disabled:opacity-60">
+                                            <Save size={11} /> {msmeSaving ? 'Saving...' : 'Save'}
+                                        </button>
+                                    </>
+                                ) : (
+                                    <button onClick={() => setMsmeEditing(true)}
+                                        className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30">
+                                        <Pencil size={11} /> {reg.msme?.udhyamRegNo ? 'Edit' : 'Add MSME'}
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                    )}
+
+                        {msmeEditing ? (
+                            <div className="p-5 space-y-4">
+                                {/* Udhyam Details */}
+                                <p className="text-[10px] font-black text-[#23471d] uppercase tracking-wider pb-1 border-b border-slate-100">Udhyam Registration</p>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {[
+                                        { label: 'Udhyam Reg. No. *', key: 'udhyamRegNo', placeholder: 'UDYAM-XX-00-0000000' },
+                                        { label: 'Mobile No.', key: 'udhyamMobileNo', placeholder: '10-digit' },
+                                        { label: 'Email ID', key: 'udhyamEmailId', placeholder: 'email@example.com' },
+                                        { label: 'Contact Person', key: 'udhyamContactPerson', placeholder: 'Name' },
+                                        { label: 'Designation', key: 'udhyamDesignation', placeholder: 'Designation' },
+                                        { label: 'Issue Date', key: 'udhyamIssueDate', type: 'date' },
+                                    ].map(f => (
+                                        <div key={f.key}>
+                                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">{f.label}</label>
+                                            <input type={f.type || 'text'} value={f.key === 'udhyamIssueDate' && msmeForm[f.key] ? msmeForm[f.key].split('T')[0] : (msmeForm[f.key] || '')}
+                                                onChange={e => setMsmeForm(p => ({ ...p, [f.key]: e.target.value }))}
+                                                placeholder={f.placeholder}
+                                                className="w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]" />
+                                        </div>
+                                    ))}
+                                    <div className="md:col-span-2">
+                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Udhyam Address</label>
+                                        <input value={msmeForm.udhyamAddress || ''} onChange={e => setMsmeForm(p => ({ ...p, udhyamAddress: e.target.value }))}
+                                            placeholder="Registered address"
+                                            className="w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">
+                                            Udhyam Certificate (Image) {reg.msme?.udhyamCertificateUrl && <span className="text-green-600">✓ uploaded</span>}
+                                        </label>
+                                        <input type="file" accept="image/*" onChange={e => setMsmeCertFile(e.target.files?.[0] || null)}
+                                            className="w-full text-xs border border-slate-300 rounded-[2px] px-2 py-1.5 bg-white" />
+                                    </div>
+                                </div>
+                                <p className="text-[10px] font-black text-[#23471d] uppercase tracking-wider pb-1 border-b border-slate-100 mt-2">DFO Details</p>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {[
+                                        { label: 'DFO Location', key: 'dfoLocation' },
+                                        { label: 'DFO Email', key: 'dfoEmail' },
+                                        { label: 'DFO Mobile No.', key: 'dfoMobileNo' },
+                                    ].map(f => (
+                                        <div key={f.key}>
+                                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">{f.label}</label>
+                                            <input value={msmeForm[f.key] || ''} onChange={e => setMsmeForm(p => ({ ...p, [f.key]: e.target.value }))}
+                                                className="w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]" />
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">MSME Category</label>
+                                        <select value={msmeForm.msmeCategory || 'Manufacturer'} onChange={e => setMsmeForm(p => ({ ...p, msmeCategory: e.target.value }))}
+                                            className="w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]">
+                                            {['Manufacturer', 'Service Provider', 'Trader', 'Others'].map(c => <option key={c}>{c}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">MSME Remark</label>
+                                        <input value={msmeForm.msmeRemark || ''} onChange={e => setMsmeForm(p => ({ ...p, msmeRemark: e.target.value }))}
+                                            className="w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]" />
+                                    </div>
+                                </div>
+                            </div>
+                        ) : reg.msme?.udhyamRegNo ? (
+                            <div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 border-l border-t border-gray-200">
+                                    {[
+                                        { label: 'Udhyam Reg. No.', value: reg.msme.udhyamRegNo },
+                                        { label: 'MSME Category', value: reg.msme.msmeCategory },
+                                        { label: 'Issue Date', value: reg.msme.udhyamIssueDate ? new Date(reg.msme.udhyamIssueDate).toLocaleDateString('en-IN') : null },
+                                        { label: 'Contact Person', value: reg.msme.udhyamContactPerson },
+                                        { label: 'Designation', value: reg.msme.udhyamDesignation },
+                                        { label: 'Mobile No.', value: reg.msme.udhyamMobileNo },
+                                        { label: 'Email ID', value: reg.msme.udhyamEmailId },
+                                        { label: 'Address', value: reg.msme.udhyamAddress },
+                                        { label: 'DFO Location', value: reg.msme.dfoLocation },
+                                        { label: 'DFO Email', value: reg.msme.dfoEmail },
+                                        { label: 'DFO Mobile', value: reg.msme.dfoMobileNo },
+                                        { label: 'Remark', value: reg.msme.msmeRemark },
+                                    ].map((item, idx) => (
+                                        <div key={idx} className="border-r border-b border-gray-200 p-3">
+                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">{item.label}</p>
+                                            <p className="text-sm font-bold text-gray-800">{item.value || <span className="text-gray-300 font-normal italic">Not provided</span>}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                                {reg.msme.udhyamCertificateUrl && (
+                                    <div className="px-5 py-3 border-t border-gray-200 bg-slate-50">
+                                        {(() => {
+                                            const url = reg.msme.udhyamCertificateUrl.startsWith('http') ? reg.msme.udhyamCertificateUrl : `${SERVER_URL}${reg.msme.udhyamCertificateUrl}`;
+                                            return (
+                                                <a href={url} target="_blank" rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#23471d] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1a3516] transition-all">
+                                                    <ExternalLink size={12} /> View Udhyam Certificate
+                                                </a>
+                                            );
+                                        })()}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="p-6 text-center text-[11px] text-slate-400 font-bold uppercase tracking-widest">
+                                No MSME details added yet. Click "Add MSME" to add.
+                            </div>
+                        )}
+                    </div>
 
                     {/* DOCUMENTS */}
                     <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
