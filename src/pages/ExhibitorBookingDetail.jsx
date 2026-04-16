@@ -323,7 +323,7 @@ const ExhibitorBookingDetail = () => {
                                 <a href={reg.receiptUrl.startsWith('http') ? reg.receiptUrl : `${SERVER_URL}${reg.receiptUrl}`}
                                     target="_blank" rel="noopener noreferrer"
                                     className="flex items-center gap-2 px-4 py-2 bg-slate-700 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all">
-                                    <ExternalLink size={12} /> Uploaded Receipt
+                                    <ExternalLink size={12} /> Uploaded Invoice
                                 </a>
                             )}
                             {!reg.registrationPdfUrl && !reg.receiptPdfUrl && !reg.receiptUrl && (
