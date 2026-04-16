@@ -258,10 +258,6 @@ const ExhibitorBookingDetail = () => {
                                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Razorpay Payment ID</p>
                                     <p className="text-xs font-bold text-indigo-700 break-all">{reg.paymentId}</p>
                                 </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Order ID</p>
-                                    <p className="text-xs font-bold text-indigo-700 break-all">{reg.razorpayOrderId}</p>
-                                </div>
                             </div>
                         )}
                     </div>
@@ -270,6 +266,35 @@ const ExhibitorBookingDetail = () => {
                     <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
                         <SectionHeader title="CRM & Attribution Details" icon={Info} />
                         <Grid data={crmData} />
+                    </div>
+
+                    {/* DOCUMENTS */}
+                    <div className="bg-white shadow-sm border-2 border-gray-100 overflow-hidden">
+                        <SectionHeader title="Documents & Downloads" icon={FileText} />
+                        <div className="p-5 flex flex-wrap gap-3">
+                            {reg.registrationPdfUrl && (
+                                <a href={reg.registrationPdfUrl} target="_blank" rel="noopener noreferrer"
+                                    className="flex items-center gap-2 px-4 py-2 bg-[#23471d] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1a3516] transition-all">
+                                    <FileText size={12} /> Registration Form (PDF)
+                                </a>
+                            )}
+                            {reg.receiptPdfUrl && (
+                                <a href={reg.receiptPdfUrl} target="_blank" rel="noopener noreferrer"
+                                    className="flex items-center gap-2 px-4 py-2 bg-[#d26019] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#b8521a] transition-all">
+                                    <Receipt size={12} /> Payment Receipt (PDF)
+                                </a>
+                            )}
+                            {reg.receiptUrl && (
+                                <a href={reg.receiptUrl.startsWith('http') ? reg.receiptUrl : `${SERVER_URL}${reg.receiptUrl}`}
+                                    target="_blank" rel="noopener noreferrer"
+                                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all">
+                                    <ExternalLink size={12} /> Uploaded Receipt
+                                </a>
+                            )}
+                            {!reg.registrationPdfUrl && !reg.receiptPdfUrl && !reg.receiptUrl && (
+                                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">No documents available</p>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
