@@ -69,4 +69,99 @@ api.interceptors.response.use(
   },
 );
 
+const unwrapApiResponse = (response) => response?.data ?? response;
+
+export const heroBackgroundApi = {
+  getAll: async () => {
+    const payload = unwrapApiResponse(
+      await api.get(`/api/hero-background?t=${Date.now()}`),
+    );
+    return payload.success ? payload.data : [];
+  },
+  getByPage: async (pageName) => {
+    const items = await heroBackgroundApi.getAll();
+    return items.find((item) => item.pageName === pageName) || null;
+  },
+};
+
+export const buyerRegistrationApi = {
+  submit: async (payload) => {
+    const isFormData = payload instanceof FormData;
+    const response = await api.post("/api/buyer-registration", payload, {
+      headers: isFormData
+        ? { "Content-Type": "multipart/form-data" }
+        : { "Content-Type": "application/json" },
+    });
+    return unwrapApiResponse(response);
+  },
+  getAll: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/buyer-registration"));
+    return payload.success ? payload.data : [];
+  },
+  delete: async (id) => {
+    const response = await api.delete(`/api/buyer-registration/${id}`);
+    return unwrapApiResponse(response);
+  },
+  createOrder: async (amount) => {
+    const response = await api.post("/api/buyer-registration/create-order", {
+      amount,
+    });
+    return unwrapApiResponse(response);
+  },
+  verifyPayment: async (regId, paymentDetails) => {
+    const response = await api.post("/api/buyer-registration/verify-payment", {
+      regId,
+      paymentDetails,
+    });
+    return unwrapApiResponse(response);
+  },
+  getConfig: async () => {
+    const response = await api.get("/api/buyer-registration/config");
+    return unwrapApiResponse(response);
+  },
+};
+
+export const otpApi = {
+  request: async (identifier, type, name) => {
+    const response = await api.post("/api/otp/request", {
+      identifier,
+      type,
+      name,
+    });
+    return unwrapApiResponse(response);
+  },
+  verify: async (identifier, otp, type) => {
+    const response = await api.post("/api/otp/verify", {
+      identifier,
+      otp,
+      type,
+    });
+    return unwrapApiResponse(response);
+  },
+};
+
+export const policyApi = {
+  getByPage: async (page) => {
+    const payload = unwrapApiResponse(await api.get(`/api/policies/${page}`));
+    return payload.success ? payload.data : null;
+  },
+};
+
+export const crmApi = {
+  getCountries: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/crm-countries"));
+    return Array.isArray(payload) ? payload : payload.data || [];
+  },
+  getStates: async (countryCode) => {
+    const query = countryCode ? `?countryCode=${countryCode}` : "";
+    const payload = unwrapApiResponse(await api.get(`/api/crm-states${query}`));
+    return Array.isArray(payload) ? payload : payload.data || [];
+  },
+  getCities: async (stateCode) => {
+    const query = stateCode ? `?stateCode=${stateCode}` : "";
+    const payload = unwrapApiResponse(await api.get(`/api/crm-cities${query}`));
+    return Array.isArray(payload) ? payload : payload.data || [];
+  },
+};
+
 export default api;

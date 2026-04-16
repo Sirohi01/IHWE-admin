@@ -77,7 +77,7 @@ import ServiceList from "../pages/service/ServiceList";
 import EPromotionManage from "../pages/EPromotionManage";
 import EPromotionRegisters from "../pages/EPromotionRegisters";
 import ContactEnquiries from "../pages/ContactEnquiries";
-import BuyerRegistrations from "../pages/BuyerRegistrations";
+// import BuyerRegistrations from "../pages/buyer/BuyerRegistrations";
 import BuyerRegistrationDetail from "../pages/BuyerRegistrationDetail";
 import BuyerRegistrationEdit from "../pages/BuyerRegistrationEdit";
 import BuyerRegistrationConfig from "../pages/BuyerRegistrationConfig";
@@ -148,6 +148,8 @@ import PrimaryProductInterest from "../pages/admin_management/PrimaryProductInte
 import SecondaryProductCategories from "../pages/admin_management/SecondaryProductCategories";
 import MeetingPriorityLevel from "../pages/admin_management/MeetingPriorityLevel";
 import AddDomesticVisitor from "../pages/web_visitor_data/add_new_visitor/AddDomesticVisitor";
+import BuyerRegistration from "../pages/buyer/BuyerRegistration";
+import BuyerList from "../pages/buyer/BuyerList";
 
 export default function AppRoutes() {
   return (
@@ -214,7 +216,7 @@ export default function AppRoutes() {
             element={<EPromotionRegisters />}
           />
           <Route path="contact-enquiries" element={<ContactEnquiries />} />
-          <Route path="buyer-registrations" element={<BuyerRegistrations />} />
+          {/* <Route path="buyer-registrations" element={<BuyerRegistrations />} /> */}
           <Route
             path="buyer-registration/:id"
             element={<BuyerRegistrationDetail />}
@@ -417,6 +419,8 @@ export default function AppRoutes() {
           <Route path="/primary-product-interest" element={<PrimaryProductInterest />} />
           <Route path="/secondary-product-categories" element={<SecondaryProductCategories />} />
           <Route path="/meeting-priority-level" element={<MeetingPriorityLevel />} />
+          <Route path="/buyer-registration" element={<BuyerRegistration />} />
+          <Route path="/buyer-list" element={<BuyerList />} />
         </Route>
       </Route>
     </Routes>
