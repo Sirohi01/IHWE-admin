@@ -61,7 +61,8 @@ const BuyerList = () => {
         reg.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         reg.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         reg.emailAddress?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        reg.country?.toLowerCase().includes(searchTerm.toLowerCase())
+        reg.country?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        reg.registrationId?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -74,6 +75,15 @@ const BuyerList = () => {
             width: "60px",
             render: (_, index) => (
                 <div className="font-bold text-gray-900">{startIndex + index + 1}</div>
+            )
+        },
+        {
+            key: "registrationId",
+            label: "BUYER ID",
+            render: (row) => (
+                <div className="font-mono text-[11px] font-black text-[#23471d] uppercase tracking-wider">
+                    {row.registrationId || "PENDING"}
+                </div>
             )
         },
         {
