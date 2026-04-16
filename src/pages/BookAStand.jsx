@@ -236,6 +236,48 @@ const BookAStand = () => {
                     confirmButtonColor: '#23471d'
                 }).then(() => {
                     setExhibitorType(null);
+                    setFormData({
+                        exhibitorName: '',
+                        typeOfBusiness: '',
+                        industrySector: '',
+                        website: '',
+                        address: '',
+                        country: '',
+                        state: '',
+                        city: '',
+                        pincode: '',
+                        landlineNo: '',
+                        gstNo: '',
+                        panNo: '',
+                        natureOfBusiness: '',
+                        fasciaName: '',
+                        contact1: { title: 'Mr.', firstName: '', lastName: '', email: '', designation: '', mobile: '', alternateNo: '' },
+                        contact2: { title: 'Mr.', firstName: '', lastName: '', email: '', designation: '', mobile: '', alternateNo: '' },
+                        participation: {
+                            eventId: '',
+                            stallNo: '',
+                            stallFor: '',
+                            stallSize: 0,
+                            stallType: 'Shell Space',
+                            currency: 'INR',
+                            rate: 0,
+                            amount: 0,
+                            gstPercent: 18,
+                            total: 0,
+                            dimension: ''
+                        },
+                        selectedSectors: [],
+                        primaryCategory: '',
+                        subCategory: '',
+                        referredBy: 'Direct Website',
+                        spokenWith: '',
+                        filledBy: 'Admin',
+                        status: 'pending',
+                        paymentMode: 'manual',
+                        paymentType: 'full',
+                        amountPaid: 0,
+                        balanceAmount: 0
+                    });
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 });
             }

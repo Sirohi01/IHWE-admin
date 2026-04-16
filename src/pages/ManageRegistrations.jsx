@@ -354,6 +354,7 @@ const ManageRegistrations = () => {
                     row.status === 'advance-paid' ? 'bg-cyan-50 text-cyan-700 border-cyan-200' :
                     row.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                     row.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                    row.status === 'payment-failed' ? 'bg-rose-100 text-rose-800 border-rose-300' :
                     'bg-slate-50 text-slate-700 border-slate-200'
                 }`}>
                     {row.status}
@@ -382,6 +383,7 @@ const ManageRegistrations = () => {
                         <option value="advance-paid">Advance Paid</option>
                         <option value="confirmed">Confirmed</option>
                         <option value="rejected">Rejected</option>
+                        <option value="payment-failed">Payment Failed</option>
                     </select>
                 </div>
             )
@@ -671,6 +673,7 @@ const ManageRegistrations = () => {
                                         <option value="advance-paid">Partial (Advance)</option>
                                         <option value="confirmed">Confirmed Registry</option>
                                         <option value="rejected">Rejected / Cancelled</option>
+                                        <option value="payment-failed">Payment Failed</option>
                                     </select>
                                 </div>
                             </div>

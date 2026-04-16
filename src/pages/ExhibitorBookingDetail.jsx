@@ -47,6 +47,7 @@ const STATUS_STYLES = {
     confirmed: 'bg-blue-50 text-blue-700 border-blue-200',
     pending: 'bg-amber-50 text-amber-700 border-amber-200',
     rejected: 'bg-red-50 text-red-700 border-red-200',
+    'payment-failed': 'bg-rose-100 text-rose-800 border-rose-300',
 };
 
 const ExhibitorBookingDetail = () => {

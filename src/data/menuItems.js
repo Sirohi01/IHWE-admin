@@ -34,6 +34,7 @@ import {
   Sparkles,
   ClipboardList,
   Activity,
+  AlertTriangle,
 } from "lucide-react";
 
 
@@ -345,6 +346,12 @@ export const menuItems = [
     label: "Exhibitor Bookings",
     icon: ClipboardList,
     path: "/exhibitor-bookings",
+  },
+  {
+    type: "item",
+    label: "Failed Payments",
+    icon: AlertTriangle,
+    path: "/failed-payments",
   },
 
   /* ================= GENERAL OPERATIONS ================= */
