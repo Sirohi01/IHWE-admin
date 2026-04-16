@@ -29,6 +29,17 @@ const Field = ({ label, value }) => (
     </div>
 );
 
+const EditField = ({ label, value, onChange, type = 'text', editing }) => (
+    <div className="p-3 border-r border-b border-gray-100">
+        <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+        {editing
+            ? <input type={type} value={value || ''} onChange={e => onChange(e.target.value)}
+                className="w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]" />
+            : <p className="text-[12px] font-bold text-gray-800 break-words">{value || '—'}</p>
+        }
+    </div>
+);
+
 const Grid4 = ({ items }) => (
     <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
         {items.map((item, i) => <Field key={i} {...item} />)}
@@ -78,8 +89,6 @@ function OverviewTab({ reg, fmt, id, onRefresh }) {
         subCategory: reg.subCategory || '',
     });
 
-    const iCls = "w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]";
-    const lCls = "text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1 block";
     const inp = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
     const handleSave = async () => {
@@ -104,39 +113,29 @@ function OverviewTab({ reg, fmt, id, onRefresh }) {
         <button onClick={() => setEditing(true)} className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30"><Pencil size={11} /> Edit</button>
     );
 
-    const F = ({ label, k, type = 'text' }) => (
-        <div className="p-3 border-r border-b border-gray-100">
-            <label className={lCls}>{label}</label>
-            {editing
-                ? <input type={type} value={form[k] || ''} onChange={e => inp(k, e.target.value)} className={iCls} />
-                : <p className="text-[12px] font-bold text-gray-800">{reg[k] || '—'}</p>
-            }
-        </div>
-    );
-
     return (
         <div className="space-y-4">
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Company & Business" icon={Building2} actions={editActions} />
                 <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
-                    <F label="Company Name" k="exhibitorName" />
-                    <F label="Type of Business" k="typeOfBusiness" />
-                    <F label="Industry Sector" k="industrySector" />
-                    <F label="Fascia Name" k="fasciaName" />
-                    <F label="Website" k="website" />
-                    <F label="GST No." k="gstNo" />
-                    <F label="PAN No." k="panNo" />
-                    <F label="Landline" k="landlineNo" />
+                    <EditField label="Company Name" value={form.exhibitorName} onChange={v => inp('exhibitorName', v)} editing={editing} />
+                    <EditField label="Type of Business" value={form.typeOfBusiness} onChange={v => inp('typeOfBusiness', v)} editing={editing} />
+                    <EditField label="Industry Sector" value={form.industrySector} onChange={v => inp('industrySector', v)} editing={editing} />
+                    <EditField label="Fascia Name" value={form.fasciaName} onChange={v => inp('fasciaName', v)} editing={editing} />
+                    <EditField label="Website" value={form.website} onChange={v => inp('website', v)} editing={editing} />
+                    <EditField label="GST No." value={form.gstNo} onChange={v => inp('gstNo', v)} editing={editing} />
+                    <EditField label="PAN No." value={form.panNo} onChange={v => inp('panNo', v)} editing={editing} />
+                    <EditField label="Landline" value={form.landlineNo} onChange={v => inp('landlineNo', v)} editing={editing} />
                 </div>
             </div>
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Address" icon={MapPin} />
                 <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
-                    <F label="Address" k="address" />
-                    <F label="City" k="city" />
-                    <F label="State" k="state" />
-                    <F label="Country" k="country" />
-                    <F label="Pincode" k="pincode" />
+                    <EditField label="Address" value={form.address} onChange={v => inp('address', v)} editing={editing} />
+                    <EditField label="City" value={form.city} onChange={v => inp('city', v)} editing={editing} />
+                    <EditField label="State" value={form.state} onChange={v => inp('state', v)} editing={editing} />
+                    <EditField label="Country" value={form.country} onChange={v => inp('country', v)} editing={editing} />
+                    <EditField label="Pincode" value={form.pincode} onChange={v => inp('pincode', v)} editing={editing} />
                 </div>
             </div>
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
@@ -155,14 +154,14 @@ function OverviewTab({ reg, fmt, id, onRefresh }) {
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="CRM & Attribution" icon={Info} />
                 <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
-                    <div className="p-3 border-r border-b border-gray-100"><label className={lCls}>Registration ID</label><p className="text-[12px] font-bold text-gray-800">{reg.registrationId || '—'}</p></div>
-                    <F label="Referred By" k="referredBy" />
-                    <F label="Spoken With" k="spokenWith" />
-                    <div className="p-3 border-r border-b border-gray-100"><label className={lCls}>Filled By</label><p className="text-[12px] font-bold text-gray-800">{reg.filledBy || '—'}</p></div>
-                    <F label="Primary Category" k="primaryCategory" />
-                    <F label="Sub Category" k="subCategory" />
-                    <div className="p-3 border-r border-b border-gray-100"><label className={lCls}>Selected Sectors</label><p className="text-[12px] font-bold text-gray-800">{reg.selectedSectors?.join(', ') || '—'}</p></div>
-                    <div className="p-3 border-r border-b border-gray-100"><label className={lCls}>Registered On</label><p className="text-[12px] font-bold text-gray-800">{reg.createdAt ? new Date(reg.createdAt).toLocaleDateString('en-IN') : '—'}</p></div>
+                    <Field label="Registration ID" value={reg.registrationId} />
+                    <EditField label="Referred By" value={form.referredBy} onChange={v => inp('referredBy', v)} editing={editing} />
+                    <EditField label="Spoken With" value={form.spokenWith} onChange={v => inp('spokenWith', v)} editing={editing} />
+                    <Field label="Filled By" value={reg.filledBy} />
+                    <EditField label="Primary Category" value={form.primaryCategory} onChange={v => inp('primaryCategory', v)} editing={editing} />
+                    <EditField label="Sub Category" value={form.subCategory} onChange={v => inp('subCategory', v)} editing={editing} />
+                    <Field label="Selected Sectors" value={reg.selectedSectors?.join(', ')} />
+                    <Field label="Registered On" value={reg.createdAt ? new Date(reg.createdAt).toLocaleDateString('en-IN') : null} />
                 </div>
             </div>
         </div>
@@ -173,12 +172,10 @@ function ContactsTab({ reg, id, onRefresh }) {
     const [editing, setEditing] = useState(false);
     const [saving, setSaving] = useState(false);
     const [form, setForm] = useState({
-        contact1: { ...reg.contact1 },
-        contact2: { ...reg.contact2 },
+        contact1: { ...(reg.contact1 || {}) },
+        contact2: { ...(reg.contact2 || {}) },
     });
 
-    const iCls = "w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]";
-    const lCls = "text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1 block";
     const inp1 = (k, v) => setForm(p => ({ ...p, contact1: { ...p.contact1, [k]: v } }));
     const inp2 = (k, v) => setForm(p => ({ ...p, contact2: { ...p.contact2, [k]: v } }));
 
@@ -204,40 +201,22 @@ function ContactsTab({ reg, id, onRefresh }) {
         <button onClick={() => setEditing(true)} className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30"><Pencil size={11} /> Edit</button>
     );
 
-    const CF = ({ label, k, contact, inp }) => (
-        <div className="p-3 border-r border-b border-gray-100">
-            <label className={lCls}>{label}</label>
-            {editing
-                ? <input value={contact[k] || ''} onChange={e => inp(k, e.target.value)} className={iCls} />
-                : <p className="text-[12px] font-bold text-gray-800">{contact[k] || '—'}</p>
-            }
-        </div>
-    );
-
     return (
         <div className="space-y-4">
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Primary Contact Person" icon={User} actions={editActions} />
                 <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
-                    <CF label="Title" k="title" contact={editing ? form.contact1 : reg.contact1 || {}} inp={inp1} />
-                    <CF label="First Name" k="firstName" contact={editing ? form.contact1 : reg.contact1 || {}} inp={inp1} />
-                    <CF label="Last Name" k="lastName" contact={editing ? form.contact1 : reg.contact1 || {}} inp={inp1} />
-                    <CF label="Designation" k="designation" contact={editing ? form.contact1 : reg.contact1 || {}} inp={inp1} />
-                    <CF label="Email" k="email" contact={editing ? form.contact1 : reg.contact1 || {}} inp={inp1} />
-                    <CF label="Mobile" k="mobile" contact={editing ? form.contact1 : reg.contact1 || {}} inp={inp1} />
-                    <CF label="Alternate No." k="alternateNo" contact={editing ? form.contact1 : reg.contact1 || {}} inp={inp1} />
+                    {['title','firstName','lastName','designation','email','mobile','alternateNo'].map(k => (
+                        <EditField key={k} label={k.replace(/([A-Z])/g,' $1').trim()} value={editing ? form.contact1[k] : reg.contact1?.[k]} onChange={v => inp1(k, v)} editing={editing} />
+                    ))}
                 </div>
             </div>
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Secondary Contact Person" icon={Users} />
                 <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
-                    <CF label="Title" k="title" contact={editing ? form.contact2 : reg.contact2 || {}} inp={inp2} />
-                    <CF label="First Name" k="firstName" contact={editing ? form.contact2 : reg.contact2 || {}} inp={inp2} />
-                    <CF label="Last Name" k="lastName" contact={editing ? form.contact2 : reg.contact2 || {}} inp={inp2} />
-                    <CF label="Designation" k="designation" contact={editing ? form.contact2 : reg.contact2 || {}} inp={inp2} />
-                    <CF label="Email" k="email" contact={editing ? form.contact2 : reg.contact2 || {}} inp={inp2} />
-                    <CF label="Mobile" k="mobile" contact={editing ? form.contact2 : reg.contact2 || {}} inp={inp2} />
-                    <CF label="Alternate No." k="alternateNo" contact={editing ? form.contact2 : reg.contact2 || {}} inp={inp2} />
+                    {['title','firstName','lastName','designation','email','mobile','alternateNo'].map(k => (
+                        <EditField key={k} label={k.replace(/([A-Z])/g,' $1').trim()} value={editing ? form.contact2[k] : reg.contact2?.[k]} onChange={v => inp2(k, v)} editing={editing} />
+                    ))}
                 </div>
             </div>
         </div>
