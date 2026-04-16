@@ -55,31 +55,89 @@ const TABS = [
 
 // ─── Tab Components ───────────────────────────────────────────────────────────
 
-function OverviewTab({ reg, fmt }) {
+function OverviewTab({ reg, fmt, id, onRefresh }) {
+    const [editing, setEditing] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [form, setForm] = useState({
+        exhibitorName: reg.exhibitorName || '',
+        typeOfBusiness: reg.typeOfBusiness || '',
+        industrySector: reg.industrySector || '',
+        fasciaName: reg.fasciaName || '',
+        website: reg.website || '',
+        gstNo: reg.gstNo || '',
+        panNo: reg.panNo || '',
+        landlineNo: reg.landlineNo || '',
+        address: reg.address || '',
+        city: reg.city || '',
+        state: reg.state || '',
+        country: reg.country || '',
+        pincode: reg.pincode || '',
+        referredBy: reg.referredBy || '',
+        spokenWith: reg.spokenWith || '',
+        primaryCategory: reg.primaryCategory || '',
+        subCategory: reg.subCategory || '',
+    });
+
+    const iCls = "w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]";
+    const lCls = "text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1 block";
+    const inp = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const res = await api.put(`/api/exhibitor-registration/${id}`, form);
+            if (res.data.success) {
+                Swal.fire({ icon: 'success', title: 'Updated', timer: 1200, showConfirmButton: false });
+                setEditing(false);
+                onRefresh();
+            }
+        } catch { Swal.fire('Error', 'Update failed', 'error'); }
+        finally { setSaving(false); }
+    };
+
+    const editActions = editing ? (
+        <>
+            <button onClick={() => setEditing(false)} className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30"><X size={11} /> Cancel</button>
+            <button onClick={handleSave} disabled={saving} className="flex items-center gap-1 px-3 py-1 bg-[#d26019] text-white text-[10px] font-bold uppercase rounded-[2px] disabled:opacity-60"><Save size={11} /> {saving ? 'Saving...' : 'Save'}</button>
+        </>
+    ) : (
+        <button onClick={() => setEditing(true)} className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30"><Pencil size={11} /> Edit</button>
+    );
+
+    const F = ({ label, k, type = 'text' }) => (
+        <div className="p-3 border-r border-b border-gray-100">
+            <label className={lCls}>{label}</label>
+            {editing
+                ? <input type={type} value={form[k] || ''} onChange={e => inp(k, e.target.value)} className={iCls} />
+                : <p className="text-[12px] font-bold text-gray-800">{reg[k] || '—'}</p>
+            }
+        </div>
+    );
+
     return (
         <div className="space-y-4">
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
-                <SH title="Company & Business" icon={Building2} />
-                <Grid4 items={[
-                    { label: 'Company Name', value: reg.exhibitorName },
-                    { label: 'Type of Business', value: reg.typeOfBusiness },
-                    { label: 'Industry Sector', value: reg.industrySector },
-                    { label: 'Fascia Name', value: reg.fasciaName },
-                    { label: 'Website', value: reg.website },
-                    { label: 'GST No.', value: reg.gstNo },
-                    { label: 'PAN No.', value: reg.panNo },
-                    { label: 'Landline', value: reg.landlineNo },
-                ]} />
+                <SH title="Company & Business" icon={Building2} actions={editActions} />
+                <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
+                    <F label="Company Name" k="exhibitorName" />
+                    <F label="Type of Business" k="typeOfBusiness" />
+                    <F label="Industry Sector" k="industrySector" />
+                    <F label="Fascia Name" k="fasciaName" />
+                    <F label="Website" k="website" />
+                    <F label="GST No." k="gstNo" />
+                    <F label="PAN No." k="panNo" />
+                    <F label="Landline" k="landlineNo" />
+                </div>
             </div>
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Address" icon={MapPin} />
-                <Grid4 items={[
-                    { label: 'Address', value: reg.address },
-                    { label: 'City', value: reg.city },
-                    { label: 'State', value: reg.state },
-                    { label: 'Country', value: reg.country },
-                    { label: 'Pincode', value: reg.pincode },
-                ]} />
+                <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
+                    <F label="Address" k="address" />
+                    <F label="City" k="city" />
+                    <F label="State" k="state" />
+                    <F label="Country" k="country" />
+                    <F label="Pincode" k="pincode" />
+                </div>
             </div>
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Stall & Event" icon={Layers} />
@@ -96,47 +154,91 @@ function OverviewTab({ reg, fmt }) {
             </div>
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="CRM & Attribution" icon={Info} />
-                <Grid4 items={[
-                    { label: 'Registration ID', value: reg.registrationId },
-                    { label: 'Referred By', value: reg.referredBy },
-                    { label: 'Spoken With', value: reg.spokenWith },
-                    { label: 'Filled By', value: reg.filledBy },
-                    { label: 'Primary Category', value: reg.primaryCategory },
-                    { label: 'Sub Category', value: reg.subCategory },
-                    { label: 'Selected Sectors', value: reg.selectedSectors },
-                    { label: 'Registered On', value: reg.createdAt ? new Date(reg.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : null },
-                ]} />
+                <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
+                    <div className="p-3 border-r border-b border-gray-100"><label className={lCls}>Registration ID</label><p className="text-[12px] font-bold text-gray-800">{reg.registrationId || '—'}</p></div>
+                    <F label="Referred By" k="referredBy" />
+                    <F label="Spoken With" k="spokenWith" />
+                    <div className="p-3 border-r border-b border-gray-100"><label className={lCls}>Filled By</label><p className="text-[12px] font-bold text-gray-800">{reg.filledBy || '—'}</p></div>
+                    <F label="Primary Category" k="primaryCategory" />
+                    <F label="Sub Category" k="subCategory" />
+                    <div className="p-3 border-r border-b border-gray-100"><label className={lCls}>Selected Sectors</label><p className="text-[12px] font-bold text-gray-800">{reg.selectedSectors?.join(', ') || '—'}</p></div>
+                    <div className="p-3 border-r border-b border-gray-100"><label className={lCls}>Registered On</label><p className="text-[12px] font-bold text-gray-800">{reg.createdAt ? new Date(reg.createdAt).toLocaleDateString('en-IN') : '—'}</p></div>
+                </div>
             </div>
         </div>
     );
 }
 
-function ContactsTab({ reg }) {
+function ContactsTab({ reg, id, onRefresh }) {
+    const [editing, setEditing] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [form, setForm] = useState({
+        contact1: { ...reg.contact1 },
+        contact2: { ...reg.contact2 },
+    });
+
+    const iCls = "w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]";
+    const lCls = "text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1 block";
+    const inp1 = (k, v) => setForm(p => ({ ...p, contact1: { ...p.contact1, [k]: v } }));
+    const inp2 = (k, v) => setForm(p => ({ ...p, contact2: { ...p.contact2, [k]: v } }));
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const res = await api.put(`/api/exhibitor-registration/${id}`, form);
+            if (res.data.success) {
+                Swal.fire({ icon: 'success', title: 'Contacts Updated', timer: 1200, showConfirmButton: false });
+                setEditing(false);
+                onRefresh();
+            }
+        } catch { Swal.fire('Error', 'Update failed', 'error'); }
+        finally { setSaving(false); }
+    };
+
+    const editActions = editing ? (
+        <>
+            <button onClick={() => setEditing(false)} className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30"><X size={11} /> Cancel</button>
+            <button onClick={handleSave} disabled={saving} className="flex items-center gap-1 px-3 py-1 bg-[#d26019] text-white text-[10px] font-bold uppercase rounded-[2px] disabled:opacity-60"><Save size={11} /> {saving ? 'Saving...' : 'Save'}</button>
+        </>
+    ) : (
+        <button onClick={() => setEditing(true)} className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30"><Pencil size={11} /> Edit</button>
+    );
+
+    const CF = ({ label, k, contact, inp }) => (
+        <div className="p-3 border-r border-b border-gray-100">
+            <label className={lCls}>{label}</label>
+            {editing
+                ? <input value={contact[k] || ''} onChange={e => inp(k, e.target.value)} className={iCls} />
+                : <p className="text-[12px] font-bold text-gray-800">{contact[k] || '—'}</p>
+            }
+        </div>
+    );
+
     return (
         <div className="space-y-4">
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
-                <SH title="Primary Contact Person" icon={User} />
-                <Grid4 items={[
-                    { label: 'Title', value: reg.contact1?.title },
-                    { label: 'First Name', value: reg.contact1?.firstName },
-                    { label: 'Last Name', value: reg.contact1?.lastName },
-                    { label: 'Designation', value: reg.contact1?.designation },
-                    { label: 'Email', value: reg.contact1?.email },
-                    { label: 'Mobile', value: reg.contact1?.mobile },
-                    { label: 'Alternate No.', value: reg.contact1?.alternateNo },
-                ]} />
+                <SH title="Primary Contact Person" icon={User} actions={editActions} />
+                <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
+                    <CF label="Title" k="title" contact={editing ? form.contact1 : reg.contact1 || {}} inp={inp1} />
+                    <CF label="First Name" k="firstName" contact={editing ? form.contact1 : reg.contact1 || {}} inp={inp1} />
+                    <CF label="Last Name" k="lastName" contact={editing ? form.contact1 : reg.contact1 || {}} inp={inp1} />
+                    <CF label="Designation" k="designation" contact={editing ? form.contact1 : reg.contact1 || {}} inp={inp1} />
+                    <CF label="Email" k="email" contact={editing ? form.contact1 : reg.contact1 || {}} inp={inp1} />
+                    <CF label="Mobile" k="mobile" contact={editing ? form.contact1 : reg.contact1 || {}} inp={inp1} />
+                    <CF label="Alternate No." k="alternateNo" contact={editing ? form.contact1 : reg.contact1 || {}} inp={inp1} />
+                </div>
             </div>
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Secondary Contact Person" icon={Users} />
-                <Grid4 items={[
-                    { label: 'Title', value: reg.contact2?.title },
-                    { label: 'First Name', value: reg.contact2?.firstName },
-                    { label: 'Last Name', value: reg.contact2?.lastName },
-                    { label: 'Designation', value: reg.contact2?.designation },
-                    { label: 'Email', value: reg.contact2?.email },
-                    { label: 'Mobile', value: reg.contact2?.mobile },
-                    { label: 'Alternate No.', value: reg.contact2?.alternateNo },
-                ]} />
+                <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
+                    <CF label="Title" k="title" contact={editing ? form.contact2 : reg.contact2 || {}} inp={inp2} />
+                    <CF label="First Name" k="firstName" contact={editing ? form.contact2 : reg.contact2 || {}} inp={inp2} />
+                    <CF label="Last Name" k="lastName" contact={editing ? form.contact2 : reg.contact2 || {}} inp={inp2} />
+                    <CF label="Designation" k="designation" contact={editing ? form.contact2 : reg.contact2 || {}} inp={inp2} />
+                    <CF label="Email" k="email" contact={editing ? form.contact2 : reg.contact2 || {}} inp={inp2} />
+                    <CF label="Mobile" k="mobile" contact={editing ? form.contact2 : reg.contact2 || {}} inp={inp2} />
+                    <CF label="Alternate No." k="alternateNo" contact={editing ? form.contact2 : reg.contact2 || {}} inp={inp2} />
+                </div>
             </div>
         </div>
     );
@@ -465,8 +567,8 @@ export default function ExhibitorBookingDetail() {
             </div>
 
             {/* Tab Content */}
-            {activeTab === 'overview'  && <OverviewTab reg={reg} fmt={fmt} />}
-            {activeTab === 'contacts'  && <ContactsTab reg={reg} />}
+            {activeTab === 'overview'  && <OverviewTab reg={reg} fmt={fmt} id={id} onRefresh={fetchReg} />}
+            {activeTab === 'contacts'  && <ContactsTab reg={reg} id={id} onRefresh={fetchReg} />}
             {activeTab === 'payment'   && <PaymentTab reg={reg} fmt={fmt} />}
             {activeTab === 'documents' && <DocumentsTab reg={reg} />}
             {activeTab === 'msme'      && <MSMETab reg={reg} id={id} onRefresh={fetchReg} />}
