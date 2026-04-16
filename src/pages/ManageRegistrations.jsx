@@ -72,7 +72,11 @@ const ManageRegistrations = () => {
         if (newStatus === 'paid' || newStatus === 'advance-paid') {
             const isAdvance = newStatus === 'advance-paid';
             const totalAmount = regData?.participation?.total || 0;
-            const cur = regData?.currency === 'USD' ? '$' : '₹';
+            // If already advance-paid, show remaining balance instead of full total
+            const alreadyPaid = regData?.amountPaid || 0;
+            const remainingAmount = Math.max(0, totalAmount - alreadyPaid);
+            const collectAmount = isAdvance ? totalAmount : remainingAmount;
+            const cur = regData?.participation?.currency === 'USD' ? '$' : '₹';
             const fmtAmt = (n) => cur + ' ' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 });
 
             // Build percent buttons with plain string concat (no nested backticks)
@@ -121,10 +125,17 @@ const ManageRegistrations = () => {
                 + '<p id="swal-balance-display" style="font-size:18px;font-weight:900;color:#dc2626;margin:0">' + fmtAmt(totalAmount * 0.5) + '</p>'
                 + '</div></div></div>';
 
-            const fullHTML = '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">'
-                + '<div><p style="font-size:10px;font-weight:900;text-transform:uppercase;color:#166534;margin:0 0 4px 0">Full Amount to be Collected</p>'
-                + '<p style="font-size:22px;font-weight:900;color:#14532d;margin:0">' + fmtAmt(totalAmount) + '</p></div>'
-                + '<span style="background:#22c55e;color:white;font-size:9px;font-weight:900;padding:6px 16px;border-radius:100px;text-transform:uppercase">FULL SETTLEMENT</span></div>';
+            const fullHTML = '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:14px;margin-bottom:16px">'
+                + (alreadyPaid > 0 ? '<div style="background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:10px 12px;margin-bottom:12px;display:flex;justify-content:space-between">'
+                    + '<div><p style="font-size:9px;font-weight:900;text-transform:uppercase;color:#854d0e;margin:0 0 2px 0">Already Paid</p>'
+                    + '<p style="font-size:14px;font-weight:900;color:#854d0e;margin:0">' + fmtAmt(alreadyPaid) + '</p></div>'
+                    + '<div><p style="font-size:9px;font-weight:900;text-transform:uppercase;color:#166534;margin:0 0 2px 0">Contract Total</p>'
+                    + '<p style="font-size:14px;font-weight:900;color:#166534;margin:0">' + fmtAmt(totalAmount) + '</p></div>'
+                    + '</div>' : '')
+                + '<div style="display:flex;justify-content:space-between;align-items:center">'
+                + '<div><p style="font-size:10px;font-weight:900;text-transform:uppercase;color:#166534;margin:0 0 4px 0">' + (alreadyPaid > 0 ? 'Balance to Collect (Remaining)' : 'Full Amount to be Collected') + '</p>'
+                + '<p style="font-size:22px;font-weight:900;color:#14532d;margin:0">' + fmtAmt(collectAmount) + '</p></div>'
+                + '<span style="background:#22c55e;color:white;font-size:9px;font-weight:900;padding:6px 16px;border-radius:100px;text-transform:uppercase">' + (alreadyPaid > 0 ? 'BALANCE SETTLEMENT' : 'FULL SETTLEMENT') + '</span></div></div>';
 
             const commonFields = '<div style="margin-bottom:12px">'
                 + '<label style="display:block;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;margin-bottom:6px">Payment Method *</label>'
@@ -167,9 +178,12 @@ const ManageRegistrations = () => {
                     if (!file) return Swal.showValidationMessage('Receipt file is required');
                     if (isAdvance && (percent < 1 || percent > 99)) return Swal.showValidationMessage('Advance % must be between 1 and 99');
 
-                    const amountPaid = parseFloat((totalAmount * percent / 100).toFixed(2));
-                    const balanceAmount = parseFloat((totalAmount - amountPaid).toFixed(2));
-                    return { method, txid, file, notes, percent, amountPaid, balanceAmount };
+                    const amountPaid = isAdvance
+                        ? parseFloat((totalAmount * percent / 100).toFixed(2))
+                        : parseFloat(collectAmount.toFixed(2));
+                    const newTotalPaid = parseFloat((alreadyPaid + amountPaid).toFixed(2));
+                    const balanceAmount = parseFloat((totalAmount - newTotalPaid).toFixed(2));
+                    return { method, txid, file, notes, percent, amountPaid: newTotalPaid, balanceAmount };
                 }
             });
 
@@ -391,6 +405,9 @@ const ManageRegistrations = () => {
     ];
 
     const filteredRegs = registrations.filter(r => {
+        // Exclude payment-failed entries - they have their own dedicated page
+        if (r.status === 'payment-failed') return false;
+
         const matchesSearch = 
             r.exhibitorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             r.participation?.stallNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
