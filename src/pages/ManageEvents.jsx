@@ -11,7 +11,8 @@ const EMPTY_EVENT = {
     startDate: '',
     endDate: '',
     location: '',
-    advancePaymentPercentage: 50,
+    onlineAdvancePercentage: 50,
+    manualAdvancePercentage: 50,
     status: 'active',
     ticketsStatus: 'Few Remaining',
     speakersCount: '100+',
@@ -179,9 +180,15 @@ const ManageEvents = () => {
                                 <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Location / Venue</label>
                                 <input type="text" value={eventForm.location} onChange={(e) => setEventForm({...eventForm, location: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="Pragati Maidan, New Delhi" />
                             </div>
-                            <div className="mb-3">
-                                <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Advance Payment % *</label>
-                                <input type="number" required value={eventForm.advancePaymentPercentage} onChange={(e) => setEventForm({...eventForm, advancePaymentPercentage: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="50" />
+                            <div className="grid grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Online Advance % *</label>
+                                    <input type="number" required min="1" max="100" value={eventForm.onlineAdvancePercentage} onChange={(e) => setEventForm({...eventForm, onlineAdvancePercentage: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="50" />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Manual Advance % *</label>
+                                    <input type="number" required min="1" max="100" value={eventForm.manualAdvancePercentage} onChange={(e) => setEventForm({...eventForm, manualAdvancePercentage: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="50" />
+                                </div>
                             </div>
                             <div className="mb-3">
                                 <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Support Contact Number</label>
@@ -229,14 +236,15 @@ const ManageEvents = () => {
                                         <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center w-16 tracking-tight">Seq.</th>
                                         <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-left tracking-tight">Event Name</th>
                                         <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Duration / Dates</th>
+                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Advance %</th>
                                         <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {isLoading ? (
-                                        <tr><td colSpan={4} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">Loading events...</td></tr>
+                                        <tr><td colSpan={5} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">Loading events...</td></tr>
                                     ) : events.length === 0 ? (
-                                        <tr><td colSpan={4} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">No events found</td></tr>
+                                        <tr><td colSpan={5} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">No events found</td></tr>
                                     ) : events.map((event, index) => (
                                         <tr key={event._id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
                                             <td className="py-4 px-4 text-black font-black text-center text-xs bg-slate-50 border-r border-slate-100">{event.order !== undefined ? event.order : index + 1}</td>
@@ -256,6 +264,12 @@ const ManageEvents = () => {
                                                     <span className="text-[10px] font-medium text-black uppercase tracking-tight opacity-40">
                                                         TO {new Date(event.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                                                     </span>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-4 text-center">
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Online: <span className="text-[#23471d]">{event.onlineAdvancePercentage ?? 50}%</span></span>
+                                                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Manual: <span className="text-[#d26019]">{event.manualAdvancePercentage ?? 50}%</span></span>
                                                 </div>
                                             </td>
                                             <td className="py-4 px-4">
