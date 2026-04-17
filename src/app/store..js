@@ -28,6 +28,7 @@ import annualTurnoverReducer from "../features/add_by_admin/annual_turnover/Annu
 import primaryProductReducer from "../features/add_by_admin/primary_product/PrimaryProductSlice";
 import secondaryProductReducer from "../features/add_by_admin/secondary_product/SecondaryProductSlice";
 import meetingPriorityReducer from "../features/add_by_admin/meeting-priority/MeetingPrioritySlice";
+import unitReducer from "../features/add_by_admin/unit/UnitSlice";
 
 export const store = configureStore({
   reducer: {
@@ -60,6 +61,7 @@ export const store = configureStore({
     primaryProduct: primaryProductReducer,
     secondaryProduct: secondaryProductReducer,
     meetingPriority: meetingPriorityReducer,
+    unit: unitReducer,
   },
 });
 
