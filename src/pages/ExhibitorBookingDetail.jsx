@@ -499,7 +499,7 @@ export default function ExhibitorBookingDetail() {
     const fmt = (n) => `${cur}${Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 
     return (
-        <div className="p-4 min-h-screen bg-gray-50 font-inter">
+        <div className="p-6 min-h-screen bg-gray-50 font-inter">
             {/* Back + Title */}
             <div className="flex items-center gap-3 mb-4">
                 <button onClick={() => navigate('/exhibitor-bookings')}
