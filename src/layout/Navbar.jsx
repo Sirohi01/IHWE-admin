@@ -1,11 +1,8 @@
 import {
-  Bell,
   Menu,
   X,
   LogOut,
   Key,
-  BellRing,
-  HelpCircle,
   Sun,
   Moon,
   Sunrise,
@@ -207,81 +204,6 @@ export default function Navbar({
             </button>
           </div>
 
-          {/* Help & Support */}
-          <div className="relative">
-            <button
-              onClick={() =>
-                setActiveTitle(activeTitle === "help" ? null : "help")
-              }
-              className="p-2 rounded-lg hover:bg-[#23471d]/10 transition-all duration-200 hover:scale-105"
-            >
-              <HelpCircle size={18} className="text-[#23471d]" />
-            </button>
-
-            {activeTitle === "help" && (
-              <motion.div
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="whitespace-nowrap absolute top-12 right-0 bg-slate-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg"
-              >
-                Help & Support
-                <div className="absolute -top-1 right-2 w-2 h-2 bg-slate-900 rotate-45"></div>
-              </motion.div>
-            )}
-          </div>
-
-          {/* Reminder List */}
-          <div className="relative">
-            <button
-              onClick={() =>
-                setActiveTitle(activeTitle === "reminder" ? null : "reminder")
-              }
-              className="p-2 rounded-lg hover:bg-[#23471d]/10 transition-all duration-200 hover:scale-105"
-            >
-              <BellRing size={18} className="text-[#23471d]" />
-            </button>
-
-            {activeTitle === "reminder" && (
-              <motion.div
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="whitespace-nowrap absolute top-12 right-0 bg-slate-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg"
-              >
-                Reminder List
-                <div className="absolute -top-1 right-2 w-2 h-2 bg-slate-900 rotate-45"></div>
-              </motion.div>
-            )}
-          </div>
-
-          {/* Notifications */}
-          <div className="relative">
-            <button
-              onClick={() =>
-                setActiveTitle(activeTitle === "notify" ? null : "notify")
-              }
-              className="relative p-2 rounded-lg hover:bg-[#23471d]/10 transition-all duration-200 hover:scale-105"
-            >
-              <Bell size={18} className="text-[#23471d]" />
-              <motion.span
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-rose-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-semibold shadow-lg"
-              >
-                3
-              </motion.span>
-            </button>
-
-            {activeTitle === "notify" && (
-              <motion.div
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="whitespace-nowrap absolute top-12 right-0 bg-slate-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg"
-              >
-                Notifications
-                <div className="absolute -top-1 right-2 w-2 h-2 bg-slate-900 rotate-45"></div>
-              </motion.div>
-            )}
-          </div>
 
           {/* Profile with Lottie Animation */}
           <button
