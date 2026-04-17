@@ -153,6 +153,7 @@ import BuyerRegistration from "../pages/buyer/BuyerRegistration";
 import BuyerList from "../pages/buyer/BuyerList";
 import ManageAccessories from "../pages/ManageAccessories";
 import AccessoryOrders from "../pages/AccessoryOrders";
+import AddUnit from "../pages/admin_management/AddUnit";
 
 export default function AppRoutes() {
   return (
@@ -427,6 +428,7 @@ export default function AppRoutes() {
           <Route path="/buyer-list" element={<BuyerList />} />
           <Route path="/stall-accessories" element={<ManageAccessories />} />
           <Route path="/accessory-orders" element={<AccessoryOrders />} />
+          <Route path="/add-unit" element={<AddUnit />} />
         </Route>
       </Route>
     </Routes>
