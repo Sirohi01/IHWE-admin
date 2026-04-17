@@ -182,6 +182,7 @@ export default function ExhibitorChat() {
                                         {(room.exhibitorName || "E")[0].toUpperCase()}
                                     </div>
                                     <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${isOnline(room) ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                    {isOnline(room) && <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 animate-ping opacity-75" />}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between">
@@ -229,6 +230,7 @@ export default function ExhibitorChat() {
                                     {(activeRoom.exhibitorName || "E")[0].toUpperCase()}
                                 </div>
                                 <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${isOnline(activeRoom) ? "bg-emerald-500" : "bg-slate-300"}`} />
+                                {isOnline(activeRoom) && <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping opacity-75" />}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-[13px] font-black text-slate-800">{activeRoom.exhibitorName}</p>
