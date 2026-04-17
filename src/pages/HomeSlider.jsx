@@ -83,6 +83,8 @@ const HeroSlider = () => {
     button1Url: "/projects-list",
     button2Name: "Get Free Consultation",
     button2Url: "/contact-list",
+    button3Name: "Attend Conference",
+    button3Url: "/conference",
     isActive: true,
     order: 0
   });
@@ -178,6 +180,8 @@ const HeroSlider = () => {
       formDataToSend.append('button1Url', formData.button1Url);
       formDataToSend.append('button2Name', formData.button2Name);
       formDataToSend.append('button2Url', formData.button2Url);
+      formDataToSend.append('button3Name', formData.button3Name);
+      formDataToSend.append('button3Url', formData.button3Url);
       formDataToSend.append('isActive', formData.isActive);
       formDataToSend.append('order', formData.order);
 
@@ -233,6 +237,8 @@ const HeroSlider = () => {
       button1Url: "/projects-list",
       button2Name: "Get Free Consultation",
       button2Url: "/contact-list",
+      button3Name: "Attend Conference",
+      button3Url: "/conference",
       isActive: true,
       order: 0
     });
@@ -262,6 +268,8 @@ const HeroSlider = () => {
       button1Url: slide.button1Url || "/projects-list",
       button2Name: slide.button2Name || "Get Free Consultation",
       button2Url: slide.button2Url || "/contact-list",
+      button3Name: slide.button3Name || "Attend Conference",
+      button3Url: slide.button3Url || "/conference",
       isActive: slide.isActive,
       order: slide.order || 0
     });
@@ -479,6 +487,16 @@ const HeroSlider = () => {
       )
     },
     {
+      key: "button3",
+      label: "BUTTON 3",
+      render: (row) => (
+        <div className="flex flex-col">
+          <span className="font-medium text-xs">{row.button3Name}</span>
+          <span className="text-[10px] text-gray-500 truncate max-w-[100px]">{row.button3Url}</span>
+        </div>
+      )
+    },
+    {
       key: "schedule",
       label: "SCHEDULE",
       render: (row) => (
@@ -688,7 +706,7 @@ const HeroSlider = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:col-span-4">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-4 md:col-span-4">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   Button 1 Name
@@ -738,6 +756,32 @@ const HeroSlider = () => {
                   value={formData.button2Url}
                   onChange={handleInputChange}
                   placeholder="e.g., /contact-list"
+                  className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Button 3 Name
+                </label>
+                <input
+                  type="text"
+                  name="button3Name"
+                  value={formData.button3Name}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Attend Conference"
+                  className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Button 3 URL
+                </label>
+                <input
+                  type="text"
+                  name="button3Url"
+                  value={formData.button3Url}
+                  onChange={handleInputChange}
+                  placeholder="e.g., /conference"
                   className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
                 />
               </div>

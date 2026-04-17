@@ -18,7 +18,8 @@ import {
     Calendar,
     MessageSquare,
     CreditCard,
-    Banknote
+    Banknote,
+    FileText
 } from 'lucide-react';
 import api, { API_URL, SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
@@ -29,6 +30,10 @@ const Settings = () => {
     // Logo state
     const [logo, setLogo] = useState(null);
     const [logoPreview, setLogoPreview] = useState('');
+
+    // Brochure state
+    const [brochureFile, setBrochureFile] = useState(null);
+    const [brochurePreview, setBrochurePreview] = useState('');
 
     // Topbar state
     const [marqueeText, setMarqueeText] = useState("• 150+ Speakers confirmed • Early Bird discount ending soon! • Join 8,000+ Professionals from 25+ Countries");
@@ -103,10 +108,13 @@ const Settings = () => {
         try {
             const res = await api.get('/api/settings');
             if (res.data.success && res.data.data) {
-                const { logo, emails, phones, addresses, mapIframe: savedIframe, marqueeText: savedMarquee, topbarDate: savedDate, supportDeskText: savedSupportDeskText } = res.data.data;
+                const { logo, exhibitorBrochurePdf, emails, phones, addresses, mapIframe: savedIframe, marqueeText: savedMarquee, topbarDate: savedDate, supportDeskText: savedSupportDeskText } = res.data.data;
 
                 if (logo) {
                     setLogoPreview(`${SERVER_URL}${logo}`);
+                }
+                if (exhibitorBrochurePdf) {
+                    setBrochurePreview(`${SERVER_URL}${exhibitorBrochurePdf}`);
                 }
                 if (savedIframe) {
                     setMapIframe(savedIframe);
@@ -153,6 +161,9 @@ const Settings = () => {
             if (logo) {
                 formData.append('logo', logo);
             }
+            if (brochureFile) {
+                formData.append('exhibitorBrochurePdf', brochureFile);
+            }
 
             const emailsToSave = emails.map(({ id, isEditing, ...rest }) => rest);
             const phonesToSave = phones.map(({ id, isEditing, ...rest }) => rest);
@@ -188,6 +199,10 @@ const Settings = () => {
                 if (res.data.data.logo) {
                     setLogoPreview(`${SERVER_URL}${res.data.data.logo}`);
                     setLogo(null);
+                }
+                if (res.data.data.exhibitorBrochurePdf) {
+                    setBrochurePreview(`${SERVER_URL}${res.data.data.exhibitorBrochurePdf}`);
+                    setBrochureFile(null);
                 }
             }
         } catch (error) {
@@ -493,6 +508,36 @@ const Settings = () => {
                                         <div className="flex flex-col items-center py-4">
                                             <ImageIcon className="w-8 h-8 text-gray-300 mb-2" />
                                             <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Click to upload logo</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    Exhibitor Brochure (PDF)
+                                </label>
+                                <div className="border border-dashed border-gray-300 p-4 text-center relative group min-h-[100px] flex items-center justify-center bg-gray-50/30 rounded-lg hover:border-[#23471d] transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={(e) => setBrochureFile(e.target.files[0])}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {brochureFile || brochurePreview ? (
+                                        <div className="flex flex-col items-center">
+                                            <FileText className="w-8 h-8 text-[#d26019] mb-1" />
+                                            <p className="text-[10px] font-bold text-gray-600 truncate max-w-[200px]">
+                                                {brochureFile ? brochureFile.name : "Current Brochure.pdf"}
+                                            </p>
+                                            {brochurePreview && !brochureFile && (
+                                                <a href={brochurePreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center">
+                                            <Plus className="w-6 h-6 text-gray-300 mb-1" />
+                                            <p className="text-[9px] font-bold text-gray-400 uppercase">Click to upload PDF</p>
                                         </div>
                                     )}
                                 </div>
