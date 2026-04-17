@@ -1,545 +1,253 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Search,
-  UserPlus,
-  Eye,
-  EyeOff,
-  CheckCircle,
-  XCircle,
-} from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, UserPlus, Eye, EyeOff, CheckCircle, XCircle, Pencil, Trash2, X, Save } from 'lucide-react';
 import Swal from 'sweetalert2';
-import api from "../lib/api";
-import Pagination from "../components/Pagination";
-import Table from '../components/table/Table';
+import api from '../lib/api';
+import Pagination from '../components/Pagination';
 
-const AdminUser = () => {
-  const [admins, setAdmins] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 25;
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [roles, setRoles] = useState([]);
+const EMPTY_FORM = { username: '', password: '', fullName: '', designation: '', email: '', mobile: '', altMobile: '', role: '', status: 'Active' };
+const iCls = 'w-full h-9 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]';
+const lCls = 'text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block';
 
+export default function AdminUser() {
+    const [admins, setAdmins] = useState([]);
+    const [roles, setRoles] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [search, setSearch] = useState('');
+    const [showPwd, setShowPwd] = useState(false);
+    const [form, setForm] = useState(EMPTY_FORM);
+    const [editId, setEditId] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const itemsPerPage = 25;
 
-  useEffect(() => {
-    const info = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
-    if (info) {
-      setCurrentUser(JSON.parse(info));
-    }
-  }, []);
+    useEffect(() => { fetchAdmins(); fetchRoles(); }, []);
 
-  const [newAdmin, setNewAdmin] = useState({
-    username: "",
-    password: "",
-    role: "",
-    mobile: ""
-  });
+    const fetchAdmins = async () => {
+        setLoading(true);
+        try {
+            const res = await api.get('/api/admin/all');
+            if (res.data.success) setAdmins(res.data.data);
+        } catch { }
+        setLoading(false);
+    };
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+    const fetchRoles = async () => {
+        try {
+            const res = await api.get('/api/roles');
+            if (res.data.success) setRoles(res.data.data);
+        } catch { }
+    };
 
-  useEffect(() => {
-    fetchAdmins();
-    fetchRoles();
-  }, []);
+    const inp = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
-  const fetchRoles = async () => {
-    try {
-      const response = await api.get('/api/roles');
-      if (response.data.success) {
-        setRoles(response.data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching roles:', error);
-    }
-  };
+    const openCreate = () => { setForm(EMPTY_FORM); setEditId(null); setShowPwd(false); setShowModal(true); };
+    const openEdit = (admin) => {
+        setForm({ ...EMPTY_FORM, ...admin, password: '' });
+        setEditId(admin._id);
+        setShowPwd(false);
+        setShowModal(true);
+    };
 
-
-  const fetchAdmins = async () => {
-    try {
-      setIsLoading(true);
-      const response = await api.get('/api/admin/all');
-
-      if (response.data.success) {
-        setAdmins(response.data.data);
-      }
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.response?.data?.message || 'Failed to fetch admins',
-        confirmButtonColor: '#134698'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewAdmin({
-      ...newAdmin,
-      [name]: value
-    });
-  };
-
-  const handleCreateAdmin = async () => {
-    if (!newAdmin.username.trim()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Missing Field',
-        text: 'Please enter a username',
-        confirmButtonColor: '#134698'
-      });
-      return;
-    }
-
-    if (!newAdmin.password) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Missing Field',
-        text: 'Please enter a password',
-        confirmButtonColor: '#134698'
-      });
-      return;
-    }
-
-    if (!newAdmin.role) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Missing Field',
-        text: 'Please select a role',
-        confirmButtonColor: '#134698'
-      });
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      const response = await api.post('/api/admin/create', {
-        username: newAdmin.username,
-        password: newAdmin.password,
-        role: newAdmin.role,
-        mobile: newAdmin.mobile
-      });
-
-      if (response.data.success) {
-        await Swal.fire({
-          icon: 'success',
-          title: 'Success!',
-          text: 'User created successfully',
-          confirmButtonColor: '#134698',
-          timer: 2000
-        });
-
-        setNewAdmin({
-          username: "",
-          password: "",
-          role: "",
-          mobile: ""
-        });
-
-        fetchAdmins();
-      }
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.response?.data?.message || 'Failed to create user',
-        confirmButtonColor: '#134698'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleEditAdmin = async (admin) => {
-    const isSuper = currentUser?.role === 'super-admin';
-    const canChangeRole = isSuper;
-
-    const { value: formValues } = await Swal.fire({
-      title: 'Edit User',
-      html: `
-        <div class="text-left space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
-            <input id="swal-username" class="w-full px-4 py-3 border-2 border-gray-300 focus:border-[#134698] focus:outline-none" value="${admin.username}">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
-            <select id="swal-role" class="w-full px-4 py-3 border-2 border-gray-300 focus:border-[#134698] focus:outline-none" ${!canChangeRole ? 'disabled' : ''}>
-              ${roles.map(r => `
-                <option value="${r.name}" ${admin.role === r.name ? 'selected' : ''}>${r.name}</option>
-              `).join('')}
-            </select>
-
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-            <select id="swal-status" class="w-full px-4 py-3 border-2 border-gray-300 focus:border-[#134698] focus:outline-none">
-              <option value="Active" ${admin.status === 'Active' ? 'selected' : ''}>Active</option>
-              <option value="Inactive" ${admin.status === 'Inactive' ? 'selected' : ''}>Inactive</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Mobile</label>
-            <input id="swal-mobile" class="w-full px-4 py-3 border-2 border-gray-300 focus:border-[#134698] focus:outline-none" value="${admin.mobile || ''}">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">New Password (optional)</label>
-            <input id="swal-password" type="password" class="w-full px-4 py-3 border-2 border-gray-300 focus:border-[#134698] focus:outline-none" placeholder="Leave blank to keep current">
-          </div>
-        </div>
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: 'Update User',
-      cancelButtonText: 'Cancel',
-      confirmButtonColor: '#134698',
-      cancelButtonColor: '#6B7280',
-      customClass: {
-        popup: 'rounded-sm',
-        confirmButton: 'px-6 py-3 font-semibold',
-        cancelButton: 'px-6 py-3 font-semibold'
-      },
-      preConfirm: () => {
-        return {
-          username: document.getElementById('swal-username').value,
-          role: document.getElementById('swal-role').value,
-          status: document.getElementById('swal-status').value,
-          mobile: document.getElementById('swal-mobile').value,
-          password: document.getElementById('swal-password').value
-        };
-      }
-    });
-
-    if (formValues) {
-      try {
-        setIsLoading(true);
-        const updateData = {
-          username: formValues.username,
-          role: formValues.role,
-          status: formValues.status
-        };
-
-        if (formValues.password) {
-          updateData.password = formValues.password;
+    const handleSave = async () => {
+        if (!form.username.trim()) return Swal.fire('Error', 'Username is required', 'error');
+        if (!editId && !form.password) return Swal.fire('Error', 'Password is required', 'error');
+        setSaving(true);
+        try {
+            const payload = { ...form };
+            if (!payload.password) delete payload.password; // don't send empty password on edit
+            if (editId) {
+                await api.put(`/api/admin/update/${editId}`, payload);
+            } else {
+                await api.post('/api/admin/create', payload);
+            }
+            Swal.fire({ icon: 'success', title: editId ? 'Updated!' : 'Created!', timer: 1500, showConfirmButton: false });
+            setShowModal(false);
+            fetchAdmins();
+        } catch (err) {
+            Swal.fire('Error', err.response?.data?.message || 'Failed', 'error');
         }
+        setSaving(false);
+    };
 
-        const response = await api.put(`/api/admin/update/${admin._id}`, updateData);
-
-        if (response.data.success) {
-          await Swal.fire({
-            icon: 'success',
-            title: 'Updated!',
-            text: 'Admin updated successfully',
-            confirmButtonColor: '#134698',
-            timer: 2000
-          });
-          fetchAdmins();
+    const handleDelete = async (admin) => {
+        const r = await Swal.fire({ title: `Delete ${admin.username}?`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626' });
+        if (!r.isConfirmed) return;
+        try {
+            await api.delete(`/api/admin/delete/${admin._id}`);
+            fetchAdmins();
+        } catch (err) {
+            Swal.fire('Error', err.response?.data?.message || 'Failed', 'error');
         }
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: error.response?.data?.message || 'Failed to update admin',
-          confirmButtonColor: '#134698'
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
+    };
 
-  const handleDeleteAdmin = async (admin) => {
-    const result = await Swal.fire({
-      title: 'Are you sure?',
-      html: `Do you want to delete <strong>${admin.username}</strong>?<br><span class="text-red-600">This action cannot be undone!</span>`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#DC2626',
-      cancelButtonColor: '#6B7280',
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'Cancel',
-      customClass: {
-        popup: 'rounded-sm',
-        confirmButton: 'px-6 py-3 font-semibold',
-        cancelButton: 'px-6 py-3 font-semibold'
-      }
-    });
+    const filtered = admins.filter(a =>
+        !search ||
+        a.username?.toLowerCase().includes(search.toLowerCase()) ||
+        a.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+        a.email?.toLowerCase().includes(search.toLowerCase()) ||
+        a.mobile?.includes(search)
+    );
+    const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-    if (result.isConfirmed) {
-      try {
-        setIsLoading(true);
-        const response = await api.delete(`/api/admin/delete/${admin._id}`);
-
-        if (response.data.success) {
-          await Swal.fire({
-            icon: 'success',
-            title: 'Deleted!',
-            text: 'Admin has been deleted successfully',
-            confirmButtonColor: '#134698',
-            timer: 2000
-          });
-          fetchAdmins();
-        }
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: error.response?.data?.message || 'Failed to delete admin',
-          confirmButtonColor: '#134698'
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
-
-  const filteredAdmins = admins.filter(admin => {
-    const matchesSearch =
-      admin.username?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
-
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedAdmins = filteredAdmins.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
-
-  const columns = [
-    {
-      key: "sno",
-      label: "S.NO",
-      width: "80px",
-      render: (row, index) => (
-        <div className="font-bold text-gray-900">
-          {startIndex + index + 1}
-        </div>
-      )
-    },
-
-    {
-      key: "username",
-      label: "USERNAME",
-      render: (row) => (
-        <div className="font-medium text-red-600">{row.username}</div>
-      )
-    },
-    {
-      key: "role",
-      label: "ROLE",
-      render: (row) => (
-        <div className="text-gray-900 font-medium capitalize">{row.role ? row.role.replace(/-/g, ' ') : 'N/A'}</div>
-      )
-    },
-    {
-      key: "status",
-      label: "STATUS",
-      render: (row) => (
-        <div className="flex items-center gap-2">
-          <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${row.status === "Active"
-            ? "bg-green-50 text-green-700 border border-green-200"
-            : "bg-red-50 text-red-700 border border-red-200"
-            }`}>
-            {row.status === "Active" ? (
-              <CheckCircle className="w-3 h-3" />
-            ) : (
-              <XCircle className="w-3 h-3" />
-            )}
-            {row.status}
-          </div>
-        </div>
-      )
-    },
-    {
-      key: "createdAt",
-      label: "CREATED AT",
-      render: (row) => (
-        <div className="text-gray-900">
-          {new Date(row.createdAt).toLocaleDateString()}
-        </div>
-      )
-    },
-    {
-      key: "lastLogin",
-      label: "LAST LOGIN",
-      render: (row) => (
-        <div className="text-sm text-gray-900">
-          {row.lastLogin ? new Date(row.lastLogin).toLocaleString() : 'Never'}
-        </div>
-      )
-    }
-  ];
-
-  return (
-    <div className="bg-white shadow-md mt-6 p-6">
-      <div className="w-full">
-        <div className="w-full">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-[#23471d]">MANAGE USERS</h1>
-            <p className="text-gray-600 mt-2 text-lg">Manage admin users and their permissions</p>
-          </div>
-
-          <div className="bg-white border-2 border-gray-200 p-6 mb-6 shadow-lg">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-green-50 rounded-lg">
-                <UserPlus className="w-4 h-4 text-green-600" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Create New Admin</h2>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Username <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="username"
-                  value={newAdmin.username}
-                  onChange={handleInputChange}
-                  placeholder="Enter username"
-                  className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Password <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={newAdmin.password}
-                    onChange={handleInputChange}
-                    placeholder="Enter password"
-                    className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-sm pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Role <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="role"
-                  value={newAdmin.role}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-sm bg-white"
-                >
-                  <option value="">Select Role</option>
-                  {roles.map(r => (
-                    <option key={r._id} value={r.name}>{r.name}</option>
-                  ))}
-                </select>
-
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mobile
-                </label>
-                <input
-                  type="text"
-                  name="mobile"
-                  value={newAdmin.mobile}
-                  onChange={handleInputChange}
-                  placeholder="Enter mobile"
-                  className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-sm"
-                />
-              </div>
-
-              <button
-                onClick={handleCreateAdmin}
-                disabled={isLoading}
-                className="w-full px-6 py-3 bg-[#d26019] text-white font-bold transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 uppercase tracking-wider text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Creating...</span>
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="w-4 h-4" />
-                    <span>Create User</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-white border-2 border-gray-200 overflow-hidden shadow-lg">
-            <div className="px-6 py-4 border-b bg-[#23471d]">
-              <div className="flex items-center justify-between gap-4">
+    return (
+        <div className="bg-white shadow-md mt-6 p-6">
+            <div className="mb-5 flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-white">
-                    Admin List
-                  </h2>
-                  <p className="text-sm text-blue-100 mt-0.5">
-                    Showing {filteredAdmins.length} of {admins.length} admins
-                  </p>
+                    <h1 className="text-2xl font-black text-[#23471d] uppercase tracking-tight">Manage Users</h1>
+                    <p className="text-[11px] text-gray-400 mt-0.5">Admin users, roles & contact details</p>
                 </div>
-
-                <div className="relative w-72">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search admins..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full h-10 pl-10 pr-4 text-sm border-2 border-gray-300 focus:outline-none focus:border-white transition-colors shadow-lg"
-                  />
-                </div>
-              </div>
+                <button onClick={openCreate}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#d26019] text-white text-[11px] font-black uppercase tracking-wider hover:bg-[#b8521a]">
+                    <UserPlus size={13} /> Add User
+                </button>
             </div>
 
-            <div className="bg-white">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-20">
-                  <div className="w-12 h-12 border-4 border-[#134698] border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              ) : (
-                <Table
-                  columns={columns}
-                  data={paginatedAdmins}
-                  onEdit={handleEditAdmin}
-                  onDelete={handleDeleteAdmin}
-                />
-              )}
+            {/* Search */}
+            <div className="relative mb-4 max-w-sm">
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, username, email..."
+                    className="w-full pl-9 pr-4 h-9 border border-gray-300 rounded-[2px] text-xs outline-none focus:border-[#23471d]" />
             </div>
 
-            <div className="mt-4 px-4 pb-4 bg-white">
-              <Pagination
-                currentPage={currentPage}
-                totalItems={filteredAdmins.length}
-                itemsPerPage={itemsPerPage}
-                onPageChange={setCurrentPage}
-                label="admins"
-              />
+            {/* Table */}
+            <div className="border border-gray-200 overflow-hidden shadow-sm">
+                {loading ? (
+                    <div className="flex items-center justify-center py-16">
+                        <div className="w-8 h-8 border-4 border-[#23471d] border-t-transparent rounded-full animate-spin" />
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="bg-[#23471d]">
+                                    {['#', 'Username', 'Full Name', 'Designation', 'Email', 'Mobile', 'Alt Mobile', 'Role', 'Status', 'Last Login', ''].map(h => (
+                                        <th key={h} className="py-2.5 px-3 text-[10px] font-black text-white uppercase text-left whitespace-nowrap">{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {paginated.map((admin, i) => (
+                                    <tr key={admin._id} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
+                                        <td className="py-2 px-3 text-[11px] text-gray-400 font-bold">{(currentPage - 1) * itemsPerPage + i + 1}</td>
+                                        <td className="py-2 px-3 text-[11px] font-bold text-[#d26019]">{admin.username}</td>
+                                        <td className="py-2 px-3 text-[11px] font-bold text-gray-800">{admin.fullName || '—'}</td>
+                                        <td className="py-2 px-3 text-[11px] text-gray-600">{admin.designation || '—'}</td>
+                                        <td className="py-2 px-3 text-[11px] text-gray-600">{admin.email || '—'}</td>
+                                        <td className="py-2 px-3 text-[11px] text-gray-600">{admin.mobile || '—'}</td>
+                                        <td className="py-2 px-3 text-[11px] text-gray-600">{admin.altMobile || '—'}</td>
+                                        <td className="py-2 px-3">
+                                            <span className="px-2 py-0.5 bg-slate-100 text-slate-700 text-[9px] font-black uppercase rounded-full">
+                                                {admin.role?.replace(/-/g, ' ') || 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td className="py-2 px-3">
+                                            <span className={`flex items-center gap-1 px-2 py-0.5 text-[9px] font-black uppercase rounded-full w-fit ${admin.status === 'Active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                                                {admin.status === 'Active' ? <CheckCircle size={9} /> : <XCircle size={9} />}
+                                                {admin.status}
+                                            </span>
+                                        </td>
+                                        <td className="py-2 px-3 text-[10px] text-gray-500">
+                                            {admin.lastLogin ? new Date(admin.lastLogin).toLocaleDateString('en-IN') : 'Never'}
+                                        </td>
+                                        <td className="py-2 px-3">
+                                            <div className="flex gap-1.5">
+                                                <button onClick={() => openEdit(admin)} className="p-1.5 bg-slate-100 hover:bg-[#23471d] hover:text-white text-slate-600 rounded-[2px] transition-colors">
+                                                    <Pencil size={11} />
+                                                </button>
+                                                <button onClick={() => handleDelete(admin)} className="p-1.5 bg-slate-100 hover:bg-red-600 hover:text-white text-slate-600 rounded-[2px] transition-colors">
+                                                    <Trash2 size={11} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {paginated.length === 0 && (
+                                    <tr><td colSpan={11} className="py-12 text-center text-[11px] text-slate-400 font-bold uppercase">No users found</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
-          </div>
+
+            <div className="mt-3">
+                <Pagination currentPage={currentPage} totalItems={filtered.length} itemsPerPage={itemsPerPage} onPageChange={setCurrentPage} label="users" />
+            </div>
+
+            {/* Create / Edit Modal */}
+            {showModal && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+                        <div className="flex items-center justify-between px-5 py-3 bg-[#23471d] sticky top-0">
+                            <h3 className="text-[11px] font-black text-white uppercase tracking-widest">
+                                {editId ? 'Edit User' : 'Add New User'}
+                            </h3>
+                            <button onClick={() => setShowModal(false)} className="text-white/70 hover:text-white"><X size={16} /></button>
+                        </div>
+                        <div className="p-5 space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className={lCls}>Username {!editId && <span className="text-red-500">*</span>}</label>
+                                    <input value={form.username} onChange={e => inp('username', e.target.value)} className={iCls} placeholder="e.g. john_doe" />
+                                </div>
+                                <div>
+                                    <label className={lCls}>Password {!editId && <span className="text-red-500">*</span>} {editId && <span className="text-gray-400 normal-case font-normal">(leave blank to keep)</span>}</label>
+                                    <div className="relative">
+                                        <input type={showPwd ? 'text' : 'password'} value={form.password} onChange={e => inp('password', e.target.value)}
+                                            className={`${iCls} pr-9`} placeholder={editId ? 'Leave blank to keep current' : 'Enter password'} />
+                                        <button type="button" onClick={() => setShowPwd(p => !p)}
+                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                            {showPwd ? <EyeOff size={13} /> : <Eye size={13} />}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className={lCls}>Full Name</label>
+                                    <input value={form.fullName} onChange={e => inp('fullName', e.target.value)} className={iCls} placeholder="e.g. John Doe" />
+                                </div>
+                                <div>
+                                    <label className={lCls}>Designation</label>
+                                    <input value={form.designation} onChange={e => inp('designation', e.target.value)} className={iCls} placeholder="e.g. Sales Manager" />
+                                </div>
+                                <div>
+                                    <label className={lCls}>Email</label>
+                                    <input type="email" value={form.email} onChange={e => inp('email', e.target.value)} className={iCls} placeholder="email@example.com" />
+                                </div>
+                                <div>
+                                    <label className={lCls}>Mobile No.</label>
+                                    <input value={form.mobile} onChange={e => inp('mobile', e.target.value)} className={iCls} placeholder="10-digit mobile" />
+                                </div>
+                                <div>
+                                    <label className={lCls}>Alternative Mobile</label>
+                                    <input value={form.altMobile} onChange={e => inp('altMobile', e.target.value)} className={iCls} placeholder="Alternative number" />
+                                </div>
+                                <div>
+                                    <label className={lCls}>Role</label>
+                                    <select value={form.role} onChange={e => inp('role', e.target.value)} className={iCls}>
+                                        <option value="">Select Role</option>
+                                        {roles.map(r => <option key={r._id} value={r.name}>{r.name}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className={lCls}>Status</label>
+                                    <select value={form.status} onChange={e => inp('status', e.target.value)} className={iCls}>
+                                        <option value="Active">Active</option>
+                                        <option value="Inactive">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="flex justify-end gap-3 pt-2">
+                                <button onClick={() => setShowModal(false)} className="px-4 py-2 border border-gray-300 text-gray-600 text-[11px] font-bold uppercase hover:bg-gray-50">Cancel</button>
+                                <button onClick={handleSave} disabled={saving}
+                                    className="flex items-center gap-2 px-5 py-2 bg-[#23471d] text-white text-[11px] font-black uppercase disabled:opacity-60 hover:bg-[#1a3516]">
+                                    <Save size={12} /> {saving ? 'Saving...' : (editId ? 'Update User' : 'Create User')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-      </div>
-    </div>
-  );
-};
-
-export default AdminUser;
+    );
+}

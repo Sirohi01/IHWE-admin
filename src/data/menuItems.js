@@ -381,6 +381,12 @@ export const menuItems = [
     icon: ShoppingCart,
     path: "/accessory-orders",
   },
+  {
+    type: "item",
+    label: "Exhibitor Chat",
+    icon: MessageSquare,
+    path: "/exhibitor-chat",
+  },
 
   /* ================= GENERAL OPERATIONS ================= */
   // {

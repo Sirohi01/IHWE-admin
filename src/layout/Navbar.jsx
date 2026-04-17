@@ -9,6 +9,7 @@ import {
   Sun,
   Moon,
   Sunrise,
+  MessageSquare,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -17,6 +18,8 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { motion } from "framer-motion";
 import Swal from "sweetalert2";
 import { logout } from "../utils/auth";
+import { io } from "socket.io-client";
+import { SERVER_URL } from "../lib/api";
 
 export default function Navbar({
   sidebarOpen,
@@ -25,6 +28,7 @@ export default function Navbar({
 }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [activeTitle, setActiveTitle] = useState(null);
+  const [chatUnread, setChatUnread] = useState(0);
   const navigate = useNavigate();
 
   const [adminData, setAdminData] = useState({ username: "Admin", role: "Authorized Access" });
@@ -70,7 +74,34 @@ export default function Navbar({
 
     updateGreeting();
     const interval = setInterval(updateGreeting, 60000);
-    return () => clearInterval(interval);
+
+    // Socket for chat notifications
+    const adminInfo2 = JSON.parse(localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo") || "{}");
+    const adminId = adminInfo2._id || adminInfo2.id || "admin";
+    const adminName2 = adminInfo2.username || "Admin";
+    const adminRole2 = adminInfo2.role || "";
+
+    // Load existing unread count on mount
+    fetch(`${SERVER_URL}/api/chat/rooms?adminUsername=${encodeURIComponent(adminName2)}&adminRole=${encodeURIComponent(adminRole2)}`)
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) {
+          const total = res.data.reduce((s, r) => s + (r.unreadAdmin || 0), 0);
+          setChatUnread(total);
+        }
+      }).catch(() => {});
+
+    const s = io(SERVER_URL, { transports: ["websocket", "polling"] });
+    s.on("connect", () => s.emit("join_admin", { adminId, adminName: adminName2 }));
+
+    // room_updated fires for every new message — increment if exhibitor sent it
+    s.on("room_updated", (data) => {
+      if (data.lastSenderType === "exhibitor" && !window.location.pathname.includes("exhibitor-chat")) {
+        setChatUnread(prev => prev + 1);
+      }
+    });
+
+    return () => { clearInterval(interval); s.disconnect(); };
   }, []);
 
   // 🔥 PROPER LOGOUT WITH SWEETALERT
@@ -155,6 +186,26 @@ export default function Navbar({
 
         {/* RIGHT – ICONS */}
         <div className="flex items-center gap-2 sm:gap-4 relative">
+
+          {/* Chat Notifications */}
+          <div className="relative">
+            <button
+              onClick={() => { navigate("/exhibitor-chat"); setChatUnread(0); }}
+              className="relative p-2 rounded-lg hover:bg-[#23471d]/10 transition-all duration-200 hover:scale-105"
+              title="Exhibitor Chat"
+            >
+              <MessageSquare size={18} className="text-[#23471d]" />
+              {chatUnread > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-1 -right-1 bg-[#d26019] text-white text-[9px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black shadow-lg"
+                >
+                  {chatUnread > 99 ? "99+" : chatUnread}
+                </motion.span>
+              )}
+            </button>
+          </div>
 
           {/* Help & Support */}
           <div className="relative">
