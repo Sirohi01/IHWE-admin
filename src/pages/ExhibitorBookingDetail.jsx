@@ -4,7 +4,7 @@ import {
     ArrowLeft, Building2, User, CreditCard, Layers,
     FileText, Info, Receipt, ExternalLink, Pencil, Save, X,
     MapPin, Phone, Mail, Globe, Briefcase, Tag, Calendar,
-    CheckCircle2, Users, Award, History
+    CheckCircle2, Users, Award, History, Package, Plus, Trash2, ShoppingCart, Gift
 } from 'lucide-react';
 import api, { SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
@@ -57,11 +57,12 @@ const STATUS_STYLES = {
 };
 
 const TABS = [
-    { id: 'overview',  label: 'Overview',        icon: Building2 },
-    { id: 'contacts',  label: 'Contacts',         icon: User },
-    { id: 'payment',   label: 'Payment',          icon: CreditCard },
-    { id: 'documents', label: 'Documents',        icon: FileText },
-    { id: 'msme',      label: 'MSME',             icon: Award },
+    { id: 'overview',     label: 'Overview',        icon: Building2 },
+    { id: 'contacts',     label: 'Contacts',         icon: User },
+    { id: 'payment',      label: 'Payment',          icon: CreditCard },
+    { id: 'documents',    label: 'Documents',        icon: FileText },
+    { id: 'msme',         label: 'MSME',             icon: Award },
+    { id: 'accessories',  label: 'Accessories',      icon: Package },
 ];
 
 // ─── Tab Components ───────────────────────────────────────────────────────────
@@ -464,6 +465,341 @@ function MSMETab({ reg, id, onRefresh }) {
     );
 }
 
+// ─── Accessories Tab ─────────────────────────────────────────────────────────
+
+function AccessoriesTab({ reg, id }) {
+    const [catalog, setCatalog] = useState([]);
+    const [orders, setOrders] = useState([]);
+    const [loadingCatalog, setLoadingCatalog] = useState(true);
+    const [loadingOrders, setLoadingOrders] = useState(true);
+    const [showOrderForm, setShowOrderForm] = useState(false);
+    const [selectedItems, setSelectedItems] = useState([]);
+    const [paymentMode, setPaymentMode] = useState('');
+    const [transactionId, setTransactionId] = useState('');
+    const [notes, setNotes] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+
+    const loadCatalog = () => {
+        setLoadingCatalog(true);
+        api.get('/api/stall-accessories/accessories')
+            .then(res => setCatalog(res.data.data || []))
+            .finally(() => setLoadingCatalog(false));
+    };
+
+    const loadOrders = () => {
+        setLoadingOrders(true);
+        api.get(`/api/stall-accessories/orders?exhibitorId=${id}`)
+            .then(res => setOrders(res.data.data || []))
+            .finally(() => setLoadingOrders(false));
+    };
+
+    useEffect(() => { loadCatalog(); loadOrders(); }, [id]);
+
+    const fmt = (n) => `₹${Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+    const toggleItem = (item) => {
+        setSelectedItems(prev => {
+            const exists = prev.find(i => i.accessoryId === item._id);
+            if (exists) return prev.filter(i => i.accessoryId !== item._id);
+            return [...prev, {
+                accessoryId: item._id,
+                name: item.name,
+                type: item.type,
+                qty: item.includedQty || 1,
+                unitPrice: item.price || 0,
+                gstPercent: item.type === 'complimentary' ? 0 : (item.gstPercent || 18),
+            }];
+        });
+    };
+
+    const updateQty = (accessoryId, qty) => {
+        setSelectedItems(prev => prev.map(i => i.accessoryId === accessoryId ? { ...i, qty: Math.max(1, parseInt(qty) || 1) } : i));
+    };
+
+    const calcTotal = () => {
+        return selectedItems.reduce((sum, item) => {
+            if (item.type === 'complimentary') return sum;
+            const base = item.unitPrice * item.qty;
+            const gst = (base * item.gstPercent) / 100;
+            return sum + base + gst;
+        }, 0);
+    };
+
+    const handleSubmitOrder = async () => {
+        if (selectedItems.length === 0) return Swal.fire('Error', 'Select at least one item', 'error');
+        setSubmitting(true);
+        try {
+            await api.post('/api/stall-accessories/orders', {
+                exhibitorRegistrationId: id,
+                items: selectedItems,
+                paymentMode,
+                transactionId,
+                notes,
+                processedBy: 'Admin',
+            });
+            Swal.fire({ icon: 'success', title: 'Order Created', text: 'Receipt & email sent to exhibitor', timer: 2000, showConfirmButton: false });
+            setShowOrderForm(false);
+            setSelectedItems([]);
+            setPaymentMode('');
+            setTransactionId('');
+            setNotes('');
+            loadOrders();
+        } catch (err) {
+            Swal.fire('Error', err.response?.data?.message || 'Failed to create order', 'error');
+        }
+        setSubmitting(false);
+    };
+
+    const handleDeleteOrder = async (orderId) => {
+        const r = await Swal.fire({ title: 'Delete Order?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626' });
+        if (!r.isConfirmed) return;
+        await api.delete(`/api/stall-accessories/orders/${orderId}`);
+        loadOrders();
+    };
+
+    const iCls = "w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]";
+    const lCls = "text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block";
+
+    const complimentaryItems = catalog.filter(i => i.type === 'complimentary' && i.isActive);
+    const purchasableItems = catalog.filter(i => i.type === 'purchasable' && i.isActive);
+
+    return (
+        <div className="space-y-4">
+            {/* Complimentary Items */}
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Complimentary Items (Included Free)" icon={Gift} />
+                {loadingCatalog ? (
+                    <div className="p-6 text-center"><div className="w-6 h-6 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin mx-auto" /></div>
+                ) : complimentaryItems.length === 0 ? (
+                    <div className="p-6 text-center text-[11px] text-slate-400 font-bold uppercase tracking-widest">No complimentary items configured</div>
+                ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
+                        {complimentaryItems.map(item => (
+                            <div key={item._id} className="p-3 border-r border-b border-gray-100">
+                                <div className="flex items-start gap-2">
+                                    <span className="mt-0.5 w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                                        <Gift size={10} className="text-emerald-600" />
+                                    </span>
+                                    <div>
+                                        <p className="text-[11px] font-bold text-gray-800">{item.name}</p>
+                                        {item.description && <p className="text-[10px] text-gray-400 mt-0.5">{item.description}</p>}
+                                        {(item.length || item.width || item.height) && (
+                                            <p className="text-[10px] text-gray-400">{[item.length, item.width, item.height].filter(Boolean).join(' × ')}</p>
+                                        )}
+                                        <p className="text-[10px] font-black text-emerald-600 mt-1">Qty: {item.includedQty} {item.unit}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Purchasable Items Catalog */}
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Purchasable Extras Catalog" icon={ShoppingCart} actions={
+                    <button onClick={() => setShowOrderForm(true)}
+                        className="flex items-center gap-1 px-3 py-1 bg-[#d26019] text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-[#b8521a]">
+                        <Plus size={11} /> Create Order
+                    </button>
+                } />
+                {loadingCatalog ? (
+                    <div className="p-6 text-center"><div className="w-6 h-6 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin mx-auto" /></div>
+                ) : purchasableItems.length === 0 ? (
+                    <div className="p-6 text-center text-[11px] text-slate-400 font-bold uppercase tracking-widest">No purchasable items configured</div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="bg-gray-50 border-b border-gray-200">
+                                    {['Item', 'Category', 'Dimensions', 'Price', 'GST', 'Total/Unit'].map(h => (
+                                        <th key={h} className="py-2 px-4 text-[10px] font-black text-gray-500 uppercase text-left">{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {purchasableItems.map((item, i) => {
+                                    const gstAmt = (item.price * (item.gstPercent || 18)) / 100;
+                                    return (
+                                        <tr key={item._id} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
+                                            <td className="py-2 px-4">
+                                                <p className="text-xs font-bold text-gray-800">{item.name}</p>
+                                                {item.description && <p className="text-[10px] text-gray-400">{item.description}</p>}
+                                            </td>
+                                            <td className="py-2 px-4 text-xs text-gray-600">{item.category || '—'}</td>
+                                            <td className="py-2 px-4 text-xs text-gray-600">{[item.length, item.width, item.height].filter(Boolean).join(' × ') || '—'}</td>
+                                            <td className="py-2 px-4 text-xs font-bold text-gray-800">{fmt(item.price)}</td>
+                                            <td className="py-2 px-4 text-xs text-gray-600">{item.gstPercent}% ({fmt(gstAmt)})</td>
+                                            <td className="py-2 px-4 text-xs font-black text-[#23471d]">{fmt(item.price + gstAmt)}</td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
+            {/* Orders History */}
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Purchase Orders History" icon={History} />
+                {loadingOrders ? (
+                    <div className="p-6 text-center"><div className="w-6 h-6 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin mx-auto" /></div>
+                ) : orders.length === 0 ? (
+                    <div className="p-8 text-center">
+                        <Package className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                        <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">No orders yet</p>
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="bg-gray-50 border-b border-gray-200">
+                                    {['Order No', 'Items', 'Total', 'Status', 'Txn ID', 'Date', 'Receipt', ''].map(h => (
+                                        <th key={h} className="py-2 px-4 text-[10px] font-black text-gray-500 uppercase text-left">{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {orders.map((order, i) => (
+                                    <tr key={order._id} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
+                                        <td className="py-2 px-4 text-xs font-bold text-[#23471d] font-mono">{order.orderNo}</td>
+                                        <td className="py-2 px-4">
+                                            {order.items.map((item, j) => (
+                                                <p key={j} className="text-[10px] text-gray-600">{item.qty}× {item.name}</p>
+                                            ))}
+                                        </td>
+                                        <td className="py-2 px-4 text-xs font-black text-gray-800">
+                                            {order.paymentStatus === 'complimentary' ? <span className="text-emerald-600">Free</span> : fmt(order.grandTotal)}
+                                        </td>
+                                        <td className="py-2 px-4">
+                                            <span className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-full border ${
+                                                order.paymentStatus === 'paid' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                order.paymentStatus === 'complimentary' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                                'bg-amber-50 text-amber-700 border-amber-200'
+                                            }`}>{order.paymentStatus}</span>
+                                        </td>
+                                        <td className="py-2 px-4 text-xs text-gray-600 font-mono">{order.transactionId || '—'}</td>
+                                        <td className="py-2 px-4 text-xs text-gray-500">
+                                            {new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                        </td>
+                                        <td className="py-2 px-4">
+                                            {order.receiptUrl ? (
+                                                <a href={order.receiptUrl} target="_blank" rel="noopener noreferrer"
+                                                    className="flex items-center gap-1 text-[10px] font-bold text-[#23471d] hover:underline">
+                                                    <ExternalLink size={11} /> PDF
+                                                </a>
+                                            ) : <span className="text-[10px] text-gray-400">—</span>}
+                                        </td>
+                                        <td className="py-2 px-4">
+                                            <button onClick={() => handleDeleteOrder(order._id)} className="p-1 text-red-400 hover:text-red-600">
+                                                <Trash2 size={12} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
+            {/* Create Order Modal */}
+            {showOrderForm && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+                        <div className="flex items-center justify-between px-5 py-3 bg-[#23471d]">
+                            <h3 className="text-[11px] font-black text-white uppercase tracking-widest">Create Accessory Order</h3>
+                            <button onClick={() => { setShowOrderForm(false); setSelectedItems([]); }} className="text-white/70 hover:text-white"><X size={16} /></button>
+                        </div>
+                        <div className="p-5 space-y-4">
+                            {/* Select Items — only purchasable */}
+                            <p className="text-[10px] font-black text-[#23471d] uppercase tracking-wider border-b border-slate-100 pb-1">Select Purchasable Items</p>
+
+                            {purchasableItems.length > 0 && (
+                                <div>
+                                    <p className="text-[10px] font-bold text-[#d26019] uppercase mb-2">Purchasable (Paid)</p>
+                                    <div className="space-y-2">
+                                        {purchasableItems.map(item => {
+                                            const sel = selectedItems.find(i => i.accessoryId === item._id);
+                                            const gstAmt = (item.price * (item.gstPercent || 18)) / 100;
+                                            return (
+                                                <div key={item._id} className={`flex items-center gap-3 p-2.5 border rounded-[2px] cursor-pointer ${sel ? 'border-orange-400 bg-orange-50' : 'border-gray-200 hover:border-gray-300'}`}
+                                                    onClick={() => toggleItem(item)}>
+                                                    <input type="checkbox" checked={!!sel} readOnly className="accent-orange-500" />
+                                                    <div className="flex-1">
+                                                        <p className="text-xs font-bold text-gray-800">{item.name}</p>
+                                                        {item.description && <p className="text-[10px] text-gray-400">{item.description}</p>}
+                                                        {(item.length || item.width) && <p className="text-[10px] text-gray-400">{[item.length, item.width, item.height].filter(Boolean).join(' × ')}</p>}
+                                                    </div>
+                                                    {sel && (
+                                                        <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                                                            <label className="text-[10px] text-gray-500">Qty:</label>
+                                                            <input type="number" value={sel.qty} onChange={e => updateQty(item._id, e.target.value)}
+                                                                className="w-16 h-7 px-2 border border-slate-300 rounded-[2px] text-xs text-center" min={1} />
+                                                        </div>
+                                                    )}
+                                                    <span className="text-[10px] font-black text-[#d26019]">{fmt(item.price + gstAmt)}/unit</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Order Total */}
+                            {selectedItems.length > 0 && (
+                                <div className="bg-slate-50 border border-slate-200 p-3 rounded-[2px]">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[11px] font-black text-gray-600 uppercase">Order Total (incl. GST)</span>
+                                        <span className="text-sm font-black text-[#23471d]">{fmt(calcTotal())}</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Payment Details (only if paid items selected) */}
+                            {selectedItems.some(i => i.type === 'purchasable') && (
+                                <>
+                                    <p className="text-[10px] font-black text-[#23471d] uppercase tracking-wider border-b border-slate-100 pb-1">Payment Details</p>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className={lCls}>Payment Mode</label>
+                                            <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className={iCls}>
+                                                <option value="">Select...</option>
+                                                {['Cash', 'Bank Transfer', 'UPI', 'Cheque', 'Online'].map(m => <option key={m}>{m}</option>)}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className={lCls}>Transaction ID</label>
+                                            <input value={transactionId} onChange={e => setTransactionId(e.target.value)} className={iCls} placeholder="Txn / Ref No." />
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            <div>
+                                <label className={lCls}>Notes (optional)</label>
+                                <textarea value={notes} onChange={e => setNotes(e.target.value)}
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d] resize-none"
+                                    rows={2} placeholder="Any additional notes..." />
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-2">
+                                <button onClick={() => { setShowOrderForm(false); setSelectedItems([]); }}
+                                    className="px-4 py-2 border border-gray-300 text-gray-600 text-[11px] font-bold uppercase hover:bg-gray-50">Cancel</button>
+                                <button onClick={handleSubmitOrder} disabled={submitting || selectedItems.length === 0}
+                                    className="flex items-center gap-2 px-5 py-2 bg-[#d26019] text-white text-[11px] font-black uppercase disabled:opacity-60 hover:bg-[#b8521a]">
+                                    <ShoppingCart size={12} /> {submitting ? 'Processing...' : 'Create Order & Send Receipt'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ExhibitorBookingDetail() {
     const { id } = useParams();
@@ -546,11 +882,12 @@ export default function ExhibitorBookingDetail() {
             </div>
 
             {/* Tab Content */}
-            {activeTab === 'overview'  && <OverviewTab reg={reg} fmt={fmt} id={id} onRefresh={fetchReg} />}
-            {activeTab === 'contacts'  && <ContactsTab reg={reg} id={id} onRefresh={fetchReg} />}
-            {activeTab === 'payment'   && <PaymentTab reg={reg} fmt={fmt} />}
-            {activeTab === 'documents' && <DocumentsTab reg={reg} />}
-            {activeTab === 'msme'      && <MSMETab reg={reg} id={id} onRefresh={fetchReg} />}
+            {activeTab === 'overview'     && <OverviewTab reg={reg} fmt={fmt} id={id} onRefresh={fetchReg} />}
+            {activeTab === 'contacts'     && <ContactsTab reg={reg} id={id} onRefresh={fetchReg} />}
+            {activeTab === 'payment'      && <PaymentTab reg={reg} fmt={fmt} />}
+            {activeTab === 'documents'    && <DocumentsTab reg={reg} />}
+            {activeTab === 'msme'         && <MSMETab reg={reg} id={id} onRefresh={fetchReg} />}
+            {activeTab === 'accessories'  && <AccessoriesTab reg={reg} id={id} />}
         </div>
     );
 }

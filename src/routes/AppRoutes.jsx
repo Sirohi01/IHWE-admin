@@ -151,6 +151,8 @@ import MeetingPriorityLevel from "../pages/admin_management/MeetingPriorityLevel
 import AddDomesticVisitor from "../pages/web_visitor_data/add_new_visitor/AddDomesticVisitor";
 import BuyerRegistration from "../pages/buyer/BuyerRegistration";
 import BuyerList from "../pages/buyer/BuyerList";
+import ManageAccessories from "../pages/ManageAccessories";
+import AccessoryOrders from "../pages/AccessoryOrders";
 
 export default function AppRoutes() {
   return (
@@ -423,6 +425,8 @@ export default function AppRoutes() {
           <Route path="/meeting-priority-level" element={<MeetingPriorityLevel />} />
           <Route path="/buyer-registration" element={<BuyerRegistration />} />
           <Route path="/buyer-list" element={<BuyerList />} />
+          <Route path="/stall-accessories" element={<ManageAccessories />} />
+          <Route path="/accessory-orders" element={<AccessoryOrders />} />
         </Route>
       </Route>
     </Routes>

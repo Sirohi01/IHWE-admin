@@ -35,6 +35,8 @@ import {
   ClipboardList,
   Activity,
   AlertTriangle,
+  Package,
+  ShoppingCart,
 } from "lucide-react";
 
 
@@ -361,6 +363,23 @@ export const menuItems = [
     label: "Failed Payments",
     icon: AlertTriangle,
     path: "/failed-payments",
+  },
+  /* ================= ACCESSORIES SECTION ================= */
+  {
+    type: "heading",
+    label: "Accessories & Extras",
+  },
+  {
+    type: "item",
+    label: "Manage Accessories",
+    icon: Package,
+    path: "/stall-accessories",
+  },
+  {
+    type: "item",
+    label: "Accessory Orders",
+    icon: ShoppingCart,
+    path: "/accessory-orders",
   },
 
   /* ================= GENERAL OPERATIONS ================= */
