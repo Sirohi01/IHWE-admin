@@ -4,7 +4,7 @@ import {
     ArrowLeft, Building2, User, CreditCard, Layers,
     FileText, Info, Receipt, ExternalLink, Pencil, Save, X,
     MapPin, Phone, Mail, Globe, Briefcase, Tag, Calendar,
-    CheckCircle2, Users, Award, History, Package, Plus, Trash2, ShoppingCart, Gift, RefreshCw, Upload
+    CheckCircle2, Users, Award, History, Package, Plus, Trash2, ShoppingCart, Gift, RefreshCw, Upload, FolderPlus, Download, Image as ImageIcon
 } from 'lucide-react';
 import api, { SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
@@ -574,6 +574,115 @@ function DocumentsTab({ reg }) {
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Business & KYC Documentation (Admin Management)" icon={Layers} />
                 <KycDocsGrid reg={reg} id={reg._id} onRefresh={() => window.location.reload()} />
+            </div>
+
+            <SpecialDocsSection reg={reg} id={reg._id} onRefresh={() => window.location.reload()} />
+        </div>
+    );
+}
+
+function SpecialDocsSection({ reg, id, onRefresh }) {
+    const [label, setLabel] = useState('');
+    const [file, setFile] = useState(null);
+    const [uploading, setUploading] = useState(false);
+
+    const isImage = (url) => url?.match(/\.(jpg|jpeg|png|webp|gif|avif)$/i) || url?.includes('res.cloudinary.com/image/upload');
+
+    const handleDownload = async (url, label) => {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = `${label.replace(/\s+/g, '_')}_${Date.now()}.${blob.type.split('/')[1] || 'bin'}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+            Swal.fire({ icon: 'success', title: 'Download Started', timer: 1000, showConfirmButton: false });
+        } catch {
+            window.open(url, '_blank');
+        }
+    };
+
+    const handleUpload = async () => {
+        if (!label || !file) return Swal.fire('Error', 'Label and File both are required', 'error');
+        setUploading(true);
+        try {
+            const fd = new FormData();
+            fd.append('label', label);
+            fd.append('file', file);
+            const res = await api.post(`/api/exhibitor-registration/${id}/special-docs`, fd);
+            if (res.data.success) {
+                Swal.fire({ icon: 'success', title: 'Document Added', timer: 1500, showConfirmButton: false });
+                setLabel('');
+                setFile(null);
+                onRefresh();
+            }
+        } catch { Swal.fire('Error', 'Upload failed', 'error'); }
+        finally { setUploading(false); }
+    };
+
+    const handleDelete = async (docId) => {
+        const r = await Swal.fire({ title: 'Delete Special Doc?', icon: 'warning', showCancelButton: true });
+        if (!r.isConfirmed) return;
+        try {
+            await api.delete(`/api/exhibitor-registration/${id}/special-docs/${docId}`);
+            onRefresh();
+        } catch { Swal.fire('Error', 'Delete failed', 'error'); }
+    };
+
+    return (
+        <div className="bg-white border border-gray-100 shadow-sm overflow-hidden mt-4">
+            <SH title="Additional / Special Documents" icon={FolderPlus} />
+            <div className="p-4">
+                {/* Upload Section */}
+                <div className="flex flex-wrap items-center gap-2 mb-4 p-3 bg-slate-50 border border-slate-100 rounded">
+                    <input className="flex-1 min-w-[150px] h-7 px-2 border border-slate-300 rounded-[1px] text-[10px] font-medium outline-none focus:border-[#23471d]"
+                        value={label} onChange={e => setLabel(e.target.value)} placeholder="Doc Title" />
+                    
+                    <input type="file" accept="image/*,.pdf" className="text-[9px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[9px] file:font-bold file:bg-[#23471d] file:text-white cursor-pointer"
+                        onChange={e => setFile(e.target.files[0])} />
+                    
+                    <button onClick={handleUpload} disabled={uploading}
+                        className="h-7 px-4 bg-[#23471d] text-white text-[9px] font-bold uppercase tracking-widest hover:bg-[#1a3516] disabled:opacity-50 rounded-[1px]">
+                        {uploading ? 'Wait...' : 'Add Doc'}
+                    </button>
+                </div>
+
+                {/* List Section */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                    {reg.specialDocuments?.length > 0 ? (
+                        reg.specialDocuments.map((doc) => (
+                            <div key={doc._id} className="flex items-center justify-between p-2.5 border border-gray-100 bg-white rounded-[2px] shadow-sm hover:border-[#23471d]/30 transition-all group">
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                    <div className="w-7 h-7 rounded bg-amber-50 flex items-center justify-center flex-shrink-0">
+                                        <FileText size={14} className={isImage(doc.url) ? "text-emerald-600" : "text-rose-500"} />
+                                    </div>
+                                    <div className="overflow-hidden">
+                                        <p className="text-[10px] font-bold text-gray-800 truncate">{doc.label}</p>
+                                        <p className="text-[7px] text-gray-400 font-black uppercase tracking-tighter">{isImage(doc.url) ? 'Image' : 'PDF File'}</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-1">
+                                    <button onClick={() => handleDownload(fixUrl(doc.url), doc.label)}
+                                        className="p-1 text-slate-600 hover:bg-slate-100 rounded transition-colors" title="Force Download">
+                                        <Download size={11} />
+                                    </button>
+                                    <button onClick={() => handleDelete(doc._id)}
+                                        className="p-1 text-rose-600 hover:bg-rose-50 rounded transition-colors opacity-0 group-hover:opacity-100" title="Delete">
+                                        <Trash2 size={11} />
+                                    </button>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="col-span-full py-6 text-center bg-slate-50/50 border border-dashed border-slate-200">
+                             <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest italic">No extra records found</p>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
