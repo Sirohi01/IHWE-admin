@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, Building2, User, CreditCard, Layers,
     FileText, Info, Receipt, ExternalLink, Pencil, Save, X,
     MapPin, Phone, Mail, Globe, Briefcase, Tag, Calendar,
-    CheckCircle2, Users, Award, History, Package, Plus, Trash2, ShoppingCart, Gift
+    CheckCircle2, Users, Award, History, Package, Plus, Trash2, ShoppingCart, Gift, RefreshCw, Upload
 } from 'lucide-react';
 import api, { SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
@@ -19,6 +19,19 @@ const SH = ({ title, icon: Icon, actions }) => (
         {actions && <div className="flex gap-2">{actions}</div>}
     </div>
 );
+
+const DEFAULT_PLACEHOLDER = "https://placehold.co/400x400?text=No+Document";
+
+const fixUrl = (url) => {
+    if (!url || url === 'undefined' || url === 'null') return null;
+    if (typeof url !== 'string') return null;
+    const trimmed = url.trim();
+    if (trimmed.startsWith('http') || trimmed.startsWith('https') || trimmed.startsWith('blob:')) {
+        return trimmed;
+    }
+    const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+    return `${SERVER_URL}${cleanPath}`;
+};
 
 const Field = ({ label, value }) => (
     <div className="p-3 border-r border-b border-gray-100">
@@ -57,12 +70,12 @@ const STATUS_STYLES = {
 };
 
 const TABS = [
-    { id: 'overview',     label: 'Overview',        icon: Building2 },
-    { id: 'contacts',     label: 'Contacts',         icon: User },
-    { id: 'payment',      label: 'Payment',          icon: CreditCard },
-    { id: 'documents',    label: 'Documents',        icon: FileText },
-    { id: 'msme',         label: 'MSME',             icon: Award },
-    { id: 'accessories',  label: 'Accessories',      icon: Package },
+    { id: 'overview', label: 'Overview', icon: Building2 },
+    { id: 'contacts', label: 'Contacts', icon: User },
+    { id: 'payment', label: 'Payment', icon: CreditCard },
+    { id: 'documents', label: 'Documents', icon: FileText },
+    { id: 'msme', label: 'MSME', icon: Award },
+    { id: 'accessories', label: 'Accessories', icon: Package },
 ];
 
 // ─── Tab Components ───────────────────────────────────────────────────────────
@@ -88,7 +101,32 @@ function OverviewTab({ reg, fmt, id, onRefresh }) {
         spokenWith: reg.spokenWith || '',
         primaryCategory: reg.primaryCategory || '',
         subCategory: reg.subCategory || '',
+        natureOfBusiness: reg.natureOfBusiness || '',
     });
+
+    // Update form when reg changes (critical for live sync)
+    useEffect(() => {
+        setForm({
+            exhibitorName: reg.exhibitorName || '',
+            typeOfBusiness: reg.typeOfBusiness || '',
+            industrySector: reg.industrySector || '',
+            fasciaName: reg.fasciaName || '',
+            website: reg.website || '',
+            gstNo: reg.gstNo || '',
+            panNo: reg.panNo || '',
+            landlineNo: reg.landlineNo || '',
+            address: reg.address || '',
+            city: reg.city || '',
+            state: reg.state || '',
+            country: reg.country || '',
+            pincode: reg.pincode || '',
+            referredBy: reg.referredBy || '',
+            spokenWith: reg.spokenWith || '',
+            primaryCategory: reg.primaryCategory || '',
+            subCategory: reg.subCategory || '',
+            natureOfBusiness: reg.natureOfBusiness || '',
+        });
+    }, [reg]);
 
     const inp = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
@@ -127,7 +165,19 @@ function OverviewTab({ reg, fmt, id, onRefresh }) {
                     <EditField label="GST No." value={form.gstNo} onChange={v => inp('gstNo', v)} editing={editing} />
                     <EditField label="PAN No." value={form.panNo} onChange={v => inp('panNo', v)} editing={editing} />
                     <EditField label="Landline" value={form.landlineNo} onChange={v => inp('landlineNo', v)} editing={editing} />
+                    <EditField label="Nature of Business" value={form.natureOfBusiness} onChange={v => inp('natureOfBusiness', v)} editing={editing} />
                 </div>
+                {reg.companyLogoUrl && (
+                    <div className="px-4 py-3 border-t border-gray-100 bg-slate-50/50 flex items-center gap-3">
+                        <div className="w-12 h-12 bg-white border border-gray-200 rounded-sm overflow-hidden flex items-center justify-center">
+                            <img src={fixUrl(reg.companyLogoUrl)} alt="Logo" className="w-full h-full object-cover" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Company Logo</p>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase">Uploaded & Saved</p>
+                        </div>
+                    </div>
+                )}
             </div>
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Address" icon={MapPin} />
@@ -165,9 +215,203 @@ function OverviewTab({ reg, fmt, id, onRefresh }) {
                     <Field label="Registered On" value={reg.createdAt ? new Date(reg.createdAt).toLocaleDateString('en-IN') : null} />
                 </div>
             </div>
+
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Contact Persons" icon={Users} />
+                <div className="grid grid-cols-1 md:grid-cols-2 border-l border-t border-gray-100">
+                    <div className="p-4 border-r border-b border-gray-100 bg-slate-50/30">
+                        <p className="text-[10px] font-black text-[#23471d] uppercase tracking-widest mb-3 border-b pb-1">Primary Contact</p>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Name</p>
+                                <p className="text-[12px] font-bold text-gray-800">{reg.contact1?.title} {reg.contact1?.firstName} {reg.contact1?.lastName}</p>
+                            </div>
+                            <div>
+                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Designation</p>
+                                <p className="text-[12px] font-bold text-gray-800">{reg.contact1?.designation || '—'}</p>
+                            </div>
+                            <div>
+                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Mobile</p>
+                                <p className="text-[12px] font-bold text-gray-800">{reg.contact1?.mobile}</p>
+                            </div>
+                            <div>
+                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Email</p>
+                                <p className="text-[12px] font-bold text-gray-800">{reg.contact1?.email}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="p-4 border-r border-b border-gray-100 italic bg-amber-50/10">
+                        <p className="text-[10px] font-black text-[#d26019] uppercase tracking-widest mb-3 border-b pb-1">Secondary Contact</p>
+                        {reg.contact2?.firstName ? (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Name</p>
+                                    <p className="text-[12px] font-bold text-gray-800">{reg.contact2?.title} {reg.contact2?.firstName} {reg.contact2?.lastName}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Designation</p>
+                                    <p className="text-[12px] font-bold text-gray-800">{reg.contact2?.designation || '—'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Mobile</p>
+                                    <p className="text-[12px] font-bold text-gray-800">{reg.contact2?.mobile || '—'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Email</p>
+                                    <p className="text-[12px] font-bold text-gray-800">{reg.contact2?.email || '—'}</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-[10px] text-gray-400 font-bold uppercase mt-4">No secondary contact provided</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+
         </div>
     );
 }
+
+function KycDocsGrid({ reg, id, onRefresh }) {
+    const DOC_FIELDS = [
+        { label: 'Company Logo', field: 'companyLogoUrl' },
+        { label: 'PAN Card', field: 'panCardFrontUrl' },
+        { label: 'Aadhaar Front', field: 'aadhaarCardFrontUrl' },
+        { label: 'Aadhaar Back', field: 'aadhaarCardBackUrl' },
+        { label: 'GST Certificate', field: 'gstCertificateUrl' },
+        { label: 'Cancelled Cheque', field: 'cancelledChequeUrl' },
+        { label: 'Rep. Photo', field: 'representativePhotoUrl' },
+    ];
+
+    return (
+        <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {DOC_FIELDS.map(({ label, field }) => (
+                <KycDocCard key={field} label={label} field={field} regId={id} currentUrl={reg[field]} onRefresh={onRefresh} />
+            ))}
+        </div>
+    );
+}
+
+function KycDocCard({ label, field, regId, currentUrl, onRefresh }) {
+    const [uploading, setUploading] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const fileRef = React.useRef(null);
+
+    const resolvedUrl = fixUrl(currentUrl);
+    const isPdf = currentUrl?.toLowerCase().includes('.pdf');
+
+    const handleUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(true);
+        try {
+            const multerFieldMap = {
+                companyLogoUrl: 'companyLogo',
+                panCardFrontUrl: 'panCardFront',
+                aadhaarCardFrontUrl: 'aadhaarCardFront',
+                aadhaarCardBackUrl: 'aadhaarCardBack',
+                gstCertificateUrl: 'gstCertificate',
+                cancelledChequeUrl: 'cancelledCheque',
+                representativePhotoUrl: 'representativePhoto'
+            };
+
+            const fd = new FormData();
+            fd.append(multerFieldMap[field] || field, file);
+            fd.append('field', field);
+            const res = await api.put(`/api/exhibitor-registration/${regId}/kyc-doc`, fd);
+            if (res.data.success) {
+                onRefresh();
+            } else {
+                Swal.fire('Error', res.data.message || 'Upload failed', 'error');
+            }
+        } catch (err) {
+            Swal.fire('Error', err.response?.data?.message || err.message, 'error');
+        } finally {
+            setUploading(false);
+            if (fileRef.current) fileRef.current.value = '';
+        }
+    };
+
+    const handleDelete = async () => {
+        const confirm = await Swal.fire({
+            title: `Delete ${label}?`,
+            text: 'This will remove this document from this registration only.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            confirmButtonText: 'Delete',
+        });
+        if (!confirm.isConfirmed) return;
+        setDeleting(true);
+        try {
+            const res = await api.delete(`/api/exhibitor-registration/${regId}/kyc-doc/${field}`);
+            if (res.data.success) onRefresh();
+            else Swal.fire('Error', res.data.message || 'Delete failed', 'error');
+        } catch (err) {
+            Swal.fire('Error', err.response?.data?.message || err.message, 'error');
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    return (
+        <div className="flex flex-col border border-gray-100 rounded overflow-hidden bg-white shadow-sm">
+            {/* Label */}
+            <div className="px-2 py-1.5 bg-slate-50 border-b border-gray-100 flex items-center justify-between">
+                <span className="text-[9px] font-black text-gray-500 uppercase tracking-wider">{label}</span>
+                {currentUrl && (
+                    <a href={resolvedUrl} target="_blank" rel="noopener noreferrer" className="text-[#23471d] hover:text-[#d26019]">
+                        <ExternalLink size={10} />
+                    </a>
+                )}
+            </div>
+
+            {/* Image preview */}
+            <div className="aspect-square bg-slate-100 flex items-center justify-center relative overflow-hidden">
+                {isPdf ? (
+                    <div className="flex flex-col items-center gap-1">
+                        <FileText size={28} className="text-[#23471d]" />
+                        <span className="text-[8px] font-bold text-gray-400 uppercase">PDF</span>
+                    </div>
+                ) : currentUrl ? (
+                    <img
+                        src={`${resolvedUrl}${resolvedUrl.includes('?') ? '&' : '?'}v=${new Date().getTime()}`}
+                        alt={label}
+                        className="w-full h-full object-cover"
+                    />
+                ) : null}
+                {uploading && (
+
+                    <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                        <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin" />
+                    </div>
+                )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex border-t border-gray-100">
+                <button
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading}
+                    className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[9px] font-black text-[#23471d] uppercase hover:bg-emerald-50 transition-colors disabled:opacity-50"
+                >
+                    <Upload size={10} /> {uploading ? '...' : currentUrl ? 'Change' : 'Upload'}
+                </button>
+                {currentUrl && (
+                    <button
+                        onClick={handleDelete}
+                        disabled={deleting}
+                        className="flex items-center justify-center px-2 py-1.5 text-[9px] font-black text-red-500 uppercase hover:bg-red-50 transition-colors border-l border-gray-100 disabled:opacity-50"
+                    >
+                        <Trash2 size={10} />
+                    </button>
+                )}
+            </div>
+            <input ref={fileRef} type="file" className="hidden" accept="image/*,.pdf" onChange={handleUpload} />
+        </div>
+    );
+}
+
 
 function ContactsTab({ reg, id, onRefresh }) {
     const [editing, setEditing] = useState(false);
@@ -176,6 +420,14 @@ function ContactsTab({ reg, id, onRefresh }) {
         contact1: { ...(reg.contact1 || {}) },
         contact2: { ...(reg.contact2 || {}) },
     });
+
+    // Update form when reg changes (critical for live sync)
+    useEffect(() => {
+        setForm({
+            contact1: { ...(reg.contact1 || {}) },
+            contact2: { ...(reg.contact2 || {}) },
+        });
+    }, [reg]);
 
     const inp1 = (k, v) => setForm(p => ({ ...p, contact1: { ...p.contact1, [k]: v } }));
     const inp2 = (k, v) => setForm(p => ({ ...p, contact2: { ...p.contact2, [k]: v } }));
@@ -207,16 +459,16 @@ function ContactsTab({ reg, id, onRefresh }) {
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Primary Contact Person" icon={User} actions={editActions} />
                 <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
-                    {['title','firstName','lastName','designation','email','mobile','alternateNo'].map(k => (
-                        <EditField key={k} label={k.replace(/([A-Z])/g,' $1').trim()} value={editing ? form.contact1[k] : reg.contact1?.[k]} onChange={v => inp1(k, v)} editing={editing} />
+                    {['title', 'firstName', 'lastName', 'designation', 'email', 'mobile', 'alternateNo'].map(k => (
+                        <EditField key={k} label={k.replace(/([A-Z])/g, ' $1').trim()} value={editing ? form.contact1[k] : reg.contact1?.[k]} onChange={v => inp1(k, v)} editing={editing} />
                     ))}
                 </div>
             </div>
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Secondary Contact Person" icon={Users} />
                 <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
-                    {['title','firstName','lastName','designation','email','mobile','alternateNo'].map(k => (
-                        <EditField key={k} label={k.replace(/([A-Z])/g,' $1').trim()} value={editing ? form.contact2[k] : reg.contact2?.[k]} onChange={v => inp2(k, v)} editing={editing} />
+                    {['title', 'firstName', 'lastName', 'designation', 'email', 'mobile', 'alternateNo'].map(k => (
+                        <EditField key={k} label={k.replace(/([A-Z])/g, ' $1').trim()} value={editing ? form.contact2[k] : reg.contact2?.[k]} onChange={v => inp2(k, v)} editing={editing} />
                     ))}
                 </div>
             </div>
@@ -282,32 +534,46 @@ function PaymentTab({ reg, fmt }) {
 }
 
 function DocumentsTab({ reg }) {
-    const fixUrl = (url) => {
-        if (!url) return null;
-        return url.startsWith('http') ? url : `${SERVER_URL}${url}`;
-    };
-    const docs = [
-        { label: 'Registration Form (PDF)', url: fixUrl(reg.registrationPdfUrl), color: 'bg-[#23471d] hover:bg-[#1a3516]' },
-        { label: 'Payment Receipt (PDF)', url: fixUrl(reg.receiptPdfUrl), color: 'bg-[#d26019] hover:bg-[#b8521a]' },
-        { label: 'Uploaded Invoice', url: fixUrl(reg.receiptUrl), color: 'bg-slate-700 hover:bg-slate-800' },
+    const registrationDocs = [
+        { label: 'Registration Form (PDF)', url: fixUrl(reg.registrationPdfUrl), color: 'bg-[#23471d]' },
+        { label: 'Payment Receipt (PDF)', url: fixUrl(reg.receiptPdfUrl), color: 'bg-[#d26019]' },
+        { label: 'Uploaded Invoice / Receipt', url: fixUrl(reg.receiptUrl), color: 'bg-slate-700' },
+    ].filter(d => d.url);
+
+    const kycDocs = [
+        { label: 'Company Logo', url: fixUrl(reg.companyLogoUrl || reg.companyLogo) },
+        { label: 'PAN Card (Front)', url: fixUrl(reg.panCardFrontUrl || reg.panFrontUrl || reg.panCardFront || reg.panFront) },
+        { label: 'PAN Card (Back)', url: fixUrl(reg.panCardBackUrl || reg.panBackUrl || reg.panCardBack || reg.panBack) },
+        { label: 'Aadhaar Card (Front)', url: fixUrl(reg.aadhaarCardFrontUrl || reg.aadhaarFrontUrl || reg.aadhaarCardFront || reg.aadhaarFront) },
+        { label: 'Aadhaar Card (Back)', url: fixUrl(reg.aadhaarCardBackUrl || reg.aadhaarBackUrl || reg.aadhaarCardBack || reg.aadhaarBack) },
+        { label: 'GST Certificate', url: fixUrl(reg.gstCertificateUrl || reg.gstCertUrl || reg.gstCertificate || reg.gstCert) },
+        { label: 'Cancelled Cheque', url: fixUrl(reg.cancelledChequeUrl || reg.chequeUrl || reg.cancelledCheque || reg.cheque) },
+        { label: 'Representative Photo', url: fixUrl(reg.representativePhotoUrl || reg.photoUrl || reg.representativePhoto || reg.photo) },
     ].filter(d => d.url);
 
     return (
-        <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
-            <SH title="Documents & Downloads" icon={FileText} />
-            <div className="p-5">
-                {docs.length > 0 ? (
-                    <div className="flex flex-wrap gap-3">
-                        {docs.map((d, i) => (
-                            <a key={i} href={d.url} target="_blank" rel="noopener noreferrer"
-                                className={`flex items-center gap-2 px-4 py-2 text-white text-[10px] font-black uppercase tracking-widest transition-all ${d.color}`}>
-                                <ExternalLink size={12} /> {d.label}
-                            </a>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">No documents available</p>
-                )}
+        <div className="space-y-4">
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Registration & Payment Documents" icon={FileText} />
+                <div className="p-5">
+                    {registrationDocs.length > 0 ? (
+                        <div className="flex flex-wrap gap-3">
+                            {registrationDocs.map((d, i) => (
+                                <a key={i} href={d.url} target="_blank" rel="noopener noreferrer"
+                                    className={`flex items-center gap-2 px-4 py-2 text-white text-[10px] font-black uppercase tracking-widest transition-all hover:opacity-90 ${d.color}`}>
+                                    <ExternalLink size={12} /> {d.label}
+                                </a>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest text-center py-4">No registration documents available</p>
+                    )}
+                </div>
+            </div>
+
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Business & KYC Documentation (Admin Management)" icon={Layers} />
+                <KycDocsGrid reg={reg} id={reg._id} onRefresh={() => window.location.reload()} />
             </div>
         </div>
     );
@@ -673,11 +939,10 @@ function AccessoriesTab({ reg, id }) {
                                             {order.paymentStatus === 'complimentary' ? <span className="text-emerald-600">Free</span> : fmt(order.grandTotal)}
                                         </td>
                                         <td className="py-2 px-4">
-                                            <span className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-full border ${
-                                                order.paymentStatus === 'paid' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                                order.paymentStatus === 'complimentary' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                                'bg-amber-50 text-amber-700 border-amber-200'
-                                            }`}>{order.paymentStatus}</span>
+                                            <span className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-full border ${order.paymentStatus === 'paid' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                    order.paymentStatus === 'complimentary' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                                        'bg-amber-50 text-amber-700 border-amber-200'
+                                                }`}>{order.paymentStatus}</span>
                                         </td>
                                         <td className="py-2 px-4 text-xs text-gray-600 font-mono">{order.transactionId || '—'}</td>
                                         <td className="py-2 px-4 text-xs text-gray-500">
@@ -872,9 +1137,8 @@ export default function ExhibitorBookingDetail() {
                     const active = activeTab === tab.id;
                     return (
                         <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-1.5 px-4 py-2 text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-all rounded-sm ${
-                                active ? 'bg-[#23471d] text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
-                            }`}>
+                            className={`flex items-center gap-1.5 px-4 py-2 text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-all rounded-sm ${active ? 'bg-[#23471d] text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+                                }`}>
                             <Icon size={13} /> {tab.label}
                         </button>
                     );
@@ -882,12 +1146,12 @@ export default function ExhibitorBookingDetail() {
             </div>
 
             {/* Tab Content */}
-            {activeTab === 'overview'     && <OverviewTab reg={reg} fmt={fmt} id={id} onRefresh={fetchReg} />}
-            {activeTab === 'contacts'     && <ContactsTab reg={reg} id={id} onRefresh={fetchReg} />}
-            {activeTab === 'payment'      && <PaymentTab reg={reg} fmt={fmt} />}
-            {activeTab === 'documents'    && <DocumentsTab reg={reg} />}
-            {activeTab === 'msme'         && <MSMETab reg={reg} id={id} onRefresh={fetchReg} />}
-            {activeTab === 'accessories'  && <AccessoriesTab reg={reg} id={id} />}
+            {reg && activeTab === 'overview' && <OverviewTab reg={reg} fmt={fmt} id={id} onRefresh={fetchReg} />}
+            {reg && activeTab === 'contacts' && <ContactsTab reg={reg} id={id} onRefresh={fetchReg} />}
+            {reg && activeTab === 'payment' && <PaymentTab reg={reg} fmt={fmt} />}
+            {reg && activeTab === 'documents' && <DocumentsTab reg={reg} />}
+            {reg && activeTab === 'msme' && <MSMETab reg={reg} id={id} onRefresh={fetchReg} />}
+            {reg && activeTab === 'accessories' && <AccessoriesTab reg={reg} id={id} />}
         </div>
     );
 }
