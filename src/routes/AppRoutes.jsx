@@ -98,6 +98,7 @@ import ManageTerms from "../pages/ManageTerms";
 import ExhibitorBookingDetail from "../pages/ExhibitorBookingDetail";
 import FailedPayments from "../pages/FailedPayments";
 import TravelAccommodationManage from "../pages/TravelAccommodationManage";
+import AdminBSM from "../pages/AdminBSM";
 import ActivityLogs from "../pages/ActivityLogs";
 import RoleManagement from "../pages/RoleManagement";
 import RolePermissions from "../pages/RolePermissions";
@@ -426,7 +427,8 @@ export default function AppRoutes() {
           <Route path="/primary-product-interest" element={<PrimaryProductInterest />} />
           <Route path="/secondary-product-categories" element={<SecondaryProductCategories />} />
           <Route path="/meeting-priority-level" element={<MeetingPriorityLevel />} />
-          <Route path="/buyer-registration" element={<BuyerRegistration />} />
+          <Route path="manage-registrations" element={<ManageRegistrations />} />
+          <Route path="bsm-management" element={<AdminBSM />} />
           <Route path="/buyer-list" element={<BuyerList />} />
           <Route path="/stall-accessories" element={<ManageAccessories />} />
           <Route path="/accessory-orders" element={<AccessoryOrders />} />

@@ -278,6 +278,12 @@ export const menuItems = [
   },
   {
     type: "item",
+    label: "BSM Management",
+    icon: Handshake,
+    path: "/bsm-management",
+  },
+  {
+    type: "item",
     label: "E-Promotion Registers",
     icon: List,
     path: "/e-promotion-registers",
