@@ -20,11 +20,11 @@ const SH = ({ title, icon: Icon, actions }) => (
     </div>
 );
 
-const DEFAULT_PLACEHOLDER = "https://res.cloudinary.com/dr8mld4i0/image/upload/v1776505293/exhibitor-docs/hhrxqt8fsepts1z2vxew.png";
+const DEFAULT_PLACEHOLDER = "https://placehold.co/400x400?text=No+Document";
 
 const fixUrl = (url) => {
-    if (!url || url === 'undefined' || url === 'null') return DEFAULT_PLACEHOLDER;
-    if (typeof url !== 'string') return DEFAULT_PLACEHOLDER;
+    if (!url || url === 'undefined' || url === 'null') return null;
+    if (typeof url !== 'string') return null;
     const trimmed = url.trim();
     if (trimmed.startsWith('http') || trimmed.startsWith('https') || trimmed.startsWith('blob:')) {
         return trimmed;
@@ -70,12 +70,12 @@ const STATUS_STYLES = {
 };
 
 const TABS = [
-    { id: 'overview',     label: 'Overview',        icon: Building2 },
-    { id: 'contacts',     label: 'Contacts',         icon: User },
-    { id: 'payment',      label: 'Payment',          icon: CreditCard },
-    { id: 'documents',    label: 'Documents',        icon: FileText },
-    { id: 'msme',         label: 'MSME',             icon: Award },
-    { id: 'accessories',  label: 'Accessories',      icon: Package },
+    { id: 'overview', label: 'Overview', icon: Building2 },
+    { id: 'contacts', label: 'Contacts', icon: User },
+    { id: 'payment', label: 'Payment', icon: CreditCard },
+    { id: 'documents', label: 'Documents', icon: FileText },
+    { id: 'msme', label: 'MSME', icon: Award },
+    { id: 'accessories', label: 'Accessories', icon: Package },
 ];
 
 // ─── Tab Components ───────────────────────────────────────────────────────────
@@ -170,7 +170,7 @@ function OverviewTab({ reg, fmt, id, onRefresh }) {
                 {reg.companyLogoUrl && (
                     <div className="px-4 py-3 border-t border-gray-100 bg-slate-50/50 flex items-center gap-3">
                         <div className="w-12 h-12 bg-white border border-gray-200 rounded-sm overflow-hidden flex items-center justify-center">
-                            <img src={fixUrl(reg.companyLogoUrl)} alt="Logo" className="w-full h-full object-contain" />
+                            <img src={fixUrl(reg.companyLogoUrl)} alt="Logo" className="w-full h-full object-cover" />
                         </div>
                         <div>
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Company Logo</p>
@@ -268,45 +268,19 @@ function OverviewTab({ reg, fmt, id, onRefresh }) {
                 </div>
             </div>
 
-            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
-                <SH title="Identity & KYC Documentation" icon={Award} actions={
-                    <button
-                        onClick={async () => {
-                            const btn = document.activeElement;
-                            if (btn) btn.disabled = true;
-                            try {
-                                const res = await api.post(`/api/exhibitor-registration/${id}/sync`);
-                                if (res.data.success) {
-                                    Swal.fire({ icon: 'success', title: 'Data Synced', timer: 2000, showConfirmButton: false });
-                                    onRefresh();
-                                }
-                            } catch (err) {
-                                Swal.fire('Error', 'Sync failed', 'error');
-                            } finally {
-                                if (btn) btn.disabled = false;
-                            }
-                        }}
-                        className="flex items-center gap-1.5 px-3 py-1 bg-emerald-600 text-white text-[9px] font-black uppercase tracking-wider rounded-[2px] hover:bg-emerald-700 transition-all border border-emerald-500 shadow-sm"
-                    >
-                        <RefreshCw size={11} /> Re-Sync
-                    </button>
-                } />
-                <KycDocsGrid reg={reg} id={id} onRefresh={onRefresh} />
-            </div>
         </div>
     );
 }
 
 function KycDocsGrid({ reg, id, onRefresh }) {
     const DOC_FIELDS = [
-        { label: 'Company Logo',       field: 'companyLogoUrl' },
-        { label: 'PAN Card Front',     field: 'panCardFrontUrl' },
-        { label: 'PAN Card Back',      field: 'panCardBackUrl' },
-        { label: 'Aadhaar Front',      field: 'aadhaarCardFrontUrl' },
-        { label: 'Aadhaar Back',       field: 'aadhaarCardBackUrl' },
-        { label: 'GST Certificate',    field: 'gstCertificateUrl' },
-        { label: 'Cancelled Cheque',   field: 'cancelledChequeUrl' },
-        { label: 'Rep. Photo',         field: 'representativePhotoUrl' },
+        { label: 'Company Logo', field: 'companyLogoUrl' },
+        { label: 'PAN Card', field: 'panCardFrontUrl' },
+        { label: 'Aadhaar Front', field: 'aadhaarCardFrontUrl' },
+        { label: 'Aadhaar Back', field: 'aadhaarCardBackUrl' },
+        { label: 'GST Certificate', field: 'gstCertificateUrl' },
+        { label: 'Cancelled Cheque', field: 'cancelledChequeUrl' },
+        { label: 'Rep. Photo', field: 'representativePhotoUrl' },
     ];
 
     return (
@@ -331,8 +305,18 @@ function KycDocCard({ label, field, regId, currentUrl, onRefresh }) {
         if (!file) return;
         setUploading(true);
         try {
+            const multerFieldMap = {
+                companyLogoUrl: 'companyLogo',
+                panCardFrontUrl: 'panCardFront',
+                aadhaarCardFrontUrl: 'aadhaarCardFront',
+                aadhaarCardBackUrl: 'aadhaarCardBack',
+                gstCertificateUrl: 'gstCertificate',
+                cancelledChequeUrl: 'cancelledCheque',
+                representativePhotoUrl: 'representativePhoto'
+            };
+
             const fd = new FormData();
-            fd.append('file', file);
+            fd.append(multerFieldMap[field] || field, file);
             fd.append('field', field);
             const res = await api.put(`/api/exhibitor-registration/${regId}/kyc-doc`, fd);
             if (res.data.success) {
@@ -389,14 +373,13 @@ function KycDocCard({ label, field, regId, currentUrl, onRefresh }) {
                         <FileText size={28} className="text-[#23471d]" />
                         <span className="text-[8px] font-bold text-gray-400 uppercase">PDF</span>
                     </div>
-                ) : (
+                ) : currentUrl ? (
                     <img
                         src={`${resolvedUrl}${resolvedUrl.includes('?') ? '&' : '?'}v=${new Date().getTime()}`}
                         alt={label}
                         className="w-full h-full object-cover"
-                        onError={(e) => { e.target.src = DEFAULT_PLACEHOLDER; }}
                     />
-                )}
+                ) : null}
                 {uploading && (
 
                     <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
@@ -476,16 +459,16 @@ function ContactsTab({ reg, id, onRefresh }) {
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Primary Contact Person" icon={User} actions={editActions} />
                 <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
-                    {['title','firstName','lastName','designation','email','mobile','alternateNo'].map(k => (
-                        <EditField key={k} label={k.replace(/([A-Z])/g,' $1').trim()} value={editing ? form.contact1[k] : reg.contact1?.[k]} onChange={v => inp1(k, v)} editing={editing} />
+                    {['title', 'firstName', 'lastName', 'designation', 'email', 'mobile', 'alternateNo'].map(k => (
+                        <EditField key={k} label={k.replace(/([A-Z])/g, ' $1').trim()} value={editing ? form.contact1[k] : reg.contact1?.[k]} onChange={v => inp1(k, v)} editing={editing} />
                     ))}
                 </div>
             </div>
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Secondary Contact Person" icon={Users} />
                 <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
-                    {['title','firstName','lastName','designation','email','mobile','alternateNo'].map(k => (
-                        <EditField key={k} label={k.replace(/([A-Z])/g,' $1').trim()} value={editing ? form.contact2[k] : reg.contact2?.[k]} onChange={v => inp2(k, v)} editing={editing} />
+                    {['title', 'firstName', 'lastName', 'designation', 'email', 'mobile', 'alternateNo'].map(k => (
+                        <EditField key={k} label={k.replace(/([A-Z])/g, ' $1').trim()} value={editing ? form.contact2[k] : reg.contact2?.[k]} onChange={v => inp2(k, v)} editing={editing} />
                     ))}
                 </div>
             </div>
@@ -589,42 +572,8 @@ function DocumentsTab({ reg }) {
             </div>
 
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
-                <SH title="Business & KYC Documents" icon={Layers} />
-                <div className="p-5">
-                    {kycDocs.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            {kycDocs.map((d, i) => {
-                                const isImage = d.url.match(/\.(jpg|jpeg|png|webp|gif)$/i);
-                                return (
-                                    <div key={i} className="flex flex-col border border-gray-100 rounded-sm overflow-hidden bg-gray-50/50">
-                                        <div className="px-3 py-2 bg-white border-b border-gray-100 flex items-center justify-between">
-                                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-wider">{d.label}</span>
-                                            <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-[#23471d] hover:text-[#d26019]">
-                                                <ExternalLink size={12} />
-                                            </a>
-                                        </div>
-                                        <div className="aspect-video relative flex items-center justify-center bg-slate-100">
-                                            {d.url.toLowerCase().includes('pdf') ? (
-                                                <div className="flex flex-col items-center gap-1">
-                                                    <FileText size={24} className="text-[#23471d]" />
-                                                    <span className="text-[9px] font-bold text-gray-400">PDF DOCUMENT</span>
-                                                </div>
-                                            ) : (
-                                                <img src={d.url} alt={d.label} className="w-full h-full object-contain" 
-                                                     onError={(e) => { e.target.src = "https://placehold.co/300x200?text=Document"; }} />
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        <div className="text-center py-8">
-                            <Info className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-                            <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">No KYC documents uploaded yet</p>
-                        </div>
-                    )}
-                </div>
+                <SH title="Business & KYC Documentation (Admin Management)" icon={Layers} />
+                <KycDocsGrid reg={reg} id={reg._id} onRefresh={() => window.location.reload()} />
             </div>
         </div>
     );
@@ -990,11 +939,10 @@ function AccessoriesTab({ reg, id }) {
                                             {order.paymentStatus === 'complimentary' ? <span className="text-emerald-600">Free</span> : fmt(order.grandTotal)}
                                         </td>
                                         <td className="py-2 px-4">
-                                            <span className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-full border ${
-                                                order.paymentStatus === 'paid' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                                order.paymentStatus === 'complimentary' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                                'bg-amber-50 text-amber-700 border-amber-200'
-                                            }`}>{order.paymentStatus}</span>
+                                            <span className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-full border ${order.paymentStatus === 'paid' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                    order.paymentStatus === 'complimentary' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                                        'bg-amber-50 text-amber-700 border-amber-200'
+                                                }`}>{order.paymentStatus}</span>
                                         </td>
                                         <td className="py-2 px-4 text-xs text-gray-600 font-mono">{order.transactionId || '—'}</td>
                                         <td className="py-2 px-4 text-xs text-gray-500">
@@ -1189,9 +1137,8 @@ export default function ExhibitorBookingDetail() {
                     const active = activeTab === tab.id;
                     return (
                         <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-1.5 px-4 py-2 text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-all rounded-sm ${
-                                active ? 'bg-[#23471d] text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
-                            }`}>
+                            className={`flex items-center gap-1.5 px-4 py-2 text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-all rounded-sm ${active ? 'bg-[#23471d] text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+                                }`}>
                             <Icon size={13} /> {tab.label}
                         </button>
                     );
@@ -1199,12 +1146,12 @@ export default function ExhibitorBookingDetail() {
             </div>
 
             {/* Tab Content */}
-            {reg && activeTab === 'overview'     && <OverviewTab reg={reg} fmt={fmt} id={id} onRefresh={fetchReg} />}
-            {reg && activeTab === 'contacts'     && <ContactsTab reg={reg} id={id} onRefresh={fetchReg} />}
-            {reg && activeTab === 'payment'      && <PaymentTab reg={reg} fmt={fmt} />}
-            {reg && activeTab === 'documents'    && <DocumentsTab reg={reg} />}
-            {reg && activeTab === 'msme'         && <MSMETab reg={reg} id={id} onRefresh={fetchReg} />}
-            {reg && activeTab === 'accessories'  && <AccessoriesTab reg={reg} id={id} />}
+            {reg && activeTab === 'overview' && <OverviewTab reg={reg} fmt={fmt} id={id} onRefresh={fetchReg} />}
+            {reg && activeTab === 'contacts' && <ContactsTab reg={reg} id={id} onRefresh={fetchReg} />}
+            {reg && activeTab === 'payment' && <PaymentTab reg={reg} fmt={fmt} />}
+            {reg && activeTab === 'documents' && <DocumentsTab reg={reg} />}
+            {reg && activeTab === 'msme' && <MSMETab reg={reg} id={id} onRefresh={fetchReg} />}
+            {reg && activeTab === 'accessories' && <AccessoriesTab reg={reg} id={id} />}
         </div>
     );
 }
