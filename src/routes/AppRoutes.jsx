@@ -155,6 +155,7 @@ import ManageAccessories from "../pages/ManageAccessories";
 import AccessoryOrders from "../pages/AccessoryOrders";
 import ExhibitorChat from "../pages/ExhibitorChat";
 import AddUnit from "../pages/admin_management/AddUnit";
+import MarketingToolkitManage from "../pages/MarketingToolkitManage";
 
 export default function AppRoutes() {
   return (
@@ -431,6 +432,7 @@ export default function AppRoutes() {
           <Route path="/accessory-orders" element={<AccessoryOrders />} />
           <Route path="/exhibitor-chat" element={<ExhibitorChat />} />
           <Route path="/add-unit" element={<AddUnit />} />
+          <Route path="/marketing-toolkit-manage" element={<MarketingToolkitManage />} />
         </Route>
       </Route>
     </Routes>
