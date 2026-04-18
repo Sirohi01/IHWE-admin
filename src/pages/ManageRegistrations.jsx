@@ -12,6 +12,18 @@ import {
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import { createActivityLogThunk } from '../features/activityLog/activityLogSlice';
+import { SERVER_URL } from '../lib/api';
+
+const fixUrl = (url) => {
+    if (!url || url === 'undefined' || url === 'null') return null;
+    if (typeof url !== 'string') return null;
+    const trimmed = url.trim();
+    if (trimmed.startsWith('http') || trimmed.startsWith('https') || trimmed.startsWith('blob:')) {
+        return trimmed;
+    }
+    const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+    return `${SERVER_URL}${cleanPath}`;
+};
 
 const DetailItem = ({ label, value, highlight = false, isLink = false }) => (
     <div className="min-w-0 font-inter">
@@ -58,7 +70,7 @@ const ManageRegistrations = () => {
         try {
             const response = await api.get('/api/exhibitor-registration');
             if (response.data.success) {
-                setRegistrations(response.data.data);
+                setRegistrations(Array.isArray(response.data.data) ? response.data.data : []);
             }
         } catch (error) {
             console.error('Error fetching registrations:', error);
@@ -282,11 +294,30 @@ const ManageRegistrations = () => {
             key: "exhibitor",
             label: "EXHIBITOR",
             render: (row) => (
-                <div className="flex flex-col font-inter">
-                    <span className="font-semibold text-red-600 text-sm uppercase tracking-tight leading-none mb-1">{row.exhibitorName}</span>
-                    <span className="text-[10px] text-black font-medium uppercase tracking-widest leading-none">{row.natureOfBusiness}</span>
-                    <div className="mt-1.5 flex items-center gap-1.5">
-                        <span className="text-[9px] bg-slate-100 px-1.5 py-0.5 rounded font-medium text-black uppercase tracking-tighter border border-slate-200">Event: <span className="text-red-500 font-bold">{row.eventId?.name || 'N/A'}</span></span>
+                <div className="flex items-center gap-3 font-inter">
+                    {/* Logo/Avatar */}
+                    <div className="w-10 h-10 rounded-sm border border-slate-200 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
+                        {row.companyLogoUrl ? (
+                            <img 
+                                src={fixUrl(row.companyLogoUrl)} 
+                                alt={row.exhibitorName} 
+                                className="w-full h-full object-cover"
+                                onError={(e) => { e.target.src = "https://placehold.co/100x100?text=LOGO"; }}
+                            />
+                        ) : (
+                            <div className="flex flex-col items-center">
+                                <Building size={16} className="text-slate-300" />
+                                <span className="text-[7px] text-slate-300 font-bold uppercase mt-0.5">No Logo</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex flex-col min-w-0">
+                        <span className="font-semibold text-red-600 text-sm uppercase tracking-tight leading-none mb-1 truncate">{row.exhibitorName}</span>
+                        <span className="text-[10px] text-black font-medium uppercase tracking-widest leading-none truncate">{row.natureOfBusiness}</span>
+                        <div className="mt-1.5 flex items-center gap-1.5">
+                            <span className="text-[9px] bg-slate-100 px-1.5 py-0.5 rounded font-medium text-black uppercase tracking-tighter border border-slate-200">Event: <span className="text-red-500 font-bold">{row.eventId?.name || 'N/A'}</span></span>
+                        </div>
                     </div>
                 </div>
             )
@@ -408,10 +439,15 @@ const ManageRegistrations = () => {
         // Exclude payment-failed entries - they have their own dedicated page
         if (r.status === 'payment-failed') return false;
 
+        const exhibitorName = (r.exhibitorName || '').toLowerCase();
+        const stallNo = (r.participation?.stallFor || r.participation?.stallNo || '').toLowerCase();
+        const eventName = (r.eventId?.name || '').toLowerCase();
+        const searchTermLower = (searchTerm || '').toLowerCase();
+
         const matchesSearch = 
-            r.exhibitorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            r.participation?.stallNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            r.eventId?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+            exhibitorName.includes(searchTermLower) ||
+            stallNo.includes(searchTermLower) ||
+            eventName.includes(searchTermLower);
         
         if (!matchesSearch) return false;
 
