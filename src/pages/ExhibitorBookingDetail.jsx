@@ -286,28 +286,60 @@ function DocumentsTab({ reg }) {
         if (!url) return null;
         return url.startsWith('http') ? url : `${SERVER_URL}${url}`;
     };
-    const docs = [
+
+    const registrationDocs = [
         { label: 'Registration Form (PDF)', url: fixUrl(reg.registrationPdfUrl), color: 'bg-[#23471d] hover:bg-[#1a3516]' },
         { label: 'Payment Receipt (PDF)', url: fixUrl(reg.receiptPdfUrl), color: 'bg-[#d26019] hover:bg-[#b8521a]' },
         { label: 'Uploaded Invoice', url: fixUrl(reg.receiptUrl), color: 'bg-slate-700 hover:bg-slate-800' },
     ].filter(d => d.url);
 
+    const businessDocs = [
+        { label: 'Company Logo', url: fixUrl(reg.companyLogoUrl), color: 'bg-blue-600 hover:bg-blue-700' },
+        { label: 'PAN Card Front', url: fixUrl(reg.panCardFrontUrl), color: 'bg-emerald-600 hover:bg-emerald-700' },
+        { label: 'PAN Card Back', url: fixUrl(reg.panCardBackUrl), color: 'bg-emerald-600 hover:bg-emerald-700' },
+        { label: 'Aadhaar Card Front', url: fixUrl(reg.aadhaarCardFrontUrl), color: 'bg-indigo-600 hover:bg-indigo-700' },
+        { label: 'Aadhaar Card Back', url: fixUrl(reg.aadhaarCardBackUrl), color: 'bg-indigo-600 hover:bg-indigo-700' },
+        { label: 'GST Certificate', url: fixUrl(reg.gstCertificateUrl), color: 'bg-amber-600 hover:bg-amber-700' },
+        { label: 'Cancelled Cheque', url: fixUrl(reg.cancelledChequeUrl), color: 'bg-rose-600 hover:bg-rose-700' },
+        { label: 'Representative Photo', url: fixUrl(reg.representativePhotoUrl), color: 'bg-slate-600 hover:bg-slate-700' },
+    ].filter(d => d.url);
+
     return (
-        <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
-            <SH title="Documents & Downloads" icon={FileText} />
-            <div className="p-5">
-                {docs.length > 0 ? (
-                    <div className="flex flex-wrap gap-3">
-                        {docs.map((d, i) => (
-                            <a key={i} href={d.url} target="_blank" rel="noopener noreferrer"
-                                className={`flex items-center gap-2 px-4 py-2 text-white text-[10px] font-black uppercase tracking-widest transition-all ${d.color}`}>
-                                <ExternalLink size={12} /> {d.label}
-                            </a>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">No documents available</p>
-                )}
+        <div className="space-y-4">
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Registration & Payment Documents" icon={FileText} />
+                <div className="p-5">
+                    {registrationDocs.length > 0 ? (
+                        <div className="flex flex-wrap gap-3">
+                            {registrationDocs.map((d, i) => (
+                                <a key={i} href={d.url} target="_blank" rel="noopener noreferrer"
+                                    className={`flex items-center gap-2 px-4 py-2 text-white text-[10px] font-black uppercase tracking-widest transition-all ${d.color}`}>
+                                    <ExternalLink size={12} /> {d.label}
+                                </a>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">No registration documents available</p>
+                    )}
+                </div>
+            </div>
+
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Business & KYC Documents" icon={Building2} />
+                <div className="p-5">
+                    {businessDocs.length > 0 ? (
+                        <div className="flex flex-wrap gap-3">
+                            {businessDocs.map((d, i) => (
+                                <a key={i} href={d.url} target="_blank" rel="noopener noreferrer"
+                                    className={`flex items-center gap-2 px-4 py-2 text-white text-[10px] font-black uppercase tracking-widest transition-all ${d.color}`}>
+                                    <ExternalLink size={12} /> {d.label}
+                                </a>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">No business documents uploaded yet</p>
+                    )}
+                </div>
             </div>
         </div>
     );
