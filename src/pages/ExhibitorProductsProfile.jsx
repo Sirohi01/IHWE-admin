@@ -53,7 +53,8 @@ export default function ExhibitorProductsProfile() {
                         _id: e._id,
                         title: e.exhibitorName || 'Unknown Company',
                         location: `${e.city || ''}, ${e.country || ''}`,
-                        email: e.contact1?.email || 'No Email'
+                        email: e.contact1?.email || 'No Email',
+                        companyLogoUrl: e.companyLogoUrl
                     }));
                 setExhibitors(activeOnes);
             } else {
@@ -212,8 +213,20 @@ export default function ExhibitorProductsProfile() {
                                 {/* Header Info Card */}
                                 <div className="bg-white border rounded-lg p-6 flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-14 h-14 bg-[#23471d] text-white rounded flex items-center justify-center text-xl font-black">
-                                            {selectedExhibitor.title?.[0] || "E"}
+                                        <div className="w-14 h-14 bg-[#23471d] text-white rounded flex items-center justify-center text-xl font-black overflow-hidden border border-gray-100 shadow-sm">
+                                            {selectedExhibitor.companyLogoUrl ? (
+                                                <img
+                                                    src={selectedExhibitor.companyLogoUrl.startsWith('http') ? selectedExhibitor.companyLogoUrl : `${backendBaseUrl}${selectedExhibitor.companyLogoUrl}`}
+                                                    className="w-full h-full object-contain bg-white"
+                                                    alt={selectedExhibitor.title}
+                                                    onError={(e) => {
+                                                        e.target.style.display = 'none';
+                                                        e.target.parentElement.innerText = selectedExhibitor.title?.[0] || "E";
+                                                    }}
+                                                />
+                                            ) : (
+                                                selectedExhibitor.title?.[0] || "E"
+                                            )}
                                         </div>
                                         <div>
                                             <h2 className="text-xl font-black uppercase tracking-tight text-gray-900">{selectedExhibitor.title}</h2>
