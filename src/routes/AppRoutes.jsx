@@ -157,6 +157,7 @@ import AccessoryOrders from "../pages/AccessoryOrders";
 import ExhibitorChat from "../pages/ExhibitorChat";
 import AddUnit from "../pages/admin_management/AddUnit";
 import MarketingToolkitManage from "../pages/MarketingToolkitManage";
+import ExhibitorProductsProfile from "../pages/ExhibitorProductsProfile";
 
 export default function AppRoutes() {
   return (
@@ -241,6 +242,7 @@ export default function AppRoutes() {
             path="exhibitor-list-manage"
             element={<ExhibitorListManage />}
           />
+          <Route path="exhibitor-products-profile" element={<ExhibitorProductsProfile />} />
           <Route path="stalls" element={<ManageStalls />} />
           <Route path="exhibitor-bookings" element={<ManageRegistrations />} />
           <Route path="exhibitor-booking/:id" element={<ExhibitorBookingDetail />} />

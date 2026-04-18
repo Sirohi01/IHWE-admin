@@ -248,6 +248,10 @@ export const menuItems = [
         path: "/exhibitor-bookings",
       },
       {
+        label: "Exhibitors Products",
+        path: "/exhibitor-products-profile",
+      },
+      {
         label: "Failed Payments",
         path: "/failed-payments",
       },
