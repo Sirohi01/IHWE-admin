@@ -65,10 +65,10 @@ export const menuItems = [
     path: "/click-analytics",
   },
 
-  /* ================= HOME SECTION ================= */
+  /* ================= Website Management SECTION ================= */
   {
     type: "heading",
-    label: "Home Section",
+    label: "Website Management",
   },
   {
     type: "dropdown",
@@ -90,11 +90,6 @@ export const menuItems = [
       { label: "Counters", path: "/stats-manage" },
     ],
   },
-
-  {
-    type: "heading",
-    label: "About Section",
-  },
   {
     type: "dropdown",
     label: "About Page",
@@ -106,78 +101,6 @@ export const menuItems = [
       { label: "Target Audience", path: "/target-audience" },
       { label: "Organized By", path: "/organized-by" },
     ],
-  },
-
-  /* ================= EXHIBIT SECTION ================= */
-  {
-    type: "heading",
-    label: "Exhibit Section",
-  },
-  {
-    type: "dropdown",
-    label: "Exhibit Page",
-    icon: Rocket,
-    children: [
-      { label: "Why Exhibit", path: "/why-exhibit-manage" },
-      { label: "Exhibitor Profile", path: "/exhibitor-profile-manage" },
-      { label: "E-Promotion Management", path: "/e-promotion-manage" },
-      { label: "Stall Designing Vendor", path: "/stall-vendor-manage" },
-      { label: "Travel & Accommodation", path: "/travel-accommodation-manage" },
-    ],
-  },
-
-  /* ================= VISIT SECTION ================= */
-  {
-    type: "heading",
-    label: "Visit Section",
-  },
-  {
-    type: "item",
-    label: "Why Visit",
-    icon: Rocket,
-    path: "/why-visit-manage",
-  },
-
-  /* ================= EXHIBITORS SECTION ================= */
-  {
-    type: "heading",
-    label: "Exhibitors Section",
-  },
-  {
-    type: "item",
-    label: "Exhibitor List",
-    icon: List,
-    path: "/exhibitor-list-manage",
-  },
-
-  /* ================= PARTNERS SECTION ================= */
-  {
-    type: "heading",
-    label: "Partners Section",
-  },
-  {
-    type: "item",
-    label: "Add Partners",
-    icon: Handshake,
-    path: "/partners-manage",
-  },
-
-  /* ================= ADVISORY SECTION ================= */
-  {
-    type: "heading",
-    label: "Advisory Section",
-  },
-  {
-    type: "item",
-    label: "Add Advisory member",
-    icon: Users,
-    path: "/advisory-manage",
-  },
-
-  /* ================= GALLERY SECTION ================= */
-  {
-    type: "heading",
-    label: "Gallery Section",
   },
   {
     type: "dropdown",
@@ -192,11 +115,41 @@ export const menuItems = [
       { label: "Media Photo Management", path: "/gallery-media" },
     ],
   },
-
-  /* ================= BLOGS SECTION ================= */
   {
-    type: "heading",
-    label: "Blogs Section",
+    type: "dropdown",
+    label: "Exhibit Page",
+    icon: Rocket,
+    children: [
+      { label: "Why Exhibit", path: "/why-exhibit-manage" },
+      { label: "Exhibitor Profile", path: "/exhibitor-profile-manage" },
+      { label: "E-Promotion Management", path: "/e-promotion-manage" },
+      { label: "Stall Designing Vendor", path: "/stall-vendor-manage" },
+      { label: "Travel & Accommodation", path: "/travel-accommodation-manage" },
+    ],
+  },
+  {
+    type: "item",
+    label: "Why Visit",
+    icon: Rocket,
+    path: "/why-visit-manage",
+  },
+  {
+    type: "item",
+    label: "Exhibitor List",
+    icon: List,
+    path: "/exhibitor-list-manage",
+  },
+  {
+    type: "item",
+    label: "Add Partners",
+    icon: Handshake,
+    path: "/partners-manage",
+  },
+  {
+    type: "item",
+    label: "Add Advisory member",
+    icon: Users,
+    path: "/advisory-manage",
   },
   {
     type: "dropdown",
@@ -207,23 +160,11 @@ export const menuItems = [
       { label: "Blogs List", path: "/blogs-list" },
     ],
   },
-
-  /* ================= BACKGROUND IMAGES SECTION ================= */
-  {
-    type: "heading",
-    label: "Background Images Section",
-  },
   {
     type: "item",
     label: "Background Images",
     icon: Images,
     path: "/hero-images",
-  },
-
-  /* ================= SEO SECTION ================= */
-  {
-    type: "heading",
-    label: "SEO Section",
   },
   {
     type: "dropdown",
@@ -235,40 +176,17 @@ export const menuItems = [
       { label: "Advanced SEO", path: "/advanced-seo" },
     ],
   },
-  /* ================= REGISTRATION SECTION ================= */
+
+  /* ================= Marketing Section ================= */
   {
     type: "heading",
-    label: "Registration Section",
+    label: "Marketing Section",
   },
   {
     type: "item",
     label: "Book A Stand",
     icon: Ticket,
     path: "/book-a-stand",
-  },
-  {
-    type: "item",
-    label: "E-Promotion Registers",
-    icon: List,
-    path: "/e-promotion-registers",
-  },
-  {
-    type: "item",
-    label: "Contact Enquiry",
-    path: "/contact-enquiries",
-    icon: MessageSquare,
-  },
-  // {
-  //   type: "item",
-  //   label: "Buyer Registration",
-  //   path: "/buyer-registrations",
-  //   icon: Users,
-  // },
-
-  /* ================= CLIENT DATA SECTION ================= */
-  {
-    type: "heading",
-    label: "Client Data Section",
   },
   {
     type: "dropdown",
@@ -299,17 +217,41 @@ export const menuItems = [
     label: "Visitor Management",
     icon: Users,
     children: [
-      // { label: "Add New Visitor", path: "/ihweClientData2026/AddNewVisitor" },
       { label: "Add Domestic Visitor", path: "/ihweClientData2026/AddNewVisitor" },
-      // { label: "Corporate Visitor Form", path: "/ihweClientData2026/CorporateVisitorForm" },
-      // { label: "Free Health Camp Form", path: "/ihweClientData2026/FreeHealthCampForm" },
-      // { label: "General Visitor Form", path: "/ihweClientData2026/GeneralVisitorForm" },
       { label: "Add International Visitor", path: "/ihweClientData2026/VisitorRegistration" },
       { label: "Corporate Visitors List", path: "/ihweClientData2026/CorporateVisitorsList" },
       { label: "General Visitors List", path: "/ihweClientData2026/GeneralVisitorsList" },
       { label: "Health Camp Visitors List", path: "/ihweClientData2026/FreeHealthCampVisitorsList" },
       { label: "Visitor Review", path: "/ihweClientData2026/VisitorReview" },
     ],
+  },
+  {
+    type: "dropdown",
+    label: "Exhibitor Management",
+    icon: FileText,
+    children: [
+      { label: "Exhibitor Chat", path: "/exhibitor-chat" },
+      {
+        label: "Stall Inventory",
+        path: "/stalls",
+      },
+      {
+        label: "Exhibition Events",
+        path: "/events",
+      },
+      {
+        label: "Stall Pricing Rates",
+        path: "/stall-rates",
+      },
+      {
+        label: "Exhibitor Bookings",
+        path: "/exhibitor-bookings",
+      },
+      {
+        label: "Failed Payments",
+        path: "/failed-payments",
+      },
+    ]
   },
   {
     type: "dropdown",
@@ -328,128 +270,35 @@ export const menuItems = [
       { label: "Registration Settings", path: "/buyer-registration-config" },
     ],
   },
+  {
+    type: "item",
+    label: "Marketing Toolkit",
+    icon: Package,
+    path: "/marketing-toolkit-manage",
+  },
+  {
+    type: "item",
+    label: "E-Promotion Registers",
+    icon: List,
+    path: "/e-promotion-registers",
+  },
+  {
+    type: "item",
+    label: "Contact Enquiry",
+    path: "/contact-enquiries",
+    icon: MessageSquare,
+  },
 
   /* ================= STALLS & EVENTS ================= */
-  {
-    type: "heading",
-    label: "Stalls & Events",
-  },
-  {
-    type: "item",
-    label: "Stall Inventory",
-    icon: LayoutDashboard,
-    path: "/stalls",
-  },
-  {
-    type: "item",
-    label: "Exhibition Events",
-    icon: CalendarCheck,
-    path: "/events",
-  },
-  {
-    type: "item",
-    label: "Stall Pricing Rates",
-    icon: Ticket,
-    path: "/stall-rates",
-  },
-  {
-    type: "item",
-    label: "Exhibitor Bookings",
-    icon: ClipboardList,
-    path: "/exhibitor-bookings",
-  },
-  {
-    type: "item",
-    label: "Failed Payments",
-    icon: AlertTriangle,
-    path: "/failed-payments",
-  },
-  /* ================= ACCESSORIES SECTION ================= */
-  {
-    type: "heading",
-    label: "Accessories & Extras",
-  },
-  {
-    type: "item",
-    label: "Manage Accessories",
-    icon: Package,
-    path: "/stall-accessories",
-  },
-  {
-    type: "item",
-    label: "Accessory Orders",
-    icon: ShoppingCart,
-    path: "/accessory-orders",
-  },
-  {
-    type: "item",
-    label: "Exhibitor Chat",
-    icon: MessageSquare,
-    path: "/exhibitor-chat",
-  },
-
-  /* ================= GENERAL OPERATIONS ================= */
   // {
   //   type: "heading",
-  //   label: "General Operations",
-  // },
-  // {
-  //   type: "dropdown",
-  //   label: "Content Hub",
-  //   icon: BookOpen,
-  //   children: [
-  //     { label: "Create Page", path: "/create-a-page" },
-  //     { label: "Page List", path: "/page-list" },
-  //     { label: "Media Uploads (PDF)", path: "/upload-pdf" },
-  //     { label: "Create News/Post", path: "/create-a-post" },
-  //     { label: "News Registry", path: "/post-list" },
-  //   ],
-  // },
-  // {
-  //   type: "dropdown",
-  //   label: "Services Hub",
-  //   icon: Sparkles,
-  //   children: [
-  //     { label: "Create Service", path: "/create-service" },
-  //     { label: "Service List", path: "/service-list" },
-  //     { label: "Add Facilities", path: "/add-facilities" },
-  //   ],
-  // },
-  // {
-  //   type: "dropdown",
-  //   label: "HR & Recruitment",
-  //   icon: BriefcaseBusiness,
-  //   children: [
-  //     { label: "Post Vacancy", path: "/add-vacancy" },
-  //     { label: "Applicants Registry", path: "/career-list" },
-  //   ],
-  // },
-  // {
-  //   type: "dropdown",
-  //   label: "CRM Client Relations",
-  //   icon: Building2,
-  //   children: [
-  //     { label: "Add Corporate Client", path: "/add-corporate-clients" },
-  //     { label: "Corporate List", path: "/corporate-clients-list" },
-  //     { label: "Add Individual Client", path: "/add-individual-clients" },
-  //     { label: "Profiles", path: "/profiles" },
-  //   ],
-  // },
-  // {
-  //   type: "dropdown",
-  //   label: "Communications",
-  //   icon: MessageSquare,
-  //   children: [
-  //     { label: "Enquiry List", path: "/enquiry-list" },
-  //     { label: "Remainder List", path: "/remainder-list" },
-  //     { label: "Contact List", path: "/contact-list" },
-  //   ],
+  //   label: "Stalls & Events",
   // },
 
-  /* ================= LOGS SECTION ================= */
+  /* ================= Developer SECTION ================= */
   {
     type: "heading",
-    label: "Logs Section",
+    label: "Developer Section",
   },
   {
     type: "item",
@@ -465,11 +314,6 @@ export const menuItems = [
   },
 
 
-  /* ================= MESSAGE SECTION ================= */
-  {
-    type: "heading",
-    label: "Message Section",
-  },
   {
     type: "item",
     label: "Response Templates",
@@ -478,22 +322,13 @@ export const menuItems = [
   },
 
 
-  /* ================= POLICY SECTION ================= */
-  {
-    type: "heading",
-    label: "Policy Section",
-  },
   {
     type: "item",
     label: "Policy Manager",
     icon: ShieldCheck,
     path: "/policy-manager",
   },
-  /* ================= ADMIN MANAGEMENT SECTION ================= */
-  {
-    type: "heading",
-    label: "Admin Management Section",
-  },
+
   {
     type: "dropdown",
     label: "Admin Management",
@@ -507,25 +342,21 @@ export const menuItems = [
       { label: "Add Unit", path: "/add-unit" },
     ],
   },
-
-
-  /* ================= ACCOUNT SECTION ================= */
   {
-    type: "heading",
-    label: "Account Section",
+    type: "item",
+    label: "Manage Accessories",
+    icon: Package,
+    path: "/stall-accessories",
   },
-  // {
-  //   type: "item",
-  //   label: "User List",
-  //   icon: Users,
-  //   path: "/ihweClientData2026/userlist",
-  // },
-  // {
-  //   type: "item",
-  //   label: "Add User",
-  //   icon: UserCheck,
-  //   path: "/ihweClientData2026/adduser",
-  // },
+  {
+    type: "item",
+    label: "Accessory Orders",
+    icon: ShoppingCart,
+    path: "/accessory-orders",
+  },
+
+
+
   {
     type: "item",
     label: "Manage Admin Users",

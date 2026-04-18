@@ -1,5 +1,5 @@
 import { ChevronDown, X, Menu } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { menuItems } from "../data/menuItems";
 import { NavLink, useLocation } from "react-router-dom";
@@ -67,69 +67,72 @@ export default function Sidebar({
     }
   }, [currentUser]);
 
-  const filteredMenuItems = (() => {
+  const groupedMenuItems = useMemo(() => {
     if (!currentUser) return [];
 
     const perms = roleData?.permissions || {};
     const isSuperAdminFallback = currentUser.role === 'super-admin' && Object.keys(perms).length === 0;
 
-    // First pass: Determine visibility for items and dropdowns
-    const visibleResults = menuItems.map(item => {
-      if (item.type === "heading") return { ...item, isVisible: false }; // Placeholder
-      
-      if (isSuperAdminFallback) return { ...item, isVisible: true };
+    const results = [];
+    let currentSection = null;
 
-      if (item.type === "item") {
-        return { ...item, isVisible: perms[item.label] === true };
-      }
+    menuItems.forEach((item) => {
+      if (item.type === "heading") {
+        currentSection = { ...item, type: "section", children: [] };
+        results.push(currentSection);
+      } else {
+        let isVisible = false;
+        let visibleChildren = item.children;
 
-      if (item.type === "dropdown") {
-        const visibleChildren = item.children?.filter(child => perms[child.label] === true);
-        return { 
-          ...item, 
-          isVisible: visibleChildren && visibleChildren.length > 0,
-          children: visibleChildren
-        };
-      }
-
-      return { ...item, isVisible: false };
-    });
-
-    // Second pass: Show headings only if they are followed by visible items
-    const finalItems = [];
-    for (let i = 0; i < visibleResults.length; i++) {
-      const current = visibleResults[i];
-      if (current.type === "heading") {
-        // Look ahead to see if any items in this section are visible
-        let hasVisibleContent = false;
-        for (let j = i + 1; j < visibleResults.length; j++) {
-          if (visibleResults[j].type === "heading") break;
-          if (visibleResults[j].isVisible) {
-            hasVisibleContent = true;
-            break;
+        if (isSuperAdminFallback) {
+          isVisible = true;
+        } else {
+          if (item.type === "item") {
+            isVisible = perms[item.label] === true;
+          } else if (item.type === "dropdown") {
+            visibleChildren = item.children?.filter(child => perms[child.label] === true);
+            isVisible = visibleChildren && visibleChildren.length > 0;
           }
         }
-        if (hasVisibleContent) {
-          finalItems.push(current);
+
+        if (isVisible) {
+          const finalItem = { ...item, children: visibleChildren };
+          if (currentSection) {
+            currentSection.children.push(finalItem);
+          } else {
+            results.push(finalItem);
+          }
         }
-      } else if (current.isVisible) {
-        finalItems.push(current);
-      }
-    }
-
-    return finalItems;
-  })();
-
-  useEffect(() => {
-    filteredMenuItems.forEach((item) => {
-      if (
-        item.type === "dropdown" &&
-        item.children?.some((c) => location.pathname === c.path)
-      ) {
-        setOpenDropdown(item.label);
       }
     });
-  }, [location.pathname]);
+
+    return results.filter(item => item.type !== "section" || item.children.length > 0);
+  }, [currentUser, roleData]);
+
+  useEffect(() => {
+    let activeSection = null;
+    let activeDropdown = null;
+
+    groupedMenuItems.forEach((group) => {
+      if (group.type === "section") {
+        let hasActive = false;
+        group.children.forEach((child) => {
+          if (child.type === "dropdown" && child.children?.some((c) => location.pathname === c.path)) {
+            activeDropdown = child.label;
+            hasActive = true;
+          } else if (child.path === location.pathname) {
+            hasActive = true;
+          }
+        });
+        if (hasActive) activeSection = group.label;
+      } else if (group.type === "dropdown" && group.children?.some((c) => location.pathname === c.path)) {
+        activeDropdown = group.label;
+      }
+    });
+
+    if (activeSection) setOpenSections((prev) => ({ ...prev, [activeSection]: true }));
+    if (activeDropdown) setOpenDropdown(activeDropdown);
+  }, [location.pathname, groupedMenuItems]);
 
   const handleLogout = async () => {
     const result = await Swal.fire({
@@ -165,6 +168,68 @@ export default function Sidebar({
     } else {
       setOpenDropdown(openDropdown === label ? null : label);
     }
+  };
+
+  const renderMenuItem = (item) => {
+    if (item.type === "item") {
+      const Icon = item.icon;
+      return (
+        <NavLink
+          key={item.label}
+          to={item.path}
+          onClick={() => setMobileMenuOpen(false)}
+          className={({ isActive }) => `sb-item flex items-center gap-3 px-3 py-1.5 rounded-md border border-transparent ${isActive ? "active" : ""} ${!sidebarOpen && "justify-center"}`}
+        >
+          <Icon size={16} className="sb-icon shrink-0" />
+          {sidebarOpen && <span className="sb-label whitespace-nowrap">{item.label}</span>}
+        </NavLink>
+      );
+    }
+
+    if (item.type === "dropdown") {
+      const Icon = item.icon;
+      const isOpen = openDropdown === item.label;
+
+      return (
+        <div key={item.label} className="w-full">
+          <button
+            onClick={() => toggleDropdown(item.label)}
+            className={`sb-dropdown-btn w-full flex items-center justify-between px-3 py-1.5 rounded-md transition-all duration-200 ${!sidebarOpen && "justify-center"} ${isOpen ? "bg-[#EFF6FF]" : ""}`}
+          >
+            <div className="flex items-center gap-3">
+              <Icon size={16} className="sb-icon shrink-0" />
+              {sidebarOpen && <span className="sb-label whitespace-nowrap">{item.label}</span>}
+            </div>
+            {sidebarOpen && <ChevronDown size={14} className={`sb-chevron transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />}
+          </button>
+
+          <AnimatePresence initial={false}>
+            {sidebarOpen && isOpen && (
+              <motion.div
+                key={`${item.label}-content`}
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                className="sb-sub-border ml-5 mt-1 space-y-1 border-l pl-3 overflow-hidden"
+              >
+                {item.children.map((sub) => (
+                  <NavLink
+                    key={sub.path}
+                    to={sub.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={({ isActive }) => `sb-sub-item block px-3 py-1.5 rounded-md sb-label transition-colors ${isActive ? "active" : ""}`}
+                  >
+                    {sub.label}
+                  </NavLink>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -214,81 +279,41 @@ export default function Sidebar({
         )}
 
         <div className="h-[calc(100vh-140px)] overflow-y-auto sidebar-scroll pt-1 p-3 space-y-1 text-[13px]">
-          {filteredMenuItems.map((item, index) => {
-            if (item.type === "heading") {
-              return (
-                sidebarOpen && (
-                  <p
-                    key={index}
-                    className={`sb-heading px-3 ${
-                      index === 0 ? "mt-0" : "mt-3"
-                    } mb-0.5 text-[11px] font-semibold uppercase`}
-                  >
-                    {item.label}
-                  </p>
-                )
-              );
-            }
-
-            if (item.type === "item") {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.label}
-                  to={item.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={({ isActive }) => `sb-item flex items-center gap-3 px-3 py-1.5 rounded-md border border-transparent ${isActive ? "active" : ""} ${!sidebarOpen && "justify-center"}`}
-                >
-                  <Icon size={16} className="sb-icon" />
-                  {sidebarOpen && <span className="sb-label whitespace-nowrap">{item.label}</span>}
-                </NavLink>
-              );
-            }
-
-            if (item.type === "dropdown") {
-              const Icon = item.icon;
-              const isOpen = openDropdown === item.label;
+          {groupedMenuItems.map((item, index) => {
+            if (item.type === "section") {
+              const isOpen = !!openSections[item.label];
 
               return (
-                <div key={item.label} className="w-full">
-                  <button
-                    onClick={() => toggleDropdown(item.label)}
-                    className={`sb-dropdown-btn w-full flex items-center justify-between px-3 py-1.5 rounded-md transition-all duration-200 ${!sidebarOpen && "justify-center"} ${isOpen ? "bg-[#EFF6FF]" : ""}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Icon size={16} className="sb-icon" />
-                      {sidebarOpen && <span className="sb-label whitespace-nowrap">{item.label}</span>}
-                    </div>
-                    {sidebarOpen && <ChevronDown size={14} className={`sb-chevron transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />}
-                  </button>
+                <div key={`section-${index}`} className={`w-full ${sidebarOpen ? "mb-2" : "mb-0"}`}>
+                  {sidebarOpen && (
+                    <button
+                      onClick={() => setOpenSections(prev => ({ ...prev, [item.label]: !prev[item.label] }))}
+                      className={`sb-heading w-full flex items-center justify-between px-3 py-2 text-[11px] font-bold uppercase tracking-wider hover:bg-gray-50 rounded-md transition-colors ${index === 0 ? "mt-0" : "mt-2"}`}
+                    >
+                      <span>{item.label}</span>
+                      <ChevronDown size={14} className={`transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
+                    </button>
+                  )}
 
                   <AnimatePresence initial={false}>
-                    {sidebarOpen && isOpen && (
+                    {(!sidebarOpen || isOpen) && (
                       <motion.div
                         key={`${item.label}-content`}
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
+                        initial={sidebarOpen ? { height: 0, opacity: 0 } : false}
+                        animate={sidebarOpen ? { height: "auto", opacity: 1 } : false}
+                        exit={sidebarOpen ? { height: 0, opacity: 0 } : false}
                         transition={{ duration: 0.2, ease: "easeInOut" }}
-                        className="sb-sub-border ml-5 mt-1 space-y-1 border-l pl-3 overflow-hidden"
+                        className="overflow-hidden space-y-1"
                       >
-                        {item.children.map((sub) => (
-                          <NavLink
-                            key={sub.path}
-                            to={sub.path}
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={({ isActive }) => `sb-sub-item block px-3 py-1.5 rounded-md sb-label transition-colors ${isActive ? "active" : ""}`}
-                          >
-                            {sub.label}
-                          </NavLink>
-                        ))}
+                        {item.children.map(subItem => renderMenuItem(subItem))}
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
               );
             }
-            return null;
+
+            return renderMenuItem(item);
           })}
         </div>
 
