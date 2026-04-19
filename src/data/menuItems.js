@@ -176,6 +176,12 @@ export const menuItems = [
       { label: "Advanced SEO", path: "/advanced-seo" },
     ],
   },
+  {
+    type: "item",
+    label: "Social Media",
+    icon: MessageSquare,
+    path: "/social-media",
+  },
 
   /* ================= Marketing Section ================= */
   {
