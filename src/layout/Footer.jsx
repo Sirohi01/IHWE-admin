@@ -14,7 +14,7 @@ const Footer = ({ darkMode }) => (
           darkMode ? "text-gray-400" : "text-gray-700"
         }`}
       >
-        © 2026 <span className="text-[#d26019]">Encodancy Pvt Ltd</span>. All rights reserved.
+        © 2026 IHWE |<span className="text-[#d26019]">Property of Namo Gange Wellness Pvt. Ltd.</span>. All rights reserved. 
       </p>
     </div>
   </footer>
