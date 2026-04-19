@@ -225,6 +225,7 @@ export default function AppRoutes() {
           />
           <Route path="contact-enquiries" element={<ContactEnquiries />} />
           {/* <Route path="buyer-registrations" element={<BuyerRegistrations />} /> */}
+          <Route path="buyer-registration" element={<BuyerRegistration />} />
           <Route
             path="buyer-registration/:id"
             element={<BuyerRegistrationDetail />}
