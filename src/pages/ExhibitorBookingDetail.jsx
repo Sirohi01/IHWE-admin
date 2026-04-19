@@ -641,10 +641,10 @@ function SpecialDocsSection({ reg, id, onRefresh }) {
                 <div className="flex flex-wrap items-center gap-2 mb-4 p-3 bg-slate-50 border border-slate-100 rounded">
                     <input className="flex-1 min-w-[150px] h-7 px-2 border border-slate-300 rounded-[1px] text-[10px] font-medium outline-none focus:border-[#23471d]"
                         value={label} onChange={e => setLabel(e.target.value)} placeholder="Doc Title" />
-                    
+
                     <input type="file" accept="image/*,.pdf" className="text-[9px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[9px] file:font-bold file:bg-[#23471d] file:text-white cursor-pointer"
                         onChange={e => setFile(e.target.files[0])} />
-                    
+
                     <button onClick={handleUpload} disabled={uploading}
                         className="h-7 px-4 bg-[#23471d] text-white text-[9px] font-bold uppercase tracking-widest hover:bg-[#1a3516] disabled:opacity-50 rounded-[1px]">
                         {uploading ? 'Wait...' : 'Add Doc'}
@@ -679,7 +679,7 @@ function SpecialDocsSection({ reg, id, onRefresh }) {
                         ))
                     ) : (
                         <div className="col-span-full py-6 text-center bg-slate-50/50 border border-dashed border-slate-200">
-                             <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest italic">No extra records found</p>
+                            <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest italic">No extra records found</p>
                         </div>
                     )}
                 </div>
@@ -697,12 +697,12 @@ function MSMETab({ reg, id, onRefresh }) {
     const inp = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
     const handleSave = async () => {
-        if (!form.udhyamRegNo) { Swal.fire('Error', 'Udhyam Reg. No. is required', 'error'); return; }
+        if (!form.udyamRegNo) { Swal.fire('Error', 'udyam Reg. No. is required', 'error'); return; }
         setSaving(true);
         try {
             const fd = new FormData();
-            Object.entries(form).forEach(([k, v]) => { if (v != null && k !== 'udhyamCertificateUrl') fd.append(k, v); });
-            if (certFile) fd.append('udhyamCertificate', certFile);
+            Object.entries(form).forEach(([k, v]) => { if (v != null && k !== 'udyamCertificateUrl') fd.append(k, v); });
+            if (certFile) fd.append('udyamCertificate', certFile);
             const res = await api.put(`/api/exhibitor-registration/${id}/msme`, fd, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
@@ -716,8 +716,8 @@ function MSMETab({ reg, id, onRefresh }) {
         finally { setSaving(false); }
     };
 
-    const certUrl = reg.msme?.udhyamCertificateUrl
-        ? (reg.msme.udhyamCertificateUrl.startsWith('http') ? reg.msme.udhyamCertificateUrl : `${SERVER_URL}${reg.msme.udhyamCertificateUrl}`)
+    const certUrl = reg.msme?.udyamCertificateUrl
+        ? (reg.msme.udyamCertificateUrl.startsWith('http') ? reg.msme.udyamCertificateUrl : `${SERVER_URL}${reg.msme.udyamCertificateUrl}`)
         : null;
 
     const iCls = "w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]";
@@ -725,7 +725,7 @@ function MSMETab({ reg, id, onRefresh }) {
 
     return (
         <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
-            <SH title="MSME / Udhyam Details" icon={Award} actions={
+            <SH title="MSME / udyam Details" icon={Award} actions={
                 editing ? (
                     <>
                         <button onClick={() => { setEditing(false); setForm(reg.msme || {}); }}
@@ -740,34 +740,34 @@ function MSMETab({ reg, id, onRefresh }) {
                 ) : (
                     <button onClick={() => setEditing(true)}
                         className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30">
-                        <Pencil size={11} /> {reg.msme?.udhyamRegNo ? 'Edit' : 'Add MSME'}
+                        <Pencil size={11} /> {reg.msme?.udyamRegNo ? 'Edit' : 'Add MSME'}
                     </button>
                 )
             } />
 
             {editing ? (
                 <div className="p-5 space-y-4">
-                    <p className="text-[10px] font-black text-[#23471d] uppercase tracking-wider pb-1 border-b border-slate-100">Udhyam Registration</p>
+                    <p className="text-[10px] font-black text-[#23471d] uppercase tracking-wider pb-1 border-b border-slate-100">udyam Registration</p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {[
-                            { label: 'Udhyam Reg. No. *', key: 'udhyamRegNo', placeholder: 'UDYAM-XX-00-0000000' },
-                            { label: 'Mobile No.', key: 'udhyamMobileNo', placeholder: '10-digit' },
-                            { label: 'Email ID', key: 'udhyamEmailId', placeholder: 'email@example.com' },
-                            { label: 'Contact Person', key: 'udhyamContactPerson', placeholder: 'Name' },
-                            { label: 'Designation', key: 'udhyamDesignation', placeholder: 'Designation' },
-                            { label: 'Issue Date', key: 'udhyamIssueDate', type: 'date' },
+                            { label: 'udyam Reg. No. *', key: 'udyamRegNo', placeholder: 'UDYAM-XX-00-0000000' },
+                            { label: 'Mobile No.', key: 'udyamMobileNo', placeholder: '10-digit' },
+                            { label: 'Email ID', key: 'udyamEmailId', placeholder: 'email@example.com' },
+                            { label: 'Contact Person', key: 'udyamContactPerson', placeholder: 'Name' },
+                            { label: 'Designation', key: 'udyamDesignation', placeholder: 'Designation' },
+                            { label: 'Issue Date', key: 'udyamIssueDate', type: 'date' },
                         ].map(f => (
                             <div key={f.key}>
                                 <label className={lCls}>{f.label}</label>
                                 <input type={f.type || 'text'}
-                                    value={f.key === 'udhyamIssueDate' && form[f.key] ? form[f.key].split('T')[0] : (form[f.key] || '')}
+                                    value={f.key === 'udyamIssueDate' && form[f.key] ? form[f.key].split('T')[0] : (form[f.key] || '')}
                                     onChange={e => inp(f.key, e.target.value)}
                                     placeholder={f.placeholder} className={iCls} />
                             </div>
                         ))}
                         <div className="md:col-span-2">
-                            <label className={lCls}>Udhyam Address</label>
-                            <input value={form.udhyamAddress || ''} onChange={e => inp('udhyamAddress', e.target.value)} className={iCls} />
+                            <label className={lCls}>udyam Address</label>
+                            <input value={form.udyamAddress || ''} onChange={e => inp('udyamAddress', e.target.value)} className={iCls} />
                         </div>
                         <div>
                             <label className={lCls}>Certificate (Image) {certUrl && <span className="text-green-600 normal-case">✓ uploaded</span>}</label>
@@ -801,17 +801,17 @@ function MSMETab({ reg, id, onRefresh }) {
                         </div>
                     </div>
                 </div>
-            ) : reg.msme?.udhyamRegNo ? (
+            ) : reg.msme?.udyamRegNo ? (
                 <div>
                     <Grid4 items={[
-                        { label: 'Udhyam Reg. No.', value: reg.msme.udhyamRegNo },
+                        { label: 'udyam Reg. No.', value: reg.msme.udyamRegNo },
                         { label: 'MSME Category', value: reg.msme.msmeCategory },
-                        { label: 'Issue Date', value: reg.msme.udhyamIssueDate ? new Date(reg.msme.udhyamIssueDate).toLocaleDateString('en-IN') : null },
-                        { label: 'Contact Person', value: reg.msme.udhyamContactPerson },
-                        { label: 'Designation', value: reg.msme.udhyamDesignation },
-                        { label: 'Mobile No.', value: reg.msme.udhyamMobileNo },
-                        { label: 'Email ID', value: reg.msme.udhyamEmailId },
-                        { label: 'Address', value: reg.msme.udhyamAddress },
+                        { label: 'Issue Date', value: reg.msme.udyamIssueDate ? new Date(reg.msme.udyamIssueDate).toLocaleDateString('en-IN') : null },
+                        { label: 'Contact Person', value: reg.msme.udyamContactPerson },
+                        { label: 'Designation', value: reg.msme.udyamDesignation },
+                        { label: 'Mobile No.', value: reg.msme.udyamMobileNo },
+                        { label: 'Email ID', value: reg.msme.udyamEmailId },
+                        { label: 'Address', value: reg.msme.udyamAddress },
                         { label: 'DFO Location', value: reg.msme.dfoLocation },
                         { label: 'DFO Email', value: reg.msme.dfoEmail },
                         { label: 'DFO Mobile', value: reg.msme.dfoMobileNo },
@@ -1049,8 +1049,8 @@ function AccessoriesTab({ reg, id }) {
                                         </td>
                                         <td className="py-2 px-4">
                                             <span className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-full border ${order.paymentStatus === 'paid' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                                    order.paymentStatus === 'complimentary' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                                        'bg-amber-50 text-amber-700 border-amber-200'
+                                                order.paymentStatus === 'complimentary' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                                    'bg-amber-50 text-amber-700 border-amber-200'
                                                 }`}>{order.paymentStatus}</span>
                                         </td>
                                         <td className="py-2 px-4 text-xs text-gray-600 font-mono">{order.transactionId || '—'}</td>
