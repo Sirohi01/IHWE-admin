@@ -1,3 +1,5 @@
+
+
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -155,11 +157,19 @@ const INITIAL_FORM_STATE = {
     stateProvince: "",
     city: "",
     registeredAddress: "",
-    yearsInOperation: "",
+    companyFirmName: "",
+    basicBusinessType: "",
+    yearOfEstablishment: "",
+    gstNumber: "",
+    panNumber: "",
+    natureOfBusiness: "",
+    yearsInBusiness: "",
+    numberOfOutlets: "",
+    yearsInOperation: "", // Kept for UI compatibility if needed, though replaced in logic
     annualTurnover: "",
     buyingFrequency: "",
     estimatedAnnualPurchaseValue: "",
-    keyProductsServices: "",
+    keyProductsServices: "", // Kept for UI compatibility if needed
     primaryProductInterest: "",
     secondaryProductCategories: "",
     specificProductRequirements: "",
@@ -182,14 +192,15 @@ const INITIAL_FORM_STATE = {
     remarks: "",
     registrationCategory: "",
     registrationFee: "₹0",
-    paymentMode: "", // Added this field
+    paymentMode: "",
     paymentMethods: [],
     transactionId: "",
-    paymentProof: null, // Added for file upload
+    paymentProof: null,
     consentTerms: true,
     consentPaymentValid: true,
     consentMatchedExhibitors: true,
 };
+
 const inputClass = "w-full rounded-[2px] border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none transition focus:border-[#23471d] focus:ring-2 focus:ring-[#23471d]/10";
 const labelClass = "mb-1 block text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500";
 const sectionTitleClass = "mb-5 flex items-center gap-2 border-b border-slate-200 pb-2 text-sm font-black uppercase tracking-[0.22em] text-[#23471d]";
@@ -267,7 +278,7 @@ const PaymentMethodCard = ({ method, selected, onToggle }) => {
     );
 };
 
-const PackageCard = ({ pkg, selected, onSelect }) => {
+const PackageCard = ({ pkg, selected, onSelect, disabled }) => {
     const meta = PACKAGE_METADATA[pkg.name] || {};
     const colorMap = {
         blue: { accent: "text-blue-700", border: "border-blue-200", badge: "bg-blue-600", surface: "bg-blue-50" },
@@ -279,7 +290,12 @@ const PackageCard = ({ pkg, selected, onSelect }) => {
     const benefits = Array.isArray(pkg.benefits) ? pkg.benefits : [];
 
     return (
-        <button type="button" onClick={() => onSelect(pkg)} className={`relative flex h-full flex-col rounded-xl border-2 p-5 text-left transition ${selected ? "border-[#23471d] bg-white shadow-xl shadow-[#23471d]/10 ring-4 ring-[#23471d]/5" : "border-slate-200 bg-white hover:border-[#23471d]/40 hover:shadow-lg"}`}>
+        <button
+            type="button"
+            onClick={() => !disabled && onSelect(pkg)}
+            disabled={disabled}
+            className={`relative flex h-full flex-col rounded-xl border-2 p-5 text-left transition ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${selected ? "border-[#23471d] bg-white shadow-xl shadow-[#23471d]/10 ring-4 ring-[#23471d]/5" : "border-slate-200 bg-white hover:border-[#23471d]/40 hover:shadow-lg"}`}
+        >
             {meta.badge && <span className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white ${theme.badge}`}>{meta.badge}</span>}
             <div className="mb-4">
                 <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{getPackageGroup(pkg)}</p>
@@ -307,8 +323,8 @@ const PackageCard = ({ pkg, selected, onSelect }) => {
                     <p className="mt-2 text-sm font-medium leading-relaxed text-slate-700">{meta.whyChoose || "Useful for buyers who want curated supplier discovery and business networking."}</p>
                 </div>
             </div>
-            <div className={`mt-5 rounded-lg px-4 py-3 text-center text-xs font-black uppercase tracking-[0.18em] transition ${selected ? "bg-[#23471d] text-white" : "bg-slate-100 text-slate-600 group-hover:bg-[#23471d]"}`}>
-                {selected ? "Selected Package" : meta.cta || "Select Package"}
+            <div className={`mt-5 rounded-lg px-4 py-3 text-center text-xs font-black uppercase tracking-[0.18em] transition ${selected ? "bg-[#23471d] text-white" : disabled ? "bg-slate-200 text-slate-400" : "bg-slate-100 text-slate-600 group-hover:bg-[#23471d]"}`}>
+                {selected ? "Selected Package" : (disabled ? "Complete Form First" : (meta.cta || "Select Package"))}
             </div>
         </button>
     );
@@ -325,13 +341,13 @@ const BuyerRegistration = () => {
     const [errors, setErrors] = useState({});
     const [loadingPage, setLoadingPage] = useState(true);
     const [loadingLocations, setLoadingLocations] = useState({ states: false, cities: false });
-    const [isFormLocked, setIsFormLocked] = useState(true);
     const [selectedPackage, setSelectedPackage] = useState(null);
     const [packageView, setPackageView] = useState("Pass");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [submittedRegistrationId, setSubmittedRegistrationId] = useState("");
     const [selectedPaymentMethods, setSelectedPaymentMethods] = useState([]);
+    const [canSelectPackage, setCanSelectPackage] = useState(false);
 
     const normalizedConfig = useMemo(() => ({
         ...FALLBACK_CONFIG,
@@ -402,7 +418,7 @@ const BuyerRegistration = () => {
 
     const validateField = (name, rawValue = formData[name]) => {
         const value = rawValue;
-        const requiredFields = ["fullName", "designation", "companyName", "businessType", "mobileNumber", "alternateNumber", "emailAddress", "registeredAddress", "pinCode", "country", "stateProvince", "city", "yearsInOperation", "annualTurnover", "keyProductsServices", "primaryProductInterest", "buyingFrequency", "estimatedAnnualPurchaseValue", "purchaseTimeline", "roleInPurchaseDecision", "matchmakingInterest", "preferredMeetingDate", "preferredTimeSlot"];
+        const requiredFields = ["fullName", "designation", "companyName", "businessType", "mobileNumber", "emailAddress", "registeredAddress", "pinCode", "country", "stateProvince", "city", "companyFirmName", "basicBusinessType", "yearOfEstablishment", "natureOfBusiness", "yearsInBusiness", "numberOfOutlets", "annualTurnover", "primaryProductInterest", "buyingFrequency", "estimatedAnnualPurchaseValue", "purchaseTimeline", "roleInPurchaseDecision", "matchmakingInterest", "preferredMeetingDate", "preferredTimeSlot"];
 
         if (requiredFields.includes(name) && !String(value || "").trim()) return "This field is required";
         if (name === "fullName" && value && !/^[A-Za-z\s.'-]+$/.test(String(value).trim())) return "Use letters and spaces only";
@@ -421,7 +437,7 @@ const BuyerRegistration = () => {
 
     const validateForm = ({ skipPackage = false } = {}) => {
         const nextErrors = {};
-        const fieldsToValidate = ["fullName", "designation", "companyName", "businessType", "mobileNumber", "alternateNumber", "emailAddress", "registeredAddress", "pinCode", "country", "stateProvince", "city", "yearsInOperation", "annualTurnover", "keyProductsServices", "primaryProductInterest", "buyingFrequency", "estimatedAnnualPurchaseValue", "purchaseTimeline", "roleInPurchaseDecision", "matchmakingInterest", "preferredMeetingDate", "preferredTimeSlot", "website"];
+        const fieldsToValidate = ["fullName", "designation", "companyName", "businessType", "mobileNumber", "alternateNumber", "emailAddress", "registeredAddress", "pinCode", "country", "stateProvince", "city", "companyFirmName", "basicBusinessType", "yearOfEstablishment", "natureOfBusiness", "yearsInBusiness", "numberOfOutlets", "annualTurnover", "primaryProductInterest", "buyingFrequency", "estimatedAnnualPurchaseValue", "purchaseTimeline", "roleInPurchaseDecision", "matchmakingInterest", "preferredMeetingDate", "preferredTimeSlot", "website"];
 
         fieldsToValidate.forEach((fieldName) => {
             const errorMessage = validateField(fieldName);
@@ -433,7 +449,15 @@ const BuyerRegistration = () => {
         if (!skipPackage && !selectedPackage?.name) nextErrors.registrationCategory = "Please select a registration package";
 
         setErrors(nextErrors);
-        return { isValid: Object.keys(nextErrors).length === 0, nextErrors };
+        const isValid = Object.keys(nextErrors).length === 0;
+
+        // Update canSelectPackage state
+        const basicFieldsValid = fieldsToValidate.every(fieldName => !nextErrors[fieldName]) &&
+            formData.preferredSupplierRegion.length > 0 &&
+            formData.preferredSupplierType.length > 0;
+        setCanSelectPackage(basicFieldsValid);
+
+        return { isValid, nextErrors };
     };
 
     const handleInputChange = (event) => {
@@ -442,23 +466,51 @@ const BuyerRegistration = () => {
         if (name === "mobileNumber" || name === "alternateNumber") nextValue = value.replace(/\D/g, "").slice(0, 10);
         if (name === "pinCode") nextValue = value.replace(/\D/g, "").slice(0, 6);
         if (name === "fullName") nextValue = value.replace(/[^A-Za-z\s.'-]/g, "");
-        setFormData((prev) => ({ ...prev, [name]: nextValue }));
-        setErrors((prev) => ({ ...prev, [name]: validateField(name, nextValue) }));
+
+        setFormData((prev) => {
+            const nextState = { ...prev, [name]: nextValue };
+            // Sync company name fields
+            if (name === "companyName") nextState.companyFirmName = nextValue;
+            if (name === "companyFirmName") nextState.companyName = nextValue;
+            return nextState;
+        });
+
+        setErrors((prev) => {
+            const nextErrors = { ...prev, [name]: validateField(name, nextValue) };
+            if (name === "companyName") nextErrors.companyFirmName = validateField("companyFirmName", nextValue);
+            if (name === "companyFirmName") nextErrors.companyName = validateField("companyName", nextValue);
+            return nextErrors;
+        });
+
+        // Re-validate form after field change
+        setTimeout(() => validateForm({ skipPackage: true }), 0);
     };
 
     const handleSelectChange = (name, value) => {
         if (name === "country") {
             setFormData((prev) => ({ ...prev, country: value, stateProvince: "", city: "" }));
             setErrors((prev) => ({ ...prev, country: validateField("country", value), stateProvince: "", city: "" }));
-            return;
-        }
-        if (name === "stateProvince") {
+        } else if (name === "stateProvince") {
             setFormData((prev) => ({ ...prev, stateProvince: value, city: "" }));
             setErrors((prev) => ({ ...prev, stateProvince: validateField("stateProvince", value), city: "" }));
-            return;
+        } else {
+            setFormData((prev) => {
+                const nextState = { ...prev, [name]: value };
+                // Sync business type fields
+                if (name === "businessType") nextState.basicBusinessType = value;
+                if (name === "basicBusinessType") nextState.businessType = value;
+                return nextState;
+            });
+            setErrors((prev) => {
+                const nextErrors = { ...prev, [name]: validateField(name, value) };
+                if (name === "businessType") nextErrors.basicBusinessType = validateField("basicBusinessType", value);
+                if (name === "basicBusinessType") nextErrors.businessType = validateField("businessType", value);
+                return nextErrors;
+            });
         }
-        setFormData((prev) => ({ ...prev, [name]: value }));
-        setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+
+        // Re-validate form after select change
+        setTimeout(() => validateForm({ skipPackage: true }), 0);
     };
 
     const toggleArrayValue = (name, option) => {
@@ -468,6 +520,9 @@ const BuyerRegistration = () => {
             return { ...prev, [name]: nextValues };
         });
         setErrors((prev) => ({ ...prev, [name]: "" }));
+
+        // Re-validate form after toggle
+        setTimeout(() => validateForm({ skipPackage: true }), 0);
     };
 
     const togglePaymentMethod = (methodId) => {
@@ -482,20 +537,11 @@ const BuyerRegistration = () => {
         }
     };
 
-    const handleUnlockPackages = () => {
-        const { isValid, nextErrors } = validateForm({ skipPackage: true });
-        if (!isValid) {
-            toast.error("Please complete the required fields before unlocking packages.");
-            const firstErrorField = Object.keys(nextErrors)[0];
-            if (firstErrorField) scrollToField(firstErrorField);
+    const handlePackageSelect = (pkg) => {
+        if (!canSelectPackage) {
+            toast.error("Please complete all required fields before selecting a package.");
             return;
         }
-        setIsFormLocked(false);
-        toast.success("Packages unlocked. You can now select the right plan.");
-        setTimeout(() => scrollToField("registrationCategory"), 120);
-    };
-
-    const handlePackageSelect = (pkg) => {
         setSelectedPackage(pkg);
         setFormData((prev) => ({ ...prev, registrationCategory: pkg.name, registrationFee: formatCurrency(pkg.price) }));
         setErrors((prev) => ({ ...prev, registrationCategory: "" }));
@@ -504,8 +550,8 @@ const BuyerRegistration = () => {
     const buildSubmissionPayload = () => {
         const fd = new FormData();
 
-        // Append all text fields
-        const fields = {
+        // Required fields - ensure all are present
+        const requiredTextFields = {
             fullName: formData.fullName,
             designation: formData.designation,
             companyName: formData.companyName,
@@ -513,16 +559,48 @@ const BuyerRegistration = () => {
             mobileNumber: formData.mobileNumber,
             alternateNumber: formData.alternateNumber,
             emailAddress: formData.emailAddress,
-            website: formData.website || "",
+            registeredAddress: formData.registeredAddress,
             pinCode: formData.pinCode,
             country: formData.country,
             stateProvince: formData.stateProvince,
             city: formData.city,
-            registeredAddress: formData.registeredAddress,
-            yearsInOperation: formData.yearsInOperation,
+            companyFirmName: formData.companyFirmName,
+            basicBusinessType: formData.basicBusinessType,
+            yearOfEstablishment: formData.yearOfEstablishment,
+            natureOfBusiness: formData.natureOfBusiness,
+            yearsInBusiness: formData.yearsInBusiness,
+            numberOfOutlets: formData.numberOfOutlets,
             annualTurnover: formData.annualTurnover,
-            keyProductsServices: formData.keyProductsServices,
             primaryProductInterest: formData.primaryProductInterest,
+            buyingFrequency: formData.buyingFrequency,
+            estimatedAnnualPurchaseValue: formData.estimatedAnnualPurchaseValue,
+            purchaseTimeline: formData.purchaseTimeline,
+            roleInPurchaseDecision: formData.roleInPurchaseDecision,
+            matchmakingInterest: formData.matchmakingInterest,
+            preferredMeetingDate: formData.preferredMeetingDate,
+            preferredTimeSlot: formData.preferredTimeSlot,
+        };
+
+        // Check for missing required fields
+        const missingFields = [];
+        Object.entries(requiredTextFields).forEach(([key, value]) => {
+            if (!value || value === "") {
+                missingFields.push(key);
+            }
+            fd.append(key, value || "");
+        });
+
+        if (missingFields.length > 0) {
+            console.error("Missing required fields:", missingFields);
+            toast.error(`Missing required fields: ${missingFields.join(", ")}`);
+            throw new Error("Missing required fields");
+        }
+
+        // Optional fields
+        const optionalFields = {
+            website: formData.website || "",
+            gstNumber: formData.gstNumber || "",
+            panNumber: formData.panNumber || "",
             secondaryProductCategories: JSON.stringify(formData.secondaryProductCategories || []),
             specificProductRequirements: formData.specificProductRequirements || "",
             estimatedPurchaseVolume: formData.estimatedPurchaseVolume || "",
@@ -531,40 +609,45 @@ const BuyerRegistration = () => {
             preferredState: JSON.stringify(formData.preferredState ? [formData.preferredState] : []),
             preferredSupplierType: JSON.stringify(formData.preferredSupplierType || []),
             preferredCompanySize: formData.preferredCompanySize || "",
-            buyingFrequency: formData.buyingFrequency,
-            estimatedAnnualPurchaseValue: formData.estimatedAnnualPurchaseValue,
-            purchaseTimeline: formData.purchaseTimeline,
-            roleInPurchaseDecision: formData.roleInPurchaseDecision,
-            matchmakingInterest: formData.matchmakingInterest,
-            preferredMeetingDate: formData.preferredMeetingDate,
-            preferredTimeSlot: formData.preferredTimeSlot,
             requirePreScheduledB2B: formData.requirePreScheduledB2B,
             meetingPriorityLevel: formData.meetingPriorityLevel,
             pricingPreference: formData.pricingPreference,
             logisticsRequirements: formData.logisticsRequirements || "",
             requiredCertifications: JSON.stringify(formData.requiredCertifications || []),
             remarks: formData.remarks || "",
-            registrationCategory: selectedPackage?.name || formData.registrationCategory,
-            registrationFee: formatCurrency(selectedPackage?.price || 0),
-            paymentMode: selectedPaymentMethods.length > 0 ? selectedPaymentMethods.join(", ") : "Pending",
-            transactionId: formData.transactionId,
-            consentTerms: true,
-            consentPaymentValid: true,
-            consentMatchedExhibitors: true,
-            paymentStatus: "Completed",
+            transactionId: formData.transactionId || "",
         };
 
-        Object.entries(fields).forEach(([key, value]) => fd.append(key, value));
+        Object.entries(optionalFields).forEach(([key, value]) => {
+            fd.append(key, value);
+        });
+
+        // Package and payment fields
+        fd.append("registrationCategory", selectedPackage?.name || formData.registrationCategory);
+        fd.append("registrationFee", formatCurrency(selectedPackage?.price || 0));
+        fd.append("paymentMode", selectedPaymentMethods.length > 0 ? selectedPaymentMethods.join(", ") : "Pending");
+
+        // Consent fields
+        fd.append("consentTerms", true);
+        fd.append("consentPaymentValid", true);
+        fd.append("consentMatchedExhibitors", true);
+        fd.append("paymentStatus", "Completed");
 
         // Append file if exists
         if (formData.paymentProof) {
             fd.append("paymentProof", formData.paymentProof);
         }
 
-        // Append payment methods as well if needed
-        selectedPaymentMethods.forEach(method => fd.append("paymentMethods[]", method));
+        // Append payment methods array
+        selectedPaymentMethods.forEach(method => {
+            fd.append("paymentMethods[]", method);
+        });
 
-        console.log("Submitting FormData payload");
+        console.log("=== FormData being submitted ===");
+        for (let pair of fd.entries()) {
+            console.log(pair[0], pair[1] instanceof File ? `File: ${pair[1].name}` : pair[1]);
+        }
+
         return fd;
     };
 
@@ -585,16 +668,41 @@ const BuyerRegistration = () => {
             toast.error("Please select at least one payment method.");
             return;
         }
+
         setIsSubmitting(true);
+
         try {
-            const response = await buyerRegistrationApi.submit(buildSubmissionPayload());
+            const payload = buildSubmissionPayload();
+            const response = await buyerRegistrationApi.submit(payload);
+
             if (!response?.success) throw new Error(response?.message || "Registration could not be completed.");
+
             setSubmitted(true);
             setSubmittedRegistrationId(response?.data?._id || response?.data?.id || response?._id || response?.id || "");
             toast.success("Buyer registration completed successfully!");
+
         } catch (error) {
-            console.error("Registration error:", error);
-            const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || "Unable to complete registration. Please try again.";
+            console.error("Registration error details:", error);
+
+            let errorMessage = "Unable to complete registration. Please try again.";
+
+            if (error.response) {
+                console.error("Error response data:", error.response.data);
+                console.error("Error response status:", error.response.status);
+
+                if (error.response.data?.message) {
+                    errorMessage = error.response.data.message;
+                } else if (error.response.data?.error) {
+                    errorMessage = error.response.data.error;
+                } else if (typeof error.response.data === 'string') {
+                    errorMessage = error.response.data;
+                }
+            } else if (error.request) {
+                errorMessage = "No response from server. Please check your connection.";
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+
             toast.error(errorMessage);
         } finally {
             setIsSubmitting(false);
@@ -607,10 +715,10 @@ const BuyerRegistration = () => {
         setStates([]);
         setCities([]);
         setSelectedPackage(null);
-        setIsFormLocked(true);
         setSubmitted(false);
         setSubmittedRegistrationId("");
         setSelectedPaymentMethods([]);
+        setCanSelectPackage(false);
         setPackageView(passPackages.length ? "Pass" : "Membership");
         if (shouldScroll) window.scrollTo({ top: 0, behavior: "smooth" });
     };
@@ -677,7 +785,6 @@ const BuyerRegistration = () => {
                 </motion.div>
             ) : (
                 <form onSubmit={(e) => { e.preventDefault(); handleSubmitRegistration(); }} className="space-y-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-                    {/* Personal & Company Information */}
                     <section>
                         <SectionTitle icon={UserRound} title="Personal & Company Information" />
                         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -688,7 +795,6 @@ const BuyerRegistration = () => {
                         </div>
                     </section>
 
-                    {/* Contact Information */}
                     <section>
                         <SectionTitle icon={Phone} title="Contact Information" />
                         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -699,7 +805,6 @@ const BuyerRegistration = () => {
                         </div>
                     </section>
 
-                    {/* Registered Address */}
                     <section>
                         <SectionTitle icon={MapPin} title="Registered Address" />
                         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
@@ -711,17 +816,63 @@ const BuyerRegistration = () => {
                         </div>
                     </section>
 
-                    {/* Business Profile */}
                     <section>
-                        <SectionTitle icon={Building2} title="Business Profile" />
-                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                            <Field label="Years in Operation" name="yearsInOperation" required error={errors.yearsInOperation}><input id="yearsInOperation" name="yearsInOperation" type="number" min="0" value={formData.yearsInOperation} onChange={handleInputChange} placeholder="e.g. 5" className={inputClass} /></Field>
-                            <Field label="Annual Turnover" name="annualTurnover" required error={errors.annualTurnover}><select id="annualTurnover" name="annualTurnover" value={formData.annualTurnover} onChange={(e) => handleSelectChange("annualTurnover", e.target.value)} className={inputClass}><option value="">Select turnover range</option>{normalizedConfig.annualTurnoverRanges.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
-                            <Field label="Key Products / Services" name="keyProductsServices" required error={errors.keyProductsServices} className="xl:col-span-2"><input id="keyProductsServices" name="keyProductsServices" value={formData.keyProductsServices} onChange={handleInputChange} placeholder="Your core products or service categories" className={inputClass} /></Field>
+                        <SectionTitle icon={Building2} title="Basic Business Information" />
+                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
+                            <Field label="Company / Firm Name" name="companyFirmName" required error={errors.companyFirmName} className="xl:col-span-2">
+                                <input id="companyFirmName" name="companyFirmName" value={formData.companyFirmName} onChange={handleInputChange} placeholder="As per registration documents" className={inputClass} />
+                            </Field>
+                            <Field label="Basic Business Type" name="basicBusinessType" required error={errors.basicBusinessType}>
+                                <select id="basicBusinessType" name="basicBusinessType" value={formData.basicBusinessType} onChange={(e) => handleSelectChange("basicBusinessType", e.target.value)} className={inputClass}>
+                                    <option value="">Select type</option>
+                                    <option value="Proprietorship">Proprietorship</option>
+                                    <option value="Partnership">Partnership</option>
+                                    <option value="Private Limited">Private Limited</option>
+                                    <option value="Public Limited">Public Limited</option>
+                                    <option value="LLP">LLP</option>
+                                    <option value="OPC">OPC (One Person Company)</option>
+                                    <option value="Trust / Society">Trust / Society</option>
+                                </select>
+                            </Field>
+                            <Field label="Year of Establishment" name="yearOfEstablishment" required error={errors.yearOfEstablishment}>
+                                <input id="yearOfEstablishment" name="yearOfEstablishment" type="number" min="1900" max={new Date().getFullYear()} value={formData.yearOfEstablishment} onChange={handleInputChange} placeholder="e.g. 2010" className={inputClass} />
+                            </Field>
+                            <Field label="GST Number" name="gstNumber" error={errors.gstNumber}>
+                                <input id="gstNumber" name="gstNumber" value={formData.gstNumber} onChange={handleInputChange} placeholder="Optional" className={inputClass} />
+                            </Field>
+                            <Field label="PAN Number" name="panNumber" error={errors.panNumber}>
+                                <input id="panNumber" name="panNumber" value={formData.panNumber} onChange={handleInputChange} placeholder="Optional" className={inputClass} />
+                            </Field>
                         </div>
                     </section>
 
-                    {/* Sourcing & Buying Interests */}
+                    <section>
+                        <SectionTitle icon={FileText} title="Business Profile Details" />
+                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+                            <Field label="Nature of Business" name="natureOfBusiness" required error={errors.natureOfBusiness} className="xl:col-span-2" hint="Short description (1-2 lines)">
+                                <input id="natureOfBusiness" name="natureOfBusiness" value={formData.natureOfBusiness} onChange={handleInputChange} placeholder="e.g. Manufacturer of Ayurvedic products" className={inputClass} />
+                            </Field>
+                            <Field label="Years in Business" name="yearsInBusiness" required error={errors.yearsInBusiness}>
+                                <input id="yearsInBusiness" name="yearsInBusiness" type="number" min="0" value={formData.yearsInBusiness} onChange={handleInputChange} placeholder="e.g. 5" className={inputClass} />
+                            </Field>
+                            <Field label="Number of Outlets" name="numberOfOutlets" required error={errors.numberOfOutlets}>
+                                <input id="numberOfOutlets" name="numberOfOutlets" type="number" min="1" value={formData.numberOfOutlets} onChange={handleInputChange} placeholder="e.g. 1" className={inputClass} />
+                            </Field>
+                            <Field label="Annual Turnover" name="annualTurnover" required error={errors.annualTurnover}>
+                                <select id="annualTurnover" name="annualTurnover" value={formData.annualTurnover} onChange={(e) => handleSelectChange("annualTurnover", e.target.value)} className={inputClass}>
+                                    <option value="">Select range</option>
+                                    <option value="Below 50 Lakhs">Below 50 Lakhs</option>
+                                    <option value="50L – 2 Cr">50L – 2 Cr</option>
+                                    <option value="2 – 10 Cr">2 – 10 Cr</option>
+                                    <option value="10 Cr+">10 Cr+</option>
+                                    {normalizedConfig.annualTurnoverRanges.filter(r => !["Below 50 Lakhs", "50L – 2 Cr", "2 – 10 Cr", "10 Cr+"].includes(r)).map((item) => (
+                                        <option key={item} value={item}>{item}</option>
+                                    ))}
+                                </select>
+                            </Field>
+                        </div>
+                    </section>
+
                     <section>
                         <SectionTitle icon={Globe2} title="Sourcing & Buying Interests" />
                         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -733,7 +884,6 @@ const BuyerRegistration = () => {
                         </div>
                     </section>
 
-                    {/* Supplier Preference */}
                     <section>
                         <SectionTitle icon={Briefcase} title="Supplier Preference" />
                         <div className="space-y-5">
@@ -748,7 +898,6 @@ const BuyerRegistration = () => {
                         </div>
                     </section>
 
-                    {/* Purchase Intent & Meeting Preferences */}
                     <section>
                         <SectionTitle icon={CalendarDays} title="Purchase Intent & Meeting Preferences" />
                         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -764,7 +913,6 @@ const BuyerRegistration = () => {
                         </div>
                     </section>
 
-                    {/* Compliance, Pricing & Notes */}
                     <section>
                         <SectionTitle icon={FileText} title="Compliance, Pricing & Notes" />
                         <div className="space-y-5">
@@ -777,61 +925,87 @@ const BuyerRegistration = () => {
                         </div>
                     </section>
 
-                    {/* Registration Category & Payment */}
+                    {/* Registration Category & Payment - Always Visible */}
                     <section data-field="registrationCategory">
                         <SectionTitle icon={CreditCard} title="Registration Category & Payment" />
                         {normalizedPackages.length === 0 ? (
                             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-900"><div className="flex gap-3"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" /><div><p className="text-sm font-black uppercase tracking-[0.16em]">No packages configured</p><p className="mt-2 text-sm leading-7">Please add buyer registration packages from the registration configuration page before using this form.</p><Link to="/buyer-registration-config" className="mt-4 inline-flex rounded-[2px] bg-[#23471d] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white">Open Registration Config</Link></div></div></div>
-                        ) : isFormLocked ? (
-                            <div className="rounded-3xl border-2 border-dashed border-emerald-200 bg-emerald-50/70 p-8 text-center"><div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-[#23471d] shadow-sm"><Lock className="h-6 w-6" /></div><h4 className="mt-4 text-lg font-black uppercase tracking-[0.16em] text-slate-900">Packages are locked</h4><p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-600">Complete the required buyer details to unlock passes and membership options.</p><button type="button" onClick={handleUnlockPackages} className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#23471d] px-6 py-3 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-[#1a3516]">Unlock Packages <ArrowRight className="h-4 w-4" /></button></div>
                         ) : (
                             <div className="space-y-6">
-                                {membershipPackages.length > 0 && <div className="flex flex-wrap gap-2"><button type="button" onClick={() => setPackageView("Pass")} className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.18em] transition ${packageView === "Pass" ? "bg-[#23471d] text-white" : "border border-slate-300 bg-white text-slate-600 hover:border-[#23471d]"}`}>Pass Packages</button><button type="button" onClick={() => setPackageView("Membership")} className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.18em] transition ${packageView === "Membership" ? "bg-[#23471d] text-white" : "border border-slate-300 bg-white text-slate-600 hover:border-[#23471d]"}`}>Membership Plans</button></div>}
-                                <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">{(packageView === "Membership" ? membershipPackages : passPackages).map((pkg) => (<PackageCard key={pkg.name} pkg={pkg} selected={selectedPackage?.name === pkg.name} onSelect={handlePackageSelect} />))}</div>
-                                {selectedPackage && (<>
-                                    <div className="rounded-2xl border border-[#23471d]/10 bg-[#23471d]/5 p-5"><div><p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Selected Package</p><h4 className="mt-2 text-xl font-black text-slate-900">{selectedPackage.name}</h4><p className="mt-2 text-sm font-medium text-slate-600">Fee: {formatCurrency(selectedPackage.price)}</p></div></div>
-                                    <div className="rounded-2xl border border-slate-200 p-5">
-                                        <div className="mb-4 flex items-center gap-2">
-                                            <CreditCard className="h-5 w-5 text-[#23471d]" />
-                                            <h4 className="text-sm font-black uppercase tracking-[0.18em] text-slate-700">Select Payment Method</h4>
-                                        </div>
-                                        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                                            {PAYMENT_METHODS.map((method) => (
-                                                <PaymentMethodCard key={method.id} method={method} selected={selectedPaymentMethods.includes(method.id)} onToggle={togglePaymentMethod} />
-                                            ))}
-                                        </div>
-                                        {selectedPaymentMethods.length === 0 && <p className="mt-3 text-xs text-red-600">Please select at least one payment method</p>}
-                                    </div>
+                                <div className={`rounded-2xl border p-4 mb-4 ${canSelectPackage ? 'border-green-200 bg-green-50' : 'border-blue-200 bg-blue-50'}`}>
+                                    <p className={`text-sm font-medium ${canSelectPackage ? 'text-green-800' : 'text-blue-800'}`}>
+                                        {canSelectPackage ?
+                                            "✅ All required fields completed! You can now select a package below." :
+                                            "⚠️ Please complete all required fields above to unlock package selection."}
+                                    </p>
+                                </div>
 
-                                    <div className="grid gap-5 md:grid-cols-2">
-                                        <Field label="Transaction ID" name="transactionId" hint="Enter the manual transaction reference ID">
-                                            <input
-                                                id="transactionId"
-                                                name="transactionId"
-                                                value={formData.transactionId}
-                                                onChange={handleInputChange}
-                                                placeholder="e.g. TXN123456789"
-                                                className={inputClass}
-                                            />
-                                        </Field>
-                                        <Field label="Payment Proof (Screenshot)" name="paymentProof" hint="Upload a file as proof of payment (Image or PDF)">
-                                            <div className="relative">
-                                                <input
-                                                    type="file"
-                                                    id="paymentProof"
-                                                    name="paymentProof"
-                                                    onChange={handleFileChange}
-                                                    accept="image/*,application/pdf"
-                                                    className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-                                                />
-                                                <div className={`flex w-full items-center justify-between rounded-[2px] border border-slate-300 bg-white px-3 py-2 text-sm font-medium ${formData.paymentProof ? "text-[#23471d]" : "text-slate-400"}`}>
-                                                    <span>{formData.paymentProof ? formData.paymentProof.name : "Select proof file..."}</span>
-                                                    <FileText className="h-4 w-4" />
-                                                </div>
+                                {membershipPackages.length > 0 && <div className="flex flex-wrap gap-2"><button type="button" onClick={() => setPackageView("Pass")} className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.18em] transition ${packageView === "Pass" ? "bg-[#23471d] text-white" : "border border-slate-300 bg-white text-slate-600 hover:border-[#23471d]"}`}>Pass Packages</button><button type="button" onClick={() => setPackageView("Membership")} className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.18em] transition ${packageView === "Membership" ? "bg-[#23471d] text-white" : "border border-slate-300 bg-white text-slate-600 hover:border-[#23471d]"}`}>Membership Plans</button></div>}
+
+                                <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+                                    {(packageView === "Membership" ? membershipPackages : passPackages).map((pkg) => (
+                                        <PackageCard
+                                            key={pkg.name}
+                                            pkg={pkg}
+                                            selected={selectedPackage?.name === pkg.name}
+                                            onSelect={handlePackageSelect}
+                                            disabled={!canSelectPackage}
+                                        />
+                                    ))}
+                                </div>
+
+                                {selectedPackage && (
+                                    <>
+                                        <div className="rounded-2xl border border-[#23471d]/10 bg-[#23471d]/5 p-5">
+                                            <div>
+                                                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Selected Package</p>
+                                                <h4 className="mt-2 text-xl font-black text-slate-900">{selectedPackage.name}</h4>
+                                                <p className="mt-2 text-sm font-medium text-slate-600">Fee: {formatCurrency(selectedPackage.price)}</p>
                                             </div>
-                                        </Field>
-                                    </div>
-                                </>)}
+                                        </div>
+                                        <div className="rounded-2xl border border-slate-200 p-5">
+                                            <div className="mb-4 flex items-center gap-2">
+                                                <CreditCard className="h-5 w-5 text-[#23471d]" />
+                                                <h4 className="text-sm font-black uppercase tracking-[0.18em] text-slate-700">Select Payment Method</h4>
+                                            </div>
+                                            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                                                {PAYMENT_METHODS.map((method) => (
+                                                    <PaymentMethodCard key={method.id} method={method} selected={selectedPaymentMethods.includes(method.id)} onToggle={togglePaymentMethod} />
+                                                ))}
+                                            </div>
+                                            {selectedPaymentMethods.length === 0 && <p className="mt-3 text-xs text-red-600">Please select at least one payment method</p>}
+                                        </div>
+
+                                        <div className="grid gap-5 md:grid-cols-2">
+                                            <Field label="Transaction ID" name="transactionId" hint="Enter the manual transaction reference ID">
+                                                <input
+                                                    id="transactionId"
+                                                    name="transactionId"
+                                                    value={formData.transactionId}
+                                                    onChange={handleInputChange}
+                                                    placeholder="e.g. TXN123456789"
+                                                    className={inputClass}
+                                                />
+                                            </Field>
+                                            <Field label="Payment Proof (Screenshot)" name="paymentProof" hint="Upload a file as proof of payment (Image or PDF)">
+                                                <div className="relative">
+                                                    <input
+                                                        type="file"
+                                                        id="paymentProof"
+                                                        name="paymentProof"
+                                                        onChange={handleFileChange}
+                                                        accept="image/*,application/pdf"
+                                                        className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+                                                    />
+                                                    <div className={`flex w-full items-center justify-between rounded-[2px] border border-slate-300 bg-white px-3 py-2 text-sm font-medium ${formData.paymentProof ? "text-[#23471d]" : "text-slate-400"}`}>
+                                                        <span>{formData.paymentProof ? formData.paymentProof.name : "Select proof file..."}</span>
+                                                        <FileText className="h-4 w-4" />
+                                                    </div>
+                                                </div>
+                                            </Field>
+                                        </div>
+                                    </>
+                                )}
                                 <ErrorText message={errors.registrationCategory} />
                             </div>
                         )}
@@ -841,8 +1015,8 @@ const BuyerRegistration = () => {
                         <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#23471d]" /><p className="leading-6">Review your details and selected package before submitting the registration.</p></div>
                         <div className="flex flex-wrap gap-3">
                             <button type="button" onClick={() => handleReset(true)} className="rounded-[2px] border border-red-200 bg-red-50 px-5 py-3 text-sm font-bold uppercase tracking-[0.16em] text-red-700 transition hover:bg-red-100">Reset Form</button>
-                            <button type="submit" disabled={isSubmitting || normalizedPackages.length === 0 || (!isFormLocked && !selectedPackage) || (!isFormLocked && selectedPackage && selectedPaymentMethods.length === 0)} className="inline-flex items-center gap-2 rounded-[2px] bg-[#23471d] px-6 py-3 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-[#1a3516] disabled:cursor-not-allowed disabled:opacity-60">
-                                {isSubmitting ? (<><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>) : isFormLocked ? (<><Lock className="h-4 w-4" /> Unlock Packages</>) : (<><CheckCircle2 className="h-4 w-4" /> Submit Registration</>)}
+                            <button type="submit" disabled={isSubmitting || normalizedPackages.length === 0 || !selectedPackage || selectedPaymentMethods.length === 0} className="inline-flex items-center gap-2 rounded-[2px] bg-[#23471d] px-6 py-3 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-[#1a3516] disabled:cursor-not-allowed disabled:opacity-60">
+                                {isSubmitting ? (<><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>) : (<><CheckCircle2 className="h-4 w-4" /> Submit Registration</>)}
                             </button>
                         </div>
                     </div>
