@@ -65,7 +65,7 @@ const BuyerList = () => {
         }
     };
 
-    // Filter logic with all column-specific searches
+
     const filteredRegistrations = registrations.filter(reg => {
         const companyMatch = !searchCompany ||
             (reg.companyName?.toLowerCase().includes(searchCompany.toLowerCase()) ||
