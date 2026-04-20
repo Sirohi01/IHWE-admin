@@ -81,7 +81,7 @@ const FALLBACK_CONFIG = {
     purchaseTimelines: ["Immediate", "1-3 Months", "3-6 Months", "Exploring"],
     roles: ["Final Decision Maker", "Influencer", "Research Only"],
     secondaryProductCategories: [
-        "Ayurveda", "Organic Food", "Nutraceuticals", "Herbal Medicine", "Cosmetics", 
+        "Ayurveda", "Organic Food", "Nutraceuticals", "Herbal Medicine", "Cosmetics",
         "Skincare", "Wellness Services", "Medical Devices", "HealthTech", "Spa & Salon"
     ],
     buyingFrequencies: ["One-time", "Monthly", "Quarterly", "Long-term"],
@@ -93,7 +93,7 @@ const FALLBACK_CONFIG = {
         "5+ Crore",
     ],
     primaryProductInterests: [
-        "AYUSH & Traditional Medicine", "Organic & Natural Products", "Wellness & Lifestyle", 
+        "AYUSH & Traditional Medicine", "Organic & Natural Products", "Wellness & Lifestyle",
         "Beauty & Personal Care", "Fitness & Nutrition", "Medical & Healthcare"
     ],
     budgetRanges: ["Flexible", "Entry Level", "Mid-Range", "Premium"],
@@ -242,9 +242,9 @@ const INITIAL_FORM_STATE = {
     consentMatchedExhibitors: true,
 };
 
-const inputClass = "w-full rounded-[2px] border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-900 outline-none transition focus:border-[#23471d] focus:ring-2 focus:ring-[#23471d]/10";
-const labelClass = "mb-0.5 block text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500";
-const sectionTitleClass = "mb-3 flex items-center gap-2 border-b border-slate-200 pb-1.5 text-xs font-black uppercase tracking-[0.22em] text-[#23471d]";
+const inputClass = "w-full h-8 px-3 py-0 rounded-[2px] border border-slate-400 bg-white text-left text-[12px] font-medium text-slate-900 outline-none shadow-none transition-all ring-offset-background focus:border-[#23471d] focus:ring-[#23471d]/10 placeholder:text-slate-400 font-sans";
+const labelClass = "text-[12px] font-semibold text-slate-900 mb-1 block text-left font-sans";
+const sectionTitleClass = "text-[13px] font-black text-[#23471d] pb-1 border-b border-emerald-500/20 flex items-center gap-1.5 mb-3 uppercase tracking-tight font-sans";
 
 const formatCurrency = (value) =>
     new Intl.NumberFormat("en-IN", {
@@ -291,8 +291,19 @@ const CheckboxChipGroup = ({ name, label, options, values, onToggle, error, requ
             {options.map((option) => {
                 const checked = values.includes(option);
                 return (
-                    <label key={option} className={`cursor-pointer rounded-full border px-3 py-1 text-xs font-bold transition ${checked ? "border-[#23471d] bg-[#23471d] text-white" : "border-slate-300 bg-white text-slate-600 hover:border-[#23471d]"}`}>
-                        <input type="checkbox" className="hidden" checked={checked} onChange={() => onToggle(name, option)} />
+                    <label
+                        key={option}
+                        className={`flex items-center gap-2 text-[11px] font-medium font-sans px-3 py-1 rounded-full border transition-all cursor-pointer ${checked
+                            ? 'bg-emerald-50 border-emerald-300 text-emerald-700 shadow-sm'
+                            : 'bg-white border-slate-200 hover:border-emerald-400 text-slate-600'
+                            }`}
+                    >
+                        <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => onToggle(name, option)}
+                            className="h-3 w-3 rounded border-emerald-500 text-emerald-500 focus:ring-emerald-500"
+                        />
                         {option}
                     </label>
                 );
@@ -404,7 +415,7 @@ const BuyerRegistration = () => {
     const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
     const roleDropdownRef = useRef(null);
 
-    // Click outside to close dropdown
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (roleDropdownRef.current && !roleDropdownRef.current.contains(event.target)) {
@@ -536,7 +547,7 @@ const BuyerRegistration = () => {
         setErrors(nextErrors);
         const isValid = Object.keys(nextErrors).length === 0;
 
-        // Update canSelectPackage state
+
         const basicFieldsValid = fieldsToValidate.every(fieldName => !nextErrors[fieldName]) &&
             formData.preferredSupplierRegion.length > 0 &&
             formData.preferredSupplierType.length > 0;
@@ -882,14 +893,14 @@ const BuyerRegistration = () => {
                     </div>
                 </motion.div>
             ) : (
-                <form onSubmit={(e) => { e.preventDefault(); handleSubmitRegistration(); }} className="space-y-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+                <form onSubmit={(e) => { e.preventDefault(); handleSubmitRegistration(); }} className="space-y-8 rounded-lg border border-slate-200 bg-white p-6 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] md:p-8">
                     <section>
                         <SectionTitle icon={UserRound} title="Personal & Company Information" />
                         <div className="grid gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-4">
-                            <Field label="Full Name" name="fullName" required error={errors.fullName}><input id="fullName" name="fullName" value={formData.fullName} onChange={handleInputChange} placeholder="As per ID proof" className={inputClass} /></Field>
-                            <Field label="Designation" name="designation" required error={errors.designation}><input id="designation" name="designation" value={formData.designation} onChange={handleInputChange} placeholder="Current position" className={inputClass} /></Field>
-                            <Field label="Company Name" name="companyName" required error={errors.companyName}><input id="companyName" name="companyName" value={formData.companyName} onChange={handleInputChange} placeholder="Full Registered Name" className={inputClass} /></Field>
-                            <Field label="Business Role" name="businessType" required error={errors.businessType}>
+                            <Field label="Full Name *" name="fullName" required error={errors.fullName}><input id="fullName" name="fullName" value={formData.fullName} onChange={handleInputChange} placeholder="As per ID Proof" className={inputClass} /></Field>
+                            <Field label="Designation *" name="designation" required error={errors.designation}><input id="designation" name="designation" value={formData.designation} onChange={handleInputChange} placeholder="Current Position" className={inputClass} /></Field>
+                            <Field label="Company Name *" name="companyName" required error={errors.companyName}><input id="companyName" name="companyName" value={formData.companyName} onChange={handleInputChange} placeholder="Full Registered Name" className={inputClass} /></Field>
+                            <Field label="Business Role *" name="businessType" required error={errors.businessType}>
                                 {!formData.businessType.toString().toLowerCase().includes('other') ? (
                                     <div className="relative" ref={roleDropdownRef}>
                                         <button
@@ -970,49 +981,49 @@ const BuyerRegistration = () => {
                     <section>
                         <SectionTitle icon={Phone} title="Contact Information" />
                         <div className="grid gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-4">
-                            <Field label="Mobile Number (10 digits)" name="mobileNumber" required error={errors.mobileNumber}><input id="mobileNumber" name="mobileNumber" value={formData.mobileNumber} onChange={handleInputChange} placeholder="10-digit mobile number" className={inputClass} maxLength={10} /></Field>
-                            <Field label="Alternate Number (10 digits)" name="alternateNumber" required error={errors.alternateNumber}><input id="alternateNumber" name="alternateNumber" value={formData.alternateNumber} onChange={handleInputChange} placeholder="10-digit alternate number" className={inputClass} maxLength={10} /></Field>
-                            <Field label="Email Address" name="emailAddress" required error={errors.emailAddress}><input id="emailAddress" name="emailAddress" type="email" value={formData.emailAddress} onChange={handleInputChange} placeholder="Work Email" className={inputClass} /></Field>
-                            <Field label="Website (Optional)" name="website" error={errors.website} hint="Example: https://yourcompany.com"><input id="website" name="website" type="url" value={formData.website} onChange={handleInputChange} placeholder="https://..." className={inputClass} /></Field>
+                            <Field label="Mobile Number (10 digits) *" name="mobileNumber" required error={errors.mobileNumber}><input id="mobileNumber" name="mobileNumber" value={formData.mobileNumber} onChange={handleInputChange} placeholder="10-digit mobile number" className={inputClass} maxLength={10} /></Field>
+                            <Field label="Alternate Number (10 digits) *" name="alternateNumber" required error={errors.alternateNumber}><input id="alternateNumber" name="alternateNumber" value={formData.alternateNumber} onChange={handleInputChange} placeholder="10-digit alternate number" className={inputClass} maxLength={10} /></Field>
+                            <Field label="Email Address (OTP) *" name="emailAddress" required error={errors.emailAddress}><input id="emailAddress" name="emailAddress" type="email" value={formData.emailAddress} onChange={handleInputChange} placeholder="Work Email" className={inputClass} /></Field>
+                            <Field label="Website (Optional)" name="website" error={errors.website}><input id="website" name="website" type="url" value={formData.website} onChange={handleInputChange} placeholder="https://..." className={inputClass} /></Field>
                         </div>
                     </section>
 
                     <section>
                         <SectionTitle icon={MapPin} title="Registered Address" />
                         <div className="grid gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-6">
-                            <Field label="Registered Address" name="registeredAddress" required error={errors.registeredAddress} className="xl:col-span-6"><textarea id="registeredAddress" name="registeredAddress" value={formData.registeredAddress} onChange={handleInputChange} placeholder="Full Corporate Address" className={`${inputClass} min-h-[60px] resize-y`} /></Field>
+                            <Field label="Registered Address *" name="registeredAddress" required error={errors.registeredAddress} className="xl:col-span-6"><textarea id="registeredAddress" name="registeredAddress" value={formData.registeredAddress} onChange={handleInputChange} placeholder="Full Corporate Address" className={`${inputClass} min-h-[60px] resize-y`} /></Field>
                             <Field label="Country" name="country" required error={errors.country} className="xl:col-span-1"><select id="country" name="country" value={formData.country} onChange={(e) => handleSelectChange("country", e.target.value)} className={inputClass}><option value="">Select country</option>{countries.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}</select></Field>
-                            <Field label="State/Province" name="stateProvince" required error={errors.stateProvince} className="xl:col-span-2"><select id="stateProvince" name="stateProvince" value={formData.stateProvince} onChange={(e) => handleSelectChange("stateProvince", e.target.value)} className={inputClass} disabled={loadingLocations.states}><option value="">{loadingLocations.states ? "Select State" : "Select State"}</option>{states.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}</select></Field>
-                            <Field label="City" name="city" required error={errors.city} className="xl:col-span-2"><select id="city" name="city" value={formData.city} onChange={(e) => handleSelectChange("city", e.target.value)} className={inputClass} disabled={!formData.stateProvince || loadingLocations.cities}><option value="">{loadingLocations.cities ? "Select City" : "Select City"}</option>{cities.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}</select></Field>
-                            <Field label="Pin Code (6 digits)" name="pinCode" required error={errors.pinCode} className="xl:col-span-1"><input id="pinCode" name="pinCode" value={formData.pinCode} onChange={handleInputChange} placeholder="Postal Code" className={inputClass} maxLength={6} /></Field>
+                            <Field label="State/Province *" name="stateProvince" required error={errors.stateProvince} className="xl:col-span-2"><select id="stateProvince" name="stateProvince" value={formData.stateProvince} onChange={(e) => handleSelectChange("stateProvince", e.target.value)} className={inputClass} disabled={loadingLocations.states}><option value="">{loadingLocations.states ? "Select State" : "Select State"}</option>{states.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}</select></Field>
+                            <Field label="City *" name="city" required error={errors.city} className="xl:col-span-2"><select id="city" name="city" value={formData.city} onChange={(e) => handleSelectChange("city", e.target.value)} className={inputClass} disabled={!formData.stateProvince || loadingLocations.cities}><option value="">{loadingLocations.cities ? "Select City" : "Select City"}</option>{cities.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}</select></Field>
+                            <Field label="Pin Code (6 digits) *" name="pinCode" required error={errors.pinCode} className="xl:col-span-1"><input id="pinCode" name="pinCode" value={formData.pinCode} onChange={handleInputChange} placeholder="Postal Code" className={inputClass} maxLength={6} /></Field>
                         </div>
                     </section>
 
                     <section>
                         <SectionTitle icon={Building2} title="1. Company Business Profile" />
                         <div className="grid gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-5">
-                            <Field label="Company / Firm Name" name="companyFirmName" required error={errors.companyFirmName} className="xl:col-span-2">
+                            <Field label="Company / Firm Name *" name="companyFirmName" required error={errors.companyFirmName} className="xl:col-span-2">
                                 <input id="companyFirmName" name="companyFirmName" value={formData.companyFirmName} onChange={handleInputChange} placeholder="Company / Firm Name" className={inputClass} />
                             </Field>
                             <Field label="Brand Name" name="brandName">
                                 <input id="brandName" name="brandName" value={formData.brandName} onChange={handleInputChange} placeholder="Brand Name" className={inputClass} />
                             </Field>
-                            <Field label="Business Type" name="basicBusinessType" required error={errors.basicBusinessType}>
+                            <Field label="Business Type *" name="basicBusinessType" required error={errors.basicBusinessType}>
                                 <select id="basicBusinessType" name="basicBusinessType" value={formData.basicBusinessType} onChange={(e) => handleSelectChange("basicBusinessType", e.target.value)} className={inputClass}>
                                     <option value="">Select Type</option>
                                     {['Proprietorship', 'Partnership', 'Pvt Ltd', 'LLP', 'Others'].map((t) => (<option key={t} value={t}>{t}</option>))}
                                 </select>
                             </Field>
-                            <Field label="Year of Establishment" name="yearOfEstablishment" required error={errors.yearOfEstablishment}>
+                            <Field label="Year of Establishment *" name="yearOfEstablishment" required error={errors.yearOfEstablishment}>
                                 <input id="yearOfEstablishment" name="yearOfEstablishment" value={formData.yearOfEstablishment} onChange={handleInputChange} placeholder="e.g. 2010" className={inputClass} />
                             </Field>
-                            <Field label="GST Number" name="gstNumber" error={errors.gstNumber} hint="(Optional but recommended)">
+                            <Field label="GST Number (Optional but recommended)" name="gstNumber" error={errors.gstNumber}>
                                 <input id="gstNumber" name="gstNumber" value={formData.gstNumber} onChange={handleInputChange} placeholder="GST Number" className={inputClass} />
                             </Field>
-                            <Field label="PAN Number" name="panNumber" error={errors.panNumber} hint="(Optional)">
+                            <Field label="PAN Number (Optional)" name="panNumber" error={errors.panNumber}>
                                 <input id="panNumber" name="panNumber" value={formData.panNumber} onChange={handleInputChange} placeholder="PAN Number" className={inputClass} />
                             </Field>
-                            <Field label="Buyer Industry" name="buyerIndustry" required error={errors.buyerIndustry}>
+                            <Field label="Buyer Industry *" name="buyerIndustry" required error={errors.buyerIndustry}>
                                 <select id="buyerIndustry" name="buyerIndustry" value={formData.buyerIndustry} onChange={(e) => handleSelectChange("buyerIndustry", e.target.value)} className={inputClass}>
                                     <option value="">Choose Industry</option>
                                     {normalizedConfig.primaryProductInterests.map((i) => (<option key={i} value={i}>{i}</option>))}
@@ -1024,16 +1035,16 @@ const BuyerRegistration = () => {
                     <section>
                         <SectionTitle icon={FileText} title="2. Business Profile Details" />
                         <div className="grid gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-4">
-                            <Field label="Nature of Business" name="natureOfBusiness" required error={errors.natureOfBusiness} className="xl:col-span-2" hint="Short description (1-2 lines)">
-                                <input id="natureOfBusiness" name="natureOfBusiness" value={formData.natureOfBusiness} onChange={handleInputChange} placeholder="Short description (1-2 lines)" className={inputClass} />
+                            <Field label="Nature of Business *" name="natureOfBusiness" required error={errors.natureOfBusiness} className="xl:col-span-2">
+                                <input id="natureOfBusiness" name="natureOfBusiness" value={formData.natureOfBusiness} onChange={handleInputChange} placeholder="Short description" className={inputClass} />
                             </Field>
-                            <Field label="Years in Business" name="yearsInBusiness" required error={errors.yearsInBusiness}>
+                            <Field label="Years in Business *" name="yearsInBusiness" required error={errors.yearsInBusiness}>
                                 <input id="yearsInBusiness" name="yearsInBusiness" type="number" min="0" value={formData.yearsInBusiness} onChange={handleInputChange} placeholder="e.g. 10" className={inputClass} />
                             </Field>
-                            <Field label="Number of Outlets / Branches" name="numberOfOutlets" required error={errors.numberOfOutlets}>
+                            <Field label="Number of Outlets / Branches *" name="numberOfOutlets" required error={errors.numberOfOutlets}>
                                 <input id="numberOfOutlets" name="numberOfOutlets" type="number" min="1" value={formData.numberOfOutlets} onChange={handleInputChange} placeholder="e.g. 5" className={inputClass} />
                             </Field>
-                            <Field label="Annual Turnover" name="annualTurnover" required error={errors.annualTurnover}>
+                            <Field label="Annual Turnover *" name="annualTurnover" required error={errors.annualTurnover}>
                                 <select id="annualTurnover" name="annualTurnover" value={formData.annualTurnover} onChange={(e) => handleSelectChange("annualTurnover", e.target.value)} className={inputClass}>
                                     <option value="">Select Range</option>
                                     {(normalizedConfig.annualTurnoverRanges || ['Below 50 Lakhs', '50L – 2 Cr', '2 – 10 Cr', '10 Cr+']).map((r) => (<option key={r} value={r}>{r}</option>))}
@@ -1073,19 +1084,17 @@ const BuyerRegistration = () => {
                                     <ErrorText message={errors.secondaryProductCategories} />
                                 </div>
                             </div>
-
                             <div className="grid gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-5 items-end">
-                                <Field label="Interested in Import?" name="interestedInImporting"><select id="interestedInImporting" name="interestedInImporting" value={formData.interestedInImporting} onChange={(e) => handleSelectChange("interestedInImporting", e.target.value)} className={inputClass}>{['Yes', 'No'].map(o => <option key={o} value={o}>{o}</option>)}</select></Field>
-                                <Field label="Interested in Export?" name="interestedInExporting"><select id="interestedInExporting" name="interestedInExporting" value={formData.interestedInExporting} onChange={(e) => handleSelectChange("interestedInExporting", e.target.value)} className={inputClass}>{['Yes', 'No'].map(o => <option key={o} value={o}>{o}</option>)}</select></Field>
-                                <Field label="Business Model" name="businessModelPreference"><select id="businessModelPreference" name="businessModelPreference" value={formData.businessModelPreference} onChange={(e) => handleSelectChange("businessModelPreference", e.target.value)} className={inputClass}><option value="">Select Model</option>{normalizedConfig.businessModelOptions.map((m) => (<option key={m} value={m}>{m}</option>))}</select></Field>
-                                <Field label="Est. Monthly Volume" name="estimatedPurchaseVolume" error={errors.estimatedPurchaseVolume}><input id="estimatedPurchaseVolume" name="estimatedPurchaseVolume" value={formData.estimatedPurchaseVolume} onChange={handleInputChange} placeholder="e.g. 5000 Units" className={inputClass} /></Field>
+                                <Field label="Interested in Importing Products?" name="interestedInImporting"><select id="interestedInImporting" name="interestedInImporting" value={formData.interestedInImporting} onChange={(e) => handleSelectChange("interestedInImporting", e.target.value)} className={inputClass}>{['Yes', 'No'].map(o => <option key={o} value={o}>{o}</option>)}</select></Field>
+                                <Field label="Interested in Export Partnerships?" name="interestedInExporting"><select id="interestedInExporting" name="interestedInExporting" value={formData.interestedInExporting} onChange={(e) => handleSelectChange("interestedInExporting", e.target.value)} className={inputClass}>{['Yes', 'No'].map(o => <option key={o} value={o}>{o}</option>)}</select></Field>
+                                <Field label="Business Model Preference" name="businessModelPreference"><select id="businessModelPreference" name="businessModelPreference" value={formData.businessModelPreference} onChange={(e) => handleSelectChange("businessModelPreference", e.target.value)} className={inputClass}><option value="">Select Model</option>{normalizedConfig.businessModelOptions.map((m) => (<option key={m} value={m}>{m}</option>))}</select></Field>
+                                <Field label="Estimated Monthly Purchase" name="estimatedPurchaseVolume" error={errors.estimatedPurchaseVolume}><input id="estimatedPurchaseVolume" name="estimatedPurchaseVolume" value={formData.estimatedPurchaseVolume} onChange={handleInputChange} placeholder="e.g. 5000 Units" className={inputClass} /></Field>
                                 <Field label="Budget Range" name="budgetRange" error={errors.budgetRange}><select id="budgetRange" name="budgetRange" value={formData.budgetRange} onChange={(e) => handleSelectChange("budgetRange", e.target.value)} className={inputClass}><option value="">Choose Budget</option>{normalizedConfig.budgetRanges.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
-                                
-                                <Field label="Buying Frequency" name="buyingFrequency" required error={errors.buyingFrequency}><select id="buyingFrequency" name="buyingFrequency" value={formData.buyingFrequency} onChange={(e) => handleSelectChange("buyingFrequency", e.target.value)} className={inputClass}><option value="">Select</option>{(normalizedConfig.buyingFrequencies || ['One-time', 'Monthly', 'Quarterly', 'Long-term']).map(f => <option key={f} value={f}>{f}</option>)}</select></Field>
-                                <Field label="Annual Purchase Val." name="estimatedAnnualPurchaseValue" required error={errors.estimatedAnnualPurchaseValue}><select id="estimatedAnnualPurchaseValue" name="estimatedAnnualPurchaseValue" value={formData.estimatedAnnualPurchaseValue} onChange={(e) => handleSelectChange("estimatedAnnualPurchaseValue", e.target.value)} className={inputClass}><option value="">Select</option>{(normalizedConfig.annualPurchaseValueRanges || ['Below 10 Lakhs', '10-50 Lakhs', '50 Lakhs - 1 Crore', '1-5 Crore', '5+ Crore']).map(v => <option key={v} value={v}>{v}</option>)}</select></Field>
-                                <Field label="Purchase Timeline" name="purchaseTimeline" required error={errors.purchaseTimeline}><select id="purchaseTimeline" name="purchaseTimeline" value={formData.purchaseTimeline} onChange={(e) => handleSelectChange("purchaseTimeline", e.target.value)} className={inputClass}><option value="">Select</option>{(normalizedConfig.purchaseTimelines || ['Immediate', '1–3 Months', '3–6 Months', 'Exploring']).map(t => <option key={t} value={t}>{t}</option>)}</select></Field>
-                                <Field label="Matchmaking Interest" name="matchmakingInterest" required error={errors.matchmakingInterest}><select id="matchmakingInterest" name="matchmakingInterest" value={formData.matchmakingInterest} onChange={(e) => handleSelectChange("matchmakingInterest", e.target.value)} className={inputClass}><option value="Yes">Yes</option><option value="No">No</option></select></Field>
-                                <Field label="Role in Decision" name="roleInPurchaseDecision" required error={errors.roleInPurchaseDecision}><select id="roleInPurchaseDecision" name="roleInPurchaseDecision" value={formData.roleInPurchaseDecision} onChange={(e) => handleSelectChange("roleInPurchaseDecision", e.target.value)} className={inputClass}><option value="">Select Role</option>{(normalizedConfig.roles || ['Final Decision Maker', 'Influencer', 'Research Only']).map(r => <option key={r} value={r}>{r}</option>)}</select></Field>
+                                <Field label="Buying Frequency *" name="buyingFrequency" required error={errors.buyingFrequency}><select id="buyingFrequency" name="buyingFrequency" value={formData.buyingFrequency} onChange={(e) => handleSelectChange("buyingFrequency", e.target.value)} className={inputClass}><option value="">Select</option>{(normalizedConfig.buyingFrequencies || ['One-time', 'Monthly', 'Quarterly', 'Long-term']).map(f => <option key={f} value={f}>{f}</option>)}</select></Field>
+                                <Field label="Est. Annual Purchase Value *" name="estimatedAnnualPurchaseValue" required error={errors.estimatedAnnualPurchaseValue}><select id="estimatedAnnualPurchaseValue" name="estimatedAnnualPurchaseValue" value={formData.estimatedAnnualPurchaseValue} onChange={(e) => handleSelectChange("estimatedAnnualPurchaseValue", e.target.value)} className={inputClass}><option value="">Select</option>{(normalizedConfig.annualPurchaseValueRanges || ['Below 10 Lakhs', '10-50 Lakhs', '50 Lakhs - 1 Crore', '1-5 Crore', '5+ Crore']).map(v => <option key={v} value={v}>{v}</option>)}</select></Field>
+                                <Field label="Purchase Timeline *" name="purchaseTimeline" required error={errors.purchaseTimeline}><select id="purchaseTimeline" name="purchaseTimeline" value={formData.purchaseTimeline} onChange={(e) => handleSelectChange("purchaseTimeline", e.target.value)} className={inputClass}><option value="">Select</option>{(normalizedConfig.purchaseTimelines || ['Immediate', '1–3 Months', '3–6 Months', 'Exploring']).map(t => <option key={t} value={t}>{t}</option>)}</select></Field>
+                                <Field label="Matchmaking Interest *" name="matchmakingInterest" required error={errors.matchmakingInterest}><select id="matchmakingInterest" name="matchmakingInterest" value={formData.matchmakingInterest} onChange={(e) => handleSelectChange("matchmakingInterest", e.target.value)} className={inputClass}><option value="Yes">Yes</option><option value="No">No</option></select></Field>
+                                <Field label="Role in Purchase Decision *" name="roleInPurchaseDecision" required error={errors.roleInPurchaseDecision}><select id="roleInPurchaseDecision" name="roleInPurchaseDecision" value={formData.roleInPurchaseDecision} onChange={(e) => handleSelectChange("roleInPurchaseDecision", e.target.value)} className={inputClass}><option value="">Select Role</option>{(normalizedConfig.roles || ['Final Decision Maker', 'Influencer', 'Research Only']).map(r => <option key={r} value={r}>{r}</option>)}</select></Field>
                             </div>
 
                             <Field label="Specific Product Requirements" name="specificProductRequirements" error={errors.specificProductRequirements} className="w-full"><textarea id="specificProductRequirements" name="specificProductRequirements" value={formData.specificProductRequirements} onChange={handleInputChange} placeholder="Any custom needs..." className={`${inputClass} min-h-[60px] resize-y`} /></Field>
@@ -1096,8 +1105,8 @@ const BuyerRegistration = () => {
                         <SectionTitle icon={Briefcase} title="Supplier Preference (India Only)" />
                         <div className="space-y-5">
                             <div className="grid gap-5 xl:grid-cols-2">
-                                <CheckboxChipGroup name="preferredSupplierRegion" label="Preferred Supplier Region" required options={normalizedConfig.regions || ['North India', 'South India', 'East India', 'West India', 'Pan India']} values={formData.preferredSupplierRegion} onToggle={toggleArrayValue} error={errors.preferredSupplierRegion} />
-                                <CheckboxChipGroup name="preferredSupplierType" label="Preferred Supplier Type" required options={normalizedConfig.supplierTypes || ['Manufacturer', 'Exporter', 'MSME', 'Startup', 'Wholesaler']} values={formData.preferredSupplierType} onToggle={toggleArrayValue} error={errors.preferredSupplierType} />
+                                <CheckboxChipGroup name="preferredSupplierRegion" label="Preferred Supplier Region *" required options={normalizedConfig.regions || ['North India', 'South India', 'East India', 'West India', 'Pan India']} values={formData.preferredSupplierRegion} onToggle={toggleArrayValue} error={errors.preferredSupplierRegion} />
+                                <CheckboxChipGroup name="preferredSupplierType" label="Preferred Supplier Type *" required options={normalizedConfig.supplierTypes || ['Manufacturer', 'Exporter', 'MSME', 'Startup', 'Wholesaler']} values={formData.preferredSupplierType} onToggle={toggleArrayValue} error={errors.preferredSupplierType} />
                             </div>
                             <div className="grid gap-5 md:grid-cols-2">
                                 <div>
@@ -1137,7 +1146,7 @@ const BuyerRegistration = () => {
                         <SectionTitle icon={ShieldCheck} title="Certification & Compliance" />
                         <div className="space-y-6">
                             <CheckboxChipGroup name="requiredCertifications" label="Required Certifications" options={normalizedConfig.certificationOptions || ['ISO', 'GMP', 'FDA', 'AYUSH', 'Organic', 'Others']} values={formData.requiredCertifications} onToggle={toggleArrayValue} error={errors.requiredCertifications} />
-                            
+
                             <div className="grid gap-5 md:grid-cols-2">
                                 <div>
                                     <label className={labelClass}>Pricing Preference</label>
@@ -1150,12 +1159,12 @@ const BuyerRegistration = () => {
                                         ))}
                                     </div>
                                 </div>
-                                <CheckboxChipGroup 
-                                    name="preferredPaymentMethods" 
-                                    label="Preferred Payment Methods (Business Interests)" 
-                                    options={['Letter of Credit (LC)', 'Cash Against Documents (CAD)', 'Bank Transfer (T/T)', 'Open Account', 'Advance Payment']} 
-                                    values={formData.preferredPaymentMethods} 
-                                    onToggle={toggleArrayValue} 
+                                <CheckboxChipGroup
+                                    name="preferredPaymentMethods"
+                                    label="Preferred Payment Methods (Business Interests)"
+                                    options={['Letter of Credit (LC)', 'Cash Against Documents (CAD)', 'Bank Transfer (T/T)', 'Open Account', 'Advance Payment']}
+                                    values={formData.preferredPaymentMethods}
+                                    onToggle={toggleArrayValue}
                                 />
                             </div>
 
@@ -1182,18 +1191,18 @@ const BuyerRegistration = () => {
                             </div>
                         </div>
                     </section>
-                    
+
                     <section>
                         <SectionTitle icon={Clock} title="B2B Meeting Preferences" />
                         <div className="space-y-6">
                             <div className="grid gap-5 md:grid-cols-2">
-                                <Field label="Would you like to participate in Pre-scheduled B2B Meetings?" name="requirePreScheduledB2B">
+                                <Field label="Interested in Pre-scheduled B2B Meetings? *" name="requirePreScheduledB2B">
                                     <select id="requirePreScheduledB2B" name="requirePreScheduledB2B" value={formData.requirePreScheduledB2B} onChange={(e) => handleSelectChange("requirePreScheduledB2B", e.target.value)} className={inputClass}>
                                         <option value="Yes">Yes</option>
                                         <option value="No">No</option>
                                     </select>
                                 </Field>
-                                <Field label="Overall Meeting Priority Level" name="meetingPriorityLevel">
+                                <Field label="Priority Level" name="meetingPriorityLevel">
                                     <select id="meetingPriorityLevel" name="meetingPriorityLevel" value={formData.meetingPriorityLevel} onChange={(e) => handleSelectChange("meetingPriorityLevel", e.target.value)} className={inputClass}>
                                         {normalizedConfig.meetingPriorityLevels.map((item) => (<option key={item} value={item}>{item}</option>))}
                                     </select>
@@ -1203,7 +1212,7 @@ const BuyerRegistration = () => {
                             {formData.requirePreScheduledB2B === 'Yes' && (
                                 <div className="grid gap-5 md:grid-cols-2">
                                     <div className="md:col-span-2">
-                                        <label className={labelClass}>Categories you're interested in meeting exhibitors from</label>
+                                        <label className={labelClass}>Preferred Meeting Categories *</label>
                                         <div className="mt-1 p-3 border border-slate-300 rounded-[2px] bg-white h-[100px] overflow-y-auto custom-scrollbar">
                                             <div className="flex flex-wrap gap-2">
                                                 {normalizedConfig.meetingCategoryOptions.map((cat) => (
@@ -1230,7 +1239,7 @@ const BuyerRegistration = () => {
 
                                     <CheckboxChipGroup
                                         name="preferredExhibitorTypes"
-                                        label="Types of Exhibitors you're interested in meeting"
+                                        label="Exhibitor Types to Meet"
                                         options={normalizedConfig.exhibitorTypeOptions}
                                         values={formData.preferredExhibitorTypes}
                                         onToggle={toggleArrayValue}
@@ -1239,7 +1248,7 @@ const BuyerRegistration = () => {
 
                                     <CheckboxChipGroup
                                         name="meetingObjectives"
-                                        label="Primary Objectives for These Meetings"
+                                        label="💼 Meeting Objectives *"
                                         options={normalizedConfig.meetingObjectiveOptions}
                                         values={formData.meetingObjectives}
                                         onToggle={toggleArrayValue}
@@ -1248,7 +1257,7 @@ const BuyerRegistration = () => {
 
                                     <CheckboxChipGroup
                                         name="preferredBusinessTypes"
-                                        label="Preferred Business Arrangement / Types"
+                                        label="🏷 Preferred Business Type *"
                                         options={normalizedConfig.preferredBusinessTypeOptions}
                                         values={formData.preferredBusinessTypes}
                                         onToggle={toggleArrayValue}
@@ -1256,25 +1265,28 @@ const BuyerRegistration = () => {
                                     />
 
                                     <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 md:col-span-2">
-                                        <Field label="Preferred Meeting Day" name="preferredMeetingDay" required error={errors.preferredMeetingDay}>
+                                        <Field label="Preferred Day *" name="preferredMeetingDay" required error={errors.preferredMeetingDay}>
                                             <select id="preferredMeetingDay" name="preferredMeetingDay" value={formData.preferredMeetingDay} onChange={(e) => handleSelectChange("preferredMeetingDay", e.target.value)} className={inputClass}>
                                                 <option value="">Select Day</option>
                                                 {normalizedConfig.meetingDayOptions.map(day => <option key={day} value={day}>{day}</option>)}
                                             </select>
                                         </Field>
-                                        <Field label="Preferred Time Slot" name="preferredTimeSlot" required error={errors.preferredTimeSlot}>
+                                        <Field label="Time Slot *" name="preferredTimeSlot" required error={errors.preferredTimeSlot}>
                                             <select id="preferredTimeSlot" name="preferredTimeSlot" value={formData.preferredTimeSlot} onChange={(e) => handleSelectChange("preferredTimeSlot", e.target.value)} className={inputClass}>
                                                 <option value="">Select Slot</option>
                                                 {(normalizedConfig.preferredTimeSlots || ['Morning (10AM - 1PM)', 'Afternoon (2PM - 4PM)', 'Evening (4PM - 6PM)']).map(slot => <option key={slot} value={slot}>{slot}</option>)}
                                             </select>
                                         </Field>
-                                        <Field label="Est. Number of Meetings Interested" name="numberOfMeetingsInterested">
-                                            <input id="numberOfMeetingsInterested" name="numberOfMeetingsInterested" type="number" min="1" value={formData.numberOfMeetingsInterested} onChange={handleInputChange} placeholder="e.g. 5" className={inputClass} />
+                                        <Field label="Number of Meetings" name="numberOfMeetingsInterested">
+                                            <select id="numberOfMeetingsInterested" name="numberOfMeetingsInterested" value={formData.numberOfMeetingsInterested} onChange={(e) => handleSelectChange("numberOfMeetingsInterested", e.target.value)} className={inputClass}>
+                                                <option value="">Select Count</option>
+                                                {["3–5 Meetings", "5–10 Meetings", "10+ Meetings"].map(count => <option key={count} value={count}>{count}</option>)}
+                                            </select>
                                         </Field>
                                     </div>
 
-                                    <Field label="Meeting Requirements & Special Requests" name="meetingRequirements" className="md:col-span-2">
-                                        <textarea id="meetingRequirements" name="meetingRequirements" value={formData.meetingRequirements} onChange={handleInputChange} placeholder="Specify any specific requirements or exhibitors you'd like to meet..." className={`${inputClass} min-h-[90px] resize-y`} />
+                                    <Field label="📝 Specific Meeting Requirements" name="meetingRequirements" className="md:col-span-2">
+                                        <textarea id="meetingRequirements" name="meetingRequirements" value={formData.meetingRequirements} onChange={handleInputChange} placeholder="Mention specific expectations, brands you want to meet, or items you are sourcing..." className={`${inputClass} min-h-[90px] resize-y`} />
                                     </Field>
                                 </div>
                             )}
