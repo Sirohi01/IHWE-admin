@@ -1,27 +1,39 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
     AlertTriangle,
     ArrowRight,
+    AtSign,
     Briefcase,
     Building2,
     CalendarDays,
     CheckCircle2,
     Clock,
     CreditCard,
+    Factory,
     FileText,
+    Globe,
     Globe2,
+    HeartPulse,
+    Hotel,
     Landmark,
+    Leaf,
+    Laptop,
     Loader2,
     Lock,
     MapPin,
     Percent,
     Phone,
     QrCode,
+    ChevronDown,
+    ChevronsUpDown,
     ShieldCheck,
+    Smartphone,
+    Store,
     UserRound,
     Wallet,
+    X,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import PageHeader from "../../components/PageHeader";
@@ -45,11 +57,11 @@ const FALLBACK_CONFIG = {
         "Other",
     ],
     annualTurnoverRanges: [
-        "Below 1 Crore",
+        "Below 10 Lakhs",
+        "10-50 Lakhs",
+        "50 Lakhs - 1 Crore",
         "1-5 Crore",
-        "5-10 Crore",
-        "10-50 Crore",
-        "50+ Crore",
+        "5+ Crore",
     ],
     regions: [
         "North India",
@@ -57,6 +69,7 @@ const FALLBACK_CONFIG = {
         "East India",
         "West India",
         "Pan India",
+        "Global",
     ],
     supplierTypes: [
         "Manufacturer",
@@ -67,7 +80,10 @@ const FALLBACK_CONFIG = {
     ],
     purchaseTimelines: ["Immediate", "1-3 Months", "3-6 Months", "Exploring"],
     roles: ["Final Decision Maker", "Influencer", "Research Only"],
-    secondaryProductCategories: [],
+    secondaryProductCategories: [
+        "Ayurveda", "Organic Food", "Nutraceuticals", "Herbal Medicine", "Cosmetics", 
+        "Skincare", "Wellness Services", "Medical Devices", "HealthTech", "Spa & Salon"
+    ],
     buyingFrequencies: ["One-time", "Monthly", "Quarterly", "Long-term"],
     annualPurchaseValueRanges: [
         "Below 10 Lakhs",
@@ -76,11 +92,21 @@ const FALLBACK_CONFIG = {
         "1-5 Crore",
         "5+ Crore",
     ],
-    primaryProductInterests: [],
+    primaryProductInterests: [
+        "AYUSH & Traditional Medicine", "Organic & Natural Products", "Wellness & Lifestyle", 
+        "Beauty & Personal Care", "Fitness & Nutrition", "Medical & Healthcare"
+    ],
     budgetRanges: ["Flexible", "Entry Level", "Mid-Range", "Premium"],
     companySizes: ["Small", "Medium", "Large", "Enterprise"],
     certificationOptions: ["ISO", "GMP", "FDA", "AYUSH", "Organic", "Others"],
-    meetingPriorityLevels: ["Low", "Medium", "High"],
+    meetingPriorityLevels: ["Low Priority", "Medium Priority", "High Priority"],
+    businessModelOptions: ["Retail", "Distribution", "Franchise", "Private Label / White Label", "Direct Sourcing"],
+    purchaseFrequencyOptions: ["Regular (Monthly Procurement)", "Quarterly", "Bi-Annual", "Annual / Project Based"],
+    meetingCategoryOptions: ["Ayurveda & Herbal", "Organic Food & Beverages", "Nutraceuticals & Supplements", "Fitness Equipment", "Beauty & Cosmetics", "Skincare", "Medical Devices", "Wellness Services", "Spa & Salon", "HealthTech", "Others"],
+    exhibitorTypeOptions: ["Manufacturer", "Brand Owner", "Distributor", "Exporter", "Startup / Innovator"],
+    meetingObjectiveOptions: ["Product Sourcing", "Partnership / Collaboration", "Distribution Opportunities", "Private Label / OEM", "Investment / Business Expansion"],
+    preferredBusinessTypeOptions: ["Bulk Purchase", "Private Label", "Franchise", "Exclusive Distribution"],
+    meetingDayOptions: ["Day 1", "Day 2", "Day 3"],
     packages: [],
 };
 
@@ -152,6 +178,7 @@ const INITIAL_FORM_STATE = {
     alternateNumber: "",
     emailAddress: "",
     website: "",
+    brandName: "",
     pinCode: "",
     country: "India",
     stateProvince: "",
@@ -166,6 +193,7 @@ const INITIAL_FORM_STATE = {
     yearsInBusiness: "",
     numberOfOutlets: "",
     annualTurnover: "",
+    buyerIndustry: "",
     buyingFrequency: "",
     estimatedAnnualPurchaseValue: "",
     primaryProductInterest: "",
@@ -173,8 +201,13 @@ const INITIAL_FORM_STATE = {
     specificProductRequirements: "",
     estimatedPurchaseVolume: "",
     budgetRange: "",
+    purchaseFrequency: "",
+    businessModelPreference: "",
+    b2bMeetInterest: "Yes",
+    interestedInImporting: "No",
+    interestedInExporting: "No",
     preferredSupplierRegion: [],
-    preferredState: "",
+    preferredState: [],
     preferredSupplierType: [],
     preferredCompanySize: "",
     purchaseTimeline: "",
@@ -182,10 +215,19 @@ const INITIAL_FORM_STATE = {
     pricingPreference: "Mid-Range",
     matchmakingInterest: "Yes",
     logisticsRequirements: "",
+    preferredPaymentMethods: [],
+    companyProfile: null,
     requiredCertifications: [],
     preferredMeetingDate: "",
     preferredTimeSlot: "",
     requirePreScheduledB2B: "Yes",
+    preferredMeetingCategories: [],
+    preferredExhibitorTypes: [],
+    numberOfMeetingsInterested: "",
+    meetingObjectives: [],
+    preferredBusinessTypes: [],
+    meetingRequirements: "",
+    preferredMeetingDay: "",
     meetingPriorityLevel: "Medium",
     remarks: "",
     registrationCategory: "",
@@ -194,14 +236,15 @@ const INITIAL_FORM_STATE = {
     paymentMethods: [],
     transactionId: "",
     paymentProof: null,
+    otherBusinessType: "",
     consentTerms: true,
     consentPaymentValid: true,
     consentMatchedExhibitors: true,
 };
 
-const inputClass = "w-full rounded-[2px] border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none transition focus:border-[#23471d] focus:ring-2 focus:ring-[#23471d]/10";
-const labelClass = "mb-1 block text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500";
-const sectionTitleClass = "mb-5 flex items-center gap-2 border-b border-slate-200 pb-2 text-sm font-black uppercase tracking-[0.22em] text-[#23471d]";
+const inputClass = "w-full rounded-[2px] border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-900 outline-none transition focus:border-[#23471d] focus:ring-2 focus:ring-[#23471d]/10";
+const labelClass = "mb-0.5 block text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500";
+const sectionTitleClass = "mb-3 flex items-center gap-2 border-b border-slate-200 pb-1.5 text-xs font-black uppercase tracking-[0.22em] text-[#23471d]";
 
 const formatCurrency = (value) =>
     new Intl.NumberFormat("en-IN", {
@@ -328,6 +371,17 @@ const PackageCard = ({ pkg, selected, onSelect, disabled }) => {
     );
 };
 
+const staticGroups = [
+    { title: 'Trade & Distribution', icon: <Store size={14} />, items: ['Distributor', 'Super Distributor', 'Wholesaler', 'Retailer (Single Store)', 'Retail Chain / Multi-Store', 'Modern Trade Buyer'] },
+    { title: 'Manufacturing & Business', icon: <Factory size={14} />, items: ['Manufacturer', 'Private Label Buyer', 'Franchise Seeker', 'Investor'] },
+    { title: 'International Trade', icon: <Globe size={14} />, items: ['Importer', 'Exporter', 'International Buying Agent'] },
+    { title: 'Online & Digital', icon: <Laptop size={14} />, items: ['E-commerce Seller', 'D2C Brand Owner'] },
+    { title: 'Healthcare & Medical', icon: <HeartPulse size={14} />, items: ['Hospital / Clinic', 'Doctor / Medical Practitioner', 'Pharmacy / Chemist', 'Diagnostic Center'] },
+    { title: 'Wellness & Lifestyle', icon: <Leaf size={14} />, items: ['Spa / Salon Owner', 'Wellness Center', 'Gym / Fitness Center', 'Yoga Studio', 'Nutritionist / Dietician'] },
+    { title: 'Hospitality & Institutional', icon: <Hotel size={14} />, items: ['Wellness Resort / Hospitality', 'Hotel / Resort', 'Corporate Buyer (Procurement / HR)', 'Government / PSU', 'NGO / Trust'] },
+    { title: 'Professionals & Others', icon: <Briefcase size={14} />, items: ['Consultant / Advisor', 'Startup Founder', 'Student / Researcher', 'Other (Please Specify)'] }
+];
+
 const BuyerRegistration = () => {
     const navigate = useNavigate();
     const [config, setConfig] = useState(FALLBACK_CONFIG);
@@ -346,6 +400,20 @@ const BuyerRegistration = () => {
     const [submittedRegistrationId, setSubmittedRegistrationId] = useState("");
     const [selectedPaymentMethods, setSelectedPaymentMethods] = useState([]);
     const [canSelectPackage, setCanSelectPackage] = useState(false);
+    const [openRoleGroup, setOpenRoleGroup] = useState(null);
+    const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+    const roleDropdownRef = useRef(null);
+
+    // Click outside to close dropdown
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (roleDropdownRef.current && !roleDropdownRef.current.contains(event.target)) {
+                setIsRoleDropdownOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     const normalizedConfig = useMemo(() => ({
         ...FALLBACK_CONFIG,
@@ -422,10 +490,14 @@ const BuyerRegistration = () => {
             "registeredAddress", "pinCode", "country", "stateProvince", "city",
             "companyFirmName", "basicBusinessType", "yearOfEstablishment",
             "natureOfBusiness", "yearsInBusiness", "numberOfOutlets", "annualTurnover",
-            "primaryProductInterest", "buyingFrequency", "estimatedAnnualPurchaseValue",
-            "purchaseTimeline", "roleInPurchaseDecision", "matchmakingInterest",
-            "preferredMeetingDate", "preferredTimeSlot"
+            "buyerIndustry", "primaryProductInterest", "buyingFrequency", "estimatedAnnualPurchaseValue",
+            "purchaseTimeline", "roleInPurchaseDecision", "matchmakingInterest"
         ];
+
+        // Conditional B2B requirements
+        if (formData.requirePreScheduledB2B === 'Yes') {
+            requiredFields.push('preferredMeetingDay', 'preferredTimeSlot');
+        }
 
         if (requiredFields.includes(name) && !String(value || "").trim()) return "This field is required";
         if (name === "fullName" && value && !/^[A-Za-z\s.'-]+$/.test(String(value).trim())) return "Use letters and spaces only";
@@ -452,6 +524,13 @@ const BuyerRegistration = () => {
 
         if (!formData.preferredSupplierRegion.length) nextErrors.preferredSupplierRegion = "Select at least one region";
         if (!formData.preferredSupplierType.length) nextErrors.preferredSupplierType = "Select at least one supplier type";
+
+        if (formData.requirePreScheduledB2B === 'Yes') {
+            if (!formData.preferredMeetingCategories.length) nextErrors.preferredMeetingCategories = "Select at least one category";
+            if (!formData.meetingObjectives.length) nextErrors.meetingObjectives = "Select at least one objective";
+            if (!formData.preferredBusinessTypes.length) nextErrors.preferredBusinessTypes = "Select business types";
+        }
+
         if (!skipPackage && !selectedPackage?.name) nextErrors.registrationCategory = "Please select a registration package";
 
         setErrors(nextErrors);
@@ -577,15 +656,20 @@ const BuyerRegistration = () => {
             yearsInBusiness: formData.yearsInBusiness,
             numberOfOutlets: formData.numberOfOutlets,
             annualTurnover: formData.annualTurnover,
+            buyerIndustry: formData.buyerIndustry,
             primaryProductInterest: formData.primaryProductInterest,
             buyingFrequency: formData.buyingFrequency,
             estimatedAnnualPurchaseValue: formData.estimatedAnnualPurchaseValue,
             purchaseTimeline: formData.purchaseTimeline,
             roleInPurchaseDecision: formData.roleInPurchaseDecision,
             matchmakingInterest: formData.matchmakingInterest,
-            preferredMeetingDate: formData.preferredMeetingDate,
-            preferredTimeSlot: formData.preferredTimeSlot,
         };
+
+        // Add conditional requirements for B2B
+        if (formData.requirePreScheduledB2B === 'Yes') {
+            requiredTextFields.preferredMeetingDay = formData.preferredMeetingDay;
+            requiredTextFields.preferredTimeSlot = formData.preferredTimeSlot;
+        }
 
         // Check for missing required fields
         const missingFields = [];
@@ -604,6 +688,7 @@ const BuyerRegistration = () => {
 
         // Optional and additional fields
         const optionalFields = {
+            brandName: formData.brandName || "",
             website: formData.website || "",
             gstNumber: formData.gstNumber || "",
             panNumber: formData.panNumber || "",
@@ -611,8 +696,12 @@ const BuyerRegistration = () => {
             specificProductRequirements: formData.specificProductRequirements || "",
             estimatedPurchaseVolume: formData.estimatedPurchaseVolume || "",
             budgetRange: formData.budgetRange || "",
+            purchaseFrequency: formData.purchaseFrequency || "",
+            businessModelPreference: formData.businessModelPreference || "",
+            interestedInImporting: formData.interestedInImporting || "No",
+            interestedInExporting: formData.interestedInExporting || "No",
             preferredSupplierRegion: JSON.stringify(formData.preferredSupplierRegion || []),
-            preferredState: JSON.stringify(formData.preferredState ? [formData.preferredState] : []),
+            preferredState: JSON.stringify(Array.isArray(formData.preferredState) ? formData.preferredState : (formData.preferredState ? [formData.preferredState] : [])),
             preferredSupplierType: JSON.stringify(formData.preferredSupplierType || []),
             preferredCompanySize: formData.preferredCompanySize || "",
             requirePreScheduledB2B: formData.requirePreScheduledB2B,
@@ -628,7 +717,14 @@ const BuyerRegistration = () => {
             paymentStatus: "Completed",
             consentTerms: "true",
             consentPaymentValid: "true",
-            consentMatchedExhibitors: "true"
+            consentMatchedExhibitors: "true",
+            // B2B specific fields
+            preferredMeetingCategories: JSON.stringify(formData.preferredMeetingCategories || []),
+            preferredExhibitorTypes: JSON.stringify(formData.preferredExhibitorTypes || []),
+            numberOfMeetingsInterested: formData.numberOfMeetingsInterested || "",
+            meetingObjectives: JSON.stringify(formData.meetingObjectives || []),
+            preferredBusinessTypes: JSON.stringify(formData.preferredBusinessTypes || []),
+            meetingRequirements: formData.meetingRequirements || ""
         };
 
         Object.entries(optionalFields).forEach(([key, value]) => {
@@ -789,22 +885,91 @@ const BuyerRegistration = () => {
                 <form onSubmit={(e) => { e.preventDefault(); handleSubmitRegistration(); }} className="space-y-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
                     <section>
                         <SectionTitle icon={UserRound} title="Personal & Company Information" />
-                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+                        <div className="grid gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-4">
                             <Field label="Full Name" name="fullName" required error={errors.fullName}><input id="fullName" name="fullName" value={formData.fullName} onChange={handleInputChange} placeholder="As per ID proof" className={inputClass} /></Field>
                             <Field label="Designation" name="designation" required error={errors.designation}><input id="designation" name="designation" value={formData.designation} onChange={handleInputChange} placeholder="Current position" className={inputClass} /></Field>
                             <Field label="Company Name" name="companyName" required error={errors.companyName}><input id="companyName" name="companyName" value={formData.companyName} onChange={handleInputChange} placeholder="Full Registered Name" className={inputClass} /></Field>
                             <Field label="Business Role" name="businessType" required error={errors.businessType}>
-                                <select id="businessType" name="businessType" value={formData.businessType} onChange={(e) => handleSelectChange("businessType", e.target.value)} className={inputClass}>
-                                    <option value="">Select Type</option>
-                                    {normalizedConfig.companyTypes.map((item) => (<option key={item} value={item}>{item}</option>))}
-                                </select>
+                                {!formData.businessType.toString().toLowerCase().includes('other') ? (
+                                    <div className="relative" ref={roleDropdownRef}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+                                            className={`${inputClass} flex items-center justify-between text-left`}
+                                        >
+                                            <span className={formData.businessType ? "text-slate-900" : "text-slate-400"}>
+                                                {formData.businessType || "Select Type"}
+                                            </span>
+                                            <ChevronsUpDown className="h-3 w-3 text-slate-400" />
+                                        </button>
+
+                                        {isRoleDropdownOpen && (
+                                            <div className="absolute left-0 right-0 z-[100] mt-1 max-h-[300px] overflow-y-auto rounded-[2px] border border-slate-200 bg-white shadow-xl custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-200">
+                                                {staticGroups.map((group) => (
+                                                    <div key={group.title} className="border-b border-slate-100 last:border-0">
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setOpenRoleGroup(openRoleGroup === group.title ? null : group.title);
+                                                            }}
+                                                            className="flex w-full items-center justify-between bg-slate-50/50 px-3 py-2 text-[10px] font-bold text-slate-700 transition hover:bg-slate-50"
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-[#23471d]/60">{group.icon}</span>
+                                                                {group.title}
+                                                            </div>
+                                                            <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform duration-200 ${openRoleGroup === group.title ? 'rotate-180' : ''}`} />
+                                                        </button>
+                                                        {openRoleGroup === group.title && (
+                                                            <div className="bg-white py-1">
+                                                                {group.items.map((item) => (
+                                                                    <button
+                                                                        key={item}
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            handleSelectChange('businessType', item);
+                                                                            setIsRoleDropdownOpen(false);
+                                                                        }}
+                                                                        className={`flex w-full items-center px-8 py-1.5 text-[10px] font-medium transition hover:bg-[#23471d]/5 hover:text-[#23471d] ${formData.businessType === item ? 'bg-[#23471d]/5 text-[#23471d]' : 'text-slate-600'}`}
+                                                                    >
+                                                                        {item}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="relative">
+                                        <input
+                                            name="otherBusinessType"
+                                            value={formData.otherBusinessType}
+                                            onChange={handleInputChange}
+                                            placeholder="Specify Business Role"
+                                            className={`${inputClass} pr-8`}
+                                            required
+                                            autoFocus
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSelectChange('businessType', '')}
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500 transition-colors"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                )}
                             </Field>
                         </div>
                     </section>
 
                     <section>
                         <SectionTitle icon={Phone} title="Contact Information" />
-                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+                        <div className="grid gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-4">
                             <Field label="Mobile Number (10 digits)" name="mobileNumber" required error={errors.mobileNumber}><input id="mobileNumber" name="mobileNumber" value={formData.mobileNumber} onChange={handleInputChange} placeholder="10-digit mobile number" className={inputClass} maxLength={10} /></Field>
                             <Field label="Alternate Number (10 digits)" name="alternateNumber" required error={errors.alternateNumber}><input id="alternateNumber" name="alternateNumber" value={formData.alternateNumber} onChange={handleInputChange} placeholder="10-digit alternate number" className={inputClass} maxLength={10} /></Field>
                             <Field label="Email Address" name="emailAddress" required error={errors.emailAddress}><input id="emailAddress" name="emailAddress" type="email" value={formData.emailAddress} onChange={handleInputChange} placeholder="Work Email" className={inputClass} /></Field>
@@ -814,20 +979,23 @@ const BuyerRegistration = () => {
 
                     <section>
                         <SectionTitle icon={MapPin} title="Registered Address" />
-                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
-                            <Field label="Registered Address" name="registeredAddress" required error={errors.registeredAddress} className="xl:col-span-5"><textarea id="registeredAddress" name="registeredAddress" value={formData.registeredAddress} onChange={handleInputChange} placeholder="Full Corporate Address" className={`${inputClass} min-h-[90px] resize-y`} /></Field>
+                        <div className="grid gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-6">
+                            <Field label="Registered Address" name="registeredAddress" required error={errors.registeredAddress} className="xl:col-span-6"><textarea id="registeredAddress" name="registeredAddress" value={formData.registeredAddress} onChange={handleInputChange} placeholder="Full Corporate Address" className={`${inputClass} min-h-[60px] resize-y`} /></Field>
                             <Field label="Country" name="country" required error={errors.country} className="xl:col-span-1"><select id="country" name="country" value={formData.country} onChange={(e) => handleSelectChange("country", e.target.value)} className={inputClass}><option value="">Select country</option>{countries.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}</select></Field>
-                            <Field label="State/Province" name="stateProvince" required error={errors.stateProvince} className="xl:col-span-1"><select id="stateProvince" name="stateProvince" value={formData.stateProvince} onChange={(e) => handleSelectChange("stateProvince", e.target.value)} className={inputClass} disabled={loadingLocations.states}><option value="">{loadingLocations.states ? "Select State" : "Select State"}</option>{states.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}</select></Field>
-                            <Field label="City" name="city" required error={errors.city} className="xl:col-span-1"><select id="city" name="city" value={formData.city} onChange={(e) => handleSelectChange("city", e.target.value)} className={inputClass} disabled={!formData.stateProvince || loadingLocations.cities}><option value="">{loadingLocations.cities ? "Select City" : "Select City"}</option>{cities.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}</select></Field>
+                            <Field label="State/Province" name="stateProvince" required error={errors.stateProvince} className="xl:col-span-2"><select id="stateProvince" name="stateProvince" value={formData.stateProvince} onChange={(e) => handleSelectChange("stateProvince", e.target.value)} className={inputClass} disabled={loadingLocations.states}><option value="">{loadingLocations.states ? "Select State" : "Select State"}</option>{states.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}</select></Field>
+                            <Field label="City" name="city" required error={errors.city} className="xl:col-span-2"><select id="city" name="city" value={formData.city} onChange={(e) => handleSelectChange("city", e.target.value)} className={inputClass} disabled={!formData.stateProvince || loadingLocations.cities}><option value="">{loadingLocations.cities ? "Select City" : "Select City"}</option>{cities.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}</select></Field>
                             <Field label="Pin Code (6 digits)" name="pinCode" required error={errors.pinCode} className="xl:col-span-1"><input id="pinCode" name="pinCode" value={formData.pinCode} onChange={handleInputChange} placeholder="Postal Code" className={inputClass} maxLength={6} /></Field>
                         </div>
                     </section>
 
                     <section>
-                        <SectionTitle icon={Building2} title="1. Basic Business Information" />
-                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
+                        <SectionTitle icon={Building2} title="1. Company Business Profile" />
+                        <div className="grid gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-5">
                             <Field label="Company / Firm Name" name="companyFirmName" required error={errors.companyFirmName} className="xl:col-span-2">
                                 <input id="companyFirmName" name="companyFirmName" value={formData.companyFirmName} onChange={handleInputChange} placeholder="Company / Firm Name" className={inputClass} />
+                            </Field>
+                            <Field label="Brand Name" name="brandName">
+                                <input id="brandName" name="brandName" value={formData.brandName} onChange={handleInputChange} placeholder="Brand Name" className={inputClass} />
                             </Field>
                             <Field label="Business Type" name="basicBusinessType" required error={errors.basicBusinessType}>
                                 <select id="basicBusinessType" name="basicBusinessType" value={formData.basicBusinessType} onChange={(e) => handleSelectChange("basicBusinessType", e.target.value)} className={inputClass}>
@@ -844,12 +1012,18 @@ const BuyerRegistration = () => {
                             <Field label="PAN Number" name="panNumber" error={errors.panNumber} hint="(Optional)">
                                 <input id="panNumber" name="panNumber" value={formData.panNumber} onChange={handleInputChange} placeholder="PAN Number" className={inputClass} />
                             </Field>
+                            <Field label="Buyer Industry" name="buyerIndustry" required error={errors.buyerIndustry}>
+                                <select id="buyerIndustry" name="buyerIndustry" value={formData.buyerIndustry} onChange={(e) => handleSelectChange("buyerIndustry", e.target.value)} className={inputClass}>
+                                    <option value="">Choose Industry</option>
+                                    {normalizedConfig.primaryProductInterests.map((i) => (<option key={i} value={i}>{i}</option>))}
+                                </select>
+                            </Field>
                         </div>
                     </section>
 
                     <section>
                         <SectionTitle icon={FileText} title="2. Business Profile Details" />
-                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+                        <div className="grid gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-4">
                             <Field label="Nature of Business" name="natureOfBusiness" required error={errors.natureOfBusiness} className="xl:col-span-2" hint="Short description (1-2 lines)">
                                 <input id="natureOfBusiness" name="natureOfBusiness" value={formData.natureOfBusiness} onChange={handleInputChange} placeholder="Short description (1-2 lines)" className={inputClass} />
                             </Field>
@@ -869,13 +1043,52 @@ const BuyerRegistration = () => {
                     </section>
 
                     <section>
-                        <SectionTitle icon={Globe2} title="Sourcing & Buying Interests" />
-                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                            <Field label="Primary Product Interest" name="primaryProductInterest" required error={errors.primaryProductInterest}><select id="primaryProductInterest" name="primaryProductInterest" value={formData.primaryProductInterest} onChange={(e) => handleSelectChange("primaryProductInterest", e.target.value)} className={inputClass}><option value="">Choose Interest</option>{normalizedConfig.primaryProductInterests.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
-                            <Field label="Secondary Product Categories" name="secondaryProductCategories" error={errors.secondaryProductCategories}><select id="secondaryProductCategories" name="secondaryProductCategories" value={formData.secondaryProductCategories} onChange={(e) => handleSelectChange("secondaryProductCategories", e.target.value)} className={inputClass}><option value="">Choose Interests</option>{normalizedConfig.secondaryProductCategories.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
-                            <Field label="Estimated Purchase Volume" name="estimatedPurchaseVolume" error={errors.estimatedPurchaseVolume}><input id="estimatedPurchaseVolume" name="estimatedPurchaseVolume" value={formData.estimatedPurchaseVolume} onChange={handleInputChange} placeholder="e.g. 5000 Units" className={inputClass} /></Field>
-                            <Field label="Budget Range" name="budgetRange" error={errors.budgetRange}><select id="budgetRange" name="budgetRange" value={formData.budgetRange} onChange={(e) => handleSelectChange("budgetRange", e.target.value)} className={inputClass}><option value="">Choose Budget</option>{normalizedConfig.budgetRanges.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
-                            <Field label="Specific Product Requirements" name="specificProductRequirements" error={errors.specificProductRequirements} className="xl:col-span-4"><textarea id="specificProductRequirements" name="specificProductRequirements" value={formData.specificProductRequirements} onChange={handleInputChange} placeholder="Any custom needs..." className={`${inputClass} min-h-[90px] resize-y`} /></Field>
+                        <SectionTitle icon={Globe2} title="Sourcing & Purchase Intent" />
+                        <div className="space-y-4">
+                            <div className="grid gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-4">
+                                <Field label="Primary Product Interest" name="primaryProductInterest" required error={errors.primaryProductInterest}><select id="primaryProductInterest" name="primaryProductInterest" value={formData.primaryProductInterest} onChange={(e) => handleSelectChange("primaryProductInterest", e.target.value)} className={inputClass}><option value="">Choose Interest</option>{normalizedConfig.primaryProductInterests.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
+                                <div className="xl:col-span-3">
+                                    <label className={labelClass}>Secondary Product Categories</label>
+                                    <div className="mt-1 p-3 border border-slate-300 rounded-[2px] bg-white h-[100px] overflow-y-auto custom-scrollbar">
+                                        <div className="flex flex-wrap gap-2">
+                                            {normalizedConfig.secondaryProductCategories.map((cat) => (
+                                                <label
+                                                    key={cat}
+                                                    className={`flex items-center gap-2 text-xs font-bold px-3 py-1 rounded-full border transition-all cursor-pointer ${formData.secondaryProductCategories.includes(cat)
+                                                        ? 'bg-[#23471d] border-[#23471d] text-white'
+                                                        : 'bg-white border-slate-200 text-slate-600 hover:border-[#23471d]'
+                                                        }`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        className="hidden"
+                                                        checked={formData.secondaryProductCategories.includes(cat)}
+                                                        onChange={() => toggleArrayValue('secondaryProductCategories', cat)}
+                                                    />
+                                                    {cat}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <ErrorText message={errors.secondaryProductCategories} />
+                                </div>
+                            </div>
+
+                            <div className="grid gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-5 items-end">
+                                <Field label="Interested in Import?" name="interestedInImporting"><select id="interestedInImporting" name="interestedInImporting" value={formData.interestedInImporting} onChange={(e) => handleSelectChange("interestedInImporting", e.target.value)} className={inputClass}>{['Yes', 'No'].map(o => <option key={o} value={o}>{o}</option>)}</select></Field>
+                                <Field label="Interested in Export?" name="interestedInExporting"><select id="interestedInExporting" name="interestedInExporting" value={formData.interestedInExporting} onChange={(e) => handleSelectChange("interestedInExporting", e.target.value)} className={inputClass}>{['Yes', 'No'].map(o => <option key={o} value={o}>{o}</option>)}</select></Field>
+                                <Field label="Business Model" name="businessModelPreference"><select id="businessModelPreference" name="businessModelPreference" value={formData.businessModelPreference} onChange={(e) => handleSelectChange("businessModelPreference", e.target.value)} className={inputClass}><option value="">Select Model</option>{normalizedConfig.businessModelOptions.map((m) => (<option key={m} value={m}>{m}</option>))}</select></Field>
+                                <Field label="Est. Monthly Volume" name="estimatedPurchaseVolume" error={errors.estimatedPurchaseVolume}><input id="estimatedPurchaseVolume" name="estimatedPurchaseVolume" value={formData.estimatedPurchaseVolume} onChange={handleInputChange} placeholder="e.g. 5000 Units" className={inputClass} /></Field>
+                                <Field label="Budget Range" name="budgetRange" error={errors.budgetRange}><select id="budgetRange" name="budgetRange" value={formData.budgetRange} onChange={(e) => handleSelectChange("budgetRange", e.target.value)} className={inputClass}><option value="">Choose Budget</option>{normalizedConfig.budgetRanges.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
+                                
+                                <Field label="Buying Frequency" name="buyingFrequency" required error={errors.buyingFrequency}><select id="buyingFrequency" name="buyingFrequency" value={formData.buyingFrequency} onChange={(e) => handleSelectChange("buyingFrequency", e.target.value)} className={inputClass}><option value="">Select</option>{(normalizedConfig.buyingFrequencies || ['One-time', 'Monthly', 'Quarterly', 'Long-term']).map(f => <option key={f} value={f}>{f}</option>)}</select></Field>
+                                <Field label="Annual Purchase Val." name="estimatedAnnualPurchaseValue" required error={errors.estimatedAnnualPurchaseValue}><select id="estimatedAnnualPurchaseValue" name="estimatedAnnualPurchaseValue" value={formData.estimatedAnnualPurchaseValue} onChange={(e) => handleSelectChange("estimatedAnnualPurchaseValue", e.target.value)} className={inputClass}><option value="">Select</option>{(normalizedConfig.annualPurchaseValueRanges || ['Below 10 Lakhs', '10-50 Lakhs', '50 Lakhs - 1 Crore', '1-5 Crore', '5+ Crore']).map(v => <option key={v} value={v}>{v}</option>)}</select></Field>
+                                <Field label="Purchase Timeline" name="purchaseTimeline" required error={errors.purchaseTimeline}><select id="purchaseTimeline" name="purchaseTimeline" value={formData.purchaseTimeline} onChange={(e) => handleSelectChange("purchaseTimeline", e.target.value)} className={inputClass}><option value="">Select</option>{(normalizedConfig.purchaseTimelines || ['Immediate', '1–3 Months', '3–6 Months', 'Exploring']).map(t => <option key={t} value={t}>{t}</option>)}</select></Field>
+                                <Field label="Matchmaking Interest" name="matchmakingInterest" required error={errors.matchmakingInterest}><select id="matchmakingInterest" name="matchmakingInterest" value={formData.matchmakingInterest} onChange={(e) => handleSelectChange("matchmakingInterest", e.target.value)} className={inputClass}><option value="Yes">Yes</option><option value="No">No</option></select></Field>
+                                <Field label="Role in Decision" name="roleInPurchaseDecision" required error={errors.roleInPurchaseDecision}><select id="roleInPurchaseDecision" name="roleInPurchaseDecision" value={formData.roleInPurchaseDecision} onChange={(e) => handleSelectChange("roleInPurchaseDecision", e.target.value)} className={inputClass}><option value="">Select Role</option>{(normalizedConfig.roles || ['Final Decision Maker', 'Influencer', 'Research Only']).map(r => <option key={r} value={r}>{r}</option>)}</select></Field>
+                            </div>
+
+                            <Field label="Specific Product Requirements" name="specificProductRequirements" error={errors.specificProductRequirements} className="w-full"><textarea id="specificProductRequirements" name="specificProductRequirements" value={formData.specificProductRequirements} onChange={handleInputChange} placeholder="Any custom needs..." className={`${inputClass} min-h-[60px] resize-y`} /></Field>
                         </div>
                     </section>
 
@@ -887,49 +1100,184 @@ const BuyerRegistration = () => {
                                 <CheckboxChipGroup name="preferredSupplierType" label="Preferred Supplier Type" required options={normalizedConfig.supplierTypes || ['Manufacturer', 'Exporter', 'MSME', 'Startup', 'Wholesaler']} values={formData.preferredSupplierType} onToggle={toggleArrayValue} error={errors.preferredSupplierType} />
                             </div>
                             <div className="grid gap-5 md:grid-cols-2">
-                                <Field label="Preferred State (Optional)" name="preferredState" error={errors.preferredState}><select id="preferredState" name="preferredState" value={formData.preferredState} onChange={(e) => handleSelectChange("preferredState", e.target.value)} className={inputClass}><option value="">Select State</option>{states.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}</select></Field>
+                                <div>
+                                    <label className={labelClass}>Preferred State (Optional)</label>
+                                    <div className="mt-1 p-3 border border-slate-300 rounded-[2px] bg-white h-[100px] overflow-y-auto custom-scrollbar">
+                                        <div className="flex flex-wrap gap-2">
+                                            {states.map((s) => (
+                                                <label
+                                                    key={s._id || s.name}
+                                                    className={`flex items-center gap-2 text-xs font-bold px-3 py-1 rounded-full border transition-all cursor-pointer ${formData.preferredState.includes(s.name)
+                                                        ? 'bg-[#23471d] border-[#23471d] text-white'
+                                                        : 'bg-white border-slate-200 text-slate-600 hover:border-[#23471d]'
+                                                        }`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        className="hidden"
+                                                        checked={formData.preferredState.includes(s.name)}
+                                                        onChange={() => toggleArrayValue('preferredState', s.name)}
+                                                    />
+                                                    {s.name}
+                                                </label>
+                                            ))}
+                                            {states.length === 0 && <p className="text-[10px] text-slate-400">Select a country first to see states.</p>}
+                                        </div>
+                                    </div>
+                                    <ErrorText message={errors.preferredState} />
+                                </div>
                                 <Field label="Preferred Company Size" name="preferredCompanySize" error={errors.preferredCompanySize}><select id="preferredCompanySize" name="preferredCompanySize" value={formData.preferredCompanySize} onChange={(e) => handleSelectChange("preferredCompanySize", e.target.value)} className={inputClass}><option value="">Select Size</option>{normalizedConfig.companySizes.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
                             </div>
                         </div>
                     </section>
 
-                    <section>
-                        <SectionTitle icon={CalendarDays} title="Purchase Intent & Capacity" />
-                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
-                            <Field label="Buying Frequency" name="buyingFrequency" required error={errors.buyingFrequency}><select id="buyingFrequency" name="buyingFrequency" value={formData.buyingFrequency} onChange={(e) => handleSelectChange("buyingFrequency", e.target.value)} className={inputClass}><option value="">Select</option>{(normalizedConfig.buyingFrequencies || ['One-time', 'Monthly', 'Quarterly', 'Long-term']).map(f => <option key={f} value={f}>{f}</option>)}</select></Field>
-                            <Field label="Est. Annual Purchase Value" name="estimatedAnnualPurchaseValue" required error={errors.estimatedAnnualPurchaseValue}><select id="estimatedAnnualPurchaseValue" name="estimatedAnnualPurchaseValue" value={formData.estimatedAnnualPurchaseValue} onChange={(e) => handleSelectChange("estimatedAnnualPurchaseValue", e.target.value)} className={inputClass}><option value="">Select</option>{(normalizedConfig.annualPurchaseValueRanges || ['Below 10 Lakhs', '10-50 Lakhs', '50 Lakhs - 1 Crore', '1-5 Crore', '5+ Crore']).map(v => <option key={v} value={v}>{v}</option>)}</select></Field>
-                            <Field label="Purchase Timeline" name="purchaseTimeline" required error={errors.purchaseTimeline}><select id="purchaseTimeline" name="purchaseTimeline" value={formData.purchaseTimeline} onChange={(e) => handleSelectChange("purchaseTimeline", e.target.value)} className={inputClass}><option value="">Select</option>{(normalizedConfig.purchaseTimelines || ['Immediate', '1–3 Months', '3–6 Months', 'Exploring']).map(t => <option key={t} value={t}>{t}</option>)}</select></Field>
-                            <Field label="Matchmaking Interest" name="matchmakingInterest" required error={errors.matchmakingInterest}><select id="matchmakingInterest" name="matchmakingInterest" value={formData.matchmakingInterest} onChange={(e) => handleSelectChange("matchmakingInterest", e.target.value)} className={inputClass}><option value="Yes">Yes</option><option value="No">No</option></select></Field>
-                            <Field label="Role in Purchase Decision" name="roleInPurchaseDecision" required error={errors.roleInPurchaseDecision}><select id="roleInPurchaseDecision" name="roleInPurchaseDecision" value={formData.roleInPurchaseDecision} onChange={(e) => handleSelectChange("roleInPurchaseDecision", e.target.value)} className={inputClass}><option value="">Select Role</option>{(normalizedConfig.roles || ['Final Decision Maker', 'Influencer', 'Research Only']).map(r => <option key={r} value={r}>{r}</option>)}</select></Field>
-                        </div>
-                    </section>
+
 
                     <section>
                         <SectionTitle icon={ShieldCheck} title="Certification & Compliance" />
-                        <div className="space-y-5">
+                        <div className="space-y-6">
                             <CheckboxChipGroup name="requiredCertifications" label="Required Certifications" options={normalizedConfig.certificationOptions || ['ISO', 'GMP', 'FDA', 'AYUSH', 'Organic', 'Others']} values={formData.requiredCertifications} onToggle={toggleArrayValue} error={errors.requiredCertifications} />
                             
-                            <SectionTitle icon={Percent} title="Pricing Preference" />
-                            <Field label="" name="pricingPreference" error={errors.pricingPreference}>
-                                <div className="flex flex-wrap gap-4 rounded-[2px] border border-slate-300 p-4">
-                                    {["Premium", "Mid-Range", "Budget"].map((item) => (
-                                        <label key={item} className={`flex items-center gap-2 cursor-pointer text-sm font-bold uppercase tracking-[0.16em]`}>
-                                            <input type="radio" name="pricingPreference" value={item} checked={formData.pricingPreference === item} onChange={(e) => handleSelectChange("pricingPreference", e.target.value)} className="h-4 w-4 border-slate-300 text-[#23471d] focus:ring-[#23471d]" />
-                                            {item}
-                                        </label>
-                                    ))}
+                            <div className="grid gap-5 md:grid-cols-2">
+                                <div>
+                                    <label className={labelClass}>Pricing Preference</label>
+                                    <div className="flex flex-wrap gap-4 mt-1 rounded-[2px] border border-slate-300 p-4 bg-white">
+                                        {["Premium", "Mid-Range", "Budget"].map((item) => (
+                                            <label key={item} className={`flex items-center gap-2 cursor-pointer text-xs font-bold uppercase tracking-[0.16em]`}>
+                                                <input type="radio" name="pricingPreference" value={item} checked={formData.pricingPreference === item} onChange={(e) => handleSelectChange("pricingPreference", e.target.value)} className="h-4 w-4 border-slate-300 text-[#23471d] focus:ring-[#23471d]" />
+                                                {item}
+                                            </label>
+                                        ))}
+                                    </div>
                                 </div>
-                            </Field>
+                                <CheckboxChipGroup 
+                                    name="preferredPaymentMethods" 
+                                    label="Preferred Payment Methods (Business Interests)" 
+                                    options={['Letter of Credit (LC)', 'Cash Against Documents (CAD)', 'Bank Transfer (T/T)', 'Open Account', 'Advance Payment']} 
+                                    values={formData.preferredPaymentMethods} 
+                                    onToggle={toggleArrayValue} 
+                                />
+                            </div>
+
+                            <div className="grid gap-5 md:grid-cols-2">
+                                <Field label="Company Profile (PDF/Doc)" name="companyProfile" hint="Upload your company presentation or profile">
+                                    <div className="relative">
+                                        <input
+                                            type="file"
+                                            id="companyProfile"
+                                            name="companyProfile"
+                                            onChange={handleFileChange}
+                                            accept=".pdf,.doc,.docx"
+                                            className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+                                        />
+                                        <div className={`flex w-full items-center justify-between rounded-[2px] border border-slate-300 bg-white px-3 py-2 text-sm font-medium ${formData.companyProfile ? "text-[#23471d]" : "text-slate-400"}`}>
+                                            <span>{formData.companyProfile ? formData.companyProfile.name : "Select company profile..."}</span>
+                                            <FileText className="h-4 w-4" />
+                                        </div>
+                                    </div>
+                                </Field>
+                                <Field label="Logistics & Supply Chain Requirements" name="logisticsRequirements">
+                                    <textarea id="logisticsRequirements" name="logisticsRequirements" value={formData.logisticsRequirements} onChange={handleInputChange} placeholder="e.g. Needs sea freight, Door-to-door delivery..." className={`${inputClass} min-h-[44px] resize-y py-2`} />
+                                </Field>
+                            </div>
                         </div>
                     </section>
                     
                     <section>
                         <SectionTitle icon={Clock} title="B2B Meeting Preferences" />
-                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                            <Field label="Preferred Meeting Date" name="preferredMeetingDate" required error={errors.preferredMeetingDate}><input id="preferredMeetingDate" name="preferredMeetingDate" type="date" value={formData.preferredMeetingDate} onChange={handleInputChange} className={inputClass} /></Field>
-                            <Field label="Preferred Time Slot" name="preferredTimeSlot" required error={errors.preferredTimeSlot}><select id="preferredTimeSlot" name="preferredTimeSlot" value={formData.preferredTimeSlot} onChange={(e) => handleSelectChange("preferredTimeSlot", e.target.value)} className={inputClass}><option value="">Select Slot</option>{(normalizedConfig.preferredTimeSlots || ['Morning (10AM - 1PM)', 'Afternoon (2PM - 4PM)', 'Evening (4PM - 6PM)']).map(slot => <option key={slot} value={slot}>{slot}</option>)}</select></Field>
-                            <Field label="Pre-scheduled B2B" name="requirePreScheduledB2B" error={errors.requirePreScheduledB2B}><select id="requirePreScheduledB2B" name="requirePreScheduledB2B" value={formData.requirePreScheduledB2B} onChange={(e) => handleSelectChange("requirePreScheduledB2B", e.target.value)} className={inputClass}><option value="Yes">Yes</option><option value="No">No</option></select></Field>
-                            <Field label="Meeting Priority Level" name="meetingPriorityLevel" error={errors.meetingPriorityLevel}><select id="meetingPriorityLevel" name="meetingPriorityLevel" value={formData.meetingPriorityLevel} onChange={(e) => handleSelectChange("meetingPriorityLevel", e.target.value)} className={inputClass}>{(normalizedConfig.meetingPriorityLevels || ['Low', 'Medium', 'High']).map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
+                        <div className="space-y-6">
+                            <div className="grid gap-5 md:grid-cols-2">
+                                <Field label="Would you like to participate in Pre-scheduled B2B Meetings?" name="requirePreScheduledB2B">
+                                    <select id="requirePreScheduledB2B" name="requirePreScheduledB2B" value={formData.requirePreScheduledB2B} onChange={(e) => handleSelectChange("requirePreScheduledB2B", e.target.value)} className={inputClass}>
+                                        <option value="Yes">Yes</option>
+                                        <option value="No">No</option>
+                                    </select>
+                                </Field>
+                                <Field label="Overall Meeting Priority Level" name="meetingPriorityLevel">
+                                    <select id="meetingPriorityLevel" name="meetingPriorityLevel" value={formData.meetingPriorityLevel} onChange={(e) => handleSelectChange("meetingPriorityLevel", e.target.value)} className={inputClass}>
+                                        {normalizedConfig.meetingPriorityLevels.map((item) => (<option key={item} value={item}>{item}</option>))}
+                                    </select>
+                                </Field>
+                            </div>
+
+                            {formData.requirePreScheduledB2B === 'Yes' && (
+                                <div className="grid gap-5 md:grid-cols-2">
+                                    <div className="md:col-span-2">
+                                        <label className={labelClass}>Categories you're interested in meeting exhibitors from</label>
+                                        <div className="mt-1 p-3 border border-slate-300 rounded-[2px] bg-white h-[100px] overflow-y-auto custom-scrollbar">
+                                            <div className="flex flex-wrap gap-2">
+                                                {normalizedConfig.meetingCategoryOptions.map((cat) => (
+                                                    <label
+                                                        key={cat}
+                                                        className={`flex items-center gap-2 text-xs font-bold px-3 py-1 rounded-full border transition-all cursor-pointer ${formData.preferredMeetingCategories.includes(cat)
+                                                            ? 'bg-[#23471d] border-[#23471d] text-white'
+                                                            : 'bg-white border-slate-200 text-slate-600 hover:border-[#23471d]'
+                                                            }`}
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            className="hidden"
+                                                            checked={formData.preferredMeetingCategories.includes(cat)}
+                                                            onChange={() => toggleArrayValue('preferredMeetingCategories', cat)}
+                                                        />
+                                                        {cat}
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <ErrorText message={errors.preferredMeetingCategories} />
+                                    </div>
+
+                                    <CheckboxChipGroup
+                                        name="preferredExhibitorTypes"
+                                        label="Types of Exhibitors you're interested in meeting"
+                                        options={normalizedConfig.exhibitorTypeOptions}
+                                        values={formData.preferredExhibitorTypes}
+                                        onToggle={toggleArrayValue}
+                                        error={errors.preferredExhibitorTypes}
+                                    />
+
+                                    <CheckboxChipGroup
+                                        name="meetingObjectives"
+                                        label="Primary Objectives for These Meetings"
+                                        options={normalizedConfig.meetingObjectiveOptions}
+                                        values={formData.meetingObjectives}
+                                        onToggle={toggleArrayValue}
+                                        error={errors.meetingObjectives}
+                                    />
+
+                                    <CheckboxChipGroup
+                                        name="preferredBusinessTypes"
+                                        label="Preferred Business Arrangement / Types"
+                                        options={normalizedConfig.preferredBusinessTypeOptions}
+                                        values={formData.preferredBusinessTypes}
+                                        onToggle={toggleArrayValue}
+                                        error={errors.preferredBusinessTypes}
+                                    />
+
+                                    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 md:col-span-2">
+                                        <Field label="Preferred Meeting Day" name="preferredMeetingDay" required error={errors.preferredMeetingDay}>
+                                            <select id="preferredMeetingDay" name="preferredMeetingDay" value={formData.preferredMeetingDay} onChange={(e) => handleSelectChange("preferredMeetingDay", e.target.value)} className={inputClass}>
+                                                <option value="">Select Day</option>
+                                                {normalizedConfig.meetingDayOptions.map(day => <option key={day} value={day}>{day}</option>)}
+                                            </select>
+                                        </Field>
+                                        <Field label="Preferred Time Slot" name="preferredTimeSlot" required error={errors.preferredTimeSlot}>
+                                            <select id="preferredTimeSlot" name="preferredTimeSlot" value={formData.preferredTimeSlot} onChange={(e) => handleSelectChange("preferredTimeSlot", e.target.value)} className={inputClass}>
+                                                <option value="">Select Slot</option>
+                                                {(normalizedConfig.preferredTimeSlots || ['Morning (10AM - 1PM)', 'Afternoon (2PM - 4PM)', 'Evening (4PM - 6PM)']).map(slot => <option key={slot} value={slot}>{slot}</option>)}
+                                            </select>
+                                        </Field>
+                                        <Field label="Est. Number of Meetings Interested" name="numberOfMeetingsInterested">
+                                            <input id="numberOfMeetingsInterested" name="numberOfMeetingsInterested" type="number" min="1" value={formData.numberOfMeetingsInterested} onChange={handleInputChange} placeholder="e.g. 5" className={inputClass} />
+                                        </Field>
+                                    </div>
+
+                                    <Field label="Meeting Requirements & Special Requests" name="meetingRequirements" className="md:col-span-2">
+                                        <textarea id="meetingRequirements" name="meetingRequirements" value={formData.meetingRequirements} onChange={handleInputChange} placeholder="Specify any specific requirements or exhibitors you'd like to meet..." className={`${inputClass} min-h-[90px] resize-y`} />
+                                    </Field>
+                                </div>
+                            )}
                         </div>
                     </section>
 
@@ -955,7 +1303,7 @@ const BuyerRegistration = () => {
 
                                 {membershipPackages.length > 0 && <div className="flex flex-wrap gap-2"><button type="button" onClick={() => setPackageView("Pass")} className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.18em] transition ${packageView === "Pass" ? "bg-[#23471d] text-white" : "border border-slate-300 bg-white text-slate-600 hover:border-[#23471d]"}`}>Pass Packages</button><button type="button" onClick={() => setPackageView("Membership")} className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.18em] transition ${packageView === "Membership" ? "bg-[#23471d] text-white" : "border border-slate-300 bg-white text-slate-600 hover:border-[#23471d]"}`}>Membership Plans</button></div>}
 
-                                <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+                                <div className="grid gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-4">
                                     {(packageView === "Membership" ? membershipPackages : passPackages).map((pkg) => (
                                         <PackageCard
                                             key={pkg.name}
