@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Search, Trash2, Mail, Phone, User, Calendar, Building2, Globe, Briefcase, Eye, Edit, X } from 'lucide-react';
+import { Trash2, Eye, Edit, Search } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from "../../lib/api";
 import Swal from 'sweetalert2';
@@ -8,23 +7,20 @@ import Pagination from "../../components/Pagination";
 
 const BuyerList = () => {
     const [registrations, setRegistrations] = useState([]);
+    const [filteredRegistrations, setFilteredRegistrations] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const navigate = useNavigate();
     const itemsPerPage = 25;
 
-    const [searchCompany, setSearchCompany] = useState("");
-    const [searchContact, setSearchContact] = useState("");
-    const [searchCategory, setSearchCategory] = useState("");
-    const [searchNature, setSearchNature] = useState("");
-    const [searchCity, setSearchCity] = useState("");
-    const [searchState, setSearchState] = useState("");
-    const [searchSource, setSearchSource] = useState("");
-    const [searchUpdate, setSearchUpdate] = useState("");
-
     useEffect(() => {
         fetchRegistrations();
     }, []);
+
+    useEffect(() => {
+        filterRegistrations();
+    }, [searchTerm, registrations]);
 
     const fetchRegistrations = async () => {
         try {
@@ -32,6 +28,7 @@ const BuyerList = () => {
             const response = await api.get('/api/buyer-registration');
             if (response.data.success) {
                 setRegistrations(response.data.data);
+                setFilteredRegistrations(response.data.data);
             }
         } catch (error) {
             console.error('Error fetching registrations:', error);
@@ -39,6 +36,32 @@ const BuyerList = () => {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const filterRegistrations = () => {
+        if (!searchTerm.trim()) {
+            setFilteredRegistrations(registrations);
+            return;
+        }
+
+        const searchLower = searchTerm.toLowerCase();
+        const filtered = registrations.filter(item => {
+            return (
+                (item.companyName && item.companyName.toLowerCase().includes(searchLower)) ||
+                (item.buyerTag && item.buyerTag.toLowerCase().includes(searchLower)) ||
+                (item.fullName && item.fullName.toLowerCase().includes(searchLower)) ||
+                (item.contactPerson && item.contactPerson.toLowerCase().includes(searchLower)) ||
+                (item.emailAddress && item.emailAddress.toLowerCase().includes(searchLower)) ||
+                (item.email && item.email.toLowerCase().includes(searchLower)) ||
+                (item.mobileNumber && item.mobileNumber.toLowerCase().includes(searchLower)) ||
+                (item.whatsapp && item.whatsapp.toLowerCase().includes(searchLower)) ||
+                (item.country && item.country.toLowerCase().includes(searchLower)) ||
+                (item.paymentStatus && item.paymentStatus.toLowerCase().includes(searchLower)) ||
+                (item.registrationCategory && item.registrationCategory.toLowerCase().includes(searchLower))
+            );
+        });
+        setFilteredRegistrations(filtered);
+        setCurrentPage(1);
     };
 
     const handleDelete = async (registration) => {
@@ -65,87 +88,14 @@ const BuyerList = () => {
         }
     };
 
-
-    const filteredRegistrations = registrations.filter(reg => {
-        const companyMatch = !searchCompany ||
-            (reg.companyName?.toLowerCase().includes(searchCompany.toLowerCase()) ||
-                reg.registrationId?.toLowerCase().includes(searchCompany.toLowerCase()));
-
-        const contactMatch = !searchContact ||
-            (reg.fullName?.toLowerCase().includes(searchContact.toLowerCase()) ||
-                reg.emailAddress?.toLowerCase().includes(searchContact.toLowerCase()) ||
-                reg.mobileNumber?.toLowerCase().includes(searchContact.toLowerCase()) ||
-                reg.whatsapp?.toLowerCase().includes(searchContact.toLowerCase()));
-
-        const categoryMatch = !searchCategory ||
-            (reg.registrationCategory?.toLowerCase().includes(searchCategory.toLowerCase()));
-
-        const natureMatch = !searchNature ||
-            (reg.natureOfBusiness?.toLowerCase().includes(searchNature.toLowerCase()));
-
-        const cityMatch = !searchCity ||
-            (reg.city?.toLowerCase().includes(searchCity.toLowerCase()));
-
-        const stateMatch = !searchState ||
-            (reg.state?.toLowerCase().includes(searchState.toLowerCase()));
-
-        const sourceMatch = !searchSource ||
-            (reg.source?.toLowerCase().includes(searchSource.toLowerCase()) ||
-                reg.heardAbout?.toLowerCase().includes(searchSource.toLowerCase()));
-
-        const updateMatch = !searchUpdate ||
-            (reg.updates?.toLowerCase().includes(searchUpdate.toLowerCase()) ||
-                reg.notes?.toLowerCase().includes(searchUpdate.toLowerCase()) ||
-                reg.adminNotes?.toLowerCase().includes(searchUpdate.toLowerCase()));
-
-        return companyMatch && contactMatch && categoryMatch && natureMatch &&
-            cityMatch && stateMatch && sourceMatch && updateMatch;
-    });
-
     const startIndex = (currentPage - 1) * itemsPerPage;
     const paginatedRegistrations = filteredRegistrations.slice(startIndex, startIndex + itemsPerPage);
-
-    const clearAllFilters = () => {
-        setSearchCompany("");
-        setSearchContact("");
-        setSearchCategory("");
-        setSearchNature("");
-        setSearchCity("");
-        setSearchState("");
-        setSearchSource("");
-        setSearchUpdate("");
-        setCurrentPage(1);
-    };
-
-    const isFilterActive = searchCompany || searchContact || searchCategory || searchNature ||
-        searchCity || searchState || searchSource || searchUpdate;
 
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         const date = new Date(dateString);
         return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
     };
-
-    const FilterInput = ({ placeholder, value, onChange }) => (
-        <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-            <input
-                type="text"
-                placeholder={placeholder}
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:border-gray-500 focus:ring-0 bg-white"
-            />
-            {value && (
-                <button
-                    onClick={() => onChange("")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                    <X className="w-3 h-3" />
-                </button>
-            )}
-        </div>
-    );
 
     return (
         <div className="bg-white mt-6">
@@ -157,68 +107,11 @@ const BuyerList = () => {
 
                 <div className="border border-gray-300 overflow-hidden">
                     <div className="px-6 py-4 border-b border-gray-300 bg-white">
-                        <div className="flex items-center justify-between gap-4 flex-wrap">
-                            <div>
-                                <h2 className="text-lg font-semibold text-gray-800 uppercase">Registration List</h2>
-                                <p className="text-sm text-gray-500 mt-0.5">
-                                    Showing {filteredRegistrations.length} of {registrations.length} registrations
-                                </p>
-                            </div>
-                            {isFilterActive && (
-                                <button
-                                    onClick={clearAllFilters}
-                                    className="flex items-center gap-2 px-3 py-1.5 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded text-sm transition-colors"
-                                >
-                                    <X className="w-4 h-4" />
-                                    Clear All Filters
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Column Filters Row */}
-                    <div className="px-4 py-3 border-b border-gray-300 bg-white">
-                        <div className="grid grid-cols-8 gap-2">
-                            <FilterInput
-                                placeholder="Search Company ID/Name"
-                                value={searchCompany}
-                                onChange={setSearchCompany}
-                            />
-                            <FilterInput
-                                placeholder="Search Contact Details"
-                                value={searchContact}
-                                onChange={setSearchContact}
-                            />
-                            <FilterInput
-                                placeholder="Search Category"
-                                value={searchCategory}
-                                onChange={setSearchCategory}
-                            />
-                            <FilterInput
-                                placeholder="Search Nature of Business"
-                                value={searchNature}
-                                onChange={setSearchNature}
-                            />
-                            <FilterInput
-                                placeholder="Search City"
-                                value={searchCity}
-                                onChange={setSearchCity}
-                            />
-                            <FilterInput
-                                placeholder="Search State"
-                                value={searchState}
-                                onChange={setSearchState}
-                            />
-                            <FilterInput
-                                placeholder="Search Source"
-                                value={searchSource}
-                                onChange={setSearchSource}
-                            />
-                            <FilterInput
-                                placeholder="Search Update Details"
-                                value={searchUpdate}
-                                onChange={setSearchUpdate}
-                            />
+                        <div>
+                            <h2 className="text-lg font-semibold text-gray-800 uppercase">Registration List</h2>
+                            <p className="text-sm text-gray-500 mt-0.5">
+                                Showing {filteredRegistrations.length} total registrations
+                            </p>
                         </div>
                     </div>
 
@@ -246,7 +139,7 @@ const BuyerList = () => {
                                     {paginatedRegistrations.length === 0 ? (
                                         <tr>
                                             <td colSpan="8" className="text-center py-12 text-gray-500 border-b border-gray-300">
-                                                No registrations found
+                                                {searchTerm ? 'No matching registrations found' : 'No registrations found'}
                                             </td>
                                         </tr>
                                     ) : (
@@ -316,6 +209,46 @@ const BuyerList = () => {
                                     )}
                                 </tbody>
                             </table>
+                        )}
+                    </div>
+
+                    {/* Search Input Box at Bottom */}
+                    <div className="px-4 py-4 bg-white border-t border-gray-300">
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Search className="h-4 w-4 text-gray-400" />
+                            </div>
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="Search by company, name, email, phone, country, payment status..."
+                                className="block w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200 ease-in-out"
+                                style={{
+                                    transition: 'all 0.2s ease-in-out'
+                                }}
+                                onFocus={(e) => {
+                                    e.target.style.borderColor = '#3B82F6';
+                                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                                }}
+                                onBlur={(e) => {
+                                    e.target.style.borderColor = '#D1D5DB';
+                                    e.target.style.boxShadow = 'none';
+                                }}
+                            />
+                            {searchTerm && (
+                                <button
+                                    onClick={() => setSearchTerm('')}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                >
+                                    <span className="text-sm">✕</span>
+                                </button>
+                            )}
+                        </div>
+                        {searchTerm && (
+                            <div className="mt-2 text-xs text-gray-500">
+                                Found {filteredRegistrations.length} result(s) for "{searchTerm}"
+                            </div>
                         )}
                     </div>
 
