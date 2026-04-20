@@ -4602,7 +4602,7 @@ const BuyerRegistration = () => {
                 </form>
             )}
         </div>
-    );
+    )
 };
 
 export default BuyerRegistration;
