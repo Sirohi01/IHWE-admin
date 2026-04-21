@@ -180,105 +180,150 @@ const BuyerRegistrationDetail = () => {
                                 {registration.buyerTag} LEAD
                             </div>
                         )}
+                        <div className="mt-2 no-print">
+                            <Button onClick={() => navigate(`/buyer-edit/${registration._id}`)} variant="outline" className="mx-auto mt-2">
+                                Edit Registration
+                            </Button>
+                        </div>
                     </div>
 
-                    {/* Company Information */}
-                    <Section title="Company & Business Profile">
+                    {/* Personal & Company Information */}
+                    <Section title="Personal & Company Information">
                         <FiveColumnGrid>
+                            <DetailRow label="Full Name" value={registration.fullName} />
+                            <DetailRow label="Designation" value={registration.designation} />
                             <DetailRow label="Company Name" value={registration.companyName} />
-                            <DetailRow label="Business Type" value={registration.businessType} />
-                            <DetailRow label="Annual Turnover" value={registration.annualTurnover} />
-                            <DetailRow label="Years in Operation" value={registration.yearsInOperation} />
+                            <DetailRow label="Mobile Number" value={registration.mobileNumber} />
+                            <DetailRow label="Alternate Number" value={registration.alternateNumber} />
+                            <DetailRow label="Email Address" value={registration.emailAddress} />
+                            <DetailRow label="Business Role" value={registration.businessType} />
+                            <DetailRow label="Website" value={registration.website} />
+                        </FiveColumnGrid>
+                    </Section>
+
+                    {/* Registered Address */}
+                    <Section title="Registered Address">
+                        <FiveColumnGrid>
                             <DetailRow label="Country" value={registration.country} />
                             <DetailRow label="State/Province" value={registration.stateProvince} />
                             <DetailRow label="City" value={registration.city} />
-                            <DetailRow label="PIN/ZIP Code" value={registration.pinCode || registration.zipCode} />
-                            <DetailRow label="GST Number" value={registration.gstNumber || registration.gst} />
-                            <DetailRow label="PAN Number" value={registration.panNumber || registration.pan} />
-                            <DetailRow label="Website" value={registration.website} />
-                            <DetailRow label="Registration Date" value={registration.createdAt ? new Date(registration.createdAt).toLocaleDateString('en-IN') : 'N/A'} />
+                            <DetailRow label="Pin Code" value={registration.pinCode} />
                         </FiveColumnGrid>
-                    </Section>
-
-                    {/* Contact Information */}
-                    <Section title="Contact Personnel">
-                        <FiveColumnGrid>
-                            <DetailRow label="Full Name" value={registration.fullName || registration.contactPerson} />
-                            <DetailRow label="Designation" value={registration.designation || registration.position} />
-                            <DetailRow label="Email Address" value={registration.emailAddress || registration.email} />
-                            <DetailRow label="Mobile Number" value={registration.mobileNumber || registration.whatsapp || registration.phone} />
-                            <DetailRow label="Alternate Phone" value={registration.alternatePhone || registration.landline} />
-                            <DetailRow label="WhatsApp Number" value={registration.whatsapp || registration.mobileNumber} />
-                            <DetailRow label="Number of Employees" value={registration.numberOfEmployees} />
-                            <DetailRow label="IEC Code" value={registration.iecNumber} />
-                        </FiveColumnGrid>
-                    </Section>
-
-                    {/* Sourcing Information */}
-                    <Section title="Sourcing & Supplier Preferences">
-                        <FiveColumnGrid>
-                            <DetailRow label="Primary Product Interest" value={registration.primaryProductInterest} />
-                            <DetailRow label="Secondary Categories" value={registration.secondaryProductCategories} />
-                            <DetailRow label="Preferred Supplier Region" value={registration.preferredSupplierRegion} />
-                            <DetailRow label="Preferred Supplier Type" value={registration.preferredSupplierType} />
-                        </FiveColumnGrid>
-                        <div className="mt-3">
-                            <DetailRow label="Specific Requirements" value={registration.specificRequirements || registration.productDetails} />
+                        <div className="mt-3 grid grid-cols-1">
+                            <DetailRow label="Registered Address" value={registration.registeredAddress} />
                         </div>
                     </Section>
 
-                    {/* Purchase Information */}
-                    <Section title="Purchase Intent & Logistics">
+                    {/* Company Business Profile */}
+                    <Section title="Company Business Profile">
                         <FiveColumnGrid>
-                            <DetailRow label="Purchase Timeline" value={registration.purchaseTimeline} />
-                            <DetailRow label="Role in Decision" value={registration.roleInPurchaseDecision} />
-                            <DetailRow label="Priority Level" value={registration.meetingPriorityLevel} />
-                            <DetailRow label="Require Pre-Scheduled B2B" value={registration.requirePreScheduledB2B} />
-                            <DetailRow label="Expected Order Value" value={registration.expectedOrderValue} />
-                            <DetailRow label="Preferred Meeting Mode" value={registration.preferredMeetingMode} />
+                            <DetailRow label="Company/Firm Name" value={registration.companyFirmName} />
+                            <DetailRow label="Brand Name" value={registration.brandName} />
+                            <DetailRow label="Business Type (Structure)" value={registration.basicBusinessType} />
+                            <DetailRow label="Year of Est." value={registration.yearOfEstablishment} />
+                            <DetailRow label="GST Number" value={registration.gstNumber} />
+                            <DetailRow label="PAN Number" value={registration.panNumber} />
+                            <DetailRow label="Buyer Industry" value={registration.buyerIndustry} />
                         </FiveColumnGrid>
                     </Section>
 
-                    {/* Payment Information */}
+                    {/* Business Profile Details */}
+                    <Section title="Business Profile Details">
+                        <FiveColumnGrid>
+                            <DetailRow label="Nature of Business" value={registration.natureOfBusiness} />
+                            <DetailRow label="Years in Business" value={registration.yearsInBusiness} />
+                            <DetailRow label="No. of Outlets" value={registration.numberOfOutlets} />
+                            <DetailRow label="Annual Turnover" value={registration.annualTurnover} />
+                        </FiveColumnGrid>
+                    </Section>
+
+                    {/* Sourcing & Purchase Intent */}
+                    <Section title="Sourcing & Purchase Intent">
+                        <FiveColumnGrid>
+                            <DetailRow label="Primary Interest" value={registration.primaryProductInterest} />
+                            <DetailRow label="Secondary Categories" value={registration.secondaryProductCategories} />
+                            <DetailRow label="Import Interest?" value={registration.interestedInImporting} />
+                            <DetailRow label="Export Interest?" value={registration.interestedInExporting} />
+                            <DetailRow label="Business Model" value={registration.businessModelPreference} />
+                            <DetailRow label="Est. Monthly Purchase" value={registration.estimatedPurchaseVolume} />
+                            <DetailRow label="Budget Range" value={registration.budgetRange} />
+                            <DetailRow label="Buying Frequency" value={registration.buyingFrequency} />
+                            <DetailRow label="Est. Annual Purchase" value={registration.estimatedAnnualPurchaseValue} />
+                            <DetailRow label="Purchase Timeline" value={registration.purchaseTimeline} />
+                            <DetailRow label="Matchmaking Interest" value={registration.matchmakingInterest} />
+                            <DetailRow label="Role in Purchase" value={registration.roleInPurchaseDecision} />
+                        </FiveColumnGrid>
+                        <div className="mt-3 grid grid-cols-1">
+                            <DetailRow label="Specific Requirements" value={registration.specificProductRequirements} />
+                        </div>
+                    </Section>
+
+                    {/* Supplier Preference */}
+                    <Section title="Supplier Preference">
+                        <FiveColumnGrid>
+                            <DetailRow label="Preferred Region" value={registration.preferredSupplierRegion} />
+                            <DetailRow label="Preferred Supplier Type" value={registration.preferredSupplierType} />
+                            <DetailRow label="Preferred State" value={registration.preferredState} />
+                            <DetailRow label="Preferred Company Size" value={registration.preferredCompanySize} />
+                        </FiveColumnGrid>
+                    </Section>
+
+                    {/* Certification & Compliance */}
+                    <Section title="Certification & Compliance">
+                        <FiveColumnGrid>
+                            <DetailRow label="Required Certifications" value={registration.requiredCertifications} />
+                            <DetailRow label="Pricing Preference" value={registration.pricingPreference} />
+                            <DetailRow label="Payment Methods" value={registration.preferredPaymentMethods} />
+                            <DetailRow label="Logistics Requirements" value={registration.logisticsRequirements} />
+                        </FiveColumnGrid>
+                    </Section>
+
+                    {/* B2B Meeting Preferences */}
+                    <Section title="B2B Meeting Preferences">
+                        <FiveColumnGrid>
+                            <DetailRow label="Pre-scheduled B2B?" value={registration.requirePreScheduledB2B} />
+                            <DetailRow label="Priority Level" value={registration.meetingPriorityLevel} />
+                        </FiveColumnGrid>
+                        {registration.requirePreScheduledB2B === 'Yes' && (
+                            <>
+                                <div className="mt-3"></div>
+                                <FiveColumnGrid>
+                                    <DetailRow label="Meeting Categories" value={registration.preferredMeetingCategories} />
+                                    <DetailRow label="Exhibitor Types" value={registration.preferredExhibitorTypes} />
+                                    <DetailRow label="Meeting Objectives" value={registration.meetingObjectives} />
+                                    <DetailRow label="Business Types" value={registration.preferredBusinessTypes} />
+                                    <DetailRow label="Preferred Day" value={registration.preferredMeetingDay} />
+                                    <DetailRow label="Time Slot" value={registration.preferredTimeSlot} />
+                                    <DetailRow label="Number of Meetings" value={registration.numberOfMeetingsInterested} />
+                                </FiveColumnGrid>
+                                <div className="mt-3 grid grid-cols-1">
+                                    <DetailRow label="Meeting Requirements" value={registration.meetingRequirements} />
+                                </div>
+                            </>
+                        )}
+                    </Section>
+
+                    {/* Registration & Payment Details */}
                     <Section title="Registration & Payment Details">
                         <FiveColumnGrid>
                             <DetailRow label="Registration Category" value={registration.registrationCategory} />
                             <DetailRow label="Registration Fee" value={registration.registrationFee} />
+                            <DetailRow label="Payment Mode" value={registration.paymentMode} />
                             <DetailRow label="Payment Status" value={registration.paymentStatus} />
-                            <DetailRow label="Transaction ID" value={registration.transactionId || registration.razorpayPaymentId || registration.orderId} />
-                            <DetailRow label="Payment Date" value={registration.paymentDate ? new Date(registration.paymentDate).toLocaleDateString('en-IN') : 'N/A'} />
-                            <DetailRow label="Payment Proof" value={registration.paymentProof ? "Available" : "Not provided"} />
+                            <DetailRow label="Transaction ID" value={registration.transactionId || registration.razorpayPaymentId} />
+                            <DetailRow label="Registration Date" value={registration.createdAt ? new Date(registration.createdAt).toLocaleDateString('en-IN') : 'N/A'} />
+                            <DetailRow label="Payment Proof" value={registration.paymentProof ? "Available (View in CRM)" : "Not provided"} />
                         </FiveColumnGrid>
                     </Section>
 
-                    {/* Addresses */}
-                    <Section title="Addresses">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="border-r border-gray-200 pr-4">
-                                <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Registered Address</h3>
-                                <p className="text-sm text-gray-800 leading-relaxed break-words">
-                                    {registration.registeredAddress || registration.businessAddress || 'Not provided'}
-                                </p>
-                            </div>
-                            <div className="pl-0 md:pl-4">
-                                <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Shipping Address</h3>
-                                <p className="text-sm text-gray-800 leading-relaxed break-words">
-                                    {registration.shippingAddress || registration.factoryAddress || 'Same as registered address'}
-                                </p>
-                            </div>
-                        </div>
-                    </Section>
-
                     {/* Admin Remarks */}
-                    <Section title="Admin Remarks">
-                        <div className="bg-gray-50 p-4 border border-gray-200">
-                            <p className="text-sm text-gray-700 leading-relaxed break-words">
-                                {registration.remarks || registration.adminNotes || 'No remarks'}
+                    <Section title="Admin / Internal Remarks">
+                        <div className="bg-orange-50 p-4 border border-orange-200">
+                            <p className="text-sm text-gray-800 leading-relaxed break-words whitespace-pre-wrap">
+                                {registration.remarks || 'No remarks provided.'}
                             </p>
                         </div>
                     </Section>
-
-                    {/* Footer */}
 
                 </div>
             </div>

@@ -39,7 +39,7 @@ import {
     heroBackgroundApi,
 } from "../../lib/api";
 
-// ─── Reusable Multi-Select Dropdown ─────────────────────────────────────────
+
 const MultiSelectDropdown = ({
     options,
     selected,
