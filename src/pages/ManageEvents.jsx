@@ -11,14 +11,18 @@ const EMPTY_EVENT = {
     startDate: '',
     endDate: '',
     location: '',
-    onlineAdvancePercentage: 50,
-    manualAdvancePercentage: 50,
     status: 'active',
     ticketsStatus: 'Few Remaining',
     speakersCount: '100+',
     description: '',
     contactPhone: '',
-    order: 1
+    order: 1,
+    paymentPlans: [
+        { id: 'full', label: 'Full Payment', percentage: 100, isDefault: true },
+        { id: 'phase1', label: 'Phase 1 Payment', percentage: 25 },
+        { id: 'phase2', label: 'Phase 2 Payment', percentage: 50 },
+        { id: 'phase3', label: 'Phase 3 Payment', percentage: 75 }
+    ]
 };
 
 const ManageEvents = () => {
@@ -180,16 +184,6 @@ const ManageEvents = () => {
                                 <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Location / Venue</label>
                                 <input type="text" value={eventForm.location} onChange={(e) => setEventForm({...eventForm, location: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="Pragati Maidan, New Delhi" />
                             </div>
-                            <div className="grid grid-cols-2 gap-3 mb-3">
-                                <div>
-                                    <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Online Advance % *</label>
-                                    <input type="number" required min="1" max="100" value={eventForm.onlineAdvancePercentage} onChange={(e) => setEventForm({...eventForm, onlineAdvancePercentage: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="50" />
-                                </div>
-                                <div>
-                                    <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Manual Advance % *</label>
-                                    <input type="number" required min="1" max="100" value={eventForm.manualAdvancePercentage} onChange={(e) => setEventForm({...eventForm, manualAdvancePercentage: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="50" />
-                                </div>
-                            </div>
                             <div className="mb-3">
                                 <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Support Contact Number</label>
                                 <input type="text" value={eventForm.contactPhone} onChange={(e) => setEventForm({...eventForm, contactPhone: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="e.g. +91 98102XXXXX" />
@@ -198,17 +192,78 @@ const ManageEvents = () => {
                                 <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Event Description</label>
                                 <textarea rows={3} value={eventForm.description} onChange={(e) => setEventForm({...eventForm, description: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="Briefly describe the event..." />
                             </div>
-                            <div className="grid grid-cols-2 gap-3 mb-3">
-                                <div>
-                                    <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Tickets Highlight</label>
-                                    <input type="text" value={eventForm.ticketsStatus} onChange={(e) => setEventForm({...eventForm, ticketsStatus: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="Few Remaining" />
+                             {/* Payment Plans Section */}
+                             <div className="pt-4 border-t-2 border-gray-100">
+                                <div className="flex items-center justify-between mb-3">
+                                    <label className="block text-[11px] font-black text-black uppercase tracking-tight flex items-center gap-2">
+                                        <Percent size={14} className="text-[#23471d]" /> Installment / Payment Plans
+                                    </label>
+                                    <button 
+                                        type="button" 
+                                        onClick={() => {
+                                            const newPlans = [...(eventForm.paymentPlans || [])];
+                                            newPlans.push({ id: `p${Date.now()}`, label: 'New Phase', percentage: 25 });
+                                            setEventForm({ ...eventForm, paymentPlans: newPlans });
+                                        }}
+                                        className="text-[9px] font-black uppercase tracking-widest text-[#23471d] hover:underline"
+                                    >
+                                        + Add Plan
+                                    </button>
                                 </div>
-                                <div>
-                                    <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Speakers Highlight</label>
-                                    <input type="text" value={eventForm.speakersCount} onChange={(e) => setEventForm({...eventForm, speakersCount: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="100+ Speakers" />
+                                <div className="space-y-2">
+                                    {(eventForm.paymentPlans || []).map((plan, idx) => (
+                                        <div key={plan.id || idx} className="grid grid-cols-12 gap-2 items-center bg-gray-50 p-2 border border-gray-200 rounded-[2px]">
+                                            <div className="col-span-7">
+                                                <input 
+                                                    type="text" 
+                                                    value={plan.label} 
+                                                    onChange={(e) => {
+                                                        const newPlans = [...eventForm.paymentPlans];
+                                                        newPlans[idx].label = e.target.value;
+                                                        setEventForm({ ...eventForm, paymentPlans: newPlans });
+                                                    }}
+                                                    className="w-full px-2 py-1 border border-gray-300 text-[10px] font-bold uppercase outline-none focus:border-[#23471d]"
+                                                    placeholder="Phase Name"
+                                                />
+                                            </div>
+                                            <div className="col-span-3 h-full">
+                                                <div className="relative h-full">
+                                                    <input 
+                                                        type="number" 
+                                                        value={plan.percentage} 
+                                                        onChange={(e) => {
+                                                            const newPlans = [...eventForm.paymentPlans];
+                                                            newPlans[idx].percentage = Number(e.target.value);
+                                                            setEventForm({ ...eventForm, paymentPlans: newPlans });
+                                                        }}
+                                                        className="w-full h-full px-2 py-1 border border-gray-300 text-[10px] font-bold outline-none focus:border-[#23471d] pr-5"
+                                                        placeholder="%"
+                                                    />
+                                                    <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-gray-400">%</span>
+                                                </div>
+                                            </div>
+                                            <div className="col-span-2 flex justify-center">
+                                                <button 
+                                                    type="button" 
+                                                    disabled={plan.isDefault}
+                                                    onClick={() => {
+                                                        const newPlans = eventForm.paymentPlans.filter((_, i) => i !== idx);
+                                                        setEventForm({ ...eventForm, paymentPlans: newPlans });
+                                                    }}
+                                                    className={`p-1 rounded ${plan.isDefault ? 'text-gray-300 cursor-not-allowed' : 'text-red-500 hover:bg-red-50'}`}
+                                                >
+                                                    <Trash2 size={12} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {(!eventForm.paymentPlans || eventForm.paymentPlans.length === 0) && (
+                                        <p className="text-[10px] text-gray-400 italic text-center py-2">No custom plans defined.</p>
+                                    )}
                                 </div>
-                            </div>
-                            <div className="pt-2 border-t border-slate-100 flex justify-end gap-2">
+                             </div>
+
+                            <div className="pt-4 border-t-2 border-gray-100 flex justify-end gap-2">
                                 {isEditing && <button type="button" onClick={() => { setIsEditing(null); setEventForm({...EMPTY_EVENT}); }} className="px-6 py-2 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all rounded-[2px]">Cancel</button>}
                                 <button type="submit" disabled={isLoading} className="px-8 py-2 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-sm">
                                     {isLoading ? 'Processing...' : (isEditing ? 'Update Event' : 'Create Event')}
@@ -236,7 +291,6 @@ const ManageEvents = () => {
                                         <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center w-16 tracking-tight">Seq.</th>
                                         <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-left tracking-tight">Event Name</th>
                                         <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Duration / Dates</th>
-                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Advance %</th>
                                         <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Actions</th>
                                     </tr>
                                 </thead>
@@ -264,12 +318,6 @@ const ManageEvents = () => {
                                                     <span className="text-[10px] font-medium text-black uppercase tracking-tight opacity-40">
                                                         TO {new Date(event.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                                                     </span>
-                                                </div>
-                                            </td>
-                                            <td className="py-4 px-4 text-center">
-                                                <div className="flex flex-col gap-0.5">
-                                                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Online: <span className="text-[#23471d]">{event.onlineAdvancePercentage ?? 50}%</span></span>
-                                                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Manual: <span className="text-[#d26019]">{event.manualAdvancePercentage ?? 50}%</span></span>
                                                 </div>
                                             </td>
                                             <td className="py-4 px-4">

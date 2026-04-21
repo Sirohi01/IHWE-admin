@@ -240,9 +240,9 @@ function OverviewTab({ reg, fmt, id, onRefresh }) {
                             </div>
                         </div>
                     </div>
-                    <div className="p-4 border-r border-b border-gray-100 italic bg-amber-50/10">
-                        <p className="text-[10px] font-black text-[#d26019] uppercase tracking-widest mb-3 border-b pb-1">Secondary Contact</p>
-                        {reg.contact2?.firstName ? (
+                    {reg.contact2?.firstName || reg.contact2?.email ? (
+                        <div className="p-4 border-r border-b border-gray-100 italic bg-amber-50/10">
+                            <p className="text-[10px] font-black text-[#d26019] uppercase tracking-widest mb-3 border-b pb-1">Secondary Contact</p>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Name</p>
@@ -261,10 +261,8 @@ function OverviewTab({ reg, fmt, id, onRefresh }) {
                                     <p className="text-[12px] font-bold text-gray-800">{reg.contact2?.email || '—'}</p>
                                 </div>
                             </div>
-                        ) : (
-                            <p className="text-[10px] text-gray-400 font-bold uppercase mt-4">No secondary contact provided</p>
-                        )}
-                    </div>
+                        </div>
+                    ) : null}
                 </div>
             </div>
 
@@ -477,53 +475,82 @@ function ContactsTab({ reg, id, onRefresh }) {
 }
 
 function PaymentTab({ reg, fmt }) {
+    const fb = reg.financeBreakdown || {};
     return (
         <div className="space-y-4">
-            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
-                <SH title="Financial Summary" icon={CreditCard} />
-                <Grid4 items={[
-                    { label: 'Base Amount', value: fmt(reg.participation?.amount) },
-                    { label: 'GST (18%)', value: fmt((reg.participation?.total || 0) - (reg.participation?.amount || 0)) },
-                    { label: 'Total Amount', value: fmt(reg.participation?.total) },
-                    { label: 'Amount Paid', value: fmt(reg.amountPaid) },
-                    { label: 'Balance Due', value: fmt(reg.balanceAmount) },
-                    { label: 'Payment Mode', value: reg.paymentMode },
-                    { label: 'Payment Type', value: reg.paymentType },
-                    { label: 'Transaction ID', value: reg.manualPaymentDetails?.transactionId || reg.paymentId },
-                ]} />
-                {reg.paymentId && (
-                    <div className="px-4 py-3 bg-indigo-50/40 border-t border-gray-100">
-                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Razorpay Payment ID</p>
-                        <p className="text-xs font-bold text-indigo-700 font-mono break-all">{reg.paymentId}</p>
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+                <SH title="Financial Summary & Deductions" icon={CreditCard} />
+                <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
+                    <Field label="Gross Stall Cost" value={fmt(fb.grossAmount || reg.participation?.amount)} />
+                    <Field label="Plan Discount" value={fb.discountPercent ? `${fb.discountPercent}% (${fmt(fb.discountAmount)})` : '0%'} />
+                    <Field label="Net Subtotal (Taxable)" value={fmt(fb.subtotal || reg.participation?.amount)} />
+                    <Field label="GST Collected (18%)" value={fmt(fb.gstAmount || ((reg.participation?.total || 0) - (fb.subtotal || 0)))} />
+                    <Field label="Total Contract (incl. GST)" value={fmt(reg.participation?.total)} />
+                    <Field label="TDS Selection" value={reg.chosenTdsPercent ? `${reg.chosenTdsPercent}%` : '0%'} />
+                    <Field label="TDS Deducted (Less)" value={fb.tdsAmount ? `- ${fmt(fb.tdsAmount)}` : 'INR 0'} />
+                    <div className="p-3 border-r border-b border-gray-100 bg-emerald-50/30">
+                        <p className="text-[9px] font-black text-emerald-600 uppercase tracking-wider mb-1">Total Net Payable</p>
+                        <p className="text-[14px] font-black text-emerald-800">{fmt(fb.netPayable || reg.participation?.total)}</p>
+                    </div>
+                    <Field label="Amount Paid (To Date)" value={fmt(reg.amountPaid)} />
+                    <div className="p-3 border-r border-b border-gray-100 bg-rose-50/30">
+                        <p className="text-[9px] font-black text-rose-600 uppercase tracking-wider mb-1">Balance Outstanding</p>
+                        <p className="text-[14px] font-black text-rose-800">{fmt(reg.balanceAmount)}</p>
+                    </div>
+                    <Field label="Current Status" value={reg.status?.toUpperCase()} />
+                    <Field label="Payment Mode (Latest)" value={reg.manualPaymentDetails?.method || reg.paymentMode || 'N/A'} />
+                </div>
+                {(reg.manualPaymentDetails?.transactionId || reg.paymentId) && (
+                    <div className="px-4 py-3 bg-slate-50 border-t border-gray-100 flex items-center justify-between">
+                        <div>
+                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Latest Transaction / Razorpay ID</p>
+                            <p className="text-xs font-bold text-slate-700 font-mono break-all">{reg.manualPaymentDetails?.transactionId || reg.paymentId}</p>
+                        </div>
+                        {reg.manualPaymentDetails?.updatedAt && (
+                            <p className="text-[9px] font-bold text-slate-400 italic">Last Updated: {new Date(reg.manualPaymentDetails.updatedAt).toLocaleString()}</p>
+                        )}
                     </div>
                 )}
             </div>
 
             {reg.paymentHistory?.length > 0 && (
-                <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
-                    <SH title="Payment History" icon={History} />
+                <div className="bg-white border border-gray-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <SH title="Transaction Audit History" icon={History} />
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="bg-gray-50 border-b border-gray-200">
-                                    {['#', 'Type', 'Amount', 'Mode / Method', 'Txn ID', 'Date'].map(h => (
-                                        <th key={h} className="py-2 px-4 text-[10px] font-black text-gray-500 uppercase text-left">{h}</th>
+                                <tr className="bg-slate-100 border-b border-gray-200">
+                                    {['#', 'Type', 'Amount', 'Method / Mode', 'Txn ID', 'Date'].map(h => (
+                                        <th key={h} className="py-2.5 px-4 text-[9px] font-black text-slate-500 uppercase text-left">{h}</th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {reg.paymentHistory.map((h, i) => (
-                                    <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
-                                        <td className="py-2 px-4 text-xs text-gray-400 font-bold">{i + 1}</td>
-                                        <td className="py-2 px-4 text-xs font-bold text-gray-700 capitalize">{h.paymentType || '—'}</td>
-                                        <td className="py-2 px-4 text-xs font-black text-emerald-700">{fmt(h.amount)}</td>
-                                        <td className="py-2 px-4 text-xs text-gray-600">{h.method || h.paymentMode || '—'}</td>
-                                        <td className="py-2 px-4 text-xs text-gray-600 font-mono">{h.transactionId || h.razorpayPaymentId || '—'}</td>
-                                        <td className="py-2 px-4 text-xs text-gray-500">
-                                            {h.paidAt ? new Date(h.paidAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
-                                        </td>
-                                    </tr>
-                                ))}
+                                {reg.paymentHistory.map((h, i) => {
+                                    const rawType = (h.paymentType || 'payment').toLowerCase();
+                                    const isInstallment = ['advance', 'balance', 'installment'].includes(rawType);
+                                    const label = isInstallment ? 'INSTALLMENT' : rawType.toUpperCase();
+                                    const badgeClass = isInstallment ? 'bg-cyan-100 text-cyan-800' : 'bg-emerald-100 text-emerald-800';
+
+                                    return (
+                                        <tr key={i} className="hover:bg-slate-50/80 transition-colors">
+                                            <td className="py-3 px-4 text-xs text-gray-400 font-bold">#{i + 1}</td>
+                                            <td className="py-3 px-4">
+                                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${badgeClass}`}>
+                                                    {label}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-4 text-[13px] font-black text-slate-800">{fmt(h.amount)}</td>
+                                            <td className="py-3 px-4 text-xs font-bold text-slate-600 uppercase italic">
+                                                {h.method || h.paymentMode || 'Manual'}
+                                            </td>
+                                            <td className="py-3 px-4 text-xs text-slate-500 font-mono">{h.transactionId || h.razorpayPaymentId || '—'}</td>
+                                            <td className="py-3 px-4 text-xs font-bold text-slate-500">
+                                                {h.paidAt ? new Date(h.paidAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
