@@ -212,7 +212,7 @@ const BuyerList = () => {
                         )}
                     </div>
 
-                    {/* Search Input Box at Bottom */}
+
                     <div className="px-4 py-4 bg-white border-t border-gray-300">
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
