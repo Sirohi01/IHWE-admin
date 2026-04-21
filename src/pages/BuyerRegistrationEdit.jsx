@@ -82,8 +82,24 @@ const BuyerRegistrationEdit = () => {
                 const response = await api.get(`/api/buyer-registration/${id}`);
                 if (response.data.success) {
                     const data = response.data.data;
-                    // Ensure arrays are arrays
-                    const ensureArray = (val) => Array.isArray(val) ? val : (val ? [val] : []);
+                    // Ensure arrays are arrays, and parse JSON if mistakenly stringified by backend
+                    const ensureArray = (val) => {
+                        if (!val) return [];
+                        if (Array.isArray(val)) {
+                            // Mongoose might store a stringified array as the first element
+                            if (val.length === 1 && typeof val[0] === 'string' && val[0].trim().startsWith('[') && val[0].trim().endsWith(']')) {
+                                try { return JSON.parse(val[0]); } catch (e) {}
+                            }
+                            return val;
+                        }
+                        if (typeof val === 'string') {
+                            if (val.trim().startsWith('[') && val.trim().endsWith(']')) {
+                                try { return JSON.parse(val); } catch (e) {}
+                            }
+                            return [val];
+                        }
+                        return [val];
+                    };
                     data.secondaryProductCategories = ensureArray(data.secondaryProductCategories);
                     data.preferredSupplierRegion = ensureArray(data.preferredSupplierRegion);
                     data.preferredState = ensureArray(data.preferredState);
