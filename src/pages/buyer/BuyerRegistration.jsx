@@ -39,7 +39,7 @@ import {
     heroBackgroundApi,
 } from "../../lib/api";
 
-
+// ─── Reusable Multi-Select Dropdown ─────────────────────────────────────────
 const MultiSelectDropdown = ({
     options,
     selected,
@@ -748,6 +748,7 @@ const BuyerRegistration = () => {
         const optionalFields = {
             brandName: formData.brandName || "",
             website: formData.website || "",
+            preferredPaymentMethods: JSON.stringify(formData.preferredPaymentMethods || []),
             gstNumber: formData.gstNumber || "",
             panNumber: formData.panNumber || "",
             secondaryProductCategories: JSON.stringify(formData.secondaryProductCategories || []),
@@ -761,6 +762,7 @@ const BuyerRegistration = () => {
             preferredSupplierRegion: JSON.stringify(formData.preferredSupplierRegion || []),
             preferredState: JSON.stringify(formData.preferredState || []),
             preferredSupplierType: JSON.stringify(formData.preferredSupplierType || []),
+
             preferredCompanySize: formData.preferredCompanySize || "",
             requirePreScheduledB2B: formData.requirePreScheduledB2B,
             meetingPriorityLevel: formData.meetingPriorityLevel,
