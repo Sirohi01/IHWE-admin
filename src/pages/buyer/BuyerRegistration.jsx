@@ -1,25 +1,34 @@
-import { useEffect, useMemo, useState } from "react";
+
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
     AlertTriangle,
-    ArrowRight,
     Briefcase,
     Building2,
-    CalendarDays,
     CheckCircle2,
+    Clock,
     CreditCard,
+    Factory,
     FileText,
+    Globe,
     Globe2,
+    HeartPulse,
+    Hotel,
     Landmark,
+    Leaf,
+    Laptop,
     Loader2,
-    Lock,
     MapPin,
     Phone,
     QrCode,
+    ChevronDown,
+    ChevronsUpDown,
     ShieldCheck,
+    Store,
     UserRound,
     Wallet,
+    X,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import PageHeader from "../../components/PageHeader";
@@ -30,55 +39,166 @@ import {
     heroBackgroundApi,
 } from "../../lib/api";
 
+
+const MultiSelectDropdown = ({
+    options,
+    selected,
+    onChange,
+    placeholder = "Select options",
+    error = false,
+    accentColor = "emerald",
+}) => {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        const handler = (e) => {
+            if (ref.current && !ref.current.contains(e.target)) {
+                setOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, []);
+
+    const toggle = (item) => {
+        if (selected.includes(item)) {
+            onChange(selected.filter((s) => s !== item));
+        } else {
+            onChange([...selected, item]);
+        }
+    };
+
+    const accentClasses = {
+        emerald: {
+            bg: "bg-emerald-50",
+            border: "border-emerald-300",
+            text: "text-emerald-700",
+            tag: "bg-emerald-100 border-emerald-300",
+            tagText: "text-emerald-700",
+            tagX: "text-emerald-500 hover:text-emerald-700",
+        },
+        amber: {
+            bg: "bg-amber-50",
+            border: "border-amber-300",
+            text: "text-amber-700",
+            tag: "bg-amber-100 border-amber-300",
+            tagText: "text-amber-700",
+            tagX: "text-amber-500 hover:text-amber-700",
+        },
+        blue: {
+            bg: "bg-blue-50",
+            border: "border-blue-300",
+            text: "text-blue-700",
+            tag: "bg-blue-100 border-blue-300",
+            tagText: "text-blue-700",
+            tagX: "text-blue-500 hover:text-blue-700",
+        },
+        slate: {
+            bg: "bg-slate-50",
+            border: "border-slate-300",
+            text: "text-slate-700",
+            tag: "bg-slate-100 border-slate-300",
+            tagText: "text-slate-700",
+            tagX: "text-slate-500 hover:text-slate-700",
+        },
+    };
+
+    const ac = accentClasses[accentColor] || accentClasses.emerald;
+
+    return (
+        <div ref={ref} className="relative w-full">
+            <button
+                type="button"
+                onClick={() => setOpen((p) => !p)}
+                className={`w-full h-9 px-3 py-0 rounded-[2px] border text-left text-[12px] font-medium bg-white transition-all outline-none flex items-center justify-between gap-2
+                    ${error ? "border-red-400" : open ? "border-[#23471d]" : "border-slate-400"} hover:border-[#23471d]`}
+            >
+                <span className="flex flex-wrap gap-1 flex-1 truncate">
+                    {selected.length === 0 ? (
+                        <span className="text-slate-400">{placeholder}</span>
+                    ) : (
+                        <span className="truncate">{selected.join(", ")}</span>
+                    )}
+                </span>
+                <ChevronDown size={14} className={`shrink-0 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
+            </button>
+
+            {open && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-[220px] overflow-y-auto custom-scrollbar">
+                    {options.length === 0 ? (
+                        <p className="text-[11px] text-slate-400 text-center py-3">No options available</p>
+                    ) : (
+                        options.map((opt) => {
+                            const isChecked = selected.includes(opt);
+                            return (
+                                <label
+                                    key={opt}
+                                    className={`flex items-center gap-2.5 px-3 py-2 cursor-pointer text-[12px] font-medium transition-colors
+                                        ${isChecked ? `${ac.bg} ${ac.text}` : "text-slate-700 hover:bg-slate-50"}`}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={() => toggle(opt)}
+                                        className="h-3.5 w-3.5 rounded border-emerald-400 text-emerald-500 focus:ring-emerald-500"
+                                    />
+                                    {opt}
+                                </label>
+                            );
+                        })
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const FALLBACK_CONFIG = {
     companyTypes: [
-        "Importer / Exporter",
-        "Distributor",
-        "Retail Chain",
-        "Wholesaler",
-        "Private Label Buyer",
-        "HoReCa",
-        "E-commerce Platform",
-        "Government Agency",
-        "Other",
+        "Distributor", "Super Distributor", "Wholesaler", "Retailer (Single Store)",
+        "Retail Chain / Multi-Store", "Modern Trade Buyer", "Manufacturer",
+        "Private Label Buyer", "Franchise Seeker", "Investor", "Importer",
+        "Exporter", "International Buying Agent", "E-commerce Seller", "D2C Brand Owner",
+        "Hospital / Clinic", "Doctor / Medical Practitioner", "Pharmacy / Chemist",
+        "Diagnostic Center", "Spa / Salon Owner", "Wellness Center", "Gym / Fitness Center",
+        "Yoga Studio", "Nutritionist / Dietician", "Wellness Resort / Hospitality",
+        "Hotel / Resort", "Corporate Buyer (Procurement / HR)", "Government / PSU",
+        "NGO / Trust", "Consultant / Advisor", "Startup Founder", "Student / Researcher"
     ],
-    annualTurnoverRanges: [
-        "Below 1 Crore",
-        "1-5 Crore",
-        "5-10 Crore",
-        "10-50 Crore",
-        "50+ Crore",
-    ],
-    regions: [
-        "North India",
-        "South India",
-        "East India",
-        "West India",
-        "Pan India",
-    ],
-    supplierTypes: [
-        "Manufacturer",
-        "Exporter",
-        "MSME",
-        "Startup",
-        "Wholesaler",
-    ],
-    purchaseTimelines: ["Immediate", "1-3 Months", "3-6 Months", "Exploring"],
+    annualTurnoverRanges: ["Below 50 Lakhs", "50L – 2 Cr", "2 – 10 Cr", "10 Cr+"],
+    regions: ["North India", "South India", "East India", "West India", "Pan India", "Global"],
+    supplierTypes: ["Manufacturer", "Exporter", "MSME", "Startup", "Wholesaler"],
+    purchaseTimelines: ["Immediate", "1–3 Months", "3–6 Months", "Exploring"],
     roles: ["Final Decision Maker", "Influencer", "Research Only"],
-    secondaryProductCategories: [],
-    buyingFrequencies: ["One-time", "Monthly", "Quarterly", "Long-term"],
-    annualPurchaseValueRanges: [
-        "Below 10 Lakhs",
-        "10-50 Lakhs",
-        "50 Lakhs - 1 Crore",
-        "1-5 Crore",
-        "5+ Crore",
+    secondaryProductCategories: [
+        "Ayurveda", "Organic", "Wellness", "Pharma", "Cosmetics",
+        "Nutraceuticals", "Herbal", "Skincare", "Medical Devices", "HealthTech"
     ],
-    primaryProductInterests: [],
+    buyingFrequencies: ["One-time", "Monthly", "Quarterly", "Long-term"],
+    annualPurchaseValueRanges: ["Below 10 Lakhs", "10-50 Lakhs", "50 Lakhs - 1 Crore", "1-5 Crore", "5+ Crore"],
+    primaryProductInterests: [
+        "AYUSH & Traditional Medicine", "Organic & Natural Products", "Wellness & Lifestyle",
+        "Beauty & Personal Care", "Fitness & Nutrition", "Medical & Healthcare", "Pharmaceuticals"
+    ],
     budgetRanges: ["Flexible", "Entry Level", "Mid-Range", "Premium"],
-    companySizes: ["Small", "Medium", "Large", "Enterprise"],
-    certificationOptions: ["ISO", "GMP", "FDA", "AYUSH", "Organic", "Others"],
-    meetingPriorityLevels: ["Low", "Medium", "High"],
+    companySizes: ["Small (1-10 employees)", "Medium (11-50 employees)", "Large (51-200 employees)", "Enterprise (200+)"],
+    certificationOptions: ["ISO", "GMP", "FDA", "AYUSH", "Organic", "Halal", "Kosher", "Others"],
+    meetingPriorityLevels: ["Low Priority", "Medium Priority", "High Priority"],
+    businessModelOptions: ["Retail", "Distribution", "Franchise", "Private Label / White Label", "Direct Sourcing", "B2B Bulk Supply"],
+    meetingCategoryOptions: [
+        "Ayurveda & Herbal", "Organic Food & Beverages", "Nutraceuticals & Supplements",
+        "Fitness Equipment", "Beauty & Cosmetics", "Skincare", "Medical Devices",
+        "Wellness Services", "Spa & Salon", "HealthTech", "Pharmaceuticals", "Others"
+    ],
+    exhibitorTypeOptions: ["Manufacturer", "Brand Owner", "Distributor", "Exporter", "Startup / Innovator", "Wholesaler"],
+    meetingObjectiveOptions: [
+        "Product Sourcing", "Partnership / Collaboration", "Distribution Opportunities",
+        "Private Label / OEM", "Investment / Business Expansion", "Brand Acquisition",
+        "Market Research", "Networking"
+    ],
+    preferredBusinessTypeOptions: ["Bulk Purchase", "Private Label", "Franchise", "Exclusive Distribution", "Joint Venture"],
+    meetingDayOptions: ["Day 1", "Day 2", "Day 3"],
     packages: [],
 };
 
@@ -93,51 +213,51 @@ const PAYMENT_METHODS = [
 const PACKAGE_METADATA = {
     "Standard Buyer Pass": {
         tagline: "For Emerging Buyers & Business Explorers",
-        description: "Designed for professionals who want to explore new suppliers and business opportunities through structured buyer-seller interactions.",
-        whyChoose: "A strong entry option for buyers looking to discover products and start quality business conversations.",
-        cta: "Select Standard",
+        description: "Designed for professionals who want to explore new products, suppliers, and market opportunities through structured Buyer–Seller interactions.",
+        whyChoose: "A great starting point to explore opportunities and build initial business connections.",
+        cta: "Register Now",
         color: "blue",
         badge: null,
     },
     "VIP Buyer Pass": {
         tagline: "For Serious Buyers & Decision Makers",
-        description: "Built for high-intent buyers who want curated meetings, premium assistance, and faster business outcomes.",
-        whyChoose: "Best for buyers who value comfort, priority coordination, and focused networking.",
-        cta: "Choose VIP",
-        color: "gold",
+        description: "Crafted for high-intent buyers who are looking for structured, result-oriented meetings and premium networking.",
+        whyChoose: "Perfect for buyers who want focused meetings, comfort, and faster business outcomes.",
+        cta: "Upgrade to VIP",
         badge: "Recommended",
+        color: "yellow",
     },
     "ICOA Standard Buyer Membership": {
         tagline: "For Active Buyers & Market Explorers",
-        description: "Ideal for professionals who want broader access to curated supplier networks and trusted AYUSH ecosystem connections.",
-        whyChoose: "Useful when you want year-round value with event-linked business discovery.",
-        cta: "Start Membership",
+        description: "The Buyer–Seller Meet at IHWE 2026 is being conducted in association with the International Council of AYUSH (ICOA), bringing you access to a trusted network of verified suppliers and brands.",
+        whyChoose: "Ideal for buyers who want to explore the AYUSH and wellness ecosystem and build reliable connections.",
+        cta: "Become a Member",
         color: "blue",
         badge: null,
     },
     "ICOA VIP Buyer Membership": {
-        tagline: "For Focused Business Growth",
-        description: "A premium membership path for buyers who want structured sourcing support and priority access to relevant suppliers.",
-        whyChoose: "Great for buyers who expect more guided conversations and qualified leads.",
-        cta: "Upgrade to VIP",
-        color: "gold",
+        tagline: "For Serious Buyers & Decision Makers",
+        description: "Experience structured and high-value business networking through ICOA-curated Buyer–Seller Meets at IHWE and beyond.",
+        whyChoose: "Best suited for buyers who want focused meetings, verified suppliers, and faster business outcomes.",
+        cta: "Upgrade to VIP Membership",
         badge: "Recommended",
+        color: "yellow",
     },
     "ICOA Elite Buyer Membership": {
         tagline: "For High-Value & Institutional Buyers",
-        description: "An exclusive track for buyers seeking a more managed sourcing experience with strategic business support.",
-        whyChoose: "Well suited for institutional, bulk, or strategic procurement requirements.",
-        cta: "Get Elite Access",
+        description: "An exclusive membership offering a fully managed sourcing experience through ICOA's curated network and IHWE platform.",
+        whyChoose: "Designed for buyers who want a complete sourcing ecosystem with strategic business support.",
+        cta: "Get Elite Membership",
         color: "red",
         badge: null,
     },
     "ICOA Buyer Membership": {
-        tagline: "For Buyers Seeking Year-Round Opportunities",
-        description: "A value-driven option for buyers who want continued opportunities beyond a single event cycle.",
-        whyChoose: "Best for buyers looking for continuity, supplier discovery, and long-term engagement.",
+        tagline: "For Serious Buyers Seeking Year-Round Opportunities",
+        description: "Extend your benefits beyond the event with ICOA Buyer Membership, offering continuous access to curated sourcing opportunities and supplier connections throughout the year.",
+        whyChoose: "Perfect for buyers who want continuous business opportunities, not just a one-time event experience.",
         cta: "Get Membership",
-        color: "green",
         badge: "Best Value",
+        color: "green",
     },
 };
 
@@ -150,23 +270,36 @@ const INITIAL_FORM_STATE = {
     alternateNumber: "",
     emailAddress: "",
     website: "",
+    brandName: "",
     pinCode: "",
     country: "India",
     stateProvince: "",
     city: "",
     registeredAddress: "",
-    yearsInOperation: "",
+    companyFirmName: "",
+    basicBusinessType: "",
+    yearOfEstablishment: "",
+    gstNumber: "",
+    panNumber: "",
+    natureOfBusiness: "",
+    yearsInBusiness: "",
+    numberOfOutlets: "",
     annualTurnover: "",
+    buyerIndustry: "",
     buyingFrequency: "",
     estimatedAnnualPurchaseValue: "",
-    keyProductsServices: "",
     primaryProductInterest: "",
-    secondaryProductCategories: "",
+    secondaryProductCategories: [],
     specificProductRequirements: "",
     estimatedPurchaseVolume: "",
     budgetRange: "",
+    purchaseFrequency: "",
+    businessModelPreference: "",
+    b2bMeetInterest: "Yes",
+    interestedInImporting: "No",
+    interestedInExporting: "No",
     preferredSupplierRegion: [],
-    preferredState: "",
+    preferredState: [],
     preferredSupplierType: [],
     preferredCompanySize: "",
     purchaseTimeline: "",
@@ -174,25 +307,40 @@ const INITIAL_FORM_STATE = {
     pricingPreference: "Mid-Range",
     matchmakingInterest: "Yes",
     logisticsRequirements: "",
+    preferredPaymentMethods: [],
+    companyProfile: null,
     requiredCertifications: [],
     preferredMeetingDate: "",
     preferredTimeSlot: "",
     requirePreScheduledB2B: "Yes",
+    preferredMeetingCategories: [],
+    preferredExhibitorTypes: [],
+    numberOfMeetingsInterested: "",
+    meetingObjectives: [],
+    preferredBusinessTypes: [],
+    meetingRequirements: "",
+    preferredMeetingDay: "",
     meetingPriorityLevel: "Medium",
     remarks: "",
     registrationCategory: "",
     registrationFee: "₹0",
-    paymentMode: "", // Added this field
+    paymentMode: "",
     paymentMethods: [],
     transactionId: "",
-    paymentProof: null, // Added for file upload
+    paymentProof: null,
+    otherBusinessType: "",
     consentTerms: true,
     consentPaymentValid: true,
     consentMatchedExhibitors: true,
 };
-const inputClass = "w-full rounded-[2px] border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none transition focus:border-[#23471d] focus:ring-2 focus:ring-[#23471d]/10";
-const labelClass = "mb-1 block text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500";
-const sectionTitleClass = "mb-5 flex items-center gap-2 border-b border-slate-200 pb-2 text-sm font-black uppercase tracking-[0.22em] text-[#23471d]";
+
+// Standardized input classes - all elements have consistent height (h-9 = 36px)
+const inputClass = "w-full h-9 px-3 py-0 rounded-[2px] border border-slate-400 bg-white text-left text-[12px] font-medium text-slate-900 outline-none shadow-none transition-all ring-offset-background focus:border-[#23471d] focus:ring-[#23471d]/10 placeholder:text-slate-400 font-sans";
+const textareaClass = "w-full px-3 py-2 rounded-[2px] border border-slate-400 bg-white text-left text-[12px] font-medium text-slate-900 outline-none shadow-none transition-all ring-offset-background focus:border-[#23471d] focus:ring-[#23471d]/10 placeholder:text-slate-400 font-sans resize-y";
+const selectClass = "w-full h-9 px-3 py-0 rounded-[2px] border border-slate-400 bg-white text-left text-[12px] font-medium text-slate-900 outline-none shadow-none transition-all ring-offset-background focus:border-[#23471d] focus:ring-[#23471d]/10 placeholder:text-slate-400 font-sans appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364758b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-8";
+
+const labelClass = "text-[12px] font-semibold text-slate-900 mb-1 block text-left font-sans";
+const sectionTitleClass = "text-[13px] font-black text-[#23471d] pb-1 border-b border-emerald-500/20 flex items-center gap-1.5 mb-3 uppercase tracking-tight font-sans";
 
 const formatCurrency = (value) =>
     new Intl.NumberFormat("en-IN", {
@@ -229,27 +377,6 @@ const Field = ({ label, name, error, required, children, hint, className = "" })
     </div>
 );
 
-const CheckboxChipGroup = ({ name, label, options, values, onToggle, error, required }) => (
-    <div data-field={name}>
-        <label className={labelClass}>
-            {label}
-            {required ? <span className="text-red-500"> *</span> : null}
-        </label>
-        <div className={`flex min-h-[44px] flex-wrap gap-2 rounded-[2px] border p-2 ${error ? "border-red-300" : "border-slate-300"}`}>
-            {options.map((option) => {
-                const checked = values.includes(option);
-                return (
-                    <label key={option} className={`cursor-pointer rounded-full border px-3 py-1 text-xs font-bold transition ${checked ? "border-[#23471d] bg-[#23471d] text-white" : "border-slate-300 bg-white text-slate-600 hover:border-[#23471d]"}`}>
-                        <input type="checkbox" className="hidden" checked={checked} onChange={() => onToggle(name, option)} />
-                        {option}
-                    </label>
-                );
-            })}
-        </div>
-        <ErrorText message={error} />
-    </div>
-);
-
 const PaymentMethodCard = ({ method, selected, onToggle }) => {
     const Icon = method.icon;
     return (
@@ -267,11 +394,11 @@ const PaymentMethodCard = ({ method, selected, onToggle }) => {
     );
 };
 
-const PackageCard = ({ pkg, selected, onSelect }) => {
+const PackageCard = ({ pkg, selected, onSelect, disabled }) => {
     const meta = PACKAGE_METADATA[pkg.name] || {};
     const colorMap = {
         blue: { accent: "text-blue-700", border: "border-blue-200", badge: "bg-blue-600", surface: "bg-blue-50" },
-        gold: { accent: "text-amber-700", border: "border-amber-200", badge: "bg-amber-500", surface: "bg-amber-50" },
+        yellow: { accent: "text-amber-700", border: "border-amber-200", badge: "bg-amber-500", surface: "bg-amber-50" },
         green: { accent: "text-emerald-700", border: "border-emerald-200", badge: "bg-emerald-600", surface: "bg-emerald-50" },
         red: { accent: "text-red-700", border: "border-red-200", badge: "bg-red-600", surface: "bg-red-50" },
     };
@@ -279,7 +406,12 @@ const PackageCard = ({ pkg, selected, onSelect }) => {
     const benefits = Array.isArray(pkg.benefits) ? pkg.benefits : [];
 
     return (
-        <button type="button" onClick={() => onSelect(pkg)} className={`relative flex h-full flex-col rounded-xl border-2 p-5 text-left transition ${selected ? "border-[#23471d] bg-white shadow-xl shadow-[#23471d]/10 ring-4 ring-[#23471d]/5" : "border-slate-200 bg-white hover:border-[#23471d]/40 hover:shadow-lg"}`}>
+        <button
+            type="button"
+            onClick={() => !disabled && onSelect(pkg)}
+            disabled={disabled}
+            className={`relative flex h-full flex-col rounded-xl border-2 p-5 text-left transition ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${selected ? "border-[#23471d] bg-white shadow-xl shadow-[#23471d]/10 ring-4 ring-[#23471d]/5" : "border-slate-200 bg-white hover:border-[#23471d]/40 hover:shadow-lg"}`}
+        >
             {meta.badge && <span className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white ${theme.badge}`}>{meta.badge}</span>}
             <div className="mb-4">
                 <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{getPackageGroup(pkg)}</p>
@@ -307,12 +439,23 @@ const PackageCard = ({ pkg, selected, onSelect }) => {
                     <p className="mt-2 text-sm font-medium leading-relaxed text-slate-700">{meta.whyChoose || "Useful for buyers who want curated supplier discovery and business networking."}</p>
                 </div>
             </div>
-            <div className={`mt-5 rounded-lg px-4 py-3 text-center text-xs font-black uppercase tracking-[0.18em] transition ${selected ? "bg-[#23471d] text-white" : "bg-slate-100 text-slate-600 group-hover:bg-[#23471d]"}`}>
-                {selected ? "Selected Package" : meta.cta || "Select Package"}
+            <div className={`mt-5 rounded-lg px-4 py-3 text-center text-xs font-black uppercase tracking-[0.18em] transition ${selected ? "bg-[#23471d] text-white" : disabled ? "bg-slate-200 text-slate-400" : "bg-slate-100 text-slate-600 group-hover:bg-[#23471d]"}`}>
+                {selected ? "Selected Package" : (disabled ? "Complete Form First" : (meta.cta || "Select Package"))}
             </div>
         </button>
     );
 };
+
+const staticGroups = [
+    { title: 'Trade & Distribution', icon: <Store size={14} />, items: ['Distributor', 'Super Distributor', 'Wholesaler', 'Retailer (Single Store)', 'Retail Chain / Multi-Store', 'Modern Trade Buyer'] },
+    { title: 'Manufacturing & Business', icon: <Factory size={14} />, items: ['Manufacturer', 'Private Label Buyer', 'Franchise Seeker', 'Investor'] },
+    { title: 'International Trade', icon: <Globe size={14} />, items: ['Importer', 'Exporter', 'International Buying Agent'] },
+    { title: 'Online & Digital', icon: <Laptop size={14} />, items: ['E-commerce Seller', 'D2C Brand Owner'] },
+    { title: 'Healthcare & Medical', icon: <HeartPulse size={14} />, items: ['Hospital / Clinic', 'Doctor / Medical Practitioner', 'Pharmacy / Chemist', 'Diagnostic Center'] },
+    { title: 'Wellness & Lifestyle', icon: <Leaf size={14} />, items: ['Spa / Salon Owner', 'Wellness Center', 'Gym / Fitness Center', 'Yoga Studio', 'Nutritionist / Dietician'] },
+    { title: 'Hospitality & Institutional', icon: <Hotel size={14} />, items: ['Wellness Resort / Hospitality', 'Hotel / Resort', 'Corporate Buyer (Procurement / HR)', 'Government / PSU', 'NGO / Trust'] },
+    { title: 'Professionals & Others', icon: <Briefcase size={14} />, items: ['Consultant / Advisor', 'Startup Founder', 'Student / Researcher', 'Other (Please Specify)'] }
+];
 
 const BuyerRegistration = () => {
     const navigate = useNavigate();
@@ -325,13 +468,26 @@ const BuyerRegistration = () => {
     const [errors, setErrors] = useState({});
     const [loadingPage, setLoadingPage] = useState(true);
     const [loadingLocations, setLoadingLocations] = useState({ states: false, cities: false });
-    const [isFormLocked, setIsFormLocked] = useState(true);
     const [selectedPackage, setSelectedPackage] = useState(null);
     const [packageView, setPackageView] = useState("Pass");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [submittedRegistrationId, setSubmittedRegistrationId] = useState("");
     const [selectedPaymentMethods, setSelectedPaymentMethods] = useState([]);
+    const [canSelectPackage, setCanSelectPackage] = useState(false);
+    const [openRoleGroup, setOpenRoleGroup] = useState(null);
+    const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+    const roleDropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (roleDropdownRef.current && !roleDropdownRef.current.contains(event.target)) {
+                setIsRoleDropdownOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     const normalizedConfig = useMemo(() => ({
         ...FALLBACK_CONFIG,
@@ -402,15 +558,25 @@ const BuyerRegistration = () => {
 
     const validateField = (name, rawValue = formData[name]) => {
         const value = rawValue;
-        const requiredFields = ["fullName", "designation", "companyName", "businessType", "mobileNumber", "alternateNumber", "emailAddress", "registeredAddress", "pinCode", "country", "stateProvince", "city", "yearsInOperation", "annualTurnover", "keyProductsServices", "primaryProductInterest", "buyingFrequency", "estimatedAnnualPurchaseValue", "purchaseTimeline", "roleInPurchaseDecision", "matchmakingInterest", "preferredMeetingDate", "preferredTimeSlot"];
+        const requiredFields = [
+            "fullName", "designation", "companyName", "businessType",
+            "mobileNumber", "emailAddress", "alternateNumber",
+            "registeredAddress", "pinCode", "country", "stateProvince", "city",
+            "companyFirmName", "basicBusinessType", "yearOfEstablishment",
+            "natureOfBusiness", "yearsInBusiness", "numberOfOutlets", "annualTurnover",
+            "buyerIndustry", "primaryProductInterest", "estimatedAnnualPurchaseValue",
+            "purchaseTimeline", "roleInPurchaseDecision", "matchmakingInterest"
+        ];
+
+        if (formData.requirePreScheduledB2B === 'Yes') {
+            requiredFields.push('preferredMeetingDay', 'preferredTimeSlot');
+        }
 
         if (requiredFields.includes(name) && !String(value || "").trim()) return "This field is required";
         if (name === "fullName" && value && !/^[A-Za-z\s.'-]+$/.test(String(value).trim())) return "Use letters and spaces only";
-        if (name === "designation" && value && !/^[A-Za-z0-9\s.&/-]+$/.test(String(value).trim())) return "Please enter a valid designation";
         if (name === "emailAddress" && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value).trim())) return "Enter a valid email address";
         if (["mobileNumber", "alternateNumber"].includes(name) && value && !/^\d{10}$/.test(String(value))) return "Enter exactly 10 digits";
         if (name === "pinCode" && value && !/^\d{6}$/.test(String(value))) return "Enter a valid 6-digit pin code";
-        if (name === "website" && value && !/^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/.*)?$/.test(String(value).trim())) return "Enter a valid website URL";
         return "";
     };
 
@@ -421,7 +587,15 @@ const BuyerRegistration = () => {
 
     const validateForm = ({ skipPackage = false } = {}) => {
         const nextErrors = {};
-        const fieldsToValidate = ["fullName", "designation", "companyName", "businessType", "mobileNumber", "alternateNumber", "emailAddress", "registeredAddress", "pinCode", "country", "stateProvince", "city", "yearsInOperation", "annualTurnover", "keyProductsServices", "primaryProductInterest", "buyingFrequency", "estimatedAnnualPurchaseValue", "purchaseTimeline", "roleInPurchaseDecision", "matchmakingInterest", "preferredMeetingDate", "preferredTimeSlot", "website"];
+        const fieldsToValidate = [
+            "fullName", "designation", "companyName", "businessType",
+            "mobileNumber", "alternateNumber", "emailAddress",
+            "registeredAddress", "pinCode", "country", "stateProvince", "city",
+            "companyFirmName", "basicBusinessType", "yearOfEstablishment",
+            "natureOfBusiness", "yearsInBusiness", "numberOfOutlets", "annualTurnover",
+            "primaryProductInterest", "estimatedAnnualPurchaseValue",
+            "purchaseTimeline", "roleInPurchaseDecision", "matchmakingInterest"
+        ];
 
         fieldsToValidate.forEach((fieldName) => {
             const errorMessage = validateField(fieldName);
@@ -430,10 +604,25 @@ const BuyerRegistration = () => {
 
         if (!formData.preferredSupplierRegion.length) nextErrors.preferredSupplierRegion = "Select at least one region";
         if (!formData.preferredSupplierType.length) nextErrors.preferredSupplierType = "Select at least one supplier type";
+
+        if (formData.requirePreScheduledB2B === 'Yes') {
+            if (!formData.preferredMeetingCategories.length) nextErrors.preferredMeetingCategories = "Select at least one category";
+            if (!formData.meetingObjectives.length) nextErrors.meetingObjectives = "Select at least one objective";
+            if (!formData.preferredBusinessTypes.length) nextErrors.preferredBusinessTypes = "Select business types";
+        }
+
         if (!skipPackage && !selectedPackage?.name) nextErrors.registrationCategory = "Please select a registration package";
 
         setErrors(nextErrors);
-        return { isValid: Object.keys(nextErrors).length === 0, nextErrors };
+        const isValid = Object.keys(nextErrors).length === 0;
+
+        const basicFieldsValid = fieldsToValidate.every(fieldName => !nextErrors[fieldName]) &&
+            formData.preferredSupplierRegion.length > 0 &&
+            formData.preferredSupplierType.length > 0;
+
+        setCanSelectPackage(basicFieldsValid);
+
+        return { isValid, nextErrors };
     };
 
     const handleInputChange = (event) => {
@@ -442,23 +631,46 @@ const BuyerRegistration = () => {
         if (name === "mobileNumber" || name === "alternateNumber") nextValue = value.replace(/\D/g, "").slice(0, 10);
         if (name === "pinCode") nextValue = value.replace(/\D/g, "").slice(0, 6);
         if (name === "fullName") nextValue = value.replace(/[^A-Za-z\s.'-]/g, "");
-        setFormData((prev) => ({ ...prev, [name]: nextValue }));
-        setErrors((prev) => ({ ...prev, [name]: validateField(name, nextValue) }));
+
+        setFormData((prev) => {
+            const nextState = { ...prev, [name]: nextValue };
+            if (name === "companyName") nextState.companyFirmName = nextValue;
+            if (name === "companyFirmName") nextState.companyName = nextValue;
+            return nextState;
+        });
+
+        setErrors((prev) => {
+            const nextErrors = { ...prev, [name]: validateField(name, nextValue) };
+            if (name === "companyName") nextErrors.companyFirmName = validateField("companyFirmName", nextValue);
+            if (name === "companyFirmName") nextErrors.companyName = validateField("companyName", nextValue);
+            return nextErrors;
+        });
+
+        setTimeout(() => validateForm({ skipPackage: true }), 0);
     };
 
     const handleSelectChange = (name, value) => {
         if (name === "country") {
             setFormData((prev) => ({ ...prev, country: value, stateProvince: "", city: "" }));
             setErrors((prev) => ({ ...prev, country: validateField("country", value), stateProvince: "", city: "" }));
-            return;
-        }
-        if (name === "stateProvince") {
+        } else if (name === "stateProvince") {
             setFormData((prev) => ({ ...prev, stateProvince: value, city: "" }));
             setErrors((prev) => ({ ...prev, stateProvince: validateField("stateProvince", value), city: "" }));
-            return;
+        } else {
+            setFormData((prev) => {
+                const nextState = { ...prev, [name]: value };
+                if (name === "businessType") nextState.basicBusinessType = value;
+                if (name === "basicBusinessType") nextState.businessType = value;
+                return nextState;
+            });
+            setErrors((prev) => {
+                const nextErrors = { ...prev, [name]: validateField(name, value) };
+                if (name === "businessType") nextErrors.basicBusinessType = validateField("basicBusinessType", value);
+                if (name === "basicBusinessType") nextErrors.businessType = validateField("businessType", value);
+                return nextErrors;
+            });
         }
-        setFormData((prev) => ({ ...prev, [name]: value }));
-        setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+        setTimeout(() => validateForm({ skipPackage: true }), 0);
     };
 
     const toggleArrayValue = (name, option) => {
@@ -468,6 +680,7 @@ const BuyerRegistration = () => {
             return { ...prev, [name]: nextValues };
         });
         setErrors((prev) => ({ ...prev, [name]: "" }));
+        setTimeout(() => validateForm({ skipPackage: true }), 0);
     };
 
     const togglePaymentMethod = (methodId) => {
@@ -482,20 +695,11 @@ const BuyerRegistration = () => {
         }
     };
 
-    const handleUnlockPackages = () => {
-        const { isValid, nextErrors } = validateForm({ skipPackage: true });
-        if (!isValid) {
-            toast.error("Please complete the required fields before unlocking packages.");
-            const firstErrorField = Object.keys(nextErrors)[0];
-            if (firstErrorField) scrollToField(firstErrorField);
+    const handlePackageSelect = (pkg) => {
+        if (!canSelectPackage) {
+            toast.error("Please complete all required fields before selecting a package.");
             return;
         }
-        setIsFormLocked(false);
-        toast.success("Packages unlocked. You can now select the right plan.");
-        setTimeout(() => scrollToField("registrationCategory"), 120);
-    };
-
-    const handlePackageSelect = (pkg) => {
         setSelectedPackage(pkg);
         setFormData((prev) => ({ ...prev, registrationCategory: pkg.name, registrationFee: formatCurrency(pkg.price) }));
         setErrors((prev) => ({ ...prev, registrationCategory: "" }));
@@ -504,8 +708,7 @@ const BuyerRegistration = () => {
     const buildSubmissionPayload = () => {
         const fd = new FormData();
 
-        // Append all text fields
-        const fields = {
+        const requiredTextFields = {
             fullName: formData.fullName,
             designation: formData.designation,
             companyName: formData.companyName,
@@ -513,58 +716,87 @@ const BuyerRegistration = () => {
             mobileNumber: formData.mobileNumber,
             alternateNumber: formData.alternateNumber,
             emailAddress: formData.emailAddress,
-            website: formData.website || "",
+            registeredAddress: formData.registeredAddress,
             pinCode: formData.pinCode,
             country: formData.country,
             stateProvince: formData.stateProvince,
             city: formData.city,
-            registeredAddress: formData.registeredAddress,
-            yearsInOperation: formData.yearsInOperation,
+            companyFirmName: formData.companyFirmName,
+            basicBusinessType: formData.basicBusinessType,
+            yearOfEstablishment: formData.yearOfEstablishment,
+            natureOfBusiness: formData.natureOfBusiness,
+            yearsInBusiness: formData.yearsInBusiness,
+            numberOfOutlets: formData.numberOfOutlets,
             annualTurnover: formData.annualTurnover,
-            keyProductsServices: formData.keyProductsServices,
+            buyerIndustry: formData.buyerIndustry,
             primaryProductInterest: formData.primaryProductInterest,
-            secondaryProductCategories: JSON.stringify(formData.secondaryProductCategories || []),
-            specificProductRequirements: formData.specificProductRequirements || "",
-            estimatedPurchaseVolume: formData.estimatedPurchaseVolume || "",
-            budgetRange: formData.budgetRange || "",
-            preferredSupplierRegion: JSON.stringify(formData.preferredSupplierRegion || []),
-            preferredState: JSON.stringify(formData.preferredState ? [formData.preferredState] : []),
-            preferredSupplierType: JSON.stringify(formData.preferredSupplierType || []),
-            preferredCompanySize: formData.preferredCompanySize || "",
-            buyingFrequency: formData.buyingFrequency,
             estimatedAnnualPurchaseValue: formData.estimatedAnnualPurchaseValue,
             purchaseTimeline: formData.purchaseTimeline,
             roleInPurchaseDecision: formData.roleInPurchaseDecision,
             matchmakingInterest: formData.matchmakingInterest,
-            preferredMeetingDate: formData.preferredMeetingDate,
-            preferredTimeSlot: formData.preferredTimeSlot,
+        };
+
+        if (formData.requirePreScheduledB2B === 'Yes') {
+            requiredTextFields.preferredMeetingDay = formData.preferredMeetingDay;
+            requiredTextFields.preferredTimeSlot = formData.preferredTimeSlot;
+        }
+
+        Object.entries(requiredTextFields).forEach(([key, value]) => {
+            fd.append(key, value || "");
+        });
+
+        const optionalFields = {
+            brandName: formData.brandName || "",
+            website: formData.website || "",
+            gstNumber: formData.gstNumber || "",
+            panNumber: formData.panNumber || "",
+            secondaryProductCategories: JSON.stringify(formData.secondaryProductCategories || []),
+            specificProductRequirements: formData.specificProductRequirements || "",
+            estimatedPurchaseVolume: formData.estimatedPurchaseVolume || "",
+            budgetRange: formData.budgetRange || "",
+            purchaseFrequency: formData.purchaseFrequency || "",
+            businessModelPreference: formData.businessModelPreference || "",
+            interestedInImporting: formData.interestedInImporting || "No",
+            interestedInExporting: formData.interestedInExporting || "No",
+            preferredSupplierRegion: JSON.stringify(formData.preferredSupplierRegion || []),
+            preferredState: JSON.stringify(formData.preferredState || []),
+            preferredSupplierType: JSON.stringify(formData.preferredSupplierType || []),
+            preferredCompanySize: formData.preferredCompanySize || "",
             requirePreScheduledB2B: formData.requirePreScheduledB2B,
             meetingPriorityLevel: formData.meetingPriorityLevel,
             pricingPreference: formData.pricingPreference,
             logisticsRequirements: formData.logisticsRequirements || "",
             requiredCertifications: JSON.stringify(formData.requiredCertifications || []),
             remarks: formData.remarks || "",
+            transactionId: formData.transactionId || "",
             registrationCategory: selectedPackage?.name || formData.registrationCategory,
             registrationFee: formatCurrency(selectedPackage?.price || 0),
             paymentMode: selectedPaymentMethods.length > 0 ? selectedPaymentMethods.join(", ") : "Pending",
-            transactionId: formData.transactionId,
-            consentTerms: true,
-            consentPaymentValid: true,
-            consentMatchedExhibitors: true,
             paymentStatus: "Completed",
+            consentTerms: "true",
+            consentPaymentValid: "true",
+            consentMatchedExhibitors: "true",
+            preferredMeetingCategories: JSON.stringify(formData.preferredMeetingCategories || []),
+            preferredExhibitorTypes: JSON.stringify(formData.preferredExhibitorTypes || []),
+            numberOfMeetingsInterested: formData.numberOfMeetingsInterested || "",
+            meetingObjectives: JSON.stringify(formData.meetingObjectives || []),
+            preferredBusinessTypes: JSON.stringify(formData.preferredBusinessTypes || []),
+            meetingRequirements: formData.meetingRequirements || "",
+            buyingFrequency: formData.buyingFrequency || "",
         };
 
-        Object.entries(fields).forEach(([key, value]) => fd.append(key, value));
+        Object.entries(optionalFields).forEach(([key, value]) => {
+            fd.append(key, value);
+        });
 
-        // Append file if exists
         if (formData.paymentProof) {
             fd.append("paymentProof", formData.paymentProof);
         }
 
-        // Append payment methods as well if needed
-        selectedPaymentMethods.forEach(method => fd.append("paymentMethods[]", method));
+        selectedPaymentMethods.forEach(method => {
+            fd.append("paymentMethods[]", method);
+        });
 
-        console.log("Submitting FormData payload");
         return fd;
     };
 
@@ -585,16 +817,25 @@ const BuyerRegistration = () => {
             toast.error("Please select at least one payment method.");
             return;
         }
+
         setIsSubmitting(true);
+
         try {
-            const response = await buyerRegistrationApi.submit(buildSubmissionPayload());
+            const payload = buildSubmissionPayload();
+            const response = await buyerRegistrationApi.submit(payload);
+
             if (!response?.success) throw new Error(response?.message || "Registration could not be completed.");
+
             setSubmitted(true);
             setSubmittedRegistrationId(response?.data?._id || response?.data?.id || response?._id || response?.id || "");
             toast.success("Buyer registration completed successfully!");
+
         } catch (error) {
-            console.error("Registration error:", error);
-            const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || "Unable to complete registration. Please try again.";
+            console.error("Registration error details:", error);
+            let errorMessage = "Unable to complete registration. Please try again.";
+            if (error.response?.data?.message) errorMessage = error.response.data.message;
+            else if (error.response?.data?.error) errorMessage = error.response.data.error;
+            else if (error.message) errorMessage = error.message;
             toast.error(errorMessage);
         } finally {
             setIsSubmitting(false);
@@ -607,10 +848,10 @@ const BuyerRegistration = () => {
         setStates([]);
         setCities([]);
         setSelectedPackage(null);
-        setIsFormLocked(true);
         setSubmitted(false);
         setSubmittedRegistrationId("");
         setSelectedPaymentMethods([]);
+        setCanSelectPackage(false);
         setPackageView(passPackages.length ? "Pass" : "Membership");
         if (shouldScroll) window.scrollTo({ top: 0, behavior: "smooth" });
     };
@@ -676,180 +917,459 @@ const BuyerRegistration = () => {
                     </div>
                 </motion.div>
             ) : (
-                <form onSubmit={(e) => { e.preventDefault(); handleSubmitRegistration(); }} className="space-y-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-                    {/* Personal & Company Information */}
+                <form onSubmit={(e) => { e.preventDefault(); handleSubmitRegistration(); }} className="space-y-8 rounded-lg border border-slate-200 bg-white p-6 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] md:p-8">
+
+                    {/* SECTION 1: Personal & Company Information - 5 FIELDS */}
                     <section>
                         <SectionTitle icon={UserRound} title="Personal & Company Information" />
-                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                            <Field label="Full Name" name="fullName" required error={errors.fullName}><input id="fullName" name="fullName" value={formData.fullName} onChange={handleInputChange} placeholder="As per ID proof" className={inputClass} /></Field>
-                            <Field label="Designation" name="designation" required error={errors.designation}><input id="designation" name="designation" value={formData.designation} onChange={handleInputChange} placeholder="Current position" className={inputClass} /></Field>
-                            <Field label="Company Name" name="companyName" required error={errors.companyName}><input id="companyName" name="companyName" value={formData.companyName} onChange={handleInputChange} placeholder="Registered company name" className={inputClass} /></Field>
-                            <Field label="Business Type" name="businessType" required error={errors.businessType}><select id="businessType" name="businessType" value={formData.businessType} onChange={(e) => handleSelectChange("businessType", e.target.value)} className={inputClass}><option value="">Select business type</option>{normalizedConfig.companyTypes.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
+                            <Field label="Full Name *" name="fullName" required error={errors.fullName}>
+                                <input id="fullName" name="fullName" value={formData.fullName} onChange={handleInputChange} placeholder="As per ID Proof" className={inputClass} />
+                            </Field>
+                            <Field label="Designation *" name="designation" required error={errors.designation}>
+                                <input id="designation" name="designation" value={formData.designation} onChange={handleInputChange} placeholder="Current Position" className={inputClass} />
+                            </Field>
+                            <Field label="Company Name *" name="companyName" required error={errors.companyName}>
+                                <input id="companyName" name="companyName" value={formData.companyName} onChange={handleInputChange} placeholder="Full Registered Name" className={inputClass} />
+                            </Field>
+                            <Field label="Mobile Number *" name="mobileNumber" required error={errors.mobileNumber}>
+                                <input id="mobileNumber" name="mobileNumber" value={formData.mobileNumber} onChange={handleInputChange} placeholder="10-digit mobile" className={inputClass} maxLength={10} />
+                            </Field>
+                            <Field label="Alternate Number *" name="alternateNumber" required error={errors.alternateNumber}>
+                                <input id="alternateNumber" name="alternateNumber" value={formData.alternateNumber} onChange={handleInputChange} placeholder="10-digit alternate" className={inputClass} maxLength={10} />
+                            </Field>
+                            <Field label="Email Address *" name="emailAddress" required error={errors.emailAddress}>
+                                <input id="emailAddress" name="emailAddress" type="email" value={formData.emailAddress} onChange={handleInputChange} placeholder="Work Email" className={inputClass} />
+                            </Field>
+                            <Field label="Business Role *" name="businessType" required error={errors.businessType}>
+                                {!formData.businessType.toString().toLowerCase().includes('other') ? (
+                                    <div className="relative" ref={roleDropdownRef}>
+                                        <button type="button" onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)} className={`${inputClass} flex items-center justify-between text-left`}>
+                                            <span className={formData.businessType ? "text-slate-900" : "text-slate-400"}>{formData.businessType || "Select Type"}</span>
+                                            <ChevronsUpDown className="h-3 w-3 text-slate-400" />
+                                        </button>
+                                        {isRoleDropdownOpen && (
+                                            <div className="absolute left-0 right-0 z-[100] mt-1 max-h-[300px] overflow-y-auto rounded-[2px] border border-slate-200 bg-white shadow-xl">
+                                                {staticGroups.map((group) => (
+                                                    <div key={group.title} className="border-b border-slate-100 last:border-0">
+                                                        <button type="button" onClick={(e) => { e.stopPropagation(); setOpenRoleGroup(openRoleGroup === group.title ? null : group.title); }} className="flex w-full items-center justify-between bg-slate-50/50 px-3 py-2 text-[10px] font-bold text-slate-700 transition hover:bg-slate-50">
+                                                            <div className="flex items-center gap-2"><span className="text-[#23471d]/60">{group.icon}</span>{group.title}</div>
+                                                            <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform duration-200 ${openRoleGroup === group.title ? 'rotate-180' : ''}`} />
+                                                        </button>
+                                                        {openRoleGroup === group.title && (
+                                                            <div className="bg-white py-1">
+                                                                {group.items.map((item) => (
+                                                                    <button key={item} type="button" onClick={() => { handleSelectChange('businessType', item); setIsRoleDropdownOpen(false); }} className={`flex w-full items-center px-8 py-1.5 text-[10px] font-medium transition hover:bg-[#23471d]/5 hover:text-[#23471d] ${formData.businessType === item ? 'bg-[#23471d]/5 text-[#23471d]' : 'text-slate-600'}`}>{item}</button>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="relative">
+                                        <input name="otherBusinessType" value={formData.otherBusinessType} onChange={handleInputChange} placeholder="Specify Business Role" className={`${inputClass} pr-8`} required autoFocus />
+                                        <button type="button" onClick={() => handleSelectChange('businessType', '')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500"><X className="h-4 w-4" /></button>
+                                    </div>
+                                )}
+                            </Field>
+                            <Field label="Website" name="website">
+                                <input id="website" name="website" type="url" value={formData.website} onChange={handleInputChange} placeholder="https://..." className={inputClass} />
+                            </Field>
                         </div>
                     </section>
 
-                    {/* Contact Information */}
-                    <section>
-                        <SectionTitle icon={Phone} title="Contact Information" />
-                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                            <Field label="Mobile Number" name="mobileNumber" required error={errors.mobileNumber}><input id="mobileNumber" name="mobileNumber" value={formData.mobileNumber} onChange={handleInputChange} placeholder="10-digit mobile number" className={inputClass} maxLength={10} /></Field>
-                            <Field label="Email Address" name="emailAddress" required error={errors.emailAddress}><input id="emailAddress" name="emailAddress" type="email" value={formData.emailAddress} onChange={handleInputChange} placeholder="Work email address" className={inputClass} /></Field>
-                            <Field label="Alternate Number" name="alternateNumber" required error={errors.alternateNumber}><input id="alternateNumber" name="alternateNumber" value={formData.alternateNumber} onChange={handleInputChange} placeholder="10-digit alternate number" className={inputClass} maxLength={10} /></Field>
-                            <Field label="Website" name="website" error={errors.website} hint="Example: https://yourcompany.com"><input id="website" name="website" type="url" value={formData.website} onChange={handleInputChange} placeholder="Company website" className={inputClass} /></Field>
-                        </div>
-                    </section>
-
-                    {/* Registered Address */}
+                    {/* SECTION 2: Registered Address - 5 FIELDS */}
                     <section>
                         <SectionTitle icon={MapPin} title="Registered Address" />
-                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
-                            <Field label="Country" name="country" required error={errors.country} className="xl:col-span-1"><select id="country" name="country" value={formData.country} onChange={(e) => handleSelectChange("country", e.target.value)} className={inputClass}><option value="">Select country</option>{countries.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}</select></Field>
-                            <Field label="State / Province" name="stateProvince" required error={errors.stateProvince} className="xl:col-span-1"><select id="stateProvince" name="stateProvince" value={formData.stateProvince} onChange={(e) => handleSelectChange("stateProvince", e.target.value)} className={inputClass} disabled={loadingLocations.states}><option value="">{loadingLocations.states ? "Loading states..." : "Select state"}</option>{states.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}</select></Field>
-                            <Field label="City" name="city" required error={errors.city} className="xl:col-span-1"><select id="city" name="city" value={formData.city} onChange={(e) => handleSelectChange("city", e.target.value)} className={inputClass} disabled={!formData.stateProvince || loadingLocations.cities}><option value="">{loadingLocations.cities ? "Loading cities..." : "Select city"}</option>{cities.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}</select></Field>
-                            <Field label="Pin Code" name="pinCode" required error={errors.pinCode} className="xl:col-span-1"><input id="pinCode" name="pinCode" value={formData.pinCode} onChange={handleInputChange} placeholder="6-digit pin code" className={inputClass} maxLength={6} /></Field>
-                            <Field label="Registered Address" name="registeredAddress" required error={errors.registeredAddress} className="xl:col-span-5"><textarea id="registeredAddress" name="registeredAddress" value={formData.registeredAddress} onChange={handleInputChange} placeholder="Full registered company address" className={`${inputClass} min-h-[90px] resize-y`} /></Field>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
+                            <Field label="Country *" name="country" required error={errors.country}>
+                                <select id="country" name="country" value={formData.country} onChange={(e) => handleSelectChange("country", e.target.value)} className={selectClass}>
+                                    <option value="">Select country</option>
+                                    {countries.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}
+                                </select>
+                            </Field>
+                            <Field label="State/Province *" name="stateProvince" required error={errors.stateProvince}>
+                                <select id="stateProvince" name="stateProvince" value={formData.stateProvince} onChange={(e) => handleSelectChange("stateProvince", e.target.value)} className={selectClass} disabled={loadingLocations.states}>
+                                    <option value="">{loadingLocations.states ? "Loading..." : "Select State"}</option>
+                                    {states.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}
+                                </select>
+                            </Field>
+                            <Field label="City *" name="city" required error={errors.city}>
+                                <select id="city" name="city" value={formData.city} onChange={(e) => handleSelectChange("city", e.target.value)} className={selectClass} disabled={!formData.stateProvince || loadingLocations.cities}>
+                                    <option value="">{loadingLocations.cities ? "Loading..." : "Select City"}</option>
+                                    {cities.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}
+                                </select>
+                            </Field>
+                            <Field label="Pin Code *" name="pinCode" required error={errors.pinCode}>
+                                <input id="pinCode" name="pinCode" value={formData.pinCode} onChange={handleInputChange} placeholder="Postal Code" className={inputClass} maxLength={6} />
+                            </Field>
+                            <Field label="Registered Address *" name="registeredAddress" required error={errors.registeredAddress} className="xl:col-span-5">
+                                <textarea id="registeredAddress" name="registeredAddress" value={formData.registeredAddress} onChange={handleInputChange} placeholder="Full Corporate Address" className={`${textareaClass} min-h-[36px] h-9 resize-none`} rows={1} />
+                            </Field>
                         </div>
                     </section>
 
-                    {/* Business Profile */}
+                    {/* SECTION 3: Company Business Profile - 5 FIELDS */}
                     <section>
-                        <SectionTitle icon={Building2} title="Business Profile" />
-                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                            <Field label="Years in Operation" name="yearsInOperation" required error={errors.yearsInOperation}><input id="yearsInOperation" name="yearsInOperation" type="number" min="0" value={formData.yearsInOperation} onChange={handleInputChange} placeholder="e.g. 5" className={inputClass} /></Field>
-                            <Field label="Annual Turnover" name="annualTurnover" required error={errors.annualTurnover}><select id="annualTurnover" name="annualTurnover" value={formData.annualTurnover} onChange={(e) => handleSelectChange("annualTurnover", e.target.value)} className={inputClass}><option value="">Select turnover range</option>{normalizedConfig.annualTurnoverRanges.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
-                            <Field label="Key Products / Services" name="keyProductsServices" required error={errors.keyProductsServices} className="xl:col-span-2"><input id="keyProductsServices" name="keyProductsServices" value={formData.keyProductsServices} onChange={handleInputChange} placeholder="Your core products or service categories" className={inputClass} /></Field>
+                        <SectionTitle icon={Building2} title="Company Business Profile" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
+                            <Field label="Company/Firm Name *" name="companyFirmName" required error={errors.companyFirmName}>
+                                <input id="companyFirmName" name="companyFirmName" value={formData.companyFirmName} onChange={handleInputChange} placeholder="Company / Firm Name" className={inputClass} />
+                            </Field>
+                            <Field label="Brand Name" name="brandName">
+                                <input id="brandName" name="brandName" value={formData.brandName} onChange={handleInputChange} placeholder="Brand Name" className={inputClass} />
+                            </Field>
+                            <Field label="Business Type *" name="basicBusinessType" required error={errors.basicBusinessType}>
+                                <select id="basicBusinessType" name="basicBusinessType" value={formData.basicBusinessType} onChange={(e) => handleSelectChange("basicBusinessType", e.target.value)} className={selectClass}>
+                                    <option value="">Select Type</option>
+                                    {['Proprietorship', 'Partnership', 'Pvt Ltd', 'LLP', 'Others'].map((t) => (<option key={t} value={t}>{t}</option>))}
+                                </select>
+                            </Field>
+                            <Field label="Year of Est.*" name="yearOfEstablishment" required error={errors.yearOfEstablishment}>
+                                <input id="yearOfEstablishment" name="yearOfEstablishment" value={formData.yearOfEstablishment} onChange={handleInputChange} placeholder="e.g. 2010" className={inputClass} />
+                            </Field>
+                            <Field label="GST Number" name="gstNumber">
+                                <input id="gstNumber" name="gstNumber" value={formData.gstNumber} onChange={handleInputChange} placeholder="GST Number" className={inputClass} />
+                            </Field>
+                            <Field label="PAN Number" name="panNumber">
+                                <input id="panNumber" name="panNumber" value={formData.panNumber} onChange={handleInputChange} placeholder="PAN Number" className={inputClass} />
+                            </Field>
+                            <Field label="Buyer Industry *" name="buyerIndustry" required error={errors.buyerIndustry}>
+                                <select id="buyerIndustry" name="buyerIndustry" value={formData.buyerIndustry} onChange={(e) => handleSelectChange("buyerIndustry", e.target.value)} className={selectClass}>
+                                    <option value="">Choose Industry</option>
+                                    {normalizedConfig.primaryProductInterests.map((i) => (<option key={i} value={i}>{i}</option>))}
+                                </select>
+                            </Field>
                         </div>
                     </section>
 
-                    {/* Sourcing & Buying Interests */}
+                    {/* SECTION 4: Business Profile Details - 5 FIELDS */}
                     <section>
-                        <SectionTitle icon={Globe2} title="Sourcing & Buying Interests" />
-                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                            <Field label="Primary Product Interest" name="primaryProductInterest" required error={errors.primaryProductInterest}><select id="primaryProductInterest" name="primaryProductInterest" value={formData.primaryProductInterest} onChange={(e) => handleSelectChange("primaryProductInterest", e.target.value)} className={inputClass}><option value="">Select primary interest</option>{normalizedConfig.primaryProductInterests.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
-                            <Field label="Secondary Product Category" name="secondaryProductCategories" error={errors.secondaryProductCategories}><select id="secondaryProductCategories" name="secondaryProductCategories" value={formData.secondaryProductCategories} onChange={(e) => handleSelectChange("secondaryProductCategories", e.target.value)} className={inputClass}><option value="">Select category</option>{normalizedConfig.secondaryProductCategories.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
-                            <Field label="Estimated Purchase Volume" name="estimatedPurchaseVolume" error={errors.estimatedPurchaseVolume}><input id="estimatedPurchaseVolume" name="estimatedPurchaseVolume" value={formData.estimatedPurchaseVolume} onChange={handleInputChange} placeholder="e.g. 5000 units" className={inputClass} /></Field>
-                            <Field label="Budget Range" name="budgetRange" error={errors.budgetRange}><select id="budgetRange" name="budgetRange" value={formData.budgetRange} onChange={(e) => handleSelectChange("budgetRange", e.target.value)} className={inputClass}><option value="">Select budget range</option>{normalizedConfig.budgetRanges.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
-                            <Field label="Specific Product Requirements" name="specificProductRequirements" error={errors.specificProductRequirements} className="xl:col-span-4"><textarea id="specificProductRequirements" name="specificProductRequirements" value={formData.specificProductRequirements} onChange={handleInputChange} placeholder="Mention custom sourcing requirements, certifications, quantity expectations, or product notes." className={`${inputClass} min-h-[90px] resize-y`} /></Field>
+                        <SectionTitle icon={FileText} title="Business Profile Details" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
+                            <Field label="Nature of Business *" name="natureOfBusiness" required error={errors.natureOfBusiness}>
+                                <input id="natureOfBusiness" name="natureOfBusiness" value={formData.natureOfBusiness} onChange={handleInputChange} placeholder="Short description" className={inputClass} />
+                            </Field>
+                            <Field label="Years in Business *" name="yearsInBusiness" required error={errors.yearsInBusiness}>
+                                <input id="yearsInBusiness" name="yearsInBusiness" type="number" min="0" value={formData.yearsInBusiness} onChange={handleInputChange} placeholder="e.g. 10" className={inputClass} />
+                            </Field>
+                            <Field label="No. of Outlets *" name="numberOfOutlets" required error={errors.numberOfOutlets}>
+                                <input id="numberOfOutlets" name="numberOfOutlets" type="number" min="1" value={formData.numberOfOutlets} onChange={handleInputChange} placeholder="e.g. 5" className={inputClass} />
+                            </Field>
+                            <Field label="Annual Turnover *" name="annualTurnover" required error={errors.annualTurnover}>
+                                <select id="annualTurnover" name="annualTurnover" value={formData.annualTurnover} onChange={(e) => handleSelectChange("annualTurnover", e.target.value)} className={selectClass}>
+                                    <option value="">Select Range</option>
+                                    {(normalizedConfig.annualTurnoverRanges || ['Below 50 Lakhs', '50L – 2 Cr', '2 – 10 Cr', '10 Cr+']).map((r) => (<option key={r} value={r}>{r}</option>))}
+                                </select>
+                            </Field>
                         </div>
                     </section>
 
-                    {/* Supplier Preference */}
+                    {/* SECTION 5: Sourcing & Purchase Intent - Primary Fields */}
+                    <section>
+                        <SectionTitle icon={Globe2} title="Sourcing & Purchase Intent" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
+                            <Field label="Primary Product Interest *" name="primaryProductInterest" required error={errors.primaryProductInterest}>
+                                <select id="primaryProductInterest" name="primaryProductInterest" value={formData.primaryProductInterest} onChange={(e) => handleSelectChange("primaryProductInterest", e.target.value)} className={selectClass}>
+                                    <option value="">Choose Interest</option>
+                                    {normalizedConfig.primaryProductInterests.map((item) => (<option key={item} value={item}>{item}</option>))}
+                                </select>
+                            </Field>
+                            <Field label="Secondary Categories">
+                                <MultiSelectDropdown options={normalizedConfig.secondaryProductCategories} selected={formData.secondaryProductCategories} onChange={(val) => setFormData(prev => ({ ...prev, secondaryProductCategories: val }))} placeholder="Select categories..." accentColor="emerald" />
+                            </Field>
+                            <Field label="Importing Interest?" name="interestedInImporting">
+                                <select id="interestedInImporting" name="interestedInImporting" value={formData.interestedInImporting} onChange={(e) => handleSelectChange("interestedInImporting", e.target.value)} className={selectClass}>
+                                    {['Yes', 'No'].map(o => <option key={o} value={o}>{o}</option>)}
+                                </select>
+                            </Field>
+                            <Field label="Export Interest?" name="interestedInExporting">
+                                <select id="interestedInExporting" name="interestedInExporting" value={formData.interestedInExporting} onChange={(e) => handleSelectChange("interestedInExporting", e.target.value)} className={selectClass}>
+                                    {['Yes', 'No'].map(o => <option key={o} value={o}>{o}</option>)}
+                                </select>
+                            </Field>
+                            <Field label="Business Model" name="businessModelPreference">
+                                <select id="businessModelPreference" name="businessModelPreference" value={formData.businessModelPreference} onChange={(e) => handleSelectChange("businessModelPreference", e.target.value)} className={selectClass}>
+                                    <option value="">Select Model</option>
+                                    {normalizedConfig.businessModelOptions.map((m) => (<option key={m} value={m}>{m}</option>))}
+                                </select>
+                            </Field>
+                            <Field label="Est. Monthly Purchase" name="estimatedPurchaseVolume">
+                                <input id="estimatedPurchaseVolume" name="estimatedPurchaseVolume" value={formData.estimatedPurchaseVolume} onChange={handleInputChange} placeholder="e.g. 5000 Units" className={inputClass} />
+                            </Field>
+                            <Field label="Budget Range" name="budgetRange">
+                                <select id="budgetRange" name="budgetRange" value={formData.budgetRange} onChange={(e) => handleSelectChange("budgetRange", e.target.value)} className={selectClass}>
+                                    <option value="">Choose Budget</option>
+                                    {normalizedConfig.budgetRanges.map((item) => (<option key={item} value={item}>{item}</option>))}
+                                </select>
+                            </Field>
+                            <Field label="Buying Frequency *" name="buyingFrequency" required error={errors.buyingFrequency}>
+                                <select id="buyingFrequency" name="buyingFrequency" value={formData.buyingFrequency} onChange={(e) => handleSelectChange("buyingFrequency", e.target.value)} className={selectClass}>
+                                    <option value="">Select</option>
+                                    {(normalizedConfig.buyingFrequencies || ['One-time', 'Monthly', 'Quarterly', 'Long-term']).map(f => <option key={f} value={f}>{f}</option>)}
+                                </select>
+                            </Field>
+                            <Field label="Est. Annual Purchase *" name="estimatedAnnualPurchaseValue" required error={errors.estimatedAnnualPurchaseValue}>
+                                <select id="estimatedAnnualPurchaseValue" name="estimatedAnnualPurchaseValue" value={formData.estimatedAnnualPurchaseValue} onChange={(e) => handleSelectChange("estimatedAnnualPurchaseValue", e.target.value)} className={selectClass}>
+                                    <option value="">Select</option>
+                                    {(normalizedConfig.annualPurchaseValueRanges || ['Below 10 Lakhs', '10-50 Lakhs', '50 Lakhs - 1 Crore', '1-5 Crore', '5+ Crore']).map(v => <option key={v} value={v}>{v}</option>)}
+                                </select>
+                            </Field>
+                            <Field label="Purchase Timeline *" name="purchaseTimeline" required error={errors.purchaseTimeline}>
+                                <select id="purchaseTimeline" name="purchaseTimeline" value={formData.purchaseTimeline} onChange={(e) => handleSelectChange("purchaseTimeline", e.target.value)} className={selectClass}>
+                                    <option value="">Select</option>
+                                    {(normalizedConfig.purchaseTimelines || ['Immediate', '1–3 Months', '3–6 Months', 'Exploring']).map(t => <option key={t} value={t}>{t}</option>)}
+                                </select>
+                            </Field>
+                            <Field label="Matchmaking Interest *" name="matchmakingInterest" required error={errors.matchmakingInterest}>
+                                <select id="matchmakingInterest" name="matchmakingInterest" value={formData.matchmakingInterest} onChange={(e) => handleSelectChange("matchmakingInterest", e.target.value)} className={selectClass}>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </Field>
+                            <Field label="Role in Purchase *" name="roleInPurchaseDecision" required error={errors.roleInPurchaseDecision}>
+                                <select id="roleInPurchaseDecision" name="roleInPurchaseDecision" value={formData.roleInPurchaseDecision} onChange={(e) => handleSelectChange("roleInPurchaseDecision", e.target.value)} className={selectClass}>
+                                    <option value="">Select Role</option>
+                                    {(normalizedConfig.roles || ['Final Decision Maker', 'Influencer', 'Research Only']).map(r => <option key={r} value={r}>{r}</option>)}
+                                </select>
+                            </Field>
+                            <Field label="Specific Requirements" name="specificProductRequirements" className="xl:col-span-5">
+                                <textarea id="specificProductRequirements" name="specificProductRequirements" value={formData.specificProductRequirements} onChange={handleInputChange} placeholder="Any custom needs..." className={`${textareaClass} min-h-[36px] h-9 resize-none`} rows={1} />
+                            </Field>
+                        </div>
+                    </section>
+
+                    {/* SECTION 6: Supplier Preference - 5 FIELDS */}
                     <section>
                         <SectionTitle icon={Briefcase} title="Supplier Preference" />
-                        <div className="space-y-5">
-                            <div className="grid gap-5 xl:grid-cols-2">
-                                <CheckboxChipGroup name="preferredSupplierRegion" label="Preferred Supplier Region" required options={normalizedConfig.regions} values={formData.preferredSupplierRegion} onToggle={toggleArrayValue} error={errors.preferredSupplierRegion} />
-                                <CheckboxChipGroup name="preferredSupplierType" label="Preferred Supplier Type" required options={normalizedConfig.supplierTypes} values={formData.preferredSupplierType} onToggle={toggleArrayValue} error={errors.preferredSupplierType} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
+                            <div>
+                                <label className={labelClass}>Preferred Region *</label>
+                                <MultiSelectDropdown options={normalizedConfig.regions || ['North India', 'South India', 'East India', 'West India', 'Pan India', 'Global']} selected={formData.preferredSupplierRegion} onChange={(val) => { setFormData(prev => ({ ...prev, preferredSupplierRegion: val })); setErrors(prev => ({ ...prev, preferredSupplierRegion: '' })); }} placeholder="Select regions..." error={!!errors.preferredSupplierRegion} accentColor="emerald" />
+                                <ErrorText message={errors.preferredSupplierRegion} />
                             </div>
-                            <div className="grid gap-5 md:grid-cols-2">
-                                <Field label="Preferred State" name="preferredState" error={errors.preferredState}><select id="preferredState" name="preferredState" value={formData.preferredState} onChange={(e) => handleSelectChange("preferredState", e.target.value)} className={inputClass}><option value="">Select preferred state</option>{states.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}</select></Field>
-                                <Field label="Preferred Company Size" name="preferredCompanySize" error={errors.preferredCompanySize}><select id="preferredCompanySize" name="preferredCompanySize" value={formData.preferredCompanySize} onChange={(e) => handleSelectChange("preferredCompanySize", e.target.value)} className={inputClass}><option value="">Select company size</option>{normalizedConfig.companySizes.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
+                            <div>
+                                <label className={labelClass}>Preferred Supplier Type *</label>
+                                <MultiSelectDropdown options={normalizedConfig.supplierTypes || ['Manufacturer', 'Exporter', 'MSME', 'Startup', 'Wholesaler']} selected={formData.preferredSupplierType} onChange={(val) => { setFormData(prev => ({ ...prev, preferredSupplierType: val })); setErrors(prev => ({ ...prev, preferredSupplierType: '' })); }} placeholder="Select types..." error={!!errors.preferredSupplierType} accentColor="emerald" />
+                                <ErrorText message={errors.preferredSupplierType} />
                             </div>
+                            <div>
+                                <label className={labelClass}>Preferred State</label>
+                                <MultiSelectDropdown options={states.map(s => s.name)} selected={formData.preferredState} onChange={(val) => setFormData(prev => ({ ...prev, preferredState: val }))} placeholder={states.length === 0 ? "Select country first..." : "Select states..."} accentColor="emerald" />
+                            </div>
+                            <Field label="Preferred Company Size" name="preferredCompanySize">
+                                <select id="preferredCompanySize" name="preferredCompanySize" value={formData.preferredCompanySize} onChange={(e) => handleSelectChange("preferredCompanySize", e.target.value)} className={selectClass}>
+                                    <option value="">Select Size</option>
+                                    {normalizedConfig.companySizes.map((item) => (<option key={item} value={item}>{item}</option>))}
+                                </select>
+                            </Field>
                         </div>
                     </section>
 
-                    {/* Purchase Intent & Meeting Preferences */}
+                    {/* SECTION 7: Certification & Compliance - 5 FIELDS */}
                     <section>
-                        <SectionTitle icon={CalendarDays} title="Purchase Intent & Meeting Preferences" />
-                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                            <Field label="Buying Frequency" name="buyingFrequency" required error={errors.buyingFrequency}><select id="buyingFrequency" name="buyingFrequency" value={formData.buyingFrequency} onChange={(e) => handleSelectChange("buyingFrequency", e.target.value)} className={inputClass}><option value="">Select frequency</option>{normalizedConfig.buyingFrequencies.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
-                            <Field label="Estimated Annual Purchase" name="estimatedAnnualPurchaseValue" required error={errors.estimatedAnnualPurchaseValue}><select id="estimatedAnnualPurchaseValue" name="estimatedAnnualPurchaseValue" value={formData.estimatedAnnualPurchaseValue} onChange={(e) => handleSelectChange("estimatedAnnualPurchaseValue", e.target.value)} className={inputClass}><option value="">Select value range</option>{normalizedConfig.annualPurchaseValueRanges.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
-                            <Field label="Purchase Timeline" name="purchaseTimeline" required error={errors.purchaseTimeline}><select id="purchaseTimeline" name="purchaseTimeline" value={formData.purchaseTimeline} onChange={(e) => handleSelectChange("purchaseTimeline", e.target.value)} className={inputClass}><option value="">Select timeline</option>{normalizedConfig.purchaseTimelines.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
-                            <Field label="Role in Purchase Decision" name="roleInPurchaseDecision" required error={errors.roleInPurchaseDecision}><select id="roleInPurchaseDecision" name="roleInPurchaseDecision" value={formData.roleInPurchaseDecision} onChange={(e) => handleSelectChange("roleInPurchaseDecision", e.target.value)} className={inputClass}><option value="">Select role</option>{normalizedConfig.roles.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
-                            <Field label="Matchmaking Interest" name="matchmakingInterest" required error={errors.matchmakingInterest}><select id="matchmakingInterest" name="matchmakingInterest" value={formData.matchmakingInterest} onChange={(e) => handleSelectChange("matchmakingInterest", e.target.value)} className={inputClass}><option value="Yes">Yes</option><option value="No">No</option></select></Field>
-                            <Field label="Preferred Meeting Date" name="preferredMeetingDate" required error={errors.preferredMeetingDate}><input id="preferredMeetingDate" name="preferredMeetingDate" type="date" value={formData.preferredMeetingDate} onChange={handleInputChange} className={inputClass} /></Field>
-                            <Field label="Preferred Time Slot" name="preferredTimeSlot" required error={errors.preferredTimeSlot}><select id="preferredTimeSlot" name="preferredTimeSlot" value={formData.preferredTimeSlot} onChange={(e) => handleSelectChange("preferredTimeSlot", e.target.value)} className={inputClass}><option value="">Select time slot</option><option value="Morning (10AM - 1PM)">Morning (10AM - 1PM)</option><option value="Afternoon (2PM - 4PM)">Afternoon (2PM - 4PM)</option><option value="Evening (4PM - 6PM)">Evening (4PM - 6PM)</option></select></Field>
-                            <Field label="Pre-scheduled B2B" name="requirePreScheduledB2B" error={errors.requirePreScheduledB2B}><select id="requirePreScheduledB2B" name="requirePreScheduledB2B" value={formData.requirePreScheduledB2B} onChange={(e) => handleSelectChange("requirePreScheduledB2B", e.target.value)} className={inputClass}><option value="Yes">Yes</option><option value="No">No</option></select></Field>
-                            <Field label="Meeting Priority Level" name="meetingPriorityLevel" error={errors.meetingPriorityLevel}><select id="meetingPriorityLevel" name="meetingPriorityLevel" value={formData.meetingPriorityLevel} onChange={(e) => handleSelectChange("meetingPriorityLevel", e.target.value)} className={inputClass}>{normalizedConfig.meetingPriorityLevels.map((item) => (<option key={item} value={item}>{item}</option>))}</select></Field>
-                        </div>
-                    </section>
-
-                    {/* Compliance, Pricing & Notes */}
-                    <section>
-                        <SectionTitle icon={FileText} title="Compliance, Pricing & Notes" />
-                        <div className="space-y-5">
-                            <CheckboxChipGroup name="requiredCertifications" label="Required Certifications" options={normalizedConfig.certificationOptions} values={formData.requiredCertifications} onToggle={toggleArrayValue} error={errors.requiredCertifications} />
-                            <div className="grid gap-5 md:grid-cols-2">
-                                <Field label="Pricing Preference" name="pricingPreference" error={errors.pricingPreference}><div className="flex flex-wrap gap-3 rounded-[2px] border border-slate-300 p-3">{["Premium", "Mid-Range", "Budget"].map((item) => (<label key={item} className={`cursor-pointer rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition ${formData.pricingPreference === item ? "border-[#23471d] bg-[#23471d] text-white" : "border-slate-300 text-slate-600 hover:border-[#23471d]"}`}><input type="radio" name="pricingPreference" value={item} checked={formData.pricingPreference === item} onChange={(e) => handleSelectChange("pricingPreference", e.target.value)} className="hidden" />{item}</label>))}</div></Field>
-                                <Field label="Logistics Requirements" name="logisticsRequirements" error={errors.logisticsRequirements}><textarea id="logisticsRequirements" name="logisticsRequirements" value={formData.logisticsRequirements} onChange={handleInputChange} placeholder="Mention delivery, warehousing, or shipping requirements if any." className={`${inputClass} min-h-[90px] resize-y`} /></Field>
+                        <SectionTitle icon={ShieldCheck} title="Certification & Compliance" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
+                            <div>
+                                <label className={labelClass}>Required Certifications</label>
+                                <MultiSelectDropdown options={normalizedConfig.certificationOptions || ['ISO', 'GMP', 'FDA', 'AYUSH', 'Organic', 'Halal', 'Kosher', 'Others']} selected={formData.requiredCertifications} onChange={(val) => setFormData(prev => ({ ...prev, requiredCertifications: val }))} placeholder="Select certifications..." accentColor="slate" />
                             </div>
-                            <Field label="Remarks" name="remarks" error={errors.remarks}><textarea id="remarks" name="remarks" value={formData.remarks} onChange={handleInputChange} placeholder="Any internal or buyer-side notes for the registration." className={`${inputClass} min-h-[90px] resize-y`} /></Field>
+                            <Field label="Pricing Preference" name="pricingPreference">
+                                <select name="pricingPreference" value={formData.pricingPreference} onChange={(e) => handleSelectChange("pricingPreference", e.target.value)} className={selectClass}>
+                                    <option value="Premium">Premium</option>
+                                    <option value="Mid-Range">Mid-Range</option>
+                                    <option value="Budget">Budget</option>
+                                </select>
+                            </Field>
+                            <div>
+                                <label className={labelClass}>Payment Methods</label>
+                                <MultiSelectDropdown options={['Letter of Credit (LC)', 'Cash Against Documents (CAD)', 'Bank Transfer (T/T)', 'Open Account', 'Advance Payment']} selected={formData.preferredPaymentMethods} onChange={(val) => setFormData(prev => ({ ...prev, preferredPaymentMethods: val }))} placeholder="Select methods..." accentColor="blue" />
+                            </div>
+                            <Field label="Company Profile" name="companyProfile">
+                                <div className="relative h-9">
+                                    <input type="file" id="companyProfile" name="companyProfile" onChange={handleFileChange} accept=".pdf,.doc,.docx" className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0" />
+                                    <div className={`flex h-full w-full items-center justify-between rounded-[2px] border border-slate-300 bg-white px-3 text-[12px] font-medium ${formData.companyProfile ? "text-[#23471d]" : "text-slate-400"}`}>
+                                        <span className="truncate">{formData.companyProfile ? formData.companyProfile.name : "Select file..."}</span>
+                                        <FileText className="h-4 w-4 shrink-0" />
+                                    </div>
+                                </div>
+                            </Field>
+                            <Field label="Logistics Requirements" name="logisticsRequirements">
+                                <input id="logisticsRequirements" name="logisticsRequirements" value={formData.logisticsRequirements} onChange={handleInputChange} placeholder="e.g. Sea freight..." className={inputClass} />
+                            </Field>
                         </div>
                     </section>
 
-                    {/* Registration Category & Payment */}
+                    {/* SECTION 8: B2B Meeting Preferences - 5 FIELDS */}
+                    <section>
+                        <SectionTitle icon={Clock} title="B2B Meeting Preferences" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
+                            <Field label="Pre-scheduled B2B?" name="requirePreScheduledB2B">
+                                <select id="requirePreScheduledB2B" name="requirePreScheduledB2B" value={formData.requirePreScheduledB2B} onChange={(e) => handleSelectChange("requirePreScheduledB2B", e.target.value)} className={selectClass}>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </Field>
+                            <Field label="Priority Level" name="meetingPriorityLevel">
+                                <select id="meetingPriorityLevel" name="meetingPriorityLevel" value={formData.meetingPriorityLevel} onChange={(e) => handleSelectChange("meetingPriorityLevel", e.target.value)} className={selectClass}>
+                                    {normalizedConfig.meetingPriorityLevels.map((item) => (<option key={item} value={item}>{item}</option>))}
+                                </select>
+                            </Field>
+
+                            {formData.requirePreScheduledB2B === 'Yes' && (
+                                <>
+                                    <div>
+                                        <label className={labelClass}>Meeting Categories *</label>
+                                        <MultiSelectDropdown options={normalizedConfig.meetingCategoryOptions} selected={formData.preferredMeetingCategories} onChange={(val) => { setFormData(prev => ({ ...prev, preferredMeetingCategories: val })); setErrors(prev => ({ ...prev, preferredMeetingCategories: '' })); }} placeholder="Select..." error={!!errors.preferredMeetingCategories} accentColor="emerald" />
+                                        <ErrorText message={errors.preferredMeetingCategories} />
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Exhibitor Types</label>
+                                        <MultiSelectDropdown options={normalizedConfig.exhibitorTypeOptions} selected={formData.preferredExhibitorTypes} onChange={(val) => setFormData(prev => ({ ...prev, preferredExhibitorTypes: val }))} placeholder="Select..." accentColor="emerald" />
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Meeting Objectives *</label>
+                                        <MultiSelectDropdown options={normalizedConfig.meetingObjectiveOptions} selected={formData.meetingObjectives} onChange={(val) => { setFormData(prev => ({ ...prev, meetingObjectives: val })); setErrors(prev => ({ ...prev, meetingObjectives: '' })); }} placeholder="Select..." error={!!errors.meetingObjectives} accentColor="amber" />
+                                        <ErrorText message={errors.meetingObjectives} />
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Business Type *</label>
+                                        <MultiSelectDropdown options={normalizedConfig.preferredBusinessTypeOptions} selected={formData.preferredBusinessTypes} onChange={(val) => { setFormData(prev => ({ ...prev, preferredBusinessTypes: val })); setErrors(prev => ({ ...prev, preferredBusinessTypes: '' })); }} placeholder="Select..." error={!!errors.preferredBusinessTypes} accentColor="blue" />
+                                        <ErrorText message={errors.preferredBusinessTypes} />
+                                    </div>
+                                    <Field label="Preferred Day *" name="preferredMeetingDay" required error={errors.preferredMeetingDay}>
+                                        <select id="preferredMeetingDay" name="preferredMeetingDay" value={formData.preferredMeetingDay} onChange={(e) => handleSelectChange("preferredMeetingDay", e.target.value)} className={selectClass}>
+                                            <option value="">Select Day</option>
+                                            {normalizedConfig.meetingDayOptions.map(day => <option key={day} value={day}>{day}</option>)}
+                                        </select>
+                                    </Field>
+                                    <Field label="Time Slot *" name="preferredTimeSlot" required error={errors.preferredTimeSlot}>
+                                        <select id="preferredTimeSlot" name="preferredTimeSlot" value={formData.preferredTimeSlot} onChange={(e) => handleSelectChange("preferredTimeSlot", e.target.value)} className={selectClass}>
+                                            <option value="">Select Slot</option>
+                                            {['Morning (10AM-1PM)', 'Afternoon (2PM-4PM)', 'Evening (4PM-6PM)'].map(slot => <option key={slot} value={slot}>{slot}</option>)}
+                                        </select>
+                                    </Field>
+                                    <Field label="Number of Meetings" name="numberOfMeetingsInterested">
+                                        <select id="numberOfMeetingsInterested" name="numberOfMeetingsInterested" value={formData.numberOfMeetingsInterested} onChange={(e) => handleSelectChange("numberOfMeetingsInterested", e.target.value)} className={selectClass}>
+                                            <option value="">Select Count</option>
+                                            {["3–5 Meetings", "5–10 Meetings", "10+ Meetings"].map(count => <option key={count} value={count}>{count}</option>)}
+                                        </select>
+                                    </Field>
+                                    <Field label="Meeting Requirements" name="meetingRequirements" className="xl:col-span-5">
+                                        <textarea id="meetingRequirements" name="meetingRequirements" value={formData.meetingRequirements} onChange={handleInputChange} placeholder="Mention specific expectations..." className={`${textareaClass} min-h-[36px] h-9 resize-none`} rows={1} />
+                                    </Field>
+                                </>
+                            )}
+                        </div>
+                    </section>
+
+                    {/* SECTION 9: Remarks - Full Width */}
+                    <section>
+                        <SectionTitle icon={FileText} title="Remarks" />
+                        <div className="grid grid-cols-1 gap-4">
+                            <Field label="Remarks" name="remarks">
+                                <textarea id="remarks" name="remarks" value={formData.remarks} onChange={handleInputChange} placeholder="Any internal or buyer-side notes for the registration." className={`${textareaClass} min-h-[60px]`} rows={2} />
+                            </Field>
+                        </div>
+                    </section>
+
+                    {/* Registration Category & Payment Section */}
                     <section data-field="registrationCategory">
-                        <SectionTitle icon={CreditCard} title="Registration Category & Payment" />
+                        <SectionTitle icon={CreditCard} title="Registration Category 🔹" />
                         {normalizedPackages.length === 0 ? (
-                            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-900"><div className="flex gap-3"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" /><div><p className="text-sm font-black uppercase tracking-[0.16em]">No packages configured</p><p className="mt-2 text-sm leading-7">Please add buyer registration packages from the registration configuration page before using this form.</p><Link to="/buyer-registration-config" className="mt-4 inline-flex rounded-[2px] bg-[#23471d] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white">Open Registration Config</Link></div></div></div>
-                        ) : isFormLocked ? (
-                            <div className="rounded-3xl border-2 border-dashed border-emerald-200 bg-emerald-50/70 p-8 text-center"><div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-[#23471d] shadow-sm"><Lock className="h-6 w-6" /></div><h4 className="mt-4 text-lg font-black uppercase tracking-[0.16em] text-slate-900">Packages are locked</h4><p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-600">Complete the required buyer details to unlock passes and membership options.</p><button type="button" onClick={handleUnlockPackages} className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#23471d] px-6 py-3 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-[#1a3516]">Unlock Packages <ArrowRight className="h-4 w-4" /></button></div>
+                            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-900">
+                                <div className="flex gap-3">
+                                    <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                                    <div>
+                                        <p className="text-sm font-black uppercase tracking-[0.16em]">No packages configured</p>
+                                        <p className="mt-2 text-sm leading-7">Please add buyer registration packages from the registration configuration page before using this form.</p>
+                                        <Link to="/buyer-registration-config" className="mt-4 inline-flex rounded-[2px] bg-[#23471d] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white">Open Registration Config</Link>
+                                    </div>
+                                </div>
+                            </div>
                         ) : (
                             <div className="space-y-6">
-                                {membershipPackages.length > 0 && <div className="flex flex-wrap gap-2"><button type="button" onClick={() => setPackageView("Pass")} className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.18em] transition ${packageView === "Pass" ? "bg-[#23471d] text-white" : "border border-slate-300 bg-white text-slate-600 hover:border-[#23471d]"}`}>Pass Packages</button><button type="button" onClick={() => setPackageView("Membership")} className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.18em] transition ${packageView === "Membership" ? "bg-[#23471d] text-white" : "border border-slate-300 bg-white text-slate-600 hover:border-[#23471d]"}`}>Membership Plans</button></div>}
-                                <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">{(packageView === "Membership" ? membershipPackages : passPackages).map((pkg) => (<PackageCard key={pkg.name} pkg={pkg} selected={selectedPackage?.name === pkg.name} onSelect={handlePackageSelect} />))}</div>
-                                {selectedPackage && (<>
-                                    <div className="rounded-2xl border border-[#23471d]/10 bg-[#23471d]/5 p-5"><div><p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Selected Package</p><h4 className="mt-2 text-xl font-black text-slate-900">{selectedPackage.name}</h4><p className="mt-2 text-sm font-medium text-slate-600">Fee: {formatCurrency(selectedPackage.price)}</p></div></div>
-                                    <div className="rounded-2xl border border-slate-200 p-5">
-                                        <div className="mb-4 flex items-center gap-2">
-                                            <CreditCard className="h-5 w-5 text-[#23471d]" />
-                                            <h4 className="text-sm font-black uppercase tracking-[0.18em] text-slate-700">Select Payment Method</h4>
-                                        </div>
-                                        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                                            {PAYMENT_METHODS.map((method) => (
-                                                <PaymentMethodCard key={method.id} method={method} selected={selectedPaymentMethods.includes(method.id)} onToggle={togglePaymentMethod} />
-                                            ))}
-                                        </div>
-                                        {selectedPaymentMethods.length === 0 && <p className="mt-3 text-xs text-red-600">Please select at least one payment method</p>}
-                                    </div>
+                                <div className={`rounded-2xl border p-4 mb-4 ${canSelectPackage ? 'border-green-200 bg-green-50' : 'border-blue-200 bg-blue-50'}`}>
+                                    <p className={`text-sm font-medium ${canSelectPackage ? 'text-green-800' : 'text-blue-800'}`}>
+                                        {canSelectPackage ? "✅ All required fields completed! You can now select a package below." : "⚠️ Please complete all required fields above to unlock package selection."}
+                                    </p>
+                                </div>
 
-                                    <div className="grid gap-5 md:grid-cols-2">
-                                        <Field label="Transaction ID" name="transactionId" hint="Enter the manual transaction reference ID">
-                                            <input
-                                                id="transactionId"
-                                                name="transactionId"
-                                                value={formData.transactionId}
-                                                onChange={handleInputChange}
-                                                placeholder="e.g. TXN123456789"
-                                                className={inputClass}
-                                            />
-                                        </Field>
-                                        <Field label="Payment Proof (Screenshot)" name="paymentProof" hint="Upload a file as proof of payment (Image or PDF)">
-                                            <div className="relative">
-                                                <input
-                                                    type="file"
-                                                    id="paymentProof"
-                                                    name="paymentProof"
-                                                    onChange={handleFileChange}
-                                                    accept="image/*,application/pdf"
-                                                    className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-                                                />
-                                                <div className={`flex w-full items-center justify-between rounded-[2px] border border-slate-300 bg-white px-3 py-2 text-sm font-medium ${formData.paymentProof ? "text-[#23471d]" : "text-slate-400"}`}>
-                                                    <span>{formData.paymentProof ? formData.paymentProof.name : "Select proof file..."}</span>
-                                                    <FileText className="h-4 w-4" />
-                                                </div>
-                                            </div>
-                                        </Field>
+                                {membershipPackages.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                        <button type="button" onClick={() => setPackageView("Pass")} className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.18em] transition ${packageView === "Pass" ? "bg-[#23471d] text-white" : "border border-slate-300 bg-white text-slate-600 hover:border-[#23471d]"}`}>Pass Packages</button>
+                                        <button type="button" onClick={() => setPackageView("Membership")} className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.18em] transition ${packageView === "Membership" ? "bg-[#23471d] text-white" : "border border-slate-300 bg-white text-slate-600 hover:border-[#23471d]"}`}>Membership Plans</button>
                                     </div>
-                                </>)}
+                                )}
+
+                                <div className="grid gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-4">
+                                    {(packageView === "Membership" ? membershipPackages : passPackages).map((pkg) => (
+                                        <PackageCard key={pkg.name} pkg={pkg} selected={selectedPackage?.name === pkg.name} onSelect={handlePackageSelect} disabled={!canSelectPackage} />
+                                    ))}
+                                </div>
+
+                                {selectedPackage && (
+                                    <>
+                                        <div className="rounded-2xl border border-[#23471d]/10 bg-[#23471d]/5 p-5">
+                                            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Selected Package</p>
+                                            <h4 className="mt-2 text-xl font-black text-slate-900">{selectedPackage.name}</h4>
+                                            <p className="mt-2 text-sm font-medium text-slate-600">Fee: {formatCurrency(selectedPackage.price)}</p>
+                                        </div>
+
+                                        <div className="rounded-2xl border border-slate-200 p-5">
+                                            <div className="mb-4 flex items-center gap-2">
+                                                <CreditCard className="h-5 w-5 text-[#23471d]" />
+                                                <h4 className="text-sm font-black uppercase tracking-[0.18em] text-slate-700">Select Payment Method</h4>
+                                            </div>
+                                            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                                                {PAYMENT_METHODS.map((method) => (
+                                                    <PaymentMethodCard key={method.id} method={method} selected={selectedPaymentMethods.includes(method.id)} onToggle={togglePaymentMethod} />
+                                                ))}
+                                            </div>
+                                            {selectedPaymentMethods.length === 0 && <p className="mt-3 text-xs text-red-600">Please select at least one payment method</p>}
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                                            <Field label="Transaction ID" name="transactionId" hint="Manual transaction reference ID" className="xl:col-span-2">
+                                                <input id="transactionId" name="transactionId" value={formData.transactionId} onChange={handleInputChange} placeholder="e.g. TXN123456789" className={inputClass} />
+                                            </Field>
+                                            <Field label="Payment Proof" name="paymentProof" hint="Upload proof of payment" className="xl:col-span-3">
+                                                <div className="relative h-9">
+                                                    <input type="file" id="paymentProof" name="paymentProof" onChange={handleFileChange} accept="image/*,application/pdf" className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0" />
+                                                    <div className={`flex h-full w-full items-center justify-between rounded-[2px] border border-slate-300 bg-white px-3 text-[12px] font-medium ${formData.paymentProof ? "text-[#23471d]" : "text-slate-400"}`}>
+                                                        <span className="truncate">{formData.paymentProof ? formData.paymentProof.name : "Select proof file..."}</span>
+                                                        <FileText className="h-4 w-4 shrink-0" />
+                                                    </div>
+                                                </div>
+                                            </Field>
+                                        </div>
+                                    </>
+                                )}
                                 <ErrorText message={errors.registrationCategory} />
                             </div>
                         )}
                     </section>
 
+                    {/* Submit Buttons */}
                     <div className="flex flex-col gap-4 border-t border-slate-200 pt-6 md:flex-row md:items-center md:justify-between">
-                        <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#23471d]" /><p className="leading-6">Review your details and selected package before submitting the registration.</p></div>
+                        <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                            <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#23471d]" />
+                            <p className="leading-6">Review your details and selected package before submitting the registration.</p>
+                        </div>
                         <div className="flex flex-wrap gap-3">
                             <button type="button" onClick={() => handleReset(true)} className="rounded-[2px] border border-red-200 bg-red-50 px-5 py-3 text-sm font-bold uppercase tracking-[0.16em] text-red-700 transition hover:bg-red-100">Reset Form</button>
-                            <button type="submit" disabled={isSubmitting || normalizedPackages.length === 0 || (!isFormLocked && !selectedPackage) || (!isFormLocked && selectedPackage && selectedPaymentMethods.length === 0)} className="inline-flex items-center gap-2 rounded-[2px] bg-[#23471d] px-6 py-3 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-[#1a3516] disabled:cursor-not-allowed disabled:opacity-60">
-                                {isSubmitting ? (<><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>) : isFormLocked ? (<><Lock className="h-4 w-4" /> Unlock Packages</>) : (<><CheckCircle2 className="h-4 w-4" /> Submit Registration</>)}
+                            <button type="submit" disabled={isSubmitting || normalizedPackages.length === 0 || !selectedPackage || selectedPaymentMethods.length === 0} className="inline-flex items-center gap-2 rounded-[2px] bg-[#23471d] px-6 py-3 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-[#1a3516] disabled:cursor-not-allowed disabled:opacity-60">
+                                {isSubmitting ? (<><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>) : (<><CheckCircle2 className="h-4 w-4" /> Submit Registration</>)}
                             </button>
                         </div>
                     </div>
                 </form>
             )}
         </div>
-    );
+    )
 };
 
 export default BuyerRegistration;
