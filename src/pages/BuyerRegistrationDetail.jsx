@@ -82,7 +82,6 @@ const BuyerRegistrationDetail = () => {
         if (value === null || value === undefined || value === '') return '—';
         if (typeof value === 'boolean') return value ? 'Yes' : 'No';
 
-        // Handle case where backend returns a stringified JSON array
         if (typeof value === 'string' && value.trim().startsWith('[') && value.trim().endsWith(']')) {
             try {
                 const parsed = JSON.parse(value);
@@ -96,7 +95,7 @@ const BuyerRegistrationDetail = () => {
 
         if (Array.isArray(value)) {
             if (value.length === 0) return '—';
-            // If the array contains a single string that is actually JSON, parse it
+
             if (value.length === 1 && typeof value[0] === 'string' && value[0].trim().startsWith('[') && value[0].trim().endsWith(']')) {
                 try {
                     const parsed = JSON.parse(value[0]);
@@ -105,7 +104,7 @@ const BuyerRegistrationDetail = () => {
                     }
                 } catch (e) { }
             }
-            // Otherwise regular array
+
             return value.map(item => {
                 if (typeof item === 'string') return item;
                 return String(item);
@@ -146,45 +145,24 @@ const BuyerRegistrationDetail = () => {
         <>
             <style>{printStyles}</style>
             <div className="print-container">
-                {/* Header */}
-                <div className="flex justify-between items-center pb-4 mb-6 border-b border-gray-200 no-print">
-                    <button
-                        onClick={() => navigate('/buyer-list')}
-                        className="flex items-center gap-2 text-gray-600 text-sm hover:text-gray-900"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Back
-                    </button>
-                    <button
-                        onClick={() => window.print()}
-                        className="px-4 py-2 text-sm border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 rounded"
-                    >
-                        🖨️ Print / PDF
-                    </button>
-                </div>
 
-                {/* Main Content */}
-                <div className="max-w-6xl mx-auto">
-                    {/* Title */}
-                    <div className="text-center mb-8">
+                <div className="max-w-8xl mx-auto">
+
+                    <div className=" mb-8">
                         <h1 className="text-2xl font-bold text-gray-900 uppercase tracking-wide">
                             Buyer Registration Details
                         </h1>
                         <div className="mt-2">
                             <span className="text-sm text-gray-600 font-mono">
                                 {registration.registrationId || "ID PENDING"}
-                                {registration._id && <span className="text-gray-400"> • Ref: {registration._id.slice(-8)}</span>}
+                                {registration._id && <span className="text-gray-400">   </span>}
                             </span>
                         </div>
-                        {registration.buyerTag && (
-                            <div className="mt-3 inline-block px-4 py-1 bg-gray-100 text-gray-700 text-xs font-bold uppercase tracking-wide">
-                                {registration.buyerTag} LEAD
-                            </div>
-                        )}
+
 
                     </div>
 
-                    {/* Personal & Company */}
+
                     <Section title="Personal & Company Information">
                         <FiveColumnGrid>
                             <DetailRow label="Full Name" value={registration.fullName} />
