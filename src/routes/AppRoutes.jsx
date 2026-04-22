@@ -158,6 +158,10 @@ import ExhibitorChat from "../pages/ExhibitorChat";
 import AddUnit from "../pages/admin_management/AddUnit";
 import MarketingToolkitManage from "../pages/MarketingToolkitManage";
 import ExhibitorProductsProfile from "../pages/ExhibitorProductsProfile";
+import Reminder from "../pages/navbar_page/Reminder";
+import ToDoList from "../pages/navbar_page/ToDoList";
+import NewLeads from "../pages/navbar_page/NewLeads";
+import Notification from "../pages/navbar_page/Notification";
 
 export default function AppRoutes() {
   return (
@@ -438,6 +442,10 @@ export default function AppRoutes() {
           <Route path="/exhibitor-chat" element={<ExhibitorChat />} />
           <Route path="/add-unit" element={<AddUnit />} />
           <Route path="/marketing-toolkit-manage" element={<MarketingToolkitManage />} />
+          <Route path="/reminder" element={<Reminder />} />
+          <Route path="/to-do-list" element={<ToDoList />} />
+          <Route path="/new-leads" element={<NewLeads />} />
+          <Route path="/notification" element={<Notification />} />
         </Route>
       </Route>
     </Routes>
