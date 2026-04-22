@@ -12,6 +12,7 @@ const EMPTY_FORM = {
     title: '',
     heading: '',
     coverImageAlt: '',
+    order: 0,
 };
 
 const MediaCategoryManagement = () => {
@@ -56,6 +57,7 @@ const MediaCategoryManagement = () => {
             formData.append('title', form.title);
             formData.append('heading', form.heading);
             formData.append('coverImageAlt', form.coverImageAlt);
+            formData.append('order', form.order);
             formData.append('type', 'media');
             if (imageFile) formData.append('coverImage', imageFile);
 
@@ -111,7 +113,12 @@ const MediaCategoryManagement = () => {
 
     const startEdit = (cat) => {
         setIsEditing(cat._id);
-        setForm({ title: cat.title, heading: cat.heading || '', coverImageAlt: cat.coverImageAlt || '' });
+        setForm({ 
+            title: cat.title, 
+            heading: cat.heading || '', 
+            coverImageAlt: cat.coverImageAlt || '',
+            order: cat.order || 0
+        });
         setImagePreview(cat.coverImage ? `${SERVER_URL}${cat.coverImage}` : '');
         setImageFile(null);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -168,6 +175,20 @@ const MediaCategoryManagement = () => {
                                     onChange={(e) => setForm({ ...form, heading: e.target.value })}
                                     className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
                                     placeholder="e.g. Latest Media Coverage"
+                                />
+                            </div>
+
+                            {/* Order Number */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                    Display Order Number
+                                </label>
+                                <input
+                                    type="number"
+                                    value={form.order}
+                                    onChange={(e) => setForm({ ...form, order: e.target.value })}
+                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
+                                    placeholder="e.g. 1"
                                 />
                             </div>
 
@@ -261,6 +282,7 @@ const MediaCategoryManagement = () => {
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">IMAGE</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">TITLE</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">HEADING</th>
+                                        <th className="text-center py-3 px-4 text-xs font-bold text-gray-500 uppercase">ORDER</th>
                                         <th className="text-center py-3 px-4 text-xs font-bold text-gray-500 uppercase">LAST UPDATED BY</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">ACTIONS</th>
                                     </tr>
@@ -301,6 +323,11 @@ const MediaCategoryManagement = () => {
                                                 <p className="text-[10px] text-gray-400 mt-0.5">{cat.coverImageAlt}</p>
                                             </td>
                                             <td className="py-3 px-4 text-gray-600 text-xs">{cat.heading || '—'}</td>
+                                            <td className="py-3 px-4 text-center">
+                                                <span className="bg-gray-100 text-gray-800 text-[10px] font-bold px-2 py-0.5 rounded border border-gray-200">
+                                                    {cat.order || 0}
+                                                </span>
+                                            </td>
                                             <td className="py-3 px-4 text-center">
                                                 <div className="flex flex-col gap-1 items-center">
                                                     <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">

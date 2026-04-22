@@ -96,6 +96,18 @@ export const menuItems = [
     icon: Info,
     children: [
       { label: "Global Platform", path: "/global-platform" },
+      {
+        label: "Event Overview",
+        path: "/event-overview",
+      },
+      {
+        label: "About Organizer",
+        path: "/about-organizer",
+      },
+      {
+        label: "Our Journey",
+        path: "/our-journey",
+      },
       { label: "Vision & Mission", path: "/vision-mission" },
       { label: "Why Attend", path: "/why-attend" },
       { label: "Target Audience", path: "/target-audience" },
