@@ -60,6 +60,13 @@ const GalleryCategory = () => {
             formData.append('order', form.order);
             if (imageFile) formData.append('coverImage', imageFile);
 
+            console.log('Final Submit Data:', {
+                isEditing,
+                url: isEditing ? `/api/gallery-category/${isEditing}` : '/api/gallery-category',
+                type: 'gallery',
+                form
+            });
+
             let res;
             if (isEditing) {
                 res = await api.put(`/api/gallery-category/${isEditing}`, formData, {
@@ -70,6 +77,8 @@ const GalleryCategory = () => {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
             }
+
+            console.log('Submit Response:', res.data);
 
             if (res.data.success) {
                 Swal.fire({
@@ -111,6 +120,7 @@ const GalleryCategory = () => {
     };
 
     const startEdit = (cat) => {
+        console.log('Starting edit for category:', cat);
         setIsEditing(cat._id);
         setForm({ 
             title: cat.title, 

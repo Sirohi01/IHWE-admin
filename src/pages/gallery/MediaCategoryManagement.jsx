@@ -61,6 +61,13 @@ const MediaCategoryManagement = () => {
             formData.append('type', 'media');
             if (imageFile) formData.append('coverImage', imageFile);
 
+            console.log('Final Submit Data (Media):', {
+                isEditing,
+                url: isEditing ? `/api/gallery-category/${isEditing}` : '/api/gallery-category',
+                type: 'media',
+                form
+            });
+
             let res;
             if (isEditing) {
                 res = await api.put(`/api/gallery-category/${isEditing}`, formData, {
@@ -71,6 +78,8 @@ const MediaCategoryManagement = () => {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
             }
+
+            console.log('Submit Response (Media):', res.data);
 
             if (res.data.success) {
                 Swal.fire({
@@ -112,6 +121,7 @@ const MediaCategoryManagement = () => {
     };
 
     const startEdit = (cat) => {
+        console.log('Starting edit for media category:', cat);
         setIsEditing(cat._id);
         setForm({ 
             title: cat.title, 
