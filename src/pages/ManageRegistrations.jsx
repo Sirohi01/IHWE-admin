@@ -582,8 +582,16 @@ const ManageRegistrations = () => {
                     >
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
-                        <option value="paid">Paid (Full)</option>
-                        <option value="advance-paid">Installment Paid</option>
+                        {/* Show only relevant payment option based on paymentPlanType */}
+                        {(row.paymentPlanType === 'full' || !row.paymentPlanType) ? (
+                            <option value="paid">Paid (Full)</option>
+                        ) : (
+                            <option value="advance-paid">Installment Paid</option>
+                        )}
+                        {/* If already advance-paid, also show full paid option for final settlement */}
+                        {row.status === 'advance-paid' && (
+                            <option value="paid">Paid (Full Settlement)</option>
+                        )}
                         <option value="confirmed">Confirmed</option>
                         <option value="rejected">Rejected</option>
                         <option value="payment-failed">Payment Failed</option>

@@ -192,10 +192,10 @@ const BookAStand = () => {
         const currentEvent = events.find(e => e._id === selectedEventId);
         const plans = currentEvent?.paymentPlans || [];
         const selectedPlan = plans.find(p => p.id === formData.paymentPlanType);
-        
+
         // A payment is "full" if the plan ID is 'full' OR if the percentage is 100
         const isFull = formData.paymentPlanType === 'full' || (selectedPlan && Number(selectedPlan.percentage) === 100);
-        
+
         const fpDiscountPct = isFull ? (settings?.fullPaymentDiscount || 0) : 0;
         const fpDiscountAmt = Math.round(subtotal1 * fpDiscountPct / 100);
         const subtotal2 = subtotal1 - fpDiscountAmt;
@@ -564,24 +564,90 @@ const BookAStand = () => {
                         })()}
 
                         {/* PAYMENT PLAN & TDS CONTROL */}
-                        <div className="p-4 bg-[#f8fafc] border border-slate-200 rounded-[2px] mt-3">
-                            <label className={labelClasses}>Apply TDS Deduction *</label>
-                            <div className="flex flex-wrap gap-4 items-center">
-                                <div className="w-48 relative">
-                                    <select 
-                                        value={formData.chosenTdsPercent} 
-                                        onChange={(e) => setFormData(prev => ({ ...prev, chosenTdsPercent: Number(e.target.value) }))} 
-                                        className="w-full h-9 rounded-[2px] border border-slate-400 px-3 text-[12px] font-black text-red-600 bg-white focus:border-[#23471d] outline-none appearance-none"
-                                    >
-                                        <option value={0}>0% TDS</option>
-                                        <option value={1}>1% TDS</option>
-                                        <option value={2}>2% TDS</option>
-                                        <option value={10}>10% TDS</option>
-                                    </select>
-                                    <ChevronDown size={14} className="absolute right-3 top-3 text-red-600 pointer-events-none" />
-                                </div>
+                        <div className="p-4 bg-[#f8fafc] border border-slate-200 rounded-[2px] mt-3 space-y-3">
 
-                                <div className="text-right ml-auto min-w-[120px]">
+                            {(() => {
+                                const currentEvent = events.find(e => e._id === selectedEventId);
+                                const plans = currentEvent?.paymentPlans || [];
+                                const firstInstallPlan = plans.find(p => Number(p.percentage) < 100);
+                                const fullPlan = plans.find(p => Number(p.percentage) === 100 || p.id === 'full');
+                                return (
+                                    <div>
+                                        <label className={labelClasses}>Payment Plan *</label>
+                                        <div className="flex flex-wrap gap-2 mt-1">
+                                            {/* Full Payment option */}
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData(prev => ({
+                                                    ...prev,
+                                                    paymentPlanType: fullPlan?.id || 'full',
+                                                    paymentPlanLabel: fullPlan?.label || 'Full Payment'
+                                                }))}
+                                                className={`px-4 py-1.5 text-[11px] font-black uppercase rounded-[2px] border transition-all ${formData.paymentPlanType === 'full' || formData.paymentPlanType === fullPlan?.id
+                                                    ? 'bg-[#23471d] text-white border-[#23471d]'
+                                                    : 'bg-white text-slate-600 border-slate-300 hover:border-[#23471d]'
+                                                    }`}
+                                            >
+                                                Full Payment {settings?.fullPaymentDiscount > 0 ? `(${settings.fullPaymentDiscount}% discount)` : ''}
+                                            </button>
+                                            {/* First Installment option only */}
+                                            {firstInstallPlan ? (
+                                                <button
+                                                    key={firstInstallPlan.id}
+                                                    type="button"
+                                                    onClick={() => setFormData(prev => ({
+                                                        ...prev,
+                                                        paymentPlanType: firstInstallPlan.id,
+                                                        paymentPlanLabel: firstInstallPlan.label
+                                                    }))}
+                                                    className={`px-4 py-1.5 text-[11px] font-black uppercase rounded-[2px] border transition-all ${formData.paymentPlanType === firstInstallPlan.id
+                                                        ? 'bg-[#1a3a6b] text-white border-[#1a3a6b]'
+                                                        : 'bg-white text-slate-600 border-slate-300 hover:border-[#1a3a6b]'
+                                                        }`}
+                                                >
+                                                    {firstInstallPlan.label} ({firstInstallPlan.percentage}%)
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData(prev => ({ ...prev, paymentPlanType: 'advance', paymentPlanLabel: 'Advance Payment' }))}
+                                                    className={`px-4 py-1.5 text-[11px] font-black uppercase rounded-[2px] border transition-all ${formData.paymentPlanType === 'advance'
+                                                        ? 'bg-[#1a3a6b] text-white border-[#1a3a6b]'
+                                                        : 'bg-white text-slate-600 border-slate-300 hover:border-[#1a3a6b]'
+                                                        }`}
+                                                >
+                                                    Installment Payment
+                                                </button>
+                                            )}
+                                        </div>
+                                        {/* Show selected plan info */}
+                                        <p className="text-[10px] text-slate-400 mt-1.5 font-medium">
+                                            Selected: <span className="font-black text-slate-700">{formData.paymentPlanLabel}</span>
+                                            {formData.financeBreakdown?.isFullPayment && settings?.fullPaymentDiscount > 0 && (
+                                                <span className="ml-2 text-[#23471d] font-black">— {settings.fullPaymentDiscount}% discount applied</span>
+                                            )}
+                                        </p>
+                                    </div>
+                                );
+                            })()}
+                            <div className="flex items-end justify-between gap-4">
+                                <div>
+                                    <label className={labelClasses}>Apply TDS Deduction *</label>
+                                    <div className="w-48 relative mt-1">
+                                        <select
+                                            value={formData.chosenTdsPercent}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, chosenTdsPercent: Number(e.target.value) }))}
+                                            className="w-full h-9 rounded-[2px] border border-slate-400 px-3 text-[12px] font-black text-red-600 bg-white focus:border-[#23471d] outline-none appearance-none"
+                                        >
+                                            <option value={0}>0% TDS</option>
+                                            <option value={1}>1% TDS</option>
+                                            <option value={2}>2% TDS</option>
+                                            <option value={10}>10% TDS</option>
+                                        </select>
+                                        <ChevronDown size={14} className="absolute right-3 top-3 text-red-600 pointer-events-none" />
+                                    </div>
+                                </div>
+                                <div className="text-right">
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
                                         Total Payable (Net)
                                     </p>
@@ -853,7 +919,7 @@ const BookAStand = () => {
                     <div className="px-2">
                         <div className="bg-white border border-slate-200 rounded-[2px] p-5 shadow-sm relative overflow-hidden group">
                             <div className="absolute top-0 left-0 w-1 h-full bg-[#23471d]"></div>
-                            
+
                             <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
                                 <div className="flex items-center gap-2">
                                     <ShieldCheck size={18} className="text-[#23471d]" />
@@ -861,7 +927,7 @@ const BookAStand = () => {
                                 </div>
                                 <span className="px-2 py-0.5 text-[8px] font-black uppercase bg-slate-100 text-slate-500 rounded border border-slate-200 tracking-widest">Calculated Live</span>
                             </div>
-                            
+
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
                                 {/* Gross Cost */}
                                 <div className="space-y-1">
@@ -953,30 +1019,30 @@ const BookAStand = () => {
                         </div>
                     </div>
 
-                        {/* FOOTER ACTIONS */}
-                        <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 px-2">
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center gap-2">
-                                <ShieldCheck size={14} className="text-[#23471d]" />
-                                Secure Admin Manual Booking
-                            </p>
-                            <div className="flex gap-3">
-                                <button type="button" onClick={() => window.location.reload()}
-                                    className="px-8 py-2 bg-slate-50 border border-slate-200 text-slate-400 text-[11px] font-bold uppercase tracking-widest hover:bg-slate-100 transition-all rounded-[2px]">
-                                    Reset
-                                </button>
-                                <button type="submit" disabled={isLoading}
-                                    className="px-10 py-2 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-lg flex items-center gap-2 group">
-                                    {isLoading
-                                        ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        : <><span>Proceed Registration</span><ChevronRight size={15} className="group-hover:translate-x-1 transition-transform" /></>
-                                    }
-                                </button>
-                            </div>
+                    {/* FOOTER ACTIONS */}
+                    <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 px-2">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center gap-2">
+                            <ShieldCheck size={14} className="text-[#23471d]" />
+                            Secure Admin Manual Booking
+                        </p>
+                        <div className="flex gap-3">
+                            <button type="button" onClick={() => window.location.reload()}
+                                className="px-8 py-2 bg-slate-50 border border-slate-200 text-slate-400 text-[11px] font-bold uppercase tracking-widest hover:bg-slate-100 transition-all rounded-[2px]">
+                                Reset
+                            </button>
+                            <button type="submit" disabled={isLoading}
+                                className="px-10 py-2 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-lg flex items-center gap-2 group">
+                                {isLoading
+                                    ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    : <><span>Proceed Registration</span><ChevronRight size={15} className="group-hover:translate-x-1 transition-transform" /></>
+                                }
+                            </button>
                         </div>
-                    </form>
-                )}
-            </div>
-        );
+                    </div>
+                </form>
+            )}
+        </div>
+    );
 };
 
 export default BookAStand;
