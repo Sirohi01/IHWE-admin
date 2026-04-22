@@ -172,10 +172,24 @@ const ManageStalls = () => {
         setStallForm({ ...EMPTY_STALL });
     };
 
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10);
+
     const filteredStalls = stalls.filter(s =>
         s.stallNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.eventId?.name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    // Pagination Logic
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredStalls.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredStalls.length / itemsPerPage);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
 
     const inputCls = "w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px] appearance-none bg-white uppercase";
     const labelCls = "block text-[11px] font-medium text-black mb-1 uppercase tracking-tight";
@@ -381,11 +395,11 @@ const ManageStalls = () => {
                                 <tbody className="divide-y divide-gray-100">
                                     {isLoading ? (
                                         <tr><td colSpan={5} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">Loading inventory...</td></tr>
-                                    ) : filteredStalls.length === 0 ? (
+                                    ) : currentItems.length === 0 ? (
                                         <tr><td colSpan={5} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">No stalls found matching criteria</td></tr>
-                                    ) : filteredStalls.map((stall, index) => (
+                                    ) : currentItems.map((stall, index) => (
                                         <tr key={stall._id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
-                                            <td className="py-4 px-4 text-black font-medium text-center text-xs">{index + 1}</td>
+                                            <td className="py-4 px-4 text-black font-medium text-center text-xs">{indexOfFirstItem + index + 1}</td>
                                             <td className="py-4 px-4 min-w-[180px]">
                                                 <p className="font-semibold text-red-600 text-sm uppercase tracking-tight leading-none mb-1.5">
                                                     {stall.stallNumber}
@@ -436,10 +450,55 @@ const ManageStalls = () => {
                                 </tbody>
                             </table>
                         </div>
-                        <div className="bg-white px-5 py-3 border-t border-gray-200 flex justify-between items-center bg-gray-50/30">
-                            <div className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">Total Inventory Statistics</div>
+
+                        {/* Pagination Section */}
+                        <div className="bg-white px-5 py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center bg-gray-50/30 gap-4">
                             <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-                                Showing <span className="text-red-600">{filteredStalls.length}</span> Active Stall Records
+                                PAGE <span className="text-[#23471d]">{currentPage}</span> OF <span className="text-[#23471d]">{totalPages || 1}</span>
+                                <span className="mx-2 text-gray-300">|</span>
+                                SHOWING <span className="text-red-600">{currentItems.length}</span> OF <span className="text-red-600">{filteredStalls.length}</span> RECORDS
+                            </div>
+                            
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    className="px-3 py-1.5 border border-gray-200 bg-white text-[10px] font-black uppercase hover:bg-gray-100 disabled:opacity-50 transition-all rounded-[2px]"
+                                >
+                                    PREV
+                                </button>
+                                
+                                {[...Array(totalPages)].map((_, i) => {
+                                    const pageNum = i + 1;
+                                    // Show first, last, and pages around current
+                                    if (pageNum === 1 || pageNum === totalPages || (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)) {
+                                        return (
+                                            <button
+                                                key={pageNum}
+                                                onClick={() => setCurrentPage(pageNum)}
+                                                className={`px-3 py-1.5 border text-[10px] font-black transition-all rounded-[2px] ${
+                                                    currentPage === pageNum 
+                                                    ? 'bg-[#23471d] border-[#23471d] text-white shadow-md scale-110' 
+                                                    : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-100'
+                                                }`}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    }
+                                    if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                                        return <span key={pageNum} className="px-1 text-gray-400 font-bold">...</span>;
+                                    }
+                                    return null;
+                                })}
+
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                    disabled={currentPage === totalPages || totalPages === 0}
+                                    className="px-3 py-1.5 border border-gray-200 bg-white text-[10px] font-black uppercase hover:bg-gray-100 disabled:opacity-50 transition-all rounded-[2px]"
+                                >
+                                    NEXT
+                                </button>
                             </div>
                         </div>
                     </div>

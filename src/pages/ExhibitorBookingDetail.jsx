@@ -240,9 +240,9 @@ function OverviewTab({ reg, fmt, id, onRefresh }) {
                             </div>
                         </div>
                     </div>
-                    <div className="p-4 border-r border-b border-gray-100 italic bg-amber-50/10">
-                        <p className="text-[10px] font-black text-[#d26019] uppercase tracking-widest mb-3 border-b pb-1">Secondary Contact</p>
-                        {reg.contact2?.firstName ? (
+                    {reg.contact2?.firstName || reg.contact2?.email ? (
+                        <div className="p-4 border-r border-b border-gray-100 italic bg-amber-50/10">
+                            <p className="text-[10px] font-black text-[#d26019] uppercase tracking-widest mb-3 border-b pb-1">Secondary Contact</p>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Name</p>
@@ -261,10 +261,8 @@ function OverviewTab({ reg, fmt, id, onRefresh }) {
                                     <p className="text-[12px] font-bold text-gray-800">{reg.contact2?.email || '—'}</p>
                                 </div>
                             </div>
-                        ) : (
-                            <p className="text-[10px] text-gray-400 font-bold uppercase mt-4">No secondary contact provided</p>
-                        )}
-                    </div>
+                        </div>
+                    ) : null}
                 </div>
             </div>
 
@@ -477,53 +475,82 @@ function ContactsTab({ reg, id, onRefresh }) {
 }
 
 function PaymentTab({ reg, fmt }) {
+    const fb = reg.financeBreakdown || {};
     return (
         <div className="space-y-4">
-            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
-                <SH title="Financial Summary" icon={CreditCard} />
-                <Grid4 items={[
-                    { label: 'Base Amount', value: fmt(reg.participation?.amount) },
-                    { label: 'GST (18%)', value: fmt((reg.participation?.total || 0) - (reg.participation?.amount || 0)) },
-                    { label: 'Total Amount', value: fmt(reg.participation?.total) },
-                    { label: 'Amount Paid', value: fmt(reg.amountPaid) },
-                    { label: 'Balance Due', value: fmt(reg.balanceAmount) },
-                    { label: 'Payment Mode', value: reg.paymentMode },
-                    { label: 'Payment Type', value: reg.paymentType },
-                    { label: 'Transaction ID', value: reg.manualPaymentDetails?.transactionId || reg.paymentId },
-                ]} />
-                {reg.paymentId && (
-                    <div className="px-4 py-3 bg-indigo-50/40 border-t border-gray-100">
-                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Razorpay Payment ID</p>
-                        <p className="text-xs font-bold text-indigo-700 font-mono break-all">{reg.paymentId}</p>
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+                <SH title="Financial Summary & Deductions" icon={CreditCard} />
+                <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
+                    <Field label="Gross Stall Cost" value={fmt(fb.grossAmount || reg.participation?.amount)} />
+                    <Field label="Plan Discount" value={fb.discountPercent ? `${fb.discountPercent}% (${fmt(fb.discountAmount)})` : '0%'} />
+                    <Field label="Net Subtotal (Taxable)" value={fmt(fb.subtotal || reg.participation?.amount)} />
+                    <Field label="GST Collected (18%)" value={fmt(fb.gstAmount || ((reg.participation?.total || 0) - (fb.subtotal || 0)))} />
+                    <Field label="Total Contract (incl. GST)" value={fmt(reg.participation?.total)} />
+                    <Field label="TDS Selection" value={reg.chosenTdsPercent ? `${reg.chosenTdsPercent}%` : '0%'} />
+                    <Field label="TDS Deducted (Less)" value={fb.tdsAmount ? `- ${fmt(fb.tdsAmount)}` : 'INR 0'} />
+                    <div className="p-3 border-r border-b border-gray-100 bg-emerald-50/30">
+                        <p className="text-[9px] font-black text-emerald-600 uppercase tracking-wider mb-1">Total Net Payable</p>
+                        <p className="text-[14px] font-black text-emerald-800">{fmt(fb.netPayable || reg.participation?.total)}</p>
+                    </div>
+                    <Field label="Amount Paid (To Date)" value={fmt(reg.amountPaid)} />
+                    <div className="p-3 border-r border-b border-gray-100 bg-rose-50/30">
+                        <p className="text-[9px] font-black text-rose-600 uppercase tracking-wider mb-1">Balance Outstanding</p>
+                        <p className="text-[14px] font-black text-rose-800">{fmt(reg.balanceAmount)}</p>
+                    </div>
+                    <Field label="Current Status" value={reg.status?.toUpperCase()} />
+                    <Field label="Payment Mode (Latest)" value={reg.manualPaymentDetails?.method || reg.paymentMode || 'N/A'} />
+                </div>
+                {(reg.manualPaymentDetails?.transactionId || reg.paymentId) && (
+                    <div className="px-4 py-3 bg-slate-50 border-t border-gray-100 flex items-center justify-between">
+                        <div>
+                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Latest Transaction / Razorpay ID</p>
+                            <p className="text-xs font-bold text-slate-700 font-mono break-all">{reg.manualPaymentDetails?.transactionId || reg.paymentId}</p>
+                        </div>
+                        {reg.manualPaymentDetails?.updatedAt && (
+                            <p className="text-[9px] font-bold text-slate-400 italic">Last Updated: {new Date(reg.manualPaymentDetails.updatedAt).toLocaleString()}</p>
+                        )}
                     </div>
                 )}
             </div>
 
             {reg.paymentHistory?.length > 0 && (
-                <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
-                    <SH title="Payment History" icon={History} />
+                <div className="bg-white border border-gray-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <SH title="Transaction Audit History" icon={History} />
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="bg-gray-50 border-b border-gray-200">
-                                    {['#', 'Type', 'Amount', 'Mode / Method', 'Txn ID', 'Date'].map(h => (
-                                        <th key={h} className="py-2 px-4 text-[10px] font-black text-gray-500 uppercase text-left">{h}</th>
+                                <tr className="bg-slate-100 border-b border-gray-200">
+                                    {['#', 'Type', 'Amount', 'Method / Mode', 'Txn ID', 'Date'].map(h => (
+                                        <th key={h} className="py-2.5 px-4 text-[9px] font-black text-slate-500 uppercase text-left">{h}</th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {reg.paymentHistory.map((h, i) => (
-                                    <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
-                                        <td className="py-2 px-4 text-xs text-gray-400 font-bold">{i + 1}</td>
-                                        <td className="py-2 px-4 text-xs font-bold text-gray-700 capitalize">{h.paymentType || '—'}</td>
-                                        <td className="py-2 px-4 text-xs font-black text-emerald-700">{fmt(h.amount)}</td>
-                                        <td className="py-2 px-4 text-xs text-gray-600">{h.method || h.paymentMode || '—'}</td>
-                                        <td className="py-2 px-4 text-xs text-gray-600 font-mono">{h.transactionId || h.razorpayPaymentId || '—'}</td>
-                                        <td className="py-2 px-4 text-xs text-gray-500">
-                                            {h.paidAt ? new Date(h.paidAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
-                                        </td>
-                                    </tr>
-                                ))}
+                                {reg.paymentHistory.map((h, i) => {
+                                    const rawType = (h.paymentType || 'payment').toLowerCase();
+                                    const isInstallment = ['advance', 'balance', 'installment'].includes(rawType);
+                                    const label = isInstallment ? 'INSTALLMENT' : rawType.toUpperCase();
+                                    const badgeClass = isInstallment ? 'bg-cyan-100 text-cyan-800' : 'bg-emerald-100 text-emerald-800';
+
+                                    return (
+                                        <tr key={i} className="hover:bg-slate-50/80 transition-colors">
+                                            <td className="py-3 px-4 text-xs text-gray-400 font-bold">#{i + 1}</td>
+                                            <td className="py-3 px-4">
+                                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${badgeClass}`}>
+                                                    {label}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-4 text-[13px] font-black text-slate-800">{fmt(h.amount)}</td>
+                                            <td className="py-3 px-4 text-xs font-bold text-slate-600 uppercase italic">
+                                                {h.method || h.paymentMode || 'Manual'}
+                                            </td>
+                                            <td className="py-3 px-4 text-xs text-slate-500 font-mono">{h.transactionId || h.razorpayPaymentId || '—'}</td>
+                                            <td className="py-3 px-4 text-xs font-bold text-slate-500">
+                                                {h.paidAt ? new Date(h.paidAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
@@ -641,10 +668,10 @@ function SpecialDocsSection({ reg, id, onRefresh }) {
                 <div className="flex flex-wrap items-center gap-2 mb-4 p-3 bg-slate-50 border border-slate-100 rounded">
                     <input className="flex-1 min-w-[150px] h-7 px-2 border border-slate-300 rounded-[1px] text-[10px] font-medium outline-none focus:border-[#23471d]"
                         value={label} onChange={e => setLabel(e.target.value)} placeholder="Doc Title" />
-                    
+
                     <input type="file" accept="image/*,.pdf" className="text-[9px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[9px] file:font-bold file:bg-[#23471d] file:text-white cursor-pointer"
                         onChange={e => setFile(e.target.files[0])} />
-                    
+
                     <button onClick={handleUpload} disabled={uploading}
                         className="h-7 px-4 bg-[#23471d] text-white text-[9px] font-bold uppercase tracking-widest hover:bg-[#1a3516] disabled:opacity-50 rounded-[1px]">
                         {uploading ? 'Wait...' : 'Add Doc'}
@@ -679,7 +706,7 @@ function SpecialDocsSection({ reg, id, onRefresh }) {
                         ))
                     ) : (
                         <div className="col-span-full py-6 text-center bg-slate-50/50 border border-dashed border-slate-200">
-                             <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest italic">No extra records found</p>
+                            <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest italic">No extra records found</p>
                         </div>
                     )}
                 </div>
@@ -697,12 +724,12 @@ function MSMETab({ reg, id, onRefresh }) {
     const inp = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
     const handleSave = async () => {
-        if (!form.udhyamRegNo) { Swal.fire('Error', 'Udhyam Reg. No. is required', 'error'); return; }
+        if (!form.udyamRegNo) { Swal.fire('Error', 'udyam Reg. No. is required', 'error'); return; }
         setSaving(true);
         try {
             const fd = new FormData();
-            Object.entries(form).forEach(([k, v]) => { if (v != null && k !== 'udhyamCertificateUrl') fd.append(k, v); });
-            if (certFile) fd.append('udhyamCertificate', certFile);
+            Object.entries(form).forEach(([k, v]) => { if (v != null && k !== 'udyamCertificateUrl') fd.append(k, v); });
+            if (certFile) fd.append('udyamCertificate', certFile);
             const res = await api.put(`/api/exhibitor-registration/${id}/msme`, fd, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
@@ -716,8 +743,8 @@ function MSMETab({ reg, id, onRefresh }) {
         finally { setSaving(false); }
     };
 
-    const certUrl = reg.msme?.udhyamCertificateUrl
-        ? (reg.msme.udhyamCertificateUrl.startsWith('http') ? reg.msme.udhyamCertificateUrl : `${SERVER_URL}${reg.msme.udhyamCertificateUrl}`)
+    const certUrl = reg.msme?.udyamCertificateUrl
+        ? (reg.msme.udyamCertificateUrl.startsWith('http') ? reg.msme.udyamCertificateUrl : `${SERVER_URL}${reg.msme.udyamCertificateUrl}`)
         : null;
 
     const iCls = "w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]";
@@ -725,7 +752,7 @@ function MSMETab({ reg, id, onRefresh }) {
 
     return (
         <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
-            <SH title="MSME / Udhyam Details" icon={Award} actions={
+            <SH title="MSME / udyam Details" icon={Award} actions={
                 editing ? (
                     <>
                         <button onClick={() => { setEditing(false); setForm(reg.msme || {}); }}
@@ -740,34 +767,34 @@ function MSMETab({ reg, id, onRefresh }) {
                 ) : (
                     <button onClick={() => setEditing(true)}
                         className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30">
-                        <Pencil size={11} /> {reg.msme?.udhyamRegNo ? 'Edit' : 'Add MSME'}
+                        <Pencil size={11} /> {reg.msme?.udyamRegNo ? 'Edit' : 'Add MSME'}
                     </button>
                 )
             } />
 
             {editing ? (
                 <div className="p-5 space-y-4">
-                    <p className="text-[10px] font-black text-[#23471d] uppercase tracking-wider pb-1 border-b border-slate-100">Udhyam Registration</p>
+                    <p className="text-[10px] font-black text-[#23471d] uppercase tracking-wider pb-1 border-b border-slate-100">udyam Registration</p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {[
-                            { label: 'Udhyam Reg. No. *', key: 'udhyamRegNo', placeholder: 'UDYAM-XX-00-0000000' },
-                            { label: 'Mobile No.', key: 'udhyamMobileNo', placeholder: '10-digit' },
-                            { label: 'Email ID', key: 'udhyamEmailId', placeholder: 'email@example.com' },
-                            { label: 'Contact Person', key: 'udhyamContactPerson', placeholder: 'Name' },
-                            { label: 'Designation', key: 'udhyamDesignation', placeholder: 'Designation' },
-                            { label: 'Issue Date', key: 'udhyamIssueDate', type: 'date' },
+                            { label: 'udyam Reg. No. *', key: 'udyamRegNo', placeholder: 'UDYAM-XX-00-0000000' },
+                            { label: 'Mobile No.', key: 'udyamMobileNo', placeholder: '10-digit' },
+                            { label: 'Email ID', key: 'udyamEmailId', placeholder: 'email@example.com' },
+                            { label: 'Contact Person', key: 'udyamContactPerson', placeholder: 'Name' },
+                            { label: 'Designation', key: 'udyamDesignation', placeholder: 'Designation' },
+                            { label: 'Issue Date', key: 'udyamIssueDate', type: 'date' },
                         ].map(f => (
                             <div key={f.key}>
                                 <label className={lCls}>{f.label}</label>
                                 <input type={f.type || 'text'}
-                                    value={f.key === 'udhyamIssueDate' && form[f.key] ? form[f.key].split('T')[0] : (form[f.key] || '')}
+                                    value={f.key === 'udyamIssueDate' && form[f.key] ? form[f.key].split('T')[0] : (form[f.key] || '')}
                                     onChange={e => inp(f.key, e.target.value)}
                                     placeholder={f.placeholder} className={iCls} />
                             </div>
                         ))}
                         <div className="md:col-span-2">
-                            <label className={lCls}>Udhyam Address</label>
-                            <input value={form.udhyamAddress || ''} onChange={e => inp('udhyamAddress', e.target.value)} className={iCls} />
+                            <label className={lCls}>udyam Address</label>
+                            <input value={form.udyamAddress || ''} onChange={e => inp('udyamAddress', e.target.value)} className={iCls} />
                         </div>
                         <div>
                             <label className={lCls}>Certificate (Image) {certUrl && <span className="text-green-600 normal-case">✓ uploaded</span>}</label>
@@ -801,17 +828,17 @@ function MSMETab({ reg, id, onRefresh }) {
                         </div>
                     </div>
                 </div>
-            ) : reg.msme?.udhyamRegNo ? (
+            ) : reg.msme?.udyamRegNo ? (
                 <div>
                     <Grid4 items={[
-                        { label: 'Udhyam Reg. No.', value: reg.msme.udhyamRegNo },
+                        { label: 'udyam Reg. No.', value: reg.msme.udyamRegNo },
                         { label: 'MSME Category', value: reg.msme.msmeCategory },
-                        { label: 'Issue Date', value: reg.msme.udhyamIssueDate ? new Date(reg.msme.udhyamIssueDate).toLocaleDateString('en-IN') : null },
-                        { label: 'Contact Person', value: reg.msme.udhyamContactPerson },
-                        { label: 'Designation', value: reg.msme.udhyamDesignation },
-                        { label: 'Mobile No.', value: reg.msme.udhyamMobileNo },
-                        { label: 'Email ID', value: reg.msme.udhyamEmailId },
-                        { label: 'Address', value: reg.msme.udhyamAddress },
+                        { label: 'Issue Date', value: reg.msme.udyamIssueDate ? new Date(reg.msme.udyamIssueDate).toLocaleDateString('en-IN') : null },
+                        { label: 'Contact Person', value: reg.msme.udyamContactPerson },
+                        { label: 'Designation', value: reg.msme.udyamDesignation },
+                        { label: 'Mobile No.', value: reg.msme.udyamMobileNo },
+                        { label: 'Email ID', value: reg.msme.udyamEmailId },
+                        { label: 'Address', value: reg.msme.udyamAddress },
                         { label: 'DFO Location', value: reg.msme.dfoLocation },
                         { label: 'DFO Email', value: reg.msme.dfoEmail },
                         { label: 'DFO Mobile', value: reg.msme.dfoMobileNo },
@@ -1049,8 +1076,8 @@ function AccessoriesTab({ reg, id }) {
                                         </td>
                                         <td className="py-2 px-4">
                                             <span className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-full border ${order.paymentStatus === 'paid' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                                    order.paymentStatus === 'complimentary' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                                        'bg-amber-50 text-amber-700 border-amber-200'
+                                                order.paymentStatus === 'complimentary' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                                    'bg-amber-50 text-amber-700 border-amber-200'
                                                 }`}>{order.paymentStatus}</span>
                                         </td>
                                         <td className="py-2 px-4 text-xs text-gray-600 font-mono">{order.transactionId || '—'}</td>
