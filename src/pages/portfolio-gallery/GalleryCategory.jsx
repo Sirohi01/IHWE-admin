@@ -12,6 +12,7 @@ const EMPTY_FORM = {
     title: '',
     heading: '',
     coverImageAlt: '',
+    order: 0,
 };
 
 const GalleryCategory = () => {
@@ -56,7 +57,15 @@ const GalleryCategory = () => {
             formData.append('title', form.title);
             formData.append('heading', form.heading);
             formData.append('coverImageAlt', form.coverImageAlt);
+            formData.append('order', form.order);
             if (imageFile) formData.append('coverImage', imageFile);
+
+            console.log('Final Submit Data:', {
+                isEditing,
+                url: isEditing ? `/api/gallery-category/${isEditing}` : '/api/gallery-category',
+                type: 'gallery',
+                form
+            });
 
             let res;
             if (isEditing) {
@@ -68,6 +77,8 @@ const GalleryCategory = () => {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
             }
+
+            console.log('Submit Response:', res.data);
 
             if (res.data.success) {
                 Swal.fire({
@@ -109,8 +120,14 @@ const GalleryCategory = () => {
     };
 
     const startEdit = (cat) => {
+        console.log('Starting edit for category:', cat);
         setIsEditing(cat._id);
-        setForm({ title: cat.title, heading: cat.heading || '', coverImageAlt: cat.coverImageAlt || '' });
+        setForm({ 
+            title: cat.title, 
+            heading: cat.heading || '', 
+            coverImageAlt: cat.coverImageAlt || '',
+            order: cat.order || 0
+        });
         setImagePreview(cat.coverImage ? `${SERVER_URL}${cat.coverImage}` : '');
         setImageFile(null);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -167,6 +184,20 @@ const GalleryCategory = () => {
                                     onChange={(e) => setForm({ ...form, heading: e.target.value })}
                                     className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
                                     placeholder="e.g. General Gallery"
+                                />
+                            </div>
+
+                            {/* Order Number */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                    Display Order Number
+                                </label>
+                                <input
+                                    type="number"
+                                    value={form.order}
+                                    onChange={(e) => setForm({ ...form, order: e.target.value })}
+                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
+                                    placeholder="e.g. 1"
                                 />
                             </div>
 
@@ -260,6 +291,7 @@ const GalleryCategory = () => {
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">IMAGE</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">TITLE</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">HEADING</th>
+                                        <th className="text-center py-3 px-4 text-xs font-bold text-gray-500 uppercase">ORDER</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">ACTIONS</th>
                                     </tr>
                                 </thead>
@@ -298,6 +330,11 @@ const GalleryCategory = () => {
                                                 <p className="text-[10px] text-gray-400 mt-0.5">{cat.coverImageAlt}</p>
                                             </td>
                                             <td className="py-3 px-4 text-gray-600 text-xs">{cat.heading || '—'}</td>
+                                            <td className="py-3 px-4 text-center">
+                                                <span className="bg-gray-100 text-gray-800 text-[10px] font-bold px-2 py-0.5 rounded border border-gray-200">
+                                                    {cat.order || 0}
+                                                </span>
+                                            </td>
                                             <td className="py-3 px-4">
                                                 <div className="flex items-center gap-1">
                                                     {/* Edit */}

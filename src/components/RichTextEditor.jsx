@@ -276,12 +276,11 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                 __html: `
                 [contenteditable] {
                     outline: none;
-                    color: #333333 !important;
                     text-align: justify !important;
                     line-height: 1.6 !important;
                 }
-                [contenteditable] p, [contenteditable] li, [contenteditable] span {
-                    color: #333333 !important;
+                [contenteditable] p {
+                    margin: 0.5rem 0 !important;
                 }
                 [contenteditable] a {
                     color: #2563eb !important;
@@ -308,23 +307,32 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                 }
                 [contenteditable] b, [contenteditable] strong {
                     font-weight: 800 !important;
-                    color: #000000 !important;
                 }
                 [contenteditable] i, [contenteditable] em {
                     font-style: italic !important;
-                    color: #333333 !important;
                 }
                 [contenteditable] h1, [contenteditable] h2, [contenteditable] h3, [contenteditable] h4, [contenteditable] h5, [contenteditable] h6 {
-                    color: #000000 !important;
                     font-weight: 800 !important;
                     margin-top: 1rem !important;
                     margin-bottom: 0.5rem !important;
+                }
+                [contenteditable] h1 {
+                    font-size: 2rem !important;
                 }
                 [contenteditable] h2 {
                     font-size: 1.5rem !important;
                 }
                 [contenteditable] h3 {
                     font-size: 1.25rem !important;
+                }
+                [contenteditable] h4 {
+                    font-size: 1.1rem !important;
+                }
+                [contenteditable] h5 {
+                    font-size: 1rem !important;
+                }
+                [contenteditable] h6 {
+                    font-size: 0.9rem !important;
                 }
             ` }} />
         </div>
