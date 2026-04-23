@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import {
     Save, Image as ImageIcon, Plus, Trash2, Edit,
@@ -17,6 +17,7 @@ const EMPTY_FORM = {
 
 const GalleryCategory = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [form, setForm] = useState({ ...EMPTY_FORM });
@@ -26,6 +27,29 @@ const GalleryCategory = () => {
     const fileInputRef = useRef(null);
 
     useEffect(() => { fetchCategories(); }, []);
+
+    useEffect(() => {
+        if (location.state?.editItem) {
+            const item = location.state.editItem;
+            // If _id is the same as title, it's likely not a real category ID yet
+            const actualId = (item._id && item._id !== item.title) ? item._id : null;
+            
+            console.log('Starting edit for category:', item);
+            setIsEditing(actualId);
+            setForm({ 
+                title: item.title, 
+                heading: item.heading || '', 
+                coverImageAlt: item.coverImageAlt || '',
+                order: item.order || 0
+            });
+            setImagePreview(item.coverImage ? `${SERVER_URL}${item.coverImage}` : '');
+            setImageFile(null);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Clear state after reading to prevent re-triggering on refresh
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
 
     const fetchCategories = async () => {
         setIsLoading(true);
