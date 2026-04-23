@@ -49,7 +49,8 @@ const GalleryList = () => {
                     if (!groups[title]) {
                         const catData = categoryMap[title];
                         groups[title] = {
-                            _id: catData?._id || title, 
+                            ...(catData || {}),
+                            _id: catData?._id || title,
                             title: title,
                             category: item.category,
                             status: "active",
@@ -65,6 +66,7 @@ const GalleryList = () => {
                 Object.values(categoryMap).forEach(cat => {
                     if (!groups[cat.title]) {
                         groups[cat.title] = {
+                            ...cat,
                             _id: cat._id,
                             title: cat.title,
                             category: "photo", // Default
