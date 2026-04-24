@@ -122,7 +122,18 @@ const BuyerRegistrationConfig = () => {
     const addPackage = () => {
         setConfig(prev => ({
             ...prev,
-            packages: [...prev.packages, { name: 'New Package', price: 0, benefits: ['New Benefit'] }]
+            packages: [...prev.packages, { 
+                name: 'New Package', 
+                price: 0, 
+                category: 'Pass',
+                tagline: '',
+                description: '',
+                whyChoose: '',
+                badge: '',
+                cta: 'Select',
+                color: 'blue',
+                benefits: ['New Benefit'] 
+            }]
         }));
     };
 
@@ -135,7 +146,7 @@ const BuyerRegistrationConfig = () => {
 
     const updatePackage = (index, field, value) => {
         const newPackages = [...config.packages];
-        newPackages[index][field] = value;
+        newPackages[index] = { ...newPackages[index], [field]: value };
         setConfig(prev => ({ ...prev, packages: newPackages }));
     };
 
@@ -278,17 +289,29 @@ const BuyerRegistrationConfig = () => {
                                 <Plus className="w-3 h-3" /> Add Package
                             </button>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                             {config.packages.map((pkg, pIndex) => (
                                 <div key={pIndex} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col">
                                     <div className="p-6 bg-[#23471d] text-white flex justify-between items-start">
-                                        <div className="flex-1">
-                                            <input 
-                                                value={pkg.name} 
-                                                onChange={(e) => updatePackage(pIndex, 'name', e.target.value)}
-                                                className="bg-transparent border-none focus:ring-0 p-0 text-lg font-bold w-full placeholder:text-white/50"
-                                            />
-                                            <div className="flex items-center gap-2 mt-2">
+                                        <div className="flex-1 space-y-4">
+                                            <div className="flex items-center gap-4">
+                                                <input 
+                                                    value={pkg.name} 
+                                                    onChange={(e) => updatePackage(pIndex, 'name', e.target.value)}
+                                                    className="bg-transparent border-none focus:ring-0 p-0 text-lg font-bold w-full placeholder:text-white/50"
+                                                    placeholder="Package Name"
+                                                />
+                                                <select 
+                                                    value={pkg.category} 
+                                                    onChange={(e) => updatePackage(pIndex, 'category', e.target.value)}
+                                                    className="bg-white/10 border border-white/20 rounded px-2 py-1 text-[10px] font-bold uppercase tracking-widest outline-none"
+                                                >
+                                                    <option value="Pass" className="text-slate-800">Pass</option>
+                                                    <option value="Membership" className="text-slate-800">Membership</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <div className="flex items-center gap-2">
                                                 <span className="text-xl font-black italic">₹</span>
                                                 <input 
                                                     type="number"
@@ -296,27 +319,92 @@ const BuyerRegistrationConfig = () => {
                                                     onChange={(e) => updatePackage(pIndex, 'price', parseInt(e.target.value))}
                                                     className="bg-transparent border-none focus:ring-0 p-0 text-3xl font-black w-32 placeholder:text-white/50"
                                                 />
+                                                <select 
+                                                    value={pkg.color} 
+                                                    onChange={(e) => updatePackage(pIndex, 'color', e.target.value)}
+                                                    className="bg-white/10 border border-white/20 rounded px-2 py-1 text-[10px] font-bold uppercase tracking-widest outline-none ml-auto"
+                                                >
+                                                    <option value="blue" className="text-slate-800">Blue Theme</option>
+                                                    <option value="yellow" className="text-slate-800">Yellow Theme</option>
+                                                    <option value="green" className="text-slate-800">Green Theme</option>
+                                                    <option value="red" className="text-slate-800">Red Theme</option>
+                                                </select>
                                             </div>
                                         </div>
-                                        <button onClick={() => removePackage(pIndex)} className="p-2 hover:bg-white/20 rounded-lg text-white/60 hover:text-white transition-colors"><Trash2 size={16} /></button>
+                                        <button onClick={() => removePackage(pIndex)} className="p-2 hover:bg-white/20 rounded-lg text-white/60 hover:text-white transition-colors ml-4"><Trash2 size={16} /></button>
                                     </div>
-                                    <div className="p-6 flex-1 bg-slate-50/30">
-                                        <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-2">
-                                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#23471d]">Package Benefits</h4>
-                                            <button onClick={() => addBenefit(pIndex)} className="text-[#23471d] hover:text-[#1a3516]"><Plus size={14} /></button>
-                                        </div>
-                                        <div className="space-y-2">
-                                            {pkg.benefits.map((benefit, bIndex) => (
-                                                <div key={bIndex} className="flex items-start gap-2 group/benefit bg-white p-2 rounded border border-slate-100 shadow-sm">
-                                                    <CheckCircle size={14} className="text-emerald-500 mt-1 shrink-0" />
-                                                    <textarea 
-                                                        value={benefit}
-                                                        onChange={(e) => updateBenefit(pIndex, bIndex, e.target.value)}
-                                                        className="flex-1 bg-transparent border-none focus:ring-0 p-0 text-[11px] font-medium text-slate-600 resize-none min-h-[40px]"
+                                    
+                                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/30 flex-1">
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Tagline</label>
+                                                <input 
+                                                    value={pkg.tagline || ''} 
+                                                    onChange={(e) => updatePackage(pIndex, 'tagline', e.target.value)}
+                                                    className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-semibold text-slate-600 focus:ring-1 focus:ring-[#23471d] outline-none"
+                                                    placeholder="e.g. For Serious Buyers"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Description</label>
+                                                <textarea 
+                                                    value={pkg.description || ''} 
+                                                    onChange={(e) => updatePackage(pIndex, 'description', e.target.value)}
+                                                    className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-medium text-slate-600 focus:ring-1 focus:ring-[#23471d] outline-none min-h-[80px]"
+                                                    placeholder="Brief package description..."
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Why Choose This?</label>
+                                                <textarea 
+                                                    value={pkg.whyChoose || ''} 
+                                                    onChange={(e) => updatePackage(pIndex, 'whyChoose', e.target.value)}
+                                                    className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-medium text-slate-600 focus:ring-1 focus:ring-[#23471d] outline-none min-h-[60px]"
+                                                    placeholder="Reason to select this package..."
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Badge</label>
+                                                    <input 
+                                                        value={pkg.badge || ''} 
+                                                        onChange={(e) => updatePackage(pIndex, 'badge', e.target.value)}
+                                                        className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-semibold text-slate-600 focus:ring-1 focus:ring-[#23471d] outline-none"
+                                                        placeholder="e.g. Recommended"
                                                     />
-                                                    <button onClick={() => removeBenefit(pIndex, bIndex)} className="opacity-0 group-benefit-hover:opacity-100 text-slate-300 hover:text-red-500 transition-all"><Trash2 size={12} /></button>
                                                 </div>
-                                            ))}
+                                                <div>
+                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">CTA Text</label>
+                                                    <input 
+                                                        value={pkg.cta || ''} 
+                                                        onChange={(e) => updatePackage(pIndex, 'cta', e.target.value)}
+                                                        className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-semibold text-slate-600 focus:ring-1 focus:ring-[#23471d] outline-none"
+                                                        placeholder="e.g. Register Now"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <div className="flex items-center justify-between mb-2 border-b border-slate-100 pb-2">
+                                                <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#23471d]">Package Benefits</h4>
+                                                <button onClick={() => addBenefit(pIndex)} className="text-[#23471d] hover:text-[#1a3516] flex items-center gap-1 text-[10px] font-bold">
+                                                    <Plus size={12} /> ADD
+                                                </button>
+                                            </div>
+                                            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                                {pkg.benefits.map((benefit, bIndex) => (
+                                                    <div key={bIndex} className="flex items-start gap-2 group/benefit bg-white p-2 rounded border border-slate-100 shadow-sm">
+                                                        <CheckCircle size={14} className="text-emerald-500 mt-1 shrink-0" />
+                                                        <textarea 
+                                                            value={benefit}
+                                                            onChange={(e) => updateBenefit(pIndex, bIndex, e.target.value)}
+                                                            className="flex-1 bg-transparent border-none focus:ring-0 p-0 text-[11px] font-medium text-slate-600 resize-none min-h-[40px]"
+                                                        />
+                                                        <button onClick={() => removeBenefit(pIndex, bIndex)} className="opacity-0 group-benefit-hover:opacity-100 text-slate-300 hover:text-red-500 transition-all"><Trash2 size={12} /></button>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

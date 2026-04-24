@@ -39,7 +39,6 @@ import {
     heroBackgroundApi,
 } from "../../lib/api";
 
-// ─── Reusable Multi-Select Dropdown ─────────────────────────────────────────
 const MultiSelectDropdown = ({
     options,
     selected,
@@ -210,56 +209,7 @@ const PAYMENT_METHODS = [
     { id: "wallet", label: "Mobile Wallet", icon: Wallet, description: "Paytm, Amazon Pay" },
 ];
 
-const PACKAGE_METADATA = {
-    "Standard Buyer Pass": {
-        tagline: "For Emerging Buyers & Business Explorers",
-        description: "Designed for professionals who want to explore new products, suppliers, and market opportunities through structured Buyer–Seller interactions.",
-        whyChoose: "A great starting point to explore opportunities and build initial business connections.",
-        cta: "Register Now",
-        color: "blue",
-        badge: null,
-    },
-    "VIP Buyer Pass": {
-        tagline: "For Serious Buyers & Decision Makers",
-        description: "Crafted for high-intent buyers who are looking for structured, result-oriented meetings and premium networking.",
-        whyChoose: "Perfect for buyers who want focused meetings, comfort, and faster business outcomes.",
-        cta: "Upgrade to VIP",
-        badge: "Recommended",
-        color: "yellow",
-    },
-    "ICOA Standard Buyer Membership": {
-        tagline: "For Active Buyers & Market Explorers",
-        description: "The Buyer–Seller Meet at IHWE 2026 is being conducted in association with the International Council of AYUSH (ICOA), bringing you access to a trusted network of verified suppliers and brands.",
-        whyChoose: "Ideal for buyers who want to explore the AYUSH and wellness ecosystem and build reliable connections.",
-        cta: "Become a Member",
-        color: "blue",
-        badge: null,
-    },
-    "ICOA VIP Buyer Membership": {
-        tagline: "For Serious Buyers & Decision Makers",
-        description: "Experience structured and high-value business networking through ICOA-curated Buyer–Seller Meets at IHWE and beyond.",
-        whyChoose: "Best suited for buyers who want focused meetings, verified suppliers, and faster business outcomes.",
-        cta: "Upgrade to VIP Membership",
-        badge: "Recommended",
-        color: "yellow",
-    },
-    "ICOA Elite Buyer Membership": {
-        tagline: "For High-Value & Institutional Buyers",
-        description: "An exclusive membership offering a fully managed sourcing experience through ICOA's curated network and IHWE platform.",
-        whyChoose: "Designed for buyers who want a complete sourcing ecosystem with strategic business support.",
-        cta: "Get Elite Membership",
-        color: "red",
-        badge: null,
-    },
-    "ICOA Buyer Membership": {
-        tagline: "For Serious Buyers Seeking Year-Round Opportunities",
-        description: "Extend your benefits beyond the event with ICOA Buyer Membership, offering continuous access to curated sourcing opportunities and supplier connections throughout the year.",
-        whyChoose: "Perfect for buyers who want continuous business opportunities, not just a one-time event experience.",
-        cta: "Get Membership",
-        badge: "Best Value",
-        color: "green",
-    },
-};
+
 
 const INITIAL_FORM_STATE = {
     fullName: "",
@@ -395,14 +345,13 @@ const PaymentMethodCard = ({ method, selected, onToggle }) => {
 };
 
 const PackageCard = ({ pkg, selected, onSelect, disabled }) => {
-    const meta = PACKAGE_METADATA[pkg.name] || {};
     const colorMap = {
         blue: { accent: "text-blue-700", border: "border-blue-200", badge: "bg-blue-600", surface: "bg-blue-50" },
         yellow: { accent: "text-amber-700", border: "border-amber-200", badge: "bg-amber-500", surface: "bg-amber-50" },
         green: { accent: "text-emerald-700", border: "border-emerald-200", badge: "bg-emerald-600", surface: "bg-emerald-50" },
         red: { accent: "text-red-700", border: "border-red-200", badge: "bg-red-600", surface: "bg-red-50" },
     };
-    const theme = colorMap[meta.color] || colorMap.blue;
+    const theme = colorMap[pkg.color] || colorMap.blue;
     const benefits = Array.isArray(pkg.benefits) ? pkg.benefits : [];
 
     return (
@@ -412,15 +361,15 @@ const PackageCard = ({ pkg, selected, onSelect, disabled }) => {
             disabled={disabled}
             className={`relative flex h-full flex-col rounded-xl border-2 p-5 text-left transition ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${selected ? "border-[#23471d] bg-white shadow-xl shadow-[#23471d]/10 ring-4 ring-[#23471d]/5" : "border-slate-200 bg-white hover:border-[#23471d]/40 hover:shadow-lg"}`}
         >
-            {meta.badge && <span className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white ${theme.badge}`}>{meta.badge}</span>}
+            {pkg.badge && <span className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white ${theme.badge}`}>{pkg.badge}</span>}
             <div className="mb-4">
                 <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{getPackageGroup(pkg)}</p>
                 <h4 className="mt-2 text-lg font-black text-slate-900">{pkg.name}</h4>
                 <p className="mt-2 text-2xl font-black text-[#23471d]">{formatCurrency(pkg.price)}</p>
-                {meta.tagline && <p className={`mt-2 text-xs font-bold uppercase ${theme.accent}`}>{meta.tagline}</p>}
+                {pkg.tagline && <p className={`mt-2 text-xs font-bold uppercase ${theme.accent}`}>{pkg.tagline}</p>}
             </div>
             <div className="flex-1 space-y-4">
-                <p className="text-sm leading-relaxed text-slate-600">{meta.description || "Curated access to buyer-seller interactions and relevant event support."}</p>
+                <p className="text-sm leading-relaxed text-slate-600">{pkg.description || "Curated access to buyer-seller interactions and relevant event support."}</p>
                 {benefits.length > 0 && (
                     <div className={`rounded-xl border p-3 ${theme.border} ${theme.surface}`}>
                         <p className="mb-2 text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Package Benefits</p>
@@ -436,11 +385,11 @@ const PackageCard = ({ pkg, selected, onSelect, disabled }) => {
                 )}
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                     <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Why Choose This</p>
-                    <p className="mt-2 text-sm font-medium leading-relaxed text-slate-700">{meta.whyChoose || "Useful for buyers who want curated supplier discovery and business networking."}</p>
+                    <p className="mt-2 text-sm font-medium leading-relaxed text-slate-700">{pkg.whyChoose || "Useful for buyers who want curated supplier discovery and business networking."}</p>
                 </div>
             </div>
             <div className={`mt-5 rounded-lg px-4 py-3 text-center text-xs font-black uppercase tracking-[0.18em] transition ${selected ? "bg-[#23471d] text-white" : disabled ? "bg-slate-200 text-slate-400" : "bg-slate-100 text-slate-600 group-hover:bg-[#23471d]"}`}>
-                {selected ? "Selected Package" : (disabled ? "Complete Form First" : (meta.cta || "Select Package"))}
+                {selected ? "Selected Package" : (disabled ? "Complete Form First" : (pkg.cta || "Select Package"))}
             </div>
         </button>
     );
