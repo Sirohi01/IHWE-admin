@@ -64,6 +64,9 @@ import SeoList from "../pages/seo/SeoList";
 import AdvancedSeo from "../pages/seo/AdvancedSeo";
 import SocialMedia from "../pages/SocialMedia";
 import GlobalPlatform from "../pages/GlobalPlatform";
+import EventOverviewManagement from "../pages/EventOverviewManagement";
+import AboutOrganizerManagement from "../pages/AboutOrganizerManagement";
+import OurJourneyManagement from "../pages/OurJourneyManagement";
 import VisionMission from "../pages/VisionMission";
 import WhyAttend from "../pages/WhyAttend";
 import TargetAudience from "../pages/TargetAudience";
@@ -185,7 +188,10 @@ export default function AppRoutes() {
           <Route path="add-pdf" element={<AddPdf />} />
           <Route path="stats-counter" element={<StatsCounter />} />
           <Route path="global-platform" element={<GlobalPlatform />} />
-          <Route path="vision-mission" element={<VisionMission />} />
+          <Route path="/event-overview" element={<EventOverviewManagement />} />
+          <Route path="/about-organizer" element={<AboutOrganizerManagement />} />
+          <Route path="/our-journey" element={<OurJourneyManagement />} />
+          <Route path="/vision-mission" element={<VisionMission />} />
           <Route path="why-attend" element={<WhyAttend />} />
           <Route path="target-audience" element={<TargetAudience />} />
           <Route path="organized-by" element={<OrganizedBy />} />

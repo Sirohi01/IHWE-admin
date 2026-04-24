@@ -10,6 +10,7 @@ import api, { API_URL, SERVER_URL } from "../lib/api";
 import Table from '../components/table/Table';
 import Pagination from "../components/Pagination";
 import PageHeader from '../components/PageHeader';
+import RichTextEditor from '../components/RichTextEditor';
 import { pagesList } from '../data/pagesList';
 
 const HeroImages = () => {
@@ -32,9 +33,21 @@ const HeroImages = () => {
         pageName: "",
         backgroundImage: null,
         imageAltText: "",
+        subtitle: "",
+        subtitleFontSize: "12",
         title: "",
-        heading: "",
+        titleFontSize: "45",
+        title2: "",
+        title2FontSize: "45",
         shortDescription: "",
+        descriptionFontSize: "16",
+        button1Text: "",
+        button1Link: "",
+        button2Text: "",
+        button2Link: "",
+        infoBar1: "",
+        infoBar2: "",
+        infoBar3: "",
         status: "Active"
     });
 
@@ -81,9 +94,21 @@ const HeroImages = () => {
             pageName: item.pageName,
             backgroundImage: null,
             imageAltText: item.imageAltText || "",
+            subtitle: item.subtitle || "",
+            subtitleFontSize: item.subtitleFontSize || "12",
             title: item.title || "",
-            heading: item.heading || "",
+            titleFontSize: item.titleFontSize || "45",
+            title2: item.title2 || "",
+            title2FontSize: item.title2FontSize || "45",
             shortDescription: item.shortDescription || "",
+            descriptionFontSize: item.descriptionFontSize || "16",
+            button1Text: item.button1Text || "",
+            button1Link: item.button1Link || "",
+            button2Text: item.button2Text || "",
+            button2Link: item.button2Link || "",
+            infoBar1: item.infoBar1 || "",
+            infoBar2: item.infoBar2 || "",
+            infoBar3: item.infoBar3 || "",
             status: item.status || "Active"
         });
         setImagePreview(`${SERVER_URL}${item.backgroundImage}`);
@@ -95,9 +120,21 @@ const HeroImages = () => {
             pageName: "",
             backgroundImage: null,
             imageAltText: "",
+            subtitle: "",
+            subtitleFontSize: "12",
             title: "",
-            heading: "",
+            titleFontSize: "45",
+            title2: "",
+            title2FontSize: "45",
             shortDescription: "",
+            descriptionFontSize: "16",
+            button1Text: "",
+            button1Link: "",
+            button2Text: "",
+            button2Link: "",
+            infoBar1: "",
+            infoBar2: "",
+            infoBar3: "",
             status: "Active"
         });
         setImagePreview(null);
@@ -320,45 +357,278 @@ const HeroImages = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Hero Title (e.g. About Us)</label>
-                                <div className="relative">
-                                    <Type className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        name="title"
-                                        value={formData.title}
-                                        onChange={handleInputChange}
-                                        placeholder="Enter main title"
-                                        className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-300 focus:border-[#1a5b32] outline-none shadow-sm text-sm"
-                                    />
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">Subtitle</label>
+                                    <div className="flex items-center gap-1">
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase">Size</span>
+                                        <div className="flex items-center border-2 border-gray-300 rounded overflow-hidden h-6 bg-white shadow-sm">
+                                            <button
+                                                type="button"
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    const newSize = Math.max(1, parseInt(formData.subtitleFontSize || 0) - 1);
+                                                    setFormData(prev => ({ ...prev, subtitleFontSize: newSize.toString() }));
+                                                }}
+                                                className="px-1.5 h-full hover:bg-gray-100 border-r border-gray-300 transition-colors text-[10px] font-bold"
+                                            >
+                                                -
+                                            </button>
+                                            <input
+                                                type="number"
+                                                name="subtitleFontSize"
+                                                value={formData.subtitleFontSize}
+                                                onChange={handleInputChange}
+                                                className="w-10 h-full text-center text-[10px] focus:outline-none border-0"
+                                            />
+                                            <button
+                                                type="button"
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    const newSize = parseInt(formData.subtitleFontSize || 0) + 1;
+                                                    setFormData(prev => ({ ...prev, subtitleFontSize: newSize.toString() }));
+                                                }}
+                                                className="px-1.5 h-full hover:bg-gray-100 border-l border-gray-300 transition-colors text-[10px] font-bold"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
+                                <RichTextEditor
+                                    value={formData.subtitle}
+                                    onChange={(content) => setFormData(prev => ({ ...prev, subtitle: content }))}
+                                    placeholder="e.g., OVERVIEW"
+                                    minHeight="80px"
+                                    fontSize={formData.subtitleFontSize}
+                                />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Hero Heading (e.g. About IHWE)</label>
-                                <div className="relative">
-                                    <Heading className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        name="heading"
-                                        value={formData.heading}
-                                        onChange={handleInputChange}
-                                        placeholder="Enter section heading"
-                                        className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-300 focus:border-[#1a5b32] outline-none shadow-sm text-sm"
-                                    />
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">Hero Title 1 *</label>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase">Default: 45px</span>
+                                        <div className="flex items-center border-2 border-gray-300 rounded overflow-hidden h-6 bg-white shadow-sm">
+                                            <button
+                                                type="button"
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    const newSize = Math.max(1, parseInt(formData.titleFontSize || 0) - 1);
+                                                    setFormData(prev => ({ ...prev, titleFontSize: newSize.toString() }));
+                                                }}
+                                                className="px-1.5 h-full hover:bg-gray-100 border-r border-gray-300 transition-colors text-[10px] font-bold"
+                                            >
+                                                -
+                                            </button>
+                                            <input
+                                                type="number"
+                                                name="titleFontSize"
+                                                value={formData.titleFontSize}
+                                                onChange={handleInputChange}
+                                                className="w-10 h-full text-center text-[10px] focus:outline-none border-0"
+                                            />
+                                            <button
+                                                type="button"
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    const newSize = parseInt(formData.titleFontSize || 0) + 1;
+                                                    setFormData(prev => ({ ...prev, titleFontSize: newSize.toString() }));
+                                                }}
+                                                className="px-1.5 h-full hover:bg-gray-100 border-l border-gray-300 transition-colors text-[10px] font-bold"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
+                                <RichTextEditor
+                                    value={formData.title}
+                                    onChange={(content) => setFormData(prev => ({ ...prev, title: content }))}
+                                    placeholder="Enter Hero Title 1 (e.g. About IHWE)..."
+                                    minHeight="120px"
+                                    fontSize={formData.titleFontSize}
+                                />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Short Description</label>
-                                <textarea
-                                    name="shortDescription"
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                        Hero Title 2 <span className="text-gray-400 font-normal">(optional – shown below Title 1)</span>
+                                    </label>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase">Default: 45px</span>
+                                        <div className="flex items-center border-2 border-gray-300 rounded overflow-hidden h-6 bg-white shadow-sm">
+                                            <button
+                                                type="button"
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    const newSize = Math.max(1, parseInt(formData.title2FontSize || 0) - 1);
+                                                    setFormData(prev => ({ ...prev, title2FontSize: newSize.toString() }));
+                                                }}
+                                                className="px-1.5 h-full hover:bg-gray-100 border-r border-gray-300 transition-colors text-[10px] font-bold"
+                                            >
+                                                -
+                                            </button>
+                                            <input
+                                                type="number"
+                                                name="title2FontSize"
+                                                value={formData.title2FontSize}
+                                                onChange={handleInputChange}
+                                                className="w-10 h-full text-center text-[10px] focus:outline-none border-0"
+                                            />
+                                            <button
+                                                type="button"
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    const newSize = parseInt(formData.title2FontSize || 0) + 1;
+                                                    setFormData(prev => ({ ...prev, title2FontSize: newSize.toString() }));
+                                                }}
+                                                className="px-1.5 h-full hover:bg-gray-100 border-l border-gray-300 transition-colors text-[10px] font-bold"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <RichTextEditor
+                                    value={formData.title2}
+                                    onChange={(content) => setFormData(prev => ({ ...prev, title2: content }))}
+                                    placeholder="Enter Hero Title 2 (optional)..."
+                                    minHeight="120px"
+                                    fontSize={formData.title2FontSize}
+                                />
+                            </div>
+
+                            <div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">Short Description *</label>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase">Default: 16px</span>
+                                        <div className="flex items-center border-2 border-gray-300 rounded overflow-hidden h-6 bg-white shadow-sm">
+                                            <button
+                                                type="button"
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    const newSize = Math.max(1, parseInt(formData.descriptionFontSize || 0) - 1);
+                                                    setFormData(prev => ({ ...prev, descriptionFontSize: newSize.toString() }));
+                                                }}
+                                                className="px-1.5 h-full hover:bg-gray-100 border-r border-gray-300 transition-colors text-[10px] font-bold"
+                                            >
+                                                -
+                                            </button>
+                                            <input
+                                                type="number"
+                                                name="descriptionFontSize"
+                                                value={formData.descriptionFontSize}
+                                                onChange={handleInputChange}
+                                                className="w-10 h-full text-center text-[10px] focus:outline-none border-0"
+                                            />
+                                            <button
+                                                type="button"
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    const newSize = parseInt(formData.descriptionFontSize || 0) + 1;
+                                                    setFormData(prev => ({ ...prev, descriptionFontSize: newSize.toString() }));
+                                                }}
+                                                className="px-1.5 h-full hover:bg-gray-100 border-l border-gray-300 transition-colors text-[10px] font-bold"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <RichTextEditor
                                     value={formData.shortDescription}
-                                    onChange={handleInputChange}
-                                    rows={3}
+                                    onChange={(content) => setFormData(prev => ({ ...prev, shortDescription: content }))}
                                     placeholder="Enter brief page description..."
-                                    className="w-full px-4 py-2.5 border-2 border-gray-300 focus:border-[#1a5b32] outline-none shadow-sm text-sm resize-none"
-                                ></textarea>
+                                    minHeight="120px"
+                                    fontSize={formData.descriptionFontSize}
+                                />
+                            </div>
+
+                            {/* Button Fields */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Button 1 Text (Optional)</label>
+                                    <input
+                                        type="text"
+                                        name="button1Text"
+                                        value={formData.button1Text}
+                                        onChange={handleInputChange}
+                                        placeholder="e.g., Book Your Stand"
+                                        className="w-full px-4 py-2.5 border-2 border-gray-300 focus:border-[#1a5b32] outline-none shadow-sm text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Button 1 Link (Optional)</label>
+                                    <input
+                                        type="text"
+                                        name="button1Link"
+                                        value={formData.button1Link}
+                                        onChange={handleInputChange}
+                                        placeholder="e.g., /book-a-stand"
+                                        className="w-full px-4 py-2.5 border-2 border-gray-300 focus:border-[#1a5b32] outline-none shadow-sm text-sm"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Button 2 Text (Optional)</label>
+                                    <input
+                                        type="text"
+                                        name="button2Text"
+                                        value={formData.button2Text}
+                                        onChange={handleInputChange}
+                                        placeholder="e.g., Register as Visitor"
+                                        className="w-full px-4 py-2.5 border-2 border-gray-300 focus:border-[#1a5b32] outline-none shadow-sm text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Button 2 Link (Optional)</label>
+                                    <input
+                                        type="text"
+                                        name="button2Link"
+                                        value={formData.button2Link}
+                                        onChange={handleInputChange}
+                                        placeholder="e.g., /visitor-registration"
+                                        className="w-full px-4 py-2.5 border-2 border-gray-300 focus:border-[#1a5b32] outline-none shadow-sm text-sm"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Info Bar Fields */}
+                            <div className="border-t-2 border-dashed border-gray-200 pt-4">
+                                <label className="block text-xs font-black text-[#23471d] uppercase tracking-widest mb-3 opacity-70">📍 Info Bar (Calendar / Location / Globe)</label>
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">📅 Date / Event Info</label>
+                                        <RichTextEditor
+                                            value={formData.infoBar1}
+                                            onChange={(content) => setFormData(prev => ({ ...prev, infoBar1: content }))}
+                                            placeholder="e.g., 17–19 April 2026"
+                                            minHeight="80px"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">📍 Location</label>
+                                        <RichTextEditor
+                                            value={formData.infoBar2}
+                                            onChange={(content) => setFormData(prev => ({ ...prev, infoBar2: content }))}
+                                            placeholder="e.g., Pragati Maidan, New Delhi, India"
+                                            minHeight="80px"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">🌐 Globe / Tagline</label>
+                                        <RichTextEditor
+                                            value={formData.infoBar3}
+                                            onChange={(content) => setFormData(prev => ({ ...prev, infoBar3: content }))}
+                                            placeholder="e.g., Global Business, Global Impact"
+                                            minHeight="80px"
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">

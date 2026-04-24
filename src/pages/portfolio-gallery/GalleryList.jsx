@@ -49,7 +49,8 @@ const GalleryList = () => {
                     if (!groups[title]) {
                         const catData = categoryMap[title];
                         groups[title] = {
-                            _id: catData?._id || title, 
+                            ...(catData || {}),
+                            _id: catData?._id || title,
                             title: title,
                             category: item.category,
                             status: "active",
@@ -65,6 +66,7 @@ const GalleryList = () => {
                 Object.values(categoryMap).forEach(cat => {
                     if (!groups[cat.title]) {
                         groups[cat.title] = {
+                            ...cat,
                             _id: cat._id,
                             title: cat.title,
                             category: "photo", // Default
@@ -123,7 +125,7 @@ const GalleryList = () => {
                 // Given the instruction "Use title as ID for now", we'll use `row.title` for deletion.
                 // This is a placeholder and might need refinement based on backend API.
                 const response = await api.delete(
-                    `/api/gallery/delete-by-title/${row.title}` // Assuming a new endpoint for deleting by title
+                    `/api/gallery/delete-by-title/${encodeURIComponent(row.title)}` // Encoded for special characters
                 );
                 if (response.data.success) {
                     Swal.fire("Deleted!", "Gallery has been deleted.", "success");

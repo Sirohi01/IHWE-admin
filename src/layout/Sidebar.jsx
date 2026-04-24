@@ -71,7 +71,8 @@ export default function Sidebar({
     if (!currentUser) return [];
 
     const perms = roleData?.permissions || {};
-    const isSuperAdminFallback = currentUser.role === 'super-admin' && Object.keys(perms).length === 0;
+    const roleSlug = currentUser.role.toLowerCase().replace(/[^a-z]/g, '');
+    const isSuperAdmin = roleSlug === 'superadmin';
 
     const results = [];
     let currentSection = null;
@@ -84,8 +85,9 @@ export default function Sidebar({
         let isVisible = false;
         let visibleChildren = item.children;
 
-        if (isSuperAdminFallback) {
+        if (isSuperAdmin) {
           isVisible = true;
+          visibleChildren = item.children; // Show all children for super-admin
         } else {
           if (item.type === "item") {
             isVisible = perms[item.label] === true;

@@ -7,11 +7,10 @@ import {
     Target,
     Milestone,
     Palette,
-    CheckCircle,
-    Layout
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import PageHeader from '../components/PageHeader';
+import RichTextEditor from '../components/RichTextEditor';
 
 const AVAILABLE_ICONS = [
     'Target', 'Milestone', 'Award', 'Globe', 'Users', 'Zap', 
@@ -156,13 +155,13 @@ const VisionMission = () => {
 
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-tight">Mission Description</label>
-                                <textarea
-                                    value={data.mission.description}
-                                    onChange={(e) => handleMissionChange('description', e.target.value)}
-                                    rows={5}
-                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-justify italic"
-                                    placeholder="Enter mission statement..."
-                                />
+                                <div className="border-2 border-gray-200 rounded overflow-hidden">
+                                    <RichTextEditor
+                                        key="mission-desc"
+                                        value={data.mission.description}
+                                        onChange={(val) => handleMissionChange('description', val)}
+                                    />
+                                </div>
                             </div>
 
                             <div>
@@ -212,13 +211,13 @@ const VisionMission = () => {
 
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-tight">Vision Description</label>
-                                <textarea
-                                    value={data.vision.description}
-                                    onChange={(e) => handleVisionChange('description', e.target.value)}
-                                    rows={5}
-                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-justify italic"
-                                    placeholder="Enter vision statement..."
-                                />
+                                <div className="border-2 border-gray-200 rounded overflow-hidden">
+                                    <RichTextEditor
+                                        key="vision-desc"
+                                        value={data.vision.description}
+                                        onChange={(val) => handleVisionChange('description', val)}
+                                    />
+                                </div>
                             </div>
 
                             <div>
