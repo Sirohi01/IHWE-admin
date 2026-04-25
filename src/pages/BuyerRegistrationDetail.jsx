@@ -1,17 +1,281 @@
+// import React, { useState, useEffect } from 'react';
+// import { useParams, useNavigate } from 'react-router-dom';
+// import { ArrowLeft } from 'lucide-react';
+// import api from "../lib/api";
+
+// const Button = ({ children, onClick, className, variant, ...props }) => {
+//     const baseStyles = "px-4 py-2 text-sm font-bold uppercase tracking-widest rounded-sm flex items-center gap-2";
+//     const variants = {
+//         primary: "bg-gray-800 text-white",
+//         outline: "bg-white border border-gray-300 text-gray-700"
+//     };
+//     return (
+//         <button
+//             onClick={onClick}
+//             className={`${baseStyles} ${variant === 'outline' ? variants.outline : variants.primary} ${className}`}
+//             {...props}
+//         >
+//             {children}
+//         </button>
+//     );
+// };
+
+// const BuyerRegistrationDetail = () => {
+//     const { id } = useParams();
+//     const navigate = useNavigate();
+//     const [registration, setRegistration] = useState(null);
+//     const [isLoading, setIsLoading] = useState(true);
+
+//     useEffect(() => {
+//         const fetchDetail = async () => {
+//             try {
+//                 const response = await api.get(`/api/buyer-registration/${id}`);
+//                 if (response.data.success) {
+//                     setRegistration(response.data.data);
+//                 }
+//             } catch (error) {
+//                 console.error('Error fetching registration detail:', error);
+//             } finally {
+//                 setIsLoading(false);
+//             }
+//         };
+//         fetchDetail();
+//     }, [id]);
+
+//     if (isLoading) {
+//         return (
+//             <div className="flex items-center justify-center min-h-screen">
+//                 <div className="w-8 h-8 border-2 border-gray-800 border-t-transparent rounded-full animate-spin"></div>
+//             </div>
+//         );
+//     }
+
+//     if (!registration) {
+//         return (
+//             <div className="p-8 text-center">
+//                 <h2 className="text-xl font-bold text-gray-800">Registration not found</h2>
+//                 <Button onClick={() => navigate('/buyer-list')} className="mt-4">
+//                     Back to List
+//                 </Button>
+//             </div>
+//         );
+//     }
+
+//     const printStyles = `
+//     @media print {
+//       body { margin: 0; padding: 0; background: white; }
+//       .no-print { display: none !important; }
+//       .print-container { padding: 0; margin: 0; width: 100%; }
+//       .print-section { break-inside: avoid; page-break-inside: avoid; margin-bottom: 12px !important; }
+//       .detail-row { break-inside: avoid; page-break-inside: avoid; }
+//       @page { size: A4; margin: 1.5cm; }
+//       h1, h2, h3 { page-break-after: avoid; }
+//     }
+//     @media screen {
+//       .print-container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; }
+//       body { background: #e5e7eb; padding: 20px; }
+//     }
+//   `;
+
+//     const formatValue = (value) => {
+//         if (value === null || value === undefined || value === '') return '—';
+//         if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+
+//         if (typeof value === 'string' && value.trim().startsWith('[') && value.trim().endsWith(']')) {
+//             try {
+//                 const parsed = JSON.parse(value);
+//                 if (Array.isArray(parsed)) {
+//                     return parsed.length === 0 ? '—' : parsed.join(', ');
+//                 }
+//             } catch (e) {
+//                 return value;
+//             }
+//         }
+
+//         if (Array.isArray(value)) {
+//             if (value.length === 0) return '—';
+
+//             if (value.length === 1 && typeof value[0] === 'string' && value[0].trim().startsWith('[') && value[0].trim().endsWith(']')) {
+//                 try {
+//                     const parsed = JSON.parse(value[0]);
+//                     if (Array.isArray(parsed)) {
+//                         return parsed.join(', ');
+//                     }
+//                 } catch (e) { }
+//             }
+
+//             return value.map(item => {
+//                 if (typeof item === 'string') return item;
+//                 return String(item);
+//             }).join(', ');
+//         }
+//         return value;
+//     };
+
+//     const DetailRow = ({ label, value }) => (
+//         <div className="detail-row">
+//             <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide block">
+//                 {label}
+//             </span>
+//             <p className="text-sm text-gray-900 font-medium break-words leading-tight">
+//                 {formatValue(value)}
+//             </p>
+//         </div>
+//     );
+
+//     const Section = ({ title, children }) => (
+//         <div className="print-section mb-3">
+//             <div className="border-b-2 border-gray-300 pb-0.5 mb-2">
+//                 <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wide">
+//                     {title}
+//                 </h2>
+//             </div>
+//             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-2 gap-y-0">
+//                 {children}
+//             </div>
+//         </div>
+//     );
+
+//     return (
+//         <>
+//             <style>{printStyles}</style>
+//             <div className="print-container">
+
+//                 <div className="max-w-8xl mx-auto">
+
+//                     <div className="mb-4">
+//                         <h1 className="text-2xl font-bold text-gray-900 uppercase tracking-wide">
+//                             Buyer Registration Details
+//                         </h1>
+//                         <div className="mt-1">
+//                             <span className="text-sm text-gray-600 font-mono">
+//                                 {registration.registrationId || "ID PENDING"}
+//                                 {registration._id && <span className="text-gray-400">   </span>}
+//                             </span>
+//                         </div>
+//                     </div>
+
+//                     <Section title="Personal & Company Information">
+//                         <DetailRow label="Full Name" value={registration.fullName} />
+//                         <DetailRow label="Designation" value={registration.designation} />
+//                         <DetailRow label="Company Name" value={registration.companyName} />
+//                         <DetailRow label="Mobile Number" value={registration.mobileNumber} />
+//                         <DetailRow label="Alternate Number" value={registration.alternateNumber} />
+//                         <DetailRow label="Email Address" value={registration.emailAddress} />
+//                         <DetailRow label="Business Role" value={registration.businessType} />
+//                         <DetailRow label="Website" value={registration.website} />
+//                     </Section>
+
+//                     <Section title="Registered Address">
+//                         <DetailRow label="Country" value={registration.country} />
+//                         <DetailRow label="State/Province" value={registration.stateProvince} />
+//                         <DetailRow label="City" value={registration.city} />
+//                         <DetailRow label="Pin Code" value={registration.pinCode} />
+//                         <DetailRow label="Registered Address" value={registration.registeredAddress} colSpan={2} />
+//                     </Section>
+
+//                     <Section title="Company Business Profile">
+//                         <DetailRow label="Company/Firm Name" value={registration.companyFirmName} />
+//                         <DetailRow label="Brand Name" value={registration.brandName} />
+//                         <DetailRow label="Business Type" value={registration.basicBusinessType} />
+//                         <DetailRow label="Year of Est." value={registration.yearOfEstablishment} />
+//                         <DetailRow label="GST Number" value={registration.gstNumber} />
+//                         <DetailRow label="PAN Number" value={registration.panNumber} />
+//                         <DetailRow label="Buyer Industry" value={registration.buyerIndustry} />
+//                     </Section>
+
+//                     <Section title="Business Profile Details">
+//                         <DetailRow label="Nature of Business" value={registration.natureOfBusiness} />
+//                         <DetailRow label="Years in Business" value={registration.yearsInBusiness} />
+//                         <DetailRow label="No. of Outlets" value={registration.numberOfOutlets} />
+//                         <DetailRow label="Annual Turnover" value={registration.annualTurnover} />
+//                     </Section>
+
+//                     <Section title="Sourcing & Purchase Intent">
+//                         <DetailRow label="Primary Interest" value={registration.primaryProductInterest} />
+//                         <DetailRow label="Secondary Categories" value={registration.secondaryProductCategories} />
+//                         <DetailRow label="Import Interest" value={registration.interestedInImporting} />
+//                         <DetailRow label="Export Interest" value={registration.interestedInExporting} />
+//                         <DetailRow label="Business Model" value={registration.businessModelPreference} />
+//                         <DetailRow label="Est. Monthly Purchase" value={registration.estimatedPurchaseVolume} />
+//                         <DetailRow label="Budget Range" value={registration.budgetRange} />
+//                         <DetailRow label="Buying Frequency" value={registration.buyingFrequency} />
+//                         <DetailRow label="Est. Annual Purchase" value={registration.estimatedAnnualPurchaseValue} />
+//                         <DetailRow label="Purchase Timeline" value={registration.purchaseTimeline} />
+//                         <DetailRow label="Matchmaking Interest" value={registration.matchmakingInterest} />
+//                         <DetailRow label="Role in Purchase" value={registration.roleInPurchaseDecision} />
+//                         <DetailRow label="Specific Requirements" value={registration.specificProductRequirements} />
+//                     </Section>
+
+//                     <Section title="Supplier Preference">
+//                         <DetailRow label="Preferred Region" value={registration.preferredSupplierRegion} />
+//                         <DetailRow label="Preferred Supplier Type" value={registration.preferredSupplierType} />
+//                         <DetailRow label="Preferred State" value={registration.preferredState} />
+//                         <DetailRow label="Preferred Company Size" value={registration.preferredCompanySize} />
+//                     </Section>
+
+//                     <Section title="Certification & Compliance">
+//                         <DetailRow label="Required Certifications" value={registration.requiredCertifications} />
+//                         <DetailRow label="Pricing Preference" value={registration.pricingPreference} />
+//                         <DetailRow label="Payment Methods" value={registration.preferredPaymentMethods} />
+//                         <DetailRow label="Logistics Requirements" value={registration.logisticsRequirements} />
+//                     </Section>
+
+//                     <Section title="B2B Meeting Preferences">
+//                         <DetailRow label="Pre-scheduled B2B" value={registration.requirePreScheduledB2B} />
+//                         <DetailRow label="Priority Level" value={registration.meetingPriorityLevel} />
+//                         {registration.requirePreScheduledB2B === 'Yes' && (
+//                             <>
+//                                 <DetailRow label="Meeting Categories" value={registration.preferredMeetingCategories} />
+//                                 <DetailRow label="Exhibitor Types" value={registration.preferredExhibitorTypes} />
+//                                 <DetailRow label="Meeting Objectives" value={registration.meetingObjectives} />
+//                                 <DetailRow label="Business Types" value={registration.preferredBusinessTypes} />
+//                                 <DetailRow label="Preferred Day" value={registration.preferredMeetingDay} />
+//                                 <DetailRow label="Time Slot" value={registration.preferredTimeSlot} />
+//                                 <DetailRow label="Number of Meetings" value={registration.numberOfMeetingsInterested} />
+//                                 <DetailRow label="Meeting Requirements" value={registration.meetingRequirements} />
+//                             </>
+//                         )}
+//                     </Section>
+
+//                     <Section title="Registration & Payment Details">
+//                         <DetailRow label="Registration Category" value={registration.registrationCategory} />
+//                         <DetailRow label="Registration Fee" value={registration.registrationFee} />
+//                         <DetailRow label="Payment Mode" value={registration.paymentMode} />
+//                         <DetailRow label="Payment Status" value={registration.paymentStatus} />
+//                         <DetailRow label="Transaction ID" value={registration.transactionId || registration.razorpayPaymentId} />
+//                         <DetailRow label="Registration Date" value={registration.createdAt ? new Date(registration.createdAt).toLocaleDateString('en-IN') : 'N/A'} />
+//                         <DetailRow label="Payment Proof" value={registration.paymentProof ? "Available" : "Not provided"} />
+//                     </Section>
+
+//                     <Section title="Admin / Internal Remarks">
+//                         <div className="bg-orange-50 p-3 border border-orange-200">
+//                             <p className="text-sm text-gray-800 whitespace-pre-wrap">
+//                                 {registration.remarks || 'No remarks provided.'}
+//                             </p>
+//                         </div>
+//                     </Section>
+//                 </div>
+//             </div>
+//         </>
+//     );
+// };
+
+// export default BuyerRegistrationDetail;
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, User, Mail, Phone, Globe, Briefcase, Calendar, CheckCircle2, Info, Target, CreditCard } from 'lucide-react';
+import { ArrowLeft, Edit, Printer } from 'lucide-react';
 import api from "../lib/api";
 
 const Button = ({ children, onClick, className, variant, ...props }) => {
-    const baseStyles = "px-4 py-2 text-sm font-bold uppercase tracking-widest transition-all duration-200 rounded-sm flex items-center gap-2";
+    const baseStyles = "px-4 py-2 text-sm font-bold uppercase tracking-widest rounded-sm flex items-center gap-2";
     const variants = {
-        primary: "bg-[#23471d] text-white hover:bg-[#1a3516]",
-        outline: "bg-white border-2 border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm"
+        primary: "bg-gray-800 text-white",
+        outline: "bg-white border border-gray-300 text-gray-700"
     };
     return (
-        <button 
-            onClick={onClick} 
+        <button
+            onClick={onClick}
             className={`${baseStyles} ${variant === 'outline' ? variants.outline : variants.primary} ${className}`}
             {...props}
         >
@@ -42,10 +306,18 @@ const BuyerRegistrationDetail = () => {
         fetchDetail();
     }, [id]);
 
+    const handlePrint = () => {
+        window.print();
+    };
+
+    const handleEdit = () => {
+        navigate(`/buyer-registration/edit/${id}`);
+    };
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
-                <div className="w-12 h-12 border-4 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-2 border-gray-800 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }
@@ -53,7 +325,7 @@ const BuyerRegistrationDetail = () => {
     if (!registration) {
         return (
             <div className="p-8 text-center">
-                <h2 className="text-2xl font-bold text-gray-800">Registration not found</h2>
+                <h2 className="text-xl font-bold text-gray-800">Registration not found</h2>
                 <Button onClick={() => navigate('/buyer-list')} className="mt-4">
                     Back to List
                 </Button>
@@ -61,161 +333,242 @@ const BuyerRegistrationDetail = () => {
         );
     }
 
-    const DetailRow = ({ label, value, icon: Icon }) => (
-        <div className="flex flex-col border-b border-gray-300 py-3 hover:bg-gray-50/50 transition-colors px-4 h-full">
-            <div className="flex items-center gap-2 mb-1">
-                {Icon && <Icon className="w-3.5 h-3.5 text-[#23471d]/60" />}
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{label}</span>
+    const printStyles = `
+    @media print {
+      body { margin: 0; padding: 0; background: white; }
+      .no-print { display: none !important; }
+      .print-container { padding: 0; margin: 0; width: 100%; }
+      .print-section { break-inside: avoid; page-break-inside: avoid; margin-bottom: 12px !important; }
+      .detail-row { break-inside: avoid; page-break-inside: avoid; }
+      @page { size: A4; margin: 1.5cm; }
+      h1, h2, h3 { page-break-after: avoid; }
+    }
+    @media screen {
+      .print-container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; }
+      body { background: #e5e7eb; padding: 20px; }
+    }
+  `;
+
+    const formatValue = (value) => {
+        if (value === null || value === undefined || value === '') return '—';
+        if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+
+        if (typeof value === 'string' && value.trim().startsWith('[') && value.trim().endsWith(']')) {
+            try {
+                const parsed = JSON.parse(value);
+                if (Array.isArray(parsed)) {
+                    return parsed.length === 0 ? '—' : parsed.join(', ');
+                }
+            } catch (e) {
+                return value;
+            }
+        }
+
+        if (Array.isArray(value)) {
+            if (value.length === 0) return '—';
+
+            if (value.length === 1 && typeof value[0] === 'string' && value[0].trim().startsWith('[') && value[0].trim().endsWith(']')) {
+                try {
+                    const parsed = JSON.parse(value[0]);
+                    if (Array.isArray(parsed)) {
+                        return parsed.join(', ');
+                    }
+                } catch (e) { }
+            }
+
+            return value.map(item => {
+                if (typeof item === 'string') return item;
+                return String(item);
+            }).join(', ');
+        }
+        return value;
+    };
+
+    const DetailRow = ({ label, value }) => (
+        <div className="detail-row">
+            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide block">
+                {label}
+            </span>
+            <p className="text-sm text-gray-900 font-medium break-words leading-tight">
+                {formatValue(value)}
+            </p>
+        </div>
+    );
+
+    const Section = ({ title, children }) => (
+        <div className="print-section mb-3">
+            <div className="border-b-2 border-gray-300 pb-0.5 mb-2">
+                <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wide">
+                    {title}
+                </h2>
             </div>
-            <div>
-                <span className="text-sm font-bold text-gray-800 leading-tight">
-                    {Array.isArray(value) ? value.join(', ') : (value || <span className="text-gray-300 font-normal italic">Not provided</span>)}
-                </span>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-2 gap-y-0">
+                {children}
             </div>
         </div>
     );
-
-    const CompactDetailGrid = ({ data }) => (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 border border-gray-300">
-            {data.map((item, idx) => (
-                <div key={idx} className="border-r border-b border-gray-300 last:border-r-0 lg:[&:nth-child(4n)]:border-r-0">
-                    <DetailRow {...item} />
-                </div>
-            ))}
-        </div>
-    );
-
-    const SectionHeader = ({ title, icon: Icon }) => (
-        <div className="flex items-center gap-2 px-4 py-3 bg-[#23471d] border-b border-gray-200">
-            {Icon && <Icon className="w-4 h-4 text-white" />}
-            <h3 className="text-xs font-bold text-white uppercase tracking-widest">{title}</h3>
-        </div>
-    );
-
-    const companyData = [
-        { label: "Company Name", value: registration.companyName, icon: Building2 },
-        { label: "Business Type", value: registration.businessType, icon: Info },
-        { label: "Annual Turnover", value: registration.annualTurnover, icon: Info },
-        { label: "Years in Operation", value: registration.yearsInOperation, icon: Calendar },
-        { label: "Country", value: registration.country, icon: Globe },
-        { label: "State/Province", value: registration.stateProvince, icon: Globe },
-        { label: "City", value: registration.city, icon: Globe },
-        { label: "Registered Date", value: new Date(registration.createdAt).toLocaleDateString(), icon: Calendar },
-    ];
-
-    const contactData = [
-        { label: "Full Name", value: registration.fullName || registration.contactPerson, icon: User },
-        { label: "Designation", value: registration.designation, icon: Briefcase },
-        { label: "Email Address", value: registration.emailAddress || registration.email, icon: Mail },
-        { label: "Mobile Number", value: registration.mobileNumber || registration.whatsapp, icon: Phone },
-    ];
-
-    const sourcingData = [
-        { label: "Primary Interest", value: registration.primaryProductInterest, icon: Target },
-        { label: "Secondary Categories", value: registration.secondaryProductCategories, icon: Briefcase },
-        { label: "Supplier Region", value: registration.preferredSupplierRegion, icon: Globe },
-        { label: "Supplier Type", value: registration.preferredSupplierType, icon: User },
-    ];
-
-    const purchaseData = [
-        { label: "Timeline", value: registration.purchaseTimeline, icon: Info },
-        { label: "Decision Role", value: registration.roleInPurchaseDecision, icon: User },
-        { label: "Priority", value: registration.meetingPriorityLevel, icon: Target },
-        { label: "B2B Scheduled", value: registration.requirePreScheduledB2B, icon: Calendar },
-    ];
-
-    const paymentData = [
-        { label: "Category", value: registration.registrationCategory, icon: CreditCard },
-        { label: "Fee Paid", value: registration.registrationFee, icon: CreditCard },
-        { label: "Payment Status", value: registration.paymentStatus, icon: CheckCircle2 },
-        { label: "Transaction ID", value: registration.transactionId || registration.razorpayPaymentId, icon: Info },
-        { 
-            label: "Payment Proof", 
-            value: registration.paymentProof ? (
-                <a 
-                    href={registration.paymentProof.startsWith('http') ? registration.paymentProof : `${api.defaults.baseURL}${registration.paymentProof}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
-                >
-                    View Proof <Globe className="w-3 h-3" />
-                </a>
-            ) : "N/A", 
-            icon: CreditCard 
-        },
-    ];
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6">
-            <div className="w-full">
-                <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <button 
-                            onClick={() => navigate('/buyer-list')}
-                            className="flex items-center gap-2 text-gray-500 hover:text-[#23471d] transition-colors mb-2 text-sm font-medium"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            Back to Registrations
-                        </button>
-                        <div className="flex items-center gap-4">
-                            <h1 className="text-3xl font-bold text-[#23471d] uppercase tracking-tight">Buyer Registration <span className="text-slate-900 italic">Overview</span></h1>
-                            {registration.buyerTag && (
-                                <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase border ${
-                                    registration.buyerTag === 'Hot' ? 'bg-red-50 text-red-600 border-red-200' :
-                                    registration.buyerTag === 'Warm' ? 'bg-orange-50 text-orange-600 border-orange-200' :
-                                    'bg-blue-50 text-blue-600 border-blue-200'
-                                }`}>
-                                    {registration.buyerTag} LEAD
+        <>
+            <style>{printStyles}</style>
+            <div className="print-container">
+                <div className="max-w-8xl mx-auto">
+                    {/* Header with buttons */}
+                    <div className="flex justify-between items-start mb-4 no-print">
+                        <div>
+                            <Button
+                                onClick={() => navigate('/buyer-list')}
+                                variant="outline"
+                                className="mb-2"
+                            >
+                                <ArrowLeft className="w-4 h-4" />
+                                Back
+                            </Button>
+                            <h1 className="text-2xl font-bold text-gray-900 uppercase tracking-wide mt-2">
+                                Buyer Registration Details
+                            </h1>
+                            <div className="mt-1">
+                                <span className="text-sm text-gray-600 font-mono">
+                                    {registration.registrationId || "ID PENDING"}
+                                    {registration._id && <span className="text-gray-400">   </span>}
                                 </span>
-                            )}
+                            </div>
                         </div>
-                        <p className="text-gray-500 text-base mt-2">
-                            <span className="font-mono text-[#23471d] font-bold">{registration.registrationId || "ID PENDING"}</span>
-                            {" | "}
-                            <span className="text-xs">Database Ref: {registration._id}</span>
-                        </p>
-                    </div>
-                </div>
-
-                <div className="space-y-8">
-                    <div className="bg-white shadow-lg border-2 border-gray-100 overflow-hidden">
-                        <SectionHeader title="Company & Business Profile" icon={Building2} />
-                        <CompactDetailGrid data={companyData} />
-                    </div>
-
-                    <div className="bg-white shadow-lg border-2 border-gray-100 overflow-hidden">
-                        <SectionHeader title="Contact Personnel" icon={User} />
-                        <CompactDetailGrid data={contactData} />
-                    </div>
-
-                    <div className="bg-white shadow-lg border-2 border-gray-100 overflow-hidden">
-                        <SectionHeader title="Sourcing & Supplier Preferences" icon={Target} />
-                        <CompactDetailGrid data={sourcingData} />
-                    </div>
-
-                    <div className="bg-white shadow-lg border-2 border-gray-100 overflow-hidden">
-                        <SectionHeader title="Purchase Intent & B2B Logistics" icon={Calendar} />
-                        <CompactDetailGrid data={purchaseData} />
-                    </div>
-
-                    <div className="bg-white shadow-lg border-2 border-gray-100 overflow-hidden">
-                        <SectionHeader title="Registration & Payment Details" icon={CreditCard} />
-                        <CompactDetailGrid data={paymentData} />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="bg-slate-50 p-6 border rounded-lg">
-                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Registered Address</h4>
-                            <p className="text-slate-700 font-medium leading-relaxed">{registration.registeredAddress || 'No address provided'}</p>
-                        </div>
-                        <div className="bg-slate-50 p-6 border rounded-lg">
-                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Admin Remarks</h4>
-                            <p className="text-slate-700 font-medium leading-relaxed">{registration.remarks || 'No remarks added'}</p>
+                        <div className="flex gap-3">
+                            <Button
+                                onClick={handleEdit}
+                                variant="outline"
+                                className="bg-white hover:bg-gray-50"
+                            >
+                                <Edit className="w-4 h-4" />
+                                Edit
+                            </Button>
+                            <Button
+                                onClick={handlePrint}
+                                variant="primary"
+                                className="bg-gray-800 hover:bg-gray-700"
+                            >
+                                <Printer className="w-4 h-4" />
+                                Print
+                            </Button>
                         </div>
                     </div>
+
+                    {/* Print version header (visible only in print) */}
+                    <div className="hidden print:block mb-4">
+                        <h1 className="text-2xl font-bold text-gray-900 uppercase tracking-wide">
+                            Buyer Registration Details
+                        </h1>
+                        <div className="mt-1">
+                            <span className="text-sm text-gray-600 font-mono">
+                                {registration.registrationId || "ID PENDING"}
+                            </span>
+                        </div>
+                    </div>
+
+                    <Section title="Personal & Company Information">
+                        <DetailRow label="Full Name" value={registration.fullName} />
+                        <DetailRow label="Designation" value={registration.designation} />
+                        <DetailRow label="Company Name" value={registration.companyName} />
+                        <DetailRow label="Mobile Number" value={registration.mobileNumber} />
+                        <DetailRow label="Alternate Number" value={registration.alternateNumber} />
+                        <DetailRow label="Email Address" value={registration.emailAddress} />
+                        <DetailRow label="Business Role" value={registration.businessType} />
+                        <DetailRow label="Website" value={registration.website} />
+                    </Section>
+
+                    <Section title="Registered Address">
+                        <DetailRow label="Country" value={registration.country} />
+                        <DetailRow label="State/Province" value={registration.stateProvince} />
+                        <DetailRow label="City" value={registration.city} />
+                        <DetailRow label="Pin Code" value={registration.pinCode} />
+                        <DetailRow label="Registered Address" value={registration.registeredAddress} colSpan={2} />
+                    </Section>
+
+                    <Section title="Company Business Profile">
+                        <DetailRow label="Company/Firm Name" value={registration.companyFirmName} />
+                        <DetailRow label="Brand Name" value={registration.brandName} />
+                        <DetailRow label="Business Type" value={registration.basicBusinessType} />
+                        <DetailRow label="Year of Est." value={registration.yearOfEstablishment} />
+                        <DetailRow label="GST Number" value={registration.gstNumber} />
+                        <DetailRow label="PAN Number" value={registration.panNumber} />
+                        <DetailRow label="Buyer Industry" value={registration.buyerIndustry} />
+                    </Section>
+
+                    <Section title="Business Profile Details">
+                        <DetailRow label="Nature of Business" value={registration.natureOfBusiness} />
+                        <DetailRow label="Years in Business" value={registration.yearsInBusiness} />
+                        <DetailRow label="No. of Outlets" value={registration.numberOfOutlets} />
+                        <DetailRow label="Annual Turnover" value={registration.annualTurnover} />
+                    </Section>
+
+                    <Section title="Sourcing & Purchase Intent">
+                        <DetailRow label="Primary Interest" value={registration.primaryProductInterest} />
+                        <DetailRow label="Secondary Categories" value={registration.secondaryProductCategories} />
+                        <DetailRow label="Import Interest" value={registration.interestedInImporting} />
+                        <DetailRow label="Export Interest" value={registration.interestedInExporting} />
+                        <DetailRow label="Business Model" value={registration.businessModelPreference} />
+                        <DetailRow label="Est. Monthly Purchase" value={registration.estimatedPurchaseVolume} />
+                        <DetailRow label="Budget Range" value={registration.budgetRange} />
+                        <DetailRow label="Buying Frequency" value={registration.buyingFrequency} />
+                        <DetailRow label="Est. Annual Purchase" value={registration.estimatedAnnualPurchaseValue} />
+                        <DetailRow label="Purchase Timeline" value={registration.purchaseTimeline} />
+                        <DetailRow label="Matchmaking Interest" value={registration.matchmakingInterest} />
+                        <DetailRow label="Role in Purchase" value={registration.roleInPurchaseDecision} />
+                        <DetailRow label="Specific Requirements" value={registration.specificProductRequirements} />
+                    </Section>
+
+                    <Section title="Supplier Preference">
+                        <DetailRow label="Preferred Region" value={registration.preferredSupplierRegion} />
+                        <DetailRow label="Preferred Supplier Type" value={registration.preferredSupplierType} />
+                        <DetailRow label="Preferred State" value={registration.preferredState} />
+                        <DetailRow label="Preferred Company Size" value={registration.preferredCompanySize} />
+                    </Section>
+
+                    <Section title="Certification & Compliance">
+                        <DetailRow label="Required Certifications" value={registration.requiredCertifications} />
+                        <DetailRow label="Pricing Preference" value={registration.pricingPreference} />
+                        <DetailRow label="Payment Methods" value={registration.preferredPaymentMethods} />
+                        <DetailRow label="Logistics Requirements" value={registration.logisticsRequirements} />
+                    </Section>
+
+                    <Section title="B2B Meeting Preferences">
+                        <DetailRow label="Pre-scheduled B2B" value={registration.requirePreScheduledB2B} />
+                        <DetailRow label="Priority Level" value={registration.meetingPriorityLevel} />
+                        {registration.requirePreScheduledB2B === 'Yes' && (
+                            <>
+                                <DetailRow label="Meeting Categories" value={registration.preferredMeetingCategories} />
+                                <DetailRow label="Exhibitor Types" value={registration.preferredExhibitorTypes} />
+                                <DetailRow label="Meeting Objectives" value={registration.meetingObjectives} />
+                                <DetailRow label="Business Types" value={registration.preferredBusinessTypes} />
+                                <DetailRow label="Preferred Day" value={registration.preferredMeetingDay} />
+                                <DetailRow label="Time Slot" value={registration.preferredTimeSlot} />
+                                <DetailRow label="Number of Meetings" value={registration.numberOfMeetingsInterested} />
+                                <DetailRow label="Meeting Requirements" value={registration.meetingRequirements} />
+                            </>
+                        )}
+                    </Section>
+
+                    <Section title="Registration & Payment Details">
+                        <DetailRow label="Registration Category" value={registration.registrationCategory} />
+                        <DetailRow label="Registration Fee" value={registration.registrationFee} />
+                        <DetailRow label="Payment Mode" value={registration.paymentMode} />
+                        <DetailRow label="Payment Status" value={registration.paymentStatus} />
+                        <DetailRow label="Transaction ID" value={registration.transactionId || registration.razorpayPaymentId} />
+                        <DetailRow label="Registration Date" value={registration.createdAt ? new Date(registration.createdAt).toLocaleDateString('en-IN') : 'N/A'} />
+                        <DetailRow label="Payment Proof" value={registration.paymentProof ? "Available" : "Not provided"} />
+                    </Section>
+
+                    <Section title="Admin / Internal Remarks">
+                        <div className="bg-orange-50 p-3 border border-orange-200">
+                            <p className="text-sm text-gray-800 whitespace-pre-wrap">
+                                {registration.remarks || 'No remarks provided.'}
+                            </p>
+                        </div>
+                    </Section>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 

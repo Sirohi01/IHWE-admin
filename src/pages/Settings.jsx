@@ -18,7 +18,9 @@ import {
     Calendar,
     MessageSquare,
     CreditCard,
-    Banknote
+    Banknote,
+    FileText,
+    CheckCircle
 } from 'lucide-react';
 import api, { API_URL, SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
@@ -30,10 +32,26 @@ const Settings = () => {
     const [logo, setLogo] = useState(null);
     const [logoPreview, setLogoPreview] = useState('');
 
+    // Brochure state
+    const [brochureFile, setBrochureFile] = useState(null);
+    const [brochurePreview, setBrochurePreview] = useState('');
+
     // Topbar state
     const [marqueeText, setMarqueeText] = useState("• 150+ Speakers confirmed • Early Bird discount ending soon! • Join 8,000+ Professionals from 25+ Countries");
     const [topbarDate, setTopbarDate] = useState("15–17 October 2026");
     const [supportDeskText, setSupportDeskText] = useState("For exhibitors and delegates traveling from abroad, our international support team is available 24/7 during the expo period for visa, travel, and logistics assistance.");
+
+    // --- Financial & NGW Receipt State ---
+    const [companyName, setCompanyName] = useState("Namo Gange Wellness Pvt. Ltd.");
+    const [companyAddress, setCompanyAddress] = useState("12/29, Site-II, Loni Road, Industrial Area, Mohan Nagar, Ghaziabad, India");
+    const [companyGst, setCompanyGst] = useState("");
+    const [companyCin, setCompanyCin] = useState("");
+    const [fullPaymentDiscount, setFullPaymentDiscount] = useState(5);
+    const [availableTdsRates, setAvailableTdsRates] = useState([1, 2, 10]);
+    const [signatureFile, setSignatureFile] = useState(null);
+    const [signaturePreview, setSignaturePreview] = useState("");
+    const [stampFile, setStampFile] = useState(null);
+    const [stampPreview, setStampPreview] = useState("");
 
 
     // Email addresses state
@@ -103,10 +121,18 @@ const Settings = () => {
         try {
             const res = await api.get('/api/settings');
             if (res.data.success && res.data.data) {
-                const { logo, emails, phones, addresses, mapIframe: savedIframe, marqueeText: savedMarquee, topbarDate: savedDate, supportDeskText: savedSupportDeskText } = res.data.data;
+                const { 
+                    logo, exhibitorBrochurePdf, emails, phones, addresses, mapIframe: savedIframe, 
+                    marqueeText: savedMarquee, topbarDate: savedDate, supportDeskText: savedSupportDeskText,
+                    companyName: sName, companyAddress: sAddress, companyGst: sGst, companyCin: sCin,
+                    fullPaymentDiscount: sDisc, availableTdsRates: sTds, authorizedSignature, companyStamp
+                } = res.data.data;
 
                 if (logo) {
                     setLogoPreview(`${SERVER_URL}${logo}`);
+                }
+                if (exhibitorBrochurePdf) {
+                    setBrochurePreview(`${SERVER_URL}${exhibitorBrochurePdf}`);
                 }
                 if (savedIframe) {
                     setMapIframe(savedIframe);
@@ -120,6 +146,16 @@ const Settings = () => {
                 if (savedSupportDeskText) {
                     setSupportDeskText(savedSupportDeskText);
                 }
+
+                // Financials
+                if (sName) setCompanyName(sName);
+                if (sAddress) setCompanyAddress(sAddress);
+                if (sGst) setCompanyGst(sGst);
+                if (sCin) setCompanyCin(sCin);
+                if (sDisc !== undefined) setFullPaymentDiscount(sDisc);
+                if (sTds) setAvailableTdsRates(sTds);
+                if (authorizedSignature) setSignaturePreview(`${SERVER_URL}${authorizedSignature}`);
+                if (companyStamp) setStampPreview(`${SERVER_URL}${companyStamp}`);
 
 
                 if (emails && emails.length > 0) {
@@ -153,6 +189,9 @@ const Settings = () => {
             if (logo) {
                 formData.append('logo', logo);
             }
+            if (brochureFile) {
+                formData.append('exhibitorBrochurePdf', brochureFile);
+            }
 
             const emailsToSave = emails.map(({ id, isEditing, ...rest }) => rest);
             const phonesToSave = phones.map(({ id, isEditing, ...rest }) => rest);
@@ -169,6 +208,16 @@ const Settings = () => {
             formData.append('marqueeText', marqueeText);
             formData.append('topbarDate', topbarDate);
             formData.append('supportDeskText', supportDeskText);
+
+            // Financials
+            formData.append('companyName', companyName);
+            formData.append('companyAddress', companyAddress);
+            formData.append('companyGst', companyGst);
+            formData.append('companyCin', companyCin);
+            formData.append('fullPaymentDiscount', fullPaymentDiscount);
+            formData.append('availableTdsRates', JSON.stringify(availableTdsRates));
+            if (signatureFile) formData.append('authorizedSignature', signatureFile);
+            if (stampFile) formData.append('companyStamp', stampFile);
 
 
             const res = await api.put('/api/settings', formData, {
@@ -188,6 +237,18 @@ const Settings = () => {
                 if (res.data.data.logo) {
                     setLogoPreview(`${SERVER_URL}${res.data.data.logo}`);
                     setLogo(null);
+                }
+                if (res.data.data.exhibitorBrochurePdf) {
+                    setBrochurePreview(`${SERVER_URL}${res.data.data.exhibitorBrochurePdf}`);
+                    setBrochureFile(null);
+                }
+                if (res.data.data.authorizedSignature) {
+                    setSignaturePreview(`${SERVER_URL}${res.data.data.authorizedSignature}`);
+                    setSignatureFile(null);
+                }
+                if (res.data.data.companyStamp) {
+                    setStampPreview(`${SERVER_URL}${res.data.data.companyStamp}`);
+                    setStampFile(null);
                 }
             }
         } catch (error) {
@@ -495,6 +556,157 @@ const Settings = () => {
                                             <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Click to upload logo</p>
                                         </div>
                                     )}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    Exhibitor Brochure (PDF)
+                                </label>
+                                <div className="border border-dashed border-gray-300 p-4 text-center relative group min-h-[100px] flex items-center justify-center bg-gray-50/30 rounded-lg hover:border-[#23471d] transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={(e) => setBrochureFile(e.target.files[0])}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {brochureFile || brochurePreview ? (
+                                        <div className="flex flex-col items-center">
+                                            <FileText className="w-8 h-8 text-[#d26019] mb-1" />
+                                            <p className="text-[10px] font-bold text-gray-600 truncate max-w-[200px]">
+                                                {brochureFile ? brochureFile.name : "Current Brochure.pdf"}
+                                            </p>
+                                            {brochurePreview && !brochureFile && (
+                                                <a href={brochurePreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center">
+                                            <Plus className="w-6 h-6 text-gray-300 mb-1" />
+                                            <p className="text-[9px] font-bold text-gray-400 uppercase">Click to upload PDF</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Financial & NGW Receipt Settings */}
+                    <div className="bg-white border border-gray-200 p-6 shadow-sm rounded-lg">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-emerald-50 rounded">
+                                <CreditCard className="w-5 h-5 text-emerald-600" />
+                            </div>
+                            <h2 className="text-lg font-semibold text-gray-900 uppercase">NGW Receipt & Financials</h2>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Company Registered Name</label>
+                                <input
+                                    type="text"
+                                    value={companyName}
+                                    onChange={(e) => setCompanyName(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                    placeholder="e.g. Namo Gange Wellness Pvt. Ltd."
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Registered Office Address</label>
+                                <textarea
+                                    value={companyAddress}
+                                    onChange={(e) => setCompanyAddress(e.target.value)}
+                                    rows={2}
+                                    className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d] resize-none"
+                                    placeholder="Full address for receipt header..."
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Company GSTIN</label>
+                                    <input
+                                        type="text"
+                                        value={companyGst}
+                                        onChange={(e) => setCompanyGst(e.target.value.toUpperCase())}
+                                        className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d] font-mono"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Company CIN No.</label>
+                                    <input
+                                        type="text"
+                                        value={companyCin}
+                                        onChange={(e) => setCompanyCin(e.target.value.toUpperCase())}
+                                        className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d] font-mono"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="pt-2">
+                                <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Authorized Signature & Stamp</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {/* Signature */}
+                                    <div className="border border-dashed border-gray-200 p-2 text-center relative group bg-gray-50/50 rounded hover:border-[#23471d] transition-colors overflow-hidden">
+                                        <input
+                                            type="file"
+                                            accept="image/png"
+                                            onChange={(e) => {
+                                                const f = e.target.files[0];
+                                                if(f) { setSignatureFile(f); setSignaturePreview(URL.createObjectURL(f)); }
+                                            }}
+                                            className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                        />
+                                        {signaturePreview ? (
+                                            <div className="flex flex-col items-center">
+                                                <img src={signaturePreview} alt="Signature" className="h-12 object-contain" />
+                                                <p className="text-[8px] font-bold text-gray-400 mt-1 uppercase">Signature Added</p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center h-16">
+                                                <Edit2 className="w-4 h-4 text-gray-300 mb-1" />
+                                                <p className="text-[8px] font-bold text-gray-400 uppercase">Signature (PNG)</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Stamp */}
+                                    <div className="border border-dashed border-gray-200 p-2 text-center relative group bg-gray-50/50 rounded hover:border-[#23471d] transition-colors overflow-hidden">
+                                        <input
+                                            type="file"
+                                            accept="image/png"
+                                            onChange={(e) => {
+                                                const f = e.target.files[0];
+                                                if(f) { setStampFile(f); setStampPreview(URL.createObjectURL(f)); }
+                                            }}
+                                            className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                        />
+                                        {stampPreview ? (
+                                            <div className="flex flex-col items-center">
+                                                <img src={stampPreview} alt="Stamp" className="h-12 object-contain" />
+                                                <p className="text-[8px] font-bold text-gray-400 mt-1 uppercase">Stamp Added</p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center h-16">
+                                                <CheckCircle className="w-4 h-4 text-gray-300 mb-1" />
+                                                <p className="text-[8px] font-bold text-gray-400 uppercase">Stamp (PNG)</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 pt-2">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Full Pay Discount %</label>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            value={fullPaymentDiscount}
+                                            onChange={(e) => setFullPaymentDiscount(Number(e.target.value))}
+                                            className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                        />
+                                        <span className="absolute right-3 top-2 text-[10px] font-bold text-gray-400">%</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>

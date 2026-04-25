@@ -64,6 +64,9 @@ import SeoList from "../pages/seo/SeoList";
 import AdvancedSeo from "../pages/seo/AdvancedSeo";
 import SocialMedia from "../pages/SocialMedia";
 import GlobalPlatform from "../pages/GlobalPlatform";
+import EventOverviewManagement from "../pages/EventOverviewManagement";
+import AboutOrganizerManagement from "../pages/AboutOrganizerManagement";
+import OurJourneyManagement from "../pages/OurJourneyManagement";
 import VisionMission from "../pages/VisionMission";
 import WhyAttend from "../pages/WhyAttend";
 import TargetAudience from "../pages/TargetAudience";
@@ -98,6 +101,7 @@ import ManageTerms from "../pages/ManageTerms";
 import ExhibitorBookingDetail from "../pages/ExhibitorBookingDetail";
 import FailedPayments from "../pages/FailedPayments";
 import TravelAccommodationManage from "../pages/TravelAccommodationManage";
+import AdminBSM from "../pages/AdminBSM";
 import ActivityLogs from "../pages/ActivityLogs";
 import RoleManagement from "../pages/RoleManagement";
 import RolePermissions from "../pages/RolePermissions";
@@ -155,6 +159,12 @@ import ManageAccessories from "../pages/ManageAccessories";
 import AccessoryOrders from "../pages/AccessoryOrders";
 import ExhibitorChat from "../pages/ExhibitorChat";
 import AddUnit from "../pages/admin_management/AddUnit";
+import MarketingToolkitManage from "../pages/MarketingToolkitManage";
+import ExhibitorProductsProfile from "../pages/ExhibitorProductsProfile";
+import Reminder from "../pages/navbar_page/Reminder";
+import ToDoList from "../pages/navbar_page/ToDoList";
+import NewLeads from "../pages/navbar_page/NewLeads";
+import Notification from "../pages/navbar_page/Notification";
 
 export default function AppRoutes() {
   return (
@@ -178,7 +188,10 @@ export default function AppRoutes() {
           <Route path="add-pdf" element={<AddPdf />} />
           <Route path="stats-counter" element={<StatsCounter />} />
           <Route path="global-platform" element={<GlobalPlatform />} />
-          <Route path="vision-mission" element={<VisionMission />} />
+          <Route path="/event-overview" element={<EventOverviewManagement />} />
+          <Route path="/about-organizer" element={<AboutOrganizerManagement />} />
+          <Route path="/our-journey" element={<OurJourneyManagement />} />
+          <Route path="/vision-mission" element={<VisionMission />} />
           <Route path="why-attend" element={<WhyAttend />} />
           <Route path="target-audience" element={<TargetAudience />} />
           <Route path="organized-by" element={<OrganizedBy />} />
@@ -222,6 +235,7 @@ export default function AppRoutes() {
           />
           <Route path="contact-enquiries" element={<ContactEnquiries />} />
           {/* <Route path="buyer-registrations" element={<BuyerRegistrations />} /> */}
+          <Route path="buyer-registration" element={<BuyerRegistration />} />
           <Route
             path="buyer-registration/:id"
             element={<BuyerRegistrationDetail />}
@@ -239,6 +253,7 @@ export default function AppRoutes() {
             path="exhibitor-list-manage"
             element={<ExhibitorListManage />}
           />
+          <Route path="exhibitor-products-profile" element={<ExhibitorProductsProfile />} />
           <Route path="stalls" element={<ManageStalls />} />
           <Route path="exhibitor-bookings" element={<ManageRegistrations />} />
           <Route path="exhibitor-booking/:id" element={<ExhibitorBookingDetail />} />
@@ -425,12 +440,18 @@ export default function AppRoutes() {
           <Route path="/primary-product-interest" element={<PrimaryProductInterest />} />
           <Route path="/secondary-product-categories" element={<SecondaryProductCategories />} />
           <Route path="/meeting-priority-level" element={<MeetingPriorityLevel />} />
-          <Route path="/buyer-registration" element={<BuyerRegistration />} />
+          <Route path="manage-registrations" element={<ManageRegistrations />} />
+          <Route path="bsm-management" element={<AdminBSM />} />
           <Route path="/buyer-list" element={<BuyerList />} />
           <Route path="/stall-accessories" element={<ManageAccessories />} />
           <Route path="/accessory-orders" element={<AccessoryOrders />} />
           <Route path="/exhibitor-chat" element={<ExhibitorChat />} />
           <Route path="/add-unit" element={<AddUnit />} />
+          <Route path="/marketing-toolkit-manage" element={<MarketingToolkitManage />} />
+          <Route path="/reminder" element={<Reminder />} />
+          <Route path="/to-do-list" element={<ToDoList />} />
+          <Route path="/new-leads" element={<NewLeads />} />
+          <Route path="/notification" element={<Notification />} />
         </Route>
       </Route>
     </Routes>

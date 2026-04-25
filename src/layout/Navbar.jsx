@@ -1,11 +1,8 @@
 import {
-  Bell,
   Menu,
   X,
   LogOut,
   Key,
-  BellRing,
-  HelpCircle,
   Sun,
   Moon,
   Sunrise,
@@ -20,6 +17,9 @@ import Swal from "sweetalert2";
 import { logout } from "../utils/auth";
 import { io } from "socket.io-client";
 import { SERVER_URL } from "../lib/api";
+import { BiSupport } from "react-icons/bi";
+import { RiContactsLine, RiListCheck2, RiAlarmWarningLine, RiUserAddLine } from "react-icons/ri";
+import { IoNotificationsOutline } from "react-icons/io5";
 
 export default function Navbar({
   sidebarOpen,
@@ -89,7 +89,7 @@ export default function Navbar({
           const total = res.data.reduce((s, r) => s + (r.unreadAdmin || 0), 0);
           setChatUnread(total);
         }
-      }).catch(() => {});
+      }).catch(() => { });
 
     const s = io(SERVER_URL, { transports: ["websocket", "polling"] });
     s.on("connect", () => s.emit("join_admin", { adminId, adminName: adminName2 }));
@@ -187,100 +187,100 @@ export default function Navbar({
         {/* RIGHT – ICONS */}
         <div className="flex items-center gap-2 sm:gap-4 relative">
 
-          {/* Chat Notifications */}
-          <div className="relative">
-            <button
+          {/* UTILITY ICONS GROUP */}
+          <div className="flex items-center gap-8 relative px-3 py-1.5 bg-slate-50/50 rounded-2xl border border-slate-200/40 shadow-inner">
+
+            {/* Live Chat */}
+            <motion.div
+              whileHover={{ scale: 1.1, y: -2 }}
+              whileTap={{ scale: 0.9 }}
               onClick={() => { navigate("/exhibitor-chat"); setChatUnread(0); }}
-              className="relative p-2 rounded-lg hover:bg-[#23471d]/10 transition-all duration-200 hover:scale-105"
-              title="Exhibitor Chat"
+              className="group relative flex items-center justify-center w-10 h-10 bg-white rounded-xl cursor-pointer border border-slate-200/60 hover:border-blue-500/30 transition-all duration-300 shadow-sm hover:shadow-md"
             >
-              <MessageSquare size={18} className="text-[#23471d]" />
+              <BiSupport size={18} className="text-[#23471d] group-hover:text-blue-600 transition-colors duration-300" />
               {chatUnread > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 bg-[#d26019] text-white text-[9px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black shadow-lg"
-                >
-                  {chatUnread > 99 ? "99+" : chatUnread}
-                </motion.span>
+                <div className="absolute -top-1.5 -right-1.5">
+                  <div className="absolute inset-0 rounded-full bg-[#d26019] animate-ping opacity-25" />
+                  <span className="relative bg-[#d26019] text-white text-[9px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm">
+                    {chatUnread > 99 ? "99+" : chatUnread}
+                  </span>
+                </div>
               )}
-            </button>
-          </div>
+              {/* Premium Tooltip */}
+              <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1.5 bg-slate-900/90 backdrop-blur-md text-white text-[10px] font-bold rounded-lg opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-50 shadow-xl border border-white/10 whitespace-nowrap">
+                Live Chat
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900/90 rotate-45 border-l border-t border-white/10" />
+              </div>
+            </motion.div>
 
-          {/* Help & Support */}
-          <div className="relative">
-            <button
-              onClick={() =>
-                setActiveTitle(activeTitle === "help" ? null : "help")
-              }
-              className="p-2 rounded-lg hover:bg-[#23471d]/10 transition-all duration-200 hover:scale-105"
+            {/* Reminder List */}
+            <motion.div
+              whileHover={{ scale: 1.1, y: -2 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate('/reminder')}
+              className="group relative hidden sm:flex items-center justify-center w-10 h-10 bg-white rounded-xl cursor-pointer border border-slate-200/60 hover:border-amber-500/30 transition-all duration-300 shadow-sm hover:shadow-md"
             >
-              <HelpCircle size={18} className="text-[#23471d]" />
-            </button>
+              <RiAlarmWarningLine size={18} className="text-[#23471d] group-hover:text-amber-600 transition-colors duration-300" />
+              <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm">
+                1
+              </span>
+              <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1.5 bg-slate-900/90 backdrop-blur-md text-white text-[10px] font-bold rounded-lg opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-50 shadow-xl border border-white/10 whitespace-nowrap">
+                Reminders
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900/90 rotate-45 border-l border-t border-white/10" />
+              </div>
+            </motion.div>
 
-            {activeTitle === "help" && (
-              <motion.div
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="whitespace-nowrap absolute top-12 right-0 bg-slate-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg"
-              >
-                Help & Support
-                <div className="absolute -top-1 right-2 w-2 h-2 bg-slate-900 rotate-45"></div>
-              </motion.div>
-            )}
-          </div>
-
-          {/* Reminder List */}
-          <div className="relative">
-            <button
-              onClick={() =>
-                setActiveTitle(activeTitle === "reminder" ? null : "reminder")
-              }
-              className="p-2 rounded-lg hover:bg-[#23471d]/10 transition-all duration-200 hover:scale-105"
+            {/* Notification */}
+            <motion.div
+              whileHover={{ scale: 1.1, y: -2 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate('/notification')}
+              className="group relative flex items-center justify-center w-10 h-10 bg-white rounded-xl cursor-pointer border border-slate-200/60 hover:border-red-500/30 transition-all duration-300 shadow-sm hover:shadow-md"
             >
-              <BellRing size={18} className="text-[#23471d]" />
-            </button>
-
-            {activeTitle === "reminder" && (
-              <motion.div
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="whitespace-nowrap absolute top-12 right-0 bg-slate-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg"
-              >
-                Reminder List
-                <div className="absolute -top-1 right-2 w-2 h-2 bg-slate-900 rotate-45"></div>
-              </motion.div>
-            )}
-          </div>
-
-          {/* Notifications */}
-          <div className="relative">
-            <button
-              onClick={() =>
-                setActiveTitle(activeTitle === "notify" ? null : "notify")
-              }
-              className="relative p-2 rounded-lg hover:bg-[#23471d]/10 transition-all duration-200 hover:scale-105"
-            >
-              <Bell size={18} className="text-[#23471d]" />
-              <motion.span
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-rose-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-semibold shadow-lg"
-              >
-                3
-              </motion.span>
-            </button>
-
-            {activeTitle === "notify" && (
-              <motion.div
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="whitespace-nowrap absolute top-12 right-0 bg-slate-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg"
-              >
+              <IoNotificationsOutline size={18} className="text-[#23471d] group-hover:text-red-500 transition-colors duration-300" />
+              <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm">
+                2
+              </span>
+              <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1.5 bg-slate-900/90 backdrop-blur-md text-white text-[10px] font-bold rounded-lg opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-50 shadow-xl border border-white/10 whitespace-nowrap">
                 Notifications
-                <div className="absolute -top-1 right-2 w-2 h-2 bg-slate-900 rotate-45"></div>
-              </motion.div>
-            )}
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900/90 rotate-45 border-l border-t border-white/10" />
+              </div>
+            </motion.div>
+
+            {/* To-Do List */}
+            <motion.div
+              whileHover={{ scale: 1.1, y: -2 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate('/to-do-list')}
+              className="group relative hidden md:flex items-center justify-center w-10 h-10 bg-white rounded-xl cursor-pointer border border-slate-200/60 hover:border-emerald-500/30 transition-all duration-300 shadow-sm hover:shadow-md"
+            >
+              <RiListCheck2 size={18} className="text-[#23471d] group-hover:text-emerald-600 transition-colors duration-300" />
+              <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm">
+                4
+              </span>
+              <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1.5 bg-slate-900/90 backdrop-blur-md text-white text-[10px] font-bold rounded-lg opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-50 shadow-xl border border-white/10 whitespace-nowrap">
+                To-Do List
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900/90 rotate-45 border-l border-t border-white/10" />
+              </div>
+            </motion.div>
+
+            {/* New Leads */}
+            <motion.div
+              whileHover={{ scale: 1.1, y: -2 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate('/new-leads')}
+              className="group relative hidden lg:flex items-center justify-center w-10 h-10 bg-white rounded-xl cursor-pointer border border-slate-200/60 hover:border-indigo-500/30 transition-all duration-300 shadow-sm hover:shadow-md"
+            >
+              <RiUserAddLine size={18} className="text-[#23471d] group-hover:text-indigo-600 transition-colors duration-300" />
+              <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm">
+                3
+              </span>
+              <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1.5 bg-slate-900/90 backdrop-blur-md text-white text-[10px] font-bold rounded-lg opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-50 shadow-xl border border-white/10 whitespace-nowrap">
+                New Leads
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900/90 rotate-45 border-l border-t border-white/10" />
+              </div>
+            </motion.div>
+
           </div>
 
           {/* Profile with Lottie Animation */}

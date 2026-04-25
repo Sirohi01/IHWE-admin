@@ -15,6 +15,7 @@ export const pagesList = [
     { name: "Registration / Buyer Registration", path: "/buyer-registration" },
     { name: "Registration / Media Registration", path: "/media-registration" },
     { name: "Registration / Speaker Registration", path: "/speaker-registration" },
+    { name: "Registration / Seller Registration", path: "/seller-registration" },
     { name: "General / Exhibition", path: "/exhibition" },
     { name: "General / Conference", path: "/conference" },
     { name: "General / Exhibitors List", path: "/exhibitors" },

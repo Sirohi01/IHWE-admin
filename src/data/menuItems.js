@@ -96,6 +96,18 @@ export const menuItems = [
     icon: Info,
     children: [
       { label: "Global Platform", path: "/global-platform" },
+      {
+        label: "Event Overview",
+        path: "/event-overview",
+      },
+      {
+        label: "About Organizer",
+        path: "/about-organizer",
+      },
+      {
+        label: "Our Journey",
+        path: "/our-journey",
+      },
       { label: "Vision & Mission", path: "/vision-mission" },
       { label: "Why Attend", path: "/why-attend" },
       { label: "Target Audience", path: "/target-audience" },
@@ -254,6 +266,10 @@ export const menuItems = [
         path: "/exhibitor-bookings",
       },
       {
+        label: "Exhibitors Products",
+        path: "/exhibitor-products-profile",
+      },
+      {
         label: "Failed Payments",
         path: "/failed-payments",
       },
@@ -281,6 +297,12 @@ export const menuItems = [
     label: "Marketing Toolkit",
     icon: Package,
     path: "/marketing-toolkit-manage",
+  },
+  {
+    type: "item",
+    label: "BSM Management",
+    icon: Handshake,
+    path: "/bsm-management",
   },
   {
     type: "item",

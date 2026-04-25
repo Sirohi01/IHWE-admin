@@ -126,12 +126,12 @@ const AddPdf = () => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // 5MB Size check for PDFs
-        if (file.size > 5 * 1024 * 1024) {
+        // 10MB Size check for PDFs
+        if (file.size > 10 * 1024 * 1024) {
             Swal.fire({
                 icon: 'error',
                 title: 'PDF Too Large',
-                text: 'PDF file size should not exceed 5MB. Please optimize the file and try again.',
+                text: 'PDF file size should not exceed 10MB. Please optimize the file and try again.',
                 confirmButtonColor: '#d26019'
             });
             e.target.value = null;
@@ -436,7 +436,7 @@ const AddPdf = () => {
                                         <input type="file" accept="application/pdf" onChange={handlePdfUpload} className="hidden" disabled={isUploadingPdf} />
                                     </label>
                                     <p className="text-[10px] text-[#d26019] font-bold uppercase tracking-tight text-center leading-tight mt-1">
-                                        Max File Size: 5MB
+                                        Max File Size: 10MB
                                     </p>
                                 </div>
                             </div>

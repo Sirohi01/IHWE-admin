@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, Building2, User, CreditCard, Layers,
     FileText, Info, Receipt, ExternalLink, Pencil, Save, X,
     MapPin, Phone, Mail, Globe, Briefcase, Tag, Calendar,
-    CheckCircle2, Users, Award, History, Package, Plus, Trash2, ShoppingCart, Gift
+    CheckCircle2, Users, Award, History, Package, Plus, Trash2, ShoppingCart, Gift, RefreshCw, Upload, FolderPlus, Download, Image as ImageIcon
 } from 'lucide-react';
 import api, { SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
@@ -19,6 +19,19 @@ const SH = ({ title, icon: Icon, actions }) => (
         {actions && <div className="flex gap-2">{actions}</div>}
     </div>
 );
+
+const DEFAULT_PLACEHOLDER = "https://placehold.co/400x400?text=No+Document";
+
+const fixUrl = (url) => {
+    if (!url || url === 'undefined' || url === 'null') return null;
+    if (typeof url !== 'string') return null;
+    const trimmed = url.trim();
+    if (trimmed.startsWith('http') || trimmed.startsWith('https') || trimmed.startsWith('blob:')) {
+        return trimmed;
+    }
+    const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+    return `${SERVER_URL}${cleanPath}`;
+};
 
 const Field = ({ label, value }) => (
     <div className="p-3 border-r border-b border-gray-100">
@@ -57,12 +70,12 @@ const STATUS_STYLES = {
 };
 
 const TABS = [
-    { id: 'overview',     label: 'Overview',        icon: Building2 },
-    { id: 'contacts',     label: 'Contacts',         icon: User },
-    { id: 'payment',      label: 'Payment',          icon: CreditCard },
-    { id: 'documents',    label: 'Documents',        icon: FileText },
-    { id: 'msme',         label: 'MSME',             icon: Award },
-    { id: 'accessories',  label: 'Accessories',      icon: Package },
+    { id: 'overview', label: 'Overview', icon: Building2 },
+    { id: 'contacts', label: 'Contacts', icon: User },
+    { id: 'payment', label: 'Payment', icon: CreditCard },
+    { id: 'documents', label: 'Documents', icon: FileText },
+    { id: 'msme', label: 'MSME', icon: Award },
+    { id: 'accessories', label: 'Accessories', icon: Package },
 ];
 
 // ─── Tab Components ───────────────────────────────────────────────────────────
@@ -88,7 +101,32 @@ function OverviewTab({ reg, fmt, id, onRefresh }) {
         spokenWith: reg.spokenWith || '',
         primaryCategory: reg.primaryCategory || '',
         subCategory: reg.subCategory || '',
+        natureOfBusiness: reg.natureOfBusiness || '',
     });
+
+    // Update form when reg changes (critical for live sync)
+    useEffect(() => {
+        setForm({
+            exhibitorName: reg.exhibitorName || '',
+            typeOfBusiness: reg.typeOfBusiness || '',
+            industrySector: reg.industrySector || '',
+            fasciaName: reg.fasciaName || '',
+            website: reg.website || '',
+            gstNo: reg.gstNo || '',
+            panNo: reg.panNo || '',
+            landlineNo: reg.landlineNo || '',
+            address: reg.address || '',
+            city: reg.city || '',
+            state: reg.state || '',
+            country: reg.country || '',
+            pincode: reg.pincode || '',
+            referredBy: reg.referredBy || '',
+            spokenWith: reg.spokenWith || '',
+            primaryCategory: reg.primaryCategory || '',
+            subCategory: reg.subCategory || '',
+            natureOfBusiness: reg.natureOfBusiness || '',
+        });
+    }, [reg]);
 
     const inp = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
@@ -127,7 +165,19 @@ function OverviewTab({ reg, fmt, id, onRefresh }) {
                     <EditField label="GST No." value={form.gstNo} onChange={v => inp('gstNo', v)} editing={editing} />
                     <EditField label="PAN No." value={form.panNo} onChange={v => inp('panNo', v)} editing={editing} />
                     <EditField label="Landline" value={form.landlineNo} onChange={v => inp('landlineNo', v)} editing={editing} />
+                    <EditField label="Nature of Business" value={form.natureOfBusiness} onChange={v => inp('natureOfBusiness', v)} editing={editing} />
                 </div>
+                {reg.companyLogoUrl && (
+                    <div className="px-4 py-3 border-t border-gray-100 bg-slate-50/50 flex items-center gap-3">
+                        <div className="w-12 h-12 bg-white border border-gray-200 rounded-sm overflow-hidden flex items-center justify-center">
+                            <img src={fixUrl(reg.companyLogoUrl)} alt="Logo" className="w-full h-full object-cover" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Company Logo</p>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase">Uploaded & Saved</p>
+                        </div>
+                    </div>
+                )}
             </div>
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Address" icon={MapPin} />
@@ -165,9 +215,201 @@ function OverviewTab({ reg, fmt, id, onRefresh }) {
                     <Field label="Registered On" value={reg.createdAt ? new Date(reg.createdAt).toLocaleDateString('en-IN') : null} />
                 </div>
             </div>
+
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Contact Persons" icon={Users} />
+                <div className="grid grid-cols-1 md:grid-cols-2 border-l border-t border-gray-100">
+                    <div className="p-4 border-r border-b border-gray-100 bg-slate-50/30">
+                        <p className="text-[10px] font-black text-[#23471d] uppercase tracking-widest mb-3 border-b pb-1">Primary Contact</p>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Name</p>
+                                <p className="text-[12px] font-bold text-gray-800">{reg.contact1?.title} {reg.contact1?.firstName} {reg.contact1?.lastName}</p>
+                            </div>
+                            <div>
+                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Designation</p>
+                                <p className="text-[12px] font-bold text-gray-800">{reg.contact1?.designation || '—'}</p>
+                            </div>
+                            <div>
+                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Mobile</p>
+                                <p className="text-[12px] font-bold text-gray-800">{reg.contact1?.mobile}</p>
+                            </div>
+                            <div>
+                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Email</p>
+                                <p className="text-[12px] font-bold text-gray-800">{reg.contact1?.email}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {reg.contact2?.firstName || reg.contact2?.email ? (
+                        <div className="p-4 border-r border-b border-gray-100 italic bg-amber-50/10">
+                            <p className="text-[10px] font-black text-[#d26019] uppercase tracking-widest mb-3 border-b pb-1">Secondary Contact</p>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Name</p>
+                                    <p className="text-[12px] font-bold text-gray-800">{reg.contact2?.title} {reg.contact2?.firstName} {reg.contact2?.lastName}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Designation</p>
+                                    <p className="text-[12px] font-bold text-gray-800">{reg.contact2?.designation || '—'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Mobile</p>
+                                    <p className="text-[12px] font-bold text-gray-800">{reg.contact2?.mobile || '—'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Email</p>
+                                    <p className="text-[12px] font-bold text-gray-800">{reg.contact2?.email || '—'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    ) : null}
+                </div>
+            </div>
+
         </div>
     );
 }
+
+function KycDocsGrid({ reg, id, onRefresh }) {
+    const DOC_FIELDS = [
+        { label: 'Company Logo', field: 'companyLogoUrl' },
+        { label: 'PAN Card', field: 'panCardFrontUrl' },
+        { label: 'Aadhaar Front', field: 'aadhaarCardFrontUrl' },
+        { label: 'Aadhaar Back', field: 'aadhaarCardBackUrl' },
+        { label: 'GST Certificate', field: 'gstCertificateUrl' },
+        { label: 'Cancelled Cheque', field: 'cancelledChequeUrl' },
+        { label: 'Rep. Photo', field: 'representativePhotoUrl' },
+    ];
+
+    return (
+        <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {DOC_FIELDS.map(({ label, field }) => (
+                <KycDocCard key={field} label={label} field={field} regId={id} currentUrl={reg[field]} onRefresh={onRefresh} />
+            ))}
+        </div>
+    );
+}
+
+function KycDocCard({ label, field, regId, currentUrl, onRefresh }) {
+    const [uploading, setUploading] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const fileRef = React.useRef(null);
+
+    const resolvedUrl = fixUrl(currentUrl);
+    const isPdf = currentUrl?.toLowerCase().includes('.pdf');
+
+    const handleUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(true);
+        try {
+            const multerFieldMap = {
+                companyLogoUrl: 'companyLogo',
+                panCardFrontUrl: 'panCardFront',
+                aadhaarCardFrontUrl: 'aadhaarCardFront',
+                aadhaarCardBackUrl: 'aadhaarCardBack',
+                gstCertificateUrl: 'gstCertificate',
+                cancelledChequeUrl: 'cancelledCheque',
+                representativePhotoUrl: 'representativePhoto'
+            };
+
+            const fd = new FormData();
+            fd.append(multerFieldMap[field] || field, file);
+            fd.append('field', field);
+            const res = await api.put(`/api/exhibitor-registration/${regId}/kyc-doc`, fd);
+            if (res.data.success) {
+                onRefresh();
+            } else {
+                Swal.fire('Error', res.data.message || 'Upload failed', 'error');
+            }
+        } catch (err) {
+            Swal.fire('Error', err.response?.data?.message || err.message, 'error');
+        } finally {
+            setUploading(false);
+            if (fileRef.current) fileRef.current.value = '';
+        }
+    };
+
+    const handleDelete = async () => {
+        const confirm = await Swal.fire({
+            title: `Delete ${label}?`,
+            text: 'This will remove this document from this registration only.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            confirmButtonText: 'Delete',
+        });
+        if (!confirm.isConfirmed) return;
+        setDeleting(true);
+        try {
+            const res = await api.delete(`/api/exhibitor-registration/${regId}/kyc-doc/${field}`);
+            if (res.data.success) onRefresh();
+            else Swal.fire('Error', res.data.message || 'Delete failed', 'error');
+        } catch (err) {
+            Swal.fire('Error', err.response?.data?.message || err.message, 'error');
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    return (
+        <div className="flex flex-col border border-gray-100 rounded overflow-hidden bg-white shadow-sm">
+            {/* Label */}
+            <div className="px-2 py-1.5 bg-slate-50 border-b border-gray-100 flex items-center justify-between">
+                <span className="text-[9px] font-black text-gray-500 uppercase tracking-wider">{label}</span>
+                {currentUrl && (
+                    <a href={resolvedUrl} target="_blank" rel="noopener noreferrer" className="text-[#23471d] hover:text-[#d26019]">
+                        <ExternalLink size={10} />
+                    </a>
+                )}
+            </div>
+
+            {/* Image preview */}
+            <div className="aspect-square bg-slate-100 flex items-center justify-center relative overflow-hidden">
+                {isPdf ? (
+                    <div className="flex flex-col items-center gap-1">
+                        <FileText size={28} className="text-[#23471d]" />
+                        <span className="text-[8px] font-bold text-gray-400 uppercase">PDF</span>
+                    </div>
+                ) : currentUrl ? (
+                    <img
+                        src={`${resolvedUrl}${resolvedUrl.includes('?') ? '&' : '?'}v=${new Date().getTime()}`}
+                        alt={label}
+                        className="w-full h-full object-cover"
+                    />
+                ) : null}
+                {uploading && (
+
+                    <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                        <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin" />
+                    </div>
+                )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex border-t border-gray-100">
+                <button
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading}
+                    className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[9px] font-black text-[#23471d] uppercase hover:bg-emerald-50 transition-colors disabled:opacity-50"
+                >
+                    <Upload size={10} /> {uploading ? '...' : currentUrl ? 'Change' : 'Upload'}
+                </button>
+                {currentUrl && (
+                    <button
+                        onClick={handleDelete}
+                        disabled={deleting}
+                        className="flex items-center justify-center px-2 py-1.5 text-[9px] font-black text-red-500 uppercase hover:bg-red-50 transition-colors border-l border-gray-100 disabled:opacity-50"
+                    >
+                        <Trash2 size={10} />
+                    </button>
+                )}
+            </div>
+            <input ref={fileRef} type="file" className="hidden" accept="image/*,.pdf" onChange={handleUpload} />
+        </div>
+    );
+}
+
 
 function ContactsTab({ reg, id, onRefresh }) {
     const [editing, setEditing] = useState(false);
@@ -176,6 +418,14 @@ function ContactsTab({ reg, id, onRefresh }) {
         contact1: { ...(reg.contact1 || {}) },
         contact2: { ...(reg.contact2 || {}) },
     });
+
+    // Update form when reg changes (critical for live sync)
+    useEffect(() => {
+        setForm({
+            contact1: { ...(reg.contact1 || {}) },
+            contact2: { ...(reg.contact2 || {}) },
+        });
+    }, [reg]);
 
     const inp1 = (k, v) => setForm(p => ({ ...p, contact1: { ...p.contact1, [k]: v } }));
     const inp2 = (k, v) => setForm(p => ({ ...p, contact2: { ...p.contact2, [k]: v } }));
@@ -207,16 +457,16 @@ function ContactsTab({ reg, id, onRefresh }) {
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Primary Contact Person" icon={User} actions={editActions} />
                 <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
-                    {['title','firstName','lastName','designation','email','mobile','alternateNo'].map(k => (
-                        <EditField key={k} label={k.replace(/([A-Z])/g,' $1').trim()} value={editing ? form.contact1[k] : reg.contact1?.[k]} onChange={v => inp1(k, v)} editing={editing} />
+                    {['title', 'firstName', 'lastName', 'designation', 'email', 'mobile', 'alternateNo'].map(k => (
+                        <EditField key={k} label={k.replace(/([A-Z])/g, ' $1').trim()} value={editing ? form.contact1[k] : reg.contact1?.[k]} onChange={v => inp1(k, v)} editing={editing} />
                     ))}
                 </div>
             </div>
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Secondary Contact Person" icon={Users} />
                 <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
-                    {['title','firstName','lastName','designation','email','mobile','alternateNo'].map(k => (
-                        <EditField key={k} label={k.replace(/([A-Z])/g,' $1').trim()} value={editing ? form.contact2[k] : reg.contact2?.[k]} onChange={v => inp2(k, v)} editing={editing} />
+                    {['title', 'firstName', 'lastName', 'designation', 'email', 'mobile', 'alternateNo'].map(k => (
+                        <EditField key={k} label={k.replace(/([A-Z])/g, ' $1').trim()} value={editing ? form.contact2[k] : reg.contact2?.[k]} onChange={v => inp2(k, v)} editing={editing} />
                     ))}
                 </div>
             </div>
@@ -225,53 +475,82 @@ function ContactsTab({ reg, id, onRefresh }) {
 }
 
 function PaymentTab({ reg, fmt }) {
+    const fb = reg.financeBreakdown || {};
     return (
         <div className="space-y-4">
-            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
-                <SH title="Financial Summary" icon={CreditCard} />
-                <Grid4 items={[
-                    { label: 'Base Amount', value: fmt(reg.participation?.amount) },
-                    { label: 'GST (18%)', value: fmt((reg.participation?.total || 0) - (reg.participation?.amount || 0)) },
-                    { label: 'Total Amount', value: fmt(reg.participation?.total) },
-                    { label: 'Amount Paid', value: fmt(reg.amountPaid) },
-                    { label: 'Balance Due', value: fmt(reg.balanceAmount) },
-                    { label: 'Payment Mode', value: reg.paymentMode },
-                    { label: 'Payment Type', value: reg.paymentType },
-                    { label: 'Transaction ID', value: reg.manualPaymentDetails?.transactionId || reg.paymentId },
-                ]} />
-                {reg.paymentId && (
-                    <div className="px-4 py-3 bg-indigo-50/40 border-t border-gray-100">
-                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Razorpay Payment ID</p>
-                        <p className="text-xs font-bold text-indigo-700 font-mono break-all">{reg.paymentId}</p>
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+                <SH title="Financial Summary & Deductions" icon={CreditCard} />
+                <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
+                    <Field label="Gross Stall Cost" value={fmt(fb.grossAmount || reg.participation?.amount)} />
+                    <Field label="Plan Discount" value={fb.discountPercent ? `${fb.discountPercent}% (${fmt(fb.discountAmount)})` : '0%'} />
+                    <Field label="Net Subtotal (Taxable)" value={fmt(fb.subtotal || reg.participation?.amount)} />
+                    <Field label="GST Collected (18%)" value={fmt(fb.gstAmount || ((reg.participation?.total || 0) - (fb.subtotal || 0)))} />
+                    <Field label="Total Contract (incl. GST)" value={fmt(reg.participation?.total)} />
+                    <Field label="TDS Selection" value={reg.chosenTdsPercent ? `${reg.chosenTdsPercent}%` : '0%'} />
+                    <Field label="TDS Deducted (Less)" value={fb.tdsAmount ? `- ${fmt(fb.tdsAmount)}` : 'INR 0'} />
+                    <div className="p-3 border-r border-b border-gray-100 bg-emerald-50/30">
+                        <p className="text-[9px] font-black text-emerald-600 uppercase tracking-wider mb-1">Total Net Payable</p>
+                        <p className="text-[14px] font-black text-emerald-800">{fmt(fb.netPayable || reg.participation?.total)}</p>
+                    </div>
+                    <Field label="Amount Paid (To Date)" value={fmt(reg.amountPaid)} />
+                    <div className="p-3 border-r border-b border-gray-100 bg-rose-50/30">
+                        <p className="text-[9px] font-black text-rose-600 uppercase tracking-wider mb-1">Balance Outstanding</p>
+                        <p className="text-[14px] font-black text-rose-800">{fmt(reg.balanceAmount)}</p>
+                    </div>
+                    <Field label="Current Status" value={reg.status?.toUpperCase()} />
+                    <Field label="Payment Mode (Latest)" value={reg.manualPaymentDetails?.method || reg.paymentMode || 'N/A'} />
+                </div>
+                {(reg.manualPaymentDetails?.transactionId || reg.paymentId) && (
+                    <div className="px-4 py-3 bg-slate-50 border-t border-gray-100 flex items-center justify-between">
+                        <div>
+                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Latest Transaction / Razorpay ID</p>
+                            <p className="text-xs font-bold text-slate-700 font-mono break-all">{reg.manualPaymentDetails?.transactionId || reg.paymentId}</p>
+                        </div>
+                        {reg.manualPaymentDetails?.updatedAt && (
+                            <p className="text-[9px] font-bold text-slate-400 italic">Last Updated: {new Date(reg.manualPaymentDetails.updatedAt).toLocaleString()}</p>
+                        )}
                     </div>
                 )}
             </div>
 
             {reg.paymentHistory?.length > 0 && (
-                <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
-                    <SH title="Payment History" icon={History} />
+                <div className="bg-white border border-gray-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <SH title="Transaction Audit History" icon={History} />
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="bg-gray-50 border-b border-gray-200">
-                                    {['#', 'Type', 'Amount', 'Mode / Method', 'Txn ID', 'Date'].map(h => (
-                                        <th key={h} className="py-2 px-4 text-[10px] font-black text-gray-500 uppercase text-left">{h}</th>
+                                <tr className="bg-slate-100 border-b border-gray-200">
+                                    {['#', 'Type', 'Amount', 'Method / Mode', 'Txn ID', 'Date'].map(h => (
+                                        <th key={h} className="py-2.5 px-4 text-[9px] font-black text-slate-500 uppercase text-left">{h}</th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {reg.paymentHistory.map((h, i) => (
-                                    <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
-                                        <td className="py-2 px-4 text-xs text-gray-400 font-bold">{i + 1}</td>
-                                        <td className="py-2 px-4 text-xs font-bold text-gray-700 capitalize">{h.paymentType || '—'}</td>
-                                        <td className="py-2 px-4 text-xs font-black text-emerald-700">{fmt(h.amount)}</td>
-                                        <td className="py-2 px-4 text-xs text-gray-600">{h.method || h.paymentMode || '—'}</td>
-                                        <td className="py-2 px-4 text-xs text-gray-600 font-mono">{h.transactionId || h.razorpayPaymentId || '—'}</td>
-                                        <td className="py-2 px-4 text-xs text-gray-500">
-                                            {h.paidAt ? new Date(h.paidAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
-                                        </td>
-                                    </tr>
-                                ))}
+                                {reg.paymentHistory.map((h, i) => {
+                                    const rawType = (h.paymentType || 'payment').toLowerCase();
+                                    const isInstallment = ['advance', 'balance', 'installment'].includes(rawType);
+                                    const label = isInstallment ? 'INSTALLMENT' : rawType.toUpperCase();
+                                    const badgeClass = isInstallment ? 'bg-cyan-100 text-cyan-800' : 'bg-emerald-100 text-emerald-800';
+
+                                    return (
+                                        <tr key={i} className="hover:bg-slate-50/80 transition-colors">
+                                            <td className="py-3 px-4 text-xs text-gray-400 font-bold">#{i + 1}</td>
+                                            <td className="py-3 px-4">
+                                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${badgeClass}`}>
+                                                    {label}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-4 text-[13px] font-black text-slate-800">{fmt(h.amount)}</td>
+                                            <td className="py-3 px-4 text-xs font-bold text-slate-600 uppercase italic">
+                                                {h.method || h.paymentMode || 'Manual'}
+                                            </td>
+                                            <td className="py-3 px-4 text-xs text-slate-500 font-mono">{h.transactionId || h.razorpayPaymentId || '—'}</td>
+                                            <td className="py-3 px-4 text-xs font-bold text-slate-500">
+                                                {h.paidAt ? new Date(h.paidAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
@@ -282,32 +561,155 @@ function PaymentTab({ reg, fmt }) {
 }
 
 function DocumentsTab({ reg }) {
-    const fixUrl = (url) => {
-        if (!url) return null;
-        return url.startsWith('http') ? url : `${SERVER_URL}${url}`;
-    };
-    const docs = [
-        { label: 'Registration Form (PDF)', url: fixUrl(reg.registrationPdfUrl), color: 'bg-[#23471d] hover:bg-[#1a3516]' },
-        { label: 'Payment Receipt (PDF)', url: fixUrl(reg.receiptPdfUrl), color: 'bg-[#d26019] hover:bg-[#b8521a]' },
-        { label: 'Uploaded Invoice', url: fixUrl(reg.receiptUrl), color: 'bg-slate-700 hover:bg-slate-800' },
+    const registrationDocs = [
+        { label: 'Registration Form (PDF)', url: fixUrl(reg.registrationPdfUrl), color: 'bg-[#23471d]' },
+        { label: 'Payment Receipt (PDF)', url: fixUrl(reg.receiptPdfUrl), color: 'bg-[#d26019]' },
+        { label: 'Uploaded Invoice / Receipt', url: fixUrl(reg.receiptUrl), color: 'bg-slate-700' },
+    ].filter(d => d.url);
+
+    const kycDocs = [
+        { label: 'Company Logo', url: fixUrl(reg.companyLogoUrl || reg.companyLogo) },
+        { label: 'PAN Card (Front)', url: fixUrl(reg.panCardFrontUrl || reg.panFrontUrl || reg.panCardFront || reg.panFront) },
+        { label: 'PAN Card (Back)', url: fixUrl(reg.panCardBackUrl || reg.panBackUrl || reg.panCardBack || reg.panBack) },
+        { label: 'Aadhaar Card (Front)', url: fixUrl(reg.aadhaarCardFrontUrl || reg.aadhaarFrontUrl || reg.aadhaarCardFront || reg.aadhaarFront) },
+        { label: 'Aadhaar Card (Back)', url: fixUrl(reg.aadhaarCardBackUrl || reg.aadhaarBackUrl || reg.aadhaarCardBack || reg.aadhaarBack) },
+        { label: 'GST Certificate', url: fixUrl(reg.gstCertificateUrl || reg.gstCertUrl || reg.gstCertificate || reg.gstCert) },
+        { label: 'Cancelled Cheque', url: fixUrl(reg.cancelledChequeUrl || reg.chequeUrl || reg.cancelledCheque || reg.cheque) },
+        { label: 'Representative Photo', url: fixUrl(reg.representativePhotoUrl || reg.photoUrl || reg.representativePhoto || reg.photo) },
     ].filter(d => d.url);
 
     return (
-        <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
-            <SH title="Documents & Downloads" icon={FileText} />
-            <div className="p-5">
-                {docs.length > 0 ? (
-                    <div className="flex flex-wrap gap-3">
-                        {docs.map((d, i) => (
-                            <a key={i} href={d.url} target="_blank" rel="noopener noreferrer"
-                                className={`flex items-center gap-2 px-4 py-2 text-white text-[10px] font-black uppercase tracking-widest transition-all ${d.color}`}>
-                                <ExternalLink size={12} /> {d.label}
-                            </a>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">No documents available</p>
-                )}
+        <div className="space-y-4">
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Registration & Payment Documents" icon={FileText} />
+                <div className="p-5">
+                    {registrationDocs.length > 0 ? (
+                        <div className="flex flex-wrap gap-3">
+                            {registrationDocs.map((d, i) => (
+                                <a key={i} href={d.url} target="_blank" rel="noopener noreferrer"
+                                    className={`flex items-center gap-2 px-4 py-2 text-white text-[10px] font-black uppercase tracking-widest transition-all hover:opacity-90 ${d.color}`}>
+                                    <ExternalLink size={12} /> {d.label}
+                                </a>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest text-center py-4">No registration documents available</p>
+                    )}
+                </div>
+            </div>
+
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Business & KYC Documentation (Admin Management)" icon={Layers} />
+                <KycDocsGrid reg={reg} id={reg._id} onRefresh={() => window.location.reload()} />
+            </div>
+
+            <SpecialDocsSection reg={reg} id={reg._id} onRefresh={() => window.location.reload()} />
+        </div>
+    );
+}
+
+function SpecialDocsSection({ reg, id, onRefresh }) {
+    const [label, setLabel] = useState('');
+    const [file, setFile] = useState(null);
+    const [uploading, setUploading] = useState(false);
+
+    const isImage = (url) => url?.match(/\.(jpg|jpeg|png|webp|gif|avif)$/i) || url?.includes('res.cloudinary.com/image/upload');
+
+    const handleDownload = async (url, label) => {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = `${label.replace(/\s+/g, '_')}_${Date.now()}.${blob.type.split('/')[1] || 'bin'}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+            Swal.fire({ icon: 'success', title: 'Download Started', timer: 1000, showConfirmButton: false });
+        } catch {
+            window.open(url, '_blank');
+        }
+    };
+
+    const handleUpload = async () => {
+        if (!label || !file) return Swal.fire('Error', 'Label and File both are required', 'error');
+        setUploading(true);
+        try {
+            const fd = new FormData();
+            fd.append('label', label);
+            fd.append('file', file);
+            const res = await api.post(`/api/exhibitor-registration/${id}/special-docs`, fd);
+            if (res.data.success) {
+                Swal.fire({ icon: 'success', title: 'Document Added', timer: 1500, showConfirmButton: false });
+                setLabel('');
+                setFile(null);
+                onRefresh();
+            }
+        } catch { Swal.fire('Error', 'Upload failed', 'error'); }
+        finally { setUploading(false); }
+    };
+
+    const handleDelete = async (docId) => {
+        const r = await Swal.fire({ title: 'Delete Special Doc?', icon: 'warning', showCancelButton: true });
+        if (!r.isConfirmed) return;
+        try {
+            await api.delete(`/api/exhibitor-registration/${id}/special-docs/${docId}`);
+            onRefresh();
+        } catch { Swal.fire('Error', 'Delete failed', 'error'); }
+    };
+
+    return (
+        <div className="bg-white border border-gray-100 shadow-sm overflow-hidden mt-4">
+            <SH title="Additional / Special Documents" icon={FolderPlus} />
+            <div className="p-4">
+                {/* Upload Section */}
+                <div className="flex flex-wrap items-center gap-2 mb-4 p-3 bg-slate-50 border border-slate-100 rounded">
+                    <input className="flex-1 min-w-[150px] h-7 px-2 border border-slate-300 rounded-[1px] text-[10px] font-medium outline-none focus:border-[#23471d]"
+                        value={label} onChange={e => setLabel(e.target.value)} placeholder="Doc Title" />
+
+                    <input type="file" accept="image/*,.pdf" className="text-[9px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[9px] file:font-bold file:bg-[#23471d] file:text-white cursor-pointer"
+                        onChange={e => setFile(e.target.files[0])} />
+
+                    <button onClick={handleUpload} disabled={uploading}
+                        className="h-7 px-4 bg-[#23471d] text-white text-[9px] font-bold uppercase tracking-widest hover:bg-[#1a3516] disabled:opacity-50 rounded-[1px]">
+                        {uploading ? 'Wait...' : 'Add Doc'}
+                    </button>
+                </div>
+
+                {/* List Section */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                    {reg.specialDocuments?.length > 0 ? (
+                        reg.specialDocuments.map((doc) => (
+                            <div key={doc._id} className="flex items-center justify-between p-2.5 border border-gray-100 bg-white rounded-[2px] shadow-sm hover:border-[#23471d]/30 transition-all group">
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                    <div className="w-7 h-7 rounded bg-amber-50 flex items-center justify-center flex-shrink-0">
+                                        <FileText size={14} className={isImage(doc.url) ? "text-emerald-600" : "text-rose-500"} />
+                                    </div>
+                                    <div className="overflow-hidden">
+                                        <p className="text-[10px] font-bold text-gray-800 truncate">{doc.label}</p>
+                                        <p className="text-[7px] text-gray-400 font-black uppercase tracking-tighter">{isImage(doc.url) ? 'Image' : 'PDF File'}</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-1">
+                                    <button onClick={() => handleDownload(fixUrl(doc.url), doc.label)}
+                                        className="p-1 text-slate-600 hover:bg-slate-100 rounded transition-colors" title="Force Download">
+                                        <Download size={11} />
+                                    </button>
+                                    <button onClick={() => handleDelete(doc._id)}
+                                        className="p-1 text-rose-600 hover:bg-rose-50 rounded transition-colors opacity-0 group-hover:opacity-100" title="Delete">
+                                        <Trash2 size={11} />
+                                    </button>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="col-span-full py-6 text-center bg-slate-50/50 border border-dashed border-slate-200">
+                            <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest italic">No extra records found</p>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -322,12 +724,12 @@ function MSMETab({ reg, id, onRefresh }) {
     const inp = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
     const handleSave = async () => {
-        if (!form.udhyamRegNo) { Swal.fire('Error', 'Udhyam Reg. No. is required', 'error'); return; }
+        if (!form.udyamRegNo) { Swal.fire('Error', 'udyam Reg. No. is required', 'error'); return; }
         setSaving(true);
         try {
             const fd = new FormData();
-            Object.entries(form).forEach(([k, v]) => { if (v != null && k !== 'udhyamCertificateUrl') fd.append(k, v); });
-            if (certFile) fd.append('udhyamCertificate', certFile);
+            Object.entries(form).forEach(([k, v]) => { if (v != null && k !== 'udyamCertificateUrl') fd.append(k, v); });
+            if (certFile) fd.append('udyamCertificate', certFile);
             const res = await api.put(`/api/exhibitor-registration/${id}/msme`, fd, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
@@ -341,8 +743,8 @@ function MSMETab({ reg, id, onRefresh }) {
         finally { setSaving(false); }
     };
 
-    const certUrl = reg.msme?.udhyamCertificateUrl
-        ? (reg.msme.udhyamCertificateUrl.startsWith('http') ? reg.msme.udhyamCertificateUrl : `${SERVER_URL}${reg.msme.udhyamCertificateUrl}`)
+    const certUrl = reg.msme?.udyamCertificateUrl
+        ? (reg.msme.udyamCertificateUrl.startsWith('http') ? reg.msme.udyamCertificateUrl : `${SERVER_URL}${reg.msme.udyamCertificateUrl}`)
         : null;
 
     const iCls = "w-full h-8 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]";
@@ -350,7 +752,7 @@ function MSMETab({ reg, id, onRefresh }) {
 
     return (
         <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
-            <SH title="MSME / Udhyam Details" icon={Award} actions={
+            <SH title="MSME / udyam Details" icon={Award} actions={
                 editing ? (
                     <>
                         <button onClick={() => { setEditing(false); setForm(reg.msme || {}); }}
@@ -365,34 +767,34 @@ function MSMETab({ reg, id, onRefresh }) {
                 ) : (
                     <button onClick={() => setEditing(true)}
                         className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30">
-                        <Pencil size={11} /> {reg.msme?.udhyamRegNo ? 'Edit' : 'Add MSME'}
+                        <Pencil size={11} /> {reg.msme?.udyamRegNo ? 'Edit' : 'Add MSME'}
                     </button>
                 )
             } />
 
             {editing ? (
                 <div className="p-5 space-y-4">
-                    <p className="text-[10px] font-black text-[#23471d] uppercase tracking-wider pb-1 border-b border-slate-100">Udhyam Registration</p>
+                    <p className="text-[10px] font-black text-[#23471d] uppercase tracking-wider pb-1 border-b border-slate-100">udyam Registration</p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {[
-                            { label: 'Udhyam Reg. No. *', key: 'udhyamRegNo', placeholder: 'UDYAM-XX-00-0000000' },
-                            { label: 'Mobile No.', key: 'udhyamMobileNo', placeholder: '10-digit' },
-                            { label: 'Email ID', key: 'udhyamEmailId', placeholder: 'email@example.com' },
-                            { label: 'Contact Person', key: 'udhyamContactPerson', placeholder: 'Name' },
-                            { label: 'Designation', key: 'udhyamDesignation', placeholder: 'Designation' },
-                            { label: 'Issue Date', key: 'udhyamIssueDate', type: 'date' },
+                            { label: 'udyam Reg. No. *', key: 'udyamRegNo', placeholder: 'UDYAM-XX-00-0000000' },
+                            { label: 'Mobile No.', key: 'udyamMobileNo', placeholder: '10-digit' },
+                            { label: 'Email ID', key: 'udyamEmailId', placeholder: 'email@example.com' },
+                            { label: 'Contact Person', key: 'udyamContactPerson', placeholder: 'Name' },
+                            { label: 'Designation', key: 'udyamDesignation', placeholder: 'Designation' },
+                            { label: 'Issue Date', key: 'udyamIssueDate', type: 'date' },
                         ].map(f => (
                             <div key={f.key}>
                                 <label className={lCls}>{f.label}</label>
                                 <input type={f.type || 'text'}
-                                    value={f.key === 'udhyamIssueDate' && form[f.key] ? form[f.key].split('T')[0] : (form[f.key] || '')}
+                                    value={f.key === 'udyamIssueDate' && form[f.key] ? form[f.key].split('T')[0] : (form[f.key] || '')}
                                     onChange={e => inp(f.key, e.target.value)}
                                     placeholder={f.placeholder} className={iCls} />
                             </div>
                         ))}
                         <div className="md:col-span-2">
-                            <label className={lCls}>Udhyam Address</label>
-                            <input value={form.udhyamAddress || ''} onChange={e => inp('udhyamAddress', e.target.value)} className={iCls} />
+                            <label className={lCls}>udyam Address</label>
+                            <input value={form.udyamAddress || ''} onChange={e => inp('udyamAddress', e.target.value)} className={iCls} />
                         </div>
                         <div>
                             <label className={lCls}>Certificate (Image) {certUrl && <span className="text-green-600 normal-case">✓ uploaded</span>}</label>
@@ -426,17 +828,17 @@ function MSMETab({ reg, id, onRefresh }) {
                         </div>
                     </div>
                 </div>
-            ) : reg.msme?.udhyamRegNo ? (
+            ) : reg.msme?.udyamRegNo ? (
                 <div>
                     <Grid4 items={[
-                        { label: 'Udhyam Reg. No.', value: reg.msme.udhyamRegNo },
+                        { label: 'udyam Reg. No.', value: reg.msme.udyamRegNo },
                         { label: 'MSME Category', value: reg.msme.msmeCategory },
-                        { label: 'Issue Date', value: reg.msme.udhyamIssueDate ? new Date(reg.msme.udhyamIssueDate).toLocaleDateString('en-IN') : null },
-                        { label: 'Contact Person', value: reg.msme.udhyamContactPerson },
-                        { label: 'Designation', value: reg.msme.udhyamDesignation },
-                        { label: 'Mobile No.', value: reg.msme.udhyamMobileNo },
-                        { label: 'Email ID', value: reg.msme.udhyamEmailId },
-                        { label: 'Address', value: reg.msme.udhyamAddress },
+                        { label: 'Issue Date', value: reg.msme.udyamIssueDate ? new Date(reg.msme.udyamIssueDate).toLocaleDateString('en-IN') : null },
+                        { label: 'Contact Person', value: reg.msme.udyamContactPerson },
+                        { label: 'Designation', value: reg.msme.udyamDesignation },
+                        { label: 'Mobile No.', value: reg.msme.udyamMobileNo },
+                        { label: 'Email ID', value: reg.msme.udyamEmailId },
+                        { label: 'Address', value: reg.msme.udyamAddress },
                         { label: 'DFO Location', value: reg.msme.dfoLocation },
                         { label: 'DFO Email', value: reg.msme.dfoEmail },
                         { label: 'DFO Mobile', value: reg.msme.dfoMobileNo },
@@ -673,11 +1075,10 @@ function AccessoriesTab({ reg, id }) {
                                             {order.paymentStatus === 'complimentary' ? <span className="text-emerald-600">Free</span> : fmt(order.grandTotal)}
                                         </td>
                                         <td className="py-2 px-4">
-                                            <span className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-full border ${
-                                                order.paymentStatus === 'paid' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                            <span className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-full border ${order.paymentStatus === 'paid' ? 'bg-blue-50 text-blue-700 border-blue-200' :
                                                 order.paymentStatus === 'complimentary' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                                'bg-amber-50 text-amber-700 border-amber-200'
-                                            }`}>{order.paymentStatus}</span>
+                                                    'bg-amber-50 text-amber-700 border-amber-200'
+                                                }`}>{order.paymentStatus}</span>
                                         </td>
                                         <td className="py-2 px-4 text-xs text-gray-600 font-mono">{order.transactionId || '—'}</td>
                                         <td className="py-2 px-4 text-xs text-gray-500">
@@ -872,9 +1273,8 @@ export default function ExhibitorBookingDetail() {
                     const active = activeTab === tab.id;
                     return (
                         <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-1.5 px-4 py-2 text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-all rounded-sm ${
-                                active ? 'bg-[#23471d] text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
-                            }`}>
+                            className={`flex items-center gap-1.5 px-4 py-2 text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-all rounded-sm ${active ? 'bg-[#23471d] text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+                                }`}>
                             <Icon size={13} /> {tab.label}
                         </button>
                     );
@@ -882,12 +1282,12 @@ export default function ExhibitorBookingDetail() {
             </div>
 
             {/* Tab Content */}
-            {activeTab === 'overview'     && <OverviewTab reg={reg} fmt={fmt} id={id} onRefresh={fetchReg} />}
-            {activeTab === 'contacts'     && <ContactsTab reg={reg} id={id} onRefresh={fetchReg} />}
-            {activeTab === 'payment'      && <PaymentTab reg={reg} fmt={fmt} />}
-            {activeTab === 'documents'    && <DocumentsTab reg={reg} />}
-            {activeTab === 'msme'         && <MSMETab reg={reg} id={id} onRefresh={fetchReg} />}
-            {activeTab === 'accessories'  && <AccessoriesTab reg={reg} id={id} />}
+            {reg && activeTab === 'overview' && <OverviewTab reg={reg} fmt={fmt} id={id} onRefresh={fetchReg} />}
+            {reg && activeTab === 'contacts' && <ContactsTab reg={reg} id={id} onRefresh={fetchReg} />}
+            {reg && activeTab === 'payment' && <PaymentTab reg={reg} fmt={fmt} />}
+            {reg && activeTab === 'documents' && <DocumentsTab reg={reg} />}
+            {reg && activeTab === 'msme' && <MSMETab reg={reg} id={id} onRefresh={fetchReg} />}
+            {reg && activeTab === 'accessories' && <AccessoriesTab reg={reg} id={id} />}
         </div>
     );
 }
