@@ -338,6 +338,12 @@ export const menuItems = [
     icon: MessageSquare,
     path: "/whatsapp-logs",
   },
+  {
+    type: "item",
+    label: "Dashboard Banners",
+    icon: Images,
+    path: "/dashboard-banners",
+  },
 
 
   {
@@ -366,6 +372,7 @@ export const menuItems = [
       { label: "Secondary Product Categories", path: "/secondary-product-categories" },
       { label: "Meeting Priority Level", path: "/meeting-priority-level" },
       { label: "Add Unit", path: "/add-unit" },
+      { label: "Seller Subscription Plans", path: "/seller-subscription-plans" },
     ],
   },
   {

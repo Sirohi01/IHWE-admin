@@ -300,7 +300,7 @@ const PaymentDelayWarnings = () => {
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-2">
                                                 <button
-                                                    onClick={() => navigate(`/exhibitor-bookings/${record._id}`)}
+                                                    onClick={() => navigate(`/exhibitor-booking/${record._id}`, { state: { from: '/payment-delay-warnings' } })}
                                                     className="p-1.5 text-gray-500 hover:text-[#23471d] hover:bg-gray-100 rounded"
                                                     title="View Details"
                                                 >

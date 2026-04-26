@@ -1,5 +1,5 @@
-﻿import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
     ArrowLeft, Building2, User, CreditCard, Layers,
     FileText, Info, Receipt, ExternalLink, Pencil, Save, X,
@@ -76,7 +76,219 @@ const TABS = [
     { id: 'documents', label: 'Documents', icon: FileText },
     { id: 'msme', label: 'MSME', icon: Award },
     { id: 'accessories', label: 'Accessories', icon: Package },
+    { id: 'seller', label: 'Seller Portal', icon: ShoppingCart },
 ];
+
+function SellerTab({ reg, id, onRefresh }) {
+    const [saving, setSaving] = useState(false);
+    const [subscriptionPlans, setSubscriptionPlans] = useState([]);
+    const [loadingPlans, setLoadingPlans] = useState(true);
+    const [form, setForm] = useState({
+        isSeller: reg.isSeller || false,
+        sellerStatus: reg.sellerStatus || 'none',
+        sellerSubscription: {
+            status: reg.sellerSubscription?.status || 'inactive',
+            planId: reg.sellerSubscription?.planId || '',
+            plan: reg.sellerSubscription?.plan || '',
+            expiresAt: reg.sellerSubscription?.expiresAt ? new Date(reg.sellerSubscription.expiresAt).toISOString().split('T')[0] : ''
+        },
+        bankDetails: {
+            bankName: reg.bankDetails?.bankName || '',
+            accountHolder: reg.bankDetails?.accountHolder || '',
+            accountNumber: reg.bankDetails?.accountNumber || '',
+            ifscCode: reg.bankDetails?.ifscCode || '',
+            branch: reg.bankDetails?.branch || '',
+            accountType: reg.bankDetails?.accountType || 'Current'
+        }
+    });
+
+    // Fetch subscription plans from admin
+    useEffect(() => {
+        const fetchPlans = async () => {
+            try {
+                const res = await api.get('/api/seller-subscription-plans/active');
+                if (res.data.success) {
+                    setSubscriptionPlans(res.data.data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch subscription plans:', err);
+            } finally {
+                setLoadingPlans(false);
+            }
+        };
+        fetchPlans();
+    }, []);
+
+    useEffect(() => {
+        setForm({
+            isSeller: reg.isSeller || false,
+            sellerStatus: reg.sellerStatus || 'none',
+            sellerSubscription: {
+                status: reg.sellerSubscription?.status || 'inactive',
+                planId: reg.sellerSubscription?.planId || '',
+                plan: reg.sellerSubscription?.plan || '',
+                expiresAt: reg.sellerSubscription?.expiresAt ? new Date(reg.sellerSubscription.expiresAt).toISOString().split('T')[0] : ''
+            },
+            bankDetails: {
+                bankName: reg.bankDetails?.bankName || '',
+                accountHolder: reg.bankDetails?.accountHolder || '',
+                accountNumber: reg.bankDetails?.accountNumber || '',
+                ifscCode: reg.bankDetails?.ifscCode || '',
+                branch: reg.bankDetails?.branch || '',
+                accountType: reg.bankDetails?.accountType || 'Current'
+            }
+        });
+    }, [reg]);
+
+    const handlePlanChange = (planId) => {
+        const selectedPlan = subscriptionPlans.find(p => p._id === planId);
+        setForm(p => ({
+            ...p,
+            sellerSubscription: {
+                ...p.sellerSubscription,
+                planId: planId,
+                plan: selectedPlan?.name || ''
+            }
+        }));
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const res = await api.put(`/api/exhibitor-registration/${id}`, form);
+            if (res.data.success) {
+                Swal.fire({ icon: 'success', title: 'Seller Settings Updated', timer: 1200, showConfirmButton: false });
+                onRefresh();
+            }
+        } catch { Swal.fire('Error', 'Update failed', 'error'); }
+        finally { setSaving(false); }
+    };
+
+    const formatPrice = (price, currency) => {
+        if (currency === 'INR') return `₹ ${price.toLocaleString()}`;
+        return `${currency} ${price.toLocaleString()}`;
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden font-inter">
+                <SH title="Seller Status & Subscription" icon={ShoppingCart} actions={
+                    <button onClick={handleSave} disabled={saving} className="flex items-center gap-1 px-3 py-1 bg-[#d26019] text-white text-[10px] font-bold uppercase rounded-[2px] disabled:opacity-60 transition-all hover:bg-[#a84c14]">
+                        <Save size={11} /> {saving ? 'Saving...' : 'Update Seller Settings'}
+                    </button>
+                } />
+                <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Is Registered as Seller?</label>
+                        <select value={form.isSeller} onChange={e => setForm(p => ({ ...p, isSeller: e.target.value === 'true' }))}
+                            className="w-full h-9 px-3 border border-gray-200 rounded text-sm font-bold outline-none focus:border-[#23471d] bg-slate-50">
+                            <option value="false">No (Exhibitor Only)</option>
+                            <option value="true">Yes (Exhibitor + Seller)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Registration Review Status</label>
+                        <select value={form.sellerStatus} onChange={e => setForm(p => ({ ...p, sellerStatus: e.target.value }))}
+                            className={`w-full h-9 px-3 border border-gray-200 rounded text-sm font-bold outline-none focus:border-[#23471d] ${
+                                form.sellerStatus === 'active' ? 'text-green-600' : form.sellerStatus === 'pending' ? 'text-orange-500' : ''
+                            }`}>
+                            <option value="none">None</option>
+                            <option value="pending">Pending Approval</option>
+                            <option value="active">Active / Approved</option>
+                            <option value="expired">Expired</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Subscription Status</label>
+                        <select value={form.sellerSubscription.status} onChange={e => setForm(p => ({ ...p, sellerSubscription: { ...p.sellerSubscription, status: e.target.value } }))}
+                            className={`w-full h-9 px-3 border border-gray-200 rounded text-sm font-bold outline-none focus:border-[#23471d] ${
+                                form.sellerSubscription.status === 'active' ? 'text-green-600 bg-green-50' : ''
+                            }`}>
+                            <option value="inactive">Inactive</option>
+                            <option value="active">Active (Paid)</option>
+                            <option value="expired">Expired</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Subscription Plan</label>
+                        {loadingPlans ? (
+                            <div className="w-full h-9 px-3 border border-gray-200 rounded bg-slate-50 flex items-center">
+                                <span className="text-xs text-gray-400">Loading plans...</span>
+                            </div>
+                        ) : subscriptionPlans.length === 0 ? (
+                            <div className="w-full h-9 px-3 border border-red-200 rounded bg-red-50 flex items-center">
+                                <span className="text-xs text-red-500">No plans available</span>
+                            </div>
+                        ) : (
+                            <select 
+                                value={form.sellerSubscription.planId} 
+                                onChange={e => handlePlanChange(e.target.value)}
+                                className="w-full h-9 px-3 border border-gray-200 rounded text-sm font-bold outline-none focus:border-[#23471d] bg-slate-50"
+                            >
+                                <option value="">Select a plan...</option>
+                                {subscriptionPlans.map(plan => (
+                                    <option key={plan._id} value={plan._id}>
+                                        {plan.name} - {formatPrice(plan.price, plan.currency)} ({plan.durationDays} days)
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
+                    <div>
+                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Subscription Expiry Date</label>
+                        <input type="date" value={form.sellerSubscription.expiresAt} onChange={e => setForm(p => ({ ...p, sellerSubscription: { ...p.sellerSubscription, expiresAt: e.target.value } }))}
+                            className="w-full h-9 px-3 border border-gray-200 rounded text-sm font-bold outline-none focus:border-[#23471d]" />
+                    </div>
+                </div>
+                
+                {/* Show selected plan features */}
+                {form.sellerSubscription.planId && (
+                    <div className="px-4 pb-4">
+                        {(() => {
+                            const selectedPlan = subscriptionPlans.find(p => p._id === form.sellerSubscription.planId);
+                            if (!selectedPlan) return null;
+                            return (
+                                <div className="bg-slate-50 border border-slate-200 rounded p-3">
+                                    <p className="text-[9px] font-black text-gray-500 uppercase mb-2">Plan Features Included:</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedPlan.features?.map((f, i) => (
+                                            <span key={i} className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-[10px] px-2 py-1 rounded font-medium">
+                                                <CheckCircle2 size={10} /> {f.label}
+                                            </span>
+                                        ))}
+                                        {(!selectedPlan.features || selectedPlan.features.length === 0) && (
+                                            <span className="text-xs text-gray-400 italic">No features defined</span>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })()}
+                    </div>
+                )}
+            </div>
+
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden font-inter">
+                <SH title="Seller Bank Payout Details" icon={CreditCard} />
+                <div className="grid grid-cols-2 md:grid-cols-3 border-l border-t border-gray-100">
+                    {[
+                        { k: 'bankName', l: 'Bank Name' },
+                        { k: 'accountHolder', l: 'Account Holder' },
+                        { k: 'accountNumber', l: 'Account Number' },
+                        { k: 'ifscCode', l: 'IFSC Code' },
+                        { k: 'branch', l: 'Branch' },
+                        { k: 'accountType', l: 'Account Type' }
+                    ].map(({ k, l }) => (
+                        <div key={k} className="p-3 border-r border-b border-gray-100">
+                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">{l}</p>
+                            <input type="text" value={form.bankDetails[k] || ''} onChange={e => setForm(p => ({ ...p, bankDetails: { ...p.bankDetails, [k]: e.target.value } }))}
+                                className="w-full h-8 px-2 border border-slate-100 rounded text-xs font-black text-slate-700 outline-none focus:border-[#23471d]" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
 
 // ─── Tab Components ───────────────────────────────────────────────────────────
 
@@ -1554,6 +1766,7 @@ function AccessoriesTab({ reg, id }) {
 export default function ExhibitorBookingDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const [reg, setReg] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
@@ -1577,7 +1790,7 @@ export default function ExhibitorBookingDetail() {
     if (!reg) return (
         <div className="p-8 text-center">
             <p className="text-gray-500 font-bold mb-4">Booking not found</p>
-            <button onClick={() => navigate('/exhibitor-bookings')} className="px-4 py-2 bg-[#23471d] text-white text-sm font-bold rounded-sm">Back</button>
+            <button onClick={() => navigate(location.state?.from || '/exhibitor-bookings')} className="px-4 py-2 bg-[#23471d] text-white text-sm font-bold rounded-sm">Back</button>
         </div>
     );
 
@@ -1588,7 +1801,7 @@ export default function ExhibitorBookingDetail() {
         <div className="p-6 min-h-screen bg-gray-50 font-inter">
             {/* Back + Title */}
             <div className="flex items-center gap-3 mb-4">
-                <button onClick={() => navigate('/exhibitor-bookings')}
+                <button onClick={() => navigate(location.state?.from || '/exhibitor-bookings')}
                     className="flex items-center gap-1.5 text-gray-500 hover:text-[#23471d] text-sm font-medium transition-colors">
                     <ArrowLeft className="w-4 h-4" /> Back
                 </button>
@@ -1637,6 +1850,7 @@ export default function ExhibitorBookingDetail() {
             {reg && activeTab === 'documents' && <DocumentsTab reg={reg} />}
             {reg && activeTab === 'msme' && <MSMETab reg={reg} id={id} onRefresh={fetchReg} />}
             {reg && activeTab === 'accessories' && <AccessoriesTab reg={reg} id={id} />}
+            {reg && activeTab === 'seller' && <SellerTab reg={reg} id={id} onRefresh={fetchReg} />}
         </div>
     );
 }

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import Swal from 'sweetalert2';
 import api from "../lib/api";
@@ -461,7 +461,18 @@ const ManageRegistrations = () => {
                         )}
                     </div>
                     <div className="flex flex-col min-w-0">
-                        <span className="font-semibold text-red-600 text-sm uppercase tracking-tight leading-none mb-1 truncate">{row.exhibitorName}</span>
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold text-red-600 text-sm uppercase tracking-tight leading-none truncate">{row.exhibitorName}</span>
+                            {row.isSeller && (
+                                <span className={`text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest border ${
+                                    row.sellerSubscription?.status === 'active' 
+                                    ? 'bg-green-50 text-green-700 border-green-200' 
+                                    : 'bg-orange-50 text-orange-700 border-orange-200'
+                                }`}>
+                                    Seller {row.sellerSubscription?.status === 'active' ? '• Pro' : ''}
+                                </span>
+                            )}
+                        </div>
                         <span className="text-[10px] text-black font-medium uppercase tracking-widest leading-none truncate">{row.natureOfBusiness}</span>
                         <div className="mt-1.5 flex items-center gap-1.5">
                             <span className="text-[9px] bg-slate-100 px-1.5 py-0.5 rounded font-medium text-black uppercase tracking-tighter border border-slate-200">Event: <span className="text-red-500 font-bold">{row.eventId?.name || 'N/A'}</span></span>

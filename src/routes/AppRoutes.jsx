@@ -166,6 +166,8 @@ import Reminder from "../pages/navbar_page/Reminder";
 import ToDoList from "../pages/navbar_page/ToDoList";
 import NewLeads from "../pages/navbar_page/NewLeads";
 import Notification from "../pages/navbar_page/Notification";
+import BannerManagement from "../pages/BannerManagement";
+import SellerSubscriptionPlans from "../pages/add_by_admin/SellerSubscriptionPlans";
 
 export default function AppRoutes() {
   return (
@@ -177,6 +179,7 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="role-permissions" element={<RolePermissions />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="dashboard-banners" element={<BannerManagement />} />
           <Route path="click-analytics" element={<ClickAnalytics />} />
           <Route path="about-us" element={<About />} />
           <Route path="who-we-are" element={<WhoWeAre />} />
@@ -449,6 +452,7 @@ export default function AppRoutes() {
           <Route path="/accessory-orders" element={<AccessoryOrders />} />
           <Route path="/exhibitor-chat" element={<ExhibitorChat />} />
           <Route path="/add-unit" element={<AddUnit />} />
+          <Route path="/seller-subscription-plans" element={<SellerSubscriptionPlans />} />
           <Route path="/marketing-toolkit-manage" element={<MarketingToolkitManage />} />
           <Route path="/reminder" element={<Reminder />} />
           <Route path="/to-do-list" element={<ToDoList />} />
