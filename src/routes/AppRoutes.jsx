@@ -100,6 +100,7 @@ import ManageStallRates from "../pages/ManageStallRates";
 import ManageTerms from "../pages/ManageTerms";
 import ExhibitorBookingDetail from "../pages/ExhibitorBookingDetail";
 import FailedPayments from "../pages/FailedPayments";
+import PaymentDelayWarnings from "../pages/PaymentDelayWarnings";
 import TravelAccommodationManage from "../pages/TravelAccommodationManage";
 import AdminBSM from "../pages/AdminBSM";
 import ActivityLogs from "../pages/ActivityLogs";
@@ -258,6 +259,7 @@ export default function AppRoutes() {
           <Route path="exhibitor-bookings" element={<ManageRegistrations />} />
           <Route path="exhibitor-booking/:id" element={<ExhibitorBookingDetail />} />
           <Route path="failed-payments" element={<FailedPayments />} />
+          <Route path="payment-delay-warnings" element={<PaymentDelayWarnings />} />
           <Route path="events" element={<ManageEvents />} />
           <Route path="stall-rates" element={<ManageStallRates />} />
           <Route path="terms-conditions" element={<ManageTerms />} />

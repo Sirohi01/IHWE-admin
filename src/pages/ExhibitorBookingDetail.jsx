@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, Building2, User, CreditCard, Layers,
     FileText, Info, Receipt, ExternalLink, Pencil, Save, X,
     MapPin, Phone, Mail, Globe, Briefcase, Tag, Calendar,
-    CheckCircle2, Users, Award, History, Package, Plus, Trash2, ShoppingCart, Gift, RefreshCw, Upload, FolderPlus, Download, Image as ImageIcon
+    CheckCircle2, Users, Award, History, Package, Plus, Trash2, ShoppingCart, Gift, RefreshCw, Upload, FolderPlus, Download, Image as ImageIcon, Send, MessageSquare
 } from 'lucide-react';
 import api, { SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
@@ -474,11 +474,158 @@ function ContactsTab({ reg, id, onRefresh }) {
     );
 }
 
-function PaymentTab({ reg, fmt }) {
+function PaymentTab({ reg, fmt, id, onRefresh }) {
     const fb = reg.financeBreakdown || {};
+    const [penaltyAmount, setPenaltyAmount] = useState('');
+    const [penaltyReason, setPenaltyReason] = useState('');
+    const [showPenaltyHistory, setShowPenaltyHistory] = useState(false);
+    const [showManualPayment, setShowManualPayment] = useState(false);
+    const [manualPayment, setManualPayment] = useState({
+        amount: '', method: 'Cash', transactionId: '', notes: '',
+        paidAt: new Date().toISOString().split('T')[0]
+    });
+    const [paymentDueDate, setPaymentDueDate] = useState(
+        reg.paymentDueDate ? new Date(reg.paymentDueDate).toISOString().split('T')[0] : ''
+    );
+    const [saving, setSaving] = useState(false);
+
+    const handleAddManualPayment = async () => {
+        if (!manualPayment.amount || Number(manualPayment.amount) <= 0) {
+            Swal.fire('Error', 'Please enter a valid amount', 'error'); return;
+        }
+        setSaving(true);
+        try {
+            const res = await api.post(`/api/payment/manual/${id}`, {
+                amount: Number(manualPayment.amount),
+                method: manualPayment.method,
+                transactionId: manualPayment.transactionId,
+                notes: manualPayment.notes,
+                paidAt: manualPayment.paidAt
+            });
+            if (res.data.success) {
+                Swal.fire({ icon: 'success', title: 'Payment Recorded!', timer: 1500, showConfirmButton: false });
+                setShowManualPayment(false);
+                setManualPayment({ amount: '', method: 'Cash', transactionId: '', notes: '', paidAt: new Date().toISOString().split('T')[0] });
+                onRefresh();
+            }
+        } catch (e) { Swal.fire('Error', e.response?.data?.message || 'Failed to record payment', 'error'); }
+        finally { setSaving(false); }
+    };
+
+    const daysOverdue = reg.paymentDueDate
+        ? Math.max(0, Math.floor((new Date() - new Date(reg.paymentDueDate)) / (1000 * 60 * 60 * 24)))
+        : 0;
+
+    const handleAddPenalty = async () => {
+        if (penaltyAmount <= 0) {
+            Swal.fire('Error', 'Please enter a valid penalty amount', 'error');
+            return;
+        }
+        if (!penaltyReason.trim()) {
+            Swal.fire('Error', 'Please enter a reason for the penalty', 'error');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            const res = await api.post(`/api/penalty/add/${id}`, {
+                amount: penaltyAmount,
+                reason: penaltyReason
+            });
+            if (res.data.success) {
+                Swal.fire({ icon: 'success', title: 'Penalty Added', timer: 1500, showConfirmButton: false });
+                onRefresh();
+            }
+        } catch (error) {
+            Swal.fire('Error', error.response?.data?.message || 'Failed to add penalty', 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleRemovePenalty = async () => {
+        const result = await Swal.fire({
+            title: 'Remove Penalty?',
+            text: 'This will remove the penalty amount from this booking.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            confirmButtonText: 'Yes, remove it!'
+        });
+
+        if (!result.isConfirmed) return;
+
+        setSaving(true);
+        try {
+            const res = await api.delete(`/api/penalty/remove/${id}`);
+            if (res.data.success) {
+                setPenaltyAmount(0);
+                setPenaltyReason('');
+                Swal.fire({ icon: 'success', title: 'Penalty Removed', timer: 1500, showConfirmButton: false });
+                onRefresh();
+            }
+        } catch (error) {
+            Swal.fire('Error', error.response?.data?.message || 'Failed to remove penalty', 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleUpdateDueDate = async () => {
+        if (!paymentDueDate) {
+            Swal.fire('Error', 'Please select a due date', 'error');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            const res = await api.put(`/api/payment-delay/due-date/${id}`, { dueDate: paymentDueDate });
+            if (res.data.success) {
+                Swal.fire({ icon: 'success', title: 'Due Date Updated', timer: 1500, showConfirmButton: false });
+                onRefresh();
+            }
+        } catch (error) {
+            Swal.fire('Error', error.response?.data?.message || 'Failed to update due date', 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleSendWarning = async (type) => {
+        const result = await Swal.fire({
+            title: `Send ${type === 'both' ? 'Email & WhatsApp' : type.toUpperCase()} Warning?`,
+            text: 'This will send a payment reminder to the exhibitor.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#f59e0b',
+            confirmButtonText: 'Yes, send it!'
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+            const res = await api.post(`/api/payment-delay/send-warning/${id}`, { type });
+            if (res.data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Warning Sent!',
+                    html: `
+                        <p>Email: ${res.data.data.emailSent ? '✅ Sent' : '❌ Failed'}</p>
+                        <p>WhatsApp: ${res.data.data.whatsappSent ? '✅ Sent' : '❌ Failed'}</p>
+                    `,
+                    timer: 2000
+                });
+                onRefresh();
+            }
+        } catch (error) {
+            Swal.fire('Error', error.response?.data?.message || 'Failed to send warning', 'error');
+        }
+    };
+
     return (
         <div className="space-y-4">
-            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+            {/* ── Financial Summary ── */}
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Financial Summary & Deductions" icon={CreditCard} />
                 <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
                     <Field label="Gross Stall Cost" value={fmt(fb.grossAmount || reg.participation?.amount)} />
@@ -498,29 +645,234 @@ function PaymentTab({ reg, fmt }) {
                         <p className="text-[14px] font-black text-rose-800">{fmt(reg.balanceAmount)}</p>
                     </div>
                     <Field label="Current Status" value={reg.status?.toUpperCase()} />
-                    <Field label="Payment Mode (Latest)" value={reg.manualPaymentDetails?.method || reg.paymentMode || 'N/A'} />
+                    <Field label="Payment Plan" value={reg.paymentPlanLabel || reg.paymentPlanType || 'N/A'} />
                 </div>
-                {(reg.manualPaymentDetails?.transactionId || reg.paymentId) && (
-                    <div className="px-4 py-3 bg-slate-50 border-t border-gray-100 flex items-center justify-between">
-                        <div>
-                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Latest Transaction / Razorpay ID</p>
-                            <p className="text-xs font-bold text-slate-700 font-mono break-all">{reg.manualPaymentDetails?.transactionId || reg.paymentId}</p>
+                {(reg.penaltyAmount > 0 || reg.totalPayable > 0) && (
+                    <div className="grid grid-cols-3 border-t border-gray-100">
+                        <div className="p-3 border-r border-gray-100 bg-gray-50/50">
+                            <p className="text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Balance Amount</p>
+                            <p className="text-[13px] font-black text-gray-800">{fmt(reg.balanceAmount)}</p>
                         </div>
-                        {reg.manualPaymentDetails?.updatedAt && (
-                            <p className="text-[9px] font-bold text-slate-400 italic">Last Updated: {new Date(reg.manualPaymentDetails.updatedAt).toLocaleString()}</p>
-                        )}
+                        <div className="p-3 border-r border-gray-100 bg-red-50/30">
+                            <p className="text-[9px] font-black text-red-500 uppercase tracking-wider mb-1">Penalty</p>
+                            <p className="text-[13px] font-black text-red-700">{fmt(reg.penaltyAmount || 0)}</p>
+                        </div>
+                        <div className="p-3 bg-amber-50/30">
+                            <p className="text-[9px] font-black text-amber-600 uppercase tracking-wider mb-1">Total Payable</p>
+                            <p className="text-[14px] font-black text-amber-800">{fmt(reg.totalPayable || reg.balanceAmount)}</p>
+                        </div>
                     </div>
                 )}
             </div>
 
+            {/* ── Installment Breakdown ── */}
+            {reg.installments?.length > 0 && (
+                <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                    <SH title="Installment Breakdown" icon={CreditCard} />
+                    <div className="divide-y divide-gray-100">
+                        {reg.installments.map((inst, i) => {
+                            const isPaid = inst.status === 'paid';
+                            const isOverdue = inst.dueDate && new Date(inst.dueDate) < new Date() && !isPaid;
+                            const paidPct = inst.dueAmount > 0 ? Math.round((inst.paidAmount || 0) / inst.dueAmount * 100) : 0;
+                            return (
+                                <div key={i} className={`p-4 flex items-center justify-between gap-4 ${isOverdue ? 'bg-red-50/30' : ''}`}>
+                                    <div className="flex items-center gap-3 flex-1">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-[10px] font-black ${isPaid ? 'bg-emerald-100 text-emerald-700' : isOverdue ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                                            {isPaid ? '✓' : `${inst.percentage}%`}
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs font-black text-gray-800">{inst.label}</p>
+                                            <p className="text-[10px] text-gray-500">
+                                                Due: {inst.dueDate ? new Date(inst.dueDate).toLocaleDateString('en-IN') : 'Not set'}
+                                                {isOverdue && <span className="ml-2 text-red-600 font-bold">OVERDUE</span>}
+                                            </p>
+                                            {inst.paidAmount > 0 && inst.paidAmount < inst.dueAmount && (
+                                                <div className="mt-1">
+                                                    <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                                        <div className="bg-[#23471d] h-1.5 rounded-full" style={{ width: `${paidPct}%` }} />
+                                                    </div>
+                                                    <p className="text-[9px] text-gray-500 mt-0.5">{paidPct}% paid ({fmt(inst.paidAmount)} of {fmt(inst.dueAmount)})</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm font-black text-gray-800">{fmt(inst.dueAmount)}</p>
+                                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${isPaid ? 'bg-emerald-100 text-emerald-700' : isOverdue ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                                            {inst.status}
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Manual Payment Entry ── */}
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Add Manual Payment" icon={Plus} actions={
+                    <button onClick={() => setShowManualPayment(p => !p)} className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30">
+                        {showManualPayment ? <X size={11} /> : <Plus size={11} />} {showManualPayment ? 'Cancel' : 'Add Payment'}
+                    </button>
+                } />
+                {showManualPayment && (
+                    <div className="p-4 space-y-3">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <div>
+                                <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Amount (₹) *</label>
+                                <input type="number" value={manualPayment.amount} onChange={e => setManualPayment(p => ({ ...p, amount: e.target.value }))}
+                                    placeholder="e.g. 50000" className="w-full h-9 px-3 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#23471d]" />
+                            </div>
+                            <div>
+                                <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Payment Method *</label>
+                                <select value={manualPayment.method} onChange={e => setManualPayment(p => ({ ...p, method: e.target.value }))}
+                                    className="w-full h-9 px-3 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#23471d]">
+                                    {['Cash', 'Cheque', 'Bank Transfer', 'UPI', 'DD', 'NEFT', 'RTGS', 'Other'].map(m => <option key={m}>{m}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Payment Date *</label>
+                                <input type="date" value={manualPayment.paidAt} onChange={e => setManualPayment(p => ({ ...p, paidAt: e.target.value }))}
+                                    className="w-full h-9 px-3 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#23471d]" />
+                            </div>
+                            <div>
+                                <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Transaction / Cheque ID</label>
+                                <input type="text" value={manualPayment.transactionId} onChange={e => setManualPayment(p => ({ ...p, transactionId: e.target.value }))}
+                                    placeholder="TXN ID / Cheque No." className="w-full h-9 px-3 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#23471d]" />
+                            </div>
+                            <div className="col-span-2">
+                                <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Notes</label>
+                                <input type="text" value={manualPayment.notes} onChange={e => setManualPayment(p => ({ ...p, notes: e.target.value }))}
+                                    placeholder="Optional notes..." className="w-full h-9 px-3 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#23471d]" />
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+                            <button onClick={handleAddManualPayment} disabled={saving}
+                                className="flex items-center gap-2 px-5 py-2 bg-[#23471d] text-white text-xs font-bold uppercase rounded hover:bg-[#1a3516] disabled:opacity-50">
+                                <Plus size={14} /> {saving ? 'Saving...' : 'Record Payment'}
+                            </button>
+                            <p className="text-[10px] text-gray-400">Updates amountPaid, balanceAmount and sends receipt email.</p>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* ── Penalty Management ── */}
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Penalty Management" icon={CreditCard} actions={
+                    reg.penaltyHistory?.length > 0 && (
+                        <button onClick={() => setShowPenaltyHistory(p => !p)} className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30">
+                            History ({reg.penaltyHistory.length})
+                        </button>
+                    )
+                } />
+                <div className="p-4 space-y-3">
+                    {reg.penaltyAmount > 0 && (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-black text-red-800">Current Penalty: {fmt(reg.penaltyAmount)}</p>
+                                {reg.penaltyReason && <p className="text-[10px] text-red-600 mt-0.5">Reason: {reg.penaltyReason}</p>}
+                                {reg.penaltyAddedBy && <p className="text-[10px] text-red-500 mt-0.5">Added by: {reg.penaltyAddedBy}</p>}
+                            </div>
+                            <button onClick={handleRemovePenalty} disabled={saving}
+                                className="px-3 py-1.5 bg-red-500 text-white text-[10px] font-bold uppercase rounded hover:bg-red-600 disabled:opacity-50">
+                                Remove
+                            </button>
+                        </div>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <input type="number" value={penaltyAmount} onChange={e => setPenaltyAmount(e.target.value)}
+                            placeholder="Penalty amount (₹)" className="h-9 px-3 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#23471d]" />
+                        <input type="text" value={penaltyReason} onChange={e => setPenaltyReason(e.target.value)}
+                            placeholder="Reason for penalty" className="h-9 px-3 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#23471d]" />
+                        <button onClick={handleAddPenalty} disabled={saving}
+                            className="h-9 bg-[#23471d] text-white text-xs font-bold uppercase rounded hover:bg-[#1a3516] disabled:opacity-50">
+                            {saving ? 'Saving...' : 'Add Penalty'}
+                        </button>
+                    </div>
+                    {showPenaltyHistory && reg.penaltyHistory?.length > 0 && (
+                        <div className="mt-2 border border-gray-100 rounded overflow-hidden">
+                            <table className="w-full text-xs">
+                                <thead className="bg-gray-50">
+                                    <tr>{['Amount', 'Reason', 'Added By', 'Date', 'Removed'].map(h => <th key={h} className="px-3 py-2 text-[9px] font-black text-gray-500 uppercase text-left">{h}</th>)}</tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {reg.penaltyHistory.map((ph, i) => (
+                                        <tr key={i} className={ph.removedAt ? 'opacity-50' : ''}>
+                                            <td className="px-3 py-2 font-bold text-red-700">{fmt(ph.amount)}</td>
+                                            <td className="px-3 py-2 text-gray-600">{ph.reason}</td>
+                                            <td className="px-3 py-2 text-gray-500">{ph.addedBy}</td>
+                                            <td className="px-3 py-2 text-gray-500">{ph.addedAt ? new Date(ph.addedAt).toLocaleDateString('en-IN') : '—'}</td>
+                                            <td className="px-3 py-2 text-gray-500">{ph.removedAt ? new Date(ph.removedAt).toLocaleDateString('en-IN') : '—'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* ── Due Date & Warnings ── */}
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Payment Due Date & Reminders" icon={Calendar} />
+                <div className="p-4 space-y-3">
+                    {daysOverdue > 0 && (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded flex items-center gap-2">
+                            <span className="text-red-600 font-black text-sm">⚠️</span>
+                            <p className="text-xs font-black text-red-800">Payment overdue by {daysOverdue} days!</p>
+                            {reg.warningCount > 0 && <span className="ml-auto text-[10px] text-red-500">{reg.warningCount} warning(s) sent</span>}
+                        </div>
+                    )}
+                    <div className="flex gap-2">
+                        <input type="date" value={paymentDueDate} onChange={e => setPaymentDueDate(e.target.value)}
+                            className="flex-1 h-9 px-3 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#23471d]" />
+                        <button onClick={handleUpdateDueDate} disabled={saving}
+                            className="h-9 px-4 bg-blue-500 text-white text-xs font-bold uppercase rounded hover:bg-blue-600 disabled:opacity-50">
+                            Set Due Date
+                        </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                        <button onClick={() => handleSendWarning('email')} className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase rounded hover:bg-blue-100">
+                            <Mail size={12} /> Email Warning
+                        </button>
+                        <button onClick={() => handleSendWarning('whatsapp')} className="flex items-center gap-1.5 px-3 py-2 bg-green-50 text-green-700 text-[10px] font-bold uppercase rounded hover:bg-green-100">
+                            <MessageSquare size={12} /> WhatsApp Warning
+                        </button>
+                        <button onClick={() => handleSendWarning('both')} className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 text-amber-700 text-[10px] font-bold uppercase rounded hover:bg-amber-100">
+                            <Send size={12} /> Send Both
+                        </button>
+                    </div>
+                    {reg.warningHistory?.length > 0 && (
+                        <details className="mt-1">
+                            <summary className="text-[10px] font-black text-gray-500 uppercase cursor-pointer hover:text-gray-700">
+                                Warning History ({reg.warningHistory.length})
+                            </summary>
+                            <div className="mt-2 space-y-1">
+                                {reg.warningHistory.slice(-5).reverse().map((w, i) => (
+                                    <div key={i} className="flex items-center gap-2 text-[10px] text-gray-500 py-1 border-b border-gray-50">
+                                        <span className="font-bold text-gray-700">{new Date(w.sentAt).toLocaleDateString('en-IN')}</span>
+                                        <span className="uppercase bg-gray-100 px-1.5 py-0.5 rounded">{w.type}</span>
+                                        <span>{w.daysOverdue} days overdue</span>
+                                        <span className="ml-auto text-gray-400">by {w.sentBy}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </details>
+                    )}
+                </div>
+            </div>
+
+            {/* ── Payment History ── */}
             {reg.paymentHistory?.length > 0 && (
-                <div className="bg-white border border-gray-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                     <SH title="Transaction Audit History" icon={History} />
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="bg-slate-100 border-b border-gray-200">
-                                    {['#', 'Type', 'Amount', 'Method / Mode', 'Txn ID', 'Date'].map(h => (
+                                    {['#', 'Type', 'Amount', 'Method', 'Txn ID', 'Date', 'Notes'].map(h => (
                                         <th key={h} className="py-2.5 px-4 text-[9px] font-black text-slate-500 uppercase text-left">{h}</th>
                                     ))}
                                 </tr>
@@ -528,26 +880,24 @@ function PaymentTab({ reg, fmt }) {
                             <tbody className="divide-y divide-gray-100">
                                 {reg.paymentHistory.map((h, i) => {
                                     const rawType = (h.paymentType || 'payment').toLowerCase();
-                                    const isInstallment = ['advance', 'balance', 'installment'].includes(rawType);
-                                    const label = isInstallment ? 'INSTALLMENT' : rawType.toUpperCase();
-                                    const badgeClass = isInstallment ? 'bg-cyan-100 text-cyan-800' : 'bg-emerald-100 text-emerald-800';
-
+                                    const isManual = h.paymentMode === 'manual' || ['cash','cheque','bank transfer','upi','dd','neft','rtgs'].includes((h.method||'').toLowerCase());
+                                    const isInstallment = rawType.includes('installment') || rawType.includes('advance') || rawType.includes('phase');
+                                    const badgeClass = isManual ? 'bg-purple-100 text-purple-800' : isInstallment ? 'bg-cyan-100 text-cyan-800' : 'bg-emerald-100 text-emerald-800';
                                     return (
                                         <tr key={i} className="hover:bg-slate-50/80 transition-colors">
                                             <td className="py-3 px-4 text-xs text-gray-400 font-bold">#{i + 1}</td>
                                             <td className="py-3 px-4">
                                                 <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${badgeClass}`}>
-                                                    {label}
+                                                    {isManual ? 'MANUAL' : isInstallment ? 'INSTALLMENT' : rawType.toUpperCase()}
                                                 </span>
                                             </td>
                                             <td className="py-3 px-4 text-[13px] font-black text-slate-800">{fmt(h.amount)}</td>
-                                            <td className="py-3 px-4 text-xs font-bold text-slate-600 uppercase italic">
-                                                {h.method || h.paymentMode || 'Manual'}
-                                            </td>
+                                            <td className="py-3 px-4 text-xs font-bold text-slate-600 uppercase">{h.method || h.paymentMode || 'Online'}</td>
                                             <td className="py-3 px-4 text-xs text-slate-500 font-mono">{h.transactionId || h.razorpayPaymentId || '—'}</td>
                                             <td className="py-3 px-4 text-xs font-bold text-slate-500">
                                                 {h.paidAt ? new Date(h.paidAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                                             </td>
+                                            <td className="py-3 px-4 text-xs text-slate-400">{h.notes || '—'}</td>
                                         </tr>
                                     );
                                 })}
@@ -559,7 +909,6 @@ function PaymentTab({ reg, fmt }) {
         </div>
     );
 }
-
 function DocumentsTab({ reg }) {
     const registrationDocs = [
         { label: 'Registration Form (PDF)', url: fixUrl(reg.registrationPdfUrl), color: 'bg-[#23471d]' },
@@ -1284,7 +1633,7 @@ export default function ExhibitorBookingDetail() {
             {/* Tab Content */}
             {reg && activeTab === 'overview' && <OverviewTab reg={reg} fmt={fmt} id={id} onRefresh={fetchReg} />}
             {reg && activeTab === 'contacts' && <ContactsTab reg={reg} id={id} onRefresh={fetchReg} />}
-            {reg && activeTab === 'payment' && <PaymentTab reg={reg} fmt={fmt} />}
+            {reg && activeTab === 'payment' && <PaymentTab reg={reg} fmt={fmt} id={id} onRefresh={fetchReg} />}
             {reg && activeTab === 'documents' && <DocumentsTab reg={reg} />}
             {reg && activeTab === 'msme' && <MSMETab reg={reg} id={id} onRefresh={fetchReg} />}
             {reg && activeTab === 'accessories' && <AccessoriesTab reg={reg} id={id} />}

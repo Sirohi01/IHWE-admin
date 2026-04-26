@@ -86,14 +86,17 @@ const BookAStand = () => {
         amountPaid: 0,
         balanceAmount: 0,
         financeBreakdown: {
-            grossCost: 0,
-            stallDiscount: { percentage: 0, amount: 0 },
+            grossAmount: 0,
+            stallDiscountPercent: 0,
+            stallDiscountAmount: 0,
             subtotal1: 0,
-            fullPaymentDiscount: { percentage: 0, amount: 0 },
-            subtotal2: 0,
-            tdsDeduction: { percentage: 0, amount: 0 },
-            gst: 0,
-            totalAmount: 0,
+            discountPercent: 0,
+            discountAmount: 0,
+            subtotal: 0,
+            gstAmount: 0,
+            tdsPercent: 0,
+            tdsAmount: 0,
+            netPayable: 0,
             isFullPayment: false
         }
     });
@@ -355,14 +358,17 @@ const BookAStand = () => {
                         amountPaid: 0,
                         balanceAmount: 0,
                         financeBreakdown: {
-                            grossCost: 0,
-                            stallDiscount: { percentage: 0, amount: 0 },
+                            grossAmount: 0,
+                            stallDiscountPercent: 0,
+                            stallDiscountAmount: 0,
                             subtotal1: 0,
-                            fullPaymentDiscount: { percentage: 0, amount: 0 },
-                            subtotal2: 0,
-                            tdsDeduction: { percentage: 0, amount: 0 },
-                            gst: 0,
-                            totalAmount: 0,
+                            discountPercent: 0,
+                            discountAmount: 0,
+                            subtotal: 0,
+                            gstAmount: 0,
+                            tdsPercent: 0,
+                            tdsAmount: 0,
+                            netPayable: 0,
                             isFullPayment: false
                         }
                     });
@@ -522,8 +528,7 @@ const BookAStand = () => {
                                 <select required value={formData.participation.stallNo} onChange={(e) => handleStallSelect(e.target.value)} className={inputClasses}>
                                     <option value="">-- Choose Available Stall --</option>
                                     {availableStalls.filter(s =>
-                                        (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId) ||
-                                        (typeof s.event === 'string' ? s.event === selectedEventId : s.event?._id === selectedEventId)
+                                        (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId)
                                     ).map(s => (
                                         <option key={s._id} value={s._id}>{s.stallNumber} ({s.area} sqm � {s.plScheme})</option>
                                     ))}
@@ -569,13 +574,13 @@ const BookAStand = () => {
                             {(() => {
                                 const currentEvent = events.find(e => e._id === selectedEventId);
                                 const plans = currentEvent?.paymentPlans || [];
-                                const firstInstallPlan = plans.find(p => Number(p.percentage) < 100);
+                                const installPlans = plans.filter(p => Number(p.percentage) < 100).sort((a, b) => Number(a.percentage) - Number(b.percentage));
                                 const fullPlan = plans.find(p => Number(p.percentage) === 100 || p.id === 'full');
                                 return (
                                     <div>
                                         <label className={labelClasses}>Payment Plan *</label>
                                         <div className="flex flex-wrap gap-2 mt-1">
-                                            {/* Full Payment option */}
+                                            {/* Full Payment */}
                                             <button
                                                 type="button"
                                                 onClick={() => setFormData(prev => ({
@@ -590,37 +595,25 @@ const BookAStand = () => {
                                             >
                                                 Full Payment {settings?.fullPaymentDiscount > 0 ? `(${settings.fullPaymentDiscount}% discount)` : ''}
                                             </button>
-                                            {/* First Installment option only */}
-                                            {firstInstallPlan ? (
+                                            {/* All installment plans */}
+                                            {installPlans.map(plan => (
                                                 <button
-                                                    key={firstInstallPlan.id}
+                                                    key={plan.id}
                                                     type="button"
                                                     onClick={() => setFormData(prev => ({
                                                         ...prev,
-                                                        paymentPlanType: firstInstallPlan.id,
-                                                        paymentPlanLabel: firstInstallPlan.label
+                                                        paymentPlanType: plan.id,
+                                                        paymentPlanLabel: plan.label
                                                     }))}
-                                                    className={`px-4 py-1.5 text-[11px] font-black uppercase rounded-[2px] border transition-all ${formData.paymentPlanType === firstInstallPlan.id
+                                                    className={`px-4 py-1.5 text-[11px] font-black uppercase rounded-[2px] border transition-all ${formData.paymentPlanType === plan.id
                                                         ? 'bg-[#1a3a6b] text-white border-[#1a3a6b]'
                                                         : 'bg-white text-slate-600 border-slate-300 hover:border-[#1a3a6b]'
                                                         }`}
                                                 >
-                                                    {firstInstallPlan.label} ({firstInstallPlan.percentage}%)
+                                                    {plan.label} ({plan.percentage}%)
                                                 </button>
-                                            ) : (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setFormData(prev => ({ ...prev, paymentPlanType: 'advance', paymentPlanLabel: 'Advance Payment' }))}
-                                                    className={`px-4 py-1.5 text-[11px] font-black uppercase rounded-[2px] border transition-all ${formData.paymentPlanType === 'advance'
-                                                        ? 'bg-[#1a3a6b] text-white border-[#1a3a6b]'
-                                                        : 'bg-white text-slate-600 border-slate-300 hover:border-[#1a3a6b]'
-                                                        }`}
-                                                >
-                                                    Installment Payment
-                                                </button>
-                                            )}
+                                            ))}
                                         </div>
-                                        {/* Show selected plan info */}
                                         <p className="text-[10px] text-slate-400 mt-1.5 font-medium">
                                             Selected: <span className="font-black text-slate-700">{formData.paymentPlanLabel}</span>
                                             {formData.financeBreakdown?.isFullPayment && settings?.fullPaymentDiscount > 0 && (
@@ -649,10 +642,10 @@ const BookAStand = () => {
                                 </div>
                                 <div className="text-right">
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
-                                        Total Payable (Net)
+                                        Net Payable (After TDS)
                                     </p>
                                     <p className="text-xl font-black text-[#23471d] leading-none">
-                                        {formData.participation.currency} {formData.amountPaid?.toLocaleString()}
+                                        {formData.participation.currency} {formData.financeBreakdown?.netPayable?.toLocaleString() || 0}
                                     </p>
                                 </div>
                             </div>

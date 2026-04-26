@@ -267,6 +267,10 @@ export const menuItems = [
         label: "Failed Payments",
         path: "/failed-payments",
       },
+      {
+        label: "Payment Delay Warnings",
+        path: "/payment-delay-warnings",
+      },
     ]
   },
   {
