@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams, Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { 
-    Building2, 
-    MapPin, 
-    Phone, 
-    Mail, 
-    UserPlus, 
-    Save, 
-    RotateCcw, 
-    ArrowLeft, 
-    Plus, 
-    Trash2, 
-    Globe, 
-    Calendar, 
+import {
+    Building2,
+    MapPin,
+    Phone,
+    Mail,
+    UserPlus,
+    Save,
+    RotateCcw,
+    ArrowLeft,
+    Plus,
+    Trash2,
+    Globe,
+    Calendar,
     UserCheck,
     Briefcase,
     LayoutGrid,
@@ -34,7 +34,7 @@ import { fetchCountries } from "../../features/add_by_admin/country/countrySlice
 import { fetchStates } from "../../features/state/stateSlice";
 import { fetchCities } from "../../features/city/citySlice";
 import { fetchDataSources } from "../../features/add_by_admin/dataSource/dataSourceSlice";
-import { fetchEvents } from "../../features/crmEvent/crmEventSlice";
+import api from "../../lib/api";
 import {
     addCompany,
     fetchCompanies,
@@ -121,8 +121,8 @@ const AddNewClients = () => {
     const dataSourcesState = useSelector((state) => state.dataSources);
     const dataSourcesArray = getArrayFromSlice(dataSourcesState, "dataSources");
 
-    const eventsState = useSelector((state) => state.crmEvents);
-    const eventsArray = getArrayFromSlice(eventsState, "events");
+    const [events, setEvents] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
 
     const companiesState = useSelector((state) => state.companies);
     const companiesArray = getArrayFromSlice(companiesState, "companies");
@@ -130,11 +130,11 @@ const AddNewClients = () => {
     // 🧩 Filtered Location Data
     const filteredStates = React.useMemo(() => {
         if (!formData.country || !countriesArray.length) return [];
-        const selectedCountry = countriesArray.find(c => 
+        const selectedCountry = countriesArray.find(c =>
             c.name && c.name.trim().toLowerCase() === formData.country.trim().toLowerCase()
         );
         if (!selectedCountry) return [];
-        return statesArray.filter(s => 
+        return statesArray.filter(s =>
             s.countryCode != null && selectedCountry.countryCode != null &&
             String(s.countryCode) === String(selectedCountry.countryCode)
         );
@@ -142,11 +142,11 @@ const AddNewClients = () => {
 
     const filteredCities = React.useMemo(() => {
         if (!formData.state || !statesArray.length) return [];
-        const selectedState = statesArray.find(s => 
+        const selectedState = statesArray.find(s =>
             s.name && s.name.trim().toLowerCase() === formData.state.trim().toLowerCase()
         );
         if (!selectedState) return [];
-        return citiesArray.filter(c => 
+        return citiesArray.filter(c =>
             c.stateCode != null && selectedState.stateCode != null &&
             String(c.stateCode) === String(selectedState.stateCode)
         );
@@ -154,6 +154,34 @@ const AddNewClients = () => {
 
 
     const [isSaving, setIsSaving] = useState(false);
+
+    useEffect(() => {
+        fetchEvents();
+    }, []);
+
+    const fetchEvents = async () => {
+        setIsLoading(true);
+        try {
+            const response = await api.get('/api/events');
+            if (response.data.success) {
+                setEvents(response.data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching events:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Auto-select the first active event by default for new clients
+    useEffect(() => {
+        if (!id && !formData.eventName && events.length > 0) {
+            const activeEvents = events.filter(e => e.status === "active");
+            if (activeEvents.length > 0) {
+                setFormData(prev => ({ ...prev, eventName: activeEvents[0].name }));
+            }
+        }
+    }, [events, id, formData.eventName]);
 
     // Initial Data Fetch
     useEffect(() => {
@@ -165,7 +193,6 @@ const AddNewClients = () => {
         dispatch(fetchStates());
         dispatch(fetchCities());
         dispatch(fetchDataSources());
-        dispatch(fetchEvents());
     }, [dispatch]);
 
     // Prefill form for editing
@@ -233,7 +260,7 @@ const AddNewClients = () => {
             const dataToSave = { ...formData, updated_by: userName || formData.updated_by };
             if (id) {
                 await dispatch(updateCompany({ id, data: dataToSave })).unwrap();
-                
+
                 // Log the activity
                 const userId = sessionStorage.getItem("user_id");
                 if (userId) {
@@ -254,7 +281,7 @@ const AddNewClients = () => {
                 navigate(`/client-overview/${id}`);
             } else {
                 const response = await dispatch(addCompany(dataToSave)).unwrap();
-                
+
                 // Log the activity
                 const userId = sessionStorage.getItem("user_id");
                 if (userId) {
@@ -296,7 +323,7 @@ const AddNewClients = () => {
 
     return (
         <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-inter animate-fadeIn">
-            
+
             {/* ── HEADER AREA ── */}
             <div className="flex flex-col sm:flex-row justify-between items-center pb-4 border-b border-gray-100">
                 <div className="flex flex-col gap-1">
@@ -322,7 +349,7 @@ const AddNewClients = () => {
 
             {/* ── FORM CONTENT ── */}
             <form onSubmit={handleSave} className="mt-8 space-y-10">
-                
+
                 {/* ── SUB-HEADER ── */}
                 <div className="bg-slate-50/50 border-x border-y border-slate-200 px-6 py-3 rounded-[2px]">
                     <h2 className="text-[16px] font-bold text-slate-800 uppercase tracking-tight">
@@ -430,7 +457,7 @@ const AddNewClients = () => {
                             +
                         </button>
                     </div>
-                    
+
                     <div className="space-y-5">
                         {formData.contacts.map((contact, index) => (
                             <div key={index} className="bg-slate-50/40 p-6 border border-slate-200 rounded-[2px] relative animate-fadeIn shadow-sm hover:shadow-md transition-shadow">
@@ -464,11 +491,11 @@ const AddNewClients = () => {
                                         <input required type="email" value={contact.email} onChange={(e) => handleContactChange(index, "email", e.target.value)} className={inputClasses} placeholder="Write Here.." />
                                     </div>
                                     <div>
-                                        <label className={labelClasses}>Mobile *</label>
+                                        <label className={labelClasses}>Mobile No.</label>
                                         <input required type="text" maxLength={10} value={contact.mobile} onChange={(e) => handleContactChange(index, "mobile", e.target.value.replace(/\D/g, ""))} className={inputClasses} placeholder="Write Here.." />
                                     </div>
                                     <div>
-                                        <label className={labelClasses}>WhatsApp</label>
+                                        <label className={labelClasses}>Alternate No.</label>
                                         <input type="text" value={contact.alternate} onChange={(e) => handleContactChange(index, "alternate", e.target.value.replace(/\D/g, ""))} className={inputClasses} placeholder="Write Here.." />
                                     </div>
                                 </div>
@@ -494,8 +521,8 @@ const AddNewClients = () => {
                             <label className={labelClasses}>Event Attribution *</label>
                             <select required value={formData.eventName} onChange={(e) => handleChange("eventName", e.target.value)} className={inputClasses}>
                                 <option value="">Select Event</option>
-                                {eventsArray.filter(e => e.event_status === "active").map((event, i) => (
-                                    <option key={i} value={event?.event_fullName}>{event?.event_fullName}</option>
+                                {events.filter(e => e.status === "active").map((event, i) => (
+                                    <option key={i} value={event.name}>{event.name}</option>
                                 ))}
                             </select>
                         </div>
@@ -522,15 +549,15 @@ const AddNewClients = () => {
                         SECURE ADMIN PORTAL
                     </p>
                     <div className="flex gap-4">
-                        <button 
-                            type="button" 
+                        <button
+                            type="button"
                             onClick={handleReset}
                             className="px-10 py-2.5 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all rounded-[2px] shadow-sm"
                         >
                             Reset Form
                         </button>
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             disabled={isSaving}
                             className="px-12 py-2.5 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-lg flex items-center gap-3 group"
                         >
