@@ -13,6 +13,8 @@ export const pagesList = [
     { name: "Visit / Download Badge", path: "/download-badge" },
     { name: "Registration / Visitor Registration", path: "/visitor-registration" },
     { name: "Registration / Buyer Registration", path: "/buyer-registration" },
+    { name: "Registration / International Buyer Registration", path: "/international-buyer-registration" },
+    { name: "Registration / International Visitor Registration", path: "/international-visitor-registration" },
     { name: "Registration / Media Registration", path: "/media-registration" },
     { name: "Registration / Speaker Registration", path: "/speaker-registration" },
     { name: "Registration / Seller Registration", path: "/seller-registration" },
