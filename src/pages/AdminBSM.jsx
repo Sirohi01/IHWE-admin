@@ -197,8 +197,14 @@ const AdminBSM = () => {
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex flex-col text-sm">
-                                            <span className="flex items-center gap-1.5"><Calendar size={14} className="text-gray-400" /> {new Date(m.date).toLocaleDateString()}</span>
-                                            <span className="flex items-center gap-1.5"><Clock size={14} className="text-gray-400" /> {m.timeSlot}</span>
+                                            <span className="flex items-center gap-1.5">
+                                                <Calendar size={14} className="text-gray-400" /> 
+                                                {m.date ? new Date(m.date).toLocaleDateString() : <span className="text-amber-600 font-bold">Not Scheduled</span>}
+                                            </span>
+                                            <span className="flex items-center gap-1.5">
+                                                <Clock size={14} className="text-gray-400" /> 
+                                                {m.timeSlot || <span className="text-slate-400 italic text-xs">Awaiting Slot</span>}
+                                            </span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
@@ -250,8 +256,8 @@ const AdminBSM = () => {
                                                     setFormData({
                                                         buyerId: m.buyerId?._id,
                                                         exhibitorId: m.exhibitorId?._id,
-                                                        date: m.date?.split('T')[0],
-                                                        timeSlot: m.timeSlot,
+                                                        date: m.date ? m.date.split('T')[0] : '',
+                                                        timeSlot: m.timeSlot || '',
                                                         location: m.location || '',
                                                         adminNotes: m.adminNotes || ''
                                                     });
