@@ -188,6 +188,12 @@ export const menuItems = [
       { label: "Advanced SEO", path: "/advanced-seo" },
     ],
   },
+  {
+    type: "item",
+    label: "Contact Enquiry",
+    path: "/contact-enquiries",
+    icon: MessageSquare,
+  },
 
   /* ================= Marketing Section ================= */
   {
@@ -304,18 +310,8 @@ export const menuItems = [
     icon: List,
     path: "/e-promotion-registers",
   },
-  {
-    type: "item",
-    label: "Contact Enquiry",
-    path: "/contact-enquiries",
-    icon: MessageSquare,
-  },
+  
 
-  /* ================= STALLS & EVENTS ================= */
-  // {
-  //   type: "heading",
-  //   label: "Stalls & Events",
-  // },
 
   /* ================= Developer SECTION ================= */
   {
