@@ -250,7 +250,8 @@ const INITIAL_FORM_STATE = {
     logo: "",
     visitingCard: "",
     productCertifications: "",
-    previousParticipationProof: ""
+    previousParticipationProof: "",
+    paymentScreenshot: ""
 };
 
 const inputClass = "w-full h-9 px-3 py-0 rounded-[2px] border border-slate-400 bg-white text-left text-[12px] font-medium text-slate-900 outline-none shadow-none transition-all ring-offset-background focus:border-[#23471d] focus:ring-[#23471d]/10 placeholder:text-slate-400 font-sans";
@@ -881,6 +882,8 @@ const InternationalBuyerRegistration = () => {
                             <Field label="Payment Mode" name="billingDetails.paymentMode">
                                 <select name="billingDetails.paymentMode" value={formData.billingDetails.paymentMode} onChange={handleInputChange} className={selectClass}>
                                     <option value="">Select Mode</option>
+                                    <option value="UPI">UPI</option>
+                                    <option value="Bank Transfer">Bank Transfer</option>
                                     <option value="Online Payment Gateway">Online Payment Gateway</option>
                                 </select>
                             </Field>
@@ -907,7 +910,8 @@ const InternationalBuyerRegistration = () => {
                                 { label: 'Logo (High Res)', name: 'logo' },
                                 { label: 'Visiting Card', name: 'visitingCard' },
                                 { label: 'Product Certs', name: 'productCertifications' },
-                                { label: 'Previous Proof', name: 'previousParticipationProof' }
+                                { label: 'Previous Proof', name: 'previousParticipationProof' },
+                                { label: 'Payment Screenshot', name: 'paymentScreenshot' }
                             ].map(doc => (
                                 <div key={doc.name} className="p-3 border border-dashed border-slate-300 rounded-md bg-slate-50 flex flex-col gap-2">
                                     <label className="text-[11px] font-bold">{doc.label}</label>

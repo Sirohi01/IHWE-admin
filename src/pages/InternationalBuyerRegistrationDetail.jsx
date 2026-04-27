@@ -294,9 +294,9 @@ const InternationalBuyerRegistrationDetail = () => {
                             <div key={doc.name} className="detail-row mb-2">
                                 <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide block">{doc.label}</span>
                                 {registration.documents?.[doc.name] ? (
-                                    <a 
-                                        href={`${SERVER_URL}/${registration.documents[doc.name]}`} 
-                                        target="_blank" 
+                                    <a
+                                        href={`${SERVER_URL}/${registration.documents[doc.name]}`}
+                                        target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1 mt-0.5"
                                     >
