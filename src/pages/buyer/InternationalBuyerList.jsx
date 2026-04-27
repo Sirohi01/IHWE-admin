@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, Eye, Edit, Search, Globe } from 'lucide-react';
+import { Trash2, Eye, Edit, Search, Globe, FileText, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import api from "../../lib/api";
+import api, { SERVER_URL } from "../../lib/api";
 import Swal from 'sweetalert2';
 import Pagination from "../../components/Pagination";
 
@@ -44,20 +44,17 @@ const InternationalBuyerList = () => {
             return;
         }
 
-        const searchLower = searchTerm.toLowerCase();
-        const filtered = registrations.filter(item => {
-            return (
-                (item.brandName && item.brandName.toLowerCase().includes(searchLower)) ||
-                (item.registrationId && item.registrationId.toLowerCase().includes(searchLower)) ||
-                (item.primaryContact?.fullName && item.primaryContact.fullName.toLowerCase().includes(searchLower)) ||
-                (item.primaryContact?.emailId && item.primaryContact.emailId.toLowerCase().includes(searchLower)) ||
-                (item.primaryContact?.mobileNumber && item.primaryContact.mobileNumber.toLowerCase().includes(searchLower)) ||
-                (item.country && item.country.toLowerCase().includes(searchLower)) ||
-                (item.countryOfRegistration && item.countryOfRegistration.toLowerCase().includes(searchLower)) ||
-                (item.paymentStatus && item.paymentStatus.toLowerCase().includes(searchLower)) ||
-                (item.verification?.adminApprovalStatus && item.verification.adminApprovalStatus.toLowerCase().includes(searchLower))
-            );
-        });
+        const filtered = registrations.filter(reg => 
+            reg.brandName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            reg.registrationId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            reg.primaryContact?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            reg.primaryContact?.emailId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            reg.primaryContact?.mobileNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            reg.country?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            reg.countryOfRegistration?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            reg.paymentStatus?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            reg.verification?.adminApprovalStatus?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
         setFilteredRegistrations(filtered);
         setCurrentPage(1);
     };
@@ -140,6 +137,7 @@ const InternationalBuyerList = () => {
                                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">CONTACT PERSON</th>
                                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">CONTACT INFO</th>
                                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">STATUS</th>
+                                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">DOCUMENTS</th>
                                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">DATE</th>
                                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">ACTIONS</th>
                                     </tr>
@@ -187,6 +185,40 @@ const InternationalBuyerList = () => {
                                                         {row.verification?.adminApprovalStatus || 'Pending'}
                                                     </span>
                                                     <div className="text-[10px] text-gray-400 mt-1">{row.paymentStatus || 'Pending Payment'}</div>
+                                                    {row.paymentMode && <div className="text-[9px] text-blue-500 font-medium mt-0.5">{row.paymentMode}</div>}
+                                                </td>
+                                                <td className="px-4 py-3 border-r border-gray-200">
+                                                    <div className="flex flex-wrap gap-1.5 max-w-[150px]">
+                                                        {[
+                                                            { name: 'companyRegistrationCertificate', label: 'Company Registration' },
+                                                            { name: 'taxRegistrationCertificate', label: 'Tax Registration' },
+                                                            { name: 'passportCopy', label: 'Passport Copy' },
+                                                            { name: 'productCatalogue', label: 'Product Catalogue' },
+                                                            { name: 'companyBrochure', label: 'Company Brochure' },
+                                                            { name: 'logo', label: 'Logo' },
+                                                            { name: 'visitingCard', label: 'Visiting Card' },
+                                                            { name: 'productCertifications', label: 'Product Certifications' },
+                                                            { name: 'previousParticipationProof', label: 'Participation Proof' }
+                                                        ].map((doc) => row.documents?.[doc.name] && (
+                                                            <a
+                                                                key={doc.name}
+                                                                href={`${SERVER_URL}/${row.documents[doc.name]}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="p-1.5 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors"
+                                                                title={doc.label}
+                                                            >
+                                                                <FileText className="w-3.5 h-3.5" />
+                                                            </a>
+                                                        ))}
+                                                        {![
+                                                            'companyRegistrationCertificate', 'taxRegistrationCertificate', 'passportCopy', 
+                                                            'productCatalogue', 'companyBrochure', 'logo', 'visitingCard', 
+                                                            'productCertifications', 'previousParticipationProof'
+                                                        ].some(key => row.documents?.[key]) && (
+                                                            <span className="text-[10px] text-gray-400 italic">No Docs</span>
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-200 whitespace-nowrap">
                                                     {formatDate(row.createdAt)}

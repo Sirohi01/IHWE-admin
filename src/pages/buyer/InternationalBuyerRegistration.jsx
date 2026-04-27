@@ -30,6 +30,7 @@ import {
     Wallet,
     X,
     Plane,
+    Upload,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import PageHeader from "../../components/PageHeader";
@@ -150,9 +151,11 @@ const FALLBACK_CONFIG = {
 };
 
 const PAYMENT_METHODS = [
-    { id: "netbanking", label: "Net Banking", icon: Landmark, description: "All major banks" },
-    { id: "creditcard", label: "Credit Card", icon: CreditCard, description: "Visa, Mastercard, Amex" },
     { id: "upi", label: "UPI", icon: QrCode, description: "Google Pay, PhonePe, Paytm" },
+    { id: "debitcard", label: "Debit Card", icon: CreditCard, description: "All major banks" },
+    { id: "creditcard", label: "Credit Card", icon: CreditCard, description: "Visa, Mastercard, Amex" },
+    { id: "netbanking", label: "Net Banking", icon: Landmark, description: "All major banks" },
+    { id: "online", label: "Online Payment Gateway", icon: Globe, description: "Digital Payment" },
 ];
 
 const INITIAL_FORM_STATE = {
@@ -238,7 +241,16 @@ const INITIAL_FORM_STATE = {
     paymentStatus: "Pending",
     remarks: "",
     registrationCategory: "",
-    registrationFee: ""
+    registrationFee: "",
+    companyRegistrationCertificate: "",
+    taxRegistrationCertificate: "",
+    passportCopy: "",
+    productCatalogue: "",
+    companyBrochure: "",
+    logo: "",
+    visitingCard: "",
+    productCertifications: "",
+    previousParticipationProof: ""
 };
 
 const inputClass = "w-full h-9 px-3 py-0 rounded-[2px] border border-slate-400 bg-white text-left text-[12px] font-medium text-slate-900 outline-none shadow-none transition-all ring-offset-background focus:border-[#23471d] focus:ring-[#23471d]/10 placeholder:text-slate-400 font-sans";
@@ -337,6 +349,7 @@ const InternationalBuyerRegistration = () => {
     const [selectedPaymentMethods, setSelectedPaymentMethods] = useState([]);
     const [canSelectPackage, setCanSelectPackage] = useState(false);
     const [newSocialLink, setNewSocialLink] = useState("");
+    const [files, setFiles] = useState({});
 
     const [packageView, setPackageView] = useState("Pass");
 
@@ -452,6 +465,13 @@ const InternationalBuyerRegistration = () => {
         }
     };
 
+    const handleFileChange = (e) => {
+        const { name, files: selectedFiles } = e.target;
+        if (selectedFiles && selectedFiles[0]) {
+            setFiles(prev => ({ ...prev, [name]: selectedFiles[0] }));
+        }
+    };
+
     const handleMultiSelect = (name, value) => {
         if (name.includes('.')) {
             const [parent, child] = name.split('.');
@@ -477,8 +497,31 @@ const InternationalBuyerRegistration = () => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const payload = { ...formData, paymentMode: selectedPaymentMethods.join(", ") };
-            const res = await internationalBuyerApi.submit(payload);
+            const finalFormData = new FormData();
+            
+            // Append form data fields
+            Object.keys(formData).forEach(key => {
+                const value = formData[key];
+                if (value && typeof value === 'object' && !Array.isArray(value)) {
+                    finalFormData.append(key, JSON.stringify(value));
+                } else if (Array.isArray(value)) {
+                    finalFormData.append(key, JSON.stringify(value));
+                } else {
+                    finalFormData.append(key, value);
+                }
+            });
+
+            // Append payment mode
+            finalFormData.append('paymentMode', selectedPaymentMethods.join(", "));
+
+            // Append files
+            Object.keys(files).forEach(key => {
+                if (files[key]) {
+                    finalFormData.append(key, files[key]);
+                }
+            });
+
+            const res = await internationalBuyerApi.submit(finalFormData);
             if (res.success) {
                 setSubmitted(true);
                 setSubmittedRegistrationId(res.data?.registrationId || res.data?._id);
@@ -594,11 +637,11 @@ const InternationalBuyerRegistration = () => {
                             </Field>
                             <Field label="Social Media Links" name="socialMediaLinks">
                                 <div className="flex gap-2">
-                                    <input 
-                                        value={newSocialLink} 
-                                        onChange={(e) => setNewSocialLink(e.target.value)} 
-                                        placeholder="Instagram, Facebook, Twitter links..." 
-                                        className={inputClass} 
+                                    <input
+                                        value={newSocialLink}
+                                        onChange={(e) => setNewSocialLink(e.target.value)}
+                                        placeholder="Instagram, Facebook, Twitter links..."
+                                        className={inputClass}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
                                                 e.preventDefault();
@@ -838,9 +881,6 @@ const InternationalBuyerRegistration = () => {
                             <Field label="Payment Mode" name="billingDetails.paymentMode">
                                 <select name="billingDetails.paymentMode" value={formData.billingDetails.paymentMode} onChange={handleInputChange} className={selectClass}>
                                     <option value="">Select Mode</option>
-                                    <option value="Bank Transfer">Bank Transfer</option>
-                                    <option value="International Wire Transfer">International Wire Transfer</option>
-                                    <option value="Credit Card">Credit Card</option>
                                     <option value="Online Payment Gateway">Online Payment Gateway</option>
                                 </select>
                             </Field>
@@ -853,20 +893,39 @@ const InternationalBuyerRegistration = () => {
                         </div>
                     </section>
 
+
+
                     <section>
-                        <SectionTitle icon={ShieldCheck} title="VIP Hosted Exhibitor Program" />
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
-                            <Field label="Interested in VIP Program?" name="vipProgram.interested">
-                                <select name="vipProgram.interested" value={formData.vipProgram.interested} onChange={handleInputChange} className={selectClass}>
-                                    <option value="No">No</option>
-                                    <option value="Yes">Yes</option>
-                                </select>
-                            </Field>
+                        <SectionTitle icon={Upload} title="Section 12 – Document Upload" />
+                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                            {[
+                                { label: 'Company Registration', name: 'companyRegistrationCertificate' },
+                                { label: 'Tax Registration', name: 'taxRegistrationCertificate' },
+                                { label: 'Passport Copy', name: 'passportCopy' },
+                                { label: 'Product Catalogue', name: 'productCatalogue' },
+                                { label: 'Company Brochure', name: 'companyBrochure' },
+                                { label: 'Logo (High Res)', name: 'logo' },
+                                { label: 'Visiting Card', name: 'visitingCard' },
+                                { label: 'Product Certs', name: 'productCertifications' },
+                                { label: 'Previous Proof', name: 'previousParticipationProof' }
+                            ].map(doc => (
+                                <div key={doc.name} className="p-3 border border-dashed border-slate-300 rounded-md bg-slate-50 flex flex-col gap-2">
+                                    <label className="text-[11px] font-bold">{doc.label}</label>
+                                    <div className="flex items-center gap-2">
+                                        <input type="file" name={doc.name} onChange={handleFileChange} className="hidden" id={`admin-file-${doc.name}`} />
+                                        <label htmlFor={`admin-file-${doc.name}`} className="flex-1 flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-300 rounded cursor-pointer hover:bg-slate-50 transition-colors">
+                                            <Upload size={14} className="text-[#23471d]" />
+                                            <span className="text-[10px] text-slate-500 truncate">{files[doc.name]?.name || "Upload"}</span>
+                                        </label>
+                                        {files[doc.name] && <CheckCircle2 size={14} className="text-emerald-500" />}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </section>
 
                     <section>
-                        <SectionTitle icon={Clock} title="Admin Remarks & Payment" />
+                        <SectionTitle icon={Clock} title="Admin Remarks & Status" />
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
                             <Field label="Approval Status" name="verification.adminApprovalStatus">
                                 <select name="verification.adminApprovalStatus" value={formData.verification.adminApprovalStatus} onChange={handleInputChange} className={selectClass}>
@@ -941,6 +1000,7 @@ const InternationalBuyerRegistration = () => {
                             </div>
                         </section>
                     )}
+
 
                     <div className="flex justify-end gap-3 border-t pt-6">
                         <button type="button" onClick={() => window.location.reload()} className="rounded-[2px] border border-red-200 bg-red-50 px-5 py-3 text-sm font-bold uppercase tracking-[0.16em] text-red-700 hover:bg-red-100">Reset</button>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
-import api from "../lib/api";
+import { ArrowLeft, Save, Loader2, FileText, Upload, ExternalLink } from 'lucide-react';
+import api, { SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
 
 const InternationalBuyerRegistrationEdit = () => {
@@ -159,28 +159,118 @@ const InternationalBuyerRegistrationEdit = () => {
                         <div><label className={labelClasses}>State/Province</label><input name="stateProvince" value={formData.stateProvince || ""} onChange={handleChange} className={inputClasses} /></div>
                         <div><label className={labelClasses}>Country</label><input required name="country" value={formData.country || ""} onChange={handleChange} className={inputClasses} /></div>
                         <div><label className={labelClasses}>Postal Code</label><input name="postalCode" value={formData.postalCode || ""} onChange={handleChange} className={inputClasses} /></div>
+                        <div><label className={labelClasses}>LinkedIn</label><input name="linkedInPage" value={formData.linkedInPage || ""} onChange={handleChange} className={inputClasses} /></div>
                     </div>
 
-                    <SectionTitle title="4. Product & Business Profile" />
+                    <SectionTitle title="4. Secondary Contact" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div><label className={labelClasses}>Full Name</label><input name="secondaryContact.fullName" value={formData.secondaryContact?.fullName || ""} onChange={handleChange} className={inputClasses} /></div>
+                        <div><label className={labelClasses}>Designation</label><input name="secondaryContact.designation" value={formData.secondaryContact?.designation || ""} onChange={handleChange} className={inputClasses} /></div>
+                        <div><label className={labelClasses}>Email</label><input name="secondaryContact.emailId" value={formData.secondaryContact?.emailId || ""} onChange={handleChange} className={inputClasses} /></div>
+                        <div><label className={labelClasses}>Contact No</label><input name="secondaryContact.contactNumber" value={formData.secondaryContact?.contactNumber || ""} onChange={handleChange} className={inputClasses} /></div>
+                    </div>
+
+                    <SectionTitle title="5. Product & Business Profile" />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div><label className={labelClasses}>Nature of Business (Comma separated)</label><input name="natureOfBusiness" value={(formData.natureOfBusiness || []).join(', ')} onChange={(e) => handleMultiChange('natureOfBusiness', e.target.value)} className={inputClasses} /></div>
+                        <div><label className={labelClasses}>Product Categories (Comma separated)</label><input name="productCategories" value={(formData.productCategories || []).join(', ')} onChange={(e) => handleMultiChange('productCategories', e.target.value)} className={inputClasses} /></div>
+                        <div className="md:col-span-2"><label className={labelClasses}>Short Profile</label><textarea name="businessProfile.companyProfileShort" value={formData.businessProfile?.companyProfileShort || ""} onChange={handleChange} rows={2} className={inputClasses} /></div>
+                        <div className="md:col-span-2"><label className={labelClasses}>Key Products/Services</label><textarea name="businessProfile.keyProductsServices" value={formData.businessProfile?.keyProductsServices || ""} onChange={handleChange} rows={2} className={inputClasses} /></div>
+                        <div><label className={labelClasses}>Export Countries</label><input name="businessProfile.exportCountries" value={formData.businessProfile?.exportCountries || ""} onChange={handleChange} className={inputClasses} /></div>
+                        <div><label className={labelClasses}>Major Clients</label><input name="businessProfile.existingMajorClients" value={formData.businessProfile?.existingMajorClients || ""} onChange={handleChange} className={inputClasses} /></div>
+                    </div>
+
+                    <SectionTitle title="6. B2B Interest & Travel" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div>
-                            <label className={labelClasses}>Nature of Business (Comma separated)</label>
-                            <input 
-                                name="natureOfBusiness" 
-                                value={(formData.natureOfBusiness || []).join(', ')} 
-                                onChange={(e) => handleMultiChange('natureOfBusiness', e.target.value)} 
-                                className={inputClasses} 
-                            />
+                            <label className={labelClasses}>Interested in B2B?</label>
+                            <select name="b2bInterest.interested" value={formData.b2bInterest?.interested || "No"} onChange={handleChange} className={inputClasses}>
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
                         </div>
                         <div>
-                            <label className={labelClasses}>Product Categories (Comma separated)</label>
-                            <input 
-                                name="productCategories" 
-                                value={(formData.productCategories || []).join(', ')} 
-                                onChange={(e) => handleMultiChange('productCategories', e.target.value)} 
-                                className={inputClasses} 
-                            />
+                            <label className={labelClasses}>Visa Invitation?</label>
+                            <select name="travelSupport.visaInvitation" value={formData.travelSupport?.visaInvitation || "No"} onChange={handleChange} className={inputClasses}>
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
                         </div>
+                        <div>
+                            <label className={labelClasses}>Hotel Booking?</label>
+                            <select name="travelSupport.hotelBooking" value={formData.travelSupport?.hotelBooking || "No"} onChange={handleChange} className={inputClasses}>
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <SectionTitle title="7. Stall Requirement" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div>
+                            <label className={labelClasses}>Stall Type</label>
+                            <select name="stallRequirement.preferredStallType" value={formData.stallRequirement?.preferredStallType || ""} onChange={handleChange} className={inputClasses}>
+                                <option value="">Select...</option>
+                                <option value="Shell Scheme">Shell Scheme</option>
+                                <option value="Bare Space">Bare Space</option>
+                            </select>
+                        </div>
+                        <div><label className={labelClasses}>Stall Size</label><input name="stallRequirement.stallSize" value={formData.stallRequirement?.stallSize || ""} onChange={handleChange} className={inputClasses} /></div>
+                        <div>
+                            <label className={labelClasses}>Corner Stall</label>
+                            <select name="stallRequirement.cornerStallRequired" value={formData.stallRequirement?.cornerStallRequired || "No"} onChange={handleChange} className={inputClasses}>
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <SectionTitle title="8. Billing & Payment" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div><label className={labelClasses}>Billing Name</label><input name="billingDetails.billingName" value={formData.billingDetails?.billingName || ""} onChange={handleChange} className={inputClasses} /></div>
+                        <div><label className={labelClasses}>Payment Mode</label><input name="billingDetails.paymentMode" value={formData.billingDetails?.paymentMode || ""} onChange={handleChange} className={inputClasses} /></div>
+                        <div><label className={labelClasses}>UTR / Transaction ID</label><input name="billingDetails.utrTransactionId" value={formData.billingDetails?.utrTransactionId || ""} onChange={handleChange} className={inputClasses} /></div>
+                        <div><label className={labelClasses}>VIP Interest</label><select name="vipProgram.interested" value={formData.vipProgram?.interested || "No"} onChange={handleChange} className={inputClasses}><option value="No">No</option><option value="Yes">Yes</option></select></div>
+                    </div>
+
+                    <SectionTitle title="9. Registration Plan" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div><label className={labelClasses}>Category / Plan</label><input name="registrationCategory" value={formData.registrationCategory || ""} onChange={handleChange} className={inputClasses} /></div>
+                        <div><label className={labelClasses}>Fee Amount</label><input name="registrationFee" value={formData.registrationFee || ""} onChange={handleChange} className={inputClasses} /></div>
+                    </div>
+
+                    <SectionTitle title="10. Uploaded Documents" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {[
+                            { name: 'companyRegistrationCertificate', label: 'Company Registration' },
+                            { name: 'taxRegistrationCertificate', label: 'Tax Registration' },
+                            { name: 'passportCopy', label: 'Passport Copy' },
+                            { name: 'productCatalogue', label: 'Product Catalogue' },
+                            { name: 'companyBrochure', label: 'Company Brochure' },
+                            { name: 'logo', label: 'Logo (High Res)' },
+                            { name: 'visitingCard', label: 'Visiting Card' },
+                            { name: 'productCertifications', label: 'Product Certs' },
+                            { name: 'previousParticipationProof', label: 'Previous Proof' }
+                        ].map(doc => (
+                            <div key={doc.name} className="p-4 border border-gray-200 rounded-sm bg-gray-50 flex flex-col gap-2">
+                                <div className="flex justify-between items-center">
+                                    <label className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">{doc.label}</label>
+                                    {formData.documents?.[doc.name] && (
+                                        <a 
+                                            href={`${SERVER_URL}/${formData.documents[doc.name]}`} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="text-[10px] text-blue-600 font-bold hover:underline flex items-center gap-1"
+                                        >
+                                            <ExternalLink size={10} /> View Current
+                                        </a>
+                                    )}
+                                </div>
+                                <div className="text-xs text-gray-400 italic">
+                                    {formData.documents?.[doc.name] ? "Document uploaded" : "No document uploaded"}
+                                </div>
+                            </div>
+                        ))}
                     </div>
 
                     <div className="pt-10 flex justify-end gap-4 mt-10">

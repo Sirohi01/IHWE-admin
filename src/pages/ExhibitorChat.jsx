@@ -147,8 +147,11 @@ export default function ExhibitorChat() {
         typingTimer.current = setTimeout(() => socket.emit("stop_typing", { roomId: activeRoom._id }), 1500);
     };
 
-    const isOnline = (room) => onlineExhibitors.has(room.exhibitorRegistrationId?.toString());
-    const filtered = rooms.filter(r => !search || r.exhibitorName?.toLowerCase().includes(search.toLowerCase()));
+    const isOnline = (room) => onlineExhibitors.has(room.exhibitorRegistrationId?.toString() || room.buyerRegistrationId?.toString());
+    const filtered = rooms.filter(r => {
+        const name = (r.exhibitorName || r.buyerName || "").toLowerCase();
+        return !search || name.includes(search.toLowerCase());
+    });
     const totalUnread = rooms.reduce((s, r) => s + (r.unreadAdmin || 0), 0);
 
     return (
@@ -157,13 +160,13 @@ export default function ExhibitorChat() {
             <div className={`w-full md:w-80 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col ${activeRoom ? "hidden md:flex" : "flex"}`}>
                 <div className="px-4 py-3 bg-[#23471d] flex items-center gap-2">
                     <MessageSquare size={15} className="text-white" />
-                    <h2 className="text-[11px] font-black text-white uppercase tracking-widest">Exhibitor Chats</h2>
+                    <h2 className="text-[11px] font-black text-white uppercase tracking-widest">Chat Support</h2>
                     {totalUnread > 0 && <span className="ml-auto bg-[#d26019] text-white text-[9px] font-black px-2 py-0.5 rounded-full">{totalUnread}</span>}
                 </div>
                 <div className="px-3 py-2 border-b border-gray-100">
                     <div className="relative">
                         <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search exhibitor..."
+                        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search contact..."
                             className="w-full pl-8 pr-3 h-8 border border-gray-200 rounded-[2px] text-xs outline-none focus:border-[#23471d]" />
                     </div>
                 </div>
@@ -186,12 +189,19 @@ export default function ExhibitorChat() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between">
-                                        <p className={`text-[12px] truncate ${room.unreadAdmin > 0 ? "font-black text-slate-900" : "font-bold text-slate-700"}`}>{room.exhibitorName || "Exhibitor"}</p>
+                                        <p className={`text-[12px] truncate ${room.unreadAdmin > 0 ? "font-black text-slate-900" : "font-bold text-slate-700"}`}>
+                                            {room.exhibitorName || room.buyerName || "Unknown"}
+                                        </p>
                                         <p className="text-[9px] text-slate-400 flex-shrink-0 ml-1">{timeAgo(room.lastMessageAt)}</p>
                                     </div>
-                                    {(room.registrationId || room.stallNo) && (
-                                        <p className="text-[9px] text-[#23471d] font-bold">{room.registrationId}{room.stallNo ? ` · ${room.stallNo}` : ""}</p>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                        {(room.registrationId || room.stallNo) && (
+                                            <p className="text-[9px] text-[#23471d] font-bold">{room.registrationId}{room.stallNo ? ` · ${room.stallNo}` : ""}</p>
+                                        )}
+                                        <span className={`text-[8px] px-1 rounded-sm font-black uppercase ${room.isBuyer ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
+                                            {room.isBuyer ? 'Buyer' : 'Exhibitor'}
+                                        </span>
+                                    </div>
                                     {room.spokenWith && adminRole === 'super-admin' && (
                                         <p className="text-[9px] text-slate-400">RM: {room.spokenWith}</p>
                                     )}
@@ -227,13 +237,13 @@ export default function ExhibitorChat() {
                             <button onClick={() => setActiveRoom(null)} className="md:hidden p-1 text-slate-500"><ArrowLeft size={16} /></button>
                             <div className="relative flex-shrink-0">
                                 <div className="w-9 h-9 rounded-full bg-[#23471d]/10 flex items-center justify-center text-[12px] font-black text-[#23471d]">
-                                    {(activeRoom.exhibitorName || "E")[0].toUpperCase()}
+                                    {(activeRoom.exhibitorName || activeRoom.buyerName || "U")[0].toUpperCase()}
                                 </div>
                                 <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${isOnline(activeRoom) ? "bg-emerald-500" : "bg-slate-300"}`} />
                                 {isOnline(activeRoom) && <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping opacity-75" />}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-[13px] font-black text-slate-800">{activeRoom.exhibitorName}</p>
+                                <p className="text-[13px] font-black text-slate-800">{activeRoom.exhibitorName || activeRoom.buyerName}</p>
                                 <p className="text-[10px] text-slate-400">
                                     {activeRoom.registrationId && <span className="mr-2">{activeRoom.registrationId}</span>}
                                     {activeRoom.stallNo && <span className="mr-2">· Stall {activeRoom.stallNo}</span>}

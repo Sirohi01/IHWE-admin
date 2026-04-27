@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Printer } from 'lucide-react';
-import api from "../lib/api";
+import { ArrowLeft, Edit, Printer, FileText, ExternalLink } from 'lucide-react';
+import api, { SERVER_URL } from "../lib/api";
 
 const Button = ({ children, onClick, className, variant, ...props }) => {
     const baseStyles = "px-4 py-2 text-sm font-bold uppercase tracking-widest rounded-sm flex items-center gap-2";
@@ -279,7 +279,39 @@ const InternationalBuyerRegistrationDetail = () => {
                         <DetailRow label="UTR / Trans. ID" value={registration.billingDetails?.utrTransactionId} />
                     </Section>
 
+                    <Section title="Section 12 – Uploaded Documents">
+                        {[
+                            { name: 'companyRegistrationCertificate', label: 'Company Registration' },
+                            { name: 'taxRegistrationCertificate', label: 'Tax Registration' },
+                            { name: 'passportCopy', label: 'Passport Copy' },
+                            { name: 'productCatalogue', label: 'Product Catalogue' },
+                            { name: 'companyBrochure', label: 'Company Brochure' },
+                            { name: 'logo', label: 'Logo (High Res)' },
+                            { name: 'visitingCard', label: 'Visiting Card' },
+                            { name: 'productCertifications', label: 'Product Certs' },
+                            { name: 'previousParticipationProof', label: 'Previous Proof' }
+                        ].map(doc => (
+                            <div key={doc.name} className="detail-row mb-2">
+                                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide block">{doc.label}</span>
+                                {registration.documents?.[doc.name] ? (
+                                    <a 
+                                        href={`${SERVER_URL}/${registration.documents[doc.name]}`} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1 mt-0.5"
+                                    >
+                                        View Document
+                                    </a>
+                                ) : (
+                                    <p className="text-sm text-gray-400 italic leading-tight">Not Uploaded</p>
+                                )}
+                            </div>
+                        ))}
+                    </Section>
+
                     <Section title="Registration & Verification Status">
+                        <DetailRow label="Category" value={registration.registrationCategory} />
+                        <DetailRow label="Fee Amount" value={registration.registrationFee} />
                         <DetailRow label="Payment Status" value={registration.paymentStatus} />
                         <DetailRow label="Admin Status" value={registration.verification?.adminApprovalStatus} />
                         <DetailRow label="Email Verified" value={registration.verification?.emailVerified} />
