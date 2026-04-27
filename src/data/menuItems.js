@@ -310,8 +310,95 @@ export const menuItems = [
     icon: List,
     path: "/e-promotion-registers",
   },
-  
 
+  /* ================= CRM Management Section ================= */
+  {
+    type: "heading",
+    label: "CRM Section",
+  },
+  // ihwe section 
+  {
+    type: "dropdown",
+    label: "IHWE Client Data 2026",
+    icon: FileText,
+    children: [
+      { label: "Add New Client", path: "/ihweClientData2026/addNewClients" },
+      { label: "New Leads List", path: "/ihweClientData2026/newLeadList" },
+      { label: "Warm Client List", path: "/ihweClientData2026/warmClientList" },
+      { label: "Hot Client List", path: "/ihweClientData2026/hotClientList" },
+      { label: "Confirmed Client List", path: "/ihweClientData2026/confirmClientList" },
+      { label: "Cold Client List", path: "/ihweClientData2026/coldClientList" },
+      { label: "Master Data", path: "/ihweClientData2026/masterData" },
+      { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
+    ],
+  },
+  // exhibitor section
+  {
+    type: "dropdown",
+    label: "Exhibitor Management",
+    icon: FileText,
+    children: [
+      { label: "Domestic Exhibitors", path: "/ihweClientData2026/domesticExhibitors" },
+      { label: "International Exhibitors", path: "/ihweClientData2026/internationalExhibitors" },
+      { label: "Exhibitor Chat", path: "/exhibitor-chat" },
+      {
+        label: "Stall Inventory",
+        path: "/stalls",
+      },
+      {
+        label: "Exhibition Events",
+        path: "/events",
+      },
+      {
+        label: "Stall Pricing Rates",
+        path: "/stall-rates",
+      },
+      {
+        label: "Exhibitor Bookings",
+        path: "/exhibitor-bookings",
+      },
+      {
+        label: "Exhibitors Products",
+        path: "/exhibitor-products-profile",
+      },
+      {
+        label: "Failed Payments",
+        path: "/failed-payments",
+      },
+      {
+        type: "item",
+        label: "Marketing Toolkit",
+        icon: Package,
+        path: "/marketing-toolkit-manage",
+      },
+      {
+        type: "item",
+        label: "BSM Management",
+        icon: Handshake,
+        path: "/bsm-management",
+      },
+      {
+        type: "item",
+        label: "E-Promotion Registers",
+        icon: List,
+        path: "/e-promotion-registers",
+      },
+
+    ]
+  },
+  // buyer section
+  {
+    type: "dropdown",
+    label: "Buyer Management",
+    icon: FileText,
+    children: [
+      { label: "Domestic Buyer List", path: "/buyer-registration" },
+      { label: "International Buyer List ", path: "/buyer-registration" },
+      { label: "Buyer Registration", path: "/buyer-registration" },
+      { label: "Buyer List", path: "/buyer-list" },
+      { label: "Registration Settings", path: "/buyer-registration-config" },
+    ],
+  },
 
   /* ================= Developer SECTION ================= */
   {
