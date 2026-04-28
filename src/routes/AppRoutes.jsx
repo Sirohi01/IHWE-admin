@@ -84,6 +84,7 @@ import ContactEnquiries from "../pages/ContactEnquiries";
 import BuyerRegistrationDetail from "../pages/BuyerRegistrationDetail";
 import BuyerRegistrationEdit from "../pages/BuyerRegistrationEdit";
 import BuyerRegistrationConfig from "../pages/BuyerRegistrationConfig";
+import InternationalBuyerRegistrationConfig from "../pages/InternationalBuyerRegistrationConfig";
 import StallVendorManage from "../pages/StallVendorManage";
 import ExhibitorListManage from "../pages/ExhibitorListManage";
 import PartnerManagement from "../pages/PartnerManagement";
@@ -170,6 +171,10 @@ import BannerManagement from "../pages/BannerManagement";
 import SellerSubscriptionPlans from "../pages/add_by_admin/SellerSubscriptionPlans";
 import SellerServiceRequests from "../pages/SellerServiceRequests";
 import SellerExportInquiries from "../pages/SellerExportInquiries";
+import InternationalBuyerList from "../pages/buyer/InternationalBuyerList";
+import InternationalBuyerRegistrationDetail from "../pages/InternationalBuyerRegistrationDetail";
+import InternationalBuyerRegistrationEdit from "../pages/InternationalBuyerRegistrationEdit";
+import InternationalBuyerRegistration from "../pages/buyer/InternationalBuyerRegistration";
 
 export default function AppRoutes() {
   return (
@@ -253,6 +258,10 @@ export default function AppRoutes() {
           <Route
             path="buyer-registration-config"
             element={<BuyerRegistrationConfig />}
+          />
+          <Route
+            path="international-buyer-registration-config"
+            element={<InternationalBuyerRegistrationConfig />}
           />
           <Route path="stall-vendor-manage" element={<StallVendorManage />} />
           <Route
@@ -462,6 +471,10 @@ export default function AppRoutes() {
           <Route path="/to-do-list" element={<ToDoList />} />
           <Route path="/new-leads" element={<NewLeads />} />
           <Route path="/notification" element={<Notification />} />
+          <Route path="/international-buyer-list" element={<InternationalBuyerList />} />
+          <Route path="/international-buyer/:id" element={<InternationalBuyerRegistrationDetail />} />
+          <Route path="/international-buyer/edit/:id" element={<InternationalBuyerRegistrationEdit />} />
+          <Route path="/international-buyer-registration" element={<InternationalBuyerRegistration />} />
         </Route>
       </Route>
     </Routes>

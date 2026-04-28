@@ -121,6 +121,30 @@ export const buyerRegistrationApi = {
   },
 };
 
+export const internationalBuyerApi = {
+  submit: async (payload) => {
+    const isFormData = payload instanceof FormData;
+    const response = await api.post("/api/international-buyer/register", payload, {
+      headers: isFormData
+        ? { "Content-Type": "multipart/form-data" }
+        : { "Content-Type": "application/json" },
+    });
+    return unwrapApiResponse(response);
+  },
+  getAll: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/international-buyer"));
+    return payload.success ? payload.data : [];
+  },
+  delete: async (id) => {
+    const response = await api.delete(`/api/international-buyer/${id}`);
+    return unwrapApiResponse(response);
+  },
+  getConfig: async () => {
+    const response = await api.get("/api/international-buyer/config");
+    return unwrapApiResponse(response);
+  },
+};
+
 export const otpApi = {
   request: async (identifier, type, name) => {
     const response = await api.post("/api/otp/request", {
