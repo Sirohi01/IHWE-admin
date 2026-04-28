@@ -14,6 +14,8 @@ const EMPTY_STALL = {
     eventId: '',
     stallNumber: '',
     length: '',
+    width: '',
+    area: '',
     plScheme: 'One Side Open',
     incrementPercentage: 0,
     discountPercentage: 0,

@@ -275,6 +275,13 @@ export const menuItems = [
         label: "Failed Payments",
         path: "/failed-payments",
       },
+      {
+        label: "Payment Delay Warnings",
+        path: "/payment-delay-warnings",
+      },
+      { label: "Seller Subscription Plans", path: "/seller-subscription-plans" },
+      { label: "Seller Service Requests", path: "/seller-service-requests" },
+      { label: "Seller Export Inquiries", path: "/seller-export-inquiries" },
     ]
   },
   {
@@ -332,6 +339,12 @@ export const menuItems = [
     label: "WhatsApp Logs",
     icon: MessageSquare,
     path: "/whatsapp-logs",
+  },
+  {
+    type: "item",
+    label: "Dashboard Banners",
+    icon: Images,
+    path: "/dashboard-banners",
   },
 
 
