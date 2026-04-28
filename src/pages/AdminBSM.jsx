@@ -253,10 +253,21 @@ const AdminBSM = () => {
                                             <button 
                                                 onClick={() => {
                                                     setSelectedMeeting(m);
+                                                    // Safely extract date as YYYY-MM-DD using UTC
+                                                    let dateStr = '';
+                                                    if (m.date) {
+                                                        const d = new Date(m.date);
+                                                        if (!isNaN(d.getTime())) {
+                                                            const y = d.getUTCFullYear();
+                                                            const mo = String(d.getUTCMonth() + 1).padStart(2, '0');
+                                                            const dy = String(d.getUTCDate()).padStart(2, '0');
+                                                            dateStr = `${y}-${mo}-${dy}`;
+                                                        }
+                                                    }
                                                     setFormData({
-                                                        buyerId: m.buyerId?._id,
-                                                        exhibitorId: m.exhibitorId?._id,
-                                                        date: m.date ? m.date.split('T')[0] : '',
+                                                        buyerId: String(m.buyerId?._id || m.buyerId || ''),
+                                                        exhibitorId: String(m.exhibitorId?._id || m.exhibitorId || ''),
+                                                        date: dateStr,
                                                         timeSlot: m.timeSlot || '',
                                                         location: m.location || '',
                                                         adminNotes: m.adminNotes || ''
@@ -293,7 +304,13 @@ const AdminBSM = () => {
                                         required value={formData.buyerId} onChange={e => setFormData({...formData, buyerId: e.target.value})}
                                     >
                                         <option value="">Select Buyer...</option>
-                                        {buyers.map(b => <option key={b._id} value={b._id}>{b.companyName} ({b.fullName})</option>)}
+                                        {/* If editing and current buyer not in list, show it anyway */}
+                                        {selectedMeeting?.buyerId && !buyers.find(b => String(b._id) === formData.buyerId) && (
+                                            <option value={formData.buyerId}>
+                                                {selectedMeeting.buyerId?.companyName || selectedMeeting.buyerId?.fullName || 'Current Buyer'} (current)
+                                            </option>
+                                        )}
+                                        {buyers.map(b => <option key={b._id} value={String(b._id)}>{b.companyName} ({b.fullName})</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -303,7 +320,13 @@ const AdminBSM = () => {
                                         required value={formData.exhibitorId} onChange={e => setFormData({...formData, exhibitorId: e.target.value})}
                                     >
                                         <option value="">Select Exhibitor...</option>
-                                        {exhibitors.map(ex => <option key={ex._id} value={ex._id}>{ex.exhibitorName}</option>)}
+                                        {/* If editing and current exhibitor not in list, show it anyway */}
+                                        {selectedMeeting?.exhibitorId && !exhibitors.find(ex => String(ex._id) === formData.exhibitorId) && (
+                                            <option value={formData.exhibitorId}>
+                                                {selectedMeeting.exhibitorId?.exhibitorName || 'Current Exhibitor'} (current)
+                                            </option>
+                                        )}
+                                        {exhibitors.map(ex => <option key={ex._id} value={String(ex._id)}>{ex.exhibitorName}</option>)}
                                     </select>
                                 </div>
                             </div>
@@ -317,7 +340,26 @@ const AdminBSM = () => {
                                         onChange={e => setFormData({...formData, date: e.target.value})}
                                     >
                                         <option value="">Select Date...</option>
-                                        {getAvailableDates().map(d => (
+                                        {getAvailableDates().filter(d => {
+                                            // Always show the currently selected date even if it's "busy" (so we can see it)
+                                            if (formData.date === d) return true;
+                                            
+                                            const allSlotsBusy = slots.length > 0 && slots.every(s => {
+                                                return meetings.some(m => {
+                                                    if (selectedMeeting && m._id === selectedMeeting._id) return false;
+                                                    const mDate = m.date ? m.date.split('T')[0] : '';
+                                                    if (mDate !== d) return false;
+                                                    if (m.timeSlot !== s) return false;
+                                                    if (m.status === 'Cancelled') return false;
+                                                    
+                                                    const mBuyerId = String(m.buyerId?._id || m.buyerId || '');
+                                                    const mExhId = String(m.exhibitorId?._id || m.exhibitorId || '');
+                                                    return (formData.buyerId && mBuyerId === String(formData.buyerId)) || 
+                                                           (formData.exhibitorId && mExhId === String(formData.exhibitorId));
+                                                });
+                                            });
+                                            return !allSlotsBusy;
+                                        }).map(d => (
                                             <option key={d} value={d}>
                                                 {new Date(d + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                                             </option>
@@ -326,9 +368,30 @@ const AdminBSM = () => {
                                 </div>
                                 <div>
                                     <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Time Slot</label>
-                                    <select className="w-full border rounded-lg h-10 px-3 text-sm" required value={formData.timeSlot} onChange={e => setFormData({...formData, timeSlot: e.target.value})}>
+                                    <select 
+                                        className="w-full border rounded-lg h-10 px-3 text-sm focus:ring-2 focus:ring-indigo-500" 
+                                        required 
+                                        value={formData.timeSlot} 
+                                        onChange={e => setFormData({...formData, timeSlot: e.target.value})}
+                                    >
                                         <option value="">Select Slot...</option>
-                                        {slots.map(s => <option key={s} value={s}>{s}</option>)}
+                                        {slots.filter(s => {
+                                            if (formData.timeSlot === s) return true;
+                                            const isBusy = meetings.some(m => {
+                                                if (selectedMeeting && m._id === selectedMeeting._id) return false;
+                                                const mDate = m.date ? m.date.split('T')[0] : '';
+                                                if (mDate !== formData.date) return false;
+                                                if (m.timeSlot !== s) return false;
+                                                if (m.status === 'Cancelled') return false;
+                                                const mBuyerId = String(m.buyerId?._id || m.buyerId || '');
+                                                const mExhId = String(m.exhibitorId?._id || m.exhibitorId || '');
+                                                return (formData.buyerId && mBuyerId === String(formData.buyerId)) || 
+                                                       (formData.exhibitorId && mExhId === String(formData.exhibitorId));
+                                            });
+                                            return !isBusy;
+                                        }).map(s => (
+                                            <option key={s} value={s}>{s}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
