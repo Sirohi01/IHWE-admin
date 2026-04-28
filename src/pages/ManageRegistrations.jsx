@@ -46,6 +46,7 @@ const ManageRegistrations = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedReg, setSelectedReg] = useState(null);
+    const [registrationType, setRegistrationType] = useState('all'); // 'all', 'exhibitor-only', 'domestic-exhibitor', 'international-exhibitor', 'seller'
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const filterType = searchParams.get('type'); // 'current' or 'incoming'
@@ -117,8 +118,6 @@ const ManageRegistrations = () => {
                 pctButtons += `<button type="button" ${isAlreadyPaid ? 'disabled' : ''} data-pct="${p}" onclick="window.selectPct(${p},${installmentBase},'${cur}')" `
                     + `class="pct-btn" style="${btnStyle}">${planLabel}</button>`;
             });
-
-            // If all phases are done but balance still remaining, add "Pay Remaining" button
             const allPhasesDone = history.length >= defaultPcts.length;
             if (allPhasesDone && remainingAmount > 0) {
                 const remainBtnStyle = 'padding:5px 10px;border:2px solid #23471d;border-radius:6px;font-weight:900;font-size:11px;background:#23471d;color:#fff;cursor:pointer;white-space:nowrap;';
@@ -463,6 +462,17 @@ const ManageRegistrations = () => {
                     <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                             <span className="font-semibold text-red-600 text-sm uppercase tracking-tight leading-none truncate">{row.exhibitorName}</span>
+                            {/* Domestic/International Badge based on currency */}
+                            {row.participation?.currency === 'USD' ? (
+                                <span className="text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest border bg-purple-50 text-purple-700 border-purple-200">
+                                    International
+                                </span>
+                            ) : (
+                                <span className="text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest border bg-blue-50 text-blue-700 border-blue-200">
+                                    Domestic
+                                </span>
+                            )}
+                            {/* Seller Badge */}
                             {row.isSeller && (
                                 <span className={`text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest border ${
                                     row.sellerSubscription?.status === 'active' 
@@ -615,6 +625,26 @@ const ManageRegistrations = () => {
     const filteredRegs = registrations.filter(r => {
         if (r.status === 'payment-failed') return false;
 
+        // Filter by registration type
+        if (registrationType !== 'all') {
+            const isDomestic = r.participation?.currency !== 'USD';
+            const isInternational = r.participation?.currency === 'USD';
+            
+            if (registrationType === 'exhibitor-only') {
+                // Show only exhibitors (exclude sellers)
+                if (r.isSeller) return false;
+            }
+            if (registrationType === 'domestic-exhibitor') {
+                if (!isDomestic) return false;
+            }
+            if (registrationType === 'international-exhibitor') {
+                if (!isInternational) return false;
+            }
+            if (registrationType === 'seller') {
+                if (!r.isSeller) return false;
+            }
+        }
+
         const exhibitorName = (r.exhibitorName || '').toLowerCase();
         const stallNo = (r.participation?.stallFor || r.participation?.stallNo || '').toLowerCase();
         const eventName = (r.eventId?.name || '').toLowerCase();
@@ -645,7 +675,7 @@ const ManageRegistrations = () => {
     const PAGE_SIZE = 10;
     const [currentPage, setCurrentPage] = useState(1);
 
-    useEffect(() => { setCurrentPage(1); }, [searchTerm]);
+    useEffect(() => { setCurrentPage(1); }, [searchTerm, registrationType]);
 
     const totalPages = Math.ceil(filteredRegs.length / PAGE_SIZE);
     const paginatedRegs = filteredRegs.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -658,6 +688,31 @@ const ManageRegistrations = () => {
             />
 
             <div className="mt-6 space-y-4">
+                {/* Registration Type Filter Buttons */}
+                <div className="bg-white shadow-md border-2 border-gray-200 rounded-[2px] px-4 py-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-wider mr-2">Filter by Type:</span>
+                        {[
+                            { value: 'all', label: 'All Exhibitors' },
+                            { value: 'domestic-exhibitor', label: 'Domestic Exhibitors' },
+                            { value: 'international-exhibitor', label: 'International Exhibitors' },
+                            { value: 'seller', label: 'Sellers Only' }
+                        ].map(type => (
+                            <button
+                                key={type.value}
+                                onClick={() => setRegistrationType(type.value)}
+                                className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-[2px] border-2 transition-all ${
+                                    registrationType === type.value
+                                        ? 'bg-[#23471d] text-white border-[#23471d]'
+                                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                                }`}
+                            >
+                                {type.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
                 <div className="bg-white shadow-md border-2 border-gray-200 rounded-[2px] px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
                     <div className="relative flex-1 md:w-80">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
