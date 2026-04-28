@@ -291,7 +291,7 @@ const PackageCard = ({ pkg, selected, onSelect, disabled }) => {
             <div className="mb-4">
                 <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Package</p>
                 <h4 className="mt-2 text-lg font-black text-slate-900">{pkg.name}</h4>
-                <p className="mt-2 text-2xl font-black text-[#23471d]">₹{pkg.price}</p>
+                <p className="mt-2 text-2xl font-black text-[#23471d]">${pkg.price}</p>
             </div>
             <div className="flex-1 space-y-4">
                 <p className="text-sm leading-relaxed text-slate-600">{pkg.description || "International buyer package with relevant event support."}</p>
@@ -487,7 +487,7 @@ const InternationalBuyerRegistration = () => {
 
     const handlePackageSelect = (pkg) => {
         setSelectedPackage(pkg);
-        setFormData(prev => ({ ...prev, registrationCategory: pkg.name, registrationFee: `₹${pkg.price}` }));
+        setFormData(prev => ({ ...prev, registrationCategory: pkg.name, registrationFee: `$${pkg.price}` }));
     };
 
     const togglePaymentMethod = (id) => {
@@ -949,7 +949,7 @@ const InternationalBuyerRegistration = () => {
                                 <input name="registrationCategory" value={formData.registrationCategory} onChange={handleInputChange} placeholder="e.g. VIP Pass" className={inputClass} />
                             </Field>
                             <Field label="Fee Amount" name="registrationFee">
-                                <input name="registrationFee" value={formData.registrationFee} onChange={handleInputChange} placeholder="e.g. ₹4999" className={inputClass} />
+                                <input name="registrationFee" value={formData.registrationFee} onChange={handleInputChange} placeholder="e.g. $4999" className={inputClass} />
                             </Field>
                             <Field label="Internal Remarks" name="remarks">
                                 <textarea name="remarks" value={formData.remarks} onChange={handleInputChange} placeholder="Internal notes..." className={textareaClass} rows={2} />

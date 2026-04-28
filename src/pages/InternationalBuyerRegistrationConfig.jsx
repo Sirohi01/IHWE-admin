@@ -339,7 +339,7 @@ const InternationalBuyerRegistrationConfig = () => {
                                             </div>
                                             
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xl font-black italic">₹</span>
+                                                <span className="text-xl font-black italic">$</span>
                                                 <input 
                                                     type="number"
                                                     value={pkg.price} 
