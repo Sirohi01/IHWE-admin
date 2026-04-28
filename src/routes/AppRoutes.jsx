@@ -168,6 +168,8 @@ import NewLeads from "../pages/navbar_page/NewLeads";
 import Notification from "../pages/navbar_page/Notification";
 import BannerManagement from "../pages/BannerManagement";
 import SellerSubscriptionPlans from "../pages/add_by_admin/SellerSubscriptionPlans";
+import SellerServiceRequests from "../pages/SellerServiceRequests";
+import SellerExportInquiries from "../pages/SellerExportInquiries";
 
 export default function AppRoutes() {
   return (
@@ -453,6 +455,8 @@ export default function AppRoutes() {
           <Route path="/exhibitor-chat" element={<ExhibitorChat />} />
           <Route path="/add-unit" element={<AddUnit />} />
           <Route path="/seller-subscription-plans" element={<SellerSubscriptionPlans />} />
+          <Route path="/seller-service-requests" element={<SellerServiceRequests />} />
+          <Route path="/seller-export-inquiries" element={<SellerExportInquiries />} />
           <Route path="/marketing-toolkit-manage" element={<MarketingToolkitManage />} />
           <Route path="/reminder" element={<Reminder />} />
           <Route path="/to-do-list" element={<ToDoList />} />

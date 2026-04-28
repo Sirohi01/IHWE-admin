@@ -155,7 +155,17 @@ function SellerTab({ reg, id, onRefresh }) {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const res = await api.put(`/api/exhibitor-registration/${id}`, form);
+            // Clean up empty ObjectId fields before sending
+            const payload = {
+                ...form,
+                sellerSubscription: {
+                    ...form.sellerSubscription,
+                    planId: form.sellerSubscription.planId || null,
+                    expiresAt: form.sellerSubscription.expiresAt || null,
+                    plan: form.sellerSubscription.plan || null,
+                }
+            };
+            const res = await api.put(`/api/exhibitor-registration/${id}`, payload);
             if (res.data.success) {
                 Swal.fire({ icon: 'success', title: 'Seller Settings Updated', timer: 1200, showConfirmButton: false });
                 onRefresh();

@@ -472,14 +472,15 @@ const ManageRegistrations = () => {
                                     Domestic
                                 </span>
                             )}
-                            {/* Seller Badge */}
-                            {row.isSeller && (
-                                <span className={`text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest border ${
-                                    row.sellerSubscription?.status === 'active' 
-                                    ? 'bg-green-50 text-green-700 border-green-200' 
-                                    : 'bg-orange-50 text-orange-700 border-orange-200'
-                                }`}>
-                                    Seller {row.sellerSubscription?.status === 'active' ? '• Pro' : ''}
+                            {/* Seller Badge — only show if isSeller is explicitly true */}
+                            {row.isSeller && row.sellerSubscription?.status === 'active' && (
+                                <span className="text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest border bg-green-50 text-green-700 border-green-200">
+                                    Seller • Pro
+                                </span>
+                            )}
+                            {row.isSeller && row.sellerSubscription?.status !== 'active' && (
+                                <span className="text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest border bg-orange-50 text-orange-700 border-orange-200">
+                                    Seller
                                 </span>
                             )}
                         </div>
@@ -624,8 +625,6 @@ const ManageRegistrations = () => {
 
     const filteredRegs = registrations.filter(r => {
         if (r.status === 'payment-failed') return false;
-
-        // Filter by registration type
         if (registrationType !== 'all') {
             const isDomestic = r.participation?.currency !== 'USD';
             const isInternational = r.participation?.currency === 'USD';

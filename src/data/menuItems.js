@@ -271,6 +271,9 @@ export const menuItems = [
         label: "Payment Delay Warnings",
         path: "/payment-delay-warnings",
       },
+      { label: "Seller Subscription Plans", path: "/seller-subscription-plans" },
+      { label: "Seller Service Requests", path: "/seller-service-requests" },
+      { label: "Seller Export Inquiries", path: "/seller-export-inquiries" },
     ]
   },
   {
@@ -372,7 +375,6 @@ export const menuItems = [
       { label: "Secondary Product Categories", path: "/secondary-product-categories" },
       { label: "Meeting Priority Level", path: "/meeting-priority-level" },
       { label: "Add Unit", path: "/add-unit" },
-      { label: "Seller Subscription Plans", path: "/seller-subscription-plans" },
     ],
   },
   {

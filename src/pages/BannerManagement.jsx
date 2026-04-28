@@ -20,6 +20,7 @@ const DASHBOARD_PAGES = [
     { id: 'ex-notifications', label: 'Exhibitor Notifications', type: 'exhibitor' },
     { id: 'ex-rm', label: 'Exhibitor RM Support', type: 'exhibitor' },
     { id: 'ex-reminders', label: 'Exhibitor Pay Reminders', type: 'exhibitor' },
+    { id: 'sl-stall', label: 'Seller Stall Mgmt', type: 'seller' },
     { id: 'sl-profile', label: 'Seller Profile', type: 'seller' },
     { id: 'sl-payments', label: 'Seller Payments', type: 'seller' },
     { id: 'sl-marketing', label: 'Seller Marketing', type: 'seller' },
@@ -191,7 +192,7 @@ export default function BannerManagement() {
                                     ) : (
                                         <>
                                             <Image className="text-slate-300 mb-2" size={32} />
-                                            <p className="text-[10px] font-bold uppercase text-slate-400">Click to upload 1920x400px</p>
+                                            <p className="text-[10px] font-bold uppercase text-slate-400">Click to upload · 4:1 aspect ratio (e.g. 1200×300px)</p>
                                         </>
                                     )}
                                 </label>
