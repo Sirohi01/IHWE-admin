@@ -9,6 +9,7 @@ const NotFound = () => {
   const [settings, setSettings] = useState(null);
 
   useEffect(() => {
+    console.error("404 Error: Admin attempted to access non-existent route:", location.pathname);
     
     const fetchSettings = async () => {
       try {

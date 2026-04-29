@@ -27,12 +27,19 @@ const AddSeo = () => {
         isActive: true
     });
 
+    const [dynamicPages, setDynamicPages] = useState({
+        services: [],
+        custom: []
+    });
+
     // Editor Refs
     const ogEditorRef = useRef(null);
     const schemaEditorRef = useRef(null);
     const canonicalEditorRef = useRef(null);
 
     useEffect(() => {
+        fetchDynamicPages();
+
         if (location.state && location.state.seoData) {
             const data = location.state.seoData;
             setFormData({
@@ -58,6 +65,28 @@ const AddSeo = () => {
             }, 100);
         }
     }, [location.state]);
+
+    const fetchDynamicPages = async () => {
+        try {
+            // Fetch Service Pages
+            const serviceRes = await api.get('/api/service-details');
+            const services = serviceRes.data.success ? serviceRes.data.data.map(item => ({
+                name: `Service / ${item.serviceTitle}`,
+                path: `/industry-zone/${item.slug || item.serviceCardId}`
+            })) : [];
+
+            // Fetch Custom Pages
+            const customRes = await api.get('/api/custom-pages');
+            const custom = customRes.data.success ? customRes.data.data.map(item => ({
+                name: `Page / ${item.title}`,
+                path: `/${item.slug}`
+            })) : [];
+
+            setDynamicPages({ services, custom });
+        } catch (error) {
+            console.error("Error fetching dynamic pages:", error);
+        }
+    };
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -315,11 +344,33 @@ const AddSeo = () => {
                                 disabled={isEditMode}
                             >
                                 <option value="">-- Select a Page --</option>
-                                {pagesList.map((page, index) => (
-                                    <option key={index} value={page.path}>
-                                        {page.name} ({page.path})
-                                    </option>
-                                ))}
+                                <optgroup label="Static Pages">
+                                    {pagesList.map((page, index) => (
+                                        <option key={index} value={page.path}>
+                                            {page.name} ({page.path})
+                                        </option>
+                                    ))}
+                                </optgroup>
+
+                                {dynamicPages.services.length > 0 && (
+                                    <optgroup label="Featured Service Pages">
+                                        {dynamicPages.services.map((page, index) => (
+                                            <option key={`service-${index}`} value={page.path}>
+                                                {page.name} ({page.path})
+                                            </option>
+                                        ))}
+                                    </optgroup>
+                                )}
+
+                                {dynamicPages.custom.length > 0 && (
+                                    <optgroup label="Custom Pages">
+                                        {dynamicPages.custom.map((page, index) => (
+                                            <option key={`custom-${index}`} value={page.path}>
+                                                {page.name} ({page.path})
+                                            </option>
+                                        ))}
+                                    </optgroup>
+                                )}
                             </select>
                         </div>
 
