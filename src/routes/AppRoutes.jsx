@@ -167,6 +167,7 @@ import Reminder from "../pages/navbar_page/Reminder";
 import ToDoList from "../pages/navbar_page/ToDoList";
 import NewLeads from "../pages/navbar_page/NewLeads";
 import Notification from "../pages/navbar_page/Notification";
+import NotFound from "../pages/NotFound";
 import BannerManagement from "../pages/BannerManagement";
 import SellerSubscriptionPlans from "../pages/add_by_admin/SellerSubscriptionPlans";
 import SellerServiceRequests from "../pages/SellerServiceRequests";
@@ -471,11 +472,13 @@ export default function AppRoutes() {
           <Route path="/to-do-list" element={<ToDoList />} />
           <Route path="/new-leads" element={<NewLeads />} />
           <Route path="/notification" element={<Notification />} />
+          <Route path="*" element={<NotFound />} />
           <Route path="/international-buyer-list" element={<InternationalBuyerList />} />
           <Route path="/international-buyer/:id" element={<InternationalBuyerRegistrationDetail />} />
           <Route path="/international-buyer/edit/:id" element={<InternationalBuyerRegistrationEdit />} />
           <Route path="/international-buyer-registration" element={<InternationalBuyerRegistration />} />
         </Route>
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );

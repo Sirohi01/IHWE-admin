@@ -253,9 +253,9 @@ export default function Sidebar({
         #dh-sidebar .sb-toggle-btn { background-color: var(--sb-toggle) !important; }
         #dh-sidebar .sb-close-btn { background-color: #d26019 !important; color: white !important; border-radius: 6px !important; display: flex !important; align-items: center !important; justify-content: center !important; width: 28px !important; height: 28px !important; padding: 4px !important; transition: all 0.2s ease !important; }
         #dh-sidebar .sb-close-btn:hover { background-color: #b35215 !important; transform: scale(1.1); }
-        .sidebar-scroll::-webkit-scrollbar { width: 6px; }
+        .sidebar-scroll::-webkit-scrollbar { width: 3px; }
         .sidebar-scroll::-webkit-scrollbar-thumb { background-color: #23471d; border-radius: 10px; }
-        .sidebar-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .sidebar-scroll::-webkit-scrollbar-track { background: transparent; border-radius: 10px; }
       `}</style>
 
       {mobileMenuOpen && (

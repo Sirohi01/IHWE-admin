@@ -165,6 +165,15 @@ export const menuItems = [
   },
   {
     type: "dropdown",
+    label: "Services Page",
+    icon: Sparkles,
+    children: [
+      { label: "Add Services", path: "/create-service" },
+      { label: "Services List", path: "/service-list" },
+    ],
+  },
+  {
+    type: "dropdown",
     label: "Blogs",
     icon: FileText,
     children: [
