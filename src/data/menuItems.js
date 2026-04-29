@@ -199,6 +199,12 @@ export const menuItems = [
   },
   {
     type: "item",
+    label: "Social Media",
+    icon: MessageSquare,
+    path: "/social-media",
+  },
+    {
+    type: "item",
     label: "Contact Enquiry",
     path: "/contact-enquiries",
     icon: MessageSquare,
