@@ -48,6 +48,7 @@ const HeroImages = () => {
         infoBar1: "",
         infoBar2: "",
         infoBar3: "",
+        heading: "",
         status: "Active"
     });
 
@@ -109,6 +110,7 @@ const HeroImages = () => {
             infoBar1: item.infoBar1 || "",
             infoBar2: item.infoBar2 || "",
             infoBar3: item.infoBar3 || "",
+            heading: item.heading || "",
             status: item.status || "Active"
         });
         setImagePreview(`${SERVER_URL}${item.backgroundImage}`);
@@ -135,6 +137,7 @@ const HeroImages = () => {
             infoBar1: "",
             infoBar2: "",
             infoBar3: "",
+            heading: "",
             status: "Active"
         });
         setImagePreview(null);
@@ -496,6 +499,18 @@ const HeroImages = () => {
                                     placeholder="Enter Hero Title 2 (optional)..."
                                     minHeight="120px"
                                     fontSize={formData.title2FontSize}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Large Heading (Main Title)</label>
+                                <input
+                                    type="text"
+                                    name="heading"
+                                    value={formData.heading}
+                                    onChange={handleInputChange}
+                                    placeholder="e.g., Witness the Future of Wellness"
+                                    className="w-full px-4 py-2.5 border-2 border-gray-300 focus:border-[#1a5b32] outline-none shadow-sm text-sm"
                                 />
                             </div>
 

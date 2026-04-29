@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Search,
     Briefcase,
     LayoutGrid,
     Search as SearchIcon,
-    RefreshCw
+    RefreshCw,
+    Pencil,
+    Trash2,
+    Eye,
+    ExternalLink
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api, { SERVER_URL } from "../../lib/api";
@@ -17,7 +20,7 @@ const ServiceList = () => {
     const navigate = useNavigate();
     const [services, setServices] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 25;
+    const itemsPerPage = 25; // Increased to match SEO list
     const [isLoading, setIsLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
 
@@ -36,8 +39,8 @@ const ServiceList = () => {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: error.response?.data?.message || 'Failed to fetch services',
-                confirmButtonColor: '#134698'
+                text: 'Failed to fetch service detail list',
+                confirmButtonColor: '#1e3a8a'
             });
         } finally {
             setIsLoading(false);
@@ -45,18 +48,18 @@ const ServiceList = () => {
     };
 
     const handleEdit = (service) => {
-        navigate('/create-service', { state: { serviceName: service.serviceName } });
+        navigate('/create-service', { state: { serviceDetail: service } });
     };
 
     const handleDelete = async (service) => {
         const result = await Swal.fire({
             title: 'Are you sure?',
-            html: `Do you want to delete service detail for <strong>${service.serviceName}</strong>?<br><span class="text-red-600">This will delete background image and gallery images!</span>`,
+            html: `Do you want to delete the detail page for: <strong>${service.serviceTitle}</strong>?<br><span class="text-red-600 font-bold">This cannot be undone!</span>`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#DC2626',
             cancelButtonColor: '#6B7280',
-            confirmButtonText: 'Yes, delete it!',
+            confirmButtonText: 'Yes, Delete',
             cancelButtonText: 'Cancel'
         });
 
@@ -65,22 +68,17 @@ const ServiceList = () => {
                 setIsLoading(true);
                 const response = await api.delete(`/api/service-details/${service._id}`);
                 if (response.data.success) {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Deleted!',
-                        text: 'Service detail successfully removed',
-                        timer: 2000,
-                        confirmButtonColor: '#134698'
+                    Swal.fire({ 
+                        icon: 'success', 
+                        title: 'Deleted!', 
+                        text: 'Service detail deleted successfully',
+                        timer: 1500, 
+                        showConfirmButton: false 
                     });
                     fetchServices();
                 }
             } catch (error) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.response?.data?.message || 'Failed to delete service',
-                    confirmButtonColor: '#134698'
-                });
+                Swal.fire('Error', 'Failed to delete service detail', 'error');
             } finally {
                 setIsLoading(false);
             }
@@ -88,52 +86,12 @@ const ServiceList = () => {
     };
 
     const filteredServices = services.filter(service =>
-        service.serviceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.bgTitle.toLowerCase().includes(searchTerm.toLowerCase())
+        service.serviceTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        service.h1Heading.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const startIndex = (currentPage - 1) * itemsPerPage;
     const paginatedServices = filteredServices.slice(startIndex, startIndex + itemsPerPage);
-
-    const categorizedServices = [
-        {
-            category: "Interiors",
-            services: ["Retail Interior", "Corporate Interior", "Restaurant Interior", "Shop In Shops", "Interior Design Company"]
-        },
-        {
-            category: "Merchandising",
-            services: ["Retail Display Merchandising", "Acrylic Displays", "Gondolas", "Window Display"]
-        },
-        {
-            category: "Kiosk",
-            services: ["Retail Kiosk", "Mobile Booth"]
-        },
-        {
-            category: "Office Interior",
-            services: ["Modular Work Station", "MD Cabin", "Chairs", "Office Interior"]
-        },
-        {
-            category: "Exhibition & Events",
-            services: ["Local Level Exhibition", "National Level Exhibition", "Exhibition & Events"]
-        },
-        {
-            category: "Furniture",
-            services: ["Modular Wardrobe", "Modular Kitchen", "Modular LCD Unit", "Dressing Table", "Sofas", "Space Saving Furniture", "Furniture"]
-        },
-        {
-            category: "Signage",
-            services: ["Signage"]
-        }
-    ];
-
-    const getFullServiceName = (name) => {
-        for (const cat of categorizedServices) {
-            if (cat.services.includes(name)) {
-                return `${cat.category} / ${name}`;
-            }
-        }
-        return name;
-    };
 
     const columns = [
         {
@@ -147,44 +105,89 @@ const ServiceList = () => {
             )
         },
         {
-            key: "bgImage",
-            label: "IMAGE",
+            key: "heroImage",
+            label: "HERO IMAGE",
             width: "120px",
             render: (row) => (
-                <div className="h-12 w-20 rounded overflow-hidden shadow-sm border border-gray-100">
-                    <img
-                        src={`${SERVER_URL}${row.bgImage}`}
-                        alt={row.bgAltText}
-                        className="h-full w-full object-cover"
-                        onError={(e) => { e.target.src = 'https://via.placeholder.com/80x48?text=No+Image'; }}
-                    />
+                <div className="h-14 w-24 rounded border border-gray-200 overflow-hidden bg-gray-50">
+                    {row.heroImage ? (
+                        <img
+                            src={`${SERVER_URL}${row.heroImage}`}
+                            alt={row.heroImageAlt}
+                            className="h-full w-full object-cover"
+                        />
+                    ) : (
+                        <div className="h-full w-full flex items-center justify-center text-gray-300">
+                            <Briefcase size={16} />
+                        </div>
+                    )}
                 </div>
             )
         },
         {
-            key: "serviceName",
-            label: "SERVICE NAME",
+            key: "serviceTitle",
+            label: "SERVICE DETAILS",
+            width: "300px",
             render: (row) => (
-                <div className="font-semibold text-blue-900 uppercase tracking-tight">
-                    {getFullServiceName(row.serviceName)}
+                <div className="flex flex-col">
+                    <span className="font-bold text-[#1e3a8a] text-sm uppercase">{row.serviceTitle}</span>
+                    <span className="text-[10px] text-gray-400 font-medium line-clamp-1 italic">
+                        {row.h1Heading?.replace(/<[^>]*>/g, '')}
+                    </span>
                 </div>
             )
         },
         {
-            key: "bgTitle",
-            label: "HERO TITLE (H1)",
+            key: "updatedAt",
+            label: "LAST UPDATED",
+            className: "text-center",
+            headerClassName: "text-center",
+            width: "200px",
             render: (row) => (
-                <div className="text-gray-700 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[300px]">
-                    {row.bgTitle}
+                <div className="flex flex-col gap-1 items-center">
+                    <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                        {row.updatedBy || 'System'}
+                    </span>
+                    <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                        {row.updatedAt ? new Date(row.updatedAt).toLocaleString('en-GB', { 
+                            day: '2-digit', month: 'short', year: 'numeric', 
+                            hour: '2-digit', minute: '2-digit', hour12: true 
+                        }) : 'N/A'}
+                    </span>
                 </div>
             )
         },
         {
-            key: "createdAt",
-            label: "CREATED AT",
+            key: "actions",
+            label: "ACTIONS",
+            width: "150px",
+            headerClassName: "text-center",
+            className: "text-center",
             render: (row) => (
-                <div className="text-gray-500 text-xs">
-                    {new Date(row.createdAt).toLocaleDateString()}
+                <div className="flex items-center justify-center gap-4">
+                    <button
+                        onClick={() => handleEdit(row)}
+                        className="text-blue-500 hover:text-blue-700 transition-colors"
+                        title="Edit Page"
+                    >
+                        <Pencil size={18} />
+                    </button>
+                    <button
+                        onClick={() => handleDelete(row)}
+                        className="text-red-500 hover:text-red-700 transition-colors"
+                        title="Delete Page"
+                    >
+                        <Trash2 size={18} />
+                    </button>
+                    <a
+                        href={`/industry-zone/${row.serviceCardId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-500 hover:text-[#23471d] transition-colors"
+                        title="View on Website"
+                    >
+                        <ExternalLink size={18} />
+                    </a>
                 </div>
             )
         }
@@ -192,86 +195,73 @@ const ServiceList = () => {
 
     return (
         <div className="bg-white shadow-md p-6 mt-6 min-h-screen">
-            <div className="w-full">
-                <PageHeader
-                    title="SERVICE LIST"
-                    description="View and manage all created service detail pages"
-                />
+            <PageHeader
+                title="SERVICE PAGES LIST"
+                description="Manage configured detail pages for Industry Zones"
+            />
 
-                <div className="bg-white border-2 border-gray-200 overflow-hidden shadow-lg mt-6">
-                    <div className="px-6 py-4 border-b bg-[#1e3a8a]">
-                        <div className="flex items-center justify-between gap-4">
-                            <div>
-                                <h2 className="text-lg font-semibold text-white uppercase tracking-wider flex items-center gap-2">
-                                    <LayoutGrid className="w-5 h-5" />
-                                    Active Services
-                                </h2>
-                                <p className="text-sm text-blue-100 mt-0.5">
-                                    Total {filteredServices.length} pages configured
-                                </p>
-                            </div>
+            <div className="bg-white border-2 border-gray-200 overflow-hidden shadow-lg mt-8">
+                {/* Header matching SEO List */}
+                <div className="px-6 py-4 border-b bg-[#1e3a8a]">
+                    <div className="flex items-center justify-between gap-4">
+                        <div>
+                            <h2 className="text-lg font-semibold text-white uppercase tracking-tight">Active Pages List</h2>
+                            <p className="text-sm text-blue-100 mt-0.5 font-medium">
+                                Showing {filteredServices.length} of {services.length} entries
+                            </p>
+                        </div>
 
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={fetchServices}
-                                    className="p-2 bg-white/10 hover:bg-white/20 text-white rounded transition-colors"
-                                    title="Refresh Data"
-                                >
-                                    <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                                </button>
-                                <div className="relative w-64 lg:w-80">
-                                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search by name or title..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full h-10 pl-10 pr-4 text-sm border-2 border-gray-300 focus:outline-none focus:border-white transition-colors shadow-lg rounded"
-                                    />
-                                </div>
+                        <div className="flex items-center gap-4">
+                            <div className="relative w-72">
+                                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search page..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full h-10 pl-10 pr-4 text-sm border-2 border-gray-300 focus:outline-none focus:border-white transition-colors shadow-lg"
+                                />
                             </div>
+                            <button
+                                onClick={() => navigate('/create-service')}
+                                className="px-6 py-2 bg-white text-[#1e3a8a] font-black uppercase text-xs tracking-widest shadow-lg hover:bg-gray-100 transition-all border-2 border-white"
+                            >
+                                + Add New
+                            </button>
                         </div>
                     </div>
+                </div>
 
-                    <div className="bg-white">
-                        {isLoading && services.length === 0 ? (
-                            <div className="flex items-center justify-center py-20">
-                                <div className="w-12 h-12 border-4 border-[#134698] border-t-transparent rounded-full animate-spin"></div>
-                            </div>
-                        ) : (
-                            <Table
-                                columns={columns}
-                                data={paginatedServices}
-                                onEdit={handleEdit}
-                                onDelete={handleDelete}
-                            />
-                        )}
+                <div className="bg-white">
+                    {isLoading && services.length === 0 ? (
+                        <div className="flex items-center justify-center py-20">
+                            <div className="w-12 h-12 border-4 border-[#1e3a8a] border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                    ) : filteredServices.length > 0 ? (
+                        <Table
+                            columns={columns}
+                            data={paginatedServices}
+                            hideActions={true}
+                        />
+                    ) : (
+                        <div className="py-20 text-center bg-gray-50/50">
+                            <Briefcase className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+                            <h3 className="text-xl font-black text-gray-300 uppercase tracking-[0.2em]">No Pages Found</h3>
+                        </div>
+                    )}
+                </div>
 
-                        {!isLoading && filteredServices.length === 0 && (
-                            <div className="py-20 text-center">
-                                <Briefcase className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-                                <h3 className="text-lg font-bold text-gray-400 uppercase tracking-widest">No Services Found</h3>
-                                <p className="text-gray-400 text-sm italic mt-1">Try creating a new service or adjusting your search.</p>
-                                <button
-                                    onClick={() => navigate('/create-service')}
-                                    className="mt-6 px-6 py-2 bg-blue-600 text-white font-bold rounded shadow-lg hover:bg-blue-700 transition-all uppercase text-xs"
-                                >
-                                    Create Service
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="px-6 py-4 bg-gray-50 border-t">
+                {filteredServices.length > 0 && (
+                    <div className="mt-4 px-4 pb-4 bg-white">
                         <Pagination
                             currentPage={currentPage}
                             totalItems={filteredServices.length}
                             itemsPerPage={itemsPerPage}
                             onPageChange={setCurrentPage}
-                            label="services"
+                            label="pages"
                         />
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

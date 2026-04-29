@@ -48,13 +48,20 @@ export default function ExhibitorProductsProfile() {
             const res = await api.get("/api/exhibitor-registration");
             if (res.data && res.data.success && Array.isArray(res.data.data)) {
                 const activeOnes = res.data.data
-                    .filter(e => e && e.status && ['paid', 'confirmed', 'approved', 'advance-paid'].includes(e.status.toLowerCase()))
+                    .filter(e =>
+                        e &&
+                        e.isSeller === true &&
+                        e.sellerStatus === 'active' &&
+                        e.sellerSubscription?.status === 'active'
+                    )
                     .map(e => ({
                         _id: e._id,
                         title: e.exhibitorName || 'Unknown Company',
                         location: `${e.city || ''}, ${e.country || ''}`,
                         email: e.contact1?.email || 'No Email',
-                        companyLogoUrl: e.companyLogoUrl
+                        companyLogoUrl: e.companyLogoUrl,
+                        registrationId: e.registrationId,
+                        planName: e.sellerSubscription?.plan || 'Active Plan',
                     }));
                 setExhibitors(activeOnes);
             } else {
@@ -153,8 +160,8 @@ export default function ExhibitorProductsProfile() {
     return (
         <div className="p-6 max-w-[1600px] mx-auto space-y-6">
             <PageHeader
-                title="Exhibitors Products Management"
-                subtitle="End-to-end monitoring and multi-exhibitor catalog control."
+                title="Seller Products Management"
+                subtitle="Manage product catalogs for sellers with active subscriptions."
             />
 
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
@@ -187,8 +194,15 @@ export default function ExhibitorProductsProfile() {
                                 <div className="min-w-0">
                                     <h4 className="text-[11px] font-black uppercase truncate leading-tight">{exh.title}</h4>
                                     <p className={`text-[10px] font-medium truncate mt-0.5 ${selectedExhibitor?._id === exh._id ? 'text-white/70' : 'text-gray-400'}`}>
-                                        {exh.location}
+                                        {exh.registrationId || exh.location}
                                     </p>
+                                    {exh.planName && (
+                                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase mt-0.5 inline-block ${
+                                            selectedExhibitor?._id === exh._id ? 'bg-white/20 text-white' : 'bg-green-50 text-green-700'
+                                        }`}>
+                                            {exh.planName}
+                                        </span>
+                                    )}
                                 </div>
                                 <ArrowRight size={14} className={`shrink-0 transition-transform ${selectedExhibitor?._id === exh._id ? 'translate-x-0' : '-translate-x-2 opacity-0 group-hover:opacity-100'}`} />
                             </button>
@@ -202,7 +216,8 @@ export default function ExhibitorProductsProfile() {
                         {!selectedExhibitor ? (
                             <div className="h-full flex flex-col items-center justify-center bg-gray-50 border-2 border-dashed rounded-lg p-20 text-center opacity-60">
                                 <Users size={48} className="text-gray-300 mb-4" />
-                                <h3 className="text-sm font-black uppercase text-gray-400">Select an Exhibitor to Manage</h3>
+                                <h3 className="text-sm font-black uppercase text-gray-400">Select a Seller to Manage Products</h3>
+                                <p className="text-xs text-gray-400 mt-2">Only sellers with active subscription are shown</p>
                             </div>
                         ) : productsLoading ? (
                             <div className="h-full flex items-center justify-center py-40">

@@ -45,7 +45,9 @@ const EMPTY_CARD = {
     icon: 'ShieldCheck',
     image: '',
     imageAlt: '',
-    accent: '#23471d'
+    accent: '#23471d',
+    buttonText: 'Learn More',
+    buttonUrl: '#'
 };
 
 const Services = () => {
@@ -199,7 +201,9 @@ const Services = () => {
             icon: card.icon,
             image: card.image,
             imageAlt: card.imageAlt || '',
-            accent: card.accent
+            accent: card.accent,
+            buttonText: card.buttonText || 'Learn More',
+            buttonUrl: card.buttonUrl || '#'
         });
         setImagePreview(card.image ? `${SERVER_URL}${card.image}` : '');
         setImageFile(null);
@@ -424,6 +428,30 @@ const Services = () => {
                                          className="w-full px-3 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none text-xs shadow-sm bg-white"
                                          placeholder="Image Alt Text (SEO)..."
                                      />
+                                </div>
+                             </div>
+
+                             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Button Text</label>
+                                    <input
+                                        type="text"
+                                        value={cardForm.buttonText}
+                                        onChange={(e) => setCardForm({ ...cardForm, buttonText: e.target.value })}
+                                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none text-xs shadow-sm"
+                                        placeholder="Learn More"
+                                    />
+                                    <p className="text-[9px] text-gray-400 mt-1 font-medium italic">Leave blank to hide button</p>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Button URL</label>
+                                    <input
+                                        type="text"
+                                        value={cardForm.buttonUrl}
+                                        onChange={(e) => setCardForm({ ...cardForm, buttonUrl: e.target.value })}
+                                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none text-xs shadow-sm"
+                                        placeholder="/industry-zone/..."
+                                    />
                                 </div>
                              </div>
 

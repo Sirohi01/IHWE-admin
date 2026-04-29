@@ -883,7 +883,7 @@ const BuyerRegistration = () => {
                             <Field label="Company Name *" name="companyName" required error={errors.companyName}>
                                 <input id="companyName" name="companyName" value={formData.companyName} onChange={handleInputChange} placeholder="Full Registered Name" className={inputClass} />
                             </Field>
-                            <Field label="Mobile Number *" name="mobileNumber" required error={errors.mobileNumber}>
+                            <Field label={<span>Mobile Number * <div className="inline-flex w-32 overflow-hidden align-middle ml-2 items-center h-4 relative"><motion.span initial={{ x: "100%" }} animate={{ x: "-100%" }} transition={{ repeat: Infinity, duration: 4, ease: "linear" }} className="text-red-500 text-[10px] uppercase font-semibold tracking-wide whitespace-nowrap absolute">Our team will contact you</motion.span></div></span>} name="mobileNumber" required error={errors.mobileNumber}>
                                 <input id="mobileNumber" name="mobileNumber" value={formData.mobileNumber} onChange={handleInputChange} placeholder="10-digit mobile" className={inputClass} maxLength={10} />
                             </Field>
                             <Field label="Alternate Number *" name="alternateNumber" required error={errors.alternateNumber}>
