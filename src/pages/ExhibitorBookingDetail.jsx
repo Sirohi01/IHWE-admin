@@ -79,6 +79,203 @@ const TABS = [
     { id: 'seller', label: 'Seller Portal', icon: ShoppingCart },
 ];
 
+function SellerKycSection({ reg, id, onRefresh }) {
+    const [saving, setSaving] = useState(false);
+    const [kycStatus, setKycStatus] = useState(reg.kycStatus || 'pending');
+    const [paymentVerStatus, setPaymentVerStatus] = useState(reg.paymentVerificationStatus || 'pending');
+    const [bankVerStatus, setBankVerStatus] = useState(reg.bankVerificationStatus || 'pending');
+
+    useEffect(() => {
+        setKycStatus(reg.kycStatus || 'pending');
+        setPaymentVerStatus(reg.paymentVerificationStatus || 'pending');
+        setBankVerStatus(reg.bankVerificationStatus || 'pending');
+    }, [reg]);
+
+    const handleUpdate = async (fields, label) => {
+        setSaving(true);
+        try {
+            const res = await api.put(`/api/exhibitor-registration/${id}`, fields);
+            if (res.data.success) {
+                if (fields.kycStatus) setKycStatus(fields.kycStatus);
+                if (fields.paymentVerificationStatus) setPaymentVerStatus(fields.paymentVerificationStatus);
+                if (fields.bankVerificationStatus) setBankVerStatus(fields.bankVerificationStatus);
+                Swal.fire({ icon: 'success', title: label, timer: 1200, showConfirmButton: false });
+                onRefresh();
+            }
+        } catch { Swal.fire('Error', 'Failed to update', 'error'); }
+        finally { setSaving(false); }
+    };
+
+    const KYC_DOCS = [
+        { label: 'GST Certificate', field: 'gstCertificate' },
+        { label: 'PAN Card', field: 'panCard' },
+        { label: 'Registration Certificate', field: 'registrationCertificate' },
+        { label: 'Authorized Signatory ID', field: 'authorizedSignatoryId' },
+    ];
+
+    const statusBadge = (status) => ({
+        approved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        rejected: 'bg-red-50 text-red-700 border-red-200',
+        under_review: 'bg-blue-50 text-blue-700 border-blue-200',
+        pending: 'bg-amber-50 text-amber-700 border-amber-200',
+    }[status] || 'bg-slate-50 text-slate-700 border-slate-200');
+
+    const ActionBtns = ({ current, onApprove, onReject, onReview, onReset }) => (
+        <div className="flex items-center gap-2 flex-wrap">
+            <button onClick={onApprove} disabled={saving || current === 'approved'}
+                className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white text-[10px] font-black uppercase rounded disabled:opacity-40 hover:bg-emerald-700 transition-colors">
+                <CheckCircle2 size={11} /> Approve
+            </button>
+            <button onClick={onReview} disabled={saving || current === 'under_review'}
+                className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 text-white text-[10px] font-black uppercase rounded disabled:opacity-40 hover:bg-blue-600 transition-colors">
+                Under Review
+            </button>
+            <button onClick={onReject} disabled={saving || current === 'rejected'}
+                className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white text-[10px] font-black uppercase rounded disabled:opacity-40 hover:bg-red-700 transition-colors">
+                <X size={11} /> Reject
+            </button>
+            <button onClick={onReset} disabled={saving || current === 'pending'}
+                className="px-3 py-1.5 bg-slate-200 text-slate-700 text-[10px] font-black uppercase rounded disabled:opacity-40 hover:bg-slate-300 transition-colors">
+                Reset
+            </button>
+        </div>
+    );
+
+    return (
+        <div className="space-y-4">
+            {/* ── KYC Documents ── */}
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden font-inter">
+                <SH title="Seller KYC Documents & Verification" icon={CheckCircle2} actions={
+                    <span className={`px-3 py-1 text-[10px] font-black uppercase border rounded-full ${statusBadge(kycStatus)}`}>
+                        KYC: {kycStatus}
+                    </span>
+                } />
+                <div className="p-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                        {KYC_DOCS.map(({ label, field }) => {
+                            const url = reg.kycDocuments?.[field];
+                            const resolvedUrl = url ? (url.startsWith('http') ? url : `${SERVER_URL}${url}`) : null;
+                            const isPdf = url?.toLowerCase().includes('.pdf');
+                            return (
+                                <div key={field} className="flex flex-col border border-gray-100 rounded overflow-hidden bg-white shadow-sm">
+                                    <div className="px-2 py-1.5 bg-slate-50 border-b border-gray-100 flex items-center justify-between">
+                                        <span className="text-[9px] font-black text-gray-500 uppercase tracking-wider">{label}</span>
+                                        {resolvedUrl && (
+                                            <a href={resolvedUrl} target="_blank" rel="noopener noreferrer" className="text-[#23471d] hover:text-[#d26019]">
+                                                <ExternalLink size={10} />
+                                            </a>
+                                        )}
+                                    </div>
+                                    <div className="aspect-square bg-slate-100 flex items-center justify-center overflow-hidden">
+                                        {isPdf ? (
+                                            <div className="flex flex-col items-center gap-1">
+                                                <FileText size={28} className="text-[#23471d]" />
+                                                <span className="text-[8px] font-bold text-gray-400 uppercase">PDF</span>
+                                            </div>
+                                        ) : resolvedUrl ? (
+                                            <img src={resolvedUrl} alt={label} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="flex flex-col items-center gap-1 text-gray-300">
+                                                <FileText size={24} />
+                                                <span className="text-[8px] font-bold uppercase">Not Uploaded</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="px-2 py-1 text-center">
+                                        <span className={`text-[9px] font-black uppercase ${resolvedUrl ? 'text-emerald-600' : 'text-red-400'}`}>
+                                            {resolvedUrl ? '✓ Uploaded' : '✗ Missing'}
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <div className="flex items-center gap-2 pt-3 border-t border-gray-100 flex-wrap">
+                        <span className="text-[10px] font-black text-gray-500 uppercase mr-1">KYC:</span>
+                        <ActionBtns
+                            current={kycStatus}
+                            onApprove={() => handleUpdate({ kycStatus: 'approved' }, 'KYC Approved')}
+                            onReview={() => handleUpdate({ kycStatus: 'reupload' }, 'KYC set to Re-upload')}
+                            onReject={() => handleUpdate({ kycStatus: 'rejected' }, 'KYC Rejected')}
+                            onReset={() => handleUpdate({ kycStatus: 'pending' }, 'KYC Reset')}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Payment Verification ── */}
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden font-inter">
+                <SH title="Payment Verification" icon={CreditCard} actions={
+                    <span className={`px-3 py-1 text-[10px] font-black uppercase border rounded-full ${statusBadge(paymentVerStatus)}`}>
+                        {paymentVerStatus.replace('_', ' ')}
+                    </span>
+                } />
+                <div className="p-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                        {[
+                            { label: 'Amount Paid', value: `₹ ${Number(reg.amountPaid || 0).toLocaleString('en-IN')}` },
+                            { label: 'Balance', value: `₹ ${Number(reg.balanceAmount || 0).toLocaleString('en-IN')}` },
+                            { label: 'Payment Mode', value: reg.paymentMode || '—' },
+                            { label: 'Transactions', value: reg.paymentHistory?.length || 0 },
+                        ].map(({ label, value }) => (
+                            <div key={label} className="p-3 bg-slate-50 border border-slate-100 rounded">
+                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+                                <p className="text-sm font-black text-slate-800">{value}</p>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex items-center gap-2 pt-3 border-t border-gray-100 flex-wrap">
+                        <span className="text-[10px] font-black text-gray-500 uppercase mr-1">Payment:</span>
+                        <ActionBtns
+                            current={paymentVerStatus}
+                            onApprove={() => handleUpdate({ paymentVerificationStatus: 'approved' }, 'Payment Verified')}
+                            onReview={() => handleUpdate({ paymentVerificationStatus: 'under_review' }, 'Payment set to Under Review')}
+                            onReject={() => handleUpdate({ paymentVerificationStatus: 'rejected' }, 'Payment Rejected')}
+                            onReset={() => handleUpdate({ paymentVerificationStatus: 'pending' }, 'Payment Reset')}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Bank Details Verification ── */}
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden font-inter">
+                <SH title="Bank Details Verification" icon={CreditCard} actions={
+                    <span className={`px-3 py-1 text-[10px] font-black uppercase border rounded-full ${statusBadge(bankVerStatus)}`}>
+                        {bankVerStatus.replace('_', ' ')}
+                    </span>
+                } />
+                <div className="p-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                        {[
+                            { label: 'Bank Name', value: reg.bankDetails?.bankName || '—' },
+                            { label: 'Account Holder', value: reg.bankDetails?.accountHolder || '—' },
+                            { label: 'Account Number', value: reg.bankDetails?.accountNumber || '—' },
+                            { label: 'IFSC Code', value: reg.bankDetails?.ifscCode || '—' },
+                            { label: 'Branch', value: reg.bankDetails?.branch || '—' },
+                            { label: 'Account Type', value: reg.bankDetails?.accountType || '—' },
+                        ].map(({ label, value }) => (
+                            <div key={label} className="p-3 bg-slate-50 border border-slate-100 rounded">
+                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+                                <p className="text-sm font-black text-slate-800">{value}</p>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex items-center gap-2 pt-3 border-t border-gray-100 flex-wrap">
+                        <span className="text-[10px] font-black text-gray-500 uppercase mr-1">Bank:</span>
+                        <ActionBtns
+                            current={bankVerStatus}
+                            onApprove={() => handleUpdate({ bankVerificationStatus: 'approved' }, 'Bank Details Verified')}
+                            onReview={() => handleUpdate({ bankVerificationStatus: 'under_review' }, 'Bank set to Under Review')}
+                            onReject={() => handleUpdate({ bankVerificationStatus: 'rejected' }, 'Bank Details Rejected')}
+                            onReset={() => handleUpdate({ bankVerificationStatus: 'pending' }, 'Bank Reset')}
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function SellerTab({ reg, id, onRefresh }) {
     const [saving, setSaving] = useState(false);
     const [subscriptionPlans, setSubscriptionPlans] = useState([]);
@@ -296,6 +493,9 @@ function SellerTab({ reg, id, onRefresh }) {
                     ))}
                 </div>
             </div>
+
+            {/* ── KYC Documents & Approval ── */}
+            <SellerKycSection reg={reg} id={id} onRefresh={onRefresh} />
         </div>
     );
 }
@@ -1131,7 +1331,7 @@ function PaymentTab({ reg, fmt, id, onRefresh }) {
         </div>
     );
 }
-function DocumentsTab({ reg }) {
+function DocumentsTab({ reg, id, onRefresh }) {
     const registrationDocs = [
         { label: 'Registration Form (PDF)', url: fixUrl(reg.registrationPdfUrl), color: 'bg-[#23471d]' },
         { label: 'Payment Receipt (PDF)', url: fixUrl(reg.receiptPdfUrl), color: 'bg-[#d26019]' },
@@ -1139,7 +1339,7 @@ function DocumentsTab({ reg }) {
     ].filter(d => d.url);
 
     const kycDocs = [
-        { label: 'Company Logo', url: fixUrl(reg.companyLogoUrl || reg.companyLogo) },
+        { label: 'Company Logo', url: fixUrl(reg.companyLogoUrl || reg.companyLogo || reg.logo) },
         { label: 'PAN Card (Front)', url: fixUrl(reg.panCardFrontUrl || reg.panFrontUrl || reg.panCardFront || reg.panFront) },
         { label: 'PAN Card (Back)', url: fixUrl(reg.panCardBackUrl || reg.panBackUrl || reg.panCardBack || reg.panBack) },
         { label: 'Aadhaar Card (Front)', url: fixUrl(reg.aadhaarCardFrontUrl || reg.aadhaarFrontUrl || reg.aadhaarCardFront || reg.aadhaarFront) },
@@ -1147,6 +1347,16 @@ function DocumentsTab({ reg }) {
         { label: 'GST Certificate', url: fixUrl(reg.gstCertificateUrl || reg.gstCertUrl || reg.gstCertificate || reg.gstCert) },
         { label: 'Cancelled Cheque', url: fixUrl(reg.cancelledChequeUrl || reg.chequeUrl || reg.cancelledCheque || reg.cheque) },
         { label: 'Representative Photo', url: fixUrl(reg.representativePhotoUrl || reg.photoUrl || reg.representativePhoto || reg.photo) },
+    ].filter(d => d.url);
+
+    // Seller KYC docs (uploaded via seller profile page)
+    const sellerKycDocs = [
+        { label: 'GST Certificate', url: fixUrl(reg.kycDocuments?.gstCertificate) },
+        { label: 'PAN Card', url: fixUrl(reg.kycDocuments?.panCard) },
+        { label: 'Registration Certificate', url: fixUrl(reg.kycDocuments?.registrationCertificate) },
+        { label: 'Authorized Signatory ID', url: fixUrl(reg.kycDocuments?.authorizedSignatoryId) },
+        { label: 'Company Brochure', url: fixUrl(reg.brochure) },
+        { label: 'Product Catalogue', url: fixUrl(reg.productCatalogue) },
     ].filter(d => d.url);
 
     return (
@@ -1171,10 +1381,48 @@ function DocumentsTab({ reg }) {
 
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Business & KYC Documentation (Admin Management)" icon={Layers} />
-                <KycDocsGrid reg={reg} id={reg._id} onRefresh={() => window.location.reload()} />
+                <KycDocsGrid reg={reg} id={reg._id} onRefresh={onRefresh || (() => window.location.reload())} />
             </div>
 
-            <SpecialDocsSection reg={reg} id={reg._id} onRefresh={() => window.location.reload()} />
+            {/* Seller Profile KYC Docs */}
+            {sellerKycDocs.length > 0 && (
+                <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                    <SH title="Seller Profile KYC Documents" icon={CheckCircle2} actions={
+                        <span className={`px-3 py-1 text-[10px] font-black uppercase border rounded-full ${
+                            reg.kycStatus === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                            reg.kycStatus === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                            'bg-amber-50 text-amber-700 border-amber-200'
+                        }`}>KYC: {reg.kycStatus || 'pending'}</span>
+                    } />
+                    <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                        {sellerKycDocs.map(({ label, url }) => {
+                            const isPdf = url?.toLowerCase().includes('.pdf');
+                            return (
+                                <div key={label} className="flex flex-col border border-gray-100 rounded overflow-hidden bg-white shadow-sm">
+                                    <div className="px-2 py-1.5 bg-slate-50 border-b border-gray-100 flex items-center justify-between">
+                                        <span className="text-[9px] font-black text-gray-500 uppercase tracking-wider truncate">{label}</span>
+                                        <a href={url} target="_blank" rel="noopener noreferrer" className="text-[#23471d] hover:text-[#d26019] ml-1 flex-shrink-0">
+                                            <ExternalLink size={10} />
+                                        </a>
+                                    </div>
+                                    <div className="aspect-square bg-slate-100 flex items-center justify-center overflow-hidden">
+                                        {isPdf ? (
+                                            <div className="flex flex-col items-center gap-1">
+                                                <FileText size={24} className="text-[#23471d]" />
+                                                <span className="text-[8px] font-bold text-gray-400 uppercase">PDF</span>
+                                            </div>
+                                        ) : (
+                                            <img src={url} alt={label} className="w-full h-full object-cover" />
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            <SpecialDocsSection reg={reg} id={reg._id} onRefresh={onRefresh || (() => window.location.reload())} />
         </div>
     );
 }
@@ -1857,7 +2105,7 @@ export default function ExhibitorBookingDetail() {
             {reg && activeTab === 'overview' && <OverviewTab reg={reg} fmt={fmt} id={id} onRefresh={fetchReg} />}
             {reg && activeTab === 'contacts' && <ContactsTab reg={reg} id={id} onRefresh={fetchReg} />}
             {reg && activeTab === 'payment' && <PaymentTab reg={reg} fmt={fmt} id={id} onRefresh={fetchReg} />}
-            {reg && activeTab === 'documents' && <DocumentsTab reg={reg} />}
+            {reg && activeTab === 'documents' && <DocumentsTab reg={reg} id={id} onRefresh={fetchReg} />}
             {reg && activeTab === 'msme' && <MSMETab reg={reg} id={id} onRefresh={fetchReg} />}
             {reg && activeTab === 'accessories' && <AccessoriesTab reg={reg} id={id} />}
             {reg && activeTab === 'seller' && <SellerTab reg={reg} id={id} onRefresh={fetchReg} />}
