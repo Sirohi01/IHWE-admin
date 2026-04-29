@@ -3,6 +3,8 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { useState } from "react";
 import Sidebar from "./Sidebar";
+import WhatsAppFloat from "../components/WhatsAppFloat";
+import SocialSidebar from "../components/SocialSidebar";
 
 export default function AdminLayout({ onLogout }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -47,6 +49,10 @@ export default function AdminLayout({ onLogout }) {
           <Footer />
         </div>
       </div>
+
+      {/* Floating Widgets */}
+      <WhatsAppFloat />
+      <SocialSidebar />
     </div>
   );
 }

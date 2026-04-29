@@ -165,6 +165,7 @@ import Reminder from "../pages/navbar_page/Reminder";
 import ToDoList from "../pages/navbar_page/ToDoList";
 import NewLeads from "../pages/navbar_page/NewLeads";
 import Notification from "../pages/navbar_page/Notification";
+import NotFound from "../pages/NotFound";
 
 export default function AppRoutes() {
   return (
@@ -452,7 +453,9 @@ export default function AppRoutes() {
           <Route path="/to-do-list" element={<ToDoList />} />
           <Route path="/new-leads" element={<NewLeads />} />
           <Route path="/notification" element={<Notification />} />
+          <Route path="*" element={<NotFound />} />
         </Route>
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );
