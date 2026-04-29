@@ -23,9 +23,8 @@ import {
 } from 'lucide-react';
 import api from '../lib/api';
 import Swal from 'sweetalert2';
-import PageHeader from '../components/PageHeader';
 
-const BuyerRegistrationConfig = () => {
+const InternationalBuyerRegistrationConfig = () => {
     const [config, setConfig] = useState({
         companyTypes: [],
         annualTurnoverRanges: [],
@@ -40,6 +39,12 @@ const BuyerRegistrationConfig = () => {
         budgetRanges: [],
         companySizes: [],
         certificationOptions: [],
+        businessModelOptions: [],
+        meetingCategoryOptions: [],
+        meetingDayOptions: [],
+        exhibitorTypeOptions: [],
+        meetingObjectiveOptions: [],
+        preferredBusinessTypeOptions: [],
         packages: []
     });
     const [isLoading, setIsLoading] = useState(true);
@@ -53,16 +58,21 @@ const BuyerRegistrationConfig = () => {
     const fetchConfig = async () => {
         setIsLoading(true);
         try {
-            const res = await api.get('/api/buyer-registration/config');
+            const res = await api.get('/api/international-buyer/config');
             if (res.data.success) {
-                setConfig(res.data.data);
+                // Ensure all expected fields exist in the state
+                const fetchedData = res.data.data;
+                setConfig(prev => ({
+                    ...prev,
+                    ...fetchedData
+                }));
             }
         } catch (error) {
             console.error('Error fetching config:', error);
             Swal.fire({
                 icon: 'error',
                 title: 'Data Fetch Error',
-                text: 'Could not load configuration settings.'
+                text: 'Could not load international buyer configuration settings.'
             });
         } finally {
             setIsLoading(false);
@@ -72,12 +82,12 @@ const BuyerRegistrationConfig = () => {
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            const res = await api.put('/api/buyer-registration/config', config);
+            const res = await api.put('/api/international-buyer/config', config);
             if (res.data.success) {
                 Swal.fire({
                     icon: 'success',
                     title: 'Saved Successfully',
-                    text: 'Configuration has been updated.',
+                    text: 'International configuration has been updated.',
                     confirmButtonColor: '#23471d'
                 });
             }
@@ -86,7 +96,7 @@ const BuyerRegistrationConfig = () => {
             Swal.fire({
                 icon: 'error',
                 title: 'Save Error',
-                text: 'Failed to update configuration.'
+                text: 'Failed to update international configuration.'
             });
         } finally {
             setIsSaving(false);
@@ -98,7 +108,7 @@ const BuyerRegistrationConfig = () => {
         if (newItem && newItem.trim()) {
             setConfig(prev => ({
                 ...prev,
-                [field]: [...prev[field], newItem.trim()]
+                [field]: [...(prev[field] || []), newItem.trim()]
             }));
         }
     };
@@ -106,12 +116,12 @@ const BuyerRegistrationConfig = () => {
     const removeItem = (field, index) => {
         setConfig(prev => ({
             ...prev,
-            [field]: prev[field].filter((_, i) => i !== index)
+            [field]: (prev[field] || []).filter((_, i) => i !== index)
         }));
     };
 
     const moveItem = (field, index, direction) => {
-        const newList = [...config[field]];
+        const newList = [...(config[field] || [])];
         const newIndex = index + direction;
         if (newIndex >= 0 && newIndex < newList.length) {
             [newList[index], newList[newIndex]] = [newList[newIndex], newList[index]];
@@ -122,7 +132,7 @@ const BuyerRegistrationConfig = () => {
     const addPackage = () => {
         setConfig(prev => ({
             ...prev,
-            packages: [...prev.packages, { 
+            packages: [...(prev.packages || []), { 
                 name: 'New Package', 
                 price: 0, 
                 category: 'Pass',
@@ -152,19 +162,30 @@ const BuyerRegistrationConfig = () => {
 
     const addBenefit = (pkgIndex) => {
         const newPackages = [...config.packages];
-        newPackages[pkgIndex].benefits.push('New Benefit');
+        newPackages[pkgIndex] = {
+            ...newPackages[pkgIndex],
+            benefits: [...(newPackages[pkgIndex].benefits || []), 'New Benefit']
+        };
         setConfig(prev => ({ ...prev, packages: newPackages }));
     };
 
     const updateBenefit = (pkgIndex, benefitIndex, value) => {
         const newPackages = [...config.packages];
-        newPackages[pkgIndex].benefits[benefitIndex] = value;
+        const newBenefits = [...(newPackages[pkgIndex].benefits || [])];
+        newBenefits[benefitIndex] = value;
+        newPackages[pkgIndex] = {
+            ...newPackages[pkgIndex],
+            benefits: newBenefits
+        };
         setConfig(prev => ({ ...prev, packages: newPackages }));
     };
 
     const removeBenefit = (pkgIndex, benefitIndex) => {
         const newPackages = [...config.packages];
-        newPackages[pkgIndex].benefits = newPackages[pkgIndex].benefits.filter((_, i) => i !== benefitIndex);
+        newPackages[pkgIndex] = {
+            ...newPackages[pkgIndex],
+            benefits: (newPackages[pkgIndex].benefits || []).filter((_, i) => i !== benefitIndex)
+        };
         setConfig(prev => ({ ...prev, packages: newPackages }));
     };
 
@@ -228,8 +249,8 @@ const BuyerRegistrationConfig = () => {
         <div className="bg-white min-h-screen font-inter pb-20">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-50 shadow-sm">
                 <div>
-                    <h1 className="text-xl font-bold text-slate-800 uppercase tracking-tight">Buyer Registration Config</h1>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em] mt-0.5">Manage Dynamic Form Options & Packages</p>
+                    <h1 className="text-xl font-bold text-slate-800 uppercase tracking-tight">International Buyer Config</h1>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em] mt-0.5">Manage Form Options & Packages for INTL Buyers</p>
                 </div>
                 <button 
                     onClick={handleSave}
@@ -263,7 +284,7 @@ const BuyerRegistrationConfig = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fadeIn">
                         <ArrayEditor title="Business Types" field="companyTypes" icon={Layout} />
                         <ArrayEditor title="Turnover Ranges" field="annualTurnoverRanges" icon={CheckCircle} />
-                        <ArrayEditor title="India Regions" field="regions" icon={Globe} />
+                        <ArrayEditor title="Global Regions" field="regions" icon={Globe} />
                         <ArrayEditor title="Supplier Types" field="supplierTypes" icon={ListFilter} />
                         <ArrayEditor title="Purchase Timelines" field="purchaseTimelines" icon={ChevronRight} />
                         <ArrayEditor title="Decision Roles" field="roles" icon={Settings} />
@@ -274,13 +295,19 @@ const BuyerRegistrationConfig = () => {
                         <ArrayEditor title="Budget Ranges" field="budgetRanges" icon={Tags} />
                         <ArrayEditor title="Company Size Options" field="companySizes" icon={Users} />
                         <ArrayEditor title="Certification Options" field="certificationOptions" icon={Award} />
+                        <ArrayEditor title="Business Models" field="businessModelOptions" icon={Briefcase} />
+                        <ArrayEditor title="Meeting Categories" field="meetingCategoryOptions" icon={Target} />
+                        <ArrayEditor title="Exhibitor Types" field="exhibitorTypeOptions" icon={Package} />
+                        <ArrayEditor title="Meeting Objectives" field="meetingObjectiveOptions" icon={Briefcase} />
+                        <ArrayEditor title="Preferred Business Types" field="preferredBusinessTypeOptions" icon={Briefcase} />
+                        <ArrayEditor title="Meeting Day Options" field="meetingDayOptions" icon={Clock} />
                     </div>
                 ) : (
                     <div className="space-y-8 animate-fadeIn">
                         <div className="flex justify-between items-center mb-4">
                             <div>
                                 <h2 className="text-lg font-bold text-slate-800 uppercase">Registration Packages</h2>
-                                <p className="text-xs text-slate-400">Define the pricing tiers and benefits for buyers</p>
+                                <p className="text-xs text-slate-400">Define pricing and benefits for international buyers</p>
                             </div>
                             <button 
                                 onClick={addPackage}
@@ -312,7 +339,7 @@ const BuyerRegistrationConfig = () => {
                                             </div>
                                             
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xl font-black italic">₹</span>
+                                                <span className="text-xl font-black italic">$</span>
                                                 <input 
                                                     type="number"
                                                     value={pkg.price} 
@@ -426,4 +453,4 @@ const BuyerRegistrationConfig = () => {
     );
 };
 
-export default BuyerRegistrationConfig;
+export default InternationalBuyerRegistrationConfig;

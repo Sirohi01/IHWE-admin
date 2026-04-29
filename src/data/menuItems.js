@@ -197,6 +197,12 @@ export const menuItems = [
       { label: "Advanced SEO", path: "/advanced-seo" },
     ],
   },
+  {
+    type: "item",
+    label: "Contact Enquiry",
+    path: "/contact-enquiries",
+    icon: MessageSquare,
+  },
 
   /* ================= Marketing Section ================= */
   {
@@ -230,7 +236,9 @@ export const menuItems = [
     icon: Users,
     children: [
       { label: "Buyer Registration", path: "/buyer-registration" },
+      { label: "International Buyer Registration", path: "/international-buyer-registration" },
       { label: "Buyer List", path: "/buyer-list" },
+      { label: "International Buyer List", path: "/international-buyer-list" },
     ],
   },
   {
@@ -276,6 +284,13 @@ export const menuItems = [
         label: "Failed Payments",
         path: "/failed-payments",
       },
+      {
+        label: "Payment Delay Warnings",
+        path: "/payment-delay-warnings",
+      },
+      { label: "Seller Subscription Plans", path: "/seller-subscription-plans" },
+      { label: "Seller Service Requests", path: "/seller-service-requests" },
+      { label: "Seller Export Inquiries", path: "/seller-export-inquiries" },
     ]
   },
   {
@@ -292,7 +307,8 @@ export const menuItems = [
       { label: "Add Remark Length Fixed", path: "/ihweClientData2026/AddRemarkLengthFixed" },
       { label: "Add Status", path: "/ihweClientData2026/AddStatus" },
       { label: "Add Target", path: "/ihweClientData2026/AddTarget" },
-      { label: "Registration Settings", path: "/buyer-registration-config" },
+      { label: "Buyer Registration Config", path: "/buyer-registration-config" },
+      { label: "International Registration Config", path: "/international-buyer-registration-config" },
     ],
   },
   {
@@ -313,18 +329,8 @@ export const menuItems = [
     icon: List,
     path: "/e-promotion-registers",
   },
-  {
-    type: "item",
-    label: "Contact Enquiry",
-    path: "/contact-enquiries",
-    icon: MessageSquare,
-  },
+  
 
-  /* ================= STALLS & EVENTS ================= */
-  // {
-  //   type: "heading",
-  //   label: "Stalls & Events",
-  // },
 
   /* ================= Developer SECTION ================= */
   {
@@ -342,6 +348,12 @@ export const menuItems = [
     label: "WhatsApp Logs",
     icon: MessageSquare,
     path: "/whatsapp-logs",
+  },
+  {
+    type: "item",
+    label: "Dashboard Banners",
+    icon: Images,
+    path: "/dashboard-banners",
   },
 
 
