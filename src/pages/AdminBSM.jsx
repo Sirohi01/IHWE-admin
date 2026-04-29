@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { 
-    Calendar, Users, Clock, MapPin, 
-    MoreVertical, CheckCircle, XCircle, 
-    Plus, Search, Filter, Trash2, Edit 
+import {
+    Calendar, Users, Clock, MapPin,
+    MoreVertical, CheckCircle, XCircle,
+    Plus, Search, Filter, Trash2, Edit
 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -15,7 +15,7 @@ const AdminBSM = () => {
     const [exhibitors, setExhibitors] = useState([]);
     const [activeEvent, setActiveEvent] = useState(null);
     const [loading, setLoading] = useState(true);
-    
+
     const [showAssignModal, setShowAssignModal] = useState(false);
     const [selectedMeeting, setSelectedMeeting] = useState(null);
     const [formData, setFormData] = useState({
@@ -87,11 +87,11 @@ const AdminBSM = () => {
     const handleAssign = async (e) => {
         e.preventDefault();
         try {
-            const url = selectedMeeting 
+            const url = selectedMeeting
                 ? `${API_BASE}/bsm/admin/update/${selectedMeeting._id}`
                 : `${API_BASE}/bsm/admin/create`;
             const method = selectedMeeting ? 'put' : 'post';
-            
+
             const res = await axios[method](url, formData);
             if (res.data.success) {
                 toast.success(selectedMeeting ? "Meeting Updated" : "Meeting Assigned Successfully");
@@ -145,7 +145,7 @@ const AdminBSM = () => {
                     <h1 className="text-2xl font-bold text-gray-800">Buyer Seller Meet (BSM) Portal</h1>
                     <p className="text-sm text-gray-500">Manage matchmaking and meeting schedules</p>
                 </div>
-                <button 
+                <button
                     onClick={() => { setSelectedMeeting(null); setShowAssignModal(true); }}
                     className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
                 >
@@ -198,22 +198,21 @@ const AdminBSM = () => {
                                     <td className="px-6 py-4">
                                         <div className="flex flex-col text-sm">
                                             <span className="flex items-center gap-1.5">
-                                                <Calendar size={14} className="text-gray-400" /> 
+                                                <Calendar size={14} className="text-gray-400" />
                                                 {m.date ? new Date(m.date).toLocaleDateString() : <span className="text-amber-600 font-bold">Not Scheduled</span>}
                                             </span>
                                             <span className="flex items-center gap-1.5">
-                                                <Clock size={14} className="text-gray-400" /> 
+                                                <Clock size={14} className="text-gray-400" />
                                                 {m.timeSlot || <span className="text-slate-400 italic text-xs">Awaiting Slot</span>}
                                             </span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex flex-col gap-2">
-                                            {m.location && <span className="flex items-center gap-1 text-xs font-medium text-gray-600"><MapPin size={12}/> {m.location}</span>}
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                                                m.status === 'Approved' ? 'bg-green-100 text-green-700' : 
-                                                m.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
-                                            }`}>
+                                            {m.location && <span className="flex items-center gap-1 text-xs font-medium text-gray-600"><MapPin size={12} /> {m.location}</span>}
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${m.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                                                    m.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                                                }`}>
                                                 {m.status}
                                             </span>
                                         </div>
@@ -250,10 +249,10 @@ const AdminBSM = () => {
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex justify-end gap-2">
-                                            <button 
+                                            <button
                                                 onClick={() => {
                                                     setSelectedMeeting(m);
-                                                    // Safely extract date as YYYY-MM-DD using UTC
+
                                                     let dateStr = '';
                                                     if (m.date) {
                                                         const d = new Date(m.date);
@@ -276,7 +275,7 @@ const AdminBSM = () => {
                                                 }}
                                                 className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
                                             >
-                                                <Edit size={18}/>
+                                                <Edit size={18} />
                                             </button>
                                         </div>
                                     </td>
@@ -299,9 +298,9 @@ const AdminBSM = () => {
                             <div className="grid grid-cols-1 gap-4">
                                 <div>
                                     <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Buyer</label>
-                                    <select 
+                                    <select
                                         className="w-full border rounded-lg h-10 px-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                                        required value={formData.buyerId} onChange={e => setFormData({...formData, buyerId: e.target.value})}
+                                        required value={formData.buyerId} onChange={e => setFormData({ ...formData, buyerId: e.target.value })}
                                     >
                                         <option value="">Select Buyer...</option>
                                         {/* If editing and current buyer not in list, show it anyway */}
@@ -315,9 +314,9 @@ const AdminBSM = () => {
                                 </div>
                                 <div>
                                     <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Exhibitor</label>
-                                    <select 
+                                    <select
                                         className="w-full border rounded-lg h-10 px-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                                        required value={formData.exhibitorId} onChange={e => setFormData({...formData, exhibitorId: e.target.value})}
+                                        required value={formData.exhibitorId} onChange={e => setFormData({ ...formData, exhibitorId: e.target.value })}
                                     >
                                         <option value="">Select Exhibitor...</option>
                                         {/* If editing and current exhibitor not in list, show it anyway */}
@@ -333,17 +332,17 @@ const AdminBSM = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Date</label>
-                                    <select 
-                                        className="w-full border rounded-lg h-10 px-3 text-sm focus:ring-2 focus:ring-indigo-500" 
-                                        required 
-                                        value={formData.date} 
-                                        onChange={e => setFormData({...formData, date: e.target.value})}
+                                    <select
+                                        className="w-full border rounded-lg h-10 px-3 text-sm focus:ring-2 focus:ring-indigo-500"
+                                        required
+                                        value={formData.date}
+                                        onChange={e => setFormData({ ...formData, date: e.target.value })}
                                     >
                                         <option value="">Select Date...</option>
                                         {getAvailableDates().filter(d => {
                                             // Always show the currently selected date even if it's "busy" (so we can see it)
                                             if (formData.date === d) return true;
-                                            
+
                                             const allSlotsBusy = slots.length > 0 && slots.every(s => {
                                                 return meetings.some(m => {
                                                     if (selectedMeeting && m._id === selectedMeeting._id) return false;
@@ -351,11 +350,11 @@ const AdminBSM = () => {
                                                     if (mDate !== d) return false;
                                                     if (m.timeSlot !== s) return false;
                                                     if (m.status === 'Cancelled') return false;
-                                                    
+
                                                     const mBuyerId = String(m.buyerId?._id || m.buyerId || '');
                                                     const mExhId = String(m.exhibitorId?._id || m.exhibitorId || '');
-                                                    return (formData.buyerId && mBuyerId === String(formData.buyerId)) || 
-                                                           (formData.exhibitorId && mExhId === String(formData.exhibitorId));
+                                                    return (formData.buyerId && mBuyerId === String(formData.buyerId)) ||
+                                                        (formData.exhibitorId && mExhId === String(formData.exhibitorId));
                                                 });
                                             });
                                             return !allSlotsBusy;
@@ -368,11 +367,11 @@ const AdminBSM = () => {
                                 </div>
                                 <div>
                                     <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Time Slot</label>
-                                    <select 
-                                        className="w-full border rounded-lg h-10 px-3 text-sm focus:ring-2 focus:ring-indigo-500" 
-                                        required 
-                                        value={formData.timeSlot} 
-                                        onChange={e => setFormData({...formData, timeSlot: e.target.value})}
+                                    <select
+                                        className="w-full border rounded-lg h-10 px-3 text-sm focus:ring-2 focus:ring-indigo-500"
+                                        required
+                                        value={formData.timeSlot}
+                                        onChange={e => setFormData({ ...formData, timeSlot: e.target.value })}
                                     >
                                         <option value="">Select Slot...</option>
                                         {slots.filter(s => {
@@ -385,8 +384,8 @@ const AdminBSM = () => {
                                                 if (m.status === 'Cancelled') return false;
                                                 const mBuyerId = String(m.buyerId?._id || m.buyerId || '');
                                                 const mExhId = String(m.exhibitorId?._id || m.exhibitorId || '');
-                                                return (formData.buyerId && mBuyerId === String(formData.buyerId)) || 
-                                                       (formData.exhibitorId && mExhId === String(formData.exhibitorId));
+                                                return (formData.buyerId && mBuyerId === String(formData.buyerId)) ||
+                                                    (formData.exhibitorId && mExhId === String(formData.exhibitorId));
                                             });
                                             return !isBusy;
                                         }).map(s => (
@@ -397,7 +396,7 @@ const AdminBSM = () => {
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Meeting Venue / Table No.</label>
-                                <input type="text" className="w-full border rounded-lg h-10 px-3 text-sm" placeholder="e.g. Table 12, VIP Lounge" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />
+                                <input type="text" className="w-full border rounded-lg h-10 px-3 text-sm" placeholder="e.g. Table 12, VIP Lounge" value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} />
                             </div>
                             <div className="flex gap-3 pt-4">
                                 <button type="button" onClick={() => setShowAssignModal(false)} className="flex-1 py-2 rounded-lg border text-gray-500 font-bold text-sm">Cancel</button>
