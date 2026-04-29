@@ -20,6 +20,11 @@ const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
   return [];
 };
 
+const toTitleCase = (str) => {
+  if (!str || typeof str !== 'string') return str;
+  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
 const WarmClientList = () => {
   const [selectedClient, setSelectedClient] = useState(null);
   const navigate = useNavigate();
@@ -51,9 +56,9 @@ const WarmClientList = () => {
     { label: "Contact Details", accessor: "contact.details" },
     { label: "Category", accessor: "category.main" },
     { label: "Nature Bussiness", accessor: "Nature Bussiness" },
-    { label: "City", accessor: "location.city" },
-    { label: "State", accessor: "location.state" },
+    { label: "Address", accessor: "location.fullAddress" },
     { label: "Source", accessor: "source.type" },
+    { label: "Forward To", accessor: "forwardTo" },
     { label: "Status", accessor: "Status" },
     { label: "Event", accessor: "Event.type" },
     { label: "Updated Details", accessor: "Update.detail" },
@@ -67,26 +72,25 @@ const WarmClientList = () => {
     id: c._id,
     checkbox: true,
     company: {
-      name: c.companyName,
+      name: toTitleCase(c.companyName),
     },
     contact: {
       details: c.contacts
         ?.map(
           (contact) =>
-            `${contact.firstName} ${contact.surname} | ${contact.mobile}`,
+            `${toTitleCase(contact.firstName)} ${toTitleCase(contact.surname)} | ${contact.mobile}`,
         )
         .join(", "),
     },
-    category: { main: c.category },
-    "Nature Bussiness": c.businessNature,
-    location: { city: c.city, state: c.state },
-    source: { type: c.dataSource || "-" },
-    Status: c.companyStatus,
+    category: { main: toTitleCase(c.category) || "-" },
+    "Nature Bussiness": toTitleCase(c.businessNature) || "-",
+    location: { fullAddress: `${toTitleCase(c.country) || "-"} | ${toTitleCase(c.state) || "-"} | ${toTitleCase(c.city) || "-"}` },
+    source: { type: toTitleCase(c.dataSource) || "-" },
+    forwardTo: toTitleCase(c.forwardTo) || "-",
+    Status: toTitleCase(c.companyStatus) || "-",
     Event: { type: "Organic Expo 2026" },
     Update: {
-      detail: `${new Date(c.updatedAt).toLocaleDateString()} | ${
-        c.contacts?.[0]?.firstName || "-"
-      }`,
+      detail: `${new Date(c.updatedAt).toLocaleDateString()} | ${toTitleCase(c.contacts?.[0]?.firstName) || "-"}`,
     },
   }));
 

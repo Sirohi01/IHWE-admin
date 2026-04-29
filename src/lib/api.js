@@ -14,6 +14,12 @@ const getBaseUrl = () => {
 
   return origin.replace(/:\/\/admin\./, "://");
 };
+export const settingsApi = {
+get: async () => {
+const payload = unwrapApiResponse(await api.get("/api/settings"))
+return payload.success ? payload.data : null;
+},
+};
 
 export const SERVER_URL = getBaseUrl();
 export const API_URL = `${SERVER_URL}/api`;
@@ -44,6 +50,7 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error),
 );
+
 
 // ✅ RESPONSE INTERCEPTOR (FIXED)
 api.interceptors.response.use(

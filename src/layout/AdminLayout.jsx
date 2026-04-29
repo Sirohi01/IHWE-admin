@@ -3,6 +3,8 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { useState } from "react";
 import Sidebar from "./Sidebar";
+import WhatsAppFloat from "../components/WhatsAppFloat";
+import SocialSidebar from "../components/SocialSidebar";
 
 export default function AdminLayout({ onLogout }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -37,7 +39,7 @@ export default function AdminLayout({ onLogout }) {
           `}
         >
           {/* MAIN CONTENT - Reduced and consistent padding */}
-          <main className="flex-1 p-3 sm:p-4 lg:p-4 overflow-hidden">
+          <main className="flex-1 overflow-hidden">
             <div className="w-full">
               <Outlet />
             </div>
@@ -47,6 +49,10 @@ export default function AdminLayout({ onLogout }) {
           <Footer />
         </div>
       </div>
+
+      {/* Floating Widgets */}
+      <WhatsAppFloat />
+      <SocialSidebar />
     </div>
   );
 }

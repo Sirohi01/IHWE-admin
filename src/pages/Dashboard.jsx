@@ -8,13 +8,13 @@ export default function Dashboard() {
       `}
     >
       {/* STATS GRID */}
-      <div className={`p-4 sm:p-6 shadow-sm bg-white`}>
+      <div className={`mt-2 shadow-sm bg-white`}>
         <StatsGrid />
       </div>
 
       {/* LOWER SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
+
       </div>
     </div>
   );

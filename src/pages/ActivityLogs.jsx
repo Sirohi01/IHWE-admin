@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-    Activity, Search, Calendar, User, 
+import {
+    Activity, Search, Calendar, User,
     Layers, Info, RefreshCw,
     PlusCircle, Edit3, Trash2, LogIn
 } from 'lucide-react';
@@ -22,9 +22,9 @@ const ActivityLogs = () => {
         try {
             setLoading(true);
             const response = await api.get(`/api/activity-logs`, {
-                params: { 
-                    page: currentPage, 
-                    limit, 
+                params: {
+                    page: currentPage,
+                    limit,
                     search: searchTerm,
                     module: moduleFilter === 'all' ? '' : moduleFilter
                 }
@@ -87,246 +87,308 @@ const ActivityLogs = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
-            {/* Page Header */}
-            <div className="mb-6">
-                <h1 className="text-3xl font-bold text-[#1e3a8a]">MANAGE ACTIVITY LOGS</h1>
-                <p className="text-gray-600 mt-2 text-lg">Detailed audit trail of all administrative actions and system changes</p>
-            </div>
+        <>
+            <div className="relative w-full h-64 overflow-hidden rounded mt-8">
 
-            <div className="w-full">
-                {/* Search & Refresh Bar */}
-                <div className="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between">
-                    <div className="flex items-center gap-3 w-full md:w-auto">
-                        <div className="relative flex-1 md:w-96">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input 
-                                type="text" 
-                                placeholder="Search by user or details..." 
-                                value={searchTerm}
-                                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                                className="w-full h-11 pl-10 pr-4 text-sm border-2 border-gray-200 focus:outline-none focus:border-[#1e3a8a] transition-all bg-white"
-                            />
+                {/* Background Image */}
+                <img
+                    src="/activity_log.png"
+                    alt="banner"
+                    className="absolute inset-0 w-full h-full object-cover z-0"
+                />
+
+                {/* Halka dark overlay */}
+                <div className="absolute inset-0 bg-black/1 z-[1]" />
+
+                {/* Dot grid */}
+                <div className="absolute inset-0 opacity-[0.05] z-[2]"
+                    style={{
+                        backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+                        backgroundSize: '28px 28px'
+                    }}
+                />
+
+                {/* Left accent */}
+                <div className="absolute left-0 top-6 bottom-6 w-1 rounded-full bg-gradient-to-b from-[#d26019]/0 via-[#d26019] to-[#d26019]/0 z-[2]" />
+
+                {/* Content */}
+                <div className="relative z-10 h-full flex items-center justify-between px-10 gap-6">
+
+                    {/* LEFT */}
+                    <div className="flex items-center gap-6">
+                        <div className="w-16 h-16 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center shrink-0 backdrop-blur-sm">
+                            <p className="text-2xl leading-none">📋</p>
                         </div>
-                        <button 
-                            onClick={fetchLogs}
-                            className="p-3 bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-lg border-2 border-gray-200 transition-colors"
-                            title="Refresh Logs"
-                        >
-                            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-                        </button>
-                    </div>
 
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-gray-500 uppercase tracking-wider mr-2">Filter Module:</span>
-                        <select 
-                            value={moduleFilter} 
-                            onChange={(e) => { setModuleFilter(e.target.value); setCurrentPage(1); }}
-                            className="h-11 px-4 text-sm border-2 border-gray-300 focus:outline-none focus:border-[#1e3a8a] bg-white text-gray-700 font-semibold cursor-pointer"
-                        >
-                            <option value="all">ALL SECTIONS</option>
-                            <optgroup label="── HOME ──">
-                            <option value="Home Slider">HOME SLIDER</option>
-                            <option value="Event Highlights">EVENT HIGHLIGHTS</option>
-                            <option value="Marquee Text">MARQUEE TEXT</option>
-                            <option value="Counters">COUNTERS</option>
-                            <option value="Featured Services">FEATURED SERVICES</option>
-                            <option value="Global Platform">GLOBAL PLATFORM</option>
-                            <option value="Our Clients">OUR CLIENTS</option>
-                            <option value="Testimonials">TESTIMONIALS</option>
-                            </optgroup>
-                            <optgroup label="── ABOUT ──">
-                            <option value="About Us">ABOUT US</option>
-                            <option value="Who We Are">WHO WE ARE</option>
-                            <option value="Vision & Mission">VISION &amp; MISSION</option>
-                            <option value="Why Attend">WHY ATTEND</option>
-                            <option value="Target Audience">TARGET AUDIENCE</option>
-                            <option value="Organized By">ORGANIZED BY</option>
-                            </optgroup>
-                            <optgroup label="── EXHIBIT ──">
-                            <option value="Why Exhibit">WHY EXHIBIT</option>
-                            <option value="Exhibitor Profile">EXHIBITOR PROFILE</option>
-                            <option value="E-Promotion Management">E-PROMOTION MGMT</option>
-                            <option value="Stall Vendor">STALL VENDOR</option>
-                            <option value="Exhibitor List">EXHIBITOR LIST</option>
-                            </optgroup>
-                            <optgroup label="── VISIT ──">
-                            <option value="Why Visit">WHY VISIT</option>
-                            <option value="Travel & Accommodation">TRAVEL &amp; ACCOM.</option>
-                            <option value="Visitor Registrations">VISITOR REGISTRATIONS</option>
-                            <option value="Visitor Reviews">VISITOR REVIEWS</option>
-                            </optgroup>
-                            <optgroup label="── REGISTRATION ──">
-                            <option value="Book A Stand">BOOK A STAND</option>
-                            <option value="Buyer Registration">BUYER REGISTRATION</option>
-                            <option value="Speaker Nomination">SPEAKER NOMINATION</option>
-                            <option value="Contact Enquiries">CONTACT ENQUIRIES</option>
-                            </optgroup>
-                            <optgroup label="── STALLS & EVENTS ──">
-                            <option value="Stalls">STALLS</option>
-                            <option value="Stall Rates">STALL RATES</option>
-                            <option value="Event Schedule">EVENT SCHEDULE</option>
-                            <option value="Glimpse Management">GLIMPSE</option>
-                            </optgroup>
-                            <optgroup label="── PARTNERS & ADVISORY ──">
-                            <option value="Partners">PARTNERS</option>
-                            <option value="Advisory Board">ADVISORY BOARD</option>
-                            </optgroup>
-                            <optgroup label="── CONTENT ──">
-                            <option value="Blogs">BLOGS</option>
-                            <option value="FAQ Management">FAQ</option>
-                            <option value="Gallery">GALLERY</option>
-                            <option value="Portfolio Gallery">PORTFOLIO GALLERY</option>
-                            <option value="Hero Background">HERO BACKGROUND</option>
-                            <option value="Terms & Conditions">TERMS &amp; CONDITIONS</option>
-                            <option value="Social Media">SOCIAL MEDIA</option>
-                            <option value="SEO Settings">SEO SETTINGS</option>
-                            <option value="SEO">SEO META</option>
-                            </optgroup>
-                            <optgroup label="── HR ──">
-                            <option value="Vacancies">VACANCIES</option>
-                            <option value="Career Applications">CAREER APPLICATIONS</option>
-                            </optgroup>
-                            <optgroup label="── SYSTEM ──">
-                            <option value="Email Logs">EMAIL LOGS</option>
-                            <option value="WhatsApp Logs">WHATSAPP LOGS</option>
-                            <option value="Admin Management">ADMIN USERS</option>
-                            <option value="Auth">AUTHENTICATION</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                </div>
-
-                {/* Table Card */}
-                <div className="bg-white overflow-hidden shadow-lg">
-                    {/* Dark Table Header Bar */}
-                    <div className="bg-[#1e3a8a] px-6 py-4 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-white/10 rounded-lg">
-                                <Activity className="text-white w-5 h-5" />
-                            </div>
-                            <div>
-                                <h2 className="text-white font-bold text-lg uppercase tracking-wider">System Audit Trail</h2>
-                                <p className="text-blue-100 text-xs font-medium opacity-80">
-                                    Showing {logs.length} of {total} operations tracked
+                        <div>
+                            <div className="flex items-center gap-2 mb-1.5">
+                                <div className="w-1 h-1 rounded-full bg-[#d26019]" />
+                                <p className="text-sm font-bold text-slate-200 uppercase tracking-[0.20em]">
+                                    Admin Panel · System · Audit Trail
                                 </p>
                             </div>
-                        </div>
-                        <div className="text-white/80 text-xs font-bold bg-white/10 px-3 py-1.5 rounded-sm border border-white/20 uppercase tracking-tighter">
-                            Total Records: {total}
+                            <h1 className="text-3xl font-semibold text-white leading-tight tracking-tight mb-1">
+                                Activity <span className="text-[#d26019]">Logs</span>
+                            </h1>
+                            <p className="text-lg font-medium text-slate-200">
+                                Detailed audit trail of all administrative actions and system changes
+                            </p>
                         </div>
                     </div>
 
-                    {/* Table Implementation */}
-                    {loading && logs.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-24 gap-4">
-                            <div className="w-12 h-12 border-4 border-[#1e3a8a] border-t-transparent rounded-full animate-spin"></div>
-                            <p className="text-gray-500 font-bold animate-pulse uppercase tracking-widest text-xs">Restoring audit history...</p>
+                    {/* RIGHT */}
+                    <div className="hidden md:flex flex-col items-end gap-2.5 shrink-0">
+                        <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Live Tracking</span>
                         </div>
-                    ) : logs.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-24 text-gray-300">
-                            <Info size={64} className="mb-4 opacity-10" />
-                            <h3 className="text-xl font-bold text-gray-400 uppercase tracking-widest leading-loose">No Activity Logged</h3>
-                            <p className="text-gray-400 italic font-medium">Verify after performing administrative actions</p>
+
+                        <div className="px-3.5 py-2 rounded-xl bg-[#d26019]/10 border border-[#d26019]/20">
+                            <p className="text-[9px] font-black text-[#d26019]/80 uppercase tracking-widest">
+                                {new Date().toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })}
+                            </p>
                         </div>
-                    ) : (
-                        <div className="bg-white">
-                            <Table 
-                                columns={[
-                                    {
-                                        key: "index",
-                                        label: "No.",
-                                        width: "60px",
-                                        render: (_, i) => (
-                                            <span className="font-bold text-[#1e3a8a]">
-                                                {(currentPage - 1) * limit + i + 1}
-                                            </span>
-                                        )
-                                    },
-                                    {
-                                        key: "user",
-                                        label: "Admin User",
-                                        render: (row) => (
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-7 h-7 rounded-sm bg-red-50 flex items-center justify-center border border-red-100">
-                                                    <User className="w-3.5 h-3.5 text-red-500" />
+
+                    </div>
+
+                </div>
+            </div>
+            <div className="bg-white shadow-md p-6 min-h-screen">
+
+                <div className="w-full">
+                    {/* Search & Refresh Bar */}
+                    <div className="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between">
+                        <div className="flex items-center gap-3 w-full md:w-auto">
+                            <div className="relative flex-1 md:w-96">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search by user or details..."
+                                    value={searchTerm}
+                                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                                    className="w-full h-11 pl-10 pr-4 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#1e3a8a] transition-all bg-white"
+                                />
+                            </div>
+                            <button
+                                onClick={fetchLogs}
+                                className="p-3 bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-lg border-2 border-gray-200 transition-colors"
+                                title="Refresh Logs"
+                            >
+                                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-gray-500 uppercase tracking-wider mr-2">Filter Module:</span>
+                            <select
+                                value={moduleFilter}
+                                onChange={(e) => { setModuleFilter(e.target.value); setCurrentPage(1); }}
+                                className="h-11 px-4 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#1e3a8a] bg-white text-gray-700 font-semibold cursor-pointer"
+                            >
+                                <option value="all">ALL SECTIONS</option>
+                                <optgroup label="── HOME ──">
+                                    <option value="Home Slider">HOME SLIDER</option>
+                                    <option value="Event Highlights">EVENT HIGHLIGHTS</option>
+                                    <option value="Marquee Text">MARQUEE TEXT</option>
+                                    <option value="Counters">COUNTERS</option>
+                                    <option value="Featured Services">FEATURED SERVICES</option>
+                                    <option value="Global Platform">GLOBAL PLATFORM</option>
+                                    <option value="Our Clients">OUR CLIENTS</option>
+                                    <option value="Testimonials">TESTIMONIALS</option>
+                                </optgroup>
+                                <optgroup label="── ABOUT ──">
+                                    <option value="About Us">ABOUT US</option>
+                                    <option value="Who We Are">WHO WE ARE</option>
+                                    <option value="Vision & Mission">VISION &amp; MISSION</option>
+                                    <option value="Why Attend">WHY ATTEND</option>
+                                    <option value="Target Audience">TARGET AUDIENCE</option>
+                                    <option value="Organized By">ORGANIZED BY</option>
+                                </optgroup>
+                                <optgroup label="── EXHIBIT ──">
+                                    <option value="Why Exhibit">WHY EXHIBIT</option>
+                                    <option value="Exhibitor Profile">EXHIBITOR PROFILE</option>
+                                    <option value="E-Promotion Management">E-PROMOTION MGMT</option>
+                                    <option value="Stall Vendor">STALL VENDOR</option>
+                                    <option value="Exhibitor List">EXHIBITOR LIST</option>
+                                </optgroup>
+                                <optgroup label="── VISIT ──">
+                                    <option value="Why Visit">WHY VISIT</option>
+                                    <option value="Travel & Accommodation">TRAVEL &amp; ACCOM.</option>
+                                    <option value="Visitor Registrations">VISITOR REGISTRATIONS</option>
+                                    <option value="Visitor Reviews">VISITOR REVIEWS</option>
+                                </optgroup>
+                                <optgroup label="── REGISTRATION ──">
+                                    <option value="Book A Stand">BOOK A STAND</option>
+                                    <option value="Buyer Registration">BUYER REGISTRATION</option>
+                                    <option value="Speaker Nomination">SPEAKER NOMINATION</option>
+                                    <option value="Contact Enquiries">CONTACT ENQUIRIES</option>
+                                </optgroup>
+                                <optgroup label="── STALLS & EVENTS ──">
+                                    <option value="Stalls">STALLS</option>
+                                    <option value="Stall Rates">STALL RATES</option>
+                                    <option value="Event Schedule">EVENT SCHEDULE</option>
+                                    <option value="Glimpse Management">GLIMPSE</option>
+                                </optgroup>
+                                <optgroup label="── PARTNERS & ADVISORY ──">
+                                    <option value="Partners">PARTNERS</option>
+                                    <option value="Advisory Board">ADVISORY BOARD</option>
+                                </optgroup>
+                                <optgroup label="── CONTENT ──">
+                                    <option value="Blogs">BLOGS</option>
+                                    <option value="FAQ Management">FAQ</option>
+                                    <option value="Gallery">GALLERY</option>
+                                    <option value="Portfolio Gallery">PORTFOLIO GALLERY</option>
+                                    <option value="Hero Background">HERO BACKGROUND</option>
+                                    <option value="Terms & Conditions">TERMS &amp; CONDITIONS</option>
+                                    <option value="Social Media">SOCIAL MEDIA</option>
+                                    <option value="SEO Settings">SEO SETTINGS</option>
+                                    <option value="SEO">SEO META</option>
+                                </optgroup>
+                                <optgroup label="── HR ──">
+                                    <option value="Vacancies">VACANCIES</option>
+                                    <option value="Career Applications">CAREER APPLICATIONS</option>
+                                </optgroup>
+                                <optgroup label="── SYSTEM ──">
+                                    <option value="Email Logs">EMAIL LOGS</option>
+                                    <option value="WhatsApp Logs">WHATSAPP LOGS</option>
+                                    <option value="Admin Management">ADMIN USERS</option>
+                                    <option value="Auth">AUTHENTICATION</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Table Card */}
+                    <div className="bg-white overflow-hidden shadow-lg">
+                        {/* Dark Table Header Bar */}
+                        <div className="bg-[#1e3a8a] px-6 py-4 rounded-t flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-white/10 rounded-lg">
+                                    <Activity className="text-white w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h2 className="text-white font-bold text-lg uppercase tracking-wider">System Audit Trail</h2>
+                                    <p className="text-blue-100 text-xs font-medium opacity-80">
+                                        Showing {logs.length} of {total} operations tracked
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="text-white/80 text-sm font-bold bg-white/10 px-3 py-1.5 rounded-sm border border-white/20 uppercase tracking-tighter">
+                                Total Records: {total}
+                            </div>
+                        </div>
+
+                        {/* Table Implementation */}
+                        {loading && logs.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-24 gap-4">
+                                <div className="w-12 h-12 border-4 border-[#1e3a8a] border-t-transparent rounded-full animate-spin"></div>
+                                <p className="text-gray-500 font-bold animate-pulse uppercase tracking-widest text-xs">Restoring audit history...</p>
+                            </div>
+                        ) : logs.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-24 text-gray-300">
+                                <Info size={64} className="mb-4 opacity-10" />
+                                <h3 className="text-xl font-bold text-gray-400 uppercase tracking-widest leading-loose">No Activity Logged</h3>
+                                <p className="text-gray-400 italic font-medium">Verify after performing administrative actions</p>
+                            </div>
+                        ) : (
+                            <div className="bg-white">
+                                <Table
+                                    columns={[
+                                        {
+                                            key: "index",
+                                            label: "No.",
+                                            width: "60px",
+                                            render: (_, i) => (
+                                                <span className="font-bold text-[#1e3a8a]">
+                                                    {(currentPage - 1) * limit + i + 1}
+                                                </span>
+                                            )
+                                        },
+                                        {
+                                            key: "user",
+                                            label: "Admin User",
+                                            render: (row) => (
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-7 h-7 rounded-sm bg-red-50 flex items-center justify-center border border-red-100">
+                                                        <User className="w-3.5 h-3.5 text-red-500" />
+                                                    </div>
+                                                    <span className="font-medium text-red-600 text-sm underline decoration-red-200 underline-offset-4">
+                                                        {row.user}
+                                                    </span>
                                                 </div>
-                                                <span className="font-medium text-red-600 text-sm underline decoration-red-200 underline-offset-4">
-                                                    {row.user}
-                                                </span>
-                                            </div>
-                                        )
-                                    },
-                                    {
-                                        key: "action",
-                                        label: "Action Type",
-                                        render: (row) => getActionBadge(row.action)
-                                    },
-                                    {
-                                        key: "module",
-                                        label: "Section / Module",
-                                        headerClassName: "text-center",
-                                        className: "text-center",
-                                        render: (row) => (
-                                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-50 border border-gray-200 rounded text-gray-700">
-                                                <Layers className="w-3.5 h-3.5 text-gray-400" />
-                                                <span className="font-bold uppercase tracking-tight text-[11px]">
-                                                    {row.module}
-                                                </span>
-                                            </div>
-                                        )
-                                    },
-                                    {
-                                        key: "details",
-                                        label: "Log Details",
-                                        render: (row) => (
-                                            <div className="text-gray-900 font-medium text-xs leading-relaxed max-w-md truncate">
-                                                {row.details}
-                                            </div>
-                                        )
-                                    },
-                                    {
-                                        key: "createdAt",
-                                        label: "Execution Time",
-                                        render: (row) => (
-                                            <div className="flex flex-col">
-                                                <div className="flex items-center gap-2 text-gray-900 font-bold text-[11px] uppercase">
-                                                    <Calendar className="w-3.5 h-3.5 text-blue-600" />
-                                                    {new Date(row.createdAt).toLocaleDateString('en-GB', { 
-                                                        day: '2-digit', 
-                                                        month: 'short', 
-                                                        year: 'numeric' 
-                                                    })}
+                                            )
+                                        },
+                                        {
+                                            key: "action",
+                                            label: "Action Type",
+                                            render: (row) => getActionBadge(row.action)
+                                        },
+                                        {
+                                            key: "module",
+                                            label: "Section / Module",
+                                            headerClassName: "text-center",
+                                            className: "text-center",
+                                            render: (row) => (
+                                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-50 border border-gray-200 rounded text-gray-700">
+                                                    <Layers className="w-3.5 h-3.5 text-gray-400" />
+                                                    <span className="font-bold uppercase tracking-tight text-[11px]">
+                                                        {row.module}
+                                                    </span>
                                                 </div>
-                                                <span className="text-[10px] text-gray-500 font-bold ml-6 uppercase">
-                                                    {new Date(row.createdAt).toLocaleTimeString('en-GB', { 
-                                                        hour: '2-digit', 
-                                                        minute: '2-digit', 
-                                                        hour12: true 
-                                                    })}
-                                                </span>
-                                            </div>
-                                        )
-                                    }
-                                ]}
-                                data={logs}
+                                            )
+                                        },
+                                        {
+                                            key: "details",
+                                            label: "Log Details",
+                                            render: (row) => (
+                                                <div className="text-gray-900 font-medium text-xs leading-relaxed max-w-md truncate">
+                                                    {row.details}
+                                                </div>
+                                            )
+                                        },
+                                        {
+                                            key: "createdAt",
+                                            label: "Execution Time",
+                                            render: (row) => (
+                                                <div className="flex flex-col">
+                                                    <div className="flex items-center gap-2 text-gray-900 font-bold text-[11px] uppercase">
+                                                        <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                                                        {new Date(row.createdAt).toLocaleDateString('en-GB', {
+                                                            day: '2-digit',
+                                                            month: 'short',
+                                                            year: 'numeric'
+                                                        })}
+                                                    </div>
+                                                    <span className="text-[10px] text-gray-500 font-bold ml-6 uppercase">
+                                                        {new Date(row.createdAt).toLocaleTimeString('en-GB', {
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                            hour12: true
+                                                        })}
+                                                    </span>
+                                                </div>
+                                            )
+                                        }
+                                    ]}
+                                    data={logs}
+                                />
+                            </div>
+                        )}
+
+                        {/* Standardized Pagination */}
+                        <div className="px-6 py-4 border-t bg-gray-50">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalItems={total}
+                                itemsPerPage={limit}
+                                onPageChange={setCurrentPage}
+                                label="activity records"
                             />
                         </div>
-                    )}
-
-                    {/* Standardized Pagination */}
-                    <div className="px-6 py-4 border-t bg-gray-50">
-                        <Pagination 
-                            currentPage={currentPage}
-                            totalItems={total}
-                            itemsPerPage={limit}
-                            onPageChange={setCurrentPage}
-                            label="activity records"
-                        />
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 

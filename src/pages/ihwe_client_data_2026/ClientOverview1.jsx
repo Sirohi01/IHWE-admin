@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Swal from "sweetalert2";
-import { 
-  Building2, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  UserPlus, 
-  Save, 
-  RotateCcw, 
-  ArrowLeft, 
-  Plus, 
-  Trash2, 
-  Globe, 
-  Calendar, 
+import {
+  Building2,
+  MapPin,
+  Phone,
+  Mail,
+  UserPlus,
+  Save,
+  RotateCcw,
+  ArrowLeft,
+  Plus,
+  Trash2,
+  Globe,
+  Calendar,
   UserCheck,
   Briefcase,
   LayoutGrid,
@@ -345,7 +345,7 @@ const ClientOverview1 = () => {
 
   return (
     <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-inter animate-fadeIn">
-      
+
       {/* ── HEADER AREA Sync with AddNewClients ── */}
       <div className="flex flex-col lg:flex-row justify-between items-center pb-4 border-b border-gray-100 gap-4">
         <div className="flex flex-col items-center lg:items-start gap-1">
@@ -374,7 +374,7 @@ const ClientOverview1 = () => {
 
       {/* ── PAGE CONTENT ── */}
       <div className="mt-8 space-y-8">
-        
+
         {/* ── SUB-HEADER ── */}
         <div className="bg-slate-50/50 border border-slate-200 px-4 md:px-6 py-4 rounded-[2px] flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-center md:text-left">
@@ -409,34 +409,34 @@ const ClientOverview1 = () => {
 
         {/* ── DETAILS AREA ── */}
         <div className="space-y-2">
-          
+
           <Section title="Company Information">
-            <TR3 
-              l1="Company Name" v1={company.companyName} 
-              l2="Category" v2={company.category} 
-              l3="Nature of Business" v3={company.businessNature} 
+            <TR3
+              l1="Company Name" v1={company.companyName}
+              l2="Category" v2={company.category}
+              l3="Nature of Business" v3={company.businessNature}
             />
-            <TR3 
-              l1="Company Website" v1={company.website} 
-              l2="Official Email" v2={company.email} 
-              l3="Landline No." v3={company.landline} 
+            <TR3
+              l1="Company Website" v1={company.website}
+              l2="Official Email" v2={company.email}
+              l3="Landline No." v3={company.landline}
             />
-            <TR3 
-              l1="Data Source" v1={company.dataSource} 
-              l2="Client Status" v2={<span className="text-green-700 font-bold uppercase tracking-tight">{company?.companyStatus}</span>} 
-              l3="Added By" v3={company.updated_by} 
+            <TR3
+              l1="Data Source" v1={company.dataSource}
+              l2="Client Status" v2={<span className="text-green-700 font-bold uppercase tracking-tight">{company?.companyStatus}</span>}
+              l3="Added By" v3={company.updated_by}
             />
           </Section>
 
           <Section title="Location & Address">
             <TR1 label="Full Address" value={company.address} />
-            <TR3 
-              l1="Country" v1={company.country} 
-              l2="State" v2={company.state} 
-              l3="City / Town" v3={company.city} 
+            <TR3
+              l1="Country" v1={company.country}
+              l2="State" v2={company.state}
+              l3="City / Town" v3={company.city}
             />
-            <TR3 
-              l1="Pin Code" v1={company.pincode} 
+            <TR3
+              l1="Pin Code" v1={company.pincode}
               l2="Last Updated" v2={company.updatedAt ? new Date(company.updatedAt).toLocaleDateString('en-IN') : "-"}
               l3="Company ID" v3={<span className="text-[10px] font-mono break-all">{company._id}</span>}
             />
@@ -449,12 +449,12 @@ const ClientOverview1 = () => {
                   <div className="bg-slate-50 p-2 text-[11px] font-extrabold text-[#23471d] uppercase tracking-widest border-b border-slate-200">
                     Contact Person #{idx + 1}
                   </div>
-                  <TR3 
+                  <TR3
                     l1="Full Name" v1={`${contact.title || ""} ${contact.firstName || ""} ${contact.surname || ""}`}
                     l2="Designation" v2={contact.designation}
                     l3="Email Address" v3={<span className="text-blue-600 underline break-all">{contact.email}</span>}
                   />
-                  <TR2 
+                  <TR2
                     l1="Mobile Number" v1={contact.mobile}
                     l2="WhatsApp Number" v2={contact.alternate}
                   />
@@ -474,7 +474,7 @@ const ClientOverview1 = () => {
               <History size={18} className="text-[#23471d]" />
               <h3 className="text-[16px] font-bold text-[#23471d] uppercase tracking-tight">Post New Follow-up / Remark</h3>
             </div>
-            
+
             <form onSubmit={handleAddReview} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div>
@@ -575,7 +575,7 @@ const ClientOverview1 = () => {
                 </button>
               )}
             </div>
-            
+
             <div className="divide-y divide-slate-100">
               {filteredReviews.map((entry, index) => (
                 <div key={entry?._id} className="p-5 flex items-start gap-4 hover:bg-slate-50/30 transition-all">
@@ -601,11 +601,11 @@ const ClientOverview1 = () => {
                         <Trash2 size={16} />
                       </button>
                     </div>
-                    
+
                     <div className="mt-3 bg-slate-50/60 p-3 rounded-[2px] border border-slate-100">
                       <p className="text-[12px] text-slate-700 leading-relaxed italic font-medium">"{entry?.re_msg}"</p>
                     </div>
-                    
+
                     {entry?.reminder_dt && (
                       <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-red-50 text-red-600 rounded-[2px] border border-red-100">
                         <Calendar size={12} />

@@ -4,7 +4,11 @@ import {
     Briefcase,
     LayoutGrid,
     Search as SearchIcon,
-    RefreshCw
+    RefreshCw,
+    Pencil,
+    Trash2,
+    Eye,
+    ExternalLink
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api, { SERVER_URL } from "../../lib/api";
@@ -88,8 +92,8 @@ const ServiceList = () => {
     };
 
     const filteredServices = services.filter(service =>
-        service.serviceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.bgTitle.toLowerCase().includes(searchTerm.toLowerCase())
+        service.serviceTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        service.h1Heading.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -147,17 +151,22 @@ const ServiceList = () => {
             )
         },
         {
-            key: "bgImage",
-            label: "IMAGE",
+            key: "heroImage",
+            label: "HERO IMAGE",
             width: "120px",
             render: (row) => (
-                <div className="h-12 w-20 rounded overflow-hidden shadow-sm border border-gray-100">
-                    <img
-                        src={`${SERVER_URL}${row.bgImage}`}
-                        alt={row.bgAltText}
-                        className="h-full w-full object-cover"
-                        onError={(e) => { e.target.src = 'https://via.placeholder.com/80x48?text=No+Image'; }}
-                    />
+                <div className="h-14 w-24 rounded border border-gray-200 overflow-hidden bg-gray-50">
+                    {row.heroImage ? (
+                        <img
+                            src={`${SERVER_URL}${row.heroImage}`}
+                            alt={row.heroImageAlt}
+                            className="h-full w-full object-cover"
+                        />
+                    ) : (
+                        <div className="h-full w-full flex items-center justify-center text-gray-300">
+                            <Briefcase size={16} />
+                        </div>
+                    )}
                 </div>
             )
         },
