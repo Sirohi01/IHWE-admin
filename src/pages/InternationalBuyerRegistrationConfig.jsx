@@ -45,7 +45,8 @@ const InternationalBuyerRegistrationConfig = () => {
         exhibitorTypeOptions: [],
         meetingObjectiveOptions: [],
         preferredBusinessTypeOptions: [],
-        packages: []
+        packages: [],
+        stateCodes: []
     });
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -142,7 +143,9 @@ const InternationalBuyerRegistrationConfig = () => {
                 badge: '',
                 cta: 'Select',
                 color: 'blue',
-                benefits: ['New Benefit']
+                benefits: ['New Benefit'],
+                hsnSacCode: '998596',
+                gstPercentage: 18
             }]
         }));
     };
@@ -278,6 +281,13 @@ const InternationalBuyerRegistrationConfig = () => {
                         Registration Packages
                         {activeTab === 'packages' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#23471d]" />}
                     </button>
+                    <button
+                        onClick={() => setActiveTab('states')}
+                        className={`pb-4 px-2 text-xs font-bold uppercase tracking-widest transition-all relative ${activeTab === 'states' ? 'text-[#23471d]' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                        State Codes Mapping
+                        {activeTab === 'states' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#23471d]" />}
+                    </button>
                 </div>
 
                 {activeTab === 'dropdowns' ? (
@@ -301,6 +311,86 @@ const InternationalBuyerRegistrationConfig = () => {
                         <ArrayEditor title="Meeting Objectives" field="meetingObjectiveOptions" icon={Briefcase} />
                         <ArrayEditor title="Preferred Business Types" field="preferredBusinessTypeOptions" icon={Briefcase} />
                         <ArrayEditor title="Meeting Day Options" field="meetingDayOptions" icon={Clock} />
+                    </div>
+                ) : activeTab === 'states' ? (
+                    <div className="space-y-8 animate-fadeIn">
+                        <div className="flex justify-between items-center mb-4">
+                            <div>
+                                <h2 className="text-lg font-bold text-slate-800 uppercase">State Codes Mapping</h2>
+                                <p className="text-xs text-slate-400">Map state names to their official GST state codes</p>
+                            </div>
+                            <button 
+                                onClick={() => {
+                                    setConfig(prev => ({
+                                        ...prev,
+                                        stateCodes: [...(prev.stateCodes || []), { name: '', code: '' }]
+                                    }));
+                                }}
+                                className="bg-[#23471d]/10 text-[#23471d] hover:bg-[#23471d] hover:text-white px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border border-[#23471d]/20 flex items-center gap-2"
+                            >
+                                <Plus className="w-3 h-3" /> Add State Mapping
+                            </button>
+                        </div>
+                        
+                        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">State Name</th>
+                                        <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">State Code</th>
+                                        <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500 w-20">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {(config.stateCodes || []).map((sc, index) => (
+                                        <tr key={index} className="hover:bg-slate-50/50 transition-colors">
+                                            <td className="px-6 py-3">
+                                                <input 
+                                                    value={sc.name} 
+                                                    onChange={(e) => {
+                                                        const newCodes = [...config.stateCodes];
+                                                        newCodes[index].name = e.target.value;
+                                                        setConfig(prev => ({ ...prev, stateCodes: newCodes }));
+                                                    }}
+                                                    className="w-full bg-transparent border-none focus:ring-0 p-0 text-xs font-semibold text-slate-600"
+                                                    placeholder="e.g. Maharashtra"
+                                                />
+                                            </td>
+                                            <td className="px-6 py-3">
+                                                <input 
+                                                    value={sc.code} 
+                                                    onChange={(e) => {
+                                                        const newCodes = [...config.stateCodes];
+                                                        newCodes[index].code = e.target.value;
+                                                        setConfig(prev => ({ ...prev, stateCodes: newCodes }));
+                                                    }}
+                                                    className="w-full bg-transparent border-none focus:ring-0 p-0 text-xs font-semibold text-slate-600"
+                                                    placeholder="e.g. 27"
+                                                />
+                                            </td>
+                                            <td className="px-6 py-3">
+                                                <button 
+                                                    onClick={() => {
+                                                        const newCodes = config.stateCodes.filter((_, i) => i !== index);
+                                                        setConfig(prev => ({ ...prev, stateCodes: newCodes }));
+                                                    }}
+                                                    className="text-slate-400 hover:text-red-500 transition-colors"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {(config.stateCodes || []).length === 0 && (
+                                        <tr>
+                                            <td colSpan={3} className="px-6 py-10 text-center text-xs text-slate-400 italic">
+                                                No state mappings added yet. Click "Add State Mapping" to begin.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 ) : (
                     <div className="space-y-8 animate-fadeIn">
@@ -339,7 +429,7 @@ const InternationalBuyerRegistrationConfig = () => {
                                             </div>
 
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xl font-black italic">₹</span>
+                                                <span className="text-xl font-black italic">$</span>
                                                 <input
                                                     type="number"
                                                     value={pkg.price}
@@ -407,6 +497,27 @@ const InternationalBuyerRegistrationConfig = () => {
                                                         onChange={(e) => updatePackage(pIndex, 'cta', e.target.value)}
                                                         className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-semibold text-slate-600 focus:ring-1 focus:ring-[#23471d] outline-none"
                                                         placeholder="e.g. Register Now"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">HSN/SAC Code</label>
+                                                    <input 
+                                                        value={pkg.hsnSacCode || ''} 
+                                                        onChange={(e) => updatePackage(pIndex, 'hsnSacCode', e.target.value)}
+                                                        className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-semibold text-slate-600 focus:ring-1 focus:ring-[#23471d] outline-none"
+                                                        placeholder="e.g. 998596"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">GST %</label>
+                                                    <input 
+                                                        type="number"
+                                                        value={pkg.gstPercentage || 0} 
+                                                        onChange={(e) => updatePackage(pIndex, 'gstPercentage', parseInt(e.target.value))}
+                                                        className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-semibold text-slate-600 focus:ring-1 focus:ring-[#23471d] outline-none"
+                                                        placeholder="e.g. 18"
                                                     />
                                                 </div>
                                             </div>
