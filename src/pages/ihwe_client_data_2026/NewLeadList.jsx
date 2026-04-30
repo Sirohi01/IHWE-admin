@@ -4,6 +4,8 @@ import Globallytable from "../../Components/Globallytable";
 import Textarea from "../../Components/Textarea";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
+import { useNavigate } from "react-router-dom";
+import { Upload, UserCheck, LayoutGrid } from "lucide-react";
 
 const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
   if (Array.isArray(sliceState)) return sliceState;
@@ -25,6 +27,8 @@ const toTitleCase = (str) => {
 
 const NewLeadList = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
 
   // 🏢 Company redux data – robust extraction
   const companiesState = useSelector((state) => state.companies);
@@ -89,19 +93,33 @@ const NewLeadList = () => {
   }));
 
   return (
-    <div className="w-full h-auto bg-[#eef1f5]" style={{ marginTop: "30px" }}>
+    <div className="w-full h-auto bg-[#eef1f5] mt-8">
       {/* 🔹 Header */}
-      <div className="w-full bg-white">
-        <div className="w-full bg-white flex flex-col sm:flex-row justify-between items-center px-4 py-1 mb-3">
-          <h1 className="text-xl text-gray-500 mb-2 lg:mb-0 uppercase">
-            CLIENT DATA 2026
+      <div className="flex flex-col lg:flex-row justify-between items-center py-3 px-6 border-b border-gray-300 bg-white gap-4">
+        <div className="flex flex-col items-center lg:items-start gap-1">
+          <h1 className="text-xl font-semibold text-slate-600 uppercase tracking-tight leading-none text-center lg:text-left">
+           NEW LEAD LIST | Sales Management Section
           </h1>
+        </div>
+        <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
+          <button onClick={() => navigate("/ihweClientData2026/uploadExhibitor")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+            <Upload size={12} /> Upload Exhibitor
+          </button>
+          <button onClick={() => navigate("/ihweClientData2026/newLeadList")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+            <UserCheck size={12} /> New Leads List
+          </button>
+          <button onClick={() => navigate("/ihweClientData2026/masterData")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+            <LayoutGrid size={12} /> Master List
+          </button>
+          <button onClick={() => navigate("/ihweClientData2026/confirmClientList")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+            <UserCheck size={12} /> Exhibitor List
+          </button>
         </div>
       </div>
 
       {/* 🔹 Main Section */}
-      <div className="bg-white mx-3 p-2 rounded shadow-sm">
-        <div className="flex justify-between items-center pr-4 pt-2">
+      <div className="bg-white m-4 p-2 rounded shadow-sm">
+        <div className="flex justify-between items-center pr-4">
           <h1 className="text-lg font-medium text-gray-800 px-4">
             NEW LEAD LIST
           </h1>

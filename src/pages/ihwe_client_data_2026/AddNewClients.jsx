@@ -86,6 +86,7 @@ const AddNewClients = () => {
         eventName: "",
         reminder: "",
         forwardTo: "",
+        added_by:"",
         updated_by: "",
         contacts: [
             {
@@ -232,6 +233,7 @@ const AddNewClients = () => {
                     eventName: companyToEdit.eventName || "",
                     reminder: formatReminderDate(companyToEdit.reminder) || "",
                     forwardTo: companyToEdit.forwardTo || "",
+                    added_by: companyToEdit.added_by || "",
                     updated_by: companyToEdit.updated_by || "",
                     contacts: companyToEdit.contacts.length > 0
                         ? companyToEdit.contacts
@@ -317,7 +319,18 @@ const AddNewClients = () => {
 
         setIsSaving(true);
         try {
-            const userName = sessionStorage.getItem("user_name");
+            let userName = sessionStorage.getItem("user_name") || "";
+            try {
+                // LocalStorage ya SessionStorage se "user" object fetch karke parse karein
+                const userObjStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+                if (userObjStr) {
+                    const userObj = JSON.parse(userObjStr);
+                    if (userObj.name) userName = userObj.name;
+                }
+            } catch (e) {
+                console.error("Error parsing user data:", e);
+            }
+
             const dataToSave = { ...formData, updated_by: userName || formData.updated_by };
             if (id) {
                 await dispatch(updateCompany({ id, data: dataToSave })).unwrap();
@@ -341,6 +354,8 @@ const AddNewClients = () => {
                 });
                 navigate(`/client-overview/${id}`);
             } else {
+                // Jab naya create ho raha ho tab added_by mein bhi same name dalein
+                dataToSave.added_by = userName;
                 const response = await dispatch(addCompany(dataToSave)).unwrap();
 
                 // Log the activity
@@ -406,7 +421,7 @@ const AddNewClients = () => {
                 <div className="flex flex-col lg:flex-row justify-between items-center pb-4 border-b border-gray-300 gap-4">
                     <div className="flex flex-col items-center lg:items-start gap-1">
                         <h1 className="text-xl font-semibold text-slate-600 uppercase tracking-tight leading-none text-center lg:text-left">
-                            ADD NEW LEADS | Sales Management Section
+                            {id ? "EDIT NEW LEADS" : "ADD NEW LEADS"} | Sales Management Section
                         </h1>
                     </div>
                     <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
