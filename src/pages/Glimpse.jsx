@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import Swal from "sweetalert2";
-import { 
-  Plus, Edit2, Trash2, Save, Image as ImageIcon, 
-  Type, Upload, BadgeHelp, Edit, List, 
+import {
+  Plus, Edit2, Trash2, Save, Image as ImageIcon,
+  Type, Upload, BadgeHelp, Edit, List,
   Users, Globe, Building2, Mic, Handshake, Package, Sparkles, Camera, LayoutGrid, Hash
 } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
@@ -10,21 +10,21 @@ import PageHeader from '../components/PageHeader';
 import RichTextEditor from '../components/RichTextEditor';
 
 const ICONS_LIST = [
-    { name: 'Users', icon: Users },
-    { name: 'Globe', icon: Globe },
-    { name: 'Building2', icon: Building2 },
-    { name: 'Mic', icon: Mic },
-    { name: 'Handshake', icon: Handshake },
-    { name: 'Package', icon: Package },
-    { name: 'Sparkles', icon: Sparkles },
-    { name: 'Camera', icon: Camera },
+  { name: 'Users', icon: Users },
+  { name: 'Globe', icon: Globe },
+  { name: 'Building2', icon: Building2 },
+  { name: 'Mic', icon: Mic },
+  { name: 'Handshake', icon: Handshake },
+  { name: 'Package', icon: Package },
+  { name: 'Sparkles', icon: Sparkles },
+  { name: 'Camera', icon: Camera },
 ];
 
 const IconComponent = ({ name, ...props }) => {
-    const found = ICONS_LIST.find(i => i.name === name);
-    if (!found) return null;
-    const Comp = found.icon;
-    return <Comp {...props} />;
+  const found = ICONS_LIST.find(i => i.name === name);
+  if (!found) return null;
+  const Comp = found.icon;
+  return <Comp {...props} />;
 };
 
 const Glimpse = () => {
@@ -58,10 +58,10 @@ const Glimpse = () => {
   const [uploading, setUploading] = useState(false);
   const [isEditingImage, setIsEditingImage] = useState(false);
   const [editingImageId, setEditingImageId] = useState(null);
-  
+
   const [isEditingCounter, setIsEditingCounter] = useState(false);
   const [editingCounterId, setEditingCounterId] = useState(null);
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -390,12 +390,6 @@ const Glimpse = () => {
                   : <><Save className="w-5 h-5" /> Save Section Content</>}
               </button>
             </div>
-            <h1 className="text-3xl font-semibold text-white leading-tight tracking-tight mb-1">
-              EVENT GLIMPSES MANAGEMENT
-            </h1>
-            <p className="text-lg font-medium text-slate-200">
-              Manage the gallery section: header content and event glimpse images
-            </p>
           </div>
 
           {/* Add/Edit Image Form */}
@@ -411,7 +405,7 @@ const Glimpse = () => {
                   type="text"
                   name="title"
                   value={imageForm.title}
-                  onChange={(e) => setImageForm({...imageForm, title: e.target.value})}
+                  onChange={(e) => setImageForm({ ...imageForm, title: e.target.value })}
                   className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm font-semibold"
                   placeholder="e.g. Global Health Summit"
                   required
@@ -423,7 +417,7 @@ const Glimpse = () => {
                   type="text"
                   name="altText"
                   value={imageForm.altText}
-                  onChange={(e) => setImageForm({...imageForm, altText: e.target.value})}
+                  onChange={(e) => setImageForm({ ...imageForm, altText: e.target.value })}
                   className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm"
                   placeholder="Image description..."
                 />
@@ -435,14 +429,14 @@ const Glimpse = () => {
                 <div className="border-2 border-dashed border-gray-300 hover:border-[#23471d] transition-colors p-4 flex flex-col items-center gap-2 bg-gray-50">
                   {imagePreview ? (
                     <div className="relative w-full aspect-[3/2] border-2 border-white shadow-md overflow-hidden bg-white">
-                      <img 
-                        src={imagePreview.startsWith('http') || imagePreview.startsWith('/uploads') ? (imagePreview.startsWith('http') ? imagePreview : `${SERVER_URL}${imagePreview}`) : imagePreview} 
-                        className="w-full h-full object-cover" 
-                        alt="Preview" 
+                      <img
+                        src={imagePreview.startsWith('http') || imagePreview.startsWith('/uploads') ? (imagePreview.startsWith('http') ? imagePreview : `${SERVER_URL}${imagePreview}`) : imagePreview}
+                        className="w-full h-full object-cover"
+                        alt="Preview"
                       />
-                      <button 
+                      <button
                         type="button"
-                        onClick={() => { setImagePreview(null); setImageForm({...imageForm, url: ''}) }}
+                        onClick={() => { setImagePreview(null); setImageForm({ ...imageForm, url: '' }) }}
                         className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full shadow-lg"
                       >
                         <Trash2 size={14} />
@@ -466,64 +460,7 @@ const Glimpse = () => {
                 </div>
               </div>
 
-        </div>
-      </div>
-
-      <div className="bg-white shadow-md p-6 min-h-screen">
-        {/* <PageHeader
-        title="EVENT GLIMPSES MANAGEMENT"
-        description="Manage the gallery section: header content and event glimpse images"
-      /> */}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: Heading Settings & Form */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Headings Management */}
-            <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
-              <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[#23471d]">
-                <Type className="w-5 h-5 text-[#d26019]" /> Section Headings
-              </h2>
-              <div className="p-0 space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Subheading</label>
-                  <input
-                    type="text"
-                    name="subheading"
-                    value={glimpseData.subheading}
-                    onChange={handleHeadingChange}
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Main Title</label>
-                  <input
-                    type="text"
-                    name="heading"
-                    value={glimpseData.heading}
-                    onChange={handleHeadingChange}
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-[#d26019] mb-1 uppercase tracking-tight">Highlight Text (Orange)</label>
-                  <input
-                    type="text"
-                    name="highlightText"
-                    value={glimpseData.highlightText}
-                    onChange={handleHeadingChange}
-                    className="w-full px-4 py-2 border-2 border-[#d26019] focus:border-[#23471d] outline-none"
-                    placeholder="Enter text from title to highlight..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Short Description</label>
-                  <textarea
-                    name="description"
-                    value={glimpseData.description}
-                    onChange={handleHeadingChange}
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none h-24"
-                  />
-                </div>
+              <div className="flex gap-2 pt-2">
                 <button
                   type="submit"
                   disabled={isLoading || uploading}
@@ -537,21 +474,13 @@ const Glimpse = () => {
                     onClick={resetImageForm}
                     className="px-4 py-2.5 border-2 border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-colors text-sm"
                   >
-                    {isEditing ? 'Update Image' : 'Add Image To Glimpse'}
+                    Cancel
                   </button>
-                  {isEditing && (
-                    <button
-                      type="button"
-                      onClick={resetForm}
-                      className="px-4 py-2 bg-gray-500 text-white font-bold hover:bg-gray-600 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  )}
-                </div>
-              </form>
-            </div>
+                )}
+              </div>
+            </form>
           </div>
+        </div>
 
         {/* Right Column: Images List Table & Counters Table */}
         <div className="lg:col-span-2 space-y-8">
@@ -565,7 +494,7 @@ const Glimpse = () => {
                 {glimpseData.images?.length || 0} IMAGES
               </span>
             </div>
-            
+
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -591,58 +520,41 @@ const Glimpse = () => {
                         <td className="px-6 py-4 font-bold text-[#23471d]">{index + 1}</td>
                         <td className="px-6 py-4">
                           <div className="w-14 h-10 bg-gray-100 border border-gray-200 overflow-hidden shadow-sm">
-                            <img 
-                              src={`${SERVER_URL}${img.url}`} 
-                              alt={img.title} 
-                              className="w-full h-full object-cover" 
+                            <img
+                              src={`${SERVER_URL}${img.url}`}
+                              alt={img.title}
+                              className="w-full h-full object-cover"
                             />
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <p className="font-bold text-gray-900 text-sm leading-tight">{img.title}</p>
                         </td>
-                      </tr>
-                    ) : (
-                      glimpseData.images?.map((img, index) => (
-                        <tr key={img._id} className="hover:bg-gray-50 transition-colors border-b">
-                          <td className="px-6 py-4 font-bold text-[#23471d]">{index + 1}</td>
-                          <td className="px-6 py-4">
-                            <div className="w-14 h-10 bg-gray-100 border border-gray-200 overflow-hidden shadow-sm">
-                              <img
-                                src={`${SERVER_URL}${img.url}`}
-                                alt={img.title}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <p className="font-bold text-gray-900 text-sm leading-tight">{img.title}</p>
-                          </td>
-                          <td className="px-6 py-4 text-xs text-gray-500">{img.altText || "-"}</td>
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col gap-1 items-center">
-                              <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
-                                {img.updatedBy || 'System'}
-                              </span>
-                              <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
-                                {img.updatedAt ? new Date(img.updatedAt).toLocaleString('en-GB', {
-                                  day: '2-digit', month: 'short', year: 'numeric',
-                                  hour: '2-digit', minute: '2-digit', hour12: true
-                                }) : 'N/A'}
-                              </span>
-                            </div>
+                        <td className="px-6 py-4 text-xs text-gray-500">{img.altText || "-"}</td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-1 items-center">
+                            <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                              {img.updatedBy || 'System'}
+                            </span>
+                            <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                              {img.updatedAt ? new Date(img.updatedAt).toLocaleString('en-GB', {
+                                day: '2-digit', month: 'short', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit', hour12: true
+                              }) : 'N/A'}
+                            </span>
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-center gap-2">
-                            <button 
-                              onClick={() => startEditImage(img)} 
+                            <button
+                              onClick={() => startEditImage(img)}
                               className="text-blue-500 hover:text-blue-700 p-1 transition-colors"
                               title="Edit"
                             >
                               <Edit2 size={16} />
                             </button>
-                            <button 
-                              onClick={() => deleteImage(img._id)} 
+                            <button
+                              onClick={() => deleteImage(img._id)}
                               className="text-red-500 hover:text-red-700 p-1 transition-colors"
                               title="Delete"
                             >
@@ -656,6 +568,7 @@ const Glimpse = () => {
                 </tbody>
               </table>
             </div>
+          </div>
 
           {/* Counters Management Section */}
           <div className="bg-white border-2 border-gray-200 shadow-sm overflow-hidden">
@@ -669,105 +582,105 @@ const Glimpse = () => {
             </div>
 
             <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 border-b">
-                {/* Counter Form */}
-                <div className="md:col-span-1 space-y-4 border-r pr-6 border-gray-100">
-                    <h3 className="text-sm font-bold text-gray-700 uppercase">{isEditingCounter ? 'Edit Counter' : 'Add New Counter'}</h3>
-                    <div className="space-y-3">
-                        <div>
-                            <label className="block text-[10px] font-bold text-gray-500 uppercase">Icon</label>
-                            <div className="flex gap-2">
-                                <select 
-                                    value={counterForm.icon}
-                                    onChange={(e) => setCounterForm({...counterForm, icon: e.target.value})}
-                                    className="flex-1 px-3 py-1.5 border-2 border-gray-200 focus:border-[#23471d] outline-none text-xs"
-                                >
-                                    {ICONS_LIST.map(i => <option key={i.name} value={i.name}>{i.name}</option>)}
-                                </select>
-                                <div className="w-8 h-8 border-2 border-gray-100 flex items-center justify-center shrink-0">
-                                    <IconComponent name={counterForm.icon} size={16} className="text-[#23471d]" />
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-bold text-gray-500 uppercase">Number/Value</label>
-                            <input 
-                                type="text"
-                                value={counterForm.number}
-                                onChange={(e) => setCounterForm({...counterForm, number: e.target.value})}
-                                className="w-full px-3 py-1.5 border-2 border-gray-200 focus:border-[#23471d] outline-none text-xs"
-                                placeholder="e.g. 10,000+"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-bold text-gray-500 uppercase">Label</label>
-                            <input 
-                                type="text"
-                                value={counterForm.label}
-                                onChange={(e) => setCounterForm({...counterForm, label: e.target.value})}
-                                className="w-full px-3 py-1.5 border-2 border-gray-200 focus:border-[#23471d] outline-none text-xs"
-                                placeholder="e.g. Trade Visitors"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-bold text-gray-500 uppercase">Order</label>
-                            <input 
-                                type="number"
-                                value={counterForm.order}
-                                onChange={(e) => setCounterForm({...counterForm, order: parseInt(e.target.value)})}
-                                className="w-full px-3 py-1.5 border-2 border-gray-200 focus:border-[#23471d] outline-none text-xs"
-                            />
-                        </div>
-                        <div className="flex gap-2 pt-2">
-                            <button 
-                                onClick={handleCounterSubmit}
-                                className="flex-1 py-2 bg-[#23471d] text-white text-[10px] font-bold hover:bg-[#1a3615] transition-colors flex items-center justify-center gap-1.5"
-                            >
-                                {isEditingCounter ? <><Edit size={12} /> Update</> : <><Plus size={12} /> Add</>}
-                            </button>
-                            {isEditingCounter && (
-                                <button onClick={resetCounterForm} className="px-3 py-2 border border-gray-300 text-gray-500 text-[10px] font-bold">Cancel</button>
-                            )}
-                        </div>
+              {/* Counter Form */}
+              <div className="md:col-span-1 space-y-4 border-r pr-6 border-gray-100">
+                <h3 className="text-sm font-bold text-gray-700 uppercase">{isEditingCounter ? 'Edit Counter' : 'Add New Counter'}</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase">Icon</label>
+                    <div className="flex gap-2">
+                      <select
+                        value={counterForm.icon}
+                        onChange={(e) => setCounterForm({ ...counterForm, icon: e.target.value })}
+                        className="flex-1 px-3 py-1.5 border-2 border-gray-200 focus:border-[#23471d] outline-none text-xs"
+                      >
+                        {ICONS_LIST.map(i => <option key={i.name} value={i.name}>{i.name}</option>)}
+                      </select>
+                      <div className="w-8 h-8 border-2 border-gray-100 flex items-center justify-center shrink-0">
+                        <IconComponent name={counterForm.icon} size={16} className="text-[#23471d]" />
+                      </div>
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase">Number/Value</label>
+                    <input
+                      type="text"
+                      value={counterForm.number}
+                      onChange={(e) => setCounterForm({ ...counterForm, number: e.target.value })}
+                      className="w-full px-3 py-1.5 border-2 border-gray-200 focus:border-[#23471d] outline-none text-xs"
+                      placeholder="e.g. 10,000+"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase">Label</label>
+                    <input
+                      type="text"
+                      value={counterForm.label}
+                      onChange={(e) => setCounterForm({ ...counterForm, label: e.target.value })}
+                      className="w-full px-3 py-1.5 border-2 border-gray-200 focus:border-[#23471d] outline-none text-xs"
+                      placeholder="e.g. Trade Visitors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase">Order</label>
+                    <input
+                      type="number"
+                      value={counterForm.order}
+                      onChange={(e) => setCounterForm({ ...counterForm, order: parseInt(e.target.value) })}
+                      className="w-full px-3 py-1.5 border-2 border-gray-200 focus:border-[#23471d] outline-none text-xs"
+                    />
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      onClick={handleCounterSubmit}
+                      className="flex-1 py-2 bg-[#23471d] text-white text-[10px] font-bold hover:bg-[#1a3615] transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      {isEditingCounter ? <><Edit size={12} /> Update</> : <><Plus size={12} /> Add</>}
+                    </button>
+                    {isEditingCounter && (
+                      <button onClick={resetCounterForm} className="px-3 py-2 border border-gray-300 text-gray-500 text-[10px] font-bold">Cancel</button>
+                    )}
+                  </div>
                 </div>
+              </div>
 
-                {/* Counter Table */}
-                <div className="md:col-span-2">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
-                            <thead className="bg-gray-50 text-gray-400 font-bold uppercase tracking-wider border-b">
-                                <tr>
-                                    <th className="px-4 py-2">Icon</th>
-                                    <th className="px-4 py-2">Value</th>
-                                    <th className="px-4 py-2">Label</th>
-                                    <th className="px-4 py-2 text-center">Order</th>
-                                    <th className="px-4 py-2 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50">
-                                {glimpseData.counters?.sort((a, b) => (a.order || 0) - (b.order || 0)).map(c => (
-                                    <tr key={c._id} className="hover:bg-gray-50">
-                                        <td className="px-4 py-2">
-                                            <IconComponent name={c.icon} size={14} className="text-[#23471d]" />
-                                        </td>
-                                        <td className="px-4 py-2 font-bold text-[#d26019]">{c.number}</td>
-                                        <td className="px-4 py-2 font-medium">{c.label}</td>
-                                        <td className="px-4 py-2 text-center">{c.order}</td>
-                                        <td className="px-4 py-2 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button onClick={() => startEditCounter(c)} className="text-blue-500 hover:text-blue-700 transition-colors"><Edit2 size={14} /></button>
-                                                <button onClick={() => deleteCounter(c._id)} className="text-red-500 hover:text-red-700 transition-colors"><Trash2 size={14} /></button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {glimpseData.counters?.length === 0 && (
-                                    <tr><td colSpan="5" className="text-center py-8 text-gray-400 italic">No counters added yet.</td></tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+              {/* Counter Table */}
+              <div className="md:col-span-2">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-gray-50 text-gray-400 font-bold uppercase tracking-wider border-b">
+                      <tr>
+                        <th className="px-4 py-2">Icon</th>
+                        <th className="px-4 py-2">Value</th>
+                        <th className="px-4 py-2">Label</th>
+                        <th className="px-4 py-2 text-center">Order</th>
+                        <th className="px-4 py-2 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {glimpseData.counters?.sort((a, b) => (a.order || 0) - (b.order || 0)).map(c => (
+                        <tr key={c._id} className="hover:bg-gray-50">
+                          <td className="px-4 py-2">
+                            <IconComponent name={c.icon} size={14} className="text-[#23471d]" />
+                          </td>
+                          <td className="px-4 py-2 font-bold text-[#d26019]">{c.number}</td>
+                          <td className="px-4 py-2 font-medium">{c.label}</td>
+                          <td className="px-4 py-2 text-center">{c.order}</td>
+                          <td className="px-4 py-2 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button onClick={() => startEditCounter(c)} className="text-blue-500 hover:text-blue-700 transition-colors"><Edit2 size={14} /></button>
+                              <button onClick={() => deleteCounter(c._id)} className="text-red-500 hover:text-red-700 transition-colors"><Trash2 size={14} /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {glimpseData.counters?.length === 0 && (
+                        <tr><td colSpan="5" className="text-center py-8 text-gray-400 italic">No counters added yet.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
+              </div>
             </div>
           </div>
 
@@ -785,7 +698,7 @@ const Glimpse = () => {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
