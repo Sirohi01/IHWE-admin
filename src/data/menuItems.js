@@ -37,6 +37,7 @@ import {
   AlertTriangle,
   Package,
   ShoppingCart,
+  Award,
 } from "lucide-react";
 
 
@@ -208,6 +209,21 @@ export const menuItems = [
     label: "Contact Enquiry",
     path: "/contact-enquiries",
     icon: MessageSquare,
+  },
+
+  /* ================= Awards Section ================= */
+  {
+    type: "heading",
+    label: "Awards Section",
+  },
+  {
+    type: "dropdown",
+    label: "Awards Management",
+    icon: Award,
+    children: [
+      { label: "Award Categories", path: "/award-categories-manage" },
+      { label: "Nominations List", path: "/awards-nominations" },
+    ],
   },
 
   /* ================= Marketing Section ================= */
