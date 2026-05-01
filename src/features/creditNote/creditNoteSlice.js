@@ -9,7 +9,7 @@ export const createCreditNote = createAsyncThunk(
   async (creditNoteData, thunkAPI) => {
     try {
       const response = await axios.post(
-        `${BASE_URL}/creditnotes`,
+        `${BASE_URL}/api/creditnotes`,
         creditNoteData
       );
       return response.data.data;
@@ -23,7 +23,7 @@ export const fetchCreditNotes = createAsyncThunk(
   "creditnotes/fetchAll",
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(`${BASE_URL}/creditnotes`);
+      const response = await axios.get(`${BASE_URL}/api/creditnotes`);
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
@@ -35,7 +35,7 @@ export const fetchCreditNoteById = createAsyncThunk(
   "creditnotes/fetchById",
   async (id, thunkAPI) => {
     try {
-      const response = await axios.get(`${BASE_URL}/creditnotes/${id}`);
+      const response = await axios.get(`${BASE_URL}/api/creditnotes/${id}`);
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
@@ -48,7 +48,7 @@ export const updateCreditNote = createAsyncThunk(
   async ({ id, updatedData }, thunkAPI) => {
     try {
       const response = await axios.put(
-        `${BASE_URL}/creditnotes/${id}`,
+        `${BASE_URL}/api/creditnotes/${id}`,
         updatedData
       );
       return response.data.data;
@@ -62,7 +62,7 @@ export const deleteCreditNote = createAsyncThunk(
   "creditnotes/delete",
   async (id, thunkAPI) => {
     try {
-      await axios.delete(`${BASE_URL}/creditnotes/${id}`);
+      await axios.delete(`${BASE_URL}/api/creditnotes/${id}`);
       return id;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
