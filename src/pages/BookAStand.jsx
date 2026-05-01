@@ -56,6 +56,8 @@ const BookAStand = () => {
         landlineNo: '',
         gstNo: '',
         panNo: '',
+        aadhaarNo: '',
+        registrantType: 'registered',
         natureOfBusiness: '',
         fasciaName: '',
         contact1: { title: 'Mr.', firstName: '', lastName: '', email: '', designation: '', mobile: '', alternateNo: '' },
@@ -86,14 +88,17 @@ const BookAStand = () => {
         amountPaid: 0,
         balanceAmount: 0,
         financeBreakdown: {
-            grossCost: 0,
-            stallDiscount: { percentage: 0, amount: 0 },
+            grossAmount: 0,
+            stallDiscountPercent: 0,
+            stallDiscountAmount: 0,
             subtotal1: 0,
-            fullPaymentDiscount: { percentage: 0, amount: 0 },
-            subtotal2: 0,
-            tdsDeduction: { percentage: 0, amount: 0 },
-            gst: 0,
-            totalAmount: 0,
+            discountPercent: 0,
+            discountAmount: 0,
+            subtotal: 0,
+            gstAmount: 0,
+            tdsPercent: 0,
+            tdsAmount: 0,
+            netPayable: 0,
             isFullPayment: false
         }
     });
@@ -325,6 +330,8 @@ const BookAStand = () => {
                         landlineNo: '',
                         gstNo: '',
                         panNo: '',
+                        aadhaarNo: '',
+                        registrantType: 'registered',
                         natureOfBusiness: '',
                         fasciaName: '',
                         contact1: { title: 'Mr.', firstName: '', lastName: '', email: '', designation: '', mobile: '', alternateNo: '' },
@@ -355,14 +362,17 @@ const BookAStand = () => {
                         amountPaid: 0,
                         balanceAmount: 0,
                         financeBreakdown: {
-                            grossCost: 0,
-                            stallDiscount: { percentage: 0, amount: 0 },
+                            grossAmount: 0,
+                            stallDiscountPercent: 0,
+                            stallDiscountAmount: 0,
                             subtotal1: 0,
-                            fullPaymentDiscount: { percentage: 0, amount: 0 },
-                            subtotal2: 0,
-                            tdsDeduction: { percentage: 0, amount: 0 },
-                            gst: 0,
-                            totalAmount: 0,
+                            discountPercent: 0,
+                            discountAmount: 0,
+                            subtotal: 0,
+                            gstAmount: 0,
+                            tdsPercent: 0,
+                            tdsAmount: 0,
+                            netPayable: 0,
                             isFullPayment: false
                         }
                     });
@@ -522,8 +532,7 @@ const BookAStand = () => {
                                 <select required value={formData.participation.stallNo} onChange={(e) => handleStallSelect(e.target.value)} className={inputClasses}>
                                     <option value="">-- Choose Available Stall --</option>
                                     {availableStalls.filter(s =>
-                                        (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId) ||
-                                        (typeof s.event === 'string' ? s.event === selectedEventId : s.event?._id === selectedEventId)
+                                        (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId)
                                     ).map(s => (
                                         <option key={s._id} value={s._id}>{s.stallNumber} ({s.area} sqm � {s.plScheme})</option>
                                     ))}
@@ -569,13 +578,17 @@ const BookAStand = () => {
                             {(() => {
                                 const currentEvent = events.find(e => e._id === selectedEventId);
                                 const plans = currentEvent?.paymentPlans || [];
-                                const firstInstallPlan = plans.find(p => Number(p.percentage) < 100);
                                 const fullPlan = plans.find(p => Number(p.percentage) === 100 || p.id === 'full');
+                                // First installment phase (lowest %)
+                                const firstInstallPlan = plans
+                                    .filter(p => Number(p.percentage) < 100)
+                                    .sort((a, b) => Number(a.percentage) - Number(b.percentage))[0];
+                                const isFullSelected = formData.paymentPlanType === 'full' || formData.paymentPlanType === fullPlan?.id;
                                 return (
                                     <div>
                                         <label className={labelClasses}>Payment Plan *</label>
                                         <div className="flex flex-wrap gap-2 mt-1">
-                                            {/* Full Payment option */}
+                                            {/* Full Payment */}
                                             <button
                                                 type="button"
                                                 onClick={() => setFormData(prev => ({
@@ -583,47 +596,34 @@ const BookAStand = () => {
                                                     paymentPlanType: fullPlan?.id || 'full',
                                                     paymentPlanLabel: fullPlan?.label || 'Full Payment'
                                                 }))}
-                                                className={`px-4 py-1.5 text-[11px] font-black uppercase rounded-[2px] border transition-all ${formData.paymentPlanType === 'full' || formData.paymentPlanType === fullPlan?.id
+                                                className={`px-4 py-1.5 text-[11px] font-black uppercase rounded-[2px] border transition-all ${isFullSelected
                                                     ? 'bg-[#23471d] text-white border-[#23471d]'
                                                     : 'bg-white text-slate-600 border-slate-300 hover:border-[#23471d]'
                                                     }`}
                                             >
-                                                Full Payment {settings?.fullPaymentDiscount > 0 ? `(${settings.fullPaymentDiscount}% discount)` : ''}
+                                                Full Payment{settings?.fullPaymentDiscount > 0 ? ` (${settings.fullPaymentDiscount}% discount)` : ''}
                                             </button>
-                                            {/* First Installment option only */}
-                                            {firstInstallPlan ? (
+                                            {/* Installment — sets Phase 1 automatically */}
+                                            {firstInstallPlan && (
                                                 <button
-                                                    key={firstInstallPlan.id}
                                                     type="button"
                                                     onClick={() => setFormData(prev => ({
                                                         ...prev,
                                                         paymentPlanType: firstInstallPlan.id,
                                                         paymentPlanLabel: firstInstallPlan.label
                                                     }))}
-                                                    className={`px-4 py-1.5 text-[11px] font-black uppercase rounded-[2px] border transition-all ${formData.paymentPlanType === firstInstallPlan.id
+                                                    className={`px-4 py-1.5 text-[11px] font-black uppercase rounded-[2px] border transition-all ${!isFullSelected
                                                         ? 'bg-[#1a3a6b] text-white border-[#1a3a6b]'
                                                         : 'bg-white text-slate-600 border-slate-300 hover:border-[#1a3a6b]'
                                                         }`}
                                                 >
-                                                    {firstInstallPlan.label} ({firstInstallPlan.percentage}%)
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setFormData(prev => ({ ...prev, paymentPlanType: 'advance', paymentPlanLabel: 'Advance Payment' }))}
-                                                    className={`px-4 py-1.5 text-[11px] font-black uppercase rounded-[2px] border transition-all ${formData.paymentPlanType === 'advance'
-                                                        ? 'bg-[#1a3a6b] text-white border-[#1a3a6b]'
-                                                        : 'bg-white text-slate-600 border-slate-300 hover:border-[#1a3a6b]'
-                                                        }`}
-                                                >
-                                                    Installment Payment
+                                                    Installment ({firstInstallPlan.percentage}% Now)
                                                 </button>
                                             )}
                                         </div>
-                                        {/* Show selected plan info */}
                                         <p className="text-[10px] text-slate-400 mt-1.5 font-medium">
                                             Selected: <span className="font-black text-slate-700">{formData.paymentPlanLabel}</span>
-                                            {formData.financeBreakdown?.isFullPayment && settings?.fullPaymentDiscount > 0 && (
+                                            {isFullSelected && settings?.fullPaymentDiscount > 0 && (
                                                 <span className="ml-2 text-[#23471d] font-black">— {settings.fullPaymentDiscount}% discount applied</span>
                                             )}
                                         </p>
@@ -649,10 +649,10 @@ const BookAStand = () => {
                                 </div>
                                 <div className="text-right">
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
-                                        Total Payable (Net)
+                                        Net Payable (After TDS)
                                     </p>
                                     <p className="text-xl font-black text-[#23471d] leading-none">
-                                        {formData.participation.currency} {formData.amountPaid?.toLocaleString()}
+                                        {formData.participation.currency} {formData.financeBreakdown?.netPayable?.toLocaleString() || 0}
                                     </p>
                                 </div>
                             </div>
@@ -779,6 +779,96 @@ const BookAStand = () => {
                                     <option>Retailer</option><option>Service Provider</option><option>University</option><option>Others</option>
                                 </select>
                             </div> */}
+                        </div>
+
+                        {/* REGISTRANT TYPE + GST / PAN / AADHAAR */}
+                        <div className="mt-3 p-3 border border-slate-300 rounded-[2px] bg-slate-50/60">
+                            <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-2">Exhibitor Registration Type *</p>
+                            <div className="flex gap-6 mb-3">
+                                <label className="flex items-center gap-2 cursor-pointer group">
+                                    <input
+                                        type="radio"
+                                        name="registrantType"
+                                        value="registered"
+                                        checked={formData.registrantType === 'registered'}
+                                        onChange={() => setFormData(prev => ({ ...prev, registrantType: 'registered', panNo: '', aadhaarNo: '' }))}
+                                        className="accent-[#23471d] w-4 h-4"
+                                    />
+                                    <span className="text-[11px] font-bold text-slate-800 group-hover:text-[#23471d] transition-colors">
+                                        Registered Exhibitor
+                                        <span className="ml-1.5 text-[9px] font-black text-[#23471d] bg-green-50 border border-green-200 px-1.5 py-0.5 rounded-[2px] uppercase tracking-wider">GST Required</span>
+                                    </span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer group">
+                                    <input
+                                        type="radio"
+                                        name="registrantType"
+                                        value="unregistered"
+                                        checked={formData.registrantType === 'unregistered'}
+                                        onChange={() => setFormData(prev => ({ ...prev, registrantType: 'unregistered', gstNo: '' }))}
+                                        className="accent-[#d26019] w-4 h-4"
+                                    />
+                                    <span className="text-[11px] font-bold text-slate-800 group-hover:text-[#d26019] transition-colors">
+                                        Unregistered Buyer
+                                        <span className="ml-1.5 text-[9px] font-black text-[#d26019] bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded-[2px] uppercase tracking-wider">PAN + Aadhaar Required</span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
+                                {formData.registrantType === 'registered' ? (
+                                    <>
+                                        <div>
+                                            <label className={labelClasses}>GST No. (GSTIN) *</label>
+                                            <input
+                                                required
+                                                type="text"
+                                                value={formData.gstNo}
+                                                onChange={(e) => handleSelectChange('gstNo', e.target.value.toUpperCase())}
+                                                className={inputClasses}
+                                                placeholder="e.g. 07AABCU9603R1ZX"
+                                                maxLength={15}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className={labelClasses}>Fascia Name *</label>
+                                            <input required type="text" value={formData.fasciaName} onChange={(e) => handleSelectChange('fasciaName', e.target.value)} className={inputClasses} placeholder="Name on stall board" />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div>
+                                            <label className={labelClasses}>PAN Card No. *</label>
+                                            <input
+                                                required
+                                                type="text"
+                                                value={formData.panNo}
+                                                onChange={(e) => handleSelectChange('panNo', e.target.value.toUpperCase())}
+                                                className={inputClasses}
+                                                placeholder="e.g. ABCDE1234F"
+                                                maxLength={10}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className={labelClasses}>Aadhaar Card No. *</label>
+                                            <input
+                                                required
+                                                type="text"
+                                                value={formData.aadhaarNo || ''}
+                                                onChange={(e) => handleSelectChange('aadhaarNo', e.target.value.replace(/\D/g, '').slice(0, 12))}
+                                                className={inputClasses}
+                                                placeholder="12-digit Aadhaar number"
+                                                maxLength={12}
+                                                inputMode="numeric"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className={labelClasses}>Fascia Name *</label>
+                                            <input required type="text" value={formData.fasciaName} onChange={(e) => handleSelectChange('fasciaName', e.target.value)} className={inputClasses} placeholder="Name on stall board" />
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
 

@@ -78,9 +78,8 @@ const NewLeadList = () => {
     location: { city: c.city, state: c.state },
     source: { name: c.dataSource || "-" },
     update: {
-      details: `${new Date(c.updatedAt).toLocaleDateString()} | ${
-        c.contacts?.[0]?.firstName || "-"
-      }`,
+      details: `${new Date(c.updatedAt).toLocaleDateString()} | ${c.contacts?.[0]?.firstName || "-"
+        }`,
     },
   }));
 
@@ -98,7 +97,7 @@ const NewLeadList = () => {
       {/* 🔹 Main Section */}
       <div className="bg-white mx-3 p-2 rounded shadow-sm">
         <div className="flex justify-between items-center pr-4 pt-2">
-          <h1 className="text-base font-normal text-gray-800 px-4">
+          <h1 className="text-lg font-medium text-gray-800 px-4">
             NEW LEAD LIST
           </h1>
 
@@ -106,37 +105,37 @@ const NewLeadList = () => {
           <div className="flex flex-wrap justify-end gap-2">
             <Link
               to="/ihweClientData2026/addNewClients"
-              className="px-3 py-1 text-xs bg-[#337ab7] hover:bg-[#286090] text-white transition"
+              className="px-3 py-1.5 text-sm font-semibold bg-[#337ab7] hover:bg-[#286090] text-white transition"
             >
               Add New Lead
             </Link>
             <Link
               to="/ihweClientData2026/warmClientList"
-              className="px-3 py-1 text-xs bg-[#337ab7] hover:bg-[#286090] text-white transition"
+              className="px-3 py-1.5 text-sm font-semibold bg-[#337ab7] hover:bg-[#286090] text-white transition"
             >
               Warm Client
             </Link>
             <Link
               to="/ihweClientData2026/hotClientList"
-              className="px-3 py-1 text-xs bg-[#337ab7] hover:bg-[#286090] text-white transition"
+              className="px-3 py-1.5 text-sm font-semibold bg-[#337ab7] hover:bg-[#286090] text-white transition"
             >
               Hot Client
             </Link>
             <Link
               to="/ihweClientData2026/confirmClientList"
-              className="px-3 py-1 text-xs bg-[#337ab7] hover:bg-[#286090] text-white transition"
+              className="px-3 py-1.5 text-sm font-semibold bg-[#337ab7] hover:bg-[#286090] text-white transition"
             >
               Confirm Client
             </Link>
             <Link
               to="/ihweClientData2026/coldClientList"
-              className="px-3 py-1 text-xs bg-[#337ab7] hover:bg-[#286090] text-white transition"
+              className="px-3 py-1.5 text-sm font-semibold bg-[#337ab7] hover:bg-[#286090] text-white transition"
             >
               Cold Client
             </Link>
             <Link
               to="/ihweClientData2026/rawDataList"
-              className="px-3 py-1 text-xs bg-[#337ab7] hover:bg-[#286090] text-white transition"
+              className="px-3 py-1.5 text-sm font-semibold bg-[#337ab7] hover:bg-[#286090] text-white transition"
             >
               Raw Data List
             </Link>

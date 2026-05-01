@@ -85,6 +85,7 @@ import ContactEnquiries from "../pages/ContactEnquiries";
 import BuyerRegistrationDetail from "../pages/BuyerRegistrationDetail";
 import BuyerRegistrationEdit from "../pages/BuyerRegistrationEdit";
 import BuyerRegistrationConfig from "../pages/BuyerRegistrationConfig";
+import InternationalBuyerRegistrationConfig from "../pages/InternationalBuyerRegistrationConfig";
 import StallVendorManage from "../pages/StallVendorManage";
 import ExhibitorListManage from "../pages/ExhibitorListManage";
 import PartnerManagement from "../pages/PartnerManagement";
@@ -101,6 +102,7 @@ import ManageStallRates from "../pages/ManageStallRates";
 import ManageTerms from "../pages/ManageTerms";
 import ExhibitorBookingDetail from "../pages/ExhibitorBookingDetail";
 import FailedPayments from "../pages/FailedPayments";
+import PaymentDelayWarnings from "../pages/PaymentDelayWarnings";
 import TravelAccommodationManage from "../pages/TravelAccommodationManage";
 import AdminBSM from "../pages/AdminBSM";
 import ActivityLogs from "../pages/ActivityLogs";
@@ -167,6 +169,14 @@ import ToDoList from "../pages/navbar_page/ToDoList";
 import NewLeads from "../pages/navbar_page/NewLeads";
 import Notification from "../pages/navbar_page/Notification";
 import NotFound from "../pages/NotFound";
+import BannerManagement from "../pages/BannerManagement";
+import SellerSubscriptionPlans from "../pages/add_by_admin/SellerSubscriptionPlans";
+import SellerServiceRequests from "../pages/SellerServiceRequests";
+import SellerExportInquiries from "../pages/SellerExportInquiries";
+import InternationalBuyerList from "../pages/buyer/InternationalBuyerList";
+import InternationalBuyerRegistrationDetail from "../pages/InternationalBuyerRegistrationDetail";
+import InternationalBuyerRegistrationEdit from "../pages/InternationalBuyerRegistrationEdit";
+import InternationalBuyerRegistration from "../pages/buyer/InternationalBuyerRegistration";
 
 export default function AppRoutes() {
   return (
@@ -178,6 +188,7 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="role-permissions" element={<RolePermissions />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="dashboard-banners" element={<BannerManagement />} />
           <Route path="click-analytics" element={<ClickAnalytics />} />
           <Route path="about-us" element={<About />} />
           <Route path="who-we-are" element={<WhoWeAre />} />
@@ -251,6 +262,10 @@ export default function AppRoutes() {
             path="buyer-registration-config"
             element={<BuyerRegistrationConfig />}
           />
+          <Route
+            path="international-buyer-registration-config"
+            element={<InternationalBuyerRegistrationConfig />}
+          />
           <Route path="stall-vendor-manage" element={<StallVendorManage />} />
           <Route
             path="exhibitor-list-manage"
@@ -261,6 +276,7 @@ export default function AppRoutes() {
           <Route path="exhibitor-bookings" element={<ManageRegistrations />} />
           <Route path="exhibitor-booking/:id" element={<ExhibitorBookingDetail />} />
           <Route path="failed-payments" element={<FailedPayments />} />
+          <Route path="payment-delay-warnings" element={<PaymentDelayWarnings />} />
           <Route path="events" element={<ManageEvents />} />
           <Route path="stall-rates" element={<ManageStallRates />} />
           <Route path="terms-conditions" element={<ManageTerms />} />
@@ -450,12 +466,19 @@ export default function AppRoutes() {
           <Route path="/accessory-orders" element={<AccessoryOrders />} />
           <Route path="/exhibitor-chat" element={<ExhibitorChat />} />
           <Route path="/add-unit" element={<AddUnit />} />
+          <Route path="/seller-subscription-plans" element={<SellerSubscriptionPlans />} />
+          <Route path="/seller-service-requests" element={<SellerServiceRequests />} />
+          <Route path="/seller-export-inquiries" element={<SellerExportInquiries />} />
           <Route path="/marketing-toolkit-manage" element={<MarketingToolkitManage />} />
           <Route path="/reminder" element={<Reminder />} />
           <Route path="/to-do-list" element={<ToDoList />} />
           <Route path="/new-leads" element={<NewLeads />} />
           <Route path="/notification" element={<Notification />} />
           <Route path="*" element={<NotFound />} />
+          <Route path="/international-buyer-list" element={<InternationalBuyerList />} />
+          <Route path="/international-buyer/:id" element={<InternationalBuyerRegistrationDetail />} />
+          <Route path="/international-buyer/edit/:id" element={<InternationalBuyerRegistrationEdit />} />
+          <Route path="/international-buyer-registration" element={<InternationalBuyerRegistration />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>
