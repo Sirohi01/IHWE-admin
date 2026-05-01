@@ -176,6 +176,12 @@ import InternationalBuyerList from "../pages/buyer/InternationalBuyerList";
 import InternationalBuyerRegistrationDetail from "../pages/InternationalBuyerRegistrationDetail";
 import InternationalBuyerRegistrationEdit from "../pages/InternationalBuyerRegistrationEdit";
 import InternationalBuyerRegistration from "../pages/buyer/InternationalBuyerRegistration";
+import AccountSection1 from "../pages/ihwe_client_data_2026/AccountSection1";
+import CreateEstimate1 from "../pages/ihwe_client_data_2026/CreateEstimate1";
+import EstimateDetails from "../pages/ihwe_client_data_2026/invoice/EstimateDetails"
+import EditEstimate from "../pages/ihwe_client_data_2026/invoice/EditEstimate";
+import PerformaInvoiceDetails from "../pages/ihwe_client_data_2026/invoice/PerformaInvoiceDetails";
+
 
 export default function AppRoutes() {
   return (
@@ -269,6 +275,11 @@ export default function AppRoutes() {
             path="exhibitor-list-manage"
             element={<ExhibitorListManage />}
           />
+          <Route
+                      path="/payments/performanceInvoiceDetails/:id"
+                      element={<PerformaInvoiceDetails />}
+                    />
+
           <Route path="exhibitor-products-profile" element={<ExhibitorProductsProfile />} />
           <Route path="stalls" element={<ManageStalls />} />
           <Route path="exhibitor-bookings" element={<ManageRegistrations />} />
@@ -361,6 +372,19 @@ export default function AppRoutes() {
             path="ihweClientData2026/uploadExhibitor"
             element={<UploadExhibitor />}
           />
+          <Route
+            path="ihweClientData2026/accountSection1/:id"
+            element={<AccountSection1 />}
+          />
+          <Route
+            path="ihweClientData2026/createEstimate1/:id"
+            element={<CreateEstimate1 />}
+          />
+          <Route
+            path="payments/estimateDetails/:id"
+            element={<EstimateDetails />}
+          />
+               <Route path="/payments/estimateEdit/:id" element={<EditEstimate />} />
           {/* <Route
             path="ihweClientData2026/AddNewVisitor"
             element={<VisitorRegistration />}

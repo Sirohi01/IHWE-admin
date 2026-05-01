@@ -20,12 +20,28 @@ import { SERVER_URL } from "../lib/api";
 import { BiSupport } from "react-icons/bi";
 import { RiContactsLine, RiListCheck2, RiAlarmWarningLine, RiUserAddLine } from "react-icons/ri";
 import { IoNotificationsOutline } from "react-icons/io5";
+import { fetchCompanies } from "../features/company/companySlice";
+import { useSelector, useDispatch } from "react-redux";
+
+const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
+  if (Array.isArray(sliceState)) return sliceState;
+  if (
+    sliceState &&
+    typeof sliceState === "object" &&
+    fallbackKey in sliceState &&
+    Array.isArray(sliceState[fallbackKey])
+  ) {
+    return sliceState[fallbackKey];
+  }
+  return [];
+};
 
 export default function Navbar({
   sidebarOpen,
   mobileMenuOpen,
   setMobileMenuOpen,
 }) {
+  const dispatch = useDispatch();
   const [profileOpen, setProfileOpen] = useState(false);
   const [activeTitle, setActiveTitle] = useState(null);
   const [chatUnread, setChatUnread] = useState(0);
@@ -33,6 +49,16 @@ export default function Navbar({
 
   const [adminData, setAdminData] = useState({ username: "Admin", role: "Authorized Access" });
   const [greeting, setGreeting] = useState({ text: "", icon: null, color: "" });
+  // 🏢 Company redux data – robust extraction
+  const companiesState = useSelector((state) => state.companies);
+  const companiesArray = getArrayFromSlice(companiesState, "companies");
+
+  // Dynamic count logic for New Leads
+  const newLeadsCount = companiesArray.filter((c) => c.companyStatus === "New Lead").length;
+
+  useEffect(() => {
+    dispatch(fetchCompanies());
+  }, [dispatch]);
 
   useEffect(() => {
     // Fetch Admin Info from storage
@@ -268,13 +294,15 @@ export default function Navbar({
             <motion.div
               whileHover={{ scale: 1.1, y: -2 }}
               whileTap={{ scale: 0.9 }}
-              onClick={() => navigate('/new-leads')}
+              onClick={() => navigate('/ihweClientData2026/newLeadList')}
               className="group relative hidden lg:flex items-center justify-center w-10 h-10 bg-white rounded-xl cursor-pointer border border-slate-200/60 hover:border-indigo-500/30 transition-all duration-300 shadow-sm hover:shadow-md"
             >
               <RiUserAddLine size={18} className="text-[#23471d] group-hover:text-indigo-600 transition-colors duration-300" />
-              <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm">
-                3
-              </span>
+              {newLeadsCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm">
+                  {newLeadsCount > 99 ? '99+' : newLeadsCount}
+                </span>
+              )}
               <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1.5 bg-slate-900/90 backdrop-blur-md text-white text-[10px] font-bold rounded-lg opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-50 shadow-xl border border-white/10 whitespace-nowrap">
                 New Leads
                 <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900/90 rotate-45 border-l border-t border-white/10" />
