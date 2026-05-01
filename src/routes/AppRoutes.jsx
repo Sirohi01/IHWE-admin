@@ -23,6 +23,7 @@ import About from "../pages/About";
 import WhoWeAre from "../pages/WhoWeAre";
 import Services from "../pages/Services";
 import FAQManage from "../pages/FAQManage";
+import HealthcareSectorsManagement from "../pages/HealthcareSectorsManagement";
 import AddPdf from "../pages/AddPdf";
 import StatsCounter from "../pages/StatsCounter";
 import MarqueeManage from "../pages/MarqueeManage";
@@ -202,6 +203,7 @@ export default function AppRoutes() {
             element={<Navigate to="/who-we-are" replace />}
           />
           <Route path="featured-services" element={<Services />} />
+          <Route path="healthcare-sectors" element={<HealthcareSectorsManagement />} />
           <Route path="faq-manage" element={<FAQManage />} />
           <Route path="add-pdf" element={<AddPdf />} />
           <Route path="stats-counter" element={<StatsCounter />} />
