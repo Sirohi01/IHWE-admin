@@ -178,6 +178,7 @@ import InternationalBuyerRegistrationEdit from "../pages/InternationalBuyerRegis
 import InternationalBuyerRegistration from "../pages/buyer/InternationalBuyerRegistration";
 import AwardsNominationList from "../pages/AwardsNominationList";
 import AwardCategoriesManage from "../pages/AwardCategoriesManage";
+import AwardsNominationDetail from "../pages/AwardsNominationDetail";
 
 export default function AppRoutes() {
   return (
@@ -480,6 +481,7 @@ export default function AppRoutes() {
           <Route path="/international-buyer/edit/:id" element={<InternationalBuyerRegistrationEdit />} />
           <Route path="/international-buyer-registration" element={<InternationalBuyerRegistration />} />
           <Route path="/awards-nominations" element={<AwardsNominationList />} />
+          <Route path="/awards-nominations/:id" element={<AwardsNominationDetail />} />
           <Route path="/award-categories-manage" element={<AwardCategoriesManage />} />
         </Route>
         <Route path="*" element={<NotFound />} />

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Search, Download, Trash2, Eye, Phone, Calendar,
   Filter, Award, CheckCircle, XCircle, Clock, AlertCircle, X
@@ -187,6 +188,7 @@ const Field = ({ label, value, full }) => (
 
 // ─── Main Component ───
 const AwardsNominationList = () => {
+  const navigate = useNavigate();
   const [nominations, setNominations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -398,7 +400,7 @@ const AwardsNominationList = () => {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => setSelectedNomination(n)}
+                          onClick={() => navigate(`/awards-nominations/${n._id}`)}
                           className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
                           title="View & Update"
                         >
