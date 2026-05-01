@@ -177,6 +177,9 @@ import InternationalBuyerList from "../pages/buyer/InternationalBuyerList";
 import InternationalBuyerRegistrationDetail from "../pages/InternationalBuyerRegistrationDetail";
 import InternationalBuyerRegistrationEdit from "../pages/InternationalBuyerRegistrationEdit";
 import InternationalBuyerRegistration from "../pages/buyer/InternationalBuyerRegistration";
+import AwardsNominationList from "../pages/AwardsNominationList";
+import AwardCategoriesManage from "../pages/AwardCategoriesManage";
+import AwardsNominationDetail from "../pages/AwardsNominationDetail";
 import AccountSection1 from "../pages/ihwe_client_data_2026/AccountSection1";
 import CreateEstimate1 from "../pages/ihwe_client_data_2026/CreateEstimate1";
 import EstimateDetails from "../pages/ihwe_client_data_2026/invoice/EstimateDetails"
@@ -503,6 +506,9 @@ export default function AppRoutes() {
           <Route path="/international-buyer/:id" element={<InternationalBuyerRegistrationDetail />} />
           <Route path="/international-buyer/edit/:id" element={<InternationalBuyerRegistrationEdit />} />
           <Route path="/international-buyer-registration" element={<InternationalBuyerRegistration />} />
+          <Route path="/awards-nominations" element={<AwardsNominationList />} />
+          <Route path="/awards-nominations/:id" element={<AwardsNominationDetail />} />
+          <Route path="/award-categories-manage" element={<AwardCategoriesManage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>
