@@ -283,6 +283,7 @@ const BookAStand = () => {
                 ...formData,
                 eventId: selectedEventId,
                 filledBy: currentUser?.username || 'Admin',
+                filledByFullName: currentUser?.fullName || currentUser?.username || 'Admin',
                 status: 'pending',
                 paymentMode: 'manual',
                 amountPaid: 0,

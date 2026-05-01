@@ -64,9 +64,9 @@ const AboutOrganizerManagement = () => {
     };
 
     const addCapability = () => {
-        setData(prev => ({ 
-            ...prev, 
-            capabilities: [...prev.capabilities, ''] 
+        setData(prev => ({
+            ...prev,
+            capabilities: [...prev.capabilities, '']
         }));
     };
 
@@ -121,184 +121,244 @@ const AboutOrganizerManagement = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-poppins text-[#1a2e1a]">
-            <PageHeader
+        <>
+            <div className="relative w-full h-64 overflow-hidden rounded mt-8">
+                {/* Background Image */}
+                <img
+                    src="/about.png"
+                    alt="banner"
+                    className="absolute inset-0 w-full h-full object-cover z-0"
+                />
+
+                {/* Halka dark overlay */}
+                <div className="absolute inset-0 bg-black/40 z-[1]" />
+
+                {/* Dot grid */}
+                <div className="absolute inset-0 opacity-[0.05] z-[2]"
+                    style={{
+                        backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+                        backgroundSize: '28px 28px'
+                    }}
+                />
+
+                {/* Orange left accent bar */}
+                <div className="absolute left-0 top-6 bottom-6 w-1 rounded-full bg-gradient-to-b from-[#d26019]/0 via-[#d26019] to-[#d26019]/0 z-[2]" />
+
+                {/* Content */}
+                <div className="relative z-10 h-full flex items-center justify-between px-10">
+
+                    <div>
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#d26019] animate-pulse" />
+                            <p className="text-sm font-bold text-slate-200 uppercase tracking-[0.20em]">
+                                Admin Panel · System · CMS
+                            </p>
+                        </div>
+                        <h1 className="text-3xl font-semibold text-white leading-tight tracking-tight mb-1">
+                            ABOUT ORGANIZER MANAGEMENT
+                        </h1>
+                        <p className="text-lg font-medium text-slate-200">
+                            Manage the information of the organizer on the About Us page
+                        </p>
+                    </div>
+
+                    <div className="hidden md:flex flex-col items-end gap-3">
+                        {/* Online badge */}
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/10 backdrop-blur-sm">
+                            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                            <span className="text-[10px] font-black text-white uppercase tracking-widest">System Online</span>
+                        </div>
+
+                        {/* Date */}
+                        <div className="px-4 py-2 rounded-xl bg-[#d26019]/20 border border-[#d26019]/20">
+                            <p className="text-[10px] font-black text-[#d26019] uppercase tracking-widest">
+                                {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div className="bg-white shadow-md p-6 min-h-screen font-poppins text-[#1a2e1a]">
+                {/* <PageHeader
                 title="ABOUT ORGANIZER MANAGEMENT"
                 description="Manage the information of the organizer on the About Us page"
-            />
+            /> */}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
-                {/* Left Side: General Content */}
-                <div className="space-y-6">
-                    <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
-                        <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d]">
-                            <Type className="w-5 h-5 text-[#d26019]" /> Main Content
-                        </h2>
-                        
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Subtitle</label>
-                                <input
-                                    type="text"
-                                    value={data.subtitle}
-                                    onChange={(e) => handleInputChange('subtitle', e.target.value)}
-                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
-                                />
-                            </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
+                    {/* Left Side: General Content */}
+                    <div className="space-y-6">
+                        <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
+                            <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d]">
+                                <Type className="w-5 h-5 text-[#d26019]" /> Main Content
+                            </h2>
 
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Title</label>
-                                <input
-                                    type="text"
-                                    value={data.title}
-                                    onChange={(e) => handleInputChange('title', e.target.value)}
-                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Description</label>
-                                <div className="border-2 border-gray-200 rounded overflow-hidden">
-                                     <RichTextEditor
-                                        value={data.descriptionHtml}
-                                        onChange={(val) => handleInputChange('descriptionHtml', val)}
-                                        placeholder="Enter organizer description here..."
-                                        minHeight="250px"
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Subtitle</label>
+                                    <input
+                                        type="text"
+                                        value={data.subtitle}
+                                        onChange={(e) => handleInputChange('subtitle', e.target.value)}
+                                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
                                     />
                                 </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Title</label>
+                                    <input
+                                        type="text"
+                                        value={data.title}
+                                        onChange={(e) => handleInputChange('title', e.target.value)}
+                                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Description</label>
+                                    <div className="border-2 border-gray-200 rounded overflow-hidden">
+                                        <RichTextEditor
+                                            value={data.descriptionHtml}
+                                            onChange={(val) => handleInputChange('descriptionHtml', val)}
+                                            placeholder="Enter organizer description here..."
+                                            minHeight="250px"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-lg font-bold flex items-center gap-2 text-[#23471d]">
+                                    <Plus className="w-5 h-5 text-[#d26019]" /> Core Capabilities
+                                </h2>
+                                <button
+                                    onClick={addCapability}
+                                    className="px-3 py-1 bg-[#23471d] text-white text-[10px] font-black rounded hover:bg-[#1a3615] transition-all uppercase tracking-widest"
+                                >
+                                    Add Point
+                                </button>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Section Subheading</label>
+                                <input
+                                    type="text"
+                                    value={data.capabilitiesTitle}
+                                    onChange={(e) => handleInputChange('capabilitiesTitle', e.target.value)}
+                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
+                                />
+                            </div>
+
+                            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                                {data.capabilities.map((cap, idx) => (
+                                    <div key={idx} className="flex items-start gap-2">
+                                        <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center font-bold text-[#23471d] shrink-0 text-xs">{idx + 1}</div>
+                                        <textarea
+                                            value={cap}
+                                            onChange={(e) => handleCapabilityChange(idx, e.target.value)}
+                                            className="flex-1 px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm"
+                                            rows="2"
+                                            placeholder={`Point ${idx + 1}...`}
+                                        />
+                                        <button
+                                            onClick={() => removeCapability(idx)}
+                                            className="p-2 text-red-500 hover:bg-red-50 rounded transition-all"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-lg font-bold flex items-center gap-2 text-[#23471d]">
-                                <Plus className="w-5 h-5 text-[#d26019]" /> Core Capabilities
+                    {/* Right Side: Media & Features */}
+                    <div className="space-y-6">
+                        <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
+                            <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d]">
+                                <ImageIcon className="w-5 h-5 text-[#d26019]" /> Media Settings
                             </h2>
-                            <button 
-                                onClick={addCapability}
-                                className="px-3 py-1 bg-[#23471d] text-white text-[10px] font-black rounded hover:bg-[#1a3615] transition-all uppercase tracking-widest"
+
+                            <div className="space-y-4">
+                                <div className="border-2 border-gray-100 p-4 rounded-lg bg-gray-50/30">
+                                    <label className="block text-[10px] font-bold text-gray-500 mb-2 uppercase tracking-tighter">Organizer Image</label>
+                                    {data.imageUrl ? (
+                                        <div className="relative aspect-video rounded overflow-hidden border-2 border-white shadow-sm bg-white group">
+                                            <img src={`${SERVER_URL}${data.imageUrl}`} className="w-full h-full object-cover" alt="Preview" />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <button
+                                                    onClick={() => handleInputChange('imageUrl', '')}
+                                                    className="bg-red-600 text-white p-2 rounded-full hover:bg-red-700"
+                                                >
+                                                    <Trash2 size={20} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="relative aspect-video rounded border-2 border-dashed border-gray-200 bg-white flex flex-col items-center justify-center group hover:border-[#23471d] transition-all">
+                                            <input
+                                                type="file"
+                                                onChange={handleImageUpload}
+                                                className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                            />
+                                            <ImageIcon className="w-8 h-8 text-gray-300 group-hover:text-[#23471d] transition-colors mb-2" />
+                                            <span className="text-[10px] font-bold text-gray-400 group-hover:text-[#23471d]">CLICK TO UPLOAD</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">Image Alt Text (SEO)</label>
+                                    <input
+                                        type="text"
+                                        value={data.imageAltText}
+                                        onChange={(e) => handleInputChange('imageAltText', e.target.value)}
+                                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
+                            <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d]">
+                                <Award className="w-5 h-5 text-[#d26019]" /> Experience Badge
+                            </h2>
+
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight font-italic">Badge Text (e.g. 10+ Years)</label>
+                                <input
+                                    type="text"
+                                    value={data.experienceText}
+                                    onChange={(e) => handleInputChange('experienceText', e.target.value)}
+                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
+                                    placeholder="Leave empty to hide badge on website"
+                                />
+                                <p className="text-[10px] text-gray-500 mt-2 italic">Note: If this field is empty, the badge will not be displayed on the About Us page.</p>
+                            </div>
+                        </div>
+
+                        <div className="pt-4">
+                            <button
+                                onClick={handleSave}
+                                disabled={isLoading}
+                                className="w-full py-4 bg-[#23471d] text-white font-black hover:bg-[#1a3615] transition-all flex items-center justify-center gap-3 rounded shadow-xl active:scale-95 disabled:opacity-50 uppercase tracking-[0.2em]"
                             >
-                                Add Point
+                                {isLoading ? (
+                                    <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                    <>
+                                        <Save className="w-6 h-6" /> Save Organizer Profile
+                                    </>
+                                )}
                             </button>
                         </div>
-                        
-                        <div className="mb-4">
-                             <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Section Subheading</label>
-                             <input
-                                 type="text"
-                                 value={data.capabilitiesTitle}
-                                 onChange={(e) => handleInputChange('capabilitiesTitle', e.target.value)}
-                                 className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
-                             />
-                        </div>
-
-                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-                            {data.capabilities.map((cap, idx) => (
-                                <div key={idx} className="flex items-start gap-2">
-                                    <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center font-bold text-[#23471d] shrink-0 text-xs">{idx + 1}</div>
-                                    <textarea
-                                        value={cap}
-                                        onChange={(e) => handleCapabilityChange(idx, e.target.value)}
-                                        className="flex-1 px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm"
-                                        rows="2"
-                                        placeholder={`Point ${idx + 1}...`}
-                                    />
-                                    <button 
-                                        onClick={() => removeCapability(idx)}
-                                        className="p-2 text-red-500 hover:bg-red-50 rounded transition-all"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right Side: Media & Features */}
-                <div className="space-y-6">
-                    <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
-                        <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d]">
-                            <ImageIcon className="w-5 h-5 text-[#d26019]" /> Media Settings
-                        </h2>
-                        
-                        <div className="space-y-4">
-                            <div className="border-2 border-gray-100 p-4 rounded-lg bg-gray-50/30">
-                                <label className="block text-[10px] font-bold text-gray-500 mb-2 uppercase tracking-tighter">Organizer Image</label>
-                                {data.imageUrl ? (
-                                    <div className="relative aspect-video rounded overflow-hidden border-2 border-white shadow-sm bg-white group">
-                                        <img src={`${SERVER_URL}${data.imageUrl}`} className="w-full h-full object-cover" alt="Preview" />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <button 
-                                                onClick={() => handleInputChange('imageUrl', '')}
-                                                className="bg-red-600 text-white p-2 rounded-full hover:bg-red-700"
-                                            >
-                                                <Trash2 size={20} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="relative aspect-video rounded border-2 border-dashed border-gray-200 bg-white flex flex-col items-center justify-center group hover:border-[#23471d] transition-all">
-                                        <input
-                                            type="file"
-                                            onChange={handleImageUpload}
-                                            className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                                        />
-                                        <ImageIcon className="w-8 h-8 text-gray-300 group-hover:text-[#23471d] transition-colors mb-2" />
-                                        <span className="text-[10px] font-bold text-gray-400 group-hover:text-[#23471d]">CLICK TO UPLOAD</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">Image Alt Text (SEO)</label>
-                                <input
-                                    type="text"
-                                    value={data.imageAltText}
-                                    onChange={(e) => handleInputChange('imageAltText', e.target.value)}
-                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
-                        <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d]">
-                            <Award className="w-5 h-5 text-[#d26019]" /> Experience Badge
-                        </h2>
-                        
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight font-italic">Badge Text (e.g. 10+ Years)</label>
-                            <input
-                                type="text"
-                                value={data.experienceText}
-                                onChange={(e) => handleInputChange('experienceText', e.target.value)}
-                                className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
-                                placeholder="Leave empty to hide badge on website"
-                            />
-                            <p className="text-[10px] text-gray-500 mt-2 italic">Note: If this field is empty, the badge will not be displayed on the About Us page.</p>
-                        </div>
-                    </div>
-
-                    <div className="pt-4">
-                        <button
-                            onClick={handleSave}
-                            disabled={isLoading}
-                            className="w-full py-4 bg-[#23471d] text-white font-black hover:bg-[#1a3615] transition-all flex items-center justify-center gap-3 rounded shadow-xl active:scale-95 disabled:opacity-50 uppercase tracking-[0.2em]"
-                        >
-                            {isLoading ? (
-                                <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                                <>
-                                    <Save className="w-6 h-6" /> Save Organizer Profile
-                                </>
-                            )}
-                        </button>
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 
