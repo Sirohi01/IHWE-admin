@@ -82,6 +82,7 @@ export const menuItems = [
       { label: "Marquee Text", path: "/marquee-text" },
       { label: "Who We Are", path: "/who-we-are" },
       { label: "Featured Services", path: "/featured-services" },
+      { label: "Healthcare Sectors", path: "/healthcare-sectors" },
       { label: "FAQ Management", path: "/faq-manage" },
       { label: "Glimpse", path: "/glimpse" },
       { label: "Our Clients", path: "/clients" },
