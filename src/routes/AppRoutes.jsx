@@ -30,6 +30,11 @@ import MarqueeManage from "../pages/MarqueeManage";
 import Glimpse from "../pages/Glimpse";
 import ParallaxManage from "../pages/ParallaxManage";
 import StatsManage from "../pages/StatsManage";
+import SupportedBy from "../pages/SupportedBy";
+import Introduction from "../pages/Introduction";
+import NationalExpo from "../pages/NationalExpo";
+import IntegratedFormat from "../pages/IntegratedFormat";
+import WhyParticipateManagement from "../pages/WhyParticipateManagement";
 
 import GalleryCategory from "../pages/portfolio-gallery/GalleryCategory";
 import GalleryList from "../pages/portfolio-gallery/GalleryList";
@@ -37,6 +42,7 @@ import AddGalleryImages from "../pages/portfolio-gallery/AddGalleryImages";
 import ManageGalleryImages from "../pages/portfolio-gallery/ManageGalleryImages";
 
 import TestimonialsManage from "../pages/TestimonialsManage";
+import NewTestimonialsManagement from "../pages/NewTestimonialsManagement";
 
 import AddVacancy from "../pages/vacancy/AddVacancy";
 import VacancyList from "../pages/vacancy/VacancyList";
@@ -218,7 +224,12 @@ export default function AppRoutes() {
           <Route path="e-promotion-manage" element={<EPromotionManage />} />
           <Route path="why-visit-manage" element={<WhyVisitManagement />} />
           <Route path="marquee-text" element={<MarqueeManage />} />
-          <Route path="glimpse" element={<Glimpse />} />
+            <Route path="/glimpse" element={<Glimpse />} />
+            <Route path="/supported-by" element={<SupportedBy />} />
+            <Route path="/introduction" element={<Introduction />} />
+            <Route path="/national-expo" element={<NationalExpo />} />
+            <Route path="/integrated-format" element={<IntegratedFormat />} />
+            <Route path="/why-participate-manage" element={<WhyParticipateManagement />} />
           <Route path="parallax-manage" element={<ParallaxManage />} />
           <Route path="stats-manage" element={<StatsManage />} />
           <Route path="create-a-post" element={<Post />} />
@@ -231,6 +242,7 @@ export default function AppRoutes() {
           <Route path="add-gallery-images" element={<AddGalleryImages />} />
           <Route path="manage-gallery-images" element={<ManageGalleryImages />} />
           <Route path="testimonials-manage" element={<TestimonialsManage />} />
+          <Route path="new-testimonials-manage" element={<NewTestimonialsManagement />} />
           <Route path="add-vacancy" element={<AddVacancy />} />
           <Route path="vacancy-list" element={<VacancyList />} />
           <Route path="career-list" element={<CareerList />} />
