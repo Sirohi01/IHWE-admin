@@ -35,6 +35,10 @@ const Settings = () => {
     // Brochure state
     const [brochureFile, setBrochureFile] = useState(null);
     const [brochurePreview, setBrochurePreview] = useState('');
+    const [domesticFormFile, setDomesticFormFile] = useState(null);
+    const [domesticFormPreview, setDomesticFormPreview] = useState('');
+    const [internationalFormFile, setInternationalFormFile] = useState(null);
+    const [internationalFormPreview, setInternationalFormPreview] = useState('');
 
     // Topbar state
     const [marqueeText, setMarqueeText] = useState("• 150+ Speakers confirmed • Early Bird discount ending soon! • Join 8,000+ Professionals from 25+ Countries");
@@ -122,7 +126,8 @@ const Settings = () => {
             const res = await api.get('/api/settings');
             if (res.data.success && res.data.data) {
                 const { 
-                    logo, exhibitorBrochurePdf, emails, phones, addresses, mapIframe: savedIframe, 
+                    logo, exhibitorBrochurePdf, domesticRegistrationFormPdf, internationalRegistrationFormPdf,
+                    emails, phones, addresses, mapIframe: savedIframe, 
                     marqueeText: savedMarquee, topbarDate: savedDate, supportDeskText: savedSupportDeskText,
                     companyName: sName, companyAddress: sAddress, companyGst: sGst, companyCin: sCin,
                     fullPaymentDiscount: sDisc, availableTdsRates: sTds, authorizedSignature, companyStamp
@@ -133,6 +138,12 @@ const Settings = () => {
                 }
                 if (exhibitorBrochurePdf) {
                     setBrochurePreview(`${SERVER_URL}${exhibitorBrochurePdf}`);
+                }
+                if (domesticRegistrationFormPdf) {
+                    setDomesticFormPreview(`${SERVER_URL}${domesticRegistrationFormPdf}`);
+                }
+                if (internationalRegistrationFormPdf) {
+                    setInternationalFormPreview(`${SERVER_URL}${internationalRegistrationFormPdf}`);
                 }
                 if (savedIframe) {
                     setMapIframe(savedIframe);
@@ -192,6 +203,12 @@ const Settings = () => {
             if (brochureFile) {
                 formData.append('exhibitorBrochurePdf', brochureFile);
             }
+            if (domesticFormFile) {
+                formData.append('domesticRegistrationFormPdf', domesticFormFile);
+            }
+            if (internationalFormFile) {
+                formData.append('internationalRegistrationFormPdf', internationalFormFile);
+            }
 
             const emailsToSave = emails.map(({ id, isEditing, ...rest }) => rest);
             const phonesToSave = phones.map(({ id, isEditing, ...rest }) => rest);
@@ -241,6 +258,14 @@ const Settings = () => {
                 if (res.data.data.exhibitorBrochurePdf) {
                     setBrochurePreview(`${SERVER_URL}${res.data.data.exhibitorBrochurePdf}`);
                     setBrochureFile(null);
+                }
+                if (res.data.data.domesticRegistrationFormPdf) {
+                    setDomesticFormPreview(`${SERVER_URL}${res.data.data.domesticRegistrationFormPdf}`);
+                    setDomesticFormFile(null);
+                }
+                if (res.data.data.internationalRegistrationFormPdf) {
+                    setInternationalFormPreview(`${SERVER_URL}${res.data.data.internationalRegistrationFormPdf}`);
+                    setInternationalFormFile(null);
                 }
                 if (res.data.data.authorizedSignature) {
                     setSignaturePreview(`${SERVER_URL}${res.data.data.authorizedSignature}`);
@@ -578,6 +603,68 @@ const Settings = () => {
                                             </p>
                                             {brochurePreview && !brochureFile && (
                                                 <a href={brochurePreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center">
+                                            <Plus className="w-6 h-6 text-gray-300 mb-1" />
+                                            <p className="text-[9px] font-bold text-gray-400 uppercase">Click to upload PDF</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Domestic Registration Form PDF */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    Domestic Registration Form (PDF)
+                                </label>
+                                <div className="border border-dashed border-gray-300 p-4 text-center relative group min-h-[100px] flex items-center justify-center bg-gray-50/30 rounded-lg hover:border-[#23471d] transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={(e) => setDomesticFormFile(e.target.files[0])}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {domesticFormFile || domesticFormPreview ? (
+                                        <div className="flex flex-col items-center">
+                                            <FileText className="w-8 h-8 text-blue-500 mb-1" />
+                                            <p className="text-[10px] font-bold text-gray-600 truncate max-w-[200px]">
+                                                {domesticFormFile ? domesticFormFile.name : "Domestic Form.pdf"}
+                                            </p>
+                                            {domesticFormPreview && !domesticFormFile && (
+                                                <a href={domesticFormPreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center">
+                                            <Plus className="w-6 h-6 text-gray-300 mb-1" />
+                                            <p className="text-[9px] font-bold text-gray-400 uppercase">Click to upload PDF</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* International Registration Form PDF */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    International Registration Form (PDF)
+                                </label>
+                                <div className="border border-dashed border-gray-300 p-4 text-center relative group min-h-[100px] flex items-center justify-center bg-gray-50/30 rounded-lg hover:border-[#23471d] transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={(e) => setInternationalFormFile(e.target.files[0])}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {internationalFormFile || internationalFormPreview ? (
+                                        <div className="flex flex-col items-center">
+                                            <FileText className="w-8 h-8 text-purple-500 mb-1" />
+                                            <p className="text-[10px] font-bold text-gray-600 truncate max-w-[200px]">
+                                                {internationalFormFile ? internationalFormFile.name : "International Form.pdf"}
+                                            </p>
+                                            {internationalFormPreview && !internationalFormFile && (
+                                                <a href={internationalFormPreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
                                             )}
                                         </div>
                                     ) : (

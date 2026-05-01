@@ -203,7 +203,7 @@ export const fetchReviews = createAsyncThunk(
   "reviews/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${BASE_URL}/crm-exhibator-reviews`);
+      const res = await axios.get(`${BASE_URL}/api/crm-exhibator-reviews`);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -216,7 +216,7 @@ export const fetchReviewById = createAsyncThunk(
   "reviews/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${BASE_URL}/crm-exhibator-reviews/${id}`);
+      const res = await axios.get(`${BASE_URL}/api/crm-exhibator-reviews/${id}`);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -230,7 +230,7 @@ export const createReview = createAsyncThunk(
   async (reviewData, { dispatch, rejectWithValue }) => {
     try {
       const res = await axios.post(
-        `${BASE_URL}/crm-exhibator-reviews`,
+        `${BASE_URL}/api/crm-exhibator-reviews`,
         reviewData,
       );
 
@@ -266,7 +266,7 @@ export const updateReview = createAsyncThunk(
   async ({ id, reviewData }, { dispatch, rejectWithValue }) => {
     try {
       const res = await axios.put(
-        `${BASE_URL}/crm-exhibator-reviews/${id}`,
+        `${BASE_URL}/api/crm-exhibator-reviews/${id}`,
         reviewData,
       );
 
@@ -304,7 +304,7 @@ export const deleteReview = createAsyncThunk(
       const { reviews } = getState().reviews;
       const reviewToDelete = reviews.find((r) => r._id === id);
 
-      const res = await axios.delete(`${BASE_URL}/crm-exhibator-reviews/${id}`);
+      const res = await axios.delete(`${BASE_URL}/api/crm-exhibator-reviews/${id}`);
 
       const { userId, userName } = getUserInfo();
 

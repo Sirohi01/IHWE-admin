@@ -253,9 +253,9 @@ export default function Sidebar({
         #dh-sidebar .sb-toggle-btn { background-color: var(--sb-toggle) !important; }
         #dh-sidebar .sb-close-btn { background-color: #d26019 !important; color: white !important; border-radius: 6px !important; display: flex !important; align-items: center !important; justify-content: center !important; width: 28px !important; height: 28px !important; padding: 4px !important; transition: all 0.2s ease !important; }
         #dh-sidebar .sb-close-btn:hover { background-color: #b35215 !important; transform: scale(1.1); }
-        .sidebar-scroll::-webkit-scrollbar { width: 6px; }
+        .sidebar-scroll::-webkit-scrollbar { width: 3px; }
         .sidebar-scroll::-webkit-scrollbar-thumb { background-color: #23471d; border-radius: 10px; }
-        .sidebar-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .sidebar-scroll::-webkit-scrollbar-track { background: transparent; border-radius: 10px; }
       `}</style>
 
       {mobileMenuOpen && (
@@ -267,12 +267,12 @@ export default function Sidebar({
         style={cssVars}
         className={`fixed top-0 left-0 h-screen border-r-4 shadow-xl z-50 transition-all duration-300 flex flex-col ${sidebarOpen ? "w-75" : "w-20 -translate-x-full lg:translate-x-0"} ${mobileMenuOpen ? "translate-x-0" : ""}`}
       >
-        <div className="sb-header relative p-4 border-b">
-          <div className="flex justify-center">
-            {logo ? <img src={`${SERVER_URL}${logo}`} className="h-18 w-auto object-contain" alt="Logo" /> : <span className="text-xl font-black text-[#23471d]">IHWE</span>}
+        <div className=" sb-header relative p-4 border-b">
+          <div className="">
+            {logo ? <img src={`${SERVER_URL}${logo}`} className="h-16 w-auto object-contain" alt="Logo" /> : <span className="text-xl font-black text-[#23471d]">IHWE</span>}
           </div>
           {sidebarOpen && (
-            <button onClick={() => { setSidebarOpen(false); setMobileMenuOpen(false); }} className="sb-close-btn absolute right-4 top-4 p-2 rounded-lg"><X size={20} /></button>
+            <button onClick={() => { setSidebarOpen(false); setMobileMenuOpen(false); }} className="sb-close-btn absolute right-4 top-7 p-2 rounded-lg"><X size={20} /></button>
           )}
         </div>
 
@@ -322,7 +322,7 @@ export default function Sidebar({
         <div className="sb-footer p-2 border-t bg-inherit mt-auto">
           {sidebarOpen && (
             <div className="flex flex-col items-center gap-2">
-              <button onClick={handleLogout} className="w-full px-3 py-3 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors">Logout</button>
+              <button onClick={handleLogout} className="w-full px-3 py-2 text-lg font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors">Logout</button>
               <span className="text-[10px] text-gray-500">v1.0.0 • IHWE</span>
             </div>
           )}

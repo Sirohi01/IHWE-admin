@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Link as LinkIcon } from 'lucide-react';
+import { Link as LinkIcon, Type } from 'lucide-react';
 
 const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isCodeEditor = false, showColorPicker = true, fontSize }) => {
     const editorRef = useRef(null);
@@ -13,6 +13,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
         insertUnorderedList: false,
         insertOrderedList: false,
         formatBlock: 'p',
+        fontSize: '3',
         link: false,
         color: '#333333'
     });
@@ -27,6 +28,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
     const updateActiveFormats = useCallback(() => {
         if (!isCodeEditor && editorRef.current) {
             const formatBlockValue = document.queryCommandValue("formatBlock");
+            const fontSizeValue = document.queryCommandValue("fontSize");
             
             // Check if selection is inside a link
             const selection = window.getSelection();
@@ -55,6 +57,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                 insertUnorderedList: document.queryCommandState("insertUnorderedList"),
                 insertOrderedList: document.queryCommandState("insertOrderedList"),
                 formatBlock: formatBlockValue || 'p',
+                fontSize: fontSizeValue || '3',
                 link: isLink,
                 color: document.queryCommandValue("foreColor")
             });
@@ -137,7 +140,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
         : "bg-white border-gray-300 active:bg-gray-100";
 
     return (
-        <div className="border-2 border-gray-200 rounded overflow-hidden shadow-inner bg-white">
+        <div className="border-2 border-gray-200 rounded overflow-hidden shadow-inner bg-white font-inter">
             {/* Standardized Toolbar - Hidden in code mode or customized if needed */}
             {!isCodeEditor && (
                 <div className="bg-gray-50 p-2 border-b-2 border-gray-200 flex flex-wrap gap-1 items-center">
@@ -227,6 +230,28 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                         <option value="h5">Heading 5</option>
                         <option value="h6">Heading 6</option>
                     </select>
+
+                    <div className="w-px h-6 bg-gray-300 mx-1"></div>
+
+                    {/* Font Size Selector */}
+                    <div className="flex items-center gap-1 border-2 border-gray-300 rounded px-1 h-9 bg-white shadow-sm hover:border-blue-400 transition-colors">
+                        <Type size={14} className="text-gray-400 ml-1" />
+                        <select
+                            onChange={(e) => execCommand("fontSize", e.target.value)}
+                            value={activeFormats.fontSize}
+                            className="h-full border-0 text-[11px] font-bold px-1 focus:outline-none bg-transparent"
+                        >
+                            <option value="1">12px</option>
+                            <option value="2">14px</option>
+                            <option value="3">16px</option>
+                            <option value="4">18px</option>
+                            <option value="5">24px</option>
+                            <option value="6">36px</option>
+                            <option value="7">48px</option>
+                            <option value="8">64px</option>
+                            <option value="9">72px</option>
+                        </select>
+                    </div>
 
                     <button
                         type="button"
@@ -334,6 +359,15 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                 [contenteditable] h6 {
                     font-size: 0.9rem !important;
                 }
+                [contenteditable] font[size="1"] { font-size: 12px !important; }
+                [contenteditable] font[size="2"] { font-size: 14px !important; }
+                [contenteditable] font[size="3"] { font-size: 16px !important; }
+                [contenteditable] font[size="4"] { font-size: 18px !important; }
+                [contenteditable] font[size="5"] { font-size: 24px !important; }
+                [contenteditable] font[size="6"] { font-size: 36px !important; }
+                [contenteditable] font[size="7"] { font-size: 48px !important; }
+                [contenteditable] font[size="8"] { font-size: 64px !important; }
+                [contenteditable] font[size="9"] { font-size: 72px !important; }
             ` }} />
         </div>
     );

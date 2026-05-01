@@ -18,10 +18,10 @@ const EMPTY_EVENT = {
     contactPhone: '',
     order: 1,
     paymentPlans: [
-        { id: 'full', label: 'Full Payment', percentage: 100, isDefault: true },
-        { id: 'phase1', label: 'Phase 1 Payment', percentage: 25 },
-        { id: 'phase2', label: 'Phase 2 Payment', percentage: 50 },
-        { id: 'phase3', label: 'Phase 3 Payment', percentage: 75 }
+        { id: 'full', label: 'Full Payment (100%)', percentage: 100, isDefault: true, dueDate: null },
+        { id: 'phase1', label: 'Phase 1 – Advance (25%)', percentage: 25, isDefault: false, dueDate: null },
+        { id: 'phase2', label: 'Phase 2 – Mid Payment (50%)', percentage: 50, isDefault: false, dueDate: null },
+        { id: 'phase3', label: 'Phase 3 – Final Payment (75%)', percentage: 75, isDefault: false, dueDate: null }
     ]
 };
 
@@ -202,65 +202,149 @@ const ManageEvents = () => {
                                         type="button" 
                                         onClick={() => {
                                             const newPlans = [...(eventForm.paymentPlans || [])];
-                                            newPlans.push({ id: `p${Date.now()}`, label: 'New Phase', percentage: 25 });
+                                            const nextIdx = newPlans.filter(p => p.id !== 'full').length + 1;
+                                            newPlans.push({ id: `phase${Date.now()}`, label: `Phase ${nextIdx} Payment`, percentage: 25, isDefault: false, dueDate: null });
                                             setEventForm({ ...eventForm, paymentPlans: newPlans });
                                         }}
-                                        className="text-[9px] font-black uppercase tracking-widest text-[#23471d] hover:underline"
+                                        className="text-[9px] font-black uppercase tracking-widest px-2 py-1 bg-[#23471d]/10 text-[#23471d] hover:bg-[#23471d]/20 rounded-[2px] transition-all flex items-center gap-1"
                                     >
-                                        + Add Plan
+                                        <Plus size={10} /> Add Phase
                                     </button>
                                 </div>
+
+                                {/* Plans list */}
                                 <div className="space-y-2">
                                     {(eventForm.paymentPlans || []).map((plan, idx) => (
-                                        <div key={plan.id || idx} className="grid grid-cols-12 gap-2 items-center bg-gray-50 p-2 border border-gray-200 rounded-[2px]">
-                                            <div className="col-span-7">
-                                                <input 
-                                                    type="text" 
-                                                    value={plan.label} 
-                                                    onChange={(e) => {
-                                                        const newPlans = [...eventForm.paymentPlans];
-                                                        newPlans[idx].label = e.target.value;
-                                                        setEventForm({ ...eventForm, paymentPlans: newPlans });
-                                                    }}
-                                                    className="w-full px-2 py-1 border border-gray-300 text-[10px] font-bold uppercase outline-none focus:border-[#23471d]"
-                                                    placeholder="Phase Name"
-                                                />
+                                        <div key={plan.id || idx} className={`p-2.5 border rounded-[2px] space-y-2 ${plan.isDefault ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                                            <div className="flex items-center gap-1 mb-1">
+                                                {plan.isDefault && (
+                                                    <span className="text-[8px] font-black uppercase tracking-widest bg-green-600 text-white px-1.5 py-0.5 rounded-[2px]">Default</span>
+                                                )}
+                                                {Number(plan.percentage) === 100 && !plan.isDefault && (
+                                                    <span className="text-[8px] font-black uppercase tracking-widest bg-[#23471d] text-white px-1.5 py-0.5 rounded-[2px]">Full Payment</span>
+                                                )}
+                                                {Number(plan.percentage) < 100 && (
+                                                    <span className="text-[8px] font-black uppercase tracking-widest bg-blue-600 text-white px-1.5 py-0.5 rounded-[2px]">Installment</span>
+                                                )}
                                             </div>
-                                            <div className="col-span-3 h-full">
-                                                <div className="relative h-full">
+                                            <div className="grid grid-cols-12 gap-2 items-center">
+                                                <div className="col-span-6">
+                                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-wider block mb-0.5">Plan Label</label>
                                                     <input 
-                                                        type="number" 
-                                                        value={plan.percentage} 
+                                                        type="text" 
+                                                        value={plan.label} 
                                                         onChange={(e) => {
                                                             const newPlans = [...eventForm.paymentPlans];
-                                                            newPlans[idx].percentage = Number(e.target.value);
+                                                            newPlans[idx] = { ...newPlans[idx], label: e.target.value };
                                                             setEventForm({ ...eventForm, paymentPlans: newPlans });
                                                         }}
-                                                        className="w-full h-full px-2 py-1 border border-gray-300 text-[10px] font-bold outline-none focus:border-[#23471d] pr-5"
-                                                        placeholder="%"
+                                                        className="w-full px-2 py-1.5 border border-gray-300 text-[10px] font-bold uppercase outline-none focus:border-[#23471d] rounded-[2px]"
+                                                        placeholder="e.g. Phase 1 – Advance"
                                                     />
-                                                    <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-gray-400">%</span>
+                                                </div>
+                                                <div className="col-span-4">
+                                                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-wider block mb-0.5">% of Total</label>
+                                                    <div className="relative">
+                                                        <input 
+                                                            type="number"
+                                                            min="1"
+                                                            max="100"
+                                                            value={plan.percentage} 
+                                                            disabled={plan.isDefault}
+                                                            onChange={(e) => {
+                                                                const newPlans = [...eventForm.paymentPlans];
+                                                                newPlans[idx] = { ...newPlans[idx], percentage: Number(e.target.value) };
+                                                                setEventForm({ ...eventForm, paymentPlans: newPlans });
+                                                            }}
+                                                            className={`w-full px-2 py-1.5 border border-gray-300 text-[10px] font-black outline-none focus:border-[#23471d] pr-5 rounded-[2px] ${plan.isDefault ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
+                                                            placeholder="%"
+                                                        />
+                                                        <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-gray-400">%</span>
+                                                    </div>
+                                                </div>
+                                                <div className="col-span-2 flex justify-center items-end pb-0.5">
+                                                    <button 
+                                                        type="button" 
+                                                        disabled={plan.isDefault}
+                                                        onClick={() => {
+                                                            const newPlans = eventForm.paymentPlans.filter((_, i) => i !== idx);
+                                                            setEventForm({ ...eventForm, paymentPlans: newPlans });
+                                                        }}
+                                                        className={`p-1.5 rounded-[2px] border transition-all ${plan.isDefault ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-red-500 border-red-200 hover:bg-red-50'}`}
+                                                        title={plan.isDefault ? 'Cannot delete default plan' : 'Delete plan'}
+                                                    >
+                                                        <Trash2 size={12} />
+                                                    </button>
                                                 </div>
                                             </div>
-                                            <div className="col-span-2 flex justify-center">
-                                                <button 
-                                                    type="button" 
-                                                    disabled={plan.isDefault}
-                                                    onClick={() => {
-                                                        const newPlans = eventForm.paymentPlans.filter((_, i) => i !== idx);
-                                                        setEventForm({ ...eventForm, paymentPlans: newPlans });
-                                                    }}
-                                                    className={`p-1 rounded ${plan.isDefault ? 'text-gray-300 cursor-not-allowed' : 'text-red-500 hover:bg-red-50'}`}
-                                                >
-                                                    <Trash2 size={12} />
-                                                </button>
-                                            </div>
+                                            {/* Due date — only for installment plans */}
+                                            {plan.id !== 'full' && Number(plan.percentage) < 100 && (
+                                                <div className="flex items-center gap-2 pt-1 border-t border-gray-200">
+                                                    <label className="text-[9px] font-black text-gray-500 uppercase tracking-wider whitespace-nowrap">Due Date:</label>
+                                                    <input
+                                                        type="date"
+                                                        value={plan.dueDate ? new Date(plan.dueDate).toISOString().split('T')[0] : ''}
+                                                        onChange={(e) => {
+                                                            const newPlans = [...eventForm.paymentPlans];
+                                                            newPlans[idx] = { ...newPlans[idx], dueDate: e.target.value || null };
+                                                            setEventForm({ ...eventForm, paymentPlans: newPlans });
+                                                        }}
+                                                        className="flex-1 px-2 py-1 border border-gray-300 text-[10px] font-bold outline-none focus:border-[#23471d] rounded-[2px]"
+                                                    />
+                                                    {plan.dueDate && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const newPlans = [...eventForm.paymentPlans];
+                                                                newPlans[idx] = { ...newPlans[idx], dueDate: null };
+                                                                setEventForm({ ...eventForm, paymentPlans: newPlans });
+                                                            }}
+                                                            className="text-[9px] text-red-400 hover:text-red-600 font-bold"
+                                                        >✕</button>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                     {(!eventForm.paymentPlans || eventForm.paymentPlans.length === 0) && (
-                                        <p className="text-[10px] text-gray-400 italic text-center py-2">No custom plans defined.</p>
+                                        <p className="text-[10px] text-gray-400 italic text-center py-3 border border-dashed border-gray-200 rounded-[2px]">No payment plans defined. Click "+ Add Phase" to add one.</p>
                                     )}
                                 </div>
+
+                                {/* Summary of how plans work */}
+                                {(eventForm.paymentPlans || []).filter(p => Number(p.percentage) < 100).length > 0 && (
+                                    <div className="mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-[2px]">
+                                        <p className="text-[9px] font-black text-amber-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                                            <Info size={10} /> How Installments Work
+                                        </p>
+                                        <div className="space-y-1">
+                                            {(eventForm.paymentPlans || [])
+                                                .filter(p => Number(p.percentage) < 100)
+                                                .sort((a, b) => Number(a.percentage) - Number(b.percentage))
+                                                .map((plan, i, arr) => {
+                                                    const prevPct = i === 0 ? 0 : Number(arr[i - 1].percentage);
+                                                    const thisPct = Number(plan.percentage);
+                                                    const installmentPct = thisPct - prevPct;
+                                                    return (
+                                                        <div key={plan.id} className="flex items-center justify-between text-[9px] font-bold text-amber-800">
+                                                            <span>{plan.label}</span>
+                                                            <span className="bg-amber-200 px-1.5 py-0.5 rounded">
+                                                                Pays {installmentPct}% of net total
+                                                                {plan.dueDate ? ` · Due ${new Date(plan.dueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}` : ''}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                })
+                                            }
+                                            <div className="flex items-center justify-between text-[9px] font-bold text-amber-800 border-t border-amber-200 pt-1 mt-1">
+                                                <span>Remaining Balance</span>
+                                                <span className="bg-amber-300 px-1.5 py-0.5 rounded">
+                                                    Pays {100 - Number((eventForm.paymentPlans || []).filter(p => Number(p.percentage) < 100).sort((a, b) => Number(a.percentage) - Number(b.percentage)).slice(-1)[0]?.percentage || 0)}% of net total
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                              </div>
 
                             <div className="pt-4 border-t-2 border-gray-100 flex justify-end gap-2">
@@ -324,10 +408,12 @@ const ManageEvents = () => {
                                                 <div className="flex items-center justify-center gap-3">
                                                     <button 
                                                         onClick={() => { 
-                                                            setIsEditing(event._id); 
+                                                            setIsEditing(event._id);
+                                                            const { _id, __v, createdAt, updatedAt, ...cleanEvent } = event;
                                                             setEventForm({
-                                                                ...event,
-                                                                location: event.location || event.venue || ''
+                                                                ...cleanEvent,
+                                                                location: cleanEvent.location || cleanEvent.venue || '',
+                                                                paymentPlans: cleanEvent.paymentPlans?.length > 0 ? cleanEvent.paymentPlans : EMPTY_EVENT.paymentPlans
                                                             }); 
                                                         }} 
                                                         className="text-blue-600 hover:bg-blue-50 p-1.5 transition-all rounded-[2px] border border-blue-100 bg-blue-50/30" 

@@ -101,6 +101,7 @@ import ManageStallRates from "../pages/ManageStallRates";
 import ManageTerms from "../pages/ManageTerms";
 import ExhibitorBookingDetail from "../pages/ExhibitorBookingDetail";
 import FailedPayments from "../pages/FailedPayments";
+import PaymentDelayWarnings from "../pages/PaymentDelayWarnings";
 import TravelAccommodationManage from "../pages/TravelAccommodationManage";
 import AdminBSM from "../pages/AdminBSM";
 import ActivityLogs from "../pages/ActivityLogs";
@@ -166,10 +167,21 @@ import Reminder from "../pages/navbar_page/Reminder";
 import ToDoList from "../pages/navbar_page/ToDoList";
 import NewLeads from "../pages/navbar_page/NewLeads";
 import Notification from "../pages/navbar_page/Notification";
+import NotFound from "../pages/NotFound";
+import BannerManagement from "../pages/BannerManagement";
+import SellerSubscriptionPlans from "../pages/add_by_admin/SellerSubscriptionPlans";
+import SellerServiceRequests from "../pages/SellerServiceRequests";
+import SellerExportInquiries from "../pages/SellerExportInquiries";
 import InternationalBuyerList from "../pages/buyer/InternationalBuyerList";
 import InternationalBuyerRegistrationDetail from "../pages/InternationalBuyerRegistrationDetail";
 import InternationalBuyerRegistrationEdit from "../pages/InternationalBuyerRegistrationEdit";
 import InternationalBuyerRegistration from "../pages/buyer/InternationalBuyerRegistration";
+import AccountSection1 from "../pages/ihwe_client_data_2026/AccountSection1";
+import CreateEstimate1 from "../pages/ihwe_client_data_2026/CreateEstimate1";
+import EstimateDetails from "../pages/ihwe_client_data_2026/invoice/EstimateDetails"
+import EditEstimate from "../pages/ihwe_client_data_2026/invoice/EditEstimate";
+import PerformaInvoiceDetails from "../pages/ihwe_client_data_2026/invoice/PerformaInvoiceDetails";
+
 
 export default function AppRoutes() {
   return (
@@ -181,6 +193,7 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="role-permissions" element={<RolePermissions />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="dashboard-banners" element={<BannerManagement />} />
           <Route path="click-analytics" element={<ClickAnalytics />} />
           <Route path="about-us" element={<About />} />
           <Route path="who-we-are" element={<WhoWeAre />} />
@@ -262,11 +275,17 @@ export default function AppRoutes() {
             path="exhibitor-list-manage"
             element={<ExhibitorListManage />}
           />
+          <Route
+                      path="/payments/performanceInvoiceDetails/:id"
+                      element={<PerformaInvoiceDetails />}
+                    />
+
           <Route path="exhibitor-products-profile" element={<ExhibitorProductsProfile />} />
           <Route path="stalls" element={<ManageStalls />} />
           <Route path="exhibitor-bookings" element={<ManageRegistrations />} />
           <Route path="exhibitor-booking/:id" element={<ExhibitorBookingDetail />} />
           <Route path="failed-payments" element={<FailedPayments />} />
+          <Route path="payment-delay-warnings" element={<PaymentDelayWarnings />} />
           <Route path="events" element={<ManageEvents />} />
           <Route path="stall-rates" element={<ManageStallRates />} />
           <Route path="terms-conditions" element={<ManageTerms />} />
@@ -353,6 +372,19 @@ export default function AppRoutes() {
             path="ihweClientData2026/uploadExhibitor"
             element={<UploadExhibitor />}
           />
+          <Route
+            path="ihweClientData2026/accountSection1/:id"
+            element={<AccountSection1 />}
+          />
+          <Route
+            path="ihweClientData2026/createEstimate1/:id"
+            element={<CreateEstimate1 />}
+          />
+          <Route
+            path="payments/estimateDetails/:id"
+            element={<EstimateDetails />}
+          />
+               <Route path="/payments/estimateEdit/:id" element={<EditEstimate />} />
           {/* <Route
             path="ihweClientData2026/AddNewVisitor"
             element={<VisitorRegistration />}
@@ -456,16 +488,21 @@ export default function AppRoutes() {
           <Route path="/accessory-orders" element={<AccessoryOrders />} />
           <Route path="/exhibitor-chat" element={<ExhibitorChat />} />
           <Route path="/add-unit" element={<AddUnit />} />
+          <Route path="/seller-subscription-plans" element={<SellerSubscriptionPlans />} />
+          <Route path="/seller-service-requests" element={<SellerServiceRequests />} />
+          <Route path="/seller-export-inquiries" element={<SellerExportInquiries />} />
           <Route path="/marketing-toolkit-manage" element={<MarketingToolkitManage />} />
           <Route path="/reminder" element={<Reminder />} />
           <Route path="/to-do-list" element={<ToDoList />} />
           <Route path="/new-leads" element={<NewLeads />} />
           <Route path="/notification" element={<Notification />} />
+          <Route path="*" element={<NotFound />} />
           <Route path="/international-buyer-list" element={<InternationalBuyerList />} />
           <Route path="/international-buyer/:id" element={<InternationalBuyerRegistrationDetail />} />
           <Route path="/international-buyer/edit/:id" element={<InternationalBuyerRegistrationEdit />} />
           <Route path="/international-buyer-registration" element={<InternationalBuyerRegistration />} />
         </Route>
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );

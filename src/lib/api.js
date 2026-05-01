@@ -18,6 +18,11 @@ const getBaseUrl = () => {
 export const SERVER_URL = getBaseUrl();
 export const API_URL = `${SERVER_URL}/api`;
 
+// Determine Frontend URL (Main Website)
+export const FRONTEND_URL = (import.meta.env.VITE_FRONTEND_URL ||
+  (window.location.hostname === "localhost" ? "http://localhost:8080" : window.location.origin.replace(/:\/\/admin\./, "://"))
+).replace(/\/$/, "");
+
 const api = axios.create({
   baseURL: SERVER_URL,
 });
@@ -45,6 +50,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+
 // ✅ RESPONSE INTERCEPTOR (FIXED)
 api.interceptors.response.use(
   (response) => response,
@@ -70,6 +76,20 @@ api.interceptors.response.use(
 );
 
 const unwrapApiResponse = (response) => response?.data ?? response;
+
+export const heroApi = {
+  getAll: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/hero/all"));
+    return payload.success ? payload.data : [];
+  },
+};
+
+export const settingsApi = {
+  get: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/settings"));
+    return payload.success ? payload.data : null;
+  },
+};
 
 export const heroBackgroundApi = {
   getAll: async () => {
@@ -185,6 +205,13 @@ export const crmApi = {
     const query = stateCode ? `?stateCode=${stateCode}` : "";
     const payload = unwrapApiResponse(await api.get(`/api/crm-cities${query}`));
     return Array.isArray(payload) ? payload : payload.data || [];
+  },
+};
+
+export const socialMediaApi = {
+  get: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/social-media"));
+    return payload.success ? payload.data : null;
   },
 };
 

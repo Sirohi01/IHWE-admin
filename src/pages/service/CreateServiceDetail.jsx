@@ -1,304 +1,163 @@
 import { useState, useEffect, useRef } from 'react';
-import {
-    Save,
-    Upload,
-    Image as ImageIcon,
-    X,
-    Check,
-    Link as LinkIcon,
-    Code,
-    FileText,
-    Tag,
-    Briefcase,
-    Sparkles
-} from 'lucide-react';
+import { Save, Globe, Pencil, Upload, Image as ImageIcon, X, Sparkles, Briefcase, Link as LinkIcon, Sun } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api, { SERVER_URL } from "../../lib/api";
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/PageHeader';
 import RichTextEditor from '../../components/RichTextEditor';
 
-const initialFormState = {
-    serviceName: "",
-    bgImage: null,
-    bgImagePreview: null,
-    bgImagePath: "",
-    bgAltText: "",
-    bgTitle: "",
-    title: "",
-    highlightText: "",
-    description: "",
-    galleryImages: [
-        { file: null, preview: null, altText: "", existingPath: "" },
-        { file: null, preview: null, altText: "", existingPath: "" },
-        { file: null, preview: null, altText: "", existingPath: "" },
-        { file: null, preview: null, altText: "", existingPath: "" },
-    ],
-    metaTitle: "",
-    metaKeywords: "",
-    metaDescription: "",
-    ogTitle: "",
-    ogDescription: "",
-    canonicalTag: "",
-    schemaMarkup: "",
-    openGraphTags: "",
-    ogImage: null,
-    ogImagePreview: null,
-    ogImagePath: "",
-    ogImageAltText: ""
-};
-
 const CreateServiceDetail = () => {
     const [isLoading, setIsLoading] = useState(false);
-    const navigate = useNavigate();
     const location = useLocation();
-    const lastFetchedServiceRef = useRef("");
+    const navigate = useNavigate();
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editId, setEditId] = useState(null);
+    const [featuredServices, setFeaturedServices] = useState([]);
 
-    const [formData, setFormData] = useState(initialFormState);
+    const [formData, setFormData] = useState({
+        serviceCardId: "",
+        serviceTitle: "",
+        slug: "",
+        heroImage: null,
+        heroImagePreview: null,
+        heroImageAlt: "",
+        heroOverlayOpacity: 0.7,
+        h1Heading: "",
+        content: ""
+    });
 
-    const categorizedServices = [
-        {
-            category: "Interiors",
-            services: ["Retail Interior", "Corporate Interior", "Restaurant Interior", "Shop In Shops", "Interior Design Company"]
-        },
-        {
-            category: "Merchandising",
-            services: ["Retail Display Merchandising", "Acrylic Displays", "Gondolas", "Window Display"]
-        },
-        {
-            category: "Kiosk",
-            services: ["Retail Kiosk", "Mobile Booth"]
-        },
-        {
-            category: "Office Interior",
-            services: ["Modular Work Station", "MD Cabin", "Chairs", "Office Interior"]
-        },
-        {
-            category: "Exhibition & Events",
-            services: ["Exhibition & Events"]
-        },
-        {
-            category: "Furniture",
-            services: ["Modular Wardrobe", "Modular Kitchen", "Modular LCD Unit", "Dressing Table", "Sofas", "Space Saving Furniture", "Furniture"]
-        },
-        {
-            category: "Signage",
-            services: ["Signage"]
-        }
-    ];
-
-    // Handle pre-selected service from navigation state (Edit mode)
     useEffect(() => {
-        if (location.state && location.state.serviceName) {
-            setFormData(prev => ({ ...prev, serviceName: location.state.serviceName }));
+        fetchFeaturedServices();
+        if (location.state && location.state.serviceDetail) {
+            const data = location.state.serviceDetail;
+            setFormData({
+                serviceCardId: data.serviceCardId || "",
+                serviceTitle: data.serviceTitle || "",
+                slug: data.slug || "",
+                heroImage: null,
+                heroImagePreview: data.heroImage ? `${SERVER_URL}${data.heroImage}` : null,
+                heroImageAlt: data.heroImageAlt || "",
+                heroOverlayOpacity: data.heroOverlayOpacity !== undefined ? data.heroOverlayOpacity : 0.7,
+                h1Heading: data.h1Heading || "",
+                content: data.content || ""
+            });
+            setEditId(data._id);
+            setIsEditMode(true);
         }
     }, [location.state]);
 
-    // Fetch existing data when service name changes
-    useEffect(() => {
-        // Only fetch if the service name has ACTUALLY changed to a different service
-        if (formData.serviceName && formData.serviceName !== lastFetchedServiceRef.current) {
-            fetchServiceDetail(formData.serviceName);
-        }
-    }, [formData.serviceName]);
-
-    const fetchServiceDetail = async (name) => {
+    const fetchFeaturedServices = async () => {
         try {
-            const response = await api.get(`/api/service-details/${encodeURIComponent(name)}`);
+            const response = await api.get('/api/featured-services');
             if (response.data.success) {
-                const data = response.data.data;
-                const DATA_SERVER_URL = SERVER_URL;
-
-                setFormData(prev => ({
-                    ...prev,
-                    bgImage: null,
-                    bgImagePreview: data.bgImage ? `${DATA_SERVER_URL}${data.bgImage}` : null,
-                    bgImagePath: data.bgImage || "",
-                    bgAltText: data.bgAltText || "",
-                    bgTitle: data.bgTitle || "",
-                    title: data.title || "",
-                    highlightText: data.highlightText || "",
-                    description: data.description || "",
-                    galleryImages: data.galleryImages.map(img => ({
-                        file: null,
-                        preview: img.url ? `${DATA_SERVER_URL}${img.url}` : null,
-                        existingPath: img.url || "",
-                        altText: img.altText || ""
-                    })),
-                    // Ensure we have 4 slots
-                    ...(data.galleryImages.length < 4 ? {
-                        galleryImages: [
-                            ...data.galleryImages.map(img => ({
-                                file: null,
-                                preview: img.url ? `${DATA_SERVER_URL}${img.url}` : null,
-                                existingPath: img.url || "",
-                                altText: img.altText || ""
-                            })),
-                            ...Array(4 - data.galleryImages.length).fill({ file: null, preview: null, altText: "", existingPath: "" })
-                        ]
-                    } : {}),
-                    metaTitle: data.seo?.metaTitle || "",
-                    metaKeywords: data.seo?.metaKeywords || "",
-                    metaDescription: data.seo?.metaDescription || "",
-                    ogTitle: data.seo?.ogTitle || "",
-                    ogDescription: data.seo?.ogDescription || "",
-                    canonicalTag: data.seo?.canonicalTag || "",
-                    schemaMarkup: data.seo?.schemaMarkup || "",
-                    openGraphTags: data.seo?.openGraphTags || "",
-                    ogImage: null,
-                    ogImagePreview: data.seo?.ogImage ? `${DATA_SERVER_URL}${data.seo.ogImage}` : null,
-                    ogImagePath: data.seo?.ogImage || "",
-                    ogImageAltText: data.seo?.ogImageAltText || ""
-                }));
-                lastFetchedServiceRef.current = name;
+                setFeaturedServices(response.data.data.cards || []);
             }
         } catch (error) {
-            console.log("No existing data found for this service.");
-            // We NO LONGER reset fields here. 
-            // This allows users to keep data from a previous service if they switch names.
-            lastFetchedServiceRef.current = name;
+            console.error("Error fetching featured services:", error);
         }
     };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        if (name === "serviceCardId") {
+            const selected = featuredServices.find(s => s._id === value);
+            setFormData(prev => ({
+                ...prev,
+                serviceCardId: value,
+                serviceTitle: selected ? selected.title : "",
+                // Auto-generate slug if it's empty
+                slug: prev.slug || (selected ? selected.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : "")
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
     };
 
-    const handleBgImageUpload = (e) => {
+    const handleImageUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
-            // 🚨 100KB SIZE VALIDATION
             if (file.size > 100 * 1024) {
                 Swal.fire({
                     icon: 'warning',
-                    title: 'IMAGE TOO HEAVY!',
-                    text: 'Bhai, image 100KB se badi hai. Please compress karke upload karo taaki site fast chale! 🚀',
-                    confirmButtonColor: '#23471d',
-                    background: '#fff'
+                    title: 'Image Too Large',
+                    text: 'Image size exceeds 100KB. Please compress the image and try again! 🚀',
+                    confirmButtonColor: '#23471d'
                 });
-                if (e.target) e.target.value = '';
                 return;
             }
-
             setFormData(prev => ({
                 ...prev,
-                bgImage: file,
-                bgImagePreview: URL.createObjectURL(file)
+                heroImage: file,
+                heroImagePreview: URL.createObjectURL(file)
             }));
         }
     };
 
-    const handleOgImageUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setFormData(prev => ({
-                ...prev,
-                ogImage: file,
-                ogImagePreview: URL.createObjectURL(file)
-            }));
+    const removeImage = () => {
+        setFormData(prev => ({
+            ...prev,
+            heroImage: null,
+            heroImagePreview: null
+        }));
+    };
+
+    const handleSubmit = async () => {
+        if (!formData.serviceCardId) {
+            Swal.fire({ icon: 'warning', title: 'Selection Required', text: 'Please select a service card' });
+            return;
         }
-    };
-
-    const handleGalleryImageChange = (index, file) => {
-        if (file) {
-            const updated = [...formData.galleryImages];
-            updated[index] = {
-                ...updated[index],
-                file,
-                preview: URL.createObjectURL(file)
-            };
-            setFormData(prev => ({ ...prev, galleryImages: updated }));
+        if (!formData.h1Heading) {
+            Swal.fire({ icon: 'warning', title: 'Heading Required', text: 'Please enter H1 Heading' });
+            return;
         }
-    };
-
-    const handleGalleryAltChange = (index, value) => {
-        const updated = [...formData.galleryImages];
-        updated[index] = { ...updated[index], altText: value };
-        setFormData(prev => ({ ...prev, galleryImages: updated }));
-    };
-
-    const removeGalleryImage = (index) => {
-        const updated = [...formData.galleryImages];
-        updated[index] = { file: null, preview: null, altText: "" };
-        setFormData(prev => ({ ...prev, galleryImages: updated }));
-    };
-
-    const handleSubmit = async (e) => {
-        if (e) e.preventDefault();
-        setIsLoading(true);
 
         try {
-            const data = new FormData();
+            setIsLoading(true);
 
-            // Append basic fields
-            data.append('serviceName', formData.serviceName);
-            data.append('bgAltText', formData.bgAltText);
-            data.append('bgTitle', formData.bgTitle);
-            data.append('title', formData.title);
-            data.append('highlightText', formData.highlightText);
-            data.append('description', formData.description);
-
-            // Append SEO fields
-            data.append('metaTitle', formData.metaTitle);
-            data.append('metaKeywords', formData.metaKeywords);
-            data.append('metaDescription', formData.metaDescription);
-            data.append('ogTitle', formData.ogTitle);
-            data.append('ogDescription', formData.ogDescription);
-            data.append('canonicalTag', formData.canonicalTag);
-            data.append('schemaMarkup', formData.schemaMarkup);
-            data.append('openGraphTags', formData.openGraphTags);
-            data.append('ogImageAltText', formData.ogImageAltText);
-
-            // Append Background Image
-            if (formData.bgImage) {
-                data.append('bgImage', formData.bgImage);
-            } else if (formData.bgImagePath) {
-                data.append('existingBgImage', formData.bgImagePath);
+            let heroImageUrl = formData.heroImagePreview ? formData.heroImagePreview.replace(SERVER_URL, '') : '';
+            
+            if (formData.heroImage) {
+                const imgData = new FormData();
+                imgData.append('image', formData.heroImage);
+                const uploadRes = await api.post('/api/service-details/upload', imgData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                if (uploadRes.data.success) {
+                    heroImageUrl = uploadRes.data.imageUrl;
+                }
             }
 
-            // Append OG Image
-            if (formData.ogImage) {
-                data.append('ogImage', formData.ogImage);
-            } else if (formData.ogImagePath) {
-                data.append('existingOgImage', formData.ogImagePath);
-            }
+            const payload = {
+                serviceCardId: formData.serviceCardId,
+                serviceTitle: formData.serviceTitle,
+                slug: formData.slug,
+                heroImage: heroImageUrl,
+                heroImageAlt: formData.heroImageAlt,
+                heroOverlayOpacity: parseFloat(formData.heroOverlayOpacity),
+                h1Heading: formData.h1Heading,
+                content: formData.content
+            };
 
-            // Append Gallery Images and Alts
-            formData.galleryImages.forEach((img, index) => {
-                if (img.file) {
-                    data.append('galleryImages', img.file);
-                } else if (img.existingPath) {
-                    data.append('existingGalleryPaths', img.existingPath);
-                }
-                data.append('galleryAlts', img.altText || "");
-            });
-
-            const response = await api.post('/api/service-details', data, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
+            const response = await api.post('/api/service-details/save', payload);
 
             if (response.data.success) {
-                Swal.fire({
+                await Swal.fire({
                     icon: 'success',
                     title: 'Success!',
-                    text: 'Service details have been saved successfully.',
+                    text: 'Service detail saved successfully',
                     timer: 2000,
                     showConfirmButton: false
                 });
-
-                // Clear the form after successful save
-                setFormData(initialFormState);
-                lastFetchedServiceRef.current = "";
+                navigate('/service-list');
             }
         } catch (error) {
-            console.error('Error saving service details:', error);
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: error.response?.data?.message || 'Failed to save service details. Please try again.'
+                text: error.response?.data?.message || 'Failed to save service detail'
             });
         } finally {
             setIsLoading(false);
@@ -306,403 +165,215 @@ const CreateServiceDetail = () => {
     };
 
     return (
-        <div className="bg-white shadow-md p-6 mt-6 min-h-screen">
-            <PageHeader
-                title="CREATE SERVICE DETAIL"
-                description="Manage individual service page content and SEO settings"
-            />
+        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+            <div className="w-full">
+                <PageHeader
+                    title={isEditMode ? 'EDIT SERVICE PAGE' : 'ADD SERVICE PAGE'}
+                    description="Configure the detail page for industry zones / services"
+                />
 
-            <form onSubmit={handleSubmit}>
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-
-                    {/* Left Column - Config & SEO (1/4) */}
-                    <div className="lg:col-span-1 space-y-6">
-
-                        {/* Service Selection Card */}
-                        <div className="bg-white border border-gray-200 p-6 shadow-sm rounded-lg">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="p-2 bg-blue-50 rounded">
-                                    <Briefcase className="w-5 h-5 text-blue-600" />
-                                </div>
-                                <h2 className="text-lg font-semibold text-gray-900 uppercase">Service Detail</h2>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-[11px] font-semibold text-gray-500 mb-1.5 uppercase tracking-widest text-center">Select Service *</label>
-                                    <select
-                                        name="serviceName"
-                                        value={formData.serviceName}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-2.5 border-2 border-blue-100 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded font-bold text-xs uppercase tracking-widest text-blue-700 bg-blue-50/30"
-                                        required
-                                    >
-                                        <option value="">-- Choose Service --</option>
-                                        {categorizedServices.map((catObj, i) => (
-                                            <optgroup key={i} label={catObj.category.toUpperCase()}>
-                                                {catObj.services.map((service, j) => (
-                                                    <option key={`${i}-${j}`} value={service}>
-                                                        {catObj.category === service ? service : `${catObj.category} / ${service}`}
-                                                    </option>
-                                                ))}
-                                            </optgroup>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
+                <div className="bg-white border-2 border-gray-200 p-6 mb-6 shadow-lg">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-blue-50">
+                            <Briefcase className="w-5 h-5 text-blue-600" />
                         </div>
-
-                        {/* SEO Metadata Card */}
-                        <div className="bg-white border border-gray-200 p-6 shadow-sm rounded-lg">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="p-2 bg-emerald-50 rounded">
-                                    <FileText className="w-5 h-5 text-emerald-600" />
-                                </div>
-                                <h2 className="text-lg font-semibold text-gray-900 uppercase">SEO Metadata</h2>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <div className="flex justify-between items-center mb-1">
-                                        <label className="block text-xs font-medium text-gray-700">Meta Title</label>
-                                        <span className={`text-[10px] font-bold ${formData.metaTitle.length > 65 ? 'text-orange-500' : 'text-gray-400'}`}>
-                                            {formData.metaTitle.length}/65
-                                        </span>
-                                    </div>
-                                    <input
-                                        type="text"
-                                        name="metaTitle"
-                                        value={formData.metaTitle}
-                                        onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border-2 border-gray-200 focus:outline-none focus:border-blue-500 text-xs shadow-sm"
-                                        placeholder="Enter meta title"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">Meta Keywords</label>
-                                    <input
-                                        type="text"
-                                        name="metaKeywords"
-                                        value={formData.metaKeywords}
-                                        onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border-2 border-gray-200 focus:outline-none focus:border-blue-500 text-xs shadow-sm"
-                                        placeholder="Keywords, comma separated"
-                                    />
-                                </div>
-                                <div>
-                                    <div className="flex justify-between items-center mb-1">
-                                        <label className="block text-xs font-medium text-gray-700">Meta Description</label>
-                                        <span className={`text-[10px] font-bold ${formData.metaDescription.length > 155 ? 'text-red-500' : 'text-gray-400'}`}>
-                                            {formData.metaDescription.length}/155
-                                        </span>
-                                    </div>
-                                    <textarea
-                                        name="metaDescription"
-                                        value={formData.metaDescription}
-                                        onChange={handleInputChange}
-                                        rows={3}
-                                        maxLength={155}
-                                        className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:border-blue-500 text-xs shadow-sm resize-none"
-                                        placeholder="Brief summary..."
-                                    />
-                                </div>
-
-                                <div className="pt-4 border-t border-gray-100">
-                                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 text-center bg-gray-50 py-1">Open Graph (Social)</h3>
-                                    <div className="space-y-3">
-                                        <input
-                                            type="text"
-                                            name="ogTitle"
-                                            value={formData.ogTitle}
-                                            onChange={handleInputChange}
-                                            className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded text-[11px]"
-                                            placeholder="Social Sharing Title"
-                                        />
-                                        <textarea
-                                            name="ogDescription"
-                                            value={formData.ogDescription}
-                                            onChange={handleInputChange}
-                                            rows={2}
-                                            className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded text-[11px] resize-none"
-                                            placeholder="Social Sharing Summary"
-                                        />
-                                        <div>
-                                            <label className="block text-[8px] font-bold text-gray-400 uppercase mb-1">OG Image</label>
-                                            <div className="border border-dashed border-gray-300 rounded p-2 text-center relative hover:bg-gray-50 bg-gray-50/50">
-                                                <input
-                                                    type="file"
-                                                    onChange={handleOgImageUpload}
-                                                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                                                    accept="image/*"
-                                                />
-                                                {formData.ogImagePreview ? (
-                                                    <img src={formData.ogImagePreview} alt="OG Preview" className="h-16 w-full object-cover rounded shadow-sm" />
-                                                ) : (
-                                                    <div className="py-2 flex flex-col items-center">
-                                                        <Upload className="w-4 h-4 text-gray-300" />
-                                                        <span className="text-[8px] text-gray-400 block mt-1 uppercase font-bold tracking-tighter">Upload OG Image</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <input
-                                            type="text"
-                                            name="ogImageAltText"
-                                            value={formData.ogImageAltText}
-                                            onChange={handleInputChange}
-                                            className="w-full px-3 py-1.5 border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded text-[10px]"
-                                            placeholder="OG Image Alt Text"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="pt-4 border-t border-gray-100">
-                                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1">
-                                        <LinkIcon className="w-3 h-3" /> Canonical Tag
-                                    </h3>
-                                    <input
-                                        type="text"
-                                        name="canonicalTag"
-                                        value={formData.canonicalTag}
-                                        onChange={handleInputChange}
-                                        placeholder="Enter canonical URL"
-                                        className="w-full px-3 py-1.5 border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded text-[10px] font-medium"
-                                    />
-                                </div>
-
-                                <div className="pt-4 border-t border-gray-100">
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1">
-                                        <Code className="w-3 h-3" /> Schema Markup (JSON-LD)
-                                    </label>
-                                    <RichTextEditor
-                                        value={formData.schemaMarkup}
-                                        onChange={(val) => setFormData(prev => ({ ...prev, schemaMarkup: val }))}
-                                        placeholder='{"@context": "https://schema.org", ...}'
-                                        minHeight="150px"
-                                        isCodeEditor={true}
-                                    />
-                                </div>
-
-                                <div className="pt-2">
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1">
-                                        <Code className="w-3 h-3" /> Additional OG Tags
-                                    </label>
-                                    <RichTextEditor
-                                        value={formData.openGraphTags}
-                                        onChange={(val) => setFormData(prev => ({ ...prev, openGraphTags: val }))}
-                                        placeholder='<meta property="..." content="..." />'
-                                        minHeight="150px"
-                                        isCodeEditor={true}
-                                    />
-                                </div>
-                            </div>
-                        </div>
+                        <h2 className="text-lg font-bold text-gray-900 uppercase">
+                            Page Configuration
+                        </h2>
                     </div>
 
-                    {/* Right Column - Main Content (3/4) */}
-                    <div className="lg:col-span-3 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Service Selection */}
+                        <div className="md:col-span-2">
+                            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">
+                                Select Service From Featured Services <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                name="serviceCardId"
+                                value={formData.serviceCardId}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-sm font-bold shadow-sm bg-gray-50"
+                                disabled={isEditMode}
+                            >
+                                <option value="">-- Choose A Service --</option>
+                                {featuredServices.map((service) => (
+                                    <option key={service._id} value={service._id}>
+                                        {service.title}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
-                        {/* Hero & Primary Content Card */}
-                        <div className="bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                                <h3 className="text-lg font-semibold text-blue-900 uppercase tracking-tight">Hero Section Settings</h3>
+                        {/* URL Slug / Path */}
+                        <div className="md:col-span-2">
+                            <div className="flex items-center gap-2 mb-1">
+                                <LinkIcon className="w-4 h-4 text-[#d26019]" />
+                                <label className="block text-xs font-bold text-[#d26019] uppercase tracking-wider">
+                                    URL Slug / Custom Path (Optional)
+                                </label>
+                            </div>
+                            <div className="flex items-center">
+                                <span className="bg-gray-100 px-4 py-3 border-2 border-r-0 border-gray-300 text-gray-500 text-sm font-medium">
+                                    /industry-zone/
+                                </span>
+                                <input
+                                    type="text"
+                                    name="slug"
+                                    value={formData.slug}
+                                    onChange={handleInputChange}
+                                    placeholder="leave empty for default"
+                                    className="flex-1 px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-sm font-bold shadow-sm"
+                                />
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-1 font-bold uppercase tracking-widest italic">
+                                Note: If left empty, the system will use the service ID as the URL.
+                            </p>
+                        </div>
+
+                        {/* Hero Image */}
+                        <div>
+                            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">
+                                Hero Section Image (16:9)
+                            </label>
+                            <div className="border-2 border-dashed border-gray-300 rounded p-4 text-center relative hover:bg-gray-50 transition-colors min-h-[160px] flex items-center justify-center bg-gray-50/50">
+                                <input
+                                    type="file"
+                                    onChange={handleImageUpload}
+                                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    accept="image/*"
+                                />
+                                {formData.heroImagePreview ? (
+                                    <div className="relative w-full h-full">
+                                        <div className="relative">
+                                            <img src={formData.heroImagePreview} alt="Hero Preview" className="h-32 w-full object-cover rounded shadow-md border-2 border-white" />
+                                            {/* Overlay Preview */}
+                                            <div 
+                                                className="absolute inset-0 bg-black rounded"
+                                                style={{ opacity: formData.heroOverlayOpacity }}
+                                            ></div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={removeImage}
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg z-20 hover:bg-red-600"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                        <div className="absolute top-2 left-2 bg-[#23471d] text-white text-[9px] font-black px-2 py-1 uppercase tracking-widest shadow-lg">
+                                            {formData.heroImage ? 'NEW UPLOAD' : 'CURRENT HERO'}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="py-2 flex flex-col items-center">
+                                        <div className="p-3 bg-white rounded-full shadow-sm mb-2">
+                                            <Upload className="w-6 h-6 text-gray-300" />
+                                        </div>
+                                        <span className="text-[10px] text-gray-400 block mt-1 uppercase font-black tracking-widest">Upload Hero Image (Max 100KB)</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Hero Settings (Overlay & Alt) */}
+                        <div className="space-y-4">
+                            <div>
+                                <div className="flex items-center justify-between mb-1">
+                                    <label className="flex items-center gap-2 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                        <Sun className="w-3.5 h-3.5 text-orange-500" />
+                                        Overlay Darkness (Opacity)
+                                    </label>
+                                    <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                                        {Math.round(formData.heroOverlayOpacity * 100)}%
+                                    </span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="1"
+                                    step="0.05"
+                                    name="heroOverlayOpacity"
+                                    value={formData.heroOverlayOpacity}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, heroOverlayOpacity: parseFloat(e.target.value) }))}
+                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#23471d]"
+                                />
+                                <div className="flex justify-between mt-1">
+                                    <span className="text-[8px] font-bold text-gray-400 uppercase">Bright (0%)</span>
+                                    <span className="text-[8px] font-bold text-gray-400 uppercase">Dark (100%)</span>
+                                </div>
                             </div>
 
-                            <div className="p-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    {/* Background Image Upload */}
-                                        <div className="space-y-4">
-                                            <div className="flex justify-between items-end mb-2">
-                                                <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest leading-none">Hero Background Image *</label>
-                                                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 border border-amber-100 rounded-full">
-                                                    <Sparkles className="w-3 h-3 text-amber-500" />
-                                                    <span className="text-[9px] font-black text-amber-700 uppercase tracking-wider">1600 x 400 PX Recommended</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="relative group overflow-hidden">
-                                                <div className="w-full h-44 overflow-hidden border-2 border-gray-200 shadow-sm relative group bg-slate-50">
-                                                    <input
-                                                        type="file"
-                                                        onChange={handleBgImageUpload}
-                                                        className="absolute inset-0 opacity-0 cursor-pointer z-20"
-                                                        accept="image/*"
-                                                    />
-                                                    
-                                                    {formData.bgImagePreview ? (
-                                                        <div className="w-full h-full">
-                                                            <img src={formData.bgImagePreview} alt="Hero Preview" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                                            <div className="absolute top-3 left-3 bg-[#23471d] text-white text-[10px] font-black px-3 py-1 uppercase tracking-[0.2em] shadow-lg">
-                                                                {formData.bgImage ? 'New Selection' : 'Current Banner'}
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex flex-col items-center justify-center h-full text-slate-300">
-                                                            <ImageIcon className="w-12 h-12 mb-2 opacity-20" />
-                                                            <span className="text-[10px] font-black uppercase tracking-widest">No Background Uploaded</span>
-                                                        </div>
-                                                    )}
-                                                    
-                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                                                        <div className="px-4 py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-full">
-                                                            <span className="text-white text-[10px] font-black uppercase tracking-[0.2em]">Upload New Asset</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                
-                                                {/* 🚨 100KB POLICY BADGE */}
-                                                <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-0.5 bg-red-600 text-white rounded text-[10px] font-black uppercase tracking-widest shadow-xl">
-                                                    <X size={10} className="stroke-[4px]" />
-                                                    100KB LIMIT
-                                                </div>
-                                            </div>
-
-                                            <div className="bg-slate-50 border border-slate-100 p-3 flex items-start gap-3">
-                                                <div className="mt-0.5"><Check className="w-4 h-4 text-green-600" /></div>
-                                                <p className="text-[10px] text-slate-500 leading-relaxed">
-                                                    <span className="font-bold text-slate-700 uppercase">Pro Tip:</span> Always compress your images before uploading. We recommend using <a href="https://tinypng.com" target="_blank" className="text-blue-600 underline font-bold">TinyPNG</a> to hit that 100KB target without losing quality.
-                                                </p>
-                                            </div>
-                                        <input
-                                            type="text"
-                                            name="bgAltText"
-                                            value={formData.bgAltText}
-                                            onChange={handleInputChange}
-                                            className="w-full px-4 py-2.5 border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded font-medium text-gray-800 text-xs shadow-sm"
-                                            placeholder="Background Image Alt Text (SEO)"
-                                        />
-                                    </div>
-
-                                    {/* Hero Content text */}
-                                    <div className="space-y-5">
-                                        <div>
-                                            <label className="block text-[11px] font-bold text-gray-500 mb-1.5 uppercase tracking-widest">Background Image Title (H1) *</label>
-                                            <input
-                                                type="text"
-                                                name="bgTitle"
-                                                value={formData.bgTitle}
-                                                onChange={handleInputChange}
-                                                className="w-full px-4 py-3 border border-gray-200 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 rounded font-bold text-gray-800 text-lg placeholder:text-gray-300"
-                                                placeholder="Main Heading in Hero"
-                                                required
-                                            />
-                                            <p className="text-[10px] text-gray-400 mt-1 italic">This will be the main H1 tag for the service page.</p>
-                                        </div>
-                                        <div>
-                                            <label className="block text-[11px] font-bold text-gray-500 mb-1.5 uppercase tracking-widest">Title</label>
-                                            <input
-                                                type="text"
-                                                name="title"
-                                                value={formData.title}
-                                                onChange={handleInputChange}
-                                                className="w-full px-4 py-3 border border-gray-200 shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 rounded font-medium text-gray-800"
-                                                placeholder="e.g. Best Retail Showroom"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[11px] font-bold text-gray-500 mb-1.5 uppercase tracking-widest">Highlighted Text</label>
-                                            <input
-                                                type="text"
-                                                name="highlightText"
-                                                value={formData.highlightText}
-                                                onChange={handleInputChange}
-                                                className="w-full px-4 py-3 border border-gray-200 shadow-md focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 rounded font-medium text-gray-800 italic"
-                                                placeholder="e.g. Interior Designer In India"
-                                            />
-                                        </div>
-                                    </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">
+                                    Hero Image Alt Text (SEO)
+                                </label>
+                                <input
+                                    type="text"
+                                    name="heroImageAlt"
+                                    value={formData.heroImageAlt}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter alt text for image"
+                                    className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-sm shadow-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider text-[#d26019]">
+                                    H1 Heading (Over Hero Section) <span className="text-red-500">*</span>
+                                </label>
+                                <div className="border-2 border-[#d26019] rounded-lg overflow-hidden shadow-inner">
+                                    <RichTextEditor
+                                        value={formData.h1Heading}
+                                        onChange={(val) => setFormData(prev => ({ ...prev, h1Heading: val }))}
+                                        placeholder="Driving Innovation & Excellence..."
+                                        minHeight="120px"
+                                        showColorPicker={true}
+                                    />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Rich Text Description Section */}
-                        <div className="bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                                <h3 className="text-lg font-semibold text-blue-900 uppercase tracking-tight">Main Page Content (Description)</h3>
+                        {/* Text Editor */}
+                        <div className="md:col-span-2 mt-4">
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="p-1.5 bg-purple-50">
+                                    <Globe className="w-4 h-4 text-purple-600" />
+                                </div>
+                                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    Main Page Content (Description & Sections)
+                                </label>
                             </div>
-                            <div className="p-6">
+                            <div className="border-2 border-gray-200 rounded-lg overflow-hidden shadow-inner">
                                 <RichTextEditor
-                                    value={formData.description}
-                                    onChange={(val) => setFormData(prev => ({ ...prev, description: val }))}
-                                    placeholder="Start typing service details..."
+                                    value={formData.content}
+                                    onChange={(val) => setFormData(prev => ({ ...prev, content: val }))}
+                                    placeholder="Add service details, objectives, who should exhibit..."
                                     minHeight="400px"
                                 />
                             </div>
                         </div>
+                    </div>
 
-                        {/* Gallery Section */}
-                        <div className="bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                                <h3 className="text-lg font-semibold text-blue-900 uppercase tracking-tight">Service Portfolio Gallery (4 Images)</h3>
-                                <div className="p-1 px-3 bg-blue-100 text-blue-700 text-[10px] font-black rounded-full uppercase tracking-tighter">Required</div>
-                            </div>
-                            <div className="p-6">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    {formData.galleryImages.map((img, index) => (
-                                        <div key={index} className="space-y-3 group">
-                                            <div className="border-4 border-dashed border-gray-100 rounded-xl p-2 bg-gray-50 relative transition-all hover:bg-white hover:border-blue-400 hover:shadow-xl overflow-hidden">
-                                                <div className="h-32 w-full rounded-lg flex items-center justify-center overflow-hidden bg-white shadow-inner">
-                                                    {img.preview ? (
-                                                        <div className="relative w-full h-full">
-                                                            <img src={img.preview} alt={`Gallery ${index}`} className="w-full h-full object-cover" />
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => removeGalleryImage(index)}
-                                                                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded shadow-lg hover:bg-red-600 transition-colors"
-                                                            >
-                                                                <X className="w-3 h-3" />
-                                                            </button>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="relative w-full h-full flex flex-col items-center justify-center">
-                                                            <ImageIcon className="w-8 h-8 text-blue-100 group-hover:text-blue-200 mb-1" />
-                                                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Box {index + 1}</span>
-                                                            <input
-                                                                type="file"
-                                                                accept="image/*"
-                                                                className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                                                                onChange={(e) => handleGalleryImageChange(index, e.target.files[0])}
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <input
-                                                type="text"
-                                                value={img.altText}
-                                                onChange={(e) => handleGalleryAltChange(index, e.target.value)}
-                                                placeholder={`Alt Tag for Image ${index + 1}`}
-                                                className="w-full px-3 py-2 border border-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded text-[10px] font-medium placeholder:italic shadow-sm bg-blue-50/10"
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Save Actions */}
-                        <div className="flex items-center justify-end gap-3 mt-2">
-                            <button
-                                onClick={handleSubmit}
-                                disabled={isLoading}
-                                className="px-6 py-3 bg-[#6b21a8] text-white font-bold transition-all shadow-lg hover:shadow-xl hover:bg-[#581c87] flex items-center gap-2 uppercase tracking-wider text-sm disabled:opacity-50"
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        <span>Saving...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Save className="w-5 h-5" />
-                                        <span>Publish Service Update</span>
-                                    </>
-                                )}
-                            </button>
-                        </div>
+                    {/* Action Button */}
+                    <div className="flex items-center justify-end gap-3 mt-8">
+                        <button
+                            onClick={handleSubmit}
+                            disabled={isLoading}
+                            className="px-8 py-3.5 bg-[#23471d] text-white font-black transition-all shadow-xl hover:shadow-2xl hover:bg-[#d26019] flex items-center gap-3 uppercase tracking-[0.1em] text-sm disabled:opacity-50"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    <span>Saving Data...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="w-5 h-5" />
+                                    <span>{isEditMode ? 'Update Service Detail' : 'Save Service Detail'}</span>
+                                </>
+                            )}
+                        </button>
                     </div>
                 </div>
-            </form>
+            </div>
         </div>
     );
 };

@@ -131,173 +131,233 @@ const GlobalPlatform = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-poppins">
-            <PageHeader
+        <>
+            <div className="relative w-full h-64 overflow-hidden rounded mt-8">
+                {/* Background Image */}
+                <img
+                    src="/about.png"
+                    alt="banner"
+                    className="absolute inset-0 w-full h-full object-cover z-0"
+                />
+
+                {/* Halka dark overlay */}
+                <div className="absolute inset-0 bg-black/40 z-[1]" />
+
+                {/* Dot grid */}
+                <div className="absolute inset-0 opacity-[0.05] z-[2]"
+                    style={{
+                        backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+                        backgroundSize: '28px 28px'
+                    }}
+                />
+
+                {/* Orange left accent bar */}
+                <div className="absolute left-0 top-6 bottom-6 w-1 rounded-full bg-gradient-to-b from-[#d26019]/0 via-[#d26019] to-[#d26019]/0 z-[2]" />
+
+                {/* Content */}
+                <div className="relative z-10 h-full flex items-center justify-between px-10">
+
+                    <div>
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#d26019] animate-pulse" />
+                            <p className="text-sm font-bold text-slate-200 uppercase tracking-[0.20em]">
+                                Admin Panel · System · CMS
+                            </p>
+                        </div>
+                        <h1 className="text-3xl font-semibold text-white leading-tight tracking-tight mb-1">
+                            GLOBAL PLATFORM MANAGEMENT
+                        </h1>
+                        <p className="text-lg font-medium text-slate-200">
+                            Manage the main about section of your website home page
+                        </p>
+                    </div>
+
+                    <div className="hidden md:flex flex-col items-end gap-3">
+                        {/* Online badge */}
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/10 backdrop-blur-sm">
+                            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                            <span className="text-[10px] font-black text-white uppercase tracking-widest">System Online</span>
+                        </div>
+
+                        {/* Date */}
+                        <div className="px-4 py-2 rounded-xl bg-[#d26019]/20 border border-[#d26019]/20">
+                            <p className="text-[10px] font-black text-[#d26019] uppercase tracking-widest">
+                                {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div className="bg-white shadow-md p-6 min-h-screen font-poppins">
+                {/* <PageHeader
                 title="GLOBAL PLATFORM MANAGEMENT"
                 description="Manage the main about section of your website home page"
-            />
+            /> */}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
-                {/* Left Side: Text Inputs */}
-                <div className="space-y-6">
-                    <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
-                        <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d]">
-                            <Type className="w-5 h-5 text-[#d26019]" /> General Content
-                        </h2>
-                        
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Subheading</label>
-                                <input
-                                    type="text"
-                                    value={data.subheading}
-                                    onChange={(e) => handleInputChange('subheading', e.target.value)}
-                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
-                                    placeholder="e.g. GLOBAL PLATFORM"
-                                />
-                            </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
+                    {/* Left Side: Text Inputs */}
+                    <div className="space-y-6">
+                        <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
+                            <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d]">
+                                <Type className="w-5 h-5 text-[#d26019]" /> General Content
+                            </h2>
 
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Main Title</label>
-                                <input
-                                    type="text"
-                                    value={data.title}
-                                    onChange={(e) => handleInputChange('title', e.target.value)}
-                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
-                                    placeholder="e.g. India's Impactful Health & Wellness Stage"
-                                />
-                            </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Subheading</label>
+                                    <input
+                                        type="text"
+                                        value={data.subheading}
+                                        onChange={(e) => handleInputChange('subheading', e.target.value)}
+                                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
+                                        placeholder="e.g. GLOBAL PLATFORM"
+                                    />
+                                </div>
 
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight text-[#d26019]">Highlight Text (Orange)</label>
-                                <input
-                                    type="text"
-                                    value={data.highlightText}
-                                    onChange={(e) => handleInputChange('highlightText', e.target.value)}
-                                    className="w-full px-4 py-2 border-2 border-[#d26019] focus:border-[#23471d] outline-none shadow-sm"
-                                    placeholder="Text to highlight in orange..."
-                                />
-                            </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Main Title</label>
+                                    <input
+                                        type="text"
+                                        value={data.title}
+                                        onChange={(e) => handleInputChange('title', e.target.value)}
+                                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
+                                        placeholder="e.g. India's Impactful Health & Wellness Stage"
+                                    />
+                                </div>
 
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Main Description</label>
-                                <div className="border-2 border-gray-200 rounded overflow-hidden">
-                                     <RichTextEditor
-                                        value={data.descriptionHtml}
-                                        onChange={(val) => handleInputChange('descriptionHtml', val)}
-                                        placeholder="Start writing description here..."
-                                        minHeight="250px"
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight text-[#d26019]">Highlight Text (Orange)</label>
+                                    <input
+                                        type="text"
+                                        value={data.highlightText}
+                                        onChange={(e) => handleInputChange('highlightText', e.target.value)}
+                                        className="w-full px-4 py-2 border-2 border-[#d26019] focus:border-[#23471d] outline-none shadow-sm"
+                                        placeholder="Text to highlight in orange..."
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Main Description</label>
+                                    <div className="border-2 border-gray-200 rounded overflow-hidden">
+                                        <RichTextEditor
+                                            value={data.descriptionHtml}
+                                            onChange={(val) => handleInputChange('descriptionHtml', val)}
+                                            placeholder="Start writing description here..."
+                                            minHeight="250px"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight font-italic">Tagline (Vision Statement)</label>
+                                    <input
+                                        type="text"
+                                        value={data.tagline}
+                                        onChange={(e) => handleInputChange('tagline', e.target.value)}
+                                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm italic"
+                                        placeholder="Our vision is to empower every individual..."
                                     />
                                 </div>
                             </div>
+                        </div>
 
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight font-italic">Tagline (Vision Statement)</label>
-                                <input
-                                    type="text"
-                                    value={data.tagline}
-                                    onChange={(e) => handleInputChange('tagline', e.target.value)}
-                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm italic"
-                                    placeholder="Our vision is to empower every individual..."
-                                />
+                        <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
+                            <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d]">
+                                <Plus className="w-5 h-5 text-[#d26019]" /> Key Points (4 Features)
+                            </h2>
+                            <div className="space-y-4">
+                                {data.points.slice(0, 4).map((point, idx) => (
+                                    <div key={idx} className="flex flex-col gap-1">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase">Point {idx + 1}</label>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center font-bold text-[#23471d] shrink-0">{idx + 1}</div>
+                                            <input
+                                                type="text"
+                                                value={point}
+                                                onChange={(e) => handlePointChange(idx, e.target.value)}
+                                                className="flex-1 px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
+                                                placeholder={`Point ${idx + 1}...`}
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
-                        <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d]">
-                            <Plus className="w-5 h-5 text-[#d26019]" /> Key Points (4 Features)
-                        </h2>
-                        <div className="space-y-4">
-                            {data.points.slice(0, 4).map((point, idx) => (
-                                <div key={idx} className="flex flex-col gap-1">
-                                    <label className="block text-xs font-bold text-gray-500 uppercase">Point {idx + 1}</label>
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center font-bold text-[#23471d] shrink-0">{idx + 1}</div>
-                                        <input
-                                            type="text"
-                                            value={point}
-                                            onChange={(e) => handlePointChange(idx, e.target.value)}
-                                            className="flex-1 px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
-                                            placeholder={`Point ${idx + 1}...`}
-                                        />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                    {/* Right Side: Images */}
+                    <div className="space-y-6">
+                        <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
+                            <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d]">
+                                <ImageIcon className="w-5 h-5 text-[#d26019]" /> Component Images (4 Slots)
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {data.images.map((img, idx) => (
+                                    <div key={idx} className="border-2 border-gray-100 p-4 rounded-lg bg-gray-50/30 space-y-4">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Image Slot 0{idx + 1}</span>
+                                            {img.url && (
+                                                <button
+                                                    onClick={() => handleImageChange(idx, 'url', '')}
+                                                    className="text-red-500 hover:text-red-700 transition-colors"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            )}
+                                        </div>
 
-                {/* Right Side: Images */}
-                <div className="space-y-6">
-                    <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
-                        <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d]">
-                            <ImageIcon className="w-5 h-5 text-[#d26019]" /> Component Images (4 Slots)
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {data.images.map((img, idx) => (
-                                <div key={idx} className="border-2 border-gray-100 p-4 rounded-lg bg-gray-50/30 space-y-4">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Image Slot 0{idx + 1}</span>
-                                        {img.url && (
-                                            <button 
-                                                onClick={() => handleImageChange(idx, 'url', '')}
-                                                className="text-red-500 hover:text-red-700 transition-colors"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
+                                        {img.url ? (
+                                            <div className="relative aspect-video rounded overflow-hidden border-2 border-white shadow-sm bg-white">
+                                                <img src={`${SERVER_URL}${img.url}`} className="w-full h-full object-cover" alt="Preview" />
+                                            </div>
+                                        ) : (
+                                            <div className="relative aspect-video rounded border-2 border-dashed border-gray-200 bg-white flex flex-col items-center justify-center group hover:border-[#23471d] transition-all">
+                                                <input
+                                                    type="file"
+                                                    onChange={(e) => handleImageUpload(idx, e)}
+                                                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                                />
+                                                <ImageIcon className="w-8 h-8 text-gray-300 group-hover:text-[#23471d] transition-colors mb-2" />
+                                                <span className="text-[10px] font-bold text-gray-400 group-hover:text-[#23471d]">CLICK TO UPLOAD</span>
+                                            </div>
                                         )}
-                                    </div>
 
-                                    {img.url ? (
-                                        <div className="relative aspect-video rounded overflow-hidden border-2 border-white shadow-sm bg-white">
-                                            <img src={`${SERVER_URL}${img.url}`} className="w-full h-full object-cover" alt="Preview" />
-                                        </div>
-                                    ) : (
-                                        <div className="relative aspect-video rounded border-2 border-dashed border-gray-200 bg-white flex flex-col items-center justify-center group hover:border-[#23471d] transition-all">
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-tighter">Alt Text (SEO)</label>
                                             <input
-                                                type="file"
-                                                onChange={(e) => handleImageUpload(idx, e)}
-                                                className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                                type="text"
+                                                value={img.altText}
+                                                onChange={(e) => handleImageChange(idx, 'altText', e.target.value)}
+                                                className="w-full px-3 py-2 border-2 border-gray-300 rounded text-xs focus:border-[#23471d] outline-none bg-white shadow-sm"
+                                                placeholder="e.g. India Health Expo"
                                             />
-                                            <ImageIcon className="w-8 h-8 text-gray-300 group-hover:text-[#23471d] transition-colors mb-2" />
-                                            <span className="text-[10px] font-bold text-gray-400 group-hover:text-[#23471d]">CLICK TO UPLOAD</span>
                                         </div>
-                                    )}
-
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-tighter">Alt Text (SEO)</label>
-                                        <input
-                                            type="text"
-                                            value={img.altText}
-                                            onChange={(e) => handleImageChange(idx, 'altText', e.target.value)}
-                                            className="w-full px-3 py-2 border-2 border-gray-300 rounded text-xs focus:border-[#23471d] outline-none bg-white shadow-sm"
-                                            placeholder="e.g. India Health Expo"
-                                        />
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="pt-4">
-                        <button
-                            onClick={handleSave}
-                            disabled={isLoading}
-                            className="w-full py-4 bg-[#23471d] text-white font-black hover:bg-[#1a3615] transition-all flex items-center justify-center gap-3 rounded shadow-xl active:scale-95 disabled:opacity-50 uppercase tracking-[0.2em]"
-                        >
-                            {isLoading ? (
-                                <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                                <>
-                                    <Save className="w-6 h-6" /> Save All Content
-                                </>
-                            )}
-                        </button>
+                        <div className="pt-4">
+                            <button
+                                onClick={handleSave}
+                                disabled={isLoading}
+                                className="w-full py-4 bg-[#23471d] text-white font-black hover:bg-[#1a3615] transition-all flex items-center justify-center gap-3 rounded shadow-xl active:scale-95 disabled:opacity-50 uppercase tracking-[0.2em]"
+                            >
+                                {isLoading ? (
+                                    <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                    <>
+                                        <Save className="w-6 h-6" /> Save All Content
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 
