@@ -42,6 +42,129 @@ import {
 
 
 export const menuItems = [
+  /* ================= CRM Management Section ================= */
+  {
+    type: "heading",
+    label: "Sale Managment Section",
+  },
+  // ihwe section 
+  {
+    type: "dropdown",
+    label: "IHWE Client Data 2026",
+    icon: FileText,
+    children: [
+      { label: "Add New Leads", path: "/ihweClientData2026/addNewClients" },
+      { label: "New Leads List", path: "/ihweClientData2026/newLeadList" },
+      { label: "Warm Client List", path: "/ihweClientData2026/warmClientList" },
+      { label: "Hot Client List", path: "/ihweClientData2026/hotClientList" },
+      { label: "Confirmed Client List", path: "/ihweClientData2026/confirmClientList" },
+      { label: "Cold Client List", path: "/ihweClientData2026/coldClientList" },
+      { label: "Master Data", path: "/ihweClientData2026/masterData" },
+      { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
+    ],
+  },
+  // exhibitor section
+  {
+    type: "dropdown",
+    label: "Exhibitor Management",
+    icon: FileText,
+    children: [
+      {
+        type: "item",
+        label: "Book A Stand",
+        icon: Ticket,
+        path: "/book-a-stand",
+      },
+      {
+        label: "Exhibitor Bookings List",
+        path: "/exhibitor-bookings",
+      },
+      { label: "Exhibitor Chat", path: "/exhibitor-chat" },
+      {
+        label: "Stall Inventory",
+        path: "/stalls",
+      },
+      {
+        label: "Exhibition Events",
+        path: "/events",
+      },
+      {
+        label: "Stall Pricing Rates",
+        path: "/stall-rates",
+      },
+
+      {
+        label: "Exhibitors Products",
+        path: "/exhibitor-products-profile",
+      },
+      {
+        label: "Failed Payments",
+        path: "/failed-payments",
+      },
+      {
+        type: "item",
+        label: "Marketing Toolkit",
+        icon: Package,
+        path: "/marketing-toolkit-manage",
+      },
+      {
+        type: "item",
+        label: "BSM Management",
+        icon: Handshake,
+        path: "/bsm-management",
+      },
+      {
+        type: "item",
+        label: "E-Promotion Registers",
+        icon: List,
+        path: "/e-promotion-registers",
+      },
+
+    ]
+  },
+  // buyer section
+  {
+    type: "dropdown",
+    label: "Buyer Management",
+    icon: Users,
+    children: [
+      { label: "Add Domestic Buyer ", path: "/buyer-registration" },
+      { label: "Domestic Buyer List", path: "/buyer-list" },
+      { label: "Add International Buyer", path: "/international-buyer-registration" },
+      { label: "International Buyer List", path: "/international-buyer-list" },
+      { label: "Buyer Registration Config", path: "/buyer-registration-config" },
+      { label: "International Registration Config", path: "/international-buyer-registration-config" },
+    ],
+  },
+  // visitor section
+  {
+    type: "dropdown",
+    label: "Visitor Management",
+    icon: Users,
+    children: [
+      { label: "Add Domestic Visitor", path: "/ihweClientData2026/AddNewVisitor" },
+      { label: "Add International Visitor", path: "/ihweClientData2026/VisitorRegistration" },
+      { label: "Corporate Visitors List", path: "/ihweClientData2026/CorporateVisitorsList" },
+      { label: "General Visitors List", path: "/ihweClientData2026/GeneralVisitorsList" },
+      { label: "Health Camp Visitors List", path: "/ihweClientData2026/FreeHealthCampVisitorsList" },
+      { label: "Visitor Review", path: "/ihweClientData2026/VisitorReview" },
+    ],
+  },
+  // seller section
+  {
+    type: "dropdown",
+    label: "Seller Management",
+    icon: Users,
+    children: [
+      { label: "Add Domestic Seller ", path: "/#" },
+      { label: "Domestic Seller List", path: "/#" },
+      { label: "Add International Seller", path: "/#" },
+      { label: "International Seller List", path: "/#" },
+    ],
+  },
+
+
+
   /* ================= ANALYTICS SECTION ================= */
   {
     type: "heading",
@@ -69,7 +192,7 @@ export const menuItems = [
   /* ================= Website Management SECTION ================= */
   {
     type: "heading",
-    label: "Website Management",
+    label: "Website Section",
   },
   {
     type: "dropdown",
@@ -83,6 +206,7 @@ export const menuItems = [
       { label: "Marquee Text", path: "/marquee-text" },
       { label: "Who We Are", path: "/who-we-are" },
       { label: "Featured Services", path: "/featured-services" },
+      { label: "Healthcare Sectors", path: "/healthcare-sectors" },
       { label: "FAQ Management", path: "/faq-manage" },
       { label: "Glimpse", path: "/glimpse" },
       { label: "Our Clients", path: "/clients" },
@@ -227,85 +351,85 @@ export const menuItems = [
   },
 
   /* ================= Marketing Section ================= */
-  {
-    type: "heading",
-    label: "Marketing Section",
-  },
-  {
-    type: "item",
-    label: "Book A Stand",
-    icon: Ticket,
-    path: "/book-a-stand",
-  },
-  {
-    type: "dropdown",
-    label: "IHWE Client Data 2026",
-    icon: FileText,
-    children: [
-      { label: "Add New Client", path: "/ihweClientData2026/addNewClients" },
-      { label: "New Leads List", path: "/ihweClientData2026/newLeadList" },
-      { label: "Warm Client List", path: "/ihweClientData2026/warmClientList" },
-      { label: "Hot Client List", path: "/ihweClientData2026/hotClientList" },
-      { label: "Confirmed Client List", path: "/ihweClientData2026/confirmClientList" },
-      { label: "Cold Client List", path: "/ihweClientData2026/coldClientList" },
-      { label: "Master Data", path: "/ihweClientData2026/masterData" },
-      { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "Buyer Management",
-    icon: Users,
-    children: [
-      { label: "Buyer Registration", path: "/buyer-registration" },
-      { label: "International Buyer Registration", path: "/international-buyer-registration" },
-      { label: "Buyer List", path: "/buyer-list" },
-      { label: "International Buyer List", path: "/international-buyer-list" },
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "Visitor Management",
-    icon: Users,
-    children: [
-      { label: "Add Domestic Visitor", path: "/ihweClientData2026/AddNewVisitor" },
-      { label: "Add International Visitor", path: "/ihweClientData2026/VisitorRegistration" },
-      { label: "Corporate Visitors List", path: "/ihweClientData2026/CorporateVisitorsList" },
-      { label: "General Visitors List", path: "/ihweClientData2026/GeneralVisitorsList" },
-      { label: "Health Camp Visitors List", path: "/ihweClientData2026/FreeHealthCampVisitorsList" },
-      { label: "Visitor Review", path: "/ihweClientData2026/VisitorReview" },
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "Exhibitor Management",
-    icon: FileText,
-    children: [
-      { label: "Exhibitor Chat", path: "/exhibitor-chat" },
-      {
-        label: "Stall Inventory",
-        path: "/stalls",
-      },
-      {
-        label: "Exhibition Events",
-        path: "/events",
-      },
-      {
-        label: "Stall Pricing Rates",
-        path: "/stall-rates",
-      },
-      {
-        label: "Exhibitor Bookings",
-        path: "/exhibitor-bookings",
-      },
-      {
-        label: "Exhibitors Products",
-        path: "/exhibitor-products-profile",
-      },
-      {
-        label: "Failed Payments",
-        path: "/failed-payments",
-      },
+  // {
+  //   type: "heading",
+  //   label: "Marketing Section",
+  // },
+  // {
+  //   type: "item",
+  //   label: "Book A Stand",
+  //   icon: Ticket,
+  //   path: "/book-a-stand",
+  // },
+  // {
+  //   type: "dropdown",
+  //   label: "IHWE Client Data 2026",
+  //   icon: FileText,
+  //   children: [
+  //     { label: "Add New Client", path: "/ihweClientData2026/addNewClients" },
+  //     { label: "New Leads List", path: "/ihweClientData2026/newLeadList" },
+  //     { label: "Warm Client List", path: "/ihweClientData2026/warmClientList" },
+  //     { label: "Hot Client List", path: "/ihweClientData2026/hotClientList" },
+  //     { label: "Confirmed Client List", path: "/ihweClientData2026/confirmClientList" },
+  //     { label: "Cold Client List", path: "/ihweClientData2026/coldClientList" },
+  //     { label: "Master Data", path: "/ihweClientData2026/masterData" },
+  //     { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
+  //   ],
+  // },
+  // {
+  //   type: "dropdown",
+  //   label: "Buyer Management",
+  //   icon: Users,
+  //   children: [
+  //     { label: "Buyer Registration", path: "/buyer-registration" },
+  //     { label: "International Buyer Registration", path: "/international-buyer-registration" },
+  //     { label: "Buyer List", path: "/buyer-list" },
+  //     { label: "International Buyer List", path: "/international-buyer-list" },
+  //   ],
+  // },
+  // {
+  //   type: "dropdown",
+  //   label: "Visitor Management",
+  //   icon: Users,
+  //   children: [
+  //     { label: "Add Domestic Visitor", path: "/ihweClientData2026/AddNewVisitor" },
+  //     { label: "Add International Visitor", path: "/ihweClientData2026/VisitorRegistration" },
+  //     { label: "Corporate Visitors List", path: "/ihweClientData2026/CorporateVisitorsList" },
+  //     { label: "General Visitors List", path: "/ihweClientData2026/GeneralVisitorsList" },
+  //     { label: "Health Camp Visitors List", path: "/ihweClientData2026/FreeHealthCampVisitorsList" },
+  //     { label: "Visitor Review", path: "/ihweClientData2026/VisitorReview" },
+  //   ],
+  // },
+  // {
+  //   type: "dropdown",
+  //   label: "Exhibitor Management",
+  //   icon: FileText,
+  //   children: [
+  //     { label: "Exhibitor Chat", path: "/exhibitor-chat" },
+  //     {
+  //       label: "Stall Inventory",
+  //       path: "/stalls",
+  //     },
+  //     {
+  //       label: "Exhibition Events",
+  //       path: "/events",
+  //     },
+  //     {
+  //       label: "Stall Pricing Rates",
+  //       path: "/stall-rates",
+  //     },
+  //     {
+  //       label: "Exhibitor Bookings",
+  //       path: "/exhibitor-bookings",
+  //     },
+  //     {
+  //       label: "Exhibitors Products",
+  //       path: "/exhibitor-products-profile",
+  //     },
+  //     {
+  //       label: "Failed Payments",
+  //       path: "/failed-payments",
+  //     },
       {
         label: "Payment Delay Warnings",
         path: "/payment-delay-warnings",
@@ -313,138 +437,52 @@ export const menuItems = [
       { label: "Seller Subscription Plans", path: "/seller-subscription-plans" },
       { label: "Seller Service Requests", path: "/seller-service-requests" },
       { label: "Seller Export Inquiries", path: "/seller-export-inquiries" },
-    ]
-  },
-  {
-    type: "dropdown",
-    label: "System Configuration",
-    icon: Settings,
-    children: [
-      { label: "Add Bank", path: "/ihweClientData2026/AddBank" },
-      { label: "Add Category", path: "/ihweClientData2026/AddCategory" },
-      { label: "Add CRM Whatsapp Message", path: "/ihweClientData2026/AddCrmWhatsappMessage" },
-      { label: "Add Data Source", path: "/ihweClientData2026/AddDataSource" },
-      { label: "Add Event", path: "/ihweClientData2026/AddEvent" },
-      { label: "Add Nature Of Business", path: "/ihweClientData2026/AddNatureOfBusiness" },
-      { label: "Add Remark Length Fixed", path: "/ihweClientData2026/AddRemarkLengthFixed" },
-      { label: "Add Status", path: "/ihweClientData2026/AddStatus" },
-      { label: "Add Target", path: "/ihweClientData2026/AddTarget" },
-      { label: "Buyer Registration Config", path: "/buyer-registration-config" },
-      { label: "International Registration Config", path: "/international-buyer-registration-config" },
-    ],
-  },
-  {
-    type: "item",
-    label: "Marketing Toolkit",
-    icon: Package,
-    path: "/marketing-toolkit-manage",
-  },
-  {
-    type: "item",
-    label: "BSM Management",
-    icon: Handshake,
-    path: "/bsm-management",
-  },
-  {
-    type: "item",
-    label: "E-Promotion Registers",
-    icon: List,
-    path: "/e-promotion-registers",
-  },
+  //   ]
+  // },
+  // {
+  //   type: "dropdown",
+  //   label: "System Configuration",
+  //   icon: Settings,
+  //   children: [
+  //     { label: "Add Bank", path: "/ihweClientData2026/AddBank" },
+  //     { label: "Add Category", path: "/ihweClientData2026/AddCategory" },
+  //     { label: "Add CRM Whatsapp Message", path: "/ihweClientData2026/AddCrmWhatsappMessage" },
+  //     { label: "Add Data Source", path: "/ihweClientData2026/AddDataSource" },
+  //     { label: "Add Event", path: "/ihweClientData2026/AddEvent" },
+  //     { label: "Add Nature Of Business", path: "/ihweClientData2026/AddNatureOfBusiness" },
+  //     { label: "Add Remark Length Fixed", path: "/ihweClientData2026/AddRemarkLengthFixed" },
+  //     { label: "Add Status", path: "/ihweClientData2026/AddStatus" },
+  //     { label: "Add Target", path: "/ihweClientData2026/AddTarget" },
+  //     { label: "Buyer Registration Config", path: "/buyer-registration-config" },
+  //     { label: "International Registration Config", path: "/international-buyer-registration-config" },
+  //   ],
+  // },
+  // {
+  //   type: "item",
+  //   label: "Marketing Toolkit",
+  //   icon: Package,
+  //   path: "/marketing-toolkit-manage",
+  // },
+  // {
+  //   type: "item",
+  //   label: "BSM Management",
+  //   icon: Handshake,
+  //   path: "/bsm-management",
+  // },
+  // {
+  //   type: "item",
+  //   label: "E-Promotion Registers",
+  //   icon: List,
+  //   path: "/e-promotion-registers",
+  // },
 
-  /* ================= CRM Management Section ================= */
+
+
+
+  /* ================= Admin SECTION ================= */
   {
     type: "heading",
-    label: "CRM Section",
-  },
-  // ihwe section 
-  {
-    type: "dropdown",
-    label: "IHWE Client Data 2026",
-    icon: FileText,
-    children: [
-      { label: "Add New Client", path: "/ihweClientData2026/addNewClients" },
-      { label: "New Leads List", path: "/ihweClientData2026/newLeadList" },
-      { label: "Warm Client List", path: "/ihweClientData2026/warmClientList" },
-      { label: "Hot Client List", path: "/ihweClientData2026/hotClientList" },
-      { label: "Confirmed Client List", path: "/ihweClientData2026/confirmClientList" },
-      { label: "Cold Client List", path: "/ihweClientData2026/coldClientList" },
-      { label: "Master Data", path: "/ihweClientData2026/masterData" },
-      { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
-    ],
-  },
-  // exhibitor section
-  {
-    type: "dropdown",
-    label: "Exhibitor Management",
-    icon: FileText,
-    children: [
-      { label: "Domestic Exhibitors", path: "/ihweClientData2026/domesticExhibitors" },
-      { label: "International Exhibitors", path: "/ihweClientData2026/internationalExhibitors" },
-      { label: "Exhibitor Chat", path: "/exhibitor-chat" },
-      {
-        label: "Stall Inventory",
-        path: "/stalls",
-      },
-      {
-        label: "Exhibition Events",
-        path: "/events",
-      },
-      {
-        label: "Stall Pricing Rates",
-        path: "/stall-rates",
-      },
-      {
-        label: "Exhibitor Bookings",
-        path: "/exhibitor-bookings",
-      },
-      {
-        label: "Exhibitors Products",
-        path: "/exhibitor-products-profile",
-      },
-      {
-        label: "Failed Payments",
-        path: "/failed-payments",
-      },
-      {
-        type: "item",
-        label: "Marketing Toolkit",
-        icon: Package,
-        path: "/marketing-toolkit-manage",
-      },
-      {
-        type: "item",
-        label: "BSM Management",
-        icon: Handshake,
-        path: "/bsm-management",
-      },
-      {
-        type: "item",
-        label: "E-Promotion Registers",
-        icon: List,
-        path: "/e-promotion-registers",
-      },
-
-    ]
-  },
-  // buyer section
-  {
-    type: "dropdown",
-    label: "Buyer Management",
-    icon: FileText,
-    children: [
-      { label: "Domestic Buyer List", path: "/buyer-registration" },
-      { label: "International Buyer List ", path: "/buyer-registration" },
-      { label: "Buyer Registration", path: "/buyer-registration" },
-      { label: "Buyer List", path: "/buyer-list" },
-      { label: "Registration Settings", path: "/buyer-registration-config" },
-    ],
-  },
-
-  /* ================= Developer SECTION ================= */
-  {
-    type: "heading",
-    label: "Developer Section",
+    label: "Admin Section",
   },
   {
     type: "item",
@@ -546,4 +584,5 @@ export const menuItems = [
     icon: Palette,
     path: "/sidebar-customize",
   },
+
 ];

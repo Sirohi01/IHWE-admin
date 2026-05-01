@@ -8,13 +8,13 @@ export default function Dashboard() {
       <HeroCarousel />
 
       {/* STATS GRID */}
-      <div className="p-4 sm:p-6 shadow-sm bg-white rounded-2xl border border-slate-100">
+      <div className={`mt-2 shadow-sm bg-white`}>
         <StatsGrid />
       </div>
 
       {/* LOWER SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
+
       </div>
     </div>
   );

@@ -10,7 +10,7 @@ export const createPerformaInvoice = createAsyncThunk(
   async (invoiceData, thunkAPI) => {
     try {
       // Assuming invoiceData contains all necessary fields like est_no, companyId, finalAmount
-      const response = await axios.post(`${BASE_URL}/perinvoice`, invoiceData);
+      const response = await axios.post(`${BASE_URL}/api/perinvoice`, invoiceData);
       return response.data.data; // Should return the newly created PI object
     } catch (error) {
       // In a real app, use thunkAPI.dispatch(showError(message))
@@ -26,7 +26,7 @@ export const fetchPerformaInvoices = createAsyncThunk(
   "perinvoice/fetchAll",
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(`${BASE_URL}/perinvoice`);
+      const response = await axios.get(`${BASE_URL}/api/perinvoice`);
       return response.data; // Assuming response.data is the array of invoices
     } catch (error) {
       return thunkAPI.rejectWithValue(
@@ -41,7 +41,7 @@ export const fetchPerformaInvoiceById = createAsyncThunk(
   "perinvoice/fetchById",
   async (id, thunkAPI) => {
     try {
-      const response = await axios.get(`${BASE_URL}/perinvoice/${id}`);
+      const response = await axios.get(`${BASE_URL}/api/perinvoice/${id}`);
       return response.data; // Assuming response.data is the single invoice object
     } catch (error) {
       return thunkAPI.rejectWithValue(
@@ -57,7 +57,7 @@ export const updatePerformaInvoice = createAsyncThunk(
   async ({ id, updatedData }, thunkAPI) => {
     try {
       const response = await axios.put(
-        `${BASE_URL}/perinvoice/${id}`,
+        `${BASE_URL}/api/perinvoice/${id}`,
         updatedData
       );
       return response.data.data;
@@ -74,7 +74,7 @@ export const deletePerformaInvoice = createAsyncThunk(
   "perinvoice/delete",
   async (id, thunkAPI) => {
     try {
-      await axios.delete(`${BASE_URL}/perinvoice/${id}`);
+      await axios.delete(`${BASE_URL}/api/perinvoice/${id}`);
       return id;
     } catch (error) {
       return thunkAPI.rejectWithValue(

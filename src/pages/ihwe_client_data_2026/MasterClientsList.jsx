@@ -22,6 +22,11 @@ const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
   return [];
 };
 
+const toTitleCase = (str) => {
+  if (!str || typeof str !== 'string') return str;
+  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
 const MasterClientsList = () => {
   const [selectedClient, setSelectedClient] = useState(null);
   const printref = useRef();
@@ -99,9 +104,9 @@ const MasterClientsList = () => {
     { label: "Contact Details", accessor: "company.detail" },
     { label: "Category", accessor: "category.main" },
     { label: "Nature", accessor: "nature.name" },
-    { label: "State", accessor: "location.state" },
-    { label: "City", accessor: "location.city" },
+    { label: "Address", accessor: "location.fullAddress" },
     { label: "Source", accessor: "source.type" },
+    { label: "Forward To", accessor: "forwardTo" },
     { label: "Status", accessor: "Status.name" },
     { label: "Subject", accessor: "subject.name" },
     { label: "Updated Details", accessor: "update.by" },
@@ -112,18 +117,19 @@ const MasterClientsList = () => {
     id: c._id,
     checkbox: true,
     company: {
-      name: c.companyName,
+      name: toTitleCase(c.companyName),
       detail: c.contacts
         ?.map((contact) => `${contact.email} | ${contact.mobile}`)
         .join(", "),
     },
-    category: { main: c.category },
-    nature: { name: c.businessNature },
-    location: { state: c.state, city: c.city },
-    source: { type: c.dataSource || "-" },
-    Status: { name: c.companyStatus },
+    category: { main: toTitleCase(c.category) || "-" },
+    nature: { name: toTitleCase(c.businessNature) || "-" },
+    location: { fullAddress: `${toTitleCase(c.country) || "-"} | ${toTitleCase(c.state) || "-"} | ${toTitleCase(c.city) || "-"}` },
+    source: { type: toTitleCase(c.dataSource) || "-" },
+    forwardTo: toTitleCase(c.forwardTo) || "-",
+    Status: { name: toTitleCase(c.companyStatus) || "-" },
     subject: { name: "-" },
-    update: { by: c.updated_by || "-" },
+    update: { by: toTitleCase(c.updated_by) || "-" },
     added: { By: "-" },
   }));
 

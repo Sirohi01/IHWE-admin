@@ -39,7 +39,7 @@ export default function AdminLayout({ onLogout }) {
           `}
         >
           {/* MAIN CONTENT - Reduced and consistent padding */}
-          <main className="flex-1 p-3 sm:p-4 lg:p-4 overflow-hidden">
+          <main className="flex-1 overflow-hidden">
             <div className="w-full">
               <Outlet />
             </div>

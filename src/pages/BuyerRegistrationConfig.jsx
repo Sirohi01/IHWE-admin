@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
-import { 
-    Save, 
-    Plus, 
-    Trash2, 
+import {
+    Save,
+    Plus,
+    Trash2,
     ChevronRight,
     ChevronUp,
     ChevronDown,
-    Layout, 
-    Package, 
-    ListFilter, 
-    Settings, 
-    Loader2, 
-    CheckCircle, 
+    Layout,
+    Package,
+    ListFilter,
+    Settings,
+    Loader2,
+    CheckCircle,
     AlertCircle,
     Globe,
     Clock,
@@ -40,7 +40,8 @@ const BuyerRegistrationConfig = () => {
         budgetRanges: [],
         companySizes: [],
         certificationOptions: [],
-        packages: []
+        packages: [],
+        stateCodes: []
     });
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -122,9 +123,9 @@ const BuyerRegistrationConfig = () => {
     const addPackage = () => {
         setConfig(prev => ({
             ...prev,
-            packages: [...prev.packages, { 
-                name: 'New Package', 
-                price: 0, 
+            packages: [...prev.packages, {
+                name: 'New Package',
+                price: 0,
                 category: 'Pass',
                 tagline: '',
                 description: '',
@@ -132,7 +133,9 @@ const BuyerRegistrationConfig = () => {
                 badge: '',
                 cta: 'Select',
                 color: 'blue',
-                benefits: ['New Benefit'] 
+                benefits: ['New Benefit'],
+                hsnSacCode: '998596',
+                gstPercentage: 18
             }]
         }));
     };
@@ -188,7 +191,7 @@ const BuyerRegistrationConfig = () => {
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-0.5">Dropdown Options</p>
                     </div>
                 </div>
-                <button 
+                <button
                     onClick={() => addItem(field)}
                     className="p-1.5 hover:bg-[#23471d] hover:text-white rounded-md transition-colors text-slate-400"
                 >
@@ -200,8 +203,8 @@ const BuyerRegistrationConfig = () => {
                     {config[field].map((item, index) => (
                         <div key={index} className="flex items-center gap-2 group p-2 hover:bg-slate-50 rounded-md transition-colors border border-transparent hover:border-slate-100">
                             <span className="text-[10px] font-bold text-slate-300 w-4">{(index + 1).toString().padStart(2, '0')}</span>
-                            <input 
-                                value={item} 
+                            <input
+                                value={item}
                                 onChange={(e) => {
                                     const newList = [...config[field]];
                                     newList[index] = e.target.value;
@@ -231,7 +234,7 @@ const BuyerRegistrationConfig = () => {
                     <h1 className="text-xl font-bold text-slate-800 uppercase tracking-tight">Buyer Registration Config</h1>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em] mt-0.5">Manage Dynamic Form Options & Packages</p>
                 </div>
-                <button 
+                <button
                     onClick={handleSave}
                     disabled={isSaving}
                     className="bg-[#23471d] hover:bg-[#1a3516] text-white px-8 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all shadow-lg flex items-center gap-2 disabled:opacity-50"
@@ -243,19 +246,26 @@ const BuyerRegistrationConfig = () => {
 
             <div className="max-w-[1400px] mx-auto p-8">
                 <div className="flex gap-4 mb-10 border-b border-slate-100 pb-px font-inter">
-                    <button 
+                    <button
                         onClick={() => setActiveTab('dropdowns')}
                         className={`pb-4 px-2 text-xs font-bold uppercase tracking-widest transition-all relative ${activeTab === 'dropdowns' ? 'text-[#23471d]' : 'text-slate-400 hover:text-slate-600'}`}
                     >
                         Form Dropdowns
                         {activeTab === 'dropdowns' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#23471d]" />}
                     </button>
-                    <button 
+                    <button
                         onClick={() => setActiveTab('packages')}
                         className={`pb-4 px-2 text-xs font-bold uppercase tracking-widest transition-all relative ${activeTab === 'packages' ? 'text-[#23471d]' : 'text-slate-400 hover:text-slate-600'}`}
                     >
                         Registration Packages
                         {activeTab === 'packages' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#23471d]" />}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('states')}
+                        className={`pb-4 px-2 text-xs font-bold uppercase tracking-widest transition-all relative ${activeTab === 'states' ? 'text-[#23471d]' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                        State Codes Mapping
+                        {activeTab === 'states' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#23471d]" />}
                     </button>
                 </div>
 
@@ -275,6 +285,86 @@ const BuyerRegistrationConfig = () => {
                         <ArrayEditor title="Company Size Options" field="companySizes" icon={Users} />
                         <ArrayEditor title="Certification Options" field="certificationOptions" icon={Award} />
                     </div>
+                ) : activeTab === 'states' ? (
+                    <div className="space-y-8 animate-fadeIn">
+                        <div className="flex justify-between items-center mb-4">
+                            <div>
+                                <h2 className="text-lg font-bold text-slate-800 uppercase">State Codes Mapping</h2>
+                                <p className="text-xs text-slate-400">Map state names to their official GST state codes</p>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setConfig(prev => ({
+                                        ...prev,
+                                        stateCodes: [...(prev.stateCodes || []), { name: '', code: '' }]
+                                    }));
+                                }}
+                                className="bg-[#23471d]/10 text-[#23471d] hover:bg-[#23471d] hover:text-white px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border border-[#23471d]/20 flex items-center gap-2"
+                            >
+                                <Plus className="w-3 h-3" /> Add State Mapping
+                            </button>
+                        </div>
+
+                        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">State Name</th>
+                                        <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">State Code</th>
+                                        <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-500 w-20">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {(config.stateCodes || []).map((sc, index) => (
+                                        <tr key={index} className="hover:bg-slate-50/50 transition-colors">
+                                            <td className="px-6 py-3">
+                                                <input
+                                                    value={sc.name}
+                                                    onChange={(e) => {
+                                                        const newCodes = [...config.stateCodes];
+                                                        newCodes[index].name = e.target.value;
+                                                        setConfig(prev => ({ ...prev, stateCodes: newCodes }));
+                                                    }}
+                                                    className="w-full bg-transparent border-none focus:ring-0 p-0 text-xs font-semibold text-slate-600"
+                                                    placeholder="e.g. Maharashtra"
+                                                />
+                                            </td>
+                                            <td className="px-6 py-3">
+                                                <input
+                                                    value={sc.code}
+                                                    onChange={(e) => {
+                                                        const newCodes = [...config.stateCodes];
+                                                        newCodes[index].code = e.target.value;
+                                                        setConfig(prev => ({ ...prev, stateCodes: newCodes }));
+                                                    }}
+                                                    className="w-full bg-transparent border-none focus:ring-0 p-0 text-xs font-semibold text-slate-600"
+                                                    placeholder="e.g. 27"
+                                                />
+                                            </td>
+                                            <td className="px-6 py-3">
+                                                <button
+                                                    onClick={() => {
+                                                        const newCodes = config.stateCodes.filter((_, i) => i !== index);
+                                                        setConfig(prev => ({ ...prev, stateCodes: newCodes }));
+                                                    }}
+                                                    className="text-slate-400 hover:text-red-500 transition-colors"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {(config.stateCodes || []).length === 0 && (
+                                        <tr>
+                                            <td colSpan={3} className="px-6 py-10 text-center text-xs text-slate-400 italic">
+                                                No state mappings added yet. Click "Add State Mapping" to begin.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 ) : (
                     <div className="space-y-8 animate-fadeIn">
                         <div className="flex justify-between items-center mb-4">
@@ -282,7 +372,7 @@ const BuyerRegistrationConfig = () => {
                                 <h2 className="text-lg font-bold text-slate-800 uppercase">Registration Packages</h2>
                                 <p className="text-xs text-slate-400">Define the pricing tiers and benefits for buyers</p>
                             </div>
-                            <button 
+                            <button
                                 onClick={addPackage}
                                 className="bg-[#23471d]/10 text-[#23471d] hover:bg-[#23471d] hover:text-white px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border border-[#23471d]/20 flex items-center gap-2"
                             >
@@ -295,14 +385,14 @@ const BuyerRegistrationConfig = () => {
                                     <div className="p-6 bg-[#23471d] text-white flex justify-between items-start">
                                         <div className="flex-1 space-y-4">
                                             <div className="flex items-center gap-4">
-                                                <input 
-                                                    value={pkg.name} 
+                                                <input
+                                                    value={pkg.name}
                                                     onChange={(e) => updatePackage(pIndex, 'name', e.target.value)}
                                                     className="bg-transparent border-none focus:ring-0 p-0 text-lg font-bold w-full placeholder:text-white/50"
                                                     placeholder="Package Name"
                                                 />
-                                                <select 
-                                                    value={pkg.category} 
+                                                <select
+                                                    value={pkg.category}
                                                     onChange={(e) => updatePackage(pIndex, 'category', e.target.value)}
                                                     className="bg-white/10 border border-white/20 rounded px-2 py-1 text-[10px] font-bold uppercase tracking-widest outline-none"
                                                 >
@@ -310,17 +400,17 @@ const BuyerRegistrationConfig = () => {
                                                     <option value="Membership" className="text-slate-800">Membership</option>
                                                 </select>
                                             </div>
-                                            
+
                                             <div className="flex items-center gap-2">
                                                 <span className="text-xl font-black italic">₹</span>
-                                                <input 
+                                                <input
                                                     type="number"
-                                                    value={pkg.price} 
+                                                    value={pkg.price}
                                                     onChange={(e) => updatePackage(pIndex, 'price', parseInt(e.target.value))}
                                                     className="bg-transparent border-none focus:ring-0 p-0 text-3xl font-black w-32 placeholder:text-white/50"
                                                 />
-                                                <select 
-                                                    value={pkg.color} 
+                                                <select
+                                                    value={pkg.color}
                                                     onChange={(e) => updatePackage(pIndex, 'color', e.target.value)}
                                                     className="bg-white/10 border border-white/20 rounded px-2 py-1 text-[10px] font-bold uppercase tracking-widest outline-none ml-auto"
                                                 >
@@ -333,13 +423,13 @@ const BuyerRegistrationConfig = () => {
                                         </div>
                                         <button onClick={() => removePackage(pIndex)} className="p-2 hover:bg-white/20 rounded-lg text-white/60 hover:text-white transition-colors ml-4"><Trash2 size={16} /></button>
                                     </div>
-                                    
+
                                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/30 flex-1">
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Tagline</label>
-                                                <input 
-                                                    value={pkg.tagline || ''} 
+                                                <input
+                                                    value={pkg.tagline || ''}
                                                     onChange={(e) => updatePackage(pIndex, 'tagline', e.target.value)}
                                                     className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-semibold text-slate-600 focus:ring-1 focus:ring-[#23471d] outline-none"
                                                     placeholder="e.g. For Serious Buyers"
@@ -347,8 +437,8 @@ const BuyerRegistrationConfig = () => {
                                             </div>
                                             <div>
                                                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Description</label>
-                                                <textarea 
-                                                    value={pkg.description || ''} 
+                                                <textarea
+                                                    value={pkg.description || ''}
                                                     onChange={(e) => updatePackage(pIndex, 'description', e.target.value)}
                                                     className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-medium text-slate-600 focus:ring-1 focus:ring-[#23471d] outline-none min-h-[80px]"
                                                     placeholder="Brief package description..."
@@ -356,8 +446,8 @@ const BuyerRegistrationConfig = () => {
                                             </div>
                                             <div>
                                                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Why Choose This?</label>
-                                                <textarea 
-                                                    value={pkg.whyChoose || ''} 
+                                                <textarea
+                                                    value={pkg.whyChoose || ''}
                                                     onChange={(e) => updatePackage(pIndex, 'whyChoose', e.target.value)}
                                                     className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-medium text-slate-600 focus:ring-1 focus:ring-[#23471d] outline-none min-h-[60px]"
                                                     placeholder="Reason to select this package..."
@@ -366,8 +456,8 @@ const BuyerRegistrationConfig = () => {
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Badge</label>
-                                                    <input 
-                                                        value={pkg.badge || ''} 
+                                                    <input
+                                                        value={pkg.badge || ''}
                                                         onChange={(e) => updatePackage(pIndex, 'badge', e.target.value)}
                                                         className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-semibold text-slate-600 focus:ring-1 focus:ring-[#23471d] outline-none"
                                                         placeholder="e.g. Recommended"
@@ -375,11 +465,32 @@ const BuyerRegistrationConfig = () => {
                                                 </div>
                                                 <div>
                                                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">CTA Text</label>
-                                                    <input 
-                                                        value={pkg.cta || ''} 
+                                                    <input
+                                                        value={pkg.cta || ''}
                                                         onChange={(e) => updatePackage(pIndex, 'cta', e.target.value)}
                                                         className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-semibold text-slate-600 focus:ring-1 focus:ring-[#23471d] outline-none"
                                                         placeholder="e.g. Register Now"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">HSN/SAC Code</label>
+                                                    <input
+                                                        value={pkg.hsnSacCode || ''}
+                                                        onChange={(e) => updatePackage(pIndex, 'hsnSacCode', e.target.value)}
+                                                        className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-semibold text-slate-600 focus:ring-1 focus:ring-[#23471d] outline-none"
+                                                        placeholder="e.g. 998596"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">GST %</label>
+                                                    <input
+                                                        type="number"
+                                                        value={pkg.gstPercentage || 0}
+                                                        onChange={(e) => updatePackage(pIndex, 'gstPercentage', parseInt(e.target.value))}
+                                                        className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-semibold text-slate-600 focus:ring-1 focus:ring-[#23471d] outline-none"
+                                                        placeholder="e.g. 18"
                                                     />
                                                 </div>
                                             </div>
@@ -396,7 +507,7 @@ const BuyerRegistrationConfig = () => {
                                                 {pkg.benefits.map((benefit, bIndex) => (
                                                     <div key={bIndex} className="flex items-start gap-2 group/benefit bg-white p-2 rounded border border-slate-100 shadow-sm">
                                                         <CheckCircle size={14} className="text-emerald-500 mt-1 shrink-0" />
-                                                        <textarea 
+                                                        <textarea
                                                             value={benefit}
                                                             onChange={(e) => updateBenefit(pIndex, bIndex, e.target.value)}
                                                             className="flex-1 bg-transparent border-none focus:ring-0 p-0 text-[11px] font-medium text-slate-600 resize-none min-h-[40px]"
