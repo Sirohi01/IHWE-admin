@@ -55,8 +55,6 @@ const EstimateDetails = () => {
           </div>
         </div>
 
-
-
         <div ref={sameRef}>
           <EstimateFormDetail />
         </div>
