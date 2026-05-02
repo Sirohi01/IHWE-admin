@@ -292,7 +292,7 @@ export default function Sidebar({
                       onClick={() => setOpenSections(prev => ({ ...prev, [item.label]: !prev[item.label] }))}
                       className={`sb-heading w-full flex items-center justify-between px-3 py-2 text-[11px] font-bold uppercase tracking-wider hover:bg-gray-50 rounded-md transition-colors ${index === 0 ? "mt-0" : "mt-2"}`}
                     >
-                      <span>{item.label}</span>
+                      <span className="whitespace-nowrap">{item.label}</span>
                       <ChevronDown size={14} className={`transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
                     </button>
                   )}
