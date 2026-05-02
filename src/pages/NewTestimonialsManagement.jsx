@@ -9,20 +9,17 @@ import api, { SERVER_URL } from "../lib/api";
 import PageHeader from '../components/PageHeader';
 import RichTextEditor from '../components/RichTextEditor';
 
-const ICONS_LIST = [
-    { name: 'Quote', icon: Quote, color: '#2f8f3a' },
-    { name: 'Users', icon: Users, color: '#0e7fa8' },
-    { name: 'Activity', icon: Activity, color: '#e07b2a' },
-    { name: 'Globe', icon: Globe, color: '#1a56b0' },
-    { name: 'Sparkles', icon: Sparkles, color: '#9b3db8' },
+const TOP_IMAGES_LIST = [
+    { name: 'test23', label: 'Image 23' },
+    { name: 'test24', label: 'Image 24' },
+    { name: 'test25', label: 'Image 25' },
+    { name: 'test26', label: 'Image 26' },
 ];
 
-const IconComponent = ({ name, color, ...props }) => {
-    const found = ICONS_LIST.find(i => i.name === name);
-    if (!found) return <Quote {...props} />;
-    const Comp = found.icon;
-    return <Comp color={color || found.color} {...props} />;
-};
+// Helper to get image path (since these are frontend assets, we just store the name)
+// In a real app, you might want to serve these from backend or public folder.
+// For now, we follow the user's lead and use the names test23, etc.
+
 
 const NewTestimonialsManagement = () => {
   const [data, setData] = useState({
@@ -38,12 +35,19 @@ const NewTestimonialsManagement = () => {
   });
 
   const [testimonialForm, setTestimonialForm] = useState({
-    icon: "Quote",
+    icon: "test23",
     description: "",
     authorName: "",
     location: "",
-    order: 0
+    order: 0,
+    cardTopImage: "",
+    cardBottomImage: ""
   });
+
+  const [topImageFile, setTopImageFile] = useState(null);
+  const [topPreview, setTopPreview] = useState("");
+  const [bottomImageFile, setBottomImageFile] = useState(null);
+  const [bottomPreview, setBottomPreview] = useState("");
 
   const [leftImageFile, setLeftImageFile] = useState(null);
   const [rightImageFile, setRightImageFile] = useState(null);
@@ -126,11 +130,29 @@ const NewTestimonialsManagement = () => {
 
     setIsLoading(true);
     try {
+      const formData = new FormData();
+      formData.append('icon', testimonialForm.icon);
+      formData.append('description', testimonialForm.description);
+      formData.append('authorName', testimonialForm.authorName);
+      formData.append('location', testimonialForm.location);
+      formData.append('order', testimonialForm.order);
+      
+      if (topImageFile) {
+        formData.append('cardTopImage', topImageFile);
+      }
+      if (bottomImageFile) {
+        formData.append('cardBottomImage', bottomImageFile);
+      }
+
       let response;
       if (isEditingTestimonial) {
-        response = await api.put(`/api/new-testimonials/testimonials/${editingTestimonialId}`, testimonialForm);
+        response = await api.put(`/api/new-testimonials/testimonials/${editingTestimonialId}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
       } else {
-        response = await api.post("/api/new-testimonials/testimonials", testimonialForm);
+        response = await api.post("/api/new-testimonials/testimonials", formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
       }
 
       if (response.data.success) {
@@ -145,8 +167,28 @@ const NewTestimonialsManagement = () => {
     }
   };
 
+  const handleTopImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setTopImageFile(file);
+      setTopPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleBottomImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setBottomImageFile(file);
+      setBottomPreview(URL.createObjectURL(file));
+    }
+  };
+
   const resetTestimonialForm = () => {
-    setTestimonialForm({ icon: "Quote", description: "", authorName: "", location: "", order: 0 });
+    setTestimonialForm({ icon: "test23", description: "", authorName: "", location: "", order: 0, cardTopImage: "", cardBottomImage: "" });
+    setTopImageFile(null);
+    setTopPreview("");
+    setBottomImageFile(null);
+    setBottomPreview("");
     setIsEditingTestimonial(false);
     setEditingTestimonialId(null);
   };
@@ -155,12 +197,26 @@ const NewTestimonialsManagement = () => {
     setIsEditingTestimonial(true);
     setEditingTestimonialId(item._id);
     setTestimonialForm({
-      icon: item.icon,
+      icon: item.icon || "test23",
       description: item.description,
       authorName: item.authorName,
       location: item.location,
-      order: item.order || 0
+      order: item.order || 0,
+      cardTopImage: item.cardTopImage || "",
+      cardBottomImage: item.cardBottomImage || ""
     });
+    if (item.cardTopImage) {
+      setTopPreview(`${SERVER_URL}${item.cardTopImage}`);
+    } else {
+      setTopPreview("");
+    }
+    if (item.cardBottomImage) {
+      setBottomPreview(`${SERVER_URL}${item.cardBottomImage}`);
+    } else {
+      setBottomPreview("");
+    }
+    setTopImageFile(null);
+    setBottomImageFile(null);
     window.scrollTo({ top: 500, behavior: 'smooth' });
   };
 
@@ -312,18 +368,20 @@ const NewTestimonialsManagement = () => {
             <form onSubmit={handleTestimonialSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Select Icon</label>
-                  <div className="flex gap-2">
-                    <select 
-                      value={testimonialForm.icon}
-                      onChange={(e) => setTestimonialForm({...testimonialForm, icon: e.target.value})}
-                      className="flex-1 px-3 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none text-sm font-semibold"
-                    >
-                      {ICONS_LIST.map(i => <option key={i.name} value={i.name}>{i.name}</option>)}
-                    </select>
-                    <div className="w-10 h-10 border-2 border-gray-200 flex items-center justify-center bg-gray-50 rounded shrink-0">
-                      <IconComponent name={testimonialForm.icon} size={20} className="text-[#23471d]" />
-                    </div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Card Top Image</label>
+                  <div 
+                    className="relative border-2 border-dashed border-gray-300 h-24 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group overflow-hidden"
+                    onClick={() => document.getElementById('topImg').click()}
+                  >
+                    {topPreview ? (
+                      <img src={topPreview} alt="Preview" className="w-full h-full object-contain" />
+                    ) : (
+                      <>
+                        <Plus className="w-6 h-6 text-gray-400 group-hover:text-[#d26019]" />
+                        <span className="text-[10px] font-bold text-gray-500 uppercase">Upload Top Image</span>
+                      </>
+                    )}
+                    <input type="file" id="topImg" className="hidden" onChange={handleTopImageChange} accept="image/*" />
                   </div>
                 </div>
                 <div>
@@ -345,6 +403,26 @@ const NewTestimonialsManagement = () => {
                   placeholder="Enter what they said..."
                   minHeight="120px"
                 />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Card Bottom Image (Optional)</label>
+                  <div 
+                    className="relative border-2 border-dashed border-gray-300 h-24 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group overflow-hidden"
+                    onClick={() => document.getElementById('bottomImg').click()}
+                  >
+                    {bottomPreview ? (
+                      <img src={bottomPreview} alt="Preview" className="w-full h-full object-contain" />
+                    ) : (
+                      <>
+                        <Plus className="w-6 h-6 text-gray-400 group-hover:text-[#d26019]" />
+                        <span className="text-[10px] font-bold text-gray-500 uppercase">Upload Bottom Image</span>
+                      </>
+                    )}
+                    <input type="file" id="bottomImg" className="hidden" onChange={handleBottomImageChange} accept="image/*" />
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -414,8 +492,14 @@ const NewTestimonialsManagement = () => {
                   data.testimonials?.sort((a, b) => (a.order || 0) - (b.order || 0)).map((item, index) => (
                     <div key={item._id} className="p-6 hover:bg-gray-50 transition-colors relative group">
                         <div className="flex items-start gap-4">
-                            <div className="w-10 h-10 rounded bg-white border border-gray-200 flex items-center justify-center shrink-0">
-                                <IconComponent name={item.icon} size={18} className="text-[#23471d]" />
+                            <div className="w-10 h-10 rounded bg-white border border-gray-200 flex items-center justify-center shrink-0 overflow-hidden">
+                                {item.cardTopImage ? (
+                                    <img src={`${SERVER_URL}${item.cardTopImage}`} alt="Top" className="w-full h-full object-cover" />
+                                ) : item.cardBottomImage ? (
+                                    <img src={`${SERVER_URL}${item.cardBottomImage}`} alt="Bottom" className="w-full h-full object-cover" />
+                                ) : (
+                                    <span className="text-[10px] font-bold text-gray-400">{item.icon}</span>
+                                )}
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-center justify-between mb-1">
