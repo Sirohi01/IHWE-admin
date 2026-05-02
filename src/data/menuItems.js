@@ -45,7 +45,7 @@ export const menuItems = [
   /* ================= CRM Management Section ================= */
   {
     type: "heading",
-    label: "Sale Managment Section",
+    label: "Sale Management Section",
   },
   // ihwe section 
   {

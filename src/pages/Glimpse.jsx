@@ -466,92 +466,25 @@ const Glimpse = () => {
                 </div>
               </div>
 
-        </div>
-      </div>
-
-      <div className="bg-white shadow-md p-6 min-h-screen">
-        {/* <PageHeader
-        title="EVENT GLIMPSES MANAGEMENT"
-        description="Manage the gallery section: header content and event glimpse images"
-      /> */}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: Heading Settings & Form */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Headings Management */}
-            <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
-              <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[#23471d]">
-                <Type className="w-5 h-5 text-[#d26019]" /> Section Headings
-              </h2>
-              <div className="p-0 space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Subheading</label>
-                  <input
-                    type="text"
-                    name="subheading"
-                    value={glimpseData.subheading}
-                    onChange={handleHeadingChange}
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Main Title</label>
-                  <input
-                    type="text"
-                    name="heading"
-                    value={glimpseData.heading}
-                    onChange={handleHeadingChange}
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-[#d26019] mb-1 uppercase tracking-tight">Highlight Text (Orange)</label>
-                  <input
-                    type="text"
-                    name="highlightText"
-                    value={glimpseData.highlightText}
-                    onChange={handleHeadingChange}
-                    className="w-full px-4 py-2 border-2 border-[#d26019] focus:border-[#23471d] outline-none"
-                    placeholder="Enter text from title to highlight..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Short Description</label>
-                  <textarea
-                    name="description"
-                    value={glimpseData.description}
-                    onChange={handleHeadingChange}
-                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none h-24"
-                  />
-                </div>
+              <button
+                type="submit"
+                disabled={isLoading || uploading}
+                className="w-full py-3 bg-[#d26019] text-white font-bold hover:bg-orange-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm uppercase"
+              >
+                {isEditingImage ? <><Edit size={16}/> Update Image</> : <><Plus size={16}/> Add Glimpse Image</>}
+              </button>
+              {isEditingImage && (
                 <button
-                  type="submit"
-                  disabled={isLoading || uploading}
-                  className="flex-1 py-2.5 bg-[#d26019] text-white font-bold hover:bg-orange-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  type="button"
+                  onClick={resetImageForm}
+                  className="w-full py-3 border-2 border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-colors text-xs uppercase"
                 >
-                  {isEditingImage ? <><Edit className="w-4 h-4" /> Update Image</> : <><Plus className="w-4 h-4" /> Add Image</>}
+                  Cancel
                 </button>
-                {isEditingImage && (
-                  <button
-                    type="button"
-                    onClick={resetImageForm}
-                    className="px-4 py-2.5 border-2 border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-colors text-sm"
-                  >
-                    {isEditing ? 'Update Image' : 'Add Image To Glimpse'}
-                  </button>
-                  {isEditing && (
-                    <button
-                      type="button"
-                      onClick={resetForm}
-                      className="px-4 py-2 bg-gray-500 text-white font-bold hover:bg-gray-600 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  )}
-                </div>
-              </form>
-            </div>
+              )}
+            </form>
           </div>
+        </div>
 
         {/* Right Column: Images List Table & Counters Table */}
         <div className="lg:col-span-2 space-y-8">
@@ -587,67 +520,33 @@ const Glimpse = () => {
                     </tr>
                   ) : (
                     glimpseData.images?.map((img, index) => (
-                      <tr key={img._id} className="hover:bg-gray-50 transition-colors">
+                      <tr key={img._id} className="hover:bg-gray-50 transition-colors border-b">
                         <td className="px-6 py-4 font-bold text-[#23471d]">{index + 1}</td>
                         <td className="px-6 py-4">
                           <div className="w-14 h-10 bg-gray-100 border border-gray-200 overflow-hidden shadow-sm">
-                            <img 
-                              src={`${SERVER_URL}${img.url}`} 
-                              alt={img.title} 
-                              className="w-full h-full object-cover" 
+                            <img
+                              src={`${SERVER_URL}${img.url}`}
+                              alt={img.title}
+                              className="w-full h-full object-cover"
                             />
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <p className="font-bold text-gray-900 text-sm leading-tight">{img.title}</p>
+                        <td className="px-6 py-4 text-sm font-bold text-gray-900">{img.title}</td>
+                        <td className="px-6 py-4 text-xs text-gray-500">{img.altText || "-"}</td>
+                        <td className="px-6 py-4 text-center">
+                          <div className="flex flex-col items-center">
+                            <span className="text-[10px] font-bold text-red-600 uppercase underline decoration-red-200 underline-offset-2">
+                              {img.updatedBy || 'System'}
+                            </span>
+                            <span className="text-[9px] text-gray-400 mt-0.5">
+                              {img.updatedAt ? new Date(img.updatedAt).toLocaleDateString() : 'N/A'}
+                            </span>
+                          </div>
                         </td>
-                      </tr>
-                    ) : (
-                      glimpseData.images?.map((img, index) => (
-                        <tr key={img._id} className="hover:bg-gray-50 transition-colors border-b">
-                          <td className="px-6 py-4 font-bold text-[#23471d]">{index + 1}</td>
-                          <td className="px-6 py-4">
-                            <div className="w-14 h-10 bg-gray-100 border border-gray-200 overflow-hidden shadow-sm">
-                              <img
-                                src={`${SERVER_URL}${img.url}`}
-                                alt={img.title}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <p className="font-bold text-gray-900 text-sm leading-tight">{img.title}</p>
-                          </td>
-                          <td className="px-6 py-4 text-xs text-gray-500">{img.altText || "-"}</td>
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col gap-1 items-center">
-                              <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
-                                {img.updatedBy || 'System'}
-                              </span>
-                              <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
-                                {img.updatedAt ? new Date(img.updatedAt).toLocaleString('en-GB', {
-                                  day: '2-digit', month: 'short', year: 'numeric',
-                                  hour: '2-digit', minute: '2-digit', hour12: true
-                                }) : 'N/A'}
-                              </span>
-                            </div>
-                        </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 text-center">
                           <div className="flex items-center justify-center gap-2">
-                            <button 
-                              onClick={() => startEditImage(img)} 
-                              className="text-blue-500 hover:text-blue-700 p-1 transition-colors"
-                              title="Edit"
-                            >
-                              <Edit2 size={16} />
-                            </button>
-                            <button 
-                              onClick={() => deleteImage(img._id)} 
-                              className="text-red-500 hover:text-red-700 p-1 transition-colors"
-                              title="Delete"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            <button onClick={() => startEditImage(img)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"><Edit2 size={14} /></button>
+                            <button onClick={() => deleteImage(img._id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"><Trash2 size={14} /></button>
                           </div>
                         </td>
                       </tr>
@@ -656,6 +555,7 @@ const Glimpse = () => {
                 </tbody>
               </table>
             </div>
+          </div>
 
           {/* Counters Management Section */}
           <div className="bg-white border-2 border-gray-200 shadow-sm overflow-hidden">
@@ -785,7 +685,7 @@ const Glimpse = () => {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
