@@ -186,6 +186,7 @@ import InternationalBuyerRegistration from "../pages/buyer/InternationalBuyerReg
 import AwardsNominationList from "../pages/AwardsNominationList";
 import AwardCategoriesManage from "../pages/AwardCategoriesManage";
 import AwardsNominationDetail from "../pages/AwardsNominationDetail";
+import AwardsGalleryManage from "../pages/AwardsGalleryManage";
 import AccountSection1 from "../pages/ihwe_client_data_2026/AccountSection1";
 import CreateEstimate1 from "../pages/ihwe_client_data_2026/CreateEstimate1";
 import EstimateDetails from "../pages/ihwe_client_data_2026/invoice/EstimateDetails"
@@ -531,6 +532,7 @@ export default function AppRoutes() {
           <Route path="/awards-nominations" element={<AwardsNominationList />} />
           <Route path="/awards-nominations/:id" element={<AwardsNominationDetail />} />
           <Route path="/award-categories-manage" element={<AwardCategoriesManage />} />
+          <Route path="/awards-gallery-manage" element={<AwardsGalleryManage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>

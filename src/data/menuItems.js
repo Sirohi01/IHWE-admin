@@ -353,6 +353,7 @@ export const menuItems = [
     children: [
       { label: "Award Categories", path: "/award-categories-manage" },
       { label: "Nominations List", path: "/awards-nominations" },
+      { label: "Awards Gallery", path: "/awards-gallery-manage" },
     ],
   },
 
