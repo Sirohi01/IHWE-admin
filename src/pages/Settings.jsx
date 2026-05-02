@@ -39,6 +39,8 @@ const Settings = () => {
     const [domesticFormPreview, setDomesticFormPreview] = useState('');
     const [internationalFormFile, setInternationalFormFile] = useState(null);
     const [internationalFormPreview, setInternationalFormPreview] = useState('');
+    const [sponsorshipDeckFile, setSponsorshipDeckFile] = useState(null);
+    const [sponsorshipDeckPreview, setSponsorshipDeckPreview] = useState('');
 
     // Topbar state
     const [marqueeText, setMarqueeText] = useState("• 150+ Speakers confirmed • Early Bird discount ending soon! • Join 8,000+ Professionals from 25+ Countries");
@@ -126,7 +128,7 @@ const Settings = () => {
             const res = await api.get('/api/settings');
             if (res.data.success && res.data.data) {
                 const { 
-                    logo, exhibitorBrochurePdf, domesticRegistrationFormPdf, internationalRegistrationFormPdf,
+                    logo, exhibitorBrochurePdf, domesticRegistrationFormPdf, internationalRegistrationFormPdf, sponsorshipDeckPdf,
                     emails, phones, addresses, mapIframe: savedIframe, 
                     marqueeText: savedMarquee, topbarDate: savedDate, supportDeskText: savedSupportDeskText,
                     companyName: sName, companyAddress: sAddress, companyGst: sGst, companyCin: sCin,
@@ -144,6 +146,9 @@ const Settings = () => {
                 }
                 if (internationalRegistrationFormPdf) {
                     setInternationalFormPreview(`${SERVER_URL}${internationalRegistrationFormPdf}`);
+                }
+                if (sponsorshipDeckPdf) {
+                    setSponsorshipDeckPreview(`${SERVER_URL}${sponsorshipDeckPdf}`);
                 }
                 if (savedIframe) {
                     setMapIframe(savedIframe);
@@ -209,6 +214,9 @@ const Settings = () => {
             if (internationalFormFile) {
                 formData.append('internationalRegistrationFormPdf', internationalFormFile);
             }
+            if (sponsorshipDeckFile) {
+                formData.append('sponsorshipDeckPdf', sponsorshipDeckFile);
+            }
 
             const emailsToSave = emails.map(({ id, isEditing, ...rest }) => rest);
             const phonesToSave = phones.map(({ id, isEditing, ...rest }) => rest);
@@ -266,6 +274,10 @@ const Settings = () => {
                 if (res.data.data.internationalRegistrationFormPdf) {
                     setInternationalFormPreview(`${SERVER_URL}${res.data.data.internationalRegistrationFormPdf}`);
                     setInternationalFormFile(null);
+                }
+                if (res.data.data.sponsorshipDeckPdf) {
+                    setSponsorshipDeckPreview(`${SERVER_URL}${res.data.data.sponsorshipDeckPdf}`);
+                    setSponsorshipDeckFile(null);
                 }
                 if (res.data.data.authorizedSignature) {
                     setSignaturePreview(`${SERVER_URL}${res.data.data.authorizedSignature}`);
@@ -665,6 +677,37 @@ const Settings = () => {
                                             </p>
                                             {internationalFormPreview && !internationalFormFile && (
                                                 <a href={internationalFormPreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center">
+                                            <Plus className="w-6 h-6 text-gray-300 mb-1" />
+                                            <p className="text-[9px] font-bold text-gray-400 uppercase">Click to upload PDF</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Sponsorship Deck PDF */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    Awards Sponsorship Deck (PDF)
+                                </label>
+                                <div className="border border-dashed border-gray-300 p-4 text-center relative group min-h-[100px] flex items-center justify-center bg-gray-50/30 rounded-lg hover:border-[#23471d] transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={(e) => setSponsorshipDeckFile(e.target.files[0])}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {sponsorshipDeckFile || sponsorshipDeckPreview ? (
+                                        <div className="flex flex-col items-center">
+                                            <FileText className="w-8 h-8 text-green-600 mb-1" />
+                                            <p className="text-[10px] font-bold text-gray-600 truncate max-w-[200px]">
+                                                {sponsorshipDeckFile ? sponsorshipDeckFile.name : "Sponsorship Deck.pdf"}
+                                            </p>
+                                            {sponsorshipDeckPreview && !sponsorshipDeckFile && (
+                                                <a href={sponsorshipDeckPreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
                                             )}
                                         </div>
                                     ) : (
