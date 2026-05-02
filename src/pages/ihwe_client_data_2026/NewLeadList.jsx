@@ -4,6 +4,8 @@ import Globallytable from "../../Components/Globallytable";
 import Textarea from "../../Components/Textarea";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
+import { useNavigate } from "react-router-dom";
+import { Upload, UserCheck, LayoutGrid } from "lucide-react";
 
 const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
   if (Array.isArray(sliceState)) return sliceState;
@@ -18,8 +20,15 @@ const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
   return [];
 };
 
+const toTitleCase = (str) => {
+  if (!str || typeof str !== 'string') return str;
+  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
 const NewLeadList = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
 
   // 🏢 Company redux data – robust extraction
   const companiesState = useSelector((state) => state.companies);
@@ -48,9 +57,9 @@ const NewLeadList = () => {
     { label: "Contact Details", accessor: "contact.details" },
     { label: "Category", accessor: "category.main" },
     { label: "Nature of Business", accessor: "business.type" },
-    { label: "City", accessor: "location.city" },
-    { label: "State", accessor: "location.state" },
+    { label: "Address", accessor: "location.fullAddress" },
     { label: "Source", accessor: "source.name" },
+    { label: "Forward To", accessor: "forwardTo" },
     { label: "Update Details", accessor: "update.details" },
   ];
 
@@ -63,40 +72,54 @@ const NewLeadList = () => {
     id: c._id,
     checkbox: true,
     company: {
-      name: c.companyName,
+      name: toTitleCase(c.companyName),
     },
     contact: {
       details: c.contacts
         ?.map(
           (contact) =>
-            `${contact.firstName} ${contact.surname} | ${contact.mobile}`,
+            `${toTitleCase(contact.firstName)} ${toTitleCase(contact.surname)} | ${contact.mobile}`,
         )
         .join(", "),
     },
-    category: { main: c.category },
-    business: { type: c.businessNature },
-    location: { city: c.city, state: c.state },
-    source: { name: c.dataSource || "-" },
+    category: { main: toTitleCase(c.category) || "-" },
+    business: { type: toTitleCase(c.businessNature) || "-" },
+    location: { fullAddress: `${toTitleCase(c.country) || "-"} | ${toTitleCase(c.state) || "-"} | ${toTitleCase(c.city) || "-"}` },
+    source: { name: toTitleCase(c.dataSource) || "-" },
+    forwardTo: toTitleCase(c.forwardTo) || "-",
     update: {
-      details: `${new Date(c.updatedAt).toLocaleDateString()} | ${c.contacts?.[0]?.firstName || "-"
-        }`,
+      details: `${new Date(c.updatedAt).toLocaleDateString()} | ${toTitleCase(c.contacts?.[0]?.firstName) || "-"}`,
     },
   }));
 
   return (
-    <div className="w-full h-auto bg-[#eef1f5]" style={{ marginTop: "30px" }}>
+    <div className="w-full h-auto bg-[#eef1f5] mt-8">
       {/* 🔹 Header */}
-      <div className="w-full bg-white">
-        <div className="w-full bg-white flex flex-col sm:flex-row justify-between items-center px-4 py-1 mb-3">
-          <h1 className="text-xl text-gray-500 mb-2 lg:mb-0 uppercase">
-            CLIENT DATA 2026
+      <div className="flex flex-col lg:flex-row justify-between items-center py-3 px-6 border-b border-gray-300 bg-white gap-4">
+        <div className="flex flex-col items-center lg:items-start gap-1">
+          <h1 className="text-xl font-semibold text-slate-600 uppercase tracking-tight leading-none text-center lg:text-left">
+           NEW LEAD LIST | Sales Management Section
           </h1>
+        </div>
+        <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
+          <button onClick={() => navigate("/ihweClientData2026/uploadExhibitor")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+            <Upload size={12} /> Upload Exhibitor
+          </button>
+          <button onClick={() => navigate("/ihweClientData2026/newLeadList")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+            <UserCheck size={12} /> New Leads List
+          </button>
+          <button onClick={() => navigate("/ihweClientData2026/masterData")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+            <LayoutGrid size={12} /> Master List
+          </button>
+          <button onClick={() => navigate("/ihweClientData2026/confirmClientList")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+            <UserCheck size={12} /> Exhibitor List
+          </button>
         </div>
       </div>
 
       {/* 🔹 Main Section */}
-      <div className="bg-white mx-3 p-2 rounded shadow-sm">
-        <div className="flex justify-between items-center pr-4 pt-2">
+      <div className="bg-white m-4 p-2 rounded shadow-sm">
+        <div className="flex justify-between items-center pr-4">
           <h1 className="text-lg font-medium text-gray-800 px-4">
             NEW LEAD LIST
           </h1>

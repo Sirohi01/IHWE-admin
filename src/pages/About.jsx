@@ -63,13 +63,13 @@ const About = () => {
           image2Alt: data.image2Alt || "",
           image3Alt: data.image3Alt || ""
         });
-        
+
         setCurrentImages({
           image1: data.image1 || '',
           image2: data.image2 || '',
           image3: data.image3 || ''
         });
-        
+
         setPreviews({
           image1: data.image1 ? `${SERVER_URL}${data.image1}` : '',
           image2: data.image2 ? `${SERVER_URL}${data.image2}` : '',
@@ -156,7 +156,7 @@ const About = () => {
         const { imagePaths } = response.data;
         setCurrentImages(prev => ({ ...prev, ...imagePaths }));
         setImageFiles({ image1: null, image2: null, image3: null });
-        
+
         Swal.fire({
           icon: 'success',
           title: 'Uploaded!',
@@ -188,206 +188,267 @@ const About = () => {
   );
 
   return (
-    <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
-      <div className="w-full">
-        <PageHeader
-          title="ABOUT PAGE MANAGEMENT"
-          description="Manage your company's about page content"
+    <>
+      <div className="relative w-full h-64 overflow-hidden rounded mt-8">
+        {/* Background Image */}
+        <img
+          src="/home.png"
+          alt="banner"
+          className="absolute inset-0 w-full h-full object-cover z-0"
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-          {/* Left side: Video Upload & Preview */}
-          <div className="lg:col-span-12 xl:col-span-12">
-            <SectionCard title="About Section Images & SEO" icon={ImageIcon}>
-              <div className="flex items-center gap-2 mb-6 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                <Info className="w-4 h-4 text-blue-600" />
-                <div className="flex flex-col">
-                  <p className="text-xs text-blue-700">
-                    Recommended sizes follow the <strong>Editorial Grid</strong> layout for a premium look. 
-                    Please provide <strong>Alt Text</strong> for each image to improve SEO ranking.
-                  </p>
-                  <p className="text-[10px] text-blue-600 font-bold uppercase mt-1">
-                    Wait! Each image MUST be under 100KB for best performance.
-                  </p>
-                </div>
-              </div>
+        {/* Halka dark overlay */}
+        <div className="absolute inset-0 bg-black/40 z-[1]" />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[
-                  { id: 'image1', label: 'Image 1 (Main/Tall)', dimensions: '900x1200 px (3:4)', aspect: 'aspect-[3/4]', altField: 'image1Alt' },
-                  { id: 'image2', label: 'Image 3 (Wide/Bottom)', dimensions: '1200x675 px (16:9)', aspect: 'aspect-[16/9]', altField: 'image2Alt' },
-                  { id: 'image3', label: 'Image 2 (Square/Top)', dimensions: '800x800 px (1:1)', aspect: 'aspect-square', altField: 'image3Alt' }
-                ].map((item) => (
-                  <div key={item.id} className="flex flex-col h-full bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
-                    <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-white">
-                      <span className="text-xs font-bold text-gray-700 uppercase tracking-tight">{item.label}</span>
-                      <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-500 font-medium">{item.dimensions}</span>
-                    </div>
-                    
-                    <div className={`relative ${item.aspect} bg-slate-100 flex items-center justify-center group`}>
-                      {previews[item.id] ? (
-                         <img 
-                          src={previews[item.id]} 
-                          className="w-full h-full object-cover" 
-                          alt="preview"
-                        />
-                      ) : (
-                        <div className="text-center p-4">
-                          <Upload className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                          <p className="text-[10px] text-gray-400">No Image</p>
-                        </div>
-                      )}
-                      
-                      <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          className="hidden" 
-                          onChange={(e) => handleImageChange(e, item.id)}
-                        />
-                        <div className="bg-white px-4 py-2 rounded text-xs font-bold text-gray-900 shadow-lg capitalize">
-                          Change Image
-                        </div>
-                      </label>
+        {/* Dot grid */}
+        <div className="absolute inset-0 opacity-[0.05] z-[2]"
+          style={{
+            backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+            backgroundSize: '28px 28px'
+          }}
+        />
 
-                      {currentImages[item.id] && !imageFiles[item.id] && (
-                         <div className="absolute top-2 right-2 bg-[#23471d] text-white text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-widest shadow-sm">
-                           Live
-                         </div>
-                      )}
-                    </div>
+        {/* Orange left accent bar */}
+        <div className="absolute left-0 top-6 bottom-6 w-1 rounded-full bg-gradient-to-b from-[#d26019]/0 via-[#d26019] to-[#d26019]/0 z-[2]" />
 
-                    <div className="p-4 space-y-3 flex-grow flex flex-col justify-end bg-white">
-                      <div>
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">SEO Alt Text</label>
-                        <input
-                          type="text"
-                          name={item.altField}
-                          value={formData[item.altField]}
-                          onChange={handleChange}
-                          placeholder="e.g. Healthcare networking event..."
-                          className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#23471d] text-[11px] rounded transition-all"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+        {/* Content */}
+        <div className="relative z-10 h-full flex items-center justify-between px-10">
 
-              {Object.values(imageFiles).some(f => f !== null) && (
-                <div className="mt-8 pt-6 border-t border-gray-100 flex justify-center">
-                  <button
-                    onClick={handleUploadImages}
-                    disabled={isSavingImages}
-                    className="bg-[#d26019] hover:bg-[#b8521a] text-white px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.1em] shadow-lg flex items-center gap-2 transition-all"
-                  >
-                    {isSavingImages ? (
-                       <><RefreshCw className="w-4 h-4 animate-spin" /> Uploading...</>
-                    ) : (
-                      <><Upload className="w-4 h-4" /> Save All New Images</>
-                    )}
-                  </button>
-                </div>
-              )}
-            </SectionCard>
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#d26019] animate-pulse" />
+              <p className="text-sm font-bold text-slate-200 uppercase tracking-[0.20em]">
+                Admin Panel · System · CMS
+              </p>
+            </div>
+            <h1 className="text-3xl font-semibold text-white leading-tight tracking-tight mb-1">
+
+              About Page Management
+            </h1>
+            <p className="text-lg font-medium text-slate-200">
+              Manage about page content
+            </p>
           </div>
 
-          {/* Right side: Text fields */}
-          <div className="lg:col-span-12 xl:col-span-12 space-y-6">
-            <SectionCard title="Header Content" icon={Heading}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Main Heading</label>
-                  <input
-                    type="text"
-                    name="heading"
-                    value={formData.heading}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#23471d] text-sm shadow-sm transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Subheading</label>
-                  <input
-                    type="text"
-                    name="subheading"
-                    value={formData.subheading}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#23471d] text-sm shadow-sm transition-colors"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 underline decoration-[#23471d]">Highlighted Word(s)</label>
-                  <input
-                    type="text"
-                    name="highlightedWord"
-                    value={formData.highlightedWord}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#d26019] text-sm shadow-sm transition-colors"
-                  />
-                  <p className="mt-1.5 text-[10px] text-gray-400 italic">This word will be highlighted with an underline in the subheading.</p>
-                </div>
-              </div>
-            </SectionCard>
+          <div className="hidden md:flex flex-col items-end gap-3">
+            {/* Online badge */}
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/10 backdrop-blur-sm">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[10px] font-black text-white uppercase tracking-widest">System Online</span>
+            </div>
 
-            <SectionCard title="About Description" icon={Type}>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Main Description</label>
-                <textarea
-                  name="description"
-                  rows={5}
-                  value={formData.description}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#23471d] text-sm shadow-sm transition-colors resize-none"
-                />
-              </div>
-            </SectionCard>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <SectionCard title="Our Vision" icon={Eye}>
-                <textarea
-                  name="vision"
-                  rows={4}
-                  value={formData.vision}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#23471d] text-sm shadow-sm transition-colors resize-none"
-                />
-              </SectionCard>
-              <SectionCard title="Our Mission" icon={Target}>
-                <textarea
-                  name="mission"
-                  rows={4}
-                  value={formData.mission}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#23471d] text-sm shadow-sm transition-colors resize-none"
-                />
-              </SectionCard>
+            {/* Date */}
+            <div className="px-4 py-2 rounded-xl bg-[#d26019]/20 border border-[#d26019]/20">
+              <p className="text-[10px] font-black text-[#d26019] uppercase tracking-widest">
+                {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+              </p>
             </div>
           </div>
-        </div>
 
-        {/* Bottom Actions */}
-        <div className="flex justify-end gap-4 mt-8 pb-10">
-          <button
-            onClick={fetchAboutData}
-            className="px-6 py-3 border-2 border-gray-300 text-gray-600 hover:bg-gray-50 font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition-all"
-          >
-            <RefreshCw className="w-4 h-4" /> Reset
-          </button>
-          <button
-            onClick={handleSaveText}
-            disabled={isLoading}
-            className="px-12 py-3 bg-[#23471d] hover:bg-[#1a3615] text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all"
-          >
-            {isLoading ? (
-              <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving...</>
-            ) : (
-              <><Save className="w-4 h-4" /> Save Content</>
-            )}
-          </button>
         </div>
       </div>
-    </div>
+
+      <div className="bg-white shadow-md p-6 min-h-screen">
+        <div className="w-full">
+          {/* <PageHeader
+            title="ABOUT PAGE MANAGEMENT"
+            description="Manage your company's about page content"
+          /> */}
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+            {/* Left side: Video Upload & Preview */}
+            <div className="lg:col-span-12 xl:col-span-12">
+              <SectionCard title="About Section Images & SEO" icon={ImageIcon}>
+                <div className="flex items-center gap-2 mb-6 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                  <Info className="w-4 h-4 text-blue-600" />
+                  <div className="flex flex-col">
+                    <p className="text-xs text-blue-700">
+                      Recommended sizes follow the <strong>Editorial Grid</strong> layout for a premium look.
+                      Please provide <strong>Alt Text</strong> for each image to improve SEO ranking.
+                    </p>
+                    <p className="text-[10px] text-blue-600 font-bold uppercase mt-1">
+                      Wait! Each image MUST be under 100KB for best performance.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[
+                    { id: 'image1', label: 'Image 1 (Main/Tall)', dimensions: '900x1200 px (3:4)', aspect: 'aspect-[3/4]', altField: 'image1Alt' },
+                    { id: 'image2', label: 'Image 3 (Wide/Bottom)', dimensions: '1200x675 px (16:9)', aspect: 'aspect-[16/9]', altField: 'image2Alt' },
+                    { id: 'image3', label: 'Image 2 (Square/Top)', dimensions: '800x800 px (1:1)', aspect: 'aspect-square', altField: 'image3Alt' }
+                  ].map((item) => (
+                    <div key={item.id} className="flex flex-col h-full bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-white">
+                        <span className="text-xs font-bold text-gray-700 uppercase tracking-tight">{item.label}</span>
+                        <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-500 font-medium">{item.dimensions}</span>
+                      </div>
+
+                      <div className={`relative ${item.aspect} bg-slate-100 flex items-center justify-center group`}>
+                        {previews[item.id] ? (
+                          <img
+                            src={previews[item.id]}
+                            className="w-full h-full object-cover"
+                            alt="preview"
+                          />
+                        ) : (
+                          <div className="text-center p-4">
+                            <Upload className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                            <p className="text-[10px] text-gray-400">No Image</p>
+                          </div>
+                        )}
+
+                        <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleImageChange(e, item.id)}
+                          />
+                          <div className="bg-white px-4 py-2 rounded text-xs font-bold text-gray-900 shadow-lg capitalize">
+                            Change Image
+                          </div>
+                        </label>
+
+                        {currentImages[item.id] && !imageFiles[item.id] && (
+                          <div className="absolute top-2 right-2 bg-[#23471d] text-white text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-widest shadow-sm">
+                            Live
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-4 space-y-3 flex-grow flex flex-col justify-end bg-white">
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">SEO Alt Text</label>
+                          <input
+                            type="text"
+                            name={item.altField}
+                            value={formData[item.altField]}
+                            onChange={handleChange}
+                            placeholder="e.g. Healthcare networking event..."
+                            className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#23471d] text-[11px] rounded transition-all"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {Object.values(imageFiles).some(f => f !== null) && (
+                  <div className="mt-8 pt-6 border-t border-gray-100 flex justify-center">
+                    <button
+                      onClick={handleUploadImages}
+                      disabled={isSavingImages}
+                      className="bg-[#d26019] hover:bg-[#b8521a] text-white px-8 py-3 rounded-full text-xs font-bold uppercase tracking-[0.1em] shadow-lg flex items-center gap-2 transition-all"
+                    >
+                      {isSavingImages ? (
+                        <><RefreshCw className="w-4 h-4 animate-spin" /> Uploading...</>
+                      ) : (
+                        <><Upload className="w-4 h-4" /> Save All New Images</>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </SectionCard>
+            </div>
+
+            {/* Right side: Text fields */}
+            <div className="lg:col-span-12 xl:col-span-12 space-y-6">
+              <SectionCard title="Header Content" icon={Heading}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Main Heading</label>
+                    <input
+                      type="text"
+                      name="heading"
+                      value={formData.heading}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#23471d] text-sm shadow-sm transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Subheading</label>
+                    <input
+                      type="text"
+                      name="subheading"
+                      value={formData.subheading}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#23471d] text-sm shadow-sm transition-colors"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 underline decoration-[#23471d]">Highlighted Word(s)</label>
+                    <input
+                      type="text"
+                      name="highlightedWord"
+                      value={formData.highlightedWord}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#d26019] text-sm shadow-sm transition-colors"
+                    />
+                    <p className="mt-1.5 text-[10px] text-gray-400 italic">This word will be highlighted with an underline in the subheading.</p>
+                  </div>
+                </div>
+              </SectionCard>
+
+              <SectionCard title="About Description" icon={Type}>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Main Description</label>
+                  <textarea
+                    name="description"
+                    rows={5}
+                    value={formData.description}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#23471d] text-sm shadow-sm transition-colors resize-none"
+                  />
+                </div>
+              </SectionCard>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <SectionCard title="Our Vision" icon={Eye}>
+                  <textarea
+                    name="vision"
+                    rows={4}
+                    value={formData.vision}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#23471d] text-sm shadow-sm transition-colors resize-none"
+                  />
+                </SectionCard>
+                <SectionCard title="Our Mission" icon={Target}>
+                  <textarea
+                    name="mission"
+                    rows={4}
+                    value={formData.mission}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#23471d] text-sm shadow-sm transition-colors resize-none"
+                  />
+                </SectionCard>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Actions */}
+          <div className="flex justify-end gap-4 mt-8 pb-10">
+            <button
+              onClick={fetchAboutData}
+              className="px-6 py-3 border-2 border-gray-300 text-gray-600 hover:bg-gray-50 font-bold text-sm uppercase tracking-wider flex items-center gap-2 transition-all"
+            >
+              <RefreshCw className="w-4 h-4" /> Reset
+            </button>
+            <button
+              onClick={handleSaveText}
+              disabled={isLoading}
+              className="px-12 py-3 bg-[#23471d] hover:bg-[#1a3615] text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all"
+            >
+              {isLoading ? (
+                <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving...</>
+              ) : (
+                <><Save className="w-4 h-4" /> Save Content</>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 

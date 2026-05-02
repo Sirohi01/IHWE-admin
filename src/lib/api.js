@@ -19,7 +19,7 @@ export const SERVER_URL = getBaseUrl();
 export const API_URL = `${SERVER_URL}/api`;
 
 // Determine Frontend URL (Main Website)
-export const FRONTEND_URL = (import.meta.env.VITE_FRONTEND_URL || 
+export const FRONTEND_URL = (import.meta.env.VITE_FRONTEND_URL ||
   (window.location.hostname === "localhost" ? "http://localhost:8080" : window.location.origin.replace(/:\/\/admin\./, "://"))
 ).replace(/\/$/, "");
 
@@ -49,6 +49,7 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error),
 );
+
 
 // ✅ RESPONSE INTERCEPTOR (FIXED)
 api.interceptors.response.use(

@@ -499,7 +499,7 @@ const InternationalBuyerRegistration = () => {
         setIsSubmitting(true);
         try {
             const finalFormData = new FormData();
-            
+
             // Append form data fields
             Object.keys(formData).forEach(key => {
                 const value = formData[key];
@@ -888,7 +888,7 @@ const InternationalBuyerRegistration = () => {
                                 </select>
                             </Field>
                             <Field label="Booking Amount Paid" name="billingDetails.bookingAmountPaid">
-                                <input name="billingDetails.bookingAmountPaid" value={formData.billingDetails.bookingAmountPaid} onChange={handleInputChange} placeholder="e.g. ₹25000" className={inputClass} />
+                                <input name="billingDetails.bookingAmountPaid" value={formData.billingDetails.bookingAmountPaid} onChange={handleInputChange} placeholder="e.g. $500" className={inputClass} />
                             </Field>
                             <Field label="UTR / Transaction ID" name="billingDetails.utrTransactionId">
                                 <input name="billingDetails.utrTransactionId" value={formData.billingDetails.utrTransactionId} onChange={handleInputChange} placeholder="Transaction reference" className={inputClass} />
@@ -949,7 +949,7 @@ const InternationalBuyerRegistration = () => {
                                 <input name="registrationCategory" value={formData.registrationCategory} onChange={handleInputChange} placeholder="e.g. VIP Pass" className={inputClass} />
                             </Field>
                             <Field label="Fee Amount" name="registrationFee">
-                                <input name="registrationFee" value={formData.registrationFee} onChange={handleInputChange} placeholder="e.g. $4999" className={inputClass} />
+                                <input name="registrationFee" value={formData.registrationFee} onChange={handleInputChange} placeholder="e.g. $499" className={inputClass} />
                             </Field>
                             <Field label="Internal Remarks" name="remarks">
                                 <textarea name="remarks" value={formData.remarks} onChange={handleInputChange} placeholder="Internal notes..." className={textareaClass} rows={2} />
@@ -1004,7 +1004,6 @@ const InternationalBuyerRegistration = () => {
                             </div>
                         </section>
                     )}
-
 
                     <div className="flex justify-end gap-3 border-t pt-6">
                         <button type="button" onClick={() => window.location.reload()} className="rounded-[2px] border border-red-200 bg-red-50 px-5 py-3 text-sm font-bold uppercase tracking-[0.16em] text-red-700 hover:bg-red-100">Reset</button>

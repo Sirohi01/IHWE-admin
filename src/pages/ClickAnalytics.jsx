@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  TrendingUp, 
-  MessageCircle, 
-  Phone, 
-  Share2, 
+import {
+  TrendingUp,
+  MessageCircle,
+  Phone,
+  Share2,
   Search,
   Calendar,
   MousePointer2,
@@ -64,7 +64,7 @@ const ClickAnalytics = () => {
   const handleFilterChange = (type, val1 = "", val2 = "") => {
     setFilterType(type);
     setCurrentPage(1);
-    
+
     if (type === 'today') {
       setSelectedDate("");
       setStartDate("");
@@ -77,7 +77,7 @@ const ClickAnalytics = () => {
       if (val1) {
         const d = new Date(val1);
         const day = d.getDay();
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1); 
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
         const start = new Date(d.setDate(diff));
         const end = new Date(d.setDate(diff + 6));
         setStartDate(start.toISOString().split('T')[0]);
@@ -175,9 +175,8 @@ const ClickAnalytics = () => {
         const isBook = name.includes('book') || name.includes('register');
         return (
           <div className="flex items-center gap-3">
-             <div className={`p-2 rounded-lg ${
-              isWhatsapp ? 'bg-green-50' : isCall ? 'bg-blue-50' : isBook ? 'bg-orange-50' : 'bg-indigo-50'
-            }`}>
+            <div className={`p-2 rounded-lg ${isWhatsapp ? 'bg-green-50' : isCall ? 'bg-blue-50' : isBook ? 'bg-orange-50' : 'bg-indigo-50'
+              }`}>
               {isWhatsapp ? (
                 <MessageCircle className="w-4 h-4 text-green-600" />
               ) : isCall ? (
@@ -224,170 +223,235 @@ const ClickAnalytics = () => {
   ];
 
   return (
-    <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
-      <div className="w-full">
-        <div className="mb-8">
-            <h1 className="text-3xl font-bold text-[#23471d] uppercase tracking-tight">CLICK ANALYTICS</h1>
-            <p className="text-gray-600 mt-2 text-lg italic">Track and monitor all user interactions on floating website widgets and buttons</p>
-        </div>
+    <>
+      <div className="relative w-full h-64 overflow-hidden rounded mt-8">
 
-        <div className="space-y-8">
-          {/* STATS GRID */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-            {stats.map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={index}
-                  className="group relative bg-white border-2 border-gray-100 p-6 transition-all duration-300 shadow-md hover:shadow-xl overflow-hidden rounded-xl"
-                >
-                  <div className="absolute inset-0 pointer-events-none">
-                    <div className={`absolute top-0 right-0 w-32 h-32 ${item.iconBg} opacity-15 rounded-full -mr-10 -mt-10 transition-all duration-700 group-hover:scale-150`} />
-                  </div>
+        {/* Background Image */}
+        <img
+          src="/click.png"
+          alt="banner"
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        />
 
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className={`w-12 h-12 ${item.iconBg} flex items-center justify-center rounded-lg shadow-inner`}>
-                        <Icon className="w-6 h-6 text-white" />
-                      </div>
-                      <div className={`px-3 py-1 rounded-full text-xs font-black ${item.bg} ${item.text} border-2 ${item.accent}`}>
-                        0{index + 1}
-                      </div>
-                    </div>
+        {/* Halka dark overlay */}
+        <div className="absolute inset-0 bg-black/1 z-[1]" />
 
-                    <div className="mt-4">
-                      <p className={`text-4xl font-black ${item.text} mb-1 tracking-tighter`}>
-                        {item.value}
-                      </p>
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                        {item.title}
-                      </p>
-                      <p className="text-[10px] text-gray-500 mt-2 font-medium italic">
-                        {item.desc}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+        {/* Dot grid */}
+        <div className="absolute inset-0 opacity-[0.05] z-[2]"
+          style={{
+            backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+            backgroundSize: '28px 28px'
+          }}
+        />
+
+        {/* Left accent */}
+        <div className="absolute left-0 top-6 bottom-6 w-1 rounded-full bg-gradient-to-b from-[#d26019]/0 via-[#d26019] to-[#d26019]/0 z-[2]" />
+
+        {/* Content */}
+        <div className="relative z-10 h-full flex items-center justify-between px-10 gap-6">
+
+          {/* LEFT */}
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center shrink-0 backdrop-blur-sm">
+              <p className="text-2xl leading-none">📊</p>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="w-1 h-1 rounded-full bg-[#d26019]" />
+                <p className="text-sm font-bold text-slate-200 uppercase tracking-[0.20em]">
+                  Admin Panel · System · Analytics
+                </p>
+              </div>
+              <h1 className="text-3xl font-semibold text-white leading-tight tracking-tight mb-1">
+                Click <span className="text-[#d26019]">Analytics</span>
+              </h1>
+              <p className="text-lg font-medium text-slate-200">
+                Track and monitor all user interactions on floating website widgets and buttons
+              </p>
+            </div>
           </div>
 
-          {/* TABLE SECTION */}
-          <div className="bg-white border-2 border-gray-200 overflow-hidden shadow-xl rounded-t-xl">
-            <div className="px-6 py-5 border-b bg-[#23471d]">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
+          {/* RIGHT */}
+          <div className="hidden md:flex flex-col items-end gap-2.5 shrink-0">
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Live Tracking</span>
+            </div>
+
+            <div className="px-3.5 py-2 rounded-xl bg-[#d26019]/10 border border-[#d26019]/20">
+              <p className="text-[9px] font-black text-[#d26019]/80 uppercase tracking-widest">
+                {new Date().toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })}
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <div className="bg-white shadow-md p-6 min-h-screen">
+
+        <div className="w-full">
+
+          <div className="space-y-8">
+            {/* STATS GRID */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+              {stats.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={index}
+                    className="group relative bg-white border-2 border-gray-100 p-6 transition-all duration-300 shadow-md hover:shadow-xl overflow-hidden rounded-xl"
+                  >
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className={`absolute top-0 right-0 w-32 h-32 ${item.iconBg} opacity-15 rounded-full -mr-10 -mt-10 transition-all duration-700 group-hover:scale-150`} />
+                    </div>
+
+                    <div className="relative z-10">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className={`w-12 h-12 ${item.iconBg} flex items-center justify-center rounded-lg shadow-inner`}>
+                          <Icon className="w-6 h-6 text-white" />
+                        </div>
+                        <div className={`px-3 py-1 rounded-full text-xs font-black ${item.bg} ${item.text} border-2 ${item.accent}`}>
+                          0{index + 1}
+                        </div>
+                      </div>
+
+                      <div className="mt-4">
+                        <p className={`text-4xl font-black ${item.text} mb-1 tracking-tighter`}>
+                          {item.value}
+                        </p>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                          {item.title}
+                        </p>
+                        <p className="text-[10px] text-gray-500 mt-2 font-medium italic">
+                          {item.desc}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* TABLE SECTION */}
+            <div className="bg-white border-2 border-gray-200 overflow-hidden shadow-xl rounded-t-xl">
+              <div className="px-6 py-5 border-b bg-[#23471d]">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
                     <div className="bg-white/10 p-2 rounded-lg">
-                        <LayoutDashboard className="w-6 h-6 text-white" />
+                      <LayoutDashboard className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-white uppercase tracking-wider">Detailed Interacted Logs</h2>
-                        <p className="text-xs text-green-100 mt-0.5 font-medium">Analysis of current active logged interactions</p>
+                      <h2 className="text-xl font-bold text-white uppercase tracking-wider">Detailed Interacted Logs</h2>
+                      <p className="text-xs text-green-100 mt-0.5 font-medium">Analysis of current active logged interactions</p>
                     </div>
-                </div>
+                  </div>
 
-                <div className="flex flex-wrap gap-2">
-                  <select
-                    value={filterType}
-                    onChange={(e) => handleFilterChange(e.target.value)}
-                    className="h-10 px-4 text-[11px] font-bold border-2 border-white/20 focus:outline-none focus:border-white shadow-lg bg-[#1a3516] text-white uppercase tracking-wider rounded"
-                  >
-                    <option value="today">Today</option>
-                    <option value="daily">Select Date</option>
-                    <option value="weekly">This Week</option>
-                    <option value="monthly">This Month</option>
-                    <option value="range">Custom Range</option>
-                  </select>
+                  <div className="flex flex-wrap gap-2">
+                    <select
+                      value={filterType}
+                      onChange={(e) => handleFilterChange(e.target.value)}
+                      className="h-10 px-4 text-[11px] font-bold border-2 border-white/20 focus:outline-none focus:border-white shadow-lg bg-[#1a3516] text-white uppercase tracking-wider rounded"
+                    >
+                      <option value="today">Today</option>
+                      <option value="daily">Select Date</option>
+                      <option value="weekly">This Week</option>
+                      <option value="monthly">This Month</option>
+                      <option value="range">Custom Range</option>
+                    </select>
 
-                  {filterType === "daily" && (
-                    <input
-                      type="date"
-                      value={selectedDate}
-                      onChange={(e) => handleFilterChange("daily", e.target.value)}
-                      className="h-10 px-3 text-[11px] font-bold border-2 border-white/20 focus:outline-none focus:border-white shadow-lg bg-[#1a3516] text-white uppercase tracking-wider rounded"
-                    />
-                  )}
-
-                  {filterType === "weekly" && (
-                    <input
-                      type="date"
-                      onChange={(e) => handleFilterChange("weekly", e.target.value)}
-                      className="h-10 px-3 text-[11px] font-bold border-2 border-white/20 focus:outline-none focus:border-white shadow-lg bg-[#1a3516] text-white uppercase tracking-wider rounded"
-                    />
-                  )}
-
-                  {filterType === "monthly" && (
-                    <input
-                      type="month"
-                      onChange={(e) => handleFilterChange("monthly", e.target.value)}
-                      className="h-10 px-3 text-[11px] font-bold border-2 border-white/20 focus:outline-none focus:border-white shadow-lg bg-[#1a3516] text-white uppercase tracking-wider rounded"
-                    />
-                  )}
-
-                  {filterType === "range" && (
-                    <div className="flex items-center gap-2">
+                    {filterType === "daily" && (
                       <input
                         type="date"
-                        value={startDate}
-                        onChange={(e) => handleFilterChange("range", e.target.value, endDate)}
+                        value={selectedDate}
+                        onChange={(e) => handleFilterChange("daily", e.target.value)}
                         className="h-10 px-3 text-[11px] font-bold border-2 border-white/20 focus:outline-none focus:border-white shadow-lg bg-[#1a3516] text-white uppercase tracking-wider rounded"
                       />
-                      <span className="text-white text-[10px] font-black">TO</span>
+                    )}
+
+                    {filterType === "weekly" && (
                       <input
                         type="date"
-                        value={endDate}
-                        onChange={(e) => handleFilterChange("range", startDate, e.target.value)}
+                        onChange={(e) => handleFilterChange("weekly", e.target.value)}
                         className="h-10 px-3 text-[11px] font-bold border-2 border-white/20 focus:outline-none focus:border-white shadow-lg bg-[#1a3516] text-white uppercase tracking-wider rounded"
                       />
-                    </div>
-                  )}
+                    )}
 
-                  <div className="relative w-full sm:w-64">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-200" />
-                    <input
-                      type="text"
-                      placeholder="SEARCH LOGS BY NAME OR IP..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full h-10 pl-10 pr-4 text-[10px] font-bold border-2 border-white/20 focus:outline-none focus:border-white shadow-lg bg-[#1a3516] text-white uppercase tracking-wider rounded placeholder:text-green-300"
-                    />
+                    {filterType === "monthly" && (
+                      <input
+                        type="month"
+                        onChange={(e) => handleFilterChange("monthly", e.target.value)}
+                        className="h-10 px-3 text-[11px] font-bold border-2 border-white/20 focus:outline-none focus:border-white shadow-lg bg-[#1a3516] text-white uppercase tracking-wider rounded"
+                      />
+                    )}
+
+                    {filterType === "range" && (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="date"
+                          value={startDate}
+                          onChange={(e) => handleFilterChange("range", e.target.value, endDate)}
+                          className="h-10 px-3 text-[11px] font-bold border-2 border-white/20 focus:outline-none focus:border-white shadow-lg bg-[#1a3516] text-white uppercase tracking-wider rounded"
+                        />
+                        <span className="text-white text-[10px] font-black">TO</span>
+                        <input
+                          type="date"
+                          value={endDate}
+                          onChange={(e) => handleFilterChange("range", startDate, e.target.value)}
+                          className="h-10 px-3 text-[11px] font-bold border-2 border-white/20 focus:outline-none focus:border-white shadow-lg bg-[#1a3516] text-white uppercase tracking-wider rounded"
+                        />
+                      </div>
+                    )}
+
+                    <div className="relative w-full sm:w-64">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-200" />
+                      <input
+                        type="text"
+                        placeholder="SEARCH LOGS BY NAME OR IP..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full h-10 pl-10 pr-4 text-[10px] font-bold border-2 border-white/20 focus:outline-none focus:border-white shadow-lg bg-[#1a3516] text-white uppercase tracking-wider rounded placeholder:text-green-300"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-white relative">
-              {isLoading && (
-                <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center py-20">
-                  <div className="w-12 h-12 border-4 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              )}
-              <Table
-                columns={columns}
-                data={analyticsData.logs.filter(log => 
-                  log.iconName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  log.ipAddress.includes(searchTerm)
+              <div className="bg-white relative">
+                {isLoading && (
+                  <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center py-20">
+                    <div className="w-12 h-12 border-4 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                  </div>
                 )}
-                showActions={false}
-              />
-            </div>
-
-            <div className="px-6 py-4 bg-gray-50 border-t flex justify-between items-center rounded-b-xl">
-               <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                Total Pages Found: {totalPages}
+                <Table
+                  columns={columns}
+                  data={analyticsData.logs.filter(log =>
+                    log.iconName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    log.ipAddress.includes(searchTerm)
+                  )}
+                  showActions={false}
+                />
               </div>
-              <Pagination
-                currentPage={currentPage}
-                totalItems={totalPages * 25}
-                itemsPerPage={25}
-                onPageChange={setCurrentPage}
-                label="logs"
-              />
+
+              <div className="px-6 py-4 bg-gray-50 border-t flex justify-between items-center rounded-b-xl">
+                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  Total Pages Found: {totalPages}
+                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={totalPages * 25}
+                  itemsPerPage={25}
+                  onPageChange={setCurrentPage}
+                  label="logs"
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
