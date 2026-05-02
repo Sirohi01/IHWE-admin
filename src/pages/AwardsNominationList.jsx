@@ -179,6 +179,7 @@ const AwardsNominationList = () => {
   const [nominations, setNominations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
@@ -187,11 +188,20 @@ const AwardsNominationList = () => {
   const [filters, setFilters] = useState({ status: "all", awardCategory: "all", applicantType: "all" });
   const [awardCategories, setAwardCategories] = useState([]);
 
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   const fetchNominations = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        search: searchTerm,
+        search: debouncedSearchTerm,
         status: filters.status,
         awardCategory: filters.awardCategory,
         applicantType: filters.applicantType,
@@ -206,7 +216,7 @@ const AwardsNominationList = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, filters]);
+  }, [debouncedSearchTerm, filters]);
 
   useEffect(() => { fetchNominations(); }, [fetchNominations]);
 
@@ -407,7 +417,7 @@ const AwardsNominationList = () => {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100">
-                  {["#", "Applicant Details", "Contact Info", "Type", "Award Category", "City", "Status", "Submitted", "Actions"].map(h => (
+                  {["#", "Type", "Full Name", "Contact Person", "Designation", "Mobile", "Email", "Website", "Location", "Award Category", "Status", "Submitted", "Actions"].map(h => (
                     <th key={h} className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -419,16 +429,7 @@ const AwardsNominationList = () => {
                       {(currentPage - 1) * rowsPerPage + idx + 1}
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-[12.5px] font-black text-[#0a2e5c]">{n.fullName}</p>
-                      <p className="text-[11px] text-slate-400 font-medium">{n.contactPersonName}</p>
-                      {n.designation && <p className="text-[10px] text-slate-400 mt-0.5">{n.designation}</p>}
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-[11.5px] font-bold text-slate-600">{n.email}</p>
-                      <p className="text-[11px] text-slate-400">{n.mobile}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-black whitespace-nowrap ${
                         n.applicantType === 'Individual' 
                           ? 'bg-blue-50 text-blue-700 border border-blue-200' 
                           : n.applicantType === 'Startup'
@@ -439,14 +440,42 @@ const AwardsNominationList = () => {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-[11.5px] font-bold text-slate-700 max-w-[180px] leading-tight">{n.awardCategory}</p>
+                      <p className="text-[12.5px] font-black text-[#0a2e5c] whitespace-nowrap">{n.fullName}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-[11.5px] font-semibold text-slate-600">{n.city}</p>
-                      {n.website && <p className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[120px]">{n.website}</p>}
+                      <p className="text-[11.5px] font-bold text-slate-700 whitespace-nowrap">{n.contactPersonName}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black border ${STATUS_COLORS[n.status]}`}>
+                      <p className="text-[11px] text-slate-600 whitespace-nowrap">{n.designation || '-'}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-[11.5px] font-semibold text-slate-700 whitespace-nowrap">{n.mobile}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-[11.5px] font-semibold text-slate-700 max-w-[180px] truncate">{n.email}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      {n.website ? (
+                        <a 
+                          href={n.website.startsWith('http') ? n.website : `https://${n.website}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-[11px] text-blue-600 hover:text-blue-800 underline max-w-[150px] truncate block"
+                        >
+                          {n.website}
+                        </a>
+                      ) : (
+                        <span className="text-[11px] text-slate-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-[11.5px] font-semibold text-slate-700 whitespace-nowrap capitalize">{n.city || '-'}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-[11px] font-bold text-slate-700 max-w-[180px] leading-tight">{n.awardCategory}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black border whitespace-nowrap ${STATUS_COLORS[n.status]}`}>
                         {STATUS_ICONS[n.status]} {n.status}
                       </span>
                     </td>
