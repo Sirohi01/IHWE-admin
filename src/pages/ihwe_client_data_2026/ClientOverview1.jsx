@@ -28,8 +28,10 @@ import {
   Printer,
   History,
   MessageSquare,
-  Bell
+  Bell,
+  MessageCircle
 } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import {
   fetchCompanies,
   updateCompany,
@@ -59,11 +61,24 @@ const ClientOverview1 = () => {
   const { companies, loading, error } = useSelector((state) => state.companies);
   const [company, setCompany] = useState(null);
   const companyId = company?._id;
-  const updateBy = sessionStorage.getItem("user_name");
+
+  let updateBy = localStorage.getItem("user_name") || sessionStorage.getItem("user_name") || "";
+  try {
+    const userObjStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+    if (userObjStr) {
+      const userObj = JSON.parse(userObjStr);
+      if (userObj.name) updateBy = userObj.name;
+    }
+  } catch (e) {
+    console.error("Error parsing user data:", e);
+  }
+  if (!updateBy) updateBy = "Admin";
+
   console.log("companyId...", companyId);
   const [reviewData, setReviewData] = useState({
     cmpny_id: companyId || "",
     evnt_id: "",
+    event_name: "",
     status_short: "",
     reminder_dt: "",
     forward_to: "",
@@ -184,17 +199,43 @@ const ClientOverview1 = () => {
       cmpny_id: "cmpny_id",
     };
 
-    setReviewData((prev) => ({
-      ...prev,
-      [keyMap[id] || id]: value,
-    }));
+    setReviewData((prev) => {
+      const updated = { ...prev, [keyMap[id] || id]: value };
+
+      // Automatically set event_name when EventName changes
+      if (id === "EventName") {
+        const selectedEvent = events.find(ev => ev._id === value);
+        const eventName = selectedEvent ? (selectedEvent.event_fullName || selectedEvent.name) : "";
+        updated.event_name = eventName;
+      }
+
+      return updated;
+    });
   };
 
   // ✅ Handle submit
   const handleAddReview = async (e) => {
     e.preventDefault();
 
-    if (!reviewData.cmpny_id) {
+    // Get fresh user data right before submission to ensure it's not lost in state initialization
+    let currentUpdateBy = localStorage.getItem("user_name") || sessionStorage.getItem("user_name") || "";
+    try {
+      const userObjStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+      if (userObjStr) {
+        const userObj = JSON.parse(userObjStr);
+        if (userObj.name) currentUpdateBy = userObj.name;
+      }
+    } catch (err) {
+      console.error("Error parsing user data:", err);
+    }
+    if (!currentUpdateBy) currentUpdateBy = "Admin";
+
+    const payloadToSend = {
+      ...reviewData,
+      updated_by: currentUpdateBy,
+    };
+
+    if (!payloadToSend.cmpny_id) {
       Swal.fire({
         title: "Error",
         text: "Company ID is missing. Please select a company.",
@@ -205,7 +246,7 @@ const ClientOverview1 = () => {
       return;
     }
 
-    if (!reviewData.status_short || !reviewData.evnt_id || !reviewData.re_msg) {
+    if (!payloadToSend.status_short || !payloadToSend.evnt_id || !payloadToSend.re_msg) {
       Swal.fire({
         title: "Incomplete Data",
         text: "Status, Event Name, and Remark are required.",
@@ -216,13 +257,16 @@ const ClientOverview1 = () => {
     }
 
     try {
-      await dispatch(createReview(reviewData)).unwrap();
+      await dispatch(createReview(payloadToSend)).unwrap();
 
       // update company status
       await dispatch(
         updateCompany({
           id: companyId,
-          data: { companyStatus: reviewData.status_short },
+          data: {
+            companyStatus: payloadToSend.status_short,
+            eventName: payloadToSend.event_name
+          },
         }),
       ).unwrap();
 
@@ -241,11 +285,12 @@ const ClientOverview1 = () => {
       setReviewData({
         cmpny_id: companyId || "",
         evnt_id: "",
+        event_name: "",
         status_short: "",
         reminder_dt: "",
         forward_to: "",
         re_msg: "",
-        updated_by: updateBy || "",
+        updated_by: currentUpdateBy || "",
       });
     } catch (err) {
       Swal.fire({
@@ -329,9 +374,6 @@ const ClientOverview1 = () => {
 
   const handleChat = () => {
     if (!company) return;
-
-    // Navigate to your chat route and pass the client data.
-    // Adjust '/chat' to match the actual route of your chat screen.
     navigate(`/chat/${company._id}`, {
       state: {
         companyName: company.companyName,
@@ -389,14 +431,17 @@ const ClientOverview1 = () => {
               <button className="px-3 py-1 text-[12px] font-medium border border-slate-300 rounded hover:bg-slate-50 text-slate-600">
                 Add MSME Details
               </button>
-              <button onClick={handleSendWhatsapp} className="px-3 py-1 text-[12px] font-medium border border-slate-300 rounded hover:bg-slate-50 text-slate-600">
-                Send Whatsapp
+              <button onClick={handleSendWhatsapp} className="relative group p-1.5 border border-slate-300 rounded hover:bg-green-50 transition-colors">
+                <FaWhatsapp size={16} className="text-green-500" />
+                <span className="absolute top-9 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-3 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">WhatsApp</span>
               </button>
-              <button onClick={handleCall} className="px-3 py-1 text-[12px] font-medium border border-slate-300 rounded hover:bg-slate-50 text-slate-600">
-                Call
+              <button onClick={handleCall} className="relative group p-1.5 border border-slate-300 rounded hover:bg-blue-50 transition-colors">
+                <Phone size={16} className="text-blue-500" />
+                <span className="absolute top-9 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-3 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">Call</span>
               </button>
-              <button onClick={handleChat} className="px-3 py-1 text-[12px] font-medium border border-slate-300 rounded hover:bg-slate-50 text-slate-600">
-                Chat
+              <button onClick={handleChat} className="relative group p-1.5 border border-slate-300 rounded hover:bg-indigo-50 transition-colors">
+                <MessageSquare size={16} className="text-indigo-500" />
+                <span className="absolute top-9 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-3 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">Chat</span>
               </button>
               <button onClick={handleAccount} className="px-3 py-1 text-[12px] font-medium border border-slate-300 rounded hover:bg-slate-50 text-slate-600">
                 Account
@@ -404,8 +449,9 @@ const ClientOverview1 = () => {
               <button className="px-3 py-1 text-[12px] font-medium border border-slate-300 rounded hover:bg-slate-50 text-slate-600">
                 Payments
               </button>
-              <button onClick={handleEdit} className="px-3 py-1 border border-slate-300 rounded hover:bg-slate-50 text-slate-600">
-                <Pencil size={14} />
+              <button onClick={handleEdit} className="relative group p-1.5 border border-slate-300 rounded hover:bg-slate-50 transition-colors text-slate-600">
+                <Pencil size={16} />
+                <span className="absolute top-9 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-3 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">Edit</span>
               </button>
             </div>
           </div>
@@ -569,7 +615,7 @@ const ClientOverview1 = () => {
             </div>
 
             <div className="divide-y divide-slate-100">
-              {filteredReviews.map((entry) => (
+              {filteredReviews.map((entry, index) => (
                 <div key={entry?._id} className="p-4 flex gap-4 hover:bg-slate-50/50 transition-colors">
                   <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400">
                     <UserCircle size={28} />
@@ -579,13 +625,13 @@ const ClientOverview1 = () => {
                       <div className="space-y-1">
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                           <span className="text-[12px] font-bold text-blue-500 uppercase tracking-tight">
-                            {entry?.status_short} FOR {getEventName(entry?.evnt_id)}
+                            {entry?.status_short} FOR {entry?.event_name || getEventName(entry?.evnt_id)}
                           </span>
                           {entry?.reminder_dt && (
                             <span
-                              className="flex items-center gap-1 text-[12px] font-bold text-red-500 uppercase cursor-pointer hover:underline"
-                              onClick={() => setIsFormVisible(true)}
-                              title="Click to add new status update"
+                              className={`flex items-center gap-1 text-[12px] font-bold text-red-500 uppercase ${index === 0 ? "cursor-pointer hover:underline" : ""}`}
+                              onClick={index === 0 ? () => setIsFormVisible(true) : undefined}
+                              title={index === 0 ? "Click to add new status update" : undefined}
                             >
                               | <Bell size={12} className="fill-red-500" /> CALL THE CLIENT ON {(() => {
                                 const d = new Date(entry.reminder_dt);
@@ -598,12 +644,12 @@ const ClientOverview1 = () => {
                             </span>
                           )}
                         </div>
-                        <p className="text-[13px] text-slate-600 leading-snug">
-                          {entry?.re_msg}
+                        <p className="text-[13px] font-medium text-slate-600 leading-snug">
+                          {entry?.re_msg} By: <span className="text-blue-400 font-semibold">{entry?.updated_by}</span> On {entry?.re_updated ? new Date(entry.re_updated).toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' }) + " at " + new Date(entry.re_updated).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false }) : "N/A"}
+
                         </p>
-                        <div className="text-[11px] text-slate-400 font-medium">
-                          By: <span className="text-blue-400 font-semibold">{entry?.updated_by}</span> On {entry?.re_updated ? new Date(entry.re_updated).toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' }) + " at " + new Date(entry.re_updated).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false }) : "N/A"}
-                        </div>
+                        {/* <div className="text-[11px] text-slate-400 font-medium"> */}
+                        {/* </div> */}
                       </div>
                       <button onClick={() => handleDelete(entry?._id)} className="p-1 text-slate-300 hover:text-red-500 border border-slate-200 rounded transition-colors">
                         <Trash2 size={14} />
