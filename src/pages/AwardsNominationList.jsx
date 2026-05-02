@@ -288,7 +288,7 @@ const AwardsNominationList = () => {
       <div className="relative w-full h-64 overflow-hidden rounded mt-8">
         {/* Background Image */}
         <img
-          src="/nomi.png"
+          src="/dashbordBan.png"
           alt="Awards Nominations Banner"
           className="absolute inset-0 w-full h-full object-cover z-0"
         />

@@ -242,18 +242,14 @@ const Dashboard = () => {
     <>
 
       {/* Background Image */}
-      <div className="relative w-full h-64 overflow-hidden rounded">
+      {/* <div className="relative w-full h-64 overflow-hidden rounded">
 
         <img
           src="/dashbordBan.png"
           alt="banner"
           className="absolute inset-0 w-full h-full object-cover z-0"
         />
-
-        {/* Halka dark overlay */}
         <div className="absolute inset-0 bg-black/1 z-[1]" />
-
-        {/* Dot grid */}
         <div
           className="absolute inset-0 opacity-[0.05] z-[2]"
           style={{
@@ -261,11 +257,7 @@ const Dashboard = () => {
             backgroundSize: '28px 28px'
           }}
         />
-
-        {/* Left accent */}
         <div className="absolute left-0 top-6 bottom-6 w-1 rounded-full bg-gradient-to-b from-[#d26019]/0 via-[#d26019] to-[#d26019]/0 z-[2]" />
-
-        {/* Content */}
         <div className="relative z-10 h-full flex items-center justify-between px-10">
           <div>
             <div className="flex items-center gap-2 mb-3">
@@ -305,7 +297,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-      </div>
+      </div> */}
 
       <div className="w-full min-h-screen p-6">
         <ToastContainer />
@@ -321,21 +313,16 @@ const Dashboard = () => {
                   key={index}
                   className="group relative rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 px-5 py-3 border-2 border-slate-200 transition-all duration-500 shadow-[0_6px_14px_rgba(0,0,0,0.12)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.2)] overflow-hidden"
                 >
-                  {/* Background Animated Balls - SLOWER */}
                   <div className="absolute inset-0 pointer-events-none">
-                    {/* Top Right Ball - SLOWER transition */}
                     <div
                       className={`absolute top-0 right-0 w-60 h-60 ${item.iconBg} opacity-15 rounded-full -mr-20 -mt-20 transition-all duration-1000 ease-out group-hover:-mr-10 group-hover:-mt-10`}
                     />
-
-                    {/* Bottom Left Ball - SLOWER transition */}
                     <div
                       className={`absolute bottom-0 left-0 w-32 h-32 ${item.iconBg} opacity-15 rounded-full -ml-16 -mb-16 transition-all duration-1000 ease-out group-hover:-ml-8 group-hover:-mb-8`}
                     />
                   </div>
 
                   <div className="relative z-10">
-                    {/* Header Section */}
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-3">
                         <div
@@ -355,8 +342,6 @@ const Dashboard = () => {
                         {index + 1}
                       </div>
                     </div>
-
-                    {/* Value Section - BIGGER TEXT */}
                     <div>
                       <p className={`text-3xl font-extrabold ${item.text} mb-2 leading-none`}>
                         {item.value}
