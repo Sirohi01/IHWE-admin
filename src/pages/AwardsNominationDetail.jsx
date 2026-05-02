@@ -188,7 +188,7 @@ const AwardsNominationDetail = () => {
 
       {/* ── Top Bar ── */}
       <div className="flex items-start justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 pt-5">
           <button onClick={() => navigate("/awards-nominations")}
             className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm">
             <ArrowLeft className="w-4 h-4 text-slate-600" />
@@ -201,7 +201,7 @@ const AwardsNominationDetail = () => {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pt-7">
           <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-black border ${sc.btn}`}>
             {STATUS_ICONS[nomination.status]} {nomination.status}
           </span>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Search, Download, Trash2, Eye, Phone, Calendar,
+  Search, Download, Trash2, Eye,
   Filter, Award, CheckCircle, XCircle, Clock, AlertCircle, X
 } from "lucide-react";
 import Swal from "sweetalert2";
@@ -26,19 +26,6 @@ const STATUS_ICONS = {
 };
 
 const STATUSES = ["Pending", "Under Review", "Approved", "Rejected"];
-
-const AWARD_CATEGORIES = [
-  "Best Hospital / Healthcare Institution",
-  "Excellence in Medical Practice",
-  "Ayurveda & Natural Healing Leader",
-  "Wellness & Spa Brand of the Year",
-  "Fitness Innovation Award",
-  "Nutrition & Organic Excellence",
-  "Medical Tourism Excellence",
-  "Healthcare Startup of the Year",
-  "Women Leadership in Healthcare",
-  "Lifetime Achievement Award",
-];
 
 // ─── Detail Modal ───
 const DetailModal = ({ nomination, onClose, onStatusUpdate }) => {
@@ -197,7 +184,8 @@ const AwardsNominationList = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedNomination, setSelectedNomination] = useState(null);
   const [stats, setStats] = useState({ total: 0, pending: 0, underReview: 0, approved: 0, rejected: 0 });
-  const [filters, setFilters] = useState({ status: "all", awardCategory: "all" });
+  const [filters, setFilters] = useState({ status: "all", awardCategory: "all", applicantType: "all" });
+  const [awardCategories, setAwardCategories] = useState([]);
 
   const fetchNominations = useCallback(async () => {
     setLoading(true);
@@ -206,6 +194,7 @@ const AwardsNominationList = () => {
         search: searchTerm,
         status: filters.status,
         awardCategory: filters.awardCategory,
+        applicantType: filters.applicantType,
       });
       const res = await api.get(`/api/awards-nomination?${params}`);
       if (res.data.success) {
@@ -220,6 +209,21 @@ const AwardsNominationList = () => {
   }, [searchTerm, filters]);
 
   useEffect(() => { fetchNominations(); }, [fetchNominations]);
+
+  // Fetch Award Categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get("/api/award-categories?all=true");
+        if (res.data.success) {
+          setAwardCategories(res.data.data.filter(c => c.status === "Active").map(c => c.name));
+        }
+      } catch (err) {
+        console.error("Failed to fetch categories:", err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleDelete = async (id) => {
     const result = await Swal.fire({
@@ -269,11 +273,37 @@ const AwardsNominationList = () => {
   const paginated = nominations.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   return (
-    <div className="p-4 md:p-6 space-y-5">
-      <PageHeader
-        title="Awards Nominations"
-        subtitle="Manage Namo Gange Global Health Excellence Awards nominations"
-      />
+    <>
+      {/* Hero Banner */}
+      <div className="relative w-full h-64 overflow-hidden rounded mt-8">
+        {/* Background Image */}
+        <img
+          src="/nomi.png"
+          alt="Awards Nominations Banner"
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        />
+        
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black/40 z-10"></div>
+        
+        {/* Content */}
+        <div className="relative z-20 flex flex-col items-center justify-center h-full text-white px-6">
+          <Award className="w-16 h-16 mb-4" />
+          <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-center">
+            Awards Nominations
+          </h1>
+          <p className="text-lg mt-2 text-center text-white/90">
+            Manage Namo Gange Global Health Excellence Awards nominations
+          </p>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="p-4 md:p-6 space-y-5">
+        <PageHeader
+          title="Awards Nominations"
+          subtitle="Manage Namo Gange Global Health Excellence Awards nominations"
+        />
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -327,8 +357,21 @@ const AwardsNominationList = () => {
               onChange={e => setFilters(p => ({ ...p, status: e.target.value }))}
               className="px-3 py-1.5 border border-slate-200 rounded-lg text-[12px] focus:outline-none focus:ring-1 focus:ring-[#008d48]"
             >
-              <option value="all">All Statuses</option>
+              <option value="all">All Status</option>
               {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="text-[11px] font-bold text-slate-500 block mb-1">Applicant Type</label>
+            <select
+              value={filters.applicantType}
+              onChange={e => setFilters(p => ({ ...p, applicantType: e.target.value }))}
+              className="px-3 py-1.5 border border-slate-200 rounded-lg text-[12px] focus:outline-none focus:ring-1 focus:ring-[#008d48]"
+            >
+              <option value="all">All Types</option>
+              <option value="Individual">Individual</option>
+              <option value="Organization">Organization</option>
+              <option value="Startup">Startup</option>
             </select>
           </div>
           <div>
@@ -339,11 +382,11 @@ const AwardsNominationList = () => {
               className="px-3 py-1.5 border border-slate-200 rounded-lg text-[12px] focus:outline-none focus:ring-1 focus:ring-[#008d48]"
             >
               <option value="all">All Categories</option>
-              {AWARD_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              {awardCategories.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <button
-            onClick={() => { setFilters({ status: "all", awardCategory: "all" }); setSearchTerm(""); }}
+            onClick={() => { setFilters({ status: "all", awardCategory: "all", applicantType: "all" }); setSearchTerm(""); }}
             className="self-end px-3 py-1.5 text-[11px] font-bold text-slate-500 hover:text-red-500 transition-colors"
           >
             Reset
@@ -364,7 +407,7 @@ const AwardsNominationList = () => {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100">
-                  {["#", "Applicant", "Contact", "Category", "Type", "Status", "Date", "Actions"].map(h => (
+                  {["#", "Applicant Details", "Contact Info", "Type", "Award Category", "City", "Status", "Submitted", "Actions"].map(h => (
                     <th key={h} className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -377,17 +420,30 @@ const AwardsNominationList = () => {
                     </td>
                     <td className="px-4 py-3">
                       <p className="text-[12.5px] font-black text-[#0a2e5c]">{n.fullName}</p>
-                      <p className="text-[11px] text-slate-400 font-medium">{n.email}</p>
+                      <p className="text-[11px] text-slate-400 font-medium">{n.contactPersonName}</p>
+                      {n.designation && <p className="text-[10px] text-slate-400 mt-0.5">{n.designation}</p>}
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-[12px] font-bold text-slate-600">{n.contactPersonName}</p>
+                      <p className="text-[11.5px] font-bold text-slate-600">{n.email}</p>
                       <p className="text-[11px] text-slate-400">{n.mobile}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-[11.5px] font-bold text-slate-700 max-w-[160px] leading-tight">{n.awardCategory}</p>
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${
+                        n.applicantType === 'Individual' 
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+                          : n.applicantType === 'Startup'
+                          ? 'bg-green-50 text-green-700 border border-green-200'
+                          : 'bg-purple-50 text-purple-700 border border-purple-200'
+                      }`}>
+                        {n.applicantType}
+                      </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-[10px] font-black">{n.applicantType}</span>
+                      <p className="text-[11.5px] font-bold text-slate-700 max-w-[180px] leading-tight">{n.awardCategory}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-[11.5px] font-semibold text-slate-600">{n.city}</p>
+                      {n.website && <p className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[120px]">{n.website}</p>}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black border ${STATUS_COLORS[n.status]}`}>
@@ -441,6 +497,7 @@ const AwardsNominationList = () => {
         />
       )}
     </div>
+    </>
   );
 };
 
