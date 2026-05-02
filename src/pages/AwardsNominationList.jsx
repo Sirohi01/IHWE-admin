@@ -311,7 +311,7 @@ const AwardsNominationList = () => {
       {/* Main Content */}
       <div className="p-4 md:p-6 space-y-5">
         <PageHeader
-          title="Awards Nominations"
+          // title="Awards Nominations"
           subtitle="Manage Namo Gange Global Health Excellence Awards nominations"
         />
 

@@ -121,7 +121,7 @@ const AwardCategoriesManage = () => {
       {/* Main Content */}
       <div className="p-4 md:p-6 space-y-5">
         <PageHeader
-          title="Award Categories"
+          // title="Award Categories"
           subtitle="Manage award categories for Namo Gange Global Health Excellence Awards"
         />
 
