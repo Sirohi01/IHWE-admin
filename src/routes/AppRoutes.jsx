@@ -186,11 +186,14 @@ import InternationalBuyerRegistration from "../pages/buyer/InternationalBuyerReg
 import AwardsNominationList from "../pages/AwardsNominationList";
 import AwardCategoriesManage from "../pages/AwardCategoriesManage";
 import AwardsNominationDetail from "../pages/AwardsNominationDetail";
+import AwardsGalleryManage from "../pages/AwardsGalleryManage";
 import AccountSection1 from "../pages/ihwe_client_data_2026/AccountSection1";
 import CreateEstimate1 from "../pages/ihwe_client_data_2026/CreateEstimate1";
 import EstimateDetails from "../pages/ihwe_client_data_2026/invoice/EstimateDetails"
 import EditEstimate from "../pages/ihwe_client_data_2026/invoice/EditEstimate";
 import PerformaInvoiceDetails from "../pages/ihwe_client_data_2026/invoice/PerformaInvoiceDetails";
+import CreateInvoice from "../pages/ihwe_client_data_2026/invoice/CreateInvoice";
+import CreditNote from "../pages/ihwe_client_data_2026/CreditNote"
 
 
 export default function AppRoutes() {
@@ -293,9 +296,17 @@ export default function AppRoutes() {
             element={<ExhibitorListManage />}
           />
           <Route
-                      path="/payments/performanceInvoiceDetails/:id"
-                      element={<PerformaInvoiceDetails />}
-                    />
+            path="/payments/performanceInvoiceDetails/:id"
+            element={<PerformaInvoiceDetails />}
+          />
+          <Route
+            path="/payments/createInvoice/:id"
+            element={<CreateInvoice />}
+          />
+          <Route
+            path="/ihweClientData2026/creditNote/:id"
+            element={<CreditNote />}
+          />
 
           <Route path="exhibitor-products-profile" element={<ExhibitorProductsProfile />} />
           <Route path="stalls" element={<ManageStalls />} />
@@ -401,7 +412,7 @@ export default function AppRoutes() {
             path="payments/estimateDetails/:id"
             element={<EstimateDetails />}
           />
-               <Route path="/payments/estimateEdit/:id" element={<EditEstimate />} />
+          <Route path="/payments/estimateEdit/:id" element={<EditEstimate />} />
           {/* <Route
             path="ihweClientData2026/AddNewVisitor"
             element={<VisitorRegistration />}
@@ -521,6 +532,7 @@ export default function AppRoutes() {
           <Route path="/awards-nominations" element={<AwardsNominationList />} />
           <Route path="/awards-nominations/:id" element={<AwardsNominationDetail />} />
           <Route path="/award-categories-manage" element={<AwardCategoriesManage />} />
+          <Route path="/awards-gallery-manage" element={<AwardsGalleryManage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>

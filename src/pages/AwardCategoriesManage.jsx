@@ -93,11 +93,37 @@ const AwardCategoriesManage = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-5">
-      <PageHeader
-        title="Award Categories"
-        subtitle="Manage award categories for Namo Gange Global Health Excellence Awards"
-      />
+    <>
+      {/* Hero Banner */}
+      <div className="relative w-full h-64 overflow-hidden rounded mt-8">
+        {/* Background Image */}
+        <img
+          src="/award.png"
+          alt="Award Categories Banner"
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        />
+        
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black/40 z-10"></div>
+        
+        {/* Content */}
+        <div className="relative z-20 flex flex-col items-center justify-center h-full text-white px-6">
+          <Award className="w-16 h-16 mb-4" />
+          <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-center">
+            Award Categories
+          </h1>
+          <p className="text-lg mt-2 text-center text-white/90">
+            Manage award categories for Namo Gange Global Health Excellence Awards
+          </p>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="p-4 md:p-6 space-y-5">
+        <PageHeader
+          // title="Award Categories"
+          subtitle="Manage award categories for Namo Gange Global Health Excellence Awards"
+        />
 
       {/* Add Button */}
       <div className="flex justify-end">
@@ -280,6 +306,7 @@ const AwardCategoriesManage = () => {
         Inactive: <strong>{categories.filter(c => c.status === "Inactive").length}</strong>
       </p>
     </div>
+    </>
   );
 };
 
