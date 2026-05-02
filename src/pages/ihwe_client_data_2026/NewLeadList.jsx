@@ -59,7 +59,7 @@ const NewLeadList = () => {
     { label: "Nature of Business", accessor: "business.type" },
     { label: "Address", accessor: "location.fullAddress" },
     { label: "Source", accessor: "source.name" },
-    { label: "Forward To", accessor: "forwardTo" },
+    // { label: "Forward To", accessor: "forwardTo" },
     { label: "Update Details", accessor: "update.details" },
   ];
 
@@ -86,7 +86,7 @@ const NewLeadList = () => {
     business: { type: toTitleCase(c.businessNature) || "-" },
     location: { fullAddress: `${toTitleCase(c.country) || "-"} | ${toTitleCase(c.state) || "-"} | ${toTitleCase(c.city) || "-"}` },
     source: { name: toTitleCase(c.dataSource) || "-" },
-    forwardTo: toTitleCase(c.forwardTo) || "-",
+    // forwardTo: toTitleCase(c.forwardTo) || "-",
     update: {
       details: `${new Date(c.updatedAt).toLocaleDateString()} | ${toTitleCase(c.contacts?.[0]?.firstName) || "-"}`,
     },
