@@ -59,6 +59,12 @@ const Settings = () => {
     const [stampFile, setStampFile] = useState(null);
     const [stampPreview, setStampPreview] = useState("");
 
+    // MSME Logo state
+    const [msmeLogo, setMsmeLogo] = useState(null);
+    const [msmeLogoPreview, setMsmeLogoPreview] = useState('');
+    const [msmeLogoTitle, setMsmeLogoTitle] = useState('Supported by');
+    const [isMsmeLogoActive, setIsMsmeLogoActive] = useState(true);
+
 
     // Email addresses state
     const [emails, setEmails] = useState([
@@ -172,6 +178,17 @@ const Settings = () => {
                 if (sTds) setAvailableTdsRates(sTds);
                 if (authorizedSignature) setSignaturePreview(`${SERVER_URL}${authorizedSignature}`);
                 if (companyStamp) setStampPreview(`${SERVER_URL}${companyStamp}`);
+                
+                // MSME Settings
+                if (res.data.data.msmeLogo) {
+                    setMsmeLogoPreview(`${SERVER_URL}${res.data.data.msmeLogo}`);
+                }
+                if (res.data.data.msmeLogoTitle) {
+                    setMsmeLogoTitle(res.data.data.msmeLogoTitle);
+                }
+                if (res.data.data.isMsmeLogoActive !== undefined) {
+                    setIsMsmeLogoActive(res.data.data.isMsmeLogoActive);
+                }
 
 
                 if (emails && emails.length > 0) {
@@ -243,6 +260,11 @@ const Settings = () => {
             formData.append('availableTdsRates', JSON.stringify(availableTdsRates));
             if (signatureFile) formData.append('authorizedSignature', signatureFile);
             if (stampFile) formData.append('companyStamp', stampFile);
+            
+            // MSME
+            if (msmeLogo) formData.append('msmeLogo', msmeLogo);
+            formData.append('msmeLogoTitle', msmeLogoTitle);
+            formData.append('isMsmeLogoActive', isMsmeLogoActive);
 
 
             const res = await api.put('/api/settings', formData, {
@@ -287,6 +309,10 @@ const Settings = () => {
                     setStampPreview(`${SERVER_URL}${res.data.data.companyStamp}`);
                     setStampFile(null);
                 }
+                if (res.data.data.msmeLogo) {
+                    setMsmeLogoPreview(`${SERVER_URL}${res.data.data.msmeLogo}`);
+                    setMsmeLogo(null);
+                }
             }
         } catch (error) {
             console.error('Error saving settings:', error);
@@ -308,6 +334,18 @@ const Settings = () => {
             const reader = new FileReader();
             reader.onloadend = () => {
                 setLogoPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleMsmeLogoUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setMsmeLogo(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setMsmeLogoPreview(reader.result);
             };
             reader.readAsDataURL(file);
         }
@@ -591,6 +629,62 @@ const Settings = () => {
                                         <div className="flex flex-col items-center py-4">
                                             <ImageIcon className="w-8 h-8 text-gray-300 mb-2" />
                                             <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Click to upload logo</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        MSME Logo (Footer)
+                                    </label>
+                                    <label className="inline-flex items-center cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            className="sr-only peer"
+                                            checked={isMsmeLogoActive}
+                                            onChange={() => setIsMsmeLogoActive(!isMsmeLogoActive)}
+                                        />
+                                        <div className="relative w-7 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#23471d]"></div>
+                                        <span className="ms-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">{isMsmeLogoActive ? 'Active' : 'Hidden'}</span>
+                                    </label>
+                                </div>
+                                
+                                {/* MSME Logo Title Input */}
+                                <div className="mb-3">
+                                    <label className="block text-[10px] font-semibold text-gray-400 mb-1 uppercase tracking-wider">
+                                        Logo Title (e.g., "Supported by")
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={msmeLogoTitle}
+                                        onChange={(e) => setMsmeLogoTitle(e.target.value)}
+                                        placeholder="Supported by"
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#23471d] focus:border-transparent"
+                                    />
+                                </div>
+
+                                <div className="border border-dashed border-gray-300 p-4 text-center relative group min-h-[140px] flex items-center justify-center bg-gray-50/30 rounded-lg hover:border-[#23471d] transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleMsmeLogoUpload}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {msmeLogoPreview ? (
+                                        <div className="relative w-full h-full flex flex-col items-center justify-center">
+                                            <div className="w-20 h-20 mb-2 p-2 border border-gray-100 bg-white rounded flex items-center justify-center">
+                                                <img src={msmeLogoPreview.startsWith('http') || msmeLogoPreview.startsWith('data:') || msmeLogoPreview.startsWith('blob:') ? msmeLogoPreview : `${SERVER_URL}${msmeLogoPreview}`} alt="MSME Preview" className="max-w-full max-h-full object-contain" />
+                                            </div>
+                                            <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded pointer-events-none">
+                                                <span className="text-xs font-bold text-gray-600 bg-white/90 px-2 py-1 rounded shadow-sm">Change MSME Logo</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center py-4">
+                                            <ImageIcon className="w-8 h-8 text-gray-300 mb-2" />
+                                            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Click to upload MSME logo</p>
                                         </div>
                                     )}
                                 </div>
