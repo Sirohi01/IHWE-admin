@@ -194,6 +194,7 @@ import EditEstimate from "../pages/ihwe_client_data_2026/invoice/EditEstimate";
 import PerformaInvoiceDetails from "../pages/ihwe_client_data_2026/invoice/PerformaInvoiceDetails";
 import CreateInvoice from "../pages/ihwe_client_data_2026/invoice/CreateInvoice";
 import CreditNote from "../pages/ihwe_client_data_2026/CreditNote"
+import AgendaManagement from "../pages/AgendaManagement";
 
 
 export default function AppRoutes() {
@@ -229,6 +230,7 @@ export default function AppRoutes() {
           <Route path="organized-by" element={<OrganizedBy />} />
           <Route path="why-exhibit-manage" element={<WhyExhibitManage />} />
           <Route path="travel-accommodation-manage" element={<TravelAccommodationManage />} />
+          <Route path="/agenda-management" element={<AgendaManagement />} />
           <Route
             path="exhibitor-profile-manage"
             element={<ExhibitorProfileManage />}
