@@ -460,7 +460,7 @@ const BookAStand = () => {
 
 
     return (
-        <div className="bg-white shadow-md mt-4 p-4 min-h-screen font-inter animate-fadeIn">
+        <div className="bg-white shadow-md mt-8 p-4 min-h-screen font-inter animate-fadeIn">
             {/* HEADER */}
             <div className="flex flex-col sm:flex-row justify-between items-center pb-3 border-b border-gray-100">
                 <div>

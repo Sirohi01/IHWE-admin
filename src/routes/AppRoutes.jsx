@@ -192,7 +192,10 @@ import EstimateDetails from "../pages/ihwe_client_data_2026/invoice/EstimateDeta
 import EditEstimate from "../pages/ihwe_client_data_2026/invoice/EditEstimate";
 import PerformaInvoiceDetails from "../pages/ihwe_client_data_2026/invoice/PerformaInvoiceDetails";
 import CreateInvoice from "../pages/ihwe_client_data_2026/invoice/CreateInvoice";
-import CreditNote from "../pages/ihwe_client_data_2026/CreditNote"
+import CreditNote from "../pages/ihwe_client_data_2026/CreditNote";
+import TaxInvoiceDetails from "../pages/ihwe_client_data_2026/invoice/TaxInvoiceDetails";
+import InvoiceNumberDetails from "../pages/ihwe_client_data_2026/invoice/InvoiceNumberDetails";
+import Payments from "../pages/ihwe_client_data_2026/payments/Payment";
 
 
 export default function AppRoutes() {
@@ -235,12 +238,12 @@ export default function AppRoutes() {
           <Route path="e-promotion-manage" element={<EPromotionManage />} />
           <Route path="why-visit-manage" element={<WhyVisitManagement />} />
           <Route path="marquee-text" element={<MarqueeManage />} />
-            <Route path="/glimpse" element={<Glimpse />} />
-            <Route path="/supported-by" element={<SupportedBy />} />
-            <Route path="/introduction" element={<Introduction />} />
-            <Route path="/national-expo" element={<NationalExpo />} />
-            <Route path="/integrated-format" element={<IntegratedFormat />} />
-            <Route path="/why-participate-manage" element={<WhyParticipateManagement />} />
+          <Route path="/glimpse" element={<Glimpse />} />
+          <Route path="/supported-by" element={<SupportedBy />} />
+          <Route path="/introduction" element={<Introduction />} />
+          <Route path="/national-expo" element={<NationalExpo />} />
+          <Route path="/integrated-format" element={<IntegratedFormat />} />
+          <Route path="/why-participate-manage" element={<WhyParticipateManagement />} />
           <Route path="parallax-manage" element={<ParallaxManage />} />
           <Route path="stats-manage" element={<StatsManage />} />
           <Route path="create-a-post" element={<Post />} />
@@ -305,6 +308,14 @@ export default function AppRoutes() {
           <Route
             path="/ihweClientData2026/creditNote/:id"
             element={<CreditNote />}
+          />
+          <Route
+            path="/payments/ODT/taxInvoiceDetails/:id"
+            element={<TaxInvoiceDetails />}
+          />
+          <Route
+            path="/invoiceNumberDetails/:id"
+            element={<InvoiceNumberDetails />}
           />
 
           <Route path="exhibitor-products-profile" element={<ExhibitorProductsProfile />} />
@@ -412,6 +423,10 @@ export default function AppRoutes() {
             element={<EstimateDetails />}
           />
           <Route path="/payments/estimateEdit/:id" element={<EditEstimate />} />
+          <Route
+            path="/ihweClientData2026/payments/:id"
+            element={<Payments />}
+          />
           {/* <Route
             path="ihweClientData2026/AddNewVisitor"
             element={<VisitorRegistration />}
@@ -476,6 +491,7 @@ export default function AppRoutes() {
             path="webVisitorData/healthCampVisitorDetails/:id"
             element={<HealthCampOverview />}
           />
+
           <Route path="ihweClientData2026/adduser" element={<AddUser />} />
           <Route path="ihweClientData2026/userlist" element={<UserList />} />
           <Route path="ihweClientData2026/AddBank" element={<AddBank />} />

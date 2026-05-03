@@ -5,6 +5,7 @@ import { useReactToPrint } from "react-to-print";
 import { useNavigate, useParams } from "react-router-dom";
 import InvoiceNumberDetails from "./InvoiceNumberDetails";
 
+
 const TaxInvoiceDetails = () => {
   const { id } = useParams();
   const sameRef = useRef();

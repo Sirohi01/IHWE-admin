@@ -12,7 +12,7 @@ export const createPayment = createAsyncThunk(
   "payment/create",
   async (paymentData, thunkAPI) => {
     try {
-      const response = await axios.post(`${BASE_URL}/payments`, paymentData);
+      const response = await axios.post(`${BASE_URL}/api/payments`, paymentData);
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
@@ -27,7 +27,7 @@ export const fetchPayments = createAsyncThunk(
   "payment/fetchAll",
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(`${BASE_URL}/payments`);
+      const response = await axios.get(`${BASE_URL}/api/payments`);
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
@@ -40,7 +40,7 @@ export const fetchPaymentById = createAsyncThunk(
   "payment/fetchById",
   async (id, thunkAPI) => {
     try {
-      const response = await axios.get(`${BASE_URL}/payments/${id}`);
+      const response = await axios.get(`${BASE_URL}/api/payments/${id}`);
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
@@ -55,7 +55,7 @@ export const updatePayment = createAsyncThunk(
   async ({ id, updatedData }, thunkAPI) => {
     try {
       const response = await axios.put(
-        `${BASE_URL}/payments/${id}`,
+        `${BASE_URL}/api/payments/${id}`,
         updatedData
       );
       return response.data;
@@ -71,7 +71,7 @@ export const deletePayment = createAsyncThunk(
   "payment/delete",
   async (id, thunkAPI) => {
     try {
-      const response = await axios.delete(`${BASE_URL}/payments/${id}`);
+      const response = await axios.delete(`${BASE_URL}/api/payments/${id}`);
       return { id, message: response.data.message };
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);

@@ -446,7 +446,9 @@ const ClientOverview1 = () => {
               <button onClick={handleAccount} className="px-3 py-1 text-[12px] font-medium border border-slate-300 rounded hover:bg-slate-50 text-slate-600">
                 Account
               </button>
-              <button className="px-3 py-1 text-[12px] font-medium border border-slate-300 rounded hover:bg-slate-50 text-slate-600">
+              <button
+                onClick={() => navigate(`/ihweClientData2026/payments/${id}`)}
+                className="px-3 py-1 text-[12px] font-medium border border-slate-300 rounded hover:bg-slate-50 text-slate-600">
                 Payments
               </button>
               <button onClick={handleEdit} className="relative group p-1.5 border border-slate-300 rounded hover:bg-slate-50 transition-colors text-slate-600">

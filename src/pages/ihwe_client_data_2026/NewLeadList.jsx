@@ -98,7 +98,7 @@ const NewLeadList = () => {
       <div className="flex flex-col lg:flex-row justify-between items-center py-3 px-6 border-b border-gray-300 bg-white gap-4">
         <div className="flex flex-col items-center lg:items-start gap-1">
           <h1 className="text-xl font-semibold text-slate-600 uppercase tracking-tight leading-none text-center lg:text-left">
-           NEW LEAD LIST | Sales Management Section
+            NEW LEAD LIST | Sales Management Section
           </h1>
         </div>
         <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">

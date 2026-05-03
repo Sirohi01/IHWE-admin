@@ -88,6 +88,10 @@ const EstimateTable = ({ clientId }) => {
 
   // New function to handle navigation for Print/Copy buttons
   const handlePrintCopyNavigation = (copyType, invId) => {
+    if (!invId) {
+      alert("Invoice not found. Please create an invoice first.");
+      return;
+    }
     navigate(`/payments/ODT/taxInvoiceDetails/${invId}`, {
       state: { heading: copyType },
     });
@@ -132,18 +136,18 @@ const EstimateTable = ({ clientId }) => {
             >
               Performa Inv.
             </th>
-            <th
+            {/* <th
               scope="col"
               className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
             >
               Invoice Details
-            </th>
-            <th
+            </th> */}
+            {/* <th
               scope="col"
               className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
             >
               Print
-            </th>
+            </th> */}
             <th
               scope="col"
               className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
@@ -210,6 +214,12 @@ const EstimateTable = ({ clientId }) => {
 
             // --- 🚀 NEW PI LOGIC END 🚀 ---
 
+            // Find matching invoice to extract its ID for print buttons
+            const matchingInvoice = invoices.find(
+              (inv) => inv.estimate_no === estimate.est_no
+            );
+            const invId = matchingInvoice ? matchingInvoice._id : null;
+
             return (
               <tr key={estimate._id}>
                 <td className="border border-gray-300 px-4 py-2 whitespace-nowrap text-xs text-black text-center">
@@ -229,30 +239,32 @@ const EstimateTable = ({ clientId }) => {
                 </td>
 
                 {/* 🚀 PERFORMA INVOICE CELL LOGIC 🚀 */}
-                <td className="border border-gray-300 px-4 py-2 whitespace-nowrap text-xs text-black text-center justify-items-center">
+                <td className="border border-gray-300 px-4 py-2 whitespace-nowrap text-xs text-black text-center ">
                   {/* Display PI Data if it exists or is being created */}
                   {isPiCreated && (
-                    <Link
-                      to={`/payments/performanceInvoiceDetails/${piDataToDisplay._id}`}
-                    >
-                      <button className="text-[#3598dc] cursor-pointer hover:text-blue-900 font-medium">
-                        {`${piDataToDisplay.pi_no} | ${formatPiDate(piDataToDisplay.updated) || "N/A"
-                          }`}{" "}
-                        |<br />{" "}
-                        {`${piDataToDisplay.finalAmount?.toFixed(2) || "0.00"}`}
-                      </button>
-                    </Link>
+                    <div className="flex items-center justify-center gap-1">
+                      <Link
+                        to={`/payments/performanceInvoiceDetails/${piDataToDisplay._id}`}
+                      >
+                        <button className="text-[#3598dc] cursor-pointer hover:text-[#566e7d] font-medium px-1">
+                          {piDataToDisplay.pi_no}
+                        </button>
+                      </Link>
+                      <span>| {formatPiDate(piDataToDisplay.updated) || "N/A"} | {piDataToDisplay.finalAmount?.toFixed(2) || "0.00"}</span>
+                    </div>
                   )}
 
                   {/* Display Create PI button only if no PI is created and not loading */}
                   {!isPiCreated && !isPiCreating && (
-                    <button
-                      className={stylebutton}
-                      onClick={() => handleCreatePI(estimate, totalFinalAmount)}
-                      disabled={isPiCreating}
-                    >
-                      Create PI
-                    </button>
+                    <div className="flex items-center justify-center">
+                      <button
+                        className={stylebutton}
+                        onClick={() => handleCreatePI(estimate, totalFinalAmount)}
+                        disabled={isPiCreating}
+                      >
+                        Create PI
+                      </button>
+                    </div>
                   )}
 
                   {/* Display Loading state */}
@@ -269,27 +281,13 @@ const EstimateTable = ({ clientId }) => {
                 </td>
 
                 {/* ... Invoice Details Cell ... */}
-                <td className="border border-gray-300 px-4 justify-items-center whitespace-nowrap text-xs text-black text-center">
+                {/* <td className="border border-gray-300 px-4 justify-items-center whitespace-nowrap text-xs text-black text-center">
                   {(() => {
-                    // 1. Find the matching invoice using estimate.est_no
-                    // FIX: Comparing estimate.est_no with invoice.estimate_no
+
                     const matchingInvoice = invoices.find(
                       (inv) => inv.estimate_no === estimate.est_no
                     );
 
-                    // 💡 CONSOLE.LOG FOR MATCH CONFIRMATION
-                    // if (matchingInvoice) {
-                    //   console.log(
-                    //     "✅ MATCH FOUND for Estimate:",
-                    //     estimate.est_no,
-                    //     "| Invoice:",
-                    //     matchingInvoice.invoice_no
-                    //   );
-                    // } else {
-                    //   console.log("❌ NO MATCH for Estimate:", estimate.est_no);
-                    // }
-
-                    // 2. Helper function to format the date for the Invoice
                     const formatInvoiceDate = (dateString) => {
                       if (!dateString) return "N/A";
                       const dateObj = new Date(dateString);
@@ -303,7 +301,6 @@ const EstimateTable = ({ clientId }) => {
                     };
 
                     if (matchingInvoice) {
-                      // 3. If a matching invoice is found, display its details
                       const displayInvAmount =
                         matchingInvoice.finalAmount?.toFixed(2) || "0.00";
                       const invId = matchingInvoice._id;
@@ -316,7 +313,6 @@ const EstimateTable = ({ clientId }) => {
                         </button>
                       );
                     } else {
-                      // 4. If no matching invoice is found, display the Create INV button
                       return (
                         <Link
                           to={`/payments/createInvoice/${estimate?._id}`}
@@ -327,14 +323,14 @@ const EstimateTable = ({ clientId }) => {
                       );
                     }
                   })()}
-                </td>
+                </td> */}
 
                 {/* ... Print, Updated Details, Action cells ... */}
-                <td className="border border-gray-300 px-2 py-2 whitespace-nowrap text-xs text-black text-center ">
+                {/* <td className="border border-gray-300 px-2 py-2 whitespace-nowrap text-xs text-black text-center ">
                   <div className="flex justify-between gap-1">
                     <button
                       onClick={() =>
-                        handlePrintCopyNavigation("Original Copy", { invId })
+                        handlePrintCopyNavigation("Original Copy", invId)
                       }
                       className={stylebutton}
                     >
@@ -342,7 +338,7 @@ const EstimateTable = ({ clientId }) => {
                     </button>
                     <button
                       onClick={() =>
-                        handlePrintCopyNavigation("Duplicate Copy")
+                        handlePrintCopyNavigation("Duplicate Copy", invId)
                       }
                       className={stylebutton}
                     >
@@ -350,14 +346,14 @@ const EstimateTable = ({ clientId }) => {
                     </button>
                     <button
                       onClick={() =>
-                        handlePrintCopyNavigation("Triplicate Copy")
+                        handlePrintCopyNavigation("Triplicate Copy", invId)
                       }
                       className={stylebutton}
                     >
                       T
                     </button>
                   </div>
-                </td>
+                </td> */}
 
                 <td className="border border-gray-300 px-4 py-2 whitespace-nowrap text-xs text-black text-center">
                   {formattedUpdatedDate} | {estimate?.added_by}
