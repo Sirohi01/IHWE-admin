@@ -1,24 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Mail, Phone, MapPin, Briefcase, Calendar, FileText, Award, Users } from 'lucide-react';
+import { 
+  ArrowLeft, Mail, Phone, MapPin, Briefcase, Calendar, 
+  FileText, Award, Users, Globe, Mic, CheckCircle, 
+  UserCheck, Upload, LayoutGrid, Download 
+} from 'lucide-react';
 import api from "../lib/api";
-
-const Button = ({ children, onClick, className, variant, ...props }) => {
-    const baseStyles = "px-4 py-2 text-sm font-bold uppercase tracking-widest rounded-sm flex items-center gap-2";
-    const variants = {
-        primary: "bg-gray-800 text-white hover:bg-gray-700",
-        outline: "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-    };
-    return (
-        <button
-            onClick={onClick}
-            className={`${baseStyles} ${variant === 'outline' ? variants.outline : variants.primary} ${className}`}
-            {...props}
-        >
-            {children}
-        </button>
-    );
-};
+import { showSuccess, showError } from "../utils/toastMessage";
 
 const SpeakerRegistrationDetail = () => {
     const { id } = useParams();
@@ -39,14 +27,24 @@ const SpeakerRegistrationDetail = () => {
             }
         } catch (error) {
             console.error('Error fetching speaker detail:', error);
+            showError('Failed to fetch speaker details');
         } finally {
             setIsLoading(false);
         }
     };
 
-    // const handlePrint = () => {
-    //     window.print();
-    // };
+    const handleStatusChange = async (newStatus) => {
+        try {
+            const response = await api.put(`/api/speaker/${id}/status`, { status: newStatus });
+            if (response.data.success) {
+                showSuccess('Status updated successfully');
+                fetchSpeakerDetail();
+            }
+        } catch (error) {
+            console.error('Error updating status:', error);
+            showError('Failed to update status');
+        }
+    };
 
     if (isLoading) {
         return (
@@ -60,286 +58,247 @@ const SpeakerRegistrationDetail = () => {
         return (
             <div className="p-8 text-center">
                 <h2 className="text-xl font-bold text-gray-800">Speaker not found</h2>
-                <Button onClick={() => navigate('/speaker-registration-list')} className="mt-4">
+                <button 
+                    onClick={() => navigate(-1)} 
+                    className="mt-4 px-4 py-2 bg-gray-800 text-white rounded"
+                >
                     Back to List
-                </Button>
+                </button>
             </div>
         );
     }
 
-    const printStyles = `
-    @media print {
-      /* Hide everything except print content */
-      body * { visibility: hidden; }
-      .print-container, .print-container * { visibility: visible; }
-      .print-container { 
-        position: absolute; 
-        left: 0; 
-        top: 0; 
-        width: 100%; 
-        padding: 0;
-        margin: 0;
-        background: white;
-      }
-      
-      /* Hide non-printable elements */
-      .no-print { display: none !important; }
-      nav, aside, footer, header { display: none !important; }
-      
-      /* Print specific styles */
-      .print-section { 
-        break-inside: avoid; 
-        page-break-inside: avoid; 
-        margin-bottom: 15px !important; 
-      }
-      .detail-row { 
-        break-inside: avoid; 
-        page-break-inside: avoid; 
-        margin-bottom: 8px; 
-      }
-      
-      /* Page setup */
-      @page { 
-        size: A4; 
-        margin: 1.5cm; 
-      }
-      
-      /* Typography */
-      h1, h2, h3 { page-break-after: avoid; }
-      
-      /* Remove backgrounds and borders for print */
-      .bg-gradient-to-r { 
-        background: #fff !important; 
-        border: 1px solid #ddd !important; 
-      }
-      
-      /* Image sizing */
-      img { 
-        max-width: 80px !important; 
-        max-height: 80px !important;
-      }
-    }
-    
-    @media screen {
-      .print-container { 
-        max-width: 1200px; 
-        margin: 0 auto; 
-        background: white; 
-        padding: 20px; 
-      }
-    }
-  `;
-
-    const formatValue = (value) => {
-        if (value === null || value === undefined || value === '') return '—';
-        if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-        if (Array.isArray(value)) {
-            return value.length === 0 ? '—' : value.join(', ');
-        }
-        return value;
-    };
-
-    const DetailRow = ({ label, value, fullWidth = false }) => (
-        <div className={`detail-row ${fullWidth ? 'col-span-full' : ''}`}>
-            <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-wide block mb-1">
-                {label}
-            </span>
-            <p className="text-xs text-gray-900 font-medium break-words leading-snug">
-                {formatValue(value)}
-            </p>
-        </div>
-    );
-
-    const Section = ({ title, icon: Icon, children }) => (
-        <div className="print-section mb-6">
-            <div className="border-b-2 border-orange-300 pb-2 mb-4">
-                <div className="flex items-center gap-2">
-                    {Icon && <Icon className="w-5 h-5 text-orange-600 no-print" />}
-                    <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wide">
-                        {title}
-                    </h2>
-                </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
-                {children}
-            </div>
-        </div>
-    );
-
     const getStatusBadgeClass = (status) => {
         switch (status) {
             case 'Approved':
-                return 'bg-green-100 text-green-800 border-green-300';
+                return 'bg-green-100 text-green-800';
             case 'Rejected':
-                return 'bg-red-100 text-red-800 border-red-300';
+                return 'bg-red-100 text-red-800';
             case 'Pending':
             default:
-                return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+                return 'bg-yellow-100 text-yellow-800';
         }
     };
 
     return (
-        <>
-            <style>{printStyles}</style>
-            <div className="print-container">
-                <div className="max-w-8xl mx-auto">
-                    {/* Header with buttons */}
-                    <div className="flex justify-between items-start mb-6 no-print pt-4">
-                        <div>
-                            <Button
-                                onClick={() => navigate('/speaker-registration-list')}
-                                variant="outline"
-                                className="mb-3"
+        <div className="w-full h-auto bg-[#eef1f5] mt-8">
+            {/* ── HEADER ── */}
+            <div className="flex flex-col lg:flex-row justify-between items-center py-3 px-6 border-b border-gray-300 bg-white gap-4">
+                <div className="flex flex-col items-center lg:items-start gap-1">
+                    <h1 className="text-xl font-semibold text-slate-600 uppercase tracking-tight leading-none text-center lg:text-left">
+                        SPEAKER PROFILE | Conference Management Section
+                    </h1>
+                </div>
+                <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
+                    <button 
+                        onClick={() => navigate("/speaker-registration-list")} 
+                        className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
+                    >
+                        <Mic size={12} /> Speaker Nominations
+                    </button>
+                    <button 
+                        onClick={() => navigate("/approved-speakers-list")} 
+                        className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
+                    >
+                        <CheckCircle size={12} /> Approved Speakers
+                    </button>
+                    <button 
+                        onClick={() => navigate("/agenda-management")} 
+                        className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
+                    >
+                        <UserCheck size={12} /> Conference Agenda
+                    </button>
+                </div>
+            </div>
+
+            {/* ── PAGE CONTENT ── */}
+            <div className="p-4 space-y-6">
+
+                {/* ── DETAILS CARD ── */}
+                <div className="bg-white border border-slate-200 rounded shadow-sm overflow-hidden">
+                    {/* Sub-header */}
+                    <div className="px-4 py-3 border-b border-slate-100 flex justify-between items-center bg-white">
+                        <h2 className="text-[16px] font-semibold text-slate-700">
+                            {speaker.fullName} - Speaker Details
+                        </h2>
+                        <div className="flex gap-2">
+                            <button 
+                                onClick={() => navigate(-1)} 
+                                className="px-3 py-1 text-[12px] font-medium border border-slate-300 rounded hover:bg-slate-50 text-slate-600 flex items-center gap-1"
                             >
-                                <ArrowLeft className="w-4 h-4" />
-                                Back to List
-                            </Button>
-                            <h1 className="text-3xl font-bold text-gray-900 uppercase tracking-wide mt-2">
-                                Speaker Profile
-                            </h1>
-                            <div className="mt-2">
-                                <span className={`px-4 py-1 text-sm font-semibold rounded-full border ${getStatusBadgeClass(speaker.status)}`}>
-                                    {speaker.status}
-                                </span>
-                            </div>
-                        </div>
-                        {/* <div className="flex gap-3">
-                            <Button
-                                onClick={handlePrint}
-                                variant="primary"
-                                className="bg-gray-800 hover:bg-gray-700"
-                            >
-                                <Printer className="w-4 h-4" />
-                                Print
-                            </Button>
-                        </div> */}
-                    </div>
-
-                    {/* Print version header */}
-                    <div className="hidden print:block mb-6">
-                        <h1 className="text-3xl font-bold text-gray-900 uppercase tracking-wide">
-                            Speaker Profile
-                        </h1>
-                        <div className="mt-2">
-                            <span className={`px-4 py-1 text-sm font-semibold rounded-full border ${getStatusBadgeClass(speaker.status)}`}>
-                                {speaker.status}
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Speaker Photo & Basic Info Card */}
-                    <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-4 mb-6 border border-orange-200 print-section">
-                        <div className="flex flex-col md:flex-row gap-4 items-start">
-                            {speaker.speakerPhotoUrl && (
-                                <div className="flex-shrink-0">
-                                    <img
-                                        src={speaker.speakerPhotoUrl}
-                                        alt={speaker.fullName}
-                                        className="w-24 h-24 rounded-lg object-cover border-2 border-white shadow-lg"
-                                    />
-                                </div>
-                            )}
-                            <div className="flex-grow">
-                                <h2 className="text-xl font-bold text-gray-900 mb-2">{speaker.fullName}</h2>
-                                <div className="space-y-1 text-sm">
-                                    <div className="flex items-center gap-2 text-gray-700">
-                                        <Briefcase className="w-3 h-3 text-orange-600 no-print" />
-                                        <span className="font-semibold">{speaker.designation}</span>
-                                        <span className="text-gray-500">at</span>
-                                        <span className="font-semibold">{speaker.organization}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-gray-700">
-                                        <Mail className="w-3 h-3 text-orange-600 no-print" />
-                                        <span>{speaker.email}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-gray-700">
-                                        <Phone className="w-3 h-3 text-orange-600 no-print" />
-                                        <span>{speaker.mobile}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-gray-700">
-                                        <MapPin className="w-3 h-3 text-orange-600 no-print" />
-                                        <span>{speaker.city}</span>
-                                    </div>
-                                    {speaker.linkedin && (
-                                        <div className="flex items-center gap-2 text-gray-700">
-                                            <Users className="w-3 h-3 text-orange-600 no-print" />
-                                            <span className="text-xs break-all">{speaker.linkedin}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                            {speaker.companyLogoUrl && (
-                                <div className="flex-shrink-0">
-                                    <img
-                                        src={speaker.companyLogoUrl}
-                                        alt="Company Logo"
-                                        className="w-20 h-20 rounded-lg object-contain bg-white p-2 border border-gray-200"
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Professional Background */}
-                    <Section title="Professional Background" icon={Briefcase}>
-                        <DetailRow label="Industry Category" value={speaker.industryCategory} />
-                        <DetailRow label="Total Experience" value={speaker.totalExperience} />
-                        <DetailRow label="Areas of Expertise" value={speaker.expertise} fullWidth />
-                        <DetailRow label="Brief Profile" value={speaker.briefProfile} fullWidth />
-                    </Section>
-
-                    {/* Session Details */}
-                    <Section title="Session Details" icon={FileText}>
-                        <DetailRow label="Preferred Topic" value={speaker.preferredTopic} fullWidth />
-                        <DetailRow label="Topic Description" value={speaker.topicDescription} fullWidth />
-                        <DetailRow label="Preferred Track" value={speaker.preferredTrack} />
-                        <DetailRow label="Session Type" value={speaker.sessionType} />
-                        <DetailRow label="Spoken Before" value={speaker.spokenBefore} />
-                        {speaker.eventDetails && (
-                            <DetailRow label="Previous Event Details" value={speaker.eventDetails} fullWidth />
-                        )}
-                    </Section>
-
-                    {/* Expectations & Requirements */}
-                    <Section title="Expectations & Requirements" icon={Award}>
-                        <DetailRow label="Expectations from Event" value={speaker.expectations} fullWidth />
-                    </Section>
-
-                    {/* Attachments */}
-                    {speaker.presentationUrl && (
-                        <Section title="Attachments" icon={Download}>
-                            <div className="col-span-full">
+                                <ArrowLeft size={14} /> Back
+                            </button>
+                            {speaker.presentationUrl && (
                                 <a
                                     href={speaker.presentationUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                    className="px-3 py-1 text-[12px] font-medium border border-slate-300 rounded hover:bg-slate-50 text-slate-600 flex items-center gap-1"
                                 >
-                                    <Download className="w-4 h-4" />
-                                    Download Presentation
+                                    <Download size={14} /> Presentation
                                 </a>
-                            </div>
-                        </Section>
-                    )}
+                            )}
+                            <select
+                                value={speaker.status}
+                                onChange={(e) => handleStatusChange(e.target.value)}
+                                className={`px-3 py-1 text-[12px] font-semibold rounded ${getStatusBadgeClass(speaker.status)} border-0 cursor-pointer`}
+                            >
+                                <option value="Pending">Pending</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                        </div>
+                    </div>
 
-                    {/* Consent & Registration Info */}
-                    <Section title="Consent & Registration" icon={Calendar}>
-                        <DetailRow label="Data Usage Consent" value={speaker.consent1} />
-                        <DetailRow label="Terms & Conditions" value={speaker.consent2} />
-                        <DetailRow 
-                            label="Registration Date" 
-                            value={speaker.createdAt ? new Date(speaker.createdAt).toLocaleDateString('en-IN', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            }) : 'N/A'} 
-                        />
-                    </Section>
+                    {/* Details Table */}
+                    <div className="grid grid-cols-12 text-[12px]">
+                        {/* Row 1 - Speaker Basic Info */}
+                        <div className="col-span-2 p-3 font-bold text-slate-700 bg-slate-50/50">Speaker Name</div>
+                        <div className="col-span-4 p-3 text-slate-800 border-l border-slate-100">
+                            {speaker.fullName}
+                        </div>
+                        <div className="col-span-1 p-3 font-bold text-slate-700 bg-slate-50/50 border-l border-slate-100">Designation</div>
+                        <div className="col-span-2 p-3 text-slate-800 border-l border-slate-100">{speaker.designation}</div>
+                        <div className="col-span-1 p-3 font-bold text-slate-700 bg-slate-50/50 border-l border-slate-100">Organization</div>
+                        <div className="col-span-2 p-3 text-slate-800 border-l border-slate-100">{speaker.organization}</div>
+
+                        {/* Row 2 - Contact Info */}
+                        <div className="col-span-2 p-3 font-bold text-slate-700 bg-slate-50/50 border-t border-slate-100">Mobile</div>
+                        <div className="col-span-4 p-3 text-slate-800 border-t border-l border-slate-100">{speaker.mobile}</div>
+                        <div className="col-span-1 p-3 font-bold text-slate-700 bg-slate-50/50 border-t border-l border-slate-100">Email</div>
+                        <div className="col-span-2 p-3 text-slate-800 border-t border-l border-slate-100">{speaker.email}</div>
+                        <div className="col-span-1 p-3 font-bold text-slate-700 bg-slate-50/50 border-t border-l border-slate-100">City</div>
+                        <div className="col-span-2 p-3 text-slate-800 border-t border-l border-slate-100">{speaker.city}</div>
+
+                        {/* Row 3 - Professional Details Header */}
+                        <div className="col-span-6 p-2 font-bold text-slate-700 bg-slate-200/50 border-t border-slate-100 uppercase tracking-tight">
+                            Professional Background
+                        </div>
+                        <div className="col-span-6 p-2 font-bold text-slate-700 bg-slate-200/50 border-t border-l border-slate-100 uppercase tracking-tight">
+                            Session Details
+                        </div>
+
+                        {/* Row 4 - Professional Details */}
+                        <div className="col-span-2 p-3 font-bold text-slate-700 bg-slate-50/50 border-t border-slate-100">Industry</div>
+                        <div className="col-span-4 p-3 text-slate-800 border-t border-l border-slate-100">{speaker.industryCategory}</div>
+                        <div className="col-span-1 p-3 font-bold text-slate-700 bg-slate-50/50 border-t border-l border-slate-100">Topic</div>
+                        <div className="col-span-5 p-3 text-slate-800 border-t border-l border-slate-100">{speaker.preferredTopic}</div>
+
+                        {/* Row 5 */}
+                        <div className="col-span-2 p-3 font-bold text-slate-700 bg-slate-50/50 border-t border-slate-100">Experience</div>
+                        <div className="col-span-4 p-3 text-slate-800 border-t border-l border-slate-100">{speaker.totalExperience}</div>
+                        <div className="col-span-1 p-3 font-bold text-slate-700 bg-slate-50/50 border-t border-l border-slate-100">Session Type</div>
+                        <div className="col-span-2 p-3 text-slate-800 border-t border-l border-slate-100">{speaker.sessionType}</div>
+                        <div className="col-span-1 p-3 font-bold text-slate-700 bg-slate-50/50 border-t border-l border-slate-100">Track</div>
+                        <div className="col-span-2 p-3 text-slate-800 border-t border-l border-slate-100">{speaker.preferredTrack}</div>
+
+                        {/* Row 6 - Expertise */}
+                        <div className="col-span-2 p-3 font-bold text-slate-700 bg-slate-50/50 border-t border-slate-100">Expertise</div>
+                        <div className="col-span-4 p-3 text-slate-800 border-t border-l border-slate-100">
+                            {Array.isArray(speaker.expertise) ? speaker.expertise.join(', ') : speaker.expertise}
+                        </div>
+                        <div className="col-span-1 p-3 font-bold text-slate-700 bg-slate-50/50 border-t border-l border-slate-100">Spoken Before</div>
+                        <div className="col-span-5 p-3 text-slate-800 border-t border-l border-slate-100">{speaker.spokenBefore}</div>
+
+                        {/* Row 7 - LinkedIn */}
+                        {speaker.linkedin && (
+                            <>
+                                <div className="col-span-2 p-3 font-bold text-slate-700 bg-slate-50/50 border-t border-slate-100">LinkedIn</div>
+                                <div className="col-span-10 p-3 text-blue-600 border-t border-l border-slate-100">
+                                    <a href={speaker.linkedin} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                        {speaker.linkedin}
+                                    </a>
+                                </div>
+                            </>
+                        )}
+
+                        {/* Row 8 - Profile */}
+                        <div className="col-span-2 p-3 font-bold text-slate-700 bg-slate-50/50 border-t border-slate-100">Brief Profile</div>
+                        <div className="col-span-10 p-3 text-slate-800 border-t border-l border-slate-100 whitespace-pre-wrap">
+                            {speaker.briefProfile}
+                        </div>
+
+                        {/* Row 9 - Topic Description */}
+                        <div className="col-span-2 p-3 font-bold text-slate-700 bg-slate-50/50 border-t border-slate-100">Topic Description</div>
+                        <div className="col-span-10 p-3 text-slate-800 border-t border-l border-slate-100 whitespace-pre-wrap">
+                            {speaker.topicDescription}
+                        </div>
+
+                        {/* Row 10 - Event Details (if applicable) */}
+                        {speaker.eventDetails && (
+                            <>
+                                <div className="col-span-2 p-3 font-bold text-slate-700 bg-slate-50/50 border-t border-slate-100">Previous Events</div>
+                                <div className="col-span-10 p-3 text-slate-800 border-t border-l border-slate-100 whitespace-pre-wrap">
+                                    {speaker.eventDetails}
+                                </div>
+                            </>
+                        )}
+
+                        {/* Row 11 - Expectations */}
+                        <div className="col-span-2 p-3 font-bold text-slate-700 bg-slate-50/50 border-t border-slate-100">Expectations</div>
+                        <div className="col-span-10 p-3 text-slate-800 border-t border-l border-slate-100">
+                            {Array.isArray(speaker.expectations) ? speaker.expectations.join(', ') : speaker.expectations}
+                        </div>
+
+                        {/* Row 12 - Registration Info */}
+                        <div className="col-span-2 p-3 font-bold text-slate-700 bg-slate-50/50 border-t border-slate-100">Registration Date</div>
+                        <div className="col-span-4 p-3 text-slate-800 border-t border-l border-slate-100">
+                            {speaker.createdAt ? new Date(speaker.createdAt).toLocaleString('en-IN', { 
+                                day: '2-digit', 
+                                month: 'long', 
+                                year: 'numeric', 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                            }) : "-"}
+                        </div>
+                        <div className="col-span-1 p-3 font-bold text-slate-700 bg-slate-50/50 border-t border-l border-slate-100">Status</div>
+                        <div className="col-span-5 p-3 border-t border-l border-slate-100">
+                            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(speaker.status)}`}>
+                                {speaker.status}
+                            </span>
+                        </div>
+
+                        {/* Row 13 - Consent */}
+                        <div className="col-span-2 p-3 font-bold text-slate-700 bg-slate-50/50 border-t border-slate-100">Consents</div>
+                        <div className="col-span-10 p-3 text-slate-800 border-t border-l border-slate-100">
+                            Data Usage: {speaker.consent1 ? '✓ Yes' : '✗ No'} | 
+                            Terms & Conditions: {speaker.consent2 ? '✓ Yes' : '✗ No'}
+                        </div>
+                    </div>
                 </div>
+
+                {/* ── IMAGES SECTION ── */}
+                {(speaker.speakerPhotoUrl || speaker.companyLogoUrl) && (
+                    <div className="bg-white border border-slate-200 rounded shadow-sm overflow-hidden">
+                        <div className="px-4 py-3 border-b border-slate-100 bg-white">
+                            <h2 className="text-[16px] font-semibold text-slate-700">Attachments</h2>
+                        </div>
+                        <div className="p-4 grid grid-cols-2 gap-4">
+                            {speaker.speakerPhotoUrl && (
+                                <div>
+                                    <p className="text-xs font-semibold text-slate-600 mb-2">Speaker Photo</p>
+                                    <img 
+                                        src={speaker.speakerPhotoUrl} 
+                                        alt="Speaker" 
+                                        className="w-full h-48 object-cover rounded border border-slate-200"
+                                    />
+                                </div>
+                            )}
+                            {speaker.companyLogoUrl && (
+                                <div>
+                                    <p className="text-xs font-semibold text-slate-600 mb-2">Company Logo</p>
+                                    <img 
+                                        src={speaker.companyLogoUrl} 
+                                        alt="Company Logo" 
+                                        className="w-full h-48 object-contain rounded border border-slate-200 bg-white p-4"
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
-        </>
+        </div>
     );
 };
 
