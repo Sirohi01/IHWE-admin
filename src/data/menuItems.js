@@ -334,7 +334,7 @@ export const menuItems = [
     icon: MessageSquare,
     path: "/social-media",
   },
-    {
+  {
     type: "item",
     label: "Contact Enquiry",
     path: "/contact-enquiries",
@@ -351,9 +351,28 @@ export const menuItems = [
     label: "Awards Management",
     icon: Award,
     children: [
+      { label: "Award Nominations", path: "/awards-nominations" },
+      { label: "Approved Awards", path: "/approved-awards-list" },
       { label: "Award Categories", path: "/award-categories-manage" },
-      { label: "Nominations List", path: "/awards-nominations" },
       { label: "Awards Gallery", path: "/awards-gallery-manage" },
+    ],
+  },
+
+
+  /* ================= Conference Section ================= */
+  {
+    type: "heading",
+    label: "Conference Section",
+  },
+  {
+    type: "dropdown",
+    label: "Conference Management",
+    icon: CalendarCheck,
+    children: [
+      { label: "Speaker Nomination", path: "/speaker-registration-list" },
+      { label: "Approved Speakers", path: "/approved-speakers-list" },
+      { label: "Conference Agenda", path: "/agenda-management" },
+      { label: "Testimonials", path: "/conference-testimonials-manage" },
     ],
   },
 
@@ -437,13 +456,13 @@ export const menuItems = [
   //       label: "Failed Payments",
   //       path: "/failed-payments",
   //     },
-      {
-        label: "Payment Delay Warnings",
-        path: "/payment-delay-warnings",
-      },
-      { label: "Seller Subscription Plans", path: "/seller-subscription-plans" },
-      { label: "Seller Service Requests", path: "/seller-service-requests" },
-      { label: "Seller Export Inquiries", path: "/seller-export-inquiries" },
+  {
+    label: "Payment Delay Warnings",
+    path: "/payment-delay-warnings",
+  },
+  { label: "Seller Subscription Plans", path: "/seller-subscription-plans" },
+  { label: "Seller Service Requests", path: "/seller-service-requests" },
+  { label: "Seller Export Inquiries", path: "/seller-export-inquiries" },
   //   ]
   // },
   // {
