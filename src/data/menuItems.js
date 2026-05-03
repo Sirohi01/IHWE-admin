@@ -369,6 +369,7 @@ export const menuItems = [
     icon: CalendarCheck,
     children: [
       { label: "Conference Agenda", path: "/agenda-management" },
+      { label: "Speaker Registrations", path: "/speaker-registration-list" },
     ],
   },
 

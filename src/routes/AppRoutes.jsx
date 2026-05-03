@@ -195,6 +195,8 @@ import PerformaInvoiceDetails from "../pages/ihwe_client_data_2026/invoice/Perfo
 import CreateInvoice from "../pages/ihwe_client_data_2026/invoice/CreateInvoice";
 import CreditNote from "../pages/ihwe_client_data_2026/CreditNote"
 import AgendaManagement from "../pages/AgendaManagement";
+import SpeakerRegistrationList from "../pages/SpeakerRegistrationList";
+import SpeakerRegistrationDetail from "../pages/SpeakerRegistrationDetail";
 
 
 export default function AppRoutes() {
@@ -231,6 +233,8 @@ export default function AppRoutes() {
           <Route path="why-exhibit-manage" element={<WhyExhibitManage />} />
           <Route path="travel-accommodation-manage" element={<TravelAccommodationManage />} />
           <Route path="/agenda-management" element={<AgendaManagement />} />
+          <Route path="/speaker-registration-list" element={<SpeakerRegistrationList />} />
+          <Route path="/speaker-registration/:id" element={<SpeakerRegistrationDetail />} />
           <Route
             path="exhibitor-profile-manage"
             element={<ExhibitorProfileManage />}
