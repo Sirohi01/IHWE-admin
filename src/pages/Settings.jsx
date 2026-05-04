@@ -26,6 +26,7 @@ import api, { API_URL, SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
 import Table from '../components/table/Table';
 import PageHeader from '../components/PageHeader';
+import MsmeLogosManager from '../components/MsmeLogosManager';
 
 const Settings = () => {
     // Logo state
@@ -64,6 +65,9 @@ const Settings = () => {
     const [msmeLogoPreview, setMsmeLogoPreview] = useState('');
     const [msmeLogoTitle, setMsmeLogoTitle] = useState('Supported by');
     const [isMsmeLogoActive, setIsMsmeLogoActive] = useState(true);
+    
+    // Multiple MSME Logos state
+    const [msmeLogos, setMsmeLogos] = useState([]);
 
 
     // Email addresses state
@@ -189,6 +193,17 @@ const Settings = () => {
                 if (res.data.data.isMsmeLogoActive !== undefined) {
                     setIsMsmeLogoActive(res.data.data.isMsmeLogoActive);
                 }
+                
+                // Load Multiple MSME Logos
+                if (res.data.data.msmeLogos && res.data.data.msmeLogos.length > 0) {
+                    setMsmeLogos(res.data.data.msmeLogos.map((logo, index) => ({
+                        ...logo,
+                        id: Date.now() + index,
+                        preview: `${SERVER_URL}${logo.imageUrl}`
+                    })));
+                } else {
+                    setMsmeLogos([]);
+                }
 
 
                 if (emails && emails.length > 0) {
@@ -265,6 +280,10 @@ const Settings = () => {
             if (msmeLogo) formData.append('msmeLogo', msmeLogo);
             formData.append('msmeLogoTitle', msmeLogoTitle);
             formData.append('isMsmeLogoActive', isMsmeLogoActive);
+            
+            // Multiple MSME Logos
+            const msmeLogosData = msmeLogos.map(({ id, preview, ...rest }) => rest);
+            formData.append('msmeLogos', JSON.stringify(msmeLogosData));
 
 
             const res = await api.put('/api/settings', formData, {
@@ -312,6 +331,14 @@ const Settings = () => {
                 if (res.data.data.msmeLogo) {
                     setMsmeLogoPreview(`${SERVER_URL}${res.data.data.msmeLogo}`);
                     setMsmeLogo(null);
+                }
+                // Update msmeLogos from response
+                if (res.data.data.msmeLogos) {
+                    setMsmeLogos(res.data.data.msmeLogos.map((logo, index) => ({
+                        ...logo,
+                        id: Date.now() + index,
+                        preview: `${SERVER_URL}${logo.imageUrl}`
+                    })));
                 }
             }
         } catch (error) {
@@ -634,61 +661,13 @@ const Settings = () => {
                                 </div>
                             </div>
 
-                            <div>
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                        MSME Logo (Footer)
-                                    </label>
-                                    <label className="inline-flex items-center cursor-pointer">
-                                        <input 
-                                            type="checkbox" 
-                                            className="sr-only peer"
-                                            checked={isMsmeLogoActive}
-                                            onChange={() => setIsMsmeLogoActive(!isMsmeLogoActive)}
-                                        />
-                                        <div className="relative w-7 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#23471d]"></div>
-                                        <span className="ms-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">{isMsmeLogoActive ? 'Active' : 'Hidden'}</span>
-                                    </label>
-                                </div>
-                                
-                                {/* MSME Logo Title Input */}
-                                <div className="mb-3">
-                                    <label className="block text-[10px] font-semibold text-gray-400 mb-1 uppercase tracking-wider">
-                                        Logo Title (e.g., "Supported by")
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={msmeLogoTitle}
-                                        onChange={(e) => setMsmeLogoTitle(e.target.value)}
-                                        placeholder="Supported by"
-                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#23471d] focus:border-transparent"
-                                    />
-                                </div>
-
-                                <div className="border border-dashed border-gray-300 p-4 text-center relative group min-h-[140px] flex items-center justify-center bg-gray-50/30 rounded-lg hover:border-[#23471d] transition-colors overflow-hidden">
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleMsmeLogoUpload}
-                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                                    />
-                                    {msmeLogoPreview ? (
-                                        <div className="relative w-full h-full flex flex-col items-center justify-center">
-                                            <div className="w-20 h-20 mb-2 p-2 border border-gray-100 bg-white rounded flex items-center justify-center">
-                                                <img src={msmeLogoPreview.startsWith('http') || msmeLogoPreview.startsWith('data:') || msmeLogoPreview.startsWith('blob:') ? msmeLogoPreview : `${SERVER_URL}${msmeLogoPreview}`} alt="MSME Preview" className="max-w-full max-h-full object-contain" />
-                                            </div>
-                                            <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded pointer-events-none">
-                                                <span className="text-xs font-bold text-gray-600 bg-white/90 px-2 py-1 rounded shadow-sm">Change MSME Logo</span>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="flex flex-col items-center py-4">
-                                            <ImageIcon className="w-8 h-8 text-gray-300 mb-2" />
-                                            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Click to upload MSME logo</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                            {/* Multiple MSME Logos Management */}
+                            <MsmeLogosManager
+                                msmeLogos={msmeLogos}
+                                setMsmeLogos={setMsmeLogos}
+                                isMsmeLogoActive={isMsmeLogoActive}
+                                setIsMsmeLogoActive={setIsMsmeLogoActive}
+                            />
 
                             <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
