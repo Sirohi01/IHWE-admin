@@ -201,6 +201,7 @@ import SpeakerRegistrationList from "../pages/SpeakerRegistrationList";
 import SpeakerRegistrationDetail from "../pages/SpeakerRegistrationDetail";
 import SpeakerNominationsList from "../pages/SpeakerNominationsList";
 import ApprovedSpeakersList from "../pages/ApprovedSpeakersList";
+import RejectedSpeakersList from "../pages/RejectedSpeakersList";
 
 
 export default function AppRoutes() {
@@ -240,6 +241,7 @@ export default function AppRoutes() {
           <Route path="/conference-testimonials-manage" element={<ConferenceTestimonialsManage />} />
           <Route path="/speaker-registration-list" element={<SpeakerNominationsList />} />
           <Route path="/approved-speakers-list" element={<ApprovedSpeakersList />} />
+          <Route path="/rejected-speakers-list" element={<RejectedSpeakersList />} />
           <Route path="/speaker-registration/:id" element={<SpeakerRegistrationDetail />} />
           <Route
             path="exhibitor-profile-manage"

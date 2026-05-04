@@ -1,20 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, Mic, UserCheck, CheckCircle } from "lucide-react";
+import { Eye, Mic, XCircle, UserCheck, CheckCircle } from "lucide-react";
 import api from "../lib/api";
 import Globallytable from "../components/Globallytable";
-import { showSuccess, showError } from "../utils/toastMessage";
+import { showError } from "../utils/toastMessage";
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
   return str.replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
-const SpeakerNominationsList = () => {
+const RejectedSpeakersList = () => {
   const navigate = useNavigate();
   const [speakers, setSpeakers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [updatingStatusId, setUpdatingStatusId] = useState(null);
 
   useEffect(() => {
     fetchSpeakers();
@@ -35,26 +34,10 @@ const SpeakerNominationsList = () => {
     }
   };
 
-  const handleStatusChange = async (id, newStatus) => {
-    try {
-      setUpdatingStatusId(id);
-      const response = await api.put(`/api/speaker/${id}/status`, { status: newStatus });
-      if (response.data.success) {
-        showSuccess('Status updated successfully');
-        fetchSpeakers();
-      }
-    } catch (error) {
-      console.error('Error updating status:', error);
-      showError('Failed to update status');
-    } finally {
-      setUpdatingStatusId(null);
-    }
-  };
-
   // 📋 Table Columns
   const columns = [
     {
-      label: "Nomination Speaker Name",
+      label: "Rejected Speaker Name",
       accessor: "speaker.name",
       render: (value, row) => (
         <Link
@@ -69,31 +52,15 @@ const SpeakerNominationsList = () => {
     { label: "Contact Details", accessor: "contact.details" },
     { label: "Topic", accessor: "session.topic" },
     { label: "Session Type", accessor: "session.type" },
+    { label: "Track", accessor: "session.track" },
     { label: "Experience", accessor: "speaker.experience" },
     {
       label: "Status",
       accessor: "status.current",
-      render: (value, row) => (
-        <div className="relative inline-block">
-          <select
-            value={value}
-            onChange={(e) => handleStatusChange(row.id, e.target.value)}
-            disabled={updatingStatusId === row.id}
-            className={`px-3 py-1 text-xs font-semibold rounded-full border-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed pr-8 ${value === 'Approved' ? 'bg-green-100 text-green-800' :
-              value === 'Rejected' ? 'bg-red-100 text-red-800' :
-                'bg-yellow-100 text-yellow-800'
-              }`}
-          >
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
-          </select>
-          {updatingStatusId === row.id && (
-            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
-              <div className="w-3 h-3 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          )}
-        </div>
+      render: (value) => (
+        <span className="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+          {value}
+        </span>
       )
     },
     {
@@ -111,12 +78,12 @@ const SpeakerNominationsList = () => {
     },
   ];
 
-  // 🧱 Prepare Rows - Filter only Pending speakers
-  const pendingSpeakers = speakers.filter(
-    (speaker) => speaker.status === "Pending"
+  // 🧱 Prepare Rows - Filter only Rejected speakers
+  const rejectedSpeakers = speakers.filter(
+    (speaker) => speaker.status === "Rejected"
   );
 
-  const rows = pendingSpeakers.map((s) => ({
+  const rows = rejectedSpeakers.map((s) => ({
     id: s._id,
     checkbox: true,
     speaker: {
@@ -130,6 +97,7 @@ const SpeakerNominationsList = () => {
     session: {
       topic: s.preferredTopic || "-",
       type: s.sessionType || "-",
+      track: s.preferredTrack || "-",
     },
     status: {
       current: s.status,
@@ -144,7 +112,7 @@ const SpeakerNominationsList = () => {
         {/* Background Image */}
         <img
           src="/dashbordBan.png"
-          alt="Speaker Nominations Banner"
+          alt="Rejected Speakers Banner"
           className="absolute inset-0 w-full h-full object-cover z-0"
         />
 
@@ -153,12 +121,12 @@ const SpeakerNominationsList = () => {
 
         {/* Content */}
         <div className="relative z-20 flex flex-col items-center justify-center h-full text-white px-6">
-          <Mic className="w-16 h-16 mb-4" />
+          <XCircle className="w-16 h-16 mb-4" />
           <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-center">
-            Speaker Nominations
+            Rejected Speakers
           </h1>
           <p className="text-lg mt-2 text-center text-white/90">
-            Manage pending speaker applications and nominations
+            View all rejected speaker applications
           </p>
         </div>
       </div>
@@ -168,7 +136,7 @@ const SpeakerNominationsList = () => {
         <div className="flex flex-col lg:flex-row justify-between items-center py-3 px-6 border-b border-gray-300 bg-white gap-4">
           <div className="flex flex-col items-center lg:items-start gap-1">
             <h1 className="text-xl font-semibold text-slate-600 uppercase tracking-tight leading-none text-center lg:text-left">
-              SPEAKER NOMINATIONS | Conference Management Section
+              REJECTED SPEAKERS | Conference Management Section
             </h1>
           </div>
           <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
@@ -190,12 +158,6 @@ const SpeakerNominationsList = () => {
             >
               <UserCheck size={12} /> Conference Agenda
             </button>
-            <button
-              onClick={() => navigate("/rejected-speakers-list")}
-              className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-red-500 hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
-            >
-              <CheckCircle size={12} /> Rejected Speakers
-            </button>
           </div>
         </div>
 
@@ -203,7 +165,7 @@ const SpeakerNominationsList = () => {
         <div className="bg-white m-4 p-2 rounded shadow-sm">
           <div className="flex justify-between items-center pr-4">
             <h1 className="text-lg font-medium text-gray-800 px-4">
-              SPEAKER NOMINATIONS
+              REJECTED SPEAKERS
             </h1>
           </div>
 
@@ -213,6 +175,10 @@ const SpeakerNominationsList = () => {
           <div className="text-xs">
             {isLoading ? (
               <div className="text-center text-gray-500 py-4">Loading...</div>
+            ) : rejectedSpeakers.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                No rejected speakers found
+              </div>
             ) : (
               <Globallytable
                 rows={rows}
@@ -227,4 +193,4 @@ const SpeakerNominationsList = () => {
   );
 };
 
-export default SpeakerNominationsList;
+export default RejectedSpeakersList;
