@@ -469,7 +469,7 @@ const HeroSlider = () => {
       label: "TITLE",
       render: (row) => (
         <div
-          className="font-medium text-gray-900 max-w-[250px] line-clamp-2"
+          className="font-medium text-gray-900 max-w-[250px] line-clamp-2 [&_*]:!text-sm [&_*]:!font-medium [&_*]:!leading-tight [&_*]:!m-0 [&_*]:!p-0"
           dangerouslySetInnerHTML={{ __html: row.title }}
         />
       )
@@ -712,46 +712,29 @@ const HeroSlider = () => {
                 />
               </div>
 
-              {/* Title 1 & Title 2 side by side */}
-              <div className="md:col-span-2">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-[11px] font-semibold text-gray-700">
-                    Hero Title 1 *
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[9px] font-bold text-gray-400 uppercase">Default: 45px</span>
-                    <div className="flex items-center border-2 border-gray-300 rounded overflow-hidden h-6 bg-white shadow-sm">
-                      <button
-                        type="button"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          const newSize = Math.max(1, parseInt(formData.titleFontSize || 0) - 1);
-                          setFormData(prev => ({ ...prev, titleFontSize: newSize.toString() }));
-                        }}
-                        className="px-1.5 h-full hover:bg-gray-100 border-r border-gray-300 transition-colors text-[10px] font-bold"
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        name="titleFontSize"
-                        value={formData.titleFontSize}
-                        onChange={handleInputChange}
-                        className="w-10 h-full text-center text-[10px] focus:outline-none border-0"
-                      />
-                      <button
-                        type="button"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          const newSize = parseInt(formData.titleFontSize || 0) + 1;
-                          setFormData(prev => ({ ...prev, titleFontSize: newSize.toString() }));
-                        }}
-                        className="px-1.5 h-full hover:bg-gray-100 border-l border-gray-300 transition-colors text-[10px] font-bold"
-                      >
-                        +
-                      </button>
+              {/* Title 1 Full Width */}
+              <div className="md:col-span-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-2 gap-2">
+                  <div className="flex items-center gap-4">
+                    <label className="block text-[11px] font-bold text-gray-800 uppercase tracking-wider">
+                      Hero Title 1 *
+                    </label>
+                    <div className="flex items-center gap-3 border-l pl-4 border-gray-200">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'rgb(245, 118, 0)' }}></div>
+                        <span className="text-[10px] font-bold text-gray-500 uppercase">Orange: <span className="text-gray-900">245 118 0</span></span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'rgb(0, 179, 255)' }}></div>
+                        <span className="text-[10px] font-bold text-gray-500 uppercase">Blue: <span className="text-gray-900">0 179 255</span></span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'rgb(143, 238, 124)' }}></div>
+                        <span className="text-[10px] font-bold text-gray-500 uppercase">Green: <span className="text-gray-900">143 238 124</span></span>
+                      </div>
                     </div>
                   </div>
+                  <span className="text-[9px] font-bold text-gray-400 uppercase bg-gray-50 px-2 py-0.5 rounded border border-gray-100">Size controlled via Editor</span>
                 </div>
                 <RichTextEditor
                   value={formData.title}
@@ -762,47 +745,14 @@ const HeroSlider = () => {
                 />
               </div>
 
-              {/* Hero Title 2 */}
-              <div className="md:col-span-2">
+              {/* Hero Title 2 Full Width */}
+              <div className="md:col-span-4">
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-[11px] font-semibold text-gray-700">
                     Hero Title 2 <span className="text-gray-400 font-normal">(optional – shown below Title 1)</span>
                   </label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[9px] font-bold text-gray-400 uppercase">Default: 45px</span>
-                    <div className="flex items-center border-2 border-gray-300 rounded overflow-hidden h-6 bg-white shadow-sm">
-                      <button
-                        type="button"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          const newSize = Math.max(1, parseInt(formData.title2FontSize || 0) - 1);
-                          setFormData(prev => ({ ...prev, title2FontSize: newSize.toString() }));
-                        }}
-                        className="px-1.5 h-full hover:bg-gray-100 border-r border-gray-300 transition-colors text-[10px] font-bold"
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        name="title2FontSize"
-                        value={formData.title2FontSize}
-                        onChange={handleInputChange}
-                        className="w-10 h-full text-center text-[10px] focus:outline-none border-0"
-                      />
-                      <button
-                        type="button"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          const newSize = parseInt(formData.title2FontSize || 0) + 1;
-                          setFormData(prev => ({ ...prev, title2FontSize: newSize.toString() }));
-                        }}
-                        className="px-1.5 h-full hover:bg-gray-100 border-l border-gray-300 transition-colors text-[10px] font-bold"
-                      >
-                        +
-                      </button>
-                    </div>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase">Size controlled via Editor</span>
                   </div>
-                </div>
                 <RichTextEditor
                   value={formData.title2}
                   onChange={(content) => setFormData(prev => ({ ...prev, title2: content }))}
@@ -818,41 +768,8 @@ const HeroSlider = () => {
                   <label className="block text-[11px] font-semibold text-gray-700">
                     Description *
                   </label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[9px] font-bold text-gray-400 uppercase">Default: 16px</span>
-                    <div className="flex items-center border-2 border-gray-300 rounded overflow-hidden h-6 bg-white shadow-sm">
-                      <button
-                        type="button"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          const newSize = Math.max(1, parseInt(formData.descriptionFontSize || 0) - 1);
-                          setFormData(prev => ({ ...prev, descriptionFontSize: newSize.toString() }));
-                        }}
-                        className="px-1.5 h-full hover:bg-gray-100 border-r border-gray-300 transition-colors text-[10px] font-bold"
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        name="descriptionFontSize"
-                        value={formData.descriptionFontSize}
-                        onChange={handleInputChange}
-                        className="w-10 h-full text-center text-[10px] focus:outline-none border-0"
-                      />
-                      <button
-                        type="button"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          const newSize = parseInt(formData.descriptionFontSize || 0) + 1;
-                          setFormData(prev => ({ ...prev, descriptionFontSize: newSize.toString() }));
-                        }}
-                        className="px-1.5 h-full hover:bg-gray-100 border-l border-gray-300 transition-colors text-[10px] font-bold"
-                      >
-                        +
-                      </button>
-                    </div>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase">Size controlled via Editor</span>
                   </div>
-                </div>
                 <RichTextEditor
                   value={formData.description}
                   onChange={(content) => setFormData(prev => ({ ...prev, description: content }))}
