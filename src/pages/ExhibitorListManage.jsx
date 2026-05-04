@@ -44,6 +44,7 @@ const ExhibitorListManage = () => {
     const [bulkImages, setBulkImages] = useState([]);
     const [bulkCategory, setBulkCategory] = useState('OTHERS');
     const [bulkLocation, setBulkLocation] = useState('India');
+    const [bulkAltText, setBulkAltText] = useState('');
 
     useEffect(() => {
         fetchExhibitors();
@@ -147,6 +148,7 @@ const ExhibitorListManage = () => {
         const formData = new FormData();
         formData.append('category', bulkCategory);
         formData.append('location', bulkLocation);
+        formData.append('altText', bulkAltText);
         bulkImages.forEach(file => {
             formData.append('images', file);
         });
@@ -159,6 +161,7 @@ const ExhibitorListManage = () => {
             if (response.data.success) {
                 Swal.fire('Success', response.data.message, 'success');
                 setBulkImages([]);
+                setBulkAltText('');
                 setIsBulkMode(false);
                 setCurrentPage(1);
                 fetchExhibitors();
@@ -407,6 +410,17 @@ const ExhibitorListManage = () => {
                                     </div>
 
                                     <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase mb-1.5 tracking-widest">Image Alt Text (SEO)</label>
+                                        <input
+                                            type="text"
+                                            value={form.altText}
+                                            onChange={(e) => setForm({ ...form, altText: e.target.value })}
+                                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all text-sm font-medium"
+                                            placeholder="e.g. Brand Logo"
+                                        />
+                                    </div>
+
+                                    <div>
                                         <label className="block text-[10px] font-black text-gray-400 uppercase mb-1.5 tracking-widest">Brand Logo</label>
                                         <div className="mt-1 flex flex-col items-center p-6 border-2 border-dashed border-gray-200 rounded-xl hover:border-green-500 hover:bg-green-50/30 transition-all relative group cursor-pointer">
                                             <input
@@ -477,6 +491,17 @@ const ExhibitorListManage = () => {
                                                 placeholder="e.g. India"
                                             />
                                         </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase mb-1.5 tracking-widest">Common Alt Text (SEO)</label>
+                                        <input
+                                            type="text"
+                                            value={bulkAltText}
+                                            onChange={(e) => setBulkAltText(e.target.value)}
+                                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm font-medium"
+                                            placeholder="e.g. Exhibitor Logo"
+                                        />
                                     </div>
 
                                     <div>
