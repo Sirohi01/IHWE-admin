@@ -351,8 +351,9 @@ export const menuItems = [
     label: "Awards Management",
     icon: Award,
     children: [
+      { label: "Award Nominations", path: "/awards-nominations" },
+      { label: "Approved Awards", path: "/approved-awards-list" },
       { label: "Award Categories", path: "/award-categories-manage" },
-      { label: "Nominations List", path: "/awards-nominations" },
       { label: "Awards Gallery", path: "/awards-gallery-manage" },
     ],
   },
@@ -368,8 +369,10 @@ export const menuItems = [
     label: "Conference Management",
     icon: CalendarCheck,
     children: [
+      { label: "Speaker Nomination", path: "/speaker-registration-list" },
+      { label: "Approved Speakers", path: "/approved-speakers-list" },
       { label: "Conference Agenda", path: "/agenda-management" },
-      { label: "Speaker Registrations", path: "/speaker-registration-list" },
+      { label: "Testimonials", path: "/conference-testimonials-manage" },
     ],
   },
 
