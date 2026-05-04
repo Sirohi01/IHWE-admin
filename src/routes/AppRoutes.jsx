@@ -116,6 +116,7 @@ import RoleManagement from "../pages/RoleManagement";
 import RolePermissions from "../pages/RolePermissions";
 import PolicyManager from "../pages/PolicyManager";
 import Settings from "../pages/Settings";
+import ConferenceTestimonialsManage from "../pages/ConferenceTestimonialsManage";
 import SidebarCustomize from "../pages/SidebarCustomize";
 import ProtectedRoute from "./ProtectedRoute";
 import AddNewClients from "../pages/ihwe_client_data_2026/AddNewClients";
@@ -183,9 +184,11 @@ import InternationalBuyerList from "../pages/buyer/InternationalBuyerList";
 import InternationalBuyerRegistrationDetail from "../pages/InternationalBuyerRegistrationDetail";
 import InternationalBuyerRegistrationEdit from "../pages/InternationalBuyerRegistrationEdit";
 import InternationalBuyerRegistration from "../pages/buyer/InternationalBuyerRegistration";
-import AwardsNominationList from "../pages/AwardsNominationList";
+import AwardsNominationsList from "../pages/AwardsNominationsList";
+import ApprovedAwardsList from "../pages/ApprovedAwardsList";
 import AwardCategoriesManage from "../pages/AwardCategoriesManage";
 import AwardsNominationDetail from "../pages/AwardsNominationDetail";
+import AwardsGalleryManage from "../pages/AwardsGalleryManage";
 import AccountSection1 from "../pages/ihwe_client_data_2026/AccountSection1";
 import CreateEstimate1 from "../pages/ihwe_client_data_2026/CreateEstimate1";
 import EstimateDetails from "../pages/ihwe_client_data_2026/invoice/EstimateDetails"
@@ -196,6 +199,12 @@ import CreditNote from "../pages/ihwe_client_data_2026/CreditNote";
 import TaxInvoiceDetails from "../pages/ihwe_client_data_2026/invoice/TaxInvoiceDetails";
 import InvoiceNumberDetails from "../pages/ihwe_client_data_2026/invoice/InvoiceNumberDetails";
 import Payments from "../pages/ihwe_client_data_2026/payments/Payment";
+import CreditNote from "../pages/ihwe_client_data_2026/CreditNote"
+import AgendaManagement from "../pages/AgendaManagement";
+import SpeakerRegistrationList from "../pages/SpeakerRegistrationList";
+import SpeakerRegistrationDetail from "../pages/SpeakerRegistrationDetail";
+import SpeakerNominationsList from "../pages/SpeakerNominationsList";
+import ApprovedSpeakersList from "../pages/ApprovedSpeakersList";
 
 
 export default function AppRoutes() {
@@ -231,6 +240,11 @@ export default function AppRoutes() {
           <Route path="organized-by" element={<OrganizedBy />} />
           <Route path="why-exhibit-manage" element={<WhyExhibitManage />} />
           <Route path="travel-accommodation-manage" element={<TravelAccommodationManage />} />
+          <Route path="/agenda-management" element={<AgendaManagement />} />
+          <Route path="/conference-testimonials-manage" element={<ConferenceTestimonialsManage />} />
+          <Route path="/speaker-registration-list" element={<SpeakerNominationsList />} />
+          <Route path="/approved-speakers-list" element={<ApprovedSpeakersList />} />
+          <Route path="/speaker-registration/:id" element={<SpeakerRegistrationDetail />} />
           <Route
             path="exhibitor-profile-manage"
             element={<ExhibitorProfileManage />}
@@ -544,9 +558,11 @@ export default function AppRoutes() {
           <Route path="/international-buyer/:id" element={<InternationalBuyerRegistrationDetail />} />
           <Route path="/international-buyer/edit/:id" element={<InternationalBuyerRegistrationEdit />} />
           <Route path="/international-buyer-registration" element={<InternationalBuyerRegistration />} />
-          <Route path="/awards-nominations" element={<AwardsNominationList />} />
+          <Route path="/awards-nominations" element={<AwardsNominationsList />} />
+          <Route path="/approved-awards-list" element={<ApprovedAwardsList />} />
           <Route path="/awards-nominations/:id" element={<AwardsNominationDetail />} />
           <Route path="/award-categories-manage" element={<AwardCategoriesManage />} />
+          <Route path="/awards-gallery-manage" element={<AwardsGalleryManage />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>

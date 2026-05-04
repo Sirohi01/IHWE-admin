@@ -45,7 +45,7 @@ export const menuItems = [
   /* ================= CRM Management Section ================= */
   {
     type: "heading",
-    label: "Sale Managment Section",
+    label: "Sale Management Section",
   },
   // ihwe section 
   {
@@ -352,8 +352,28 @@ export const menuItems = [
     label: "Awards Management",
     icon: Award,
     children: [
+      { label: "Award Nominations", path: "/awards-nominations" },
+      { label: "Approved Awards", path: "/approved-awards-list" },
       { label: "Award Categories", path: "/award-categories-manage" },
-      { label: "Nominations List", path: "/awards-nominations" },
+      { label: "Awards Gallery", path: "/awards-gallery-manage" },
+    ],
+  },
+
+
+  /* ================= Conference Section ================= */
+  {
+    type: "heading",
+    label: "Conference Section",
+  },
+  {
+    type: "dropdown",
+    label: "Conference Management",
+    icon: CalendarCheck,
+    children: [
+      { label: "Speaker Nomination", path: "/speaker-registration-list" },
+      { label: "Approved Speakers", path: "/approved-speakers-list" },
+      { label: "Conference Agenda", path: "/agenda-management" },
+      { label: "Testimonials", path: "/conference-testimonials-manage" },
     ],
   },
 

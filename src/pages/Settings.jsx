@@ -26,6 +26,7 @@ import api, { API_URL, SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
 import Table from '../components/table/Table';
 import PageHeader from '../components/PageHeader';
+import MsmeLogosManager from '../components/MsmeLogosManager';
 
 const Settings = () => {
     // Logo state
@@ -39,6 +40,8 @@ const Settings = () => {
     const [domesticFormPreview, setDomesticFormPreview] = useState('');
     const [internationalFormFile, setInternationalFormFile] = useState(null);
     const [internationalFormPreview, setInternationalFormPreview] = useState('');
+    const [sponsorshipDeckFile, setSponsorshipDeckFile] = useState(null);
+    const [sponsorshipDeckPreview, setSponsorshipDeckPreview] = useState('');
 
     // Topbar state
     const [marqueeText, setMarqueeText] = useState("• 150+ Speakers confirmed • Early Bird discount ending soon! • Join 8,000+ Professionals from 25+ Countries");
@@ -56,6 +59,15 @@ const Settings = () => {
     const [signaturePreview, setSignaturePreview] = useState("");
     const [stampFile, setStampFile] = useState(null);
     const [stampPreview, setStampPreview] = useState("");
+
+    // MSME Logo state
+    const [msmeLogo, setMsmeLogo] = useState(null);
+    const [msmeLogoPreview, setMsmeLogoPreview] = useState('');
+    const [msmeLogoTitle, setMsmeLogoTitle] = useState('Supported by');
+    const [isMsmeLogoActive, setIsMsmeLogoActive] = useState(true);
+    
+    // Multiple MSME Logos state
+    const [msmeLogos, setMsmeLogos] = useState([]);
 
 
     // Email addresses state
@@ -126,7 +138,7 @@ const Settings = () => {
             const res = await api.get('/api/settings');
             if (res.data.success && res.data.data) {
                 const { 
-                    logo, exhibitorBrochurePdf, domesticRegistrationFormPdf, internationalRegistrationFormPdf,
+                    logo, exhibitorBrochurePdf, domesticRegistrationFormPdf, internationalRegistrationFormPdf, sponsorshipDeckPdf,
                     emails, phones, addresses, mapIframe: savedIframe, 
                     marqueeText: savedMarquee, topbarDate: savedDate, supportDeskText: savedSupportDeskText,
                     companyName: sName, companyAddress: sAddress, companyGst: sGst, companyCin: sCin,
@@ -144,6 +156,9 @@ const Settings = () => {
                 }
                 if (internationalRegistrationFormPdf) {
                     setInternationalFormPreview(`${SERVER_URL}${internationalRegistrationFormPdf}`);
+                }
+                if (sponsorshipDeckPdf) {
+                    setSponsorshipDeckPreview(`${SERVER_URL}${sponsorshipDeckPdf}`);
                 }
                 if (savedIframe) {
                     setMapIframe(savedIframe);
@@ -167,6 +182,28 @@ const Settings = () => {
                 if (sTds) setAvailableTdsRates(sTds);
                 if (authorizedSignature) setSignaturePreview(`${SERVER_URL}${authorizedSignature}`);
                 if (companyStamp) setStampPreview(`${SERVER_URL}${companyStamp}`);
+                
+                // MSME Settings
+                if (res.data.data.msmeLogo) {
+                    setMsmeLogoPreview(`${SERVER_URL}${res.data.data.msmeLogo}`);
+                }
+                if (res.data.data.msmeLogoTitle) {
+                    setMsmeLogoTitle(res.data.data.msmeLogoTitle);
+                }
+                if (res.data.data.isMsmeLogoActive !== undefined) {
+                    setIsMsmeLogoActive(res.data.data.isMsmeLogoActive);
+                }
+                
+                // Load Multiple MSME Logos
+                if (res.data.data.msmeLogos && res.data.data.msmeLogos.length > 0) {
+                    setMsmeLogos(res.data.data.msmeLogos.map((logo, index) => ({
+                        ...logo,
+                        id: Date.now() + index,
+                        preview: `${SERVER_URL}${logo.imageUrl}`
+                    })));
+                } else {
+                    setMsmeLogos([]);
+                }
 
 
                 if (emails && emails.length > 0) {
@@ -209,6 +246,9 @@ const Settings = () => {
             if (internationalFormFile) {
                 formData.append('internationalRegistrationFormPdf', internationalFormFile);
             }
+            if (sponsorshipDeckFile) {
+                formData.append('sponsorshipDeckPdf', sponsorshipDeckFile);
+            }
 
             const emailsToSave = emails.map(({ id, isEditing, ...rest }) => rest);
             const phonesToSave = phones.map(({ id, isEditing, ...rest }) => rest);
@@ -235,6 +275,15 @@ const Settings = () => {
             formData.append('availableTdsRates', JSON.stringify(availableTdsRates));
             if (signatureFile) formData.append('authorizedSignature', signatureFile);
             if (stampFile) formData.append('companyStamp', stampFile);
+            
+            // MSME
+            if (msmeLogo) formData.append('msmeLogo', msmeLogo);
+            formData.append('msmeLogoTitle', msmeLogoTitle);
+            formData.append('isMsmeLogoActive', isMsmeLogoActive);
+            
+            // Multiple MSME Logos
+            const msmeLogosData = msmeLogos.map(({ id, preview, ...rest }) => rest);
+            formData.append('msmeLogos', JSON.stringify(msmeLogosData));
 
 
             const res = await api.put('/api/settings', formData, {
@@ -267,6 +316,10 @@ const Settings = () => {
                     setInternationalFormPreview(`${SERVER_URL}${res.data.data.internationalRegistrationFormPdf}`);
                     setInternationalFormFile(null);
                 }
+                if (res.data.data.sponsorshipDeckPdf) {
+                    setSponsorshipDeckPreview(`${SERVER_URL}${res.data.data.sponsorshipDeckPdf}`);
+                    setSponsorshipDeckFile(null);
+                }
                 if (res.data.data.authorizedSignature) {
                     setSignaturePreview(`${SERVER_URL}${res.data.data.authorizedSignature}`);
                     setSignatureFile(null);
@@ -274,6 +327,18 @@ const Settings = () => {
                 if (res.data.data.companyStamp) {
                     setStampPreview(`${SERVER_URL}${res.data.data.companyStamp}`);
                     setStampFile(null);
+                }
+                if (res.data.data.msmeLogo) {
+                    setMsmeLogoPreview(`${SERVER_URL}${res.data.data.msmeLogo}`);
+                    setMsmeLogo(null);
+                }
+                // Update msmeLogos from response
+                if (res.data.data.msmeLogos) {
+                    setMsmeLogos(res.data.data.msmeLogos.map((logo, index) => ({
+                        ...logo,
+                        id: Date.now() + index,
+                        preview: `${SERVER_URL}${logo.imageUrl}`
+                    })));
                 }
             }
         } catch (error) {
@@ -296,6 +361,18 @@ const Settings = () => {
             const reader = new FileReader();
             reader.onloadend = () => {
                 setLogoPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleMsmeLogoUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setMsmeLogo(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setMsmeLogoPreview(reader.result);
             };
             reader.readAsDataURL(file);
         }
@@ -584,6 +661,14 @@ const Settings = () => {
                                 </div>
                             </div>
 
+                            {/* Multiple MSME Logos Management */}
+                            <MsmeLogosManager
+                                msmeLogos={msmeLogos}
+                                setMsmeLogos={setMsmeLogos}
+                                isMsmeLogoActive={isMsmeLogoActive}
+                                setIsMsmeLogoActive={setIsMsmeLogoActive}
+                            />
+
                             <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
                                     Exhibitor Brochure (PDF)
@@ -665,6 +750,37 @@ const Settings = () => {
                                             </p>
                                             {internationalFormPreview && !internationalFormFile && (
                                                 <a href={internationalFormPreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center">
+                                            <Plus className="w-6 h-6 text-gray-300 mb-1" />
+                                            <p className="text-[9px] font-bold text-gray-400 uppercase">Click to upload PDF</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Sponsorship Deck PDF */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    Awards Sponsorship Deck (PDF)
+                                </label>
+                                <div className="border border-dashed border-gray-300 p-4 text-center relative group min-h-[100px] flex items-center justify-center bg-gray-50/30 rounded-lg hover:border-[#23471d] transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={(e) => setSponsorshipDeckFile(e.target.files[0])}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {sponsorshipDeckFile || sponsorshipDeckPreview ? (
+                                        <div className="flex flex-col items-center">
+                                            <FileText className="w-8 h-8 text-green-600 mb-1" />
+                                            <p className="text-[10px] font-bold text-gray-600 truncate max-w-[200px]">
+                                                {sponsorshipDeckFile ? sponsorshipDeckFile.name : "Sponsorship Deck.pdf"}
+                                            </p>
+                                            {sponsorshipDeckPreview && !sponsorshipDeckFile && (
+                                                <a href={sponsorshipDeckPreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
                                             )}
                                         </div>
                                     ) : (
