@@ -1,11 +1,11 @@
 import React, { useRef, useState, useEffect } from "react";
-import mainpic from "../../assets/images/header.png";
+import mainpic from "../../../assets/header.png";
 import { useReactToPrint } from "react-to-print";
 import { useLocation } from "react-router-dom";
 import { useParams } from "react-router-dom";
-import { fetchInvoices } from "../../features/invoice/invoiceSlice";
-import { fetchEstimates } from "../../features/estimates/estimateSlice";
-import { fetchCompanies } from "../../features/company/companySlice";
+import { fetchInvoices } from "../../../features/invoice/invoiceSlice";
+import { fetchEstimates } from "../../../features/estimates/estimateSlice";
+import { fetchCompanies } from "../../../features/company/companySlice";
 import { useSelector, useDispatch } from "react-redux";
 
 const InvoiceNumberDetails = () => {

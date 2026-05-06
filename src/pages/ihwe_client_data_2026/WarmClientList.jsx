@@ -58,7 +58,7 @@ const WarmClientList = () => {
     { label: "Nature Bussiness", accessor: "Nature Bussiness" },
     { label: "Address", accessor: "location.fullAddress" },
     { label: "Source", accessor: "source.type" },
-    { label: "Forward To", accessor: "forwardTo" },
+    // { label: "Forward To", accessor: "forwardTo" },
     { label: "Status", accessor: "Status" },
     { label: "Event", accessor: "Event.type" },
     { label: "Updated Details", accessor: "Update.detail" },
@@ -66,7 +66,7 @@ const WarmClientList = () => {
 
   // 🧱 Prepare Rows
   const filteredCompanies = companiesArray.filter((c) =>
-    ["Warm Client", "Follow-Up Call", "Sent Details"].includes(c.companyStatus),
+    ["Warm client", "Follow-Up Call", "Sent Details"].includes(c.companyStatus),
   );
   const rows = filteredCompanies.map((c) => ({
     id: c._id,
@@ -86,7 +86,7 @@ const WarmClientList = () => {
     "Nature Bussiness": toTitleCase(c.businessNature) || "-",
     location: { fullAddress: `${toTitleCase(c.country) || "-"} | ${toTitleCase(c.state) || "-"} | ${toTitleCase(c.city) || "-"}` },
     source: { type: toTitleCase(c.dataSource) || "-" },
-    forwardTo: toTitleCase(c.forwardTo) || "-",
+    // forwardTo: toTitleCase(c.forwardTo) || "-",
     Status: toTitleCase(c.companyStatus) || "-",
     Event: { type: "Organic Expo 2026" },
     Update: {

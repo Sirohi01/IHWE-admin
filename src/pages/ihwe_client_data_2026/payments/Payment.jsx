@@ -1,22 +1,22 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { fetchEstimates } from "../../features/estimates/estimateSlice";
+import { fetchEstimates } from "../../../features/estimates/estimateSlice";
 import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { showSuccess, showError } from "../../utils/toastMessage";
+import { showSuccess, showError } from "../../../utils/toastMessage";
 import PaymentTable from "./PaymentTable";
 import BankNameModal from "./BankNameModal";
 import {
   fetchPayments,
   createPayment,
   deletePayment,
-} from "../../features/payment/paymentSlice";
-import { fetchInvoices } from "../../features/invoice/invoiceSlice";
-import { fetchPerformaInvoices } from "../../features/performaInvoice/performaInvoiceSlice";
-import { fetchUsers } from "../../features/auth/userSlice";
+} from "../../../features/payment/paymentSlice";
+import { fetchInvoices } from "../../../features/invoice/invoiceSlice";
+import { fetchPerformaInvoices } from "../../../features/performaInvoice/performaInvoiceSlice";
+import { fetchUsers } from "../../../features/auth/userSlice";
 import {
   fetchReviews,
   createReview,
-} from "../../features/crm-exhibator-reviews/crmExhibatorReviewSlice";
+} from "../../../features/crm-exhibator-reviews/crmExhibatorReviewSlice";
 
 const Payments = ({ client, onBack }) => {
   const dispatch = useDispatch();
@@ -316,7 +316,7 @@ const Payments = ({ client, onBack }) => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-gray-100 font-sans">
+    <div className="w-full mt-8 min-h-screen bg-gray-100 font-sans">
       {/* 1. Heading and Navigation Buttons */}
       <div className="max-w-full mx-auto bg-white shadow-lg sticky top-0 z-10">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between px-4 py-1">

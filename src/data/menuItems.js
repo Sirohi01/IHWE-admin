@@ -57,10 +57,11 @@ export const menuItems = [
       { label: "New Leads List", path: "/ihweClientData2026/newLeadList" },
       { label: "Warm Client List", path: "/ihweClientData2026/warmClientList" },
       { label: "Hot Client List", path: "/ihweClientData2026/hotClientList" },
-      { label: "Confirmed Client List", path: "/ihweClientData2026/confirmClientList" },
       { label: "Cold Client List", path: "/ihweClientData2026/coldClientList" },
       { label: "Master Data", path: "/ihweClientData2026/masterData" },
       { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
+      { label: "Confirmed Client List", path: "/ihweClientData2026/confirmClientList" },
+      { label: "Book A Stand", path: "/book-a-stand" },
     ],
   },
   // exhibitor section
@@ -69,16 +70,16 @@ export const menuItems = [
     label: "Exhibitor Management",
     icon: FileText,
     children: [
-      {
-        type: "item",
-        label: "Book A Stand",
-        icon: Ticket,
-        path: "/book-a-stand",
-      },
-      {
-        label: "Exhibitor Bookings List",
-        path: "/exhibitor-bookings",
-      },
+      // {
+      //   type: "item",
+      //   label: "Book A Stand",
+      //   icon: Ticket,
+      //   path: "/book-a-stand",
+      // },
+      // {
+      //   label: "Exhibitor Bookings List",
+      //   path: "/exhibitor-bookings",
+      // },
       { label: "Exhibitor Chat", path: "/exhibitor-chat" },
       {
         label: "Stall Inventory",
@@ -472,24 +473,7 @@ export const menuItems = [
   { label: "Seller Export Inquiries", path: "/seller-export-inquiries" },
   //   ]
   // },
-  // {
-  //   type: "dropdown",
-  //   label: "System Configuration",
-  //   icon: Settings,
-  //   children: [
-  //     { label: "Add Bank", path: "/ihweClientData2026/AddBank" },
-  //     { label: "Add Category", path: "/ihweClientData2026/AddCategory" },
-  //     { label: "Add CRM Whatsapp Message", path: "/ihweClientData2026/AddCrmWhatsappMessage" },
-  //     { label: "Add Data Source", path: "/ihweClientData2026/AddDataSource" },
-  //     { label: "Add Event", path: "/ihweClientData2026/AddEvent" },
-  //     { label: "Add Nature Of Business", path: "/ihweClientData2026/AddNatureOfBusiness" },
-  //     { label: "Add Remark Length Fixed", path: "/ihweClientData2026/AddRemarkLengthFixed" },
-  //     { label: "Add Status", path: "/ihweClientData2026/AddStatus" },
-  //     { label: "Add Target", path: "/ihweClientData2026/AddTarget" },
-  //     { label: "Buyer Registration Config", path: "/buyer-registration-config" },
-  //     { label: "International Registration Config", path: "/international-buyer-registration-config" },
-  //   ],
-  // },
+  
   // {
   //   type: "item",
   //   label: "Marketing Toolkit",
@@ -563,6 +547,24 @@ export const menuItems = [
       { label: "Secondary Product Categories", path: "/secondary-product-categories" },
       { label: "Meeting Priority Level", path: "/meeting-priority-level" },
       { label: "Add Unit", path: "/add-unit" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "System Configuration",
+    icon: Settings,
+    children: [
+      { label: "Add Bank", path: "/ihweClientData2026/AddBank" },
+      { label: "Add Category", path: "/ihweClientData2026/AddCategory" },
+      { label: "Add CRM Whatsapp Message", path: "/ihweClientData2026/AddCrmWhatsappMessage" },
+      { label: "Add Data Source", path: "/ihweClientData2026/AddDataSource" },
+      { label: "Add Event", path: "/ihweClientData2026/AddEvent" },
+      { label: "Add Nature Of Business", path: "/ihweClientData2026/AddNatureOfBusiness" },
+      { label: "Add Remark Length Fixed", path: "/ihweClientData2026/AddRemarkLengthFixed" },
+      { label: "Add Status", path: "/ihweClientData2026/AddStatus" },
+      { label: "Add Target", path: "/ihweClientData2026/AddTarget" },
+      { label: "Buyer Registration Config", path: "/buyer-registration-config" },
+      { label: "International Registration Config", path: "/international-buyer-registration-config" },
     ],
   },
   {
