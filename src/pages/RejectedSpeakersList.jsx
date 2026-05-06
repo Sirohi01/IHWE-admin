@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, Award, CheckCircle, List, XCircle } from "lucide-react";
+import { Eye, Mic, XCircle, UserCheck, CheckCircle } from "lucide-react";
 import api from "../lib/api";
 import Globallytable from "../components/Globallytable";
 import { showError } from "../utils/toastMessage";
@@ -10,25 +10,25 @@ const toTitleCase = (str) => {
   return str.replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
-const ApprovedAwardsList = () => {
+const RejectedSpeakersList = () => {
   const navigate = useNavigate();
-  const [nominations, setNominations] = useState([]);
+  const [speakers, setSpeakers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchNominations();
+    fetchSpeakers();
   }, []);
 
-  const fetchNominations = async () => {
+  const fetchSpeakers = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get('/api/awards-nomination');
+      const response = await api.get('/api/speaker');
       if (response.data.success) {
-        setNominations(response.data.nominations);
+        setSpeakers(response.data.data);
       }
     } catch (error) {
-      console.error('Error fetching nominations:', error);
-      showError('Failed to fetch nominations');
+      console.error('Error fetching speakers:', error);
+      showError('Failed to fetch speakers');
     } finally {
       setIsLoading(false);
     }
@@ -37,27 +37,28 @@ const ApprovedAwardsList = () => {
   // 📋 Table Columns
   const columns = [
     {
-      label: "Approved Nominee Name",
-      accessor: "nominee.name",
+      label: "Rejected Speaker Name",
+      accessor: "speaker.name",
       render: (value, row) => (
         <Link
-          to={`/awards-nominations/${row.id}`}
+          to={`/speaker-registration/${row.id}`}
           className="text-blue-500 hover:underline font-medium"
         >
           {value}
         </Link>
       ),
     },
-    { label: "Applicant Type", accessor: "nominee.type" },
-    { label: "Contact Person", accessor: "contact.person" },
+    { label: "Designation & Organization", accessor: "speaker.designation" },
     { label: "Contact Details", accessor: "contact.details" },
-    { label: "Award Category", accessor: "award.category" },
-    { label: "Location", accessor: "location" },
+    { label: "Topic", accessor: "session.topic" },
+    { label: "Session Type", accessor: "session.type" },
+    { label: "Track", accessor: "session.track" },
+    { label: "Experience", accessor: "speaker.experience" },
     {
       label: "Status",
       accessor: "status.current",
       render: (value) => (
-        <span className="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+        <span className="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
           {value}
         </span>
       )
@@ -67,7 +68,7 @@ const ApprovedAwardsList = () => {
       accessor: "actions",
       render: (value, row) => (
         <button
-          onClick={() => navigate(`/awards-nominations/${row.id}`)}
+          onClick={() => navigate(`/speaker-registration/${row.id}`)}
           className="text-blue-600 hover:text-blue-900 p-1"
           title="View Details"
         >
@@ -77,28 +78,29 @@ const ApprovedAwardsList = () => {
     },
   ];
 
-  // 🧱 Prepare Rows - Filter only Approved nominations
-  const approvedNominations = nominations.filter(
-    (nomination) => nomination.status === "Approved"
+  // 🧱 Prepare Rows - Filter only Rejected speakers
+  const rejectedSpeakers = speakers.filter(
+    (speaker) => speaker.status === "Rejected"
   );
 
-  const rows = approvedNominations.map((n) => ({
-    id: n._id,
+  const rows = rejectedSpeakers.map((s) => ({
+    id: s._id,
     checkbox: true,
-    nominee: {
-      name: toTitleCase(n.fullName),
-      type: n.applicantType,
+    speaker: {
+      name: toTitleCase(s.fullName),
+      designation: `${toTitleCase(s.designation)} at ${toTitleCase(s.organization)}`,
+      experience: s.totalExperience || "-",
     },
     contact: {
-      person: toTitleCase(n.contactPersonName),
-      details: `${n.mobile} | ${n.email}`,
+      details: `${s.mobile} | ${s.email}`,
     },
-    award: {
-      category: n.awardCategory,
+    session: {
+      topic: s.preferredTopic || "-",
+      type: s.sessionType || "-",
+      track: s.preferredTrack || "-",
     },
-    location: [n.city, n.state].filter(Boolean).join(", "),
     status: {
-      current: n.status,
+      current: s.status,
     },
     actions: "",
   }));
@@ -110,7 +112,7 @@ const ApprovedAwardsList = () => {
         {/* Background Image */}
         <img
           src="/dashbordBan.png"
-          alt="Approved Awards Banner"
+          alt="Rejected Speakers Banner"
           className="absolute inset-0 w-full h-full object-cover z-0"
         />
 
@@ -119,12 +121,12 @@ const ApprovedAwardsList = () => {
 
         {/* Content */}
         <div className="relative z-20 flex flex-col items-center justify-center h-full text-white px-6">
-          <CheckCircle className="w-16 h-16 mb-4" />
+          <XCircle className="w-16 h-16 mb-4" />
           <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-center">
-            Approved Awards
+            Rejected Speakers
           </h1>
           <p className="text-lg mt-2 text-center text-white/90">
-            View all confirmed award winners and nominees
+            View all rejected speaker applications
           </p>
         </div>
       </div>
@@ -134,33 +136,27 @@ const ApprovedAwardsList = () => {
         <div className="flex flex-col lg:flex-row justify-between items-center py-3 px-6 border-b border-gray-300 bg-white gap-4">
           <div className="flex flex-col items-center lg:items-start gap-1">
             <h1 className="text-xl font-semibold text-slate-600 uppercase tracking-tight leading-none text-center lg:text-left">
-              APPROVED AWARDS | Awards Management Section
+              REJECTED SPEAKERS | Conference Management Section
             </h1>
           </div>
           <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
             <button
-              onClick={() => navigate("/awards-nominations")}
+              onClick={() => navigate("/speaker-registration-list")}
               className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
             >
-              <Award size={12} /> Award Nominations
+              <Mic size={12} /> Speaker Nominations
             </button>
             <button
-              onClick={() => navigate("/approved-awards-list")}
-              className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#26a65b] hover:bg-[#1e8449] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
-            >
-              <CheckCircle size={12} /> Approved Awards
-            </button>
-            <button
-              onClick={() => navigate("/award-categories-manage")}
+              onClick={() => navigate("/approved-speakers-list")}
               className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
             >
-              <List size={12} /> Award Categories
+              <CheckCircle size={12} /> Approved Speakers
             </button>
             <button
-              onClick={() => navigate("/rejected-awards-list")}
-              className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-red-500 hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
+              onClick={() => navigate("/agenda-management")}
+              className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
             >
-              <XCircle size={12} /> Rejected Awards
+              <UserCheck size={12} /> Conference Agenda
             </button>
           </div>
         </div>
@@ -169,7 +165,7 @@ const ApprovedAwardsList = () => {
         <div className="bg-white m-4 p-2 rounded shadow-sm">
           <div className="flex justify-between items-center pr-4">
             <h1 className="text-lg font-medium text-gray-800 px-4">
-              APPROVED AWARDS
+              REJECTED SPEAKERS
             </h1>
           </div>
 
@@ -179,9 +175,9 @@ const ApprovedAwardsList = () => {
           <div className="text-xs">
             {isLoading ? (
               <div className="text-center text-gray-500 py-4">Loading...</div>
-            ) : approvedNominations.length === 0 ? (
+            ) : rejectedSpeakers.length === 0 ? (
               <div className="text-center text-gray-500 py-8">
-                No approved awards yet
+                No rejected speakers found
               </div>
             ) : (
               <Globallytable
@@ -197,4 +193,4 @@ const ApprovedAwardsList = () => {
   );
 };
 
-export default ApprovedAwardsList;
+export default RejectedSpeakersList;

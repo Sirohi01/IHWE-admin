@@ -54,8 +54,8 @@ const ApprovedSpeakersList = () => {
     { label: "Session Type", accessor: "session.type" },
     { label: "Track", accessor: "session.track" },
     { label: "Experience", accessor: "speaker.experience" },
-    { 
-      label: "Status", 
+    {
+      label: "Status",
       accessor: "status.current",
       render: (value) => (
         <span className="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
@@ -115,10 +115,10 @@ const ApprovedSpeakersList = () => {
           alt="Approved Speakers Banner"
           className="absolute inset-0 w-full h-full object-cover z-0"
         />
-        
+
         {/* Dark overlay */}
         <div className="absolute inset-0 bg-black/40 z-10"></div>
-        
+
         {/* Content */}
         <div className="relative z-20 flex flex-col items-center justify-center h-full text-white px-6">
           <CheckCircle className="w-16 h-16 mb-4" />
@@ -140,54 +140,60 @@ const ApprovedSpeakersList = () => {
             </h1>
           </div>
           <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
-            <button 
-              onClick={() => navigate("/speaker-registration-list")} 
+            <button
+              onClick={() => navigate("/speaker-registration-list")}
               className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
             >
               <Mic size={12} /> Speaker Nominations
             </button>
-            <button 
-              onClick={() => navigate("/approved-speakers-list")} 
+            <button
+              onClick={() => navigate("/approved-speakers-list")}
               className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#26a65b] hover:bg-[#1e8449] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
             >
               <CheckCircle size={12} /> Approved Speakers
             </button>
-            <button 
-              onClick={() => navigate("/agenda-management")} 
+            <button
+              onClick={() => navigate("/agenda-management")}
               className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
             >
               <UserCheck size={12} /> Conference Agenda
             </button>
+            <button
+              onClick={() => navigate("/rejected-speakers-list")}
+              className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-red-500 hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
+            >
+              <CheckCircle size={12} /> Rejected Speakers
+            </button>
           </div>
         </div>
 
-      {/* 🔹 Main Section */}
-      <div className="bg-white m-4 p-2 rounded shadow-sm">
-        <div className="flex justify-between items-center pr-4">
-          <h1 className="text-lg font-medium text-gray-800 px-4">
-            APPROVED SPEAKERS
-          </h1>
-        </div>
+        {/* 🔹 Main Section */}
+        <div className="bg-white m-4 p-2 rounded shadow-sm">
+          <div className="flex justify-between items-center pr-4">
+            <h1 className="text-lg font-medium text-gray-800 px-4">
+              APPROVED SPEAKERS
+            </h1>
+          </div>
 
-        <hr className="opacity-10 my-2" />
+          <hr className="opacity-10 my-2" />
 
-        {/* 🔹 Data Table */}
-        <div className="text-xs">
-          {isLoading ? (
-            <div className="text-center text-gray-500 py-4">Loading...</div>
-          ) : approvedSpeakers.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
-              No approved speakers yet
-            </div>
-          ) : (
-            <Globallytable
-              rows={rows}
-              colomns={columns}
-              style={{ marginTop: "20px" }}
-            />
-          )}
+          {/* 🔹 Data Table */}
+          <div className="text-xs">
+            {isLoading ? (
+              <div className="text-center text-gray-500 py-4">Loading...</div>
+            ) : approvedSpeakers.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                No approved speakers yet
+              </div>
+            ) : (
+              <Globallytable
+                rows={rows}
+                colomns={columns}
+                style={{ marginTop: "20px" }}
+              />
+            )}
+          </div>
         </div>
-      </div>
       </div>
     </>
   );
