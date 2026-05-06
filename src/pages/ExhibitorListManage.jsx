@@ -98,7 +98,10 @@ const ExhibitorListManage = () => {
         setBulkImages(files);
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e) => {
+        if (e) e.preventDefault();
+        if (isLoading) return;
+
         if (!form.title || !form.location || (!isEditing && !form.image)) {
             Swal.fire('Warning', 'Title, Location and Image are required!', 'warning');
             return;
@@ -138,7 +141,10 @@ const ExhibitorListManage = () => {
         }
     };
 
-    const handleBulkSubmit = async () => {
+    const handleBulkSubmit = async (e) => {
+        if (e) e.preventDefault();
+        if (isLoading) return;
+
         if (bulkImages.length === 0) {
             Swal.fire('Warning', 'Please select images first!', 'warning');
             return;
@@ -610,7 +616,7 @@ const ExhibitorListManage = () => {
                                                         </div>
                                                         <div className="flex items-center gap-3">
                                                             <span className="text-blue-400 font-medium lowercase">{(file.size / 1024).toFixed(0)}kb</span>
-                                                            <button 
+                                                            <button
                                                                 onClick={() => removeBulkImage(idx)}
                                                                 className="p-1 hover:bg-red-50 hover:text-red-500 rounded-md transition-colors"
                                                                 title="Remove file"

@@ -202,6 +202,8 @@ import SpeakerRegistrationDetail from "../pages/SpeakerRegistrationDetail";
 import SpeakerNominationsList from "../pages/SpeakerNominationsList";
 import ApprovedSpeakersList from "../pages/ApprovedSpeakersList";
 import RejectedSpeakersList from "../pages/RejectedSpeakersList";
+import RejectedAwardsList from "../pages/RejectedAwardsList";
+
 
 
 export default function AppRoutes() {
@@ -548,6 +550,8 @@ export default function AppRoutes() {
           <Route path="/awards-nominations/:id" element={<AwardsNominationDetail />} />
           <Route path="/award-categories-manage" element={<AwardCategoriesManage />} />
           <Route path="/awards-gallery-manage" element={<AwardsGalleryManage />} />
+          <Route path="/rejected-awards-list" element={<RejectedAwardsList />} />
+
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>
