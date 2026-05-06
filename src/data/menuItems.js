@@ -213,12 +213,13 @@ export const menuItems = [
       { label: "Featured Services", path: "/featured-services" },
       { label: "Healthcare Sectors", path: "/healthcare-sectors" },
       { label: "FAQ Management", path: "/faq-manage" },
-      { label: "GLIMPSE EVENT", path: "/glimpse" },
+      { label: "Glimpse Event", path: "/glimpse" },
       { label: "Our Clients", path: "/clients" },
       { label: "Parallax Image", path: "/parallax-manage" },
       { label: "Testimonials", path: "/testimonials-manage" },
       { label: "New Testimonials", path: "/new-testimonials-manage" },
       { label: "Counters", path: "/stats-manage" },
+      { label: "Floating Video", path: "/floating-video-management" },
     ],
   },
   {
@@ -333,6 +334,12 @@ export const menuItems = [
     label: "Social Media",
     icon: MessageSquare,
     path: "/social-media",
+  },
+  {
+    type: "item",
+    label: "Sponsorship Enquiry",
+    path: "/sponsorship-enquiries",
+    icon: MessageSquare,
   },
   {
     type: "item",

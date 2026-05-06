@@ -198,37 +198,47 @@ const Introduction = () => {
         {/* Left Column: Main Settings (subtitle, title, desc, image, bg) */}
         <div className="lg:col-span-5 space-y-6">
           <div className="bg-white border-2 border-gray-200 p-6 shadow-sm rounded-lg">
-            <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d] border-b-2 border-gray-100 pb-3">
+            <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d] border-b-2 border-gray-100 pb-3 uppercase tracking-tighter">
               <Type className="w-5 h-5 text-[#d26019]" /> Content Settings
             </h2>
             
-            <div className="space-y-6">
+            <style dangerouslySetInnerHTML={{ __html: `
+              .intro-editor-container [contenteditable], 
+              .intro-editor-container [contenteditable] *,
+              .intro-editor-container .prose,
+              .intro-editor-container .prose * {
+                text-shadow: none !important;
+                filter: none !important;
+                box-shadow: none !important;
+              }
+            ` }} />
+
+            <div className="space-y-6 intro-editor-container">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Subtitle (e.g. INTRODUCTION)</label>
-                <RichTextEditor
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Subtitle (e.g. INTRODUCTION)</label>
+                <input
+                  type="text"
                   value={data.subtitle}
-                  onChange={(val) => setData({ ...data, subtitle: val })}
+                  onChange={(e) => setData({ ...data, subtitle: e.target.value })}
+                  className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-sm"
                   placeholder="Enter subtitle..."
-                  minHeight="100px"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Main Title</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Main Title</label>
                 <RichTextEditor
                   value={data.title}
                   onChange={(val) => setData({ ...data, title: val })}
-                  placeholder="Enter main title..."
                   minHeight="120px"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Description</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Description</label>
                 <RichTextEditor
                   value={data.description}
                   onChange={(val) => setData({ ...data, description: val })}
-                  placeholder="Enter description..."
                   minHeight="200px"
                 />
               </div>

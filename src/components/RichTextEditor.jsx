@@ -429,6 +429,17 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                 [contenteditable].has-custom-font-master {
                     font-size: var(--master-font-size);
                 }
+                
+                /* AGGRESSIVE SHADOW REMOVAL */
+                [contenteditable], 
+                [contenteditable] *,
+                .prose,
+                .prose * {
+                    text-shadow: none !important;
+                    filter: none !important;
+                    -webkit-filter: none !important;
+                    box-shadow: none !important;
+                }
             ` }} />
         </div>
     );
