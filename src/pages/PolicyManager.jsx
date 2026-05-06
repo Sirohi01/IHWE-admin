@@ -47,7 +47,9 @@ const PolicyManager = () => {
     const policies = [
         { label: "Privacy Policy", value: "privacy-policy" },
         { label: "Terms of Service", value: "terms-of-service" },
-        { label: "Refund Policy", value: "refund-policy" }
+        { label: "Refund Policy", value: "refund-policy" },
+        { label: "Payment Policy", value: "payment-policy" },
+        { label: "Cancellation Policy", value: "cancellation-policy" }
     ];
 
     // Fetch existing policy when page changes

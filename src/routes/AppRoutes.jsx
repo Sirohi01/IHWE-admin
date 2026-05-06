@@ -205,6 +205,9 @@ import SpeakerRegistrationList from "../pages/SpeakerRegistrationList";
 import SpeakerRegistrationDetail from "../pages/SpeakerRegistrationDetail";
 import SpeakerNominationsList from "../pages/SpeakerNominationsList";
 import ApprovedSpeakersList from "../pages/ApprovedSpeakersList";
+import RejectedSpeakersList from "../pages/RejectedSpeakersList";
+import RejectedAwardsList from "../pages/RejectedAwardsList";
+
 
 
 export default function AppRoutes() {
@@ -244,6 +247,7 @@ export default function AppRoutes() {
           <Route path="/conference-testimonials-manage" element={<ConferenceTestimonialsManage />} />
           <Route path="/speaker-registration-list" element={<SpeakerNominationsList />} />
           <Route path="/approved-speakers-list" element={<ApprovedSpeakersList />} />
+          <Route path="/rejected-speakers-list" element={<RejectedSpeakersList />} />
           <Route path="/speaker-registration/:id" element={<SpeakerRegistrationDetail />} />
           <Route
             path="exhibitor-profile-manage"
@@ -563,6 +567,8 @@ export default function AppRoutes() {
           <Route path="/awards-nominations/:id" element={<AwardsNominationDetail />} />
           <Route path="/award-categories-manage" element={<AwardCategoriesManage />} />
           <Route path="/awards-gallery-manage" element={<AwardsGalleryManage />} />
+          <Route path="/rejected-awards-list" element={<RejectedAwardsList />} />
+
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>
