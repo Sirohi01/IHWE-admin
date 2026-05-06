@@ -201,6 +201,8 @@ import SpeakerRegistrationList from "../pages/SpeakerRegistrationList";
 import SpeakerRegistrationDetail from "../pages/SpeakerRegistrationDetail";
 import SpeakerNominationsList from "../pages/SpeakerNominationsList";
 import ApprovedSpeakersList from "../pages/ApprovedSpeakersList";
+import FloatingVideoManagement from "../pages/FloatingVideoManagement";
+import SponsorshipEnquiries from "../pages/SponsorshipEnquiries";
 import RejectedSpeakersList from "../pages/RejectedSpeakersList";
 import RejectedAwardsList from "../pages/RejectedAwardsList";
 
@@ -540,6 +542,9 @@ export default function AppRoutes() {
           <Route path="/to-do-list" element={<ToDoList />} />
           <Route path="/new-leads" element={<NewLeads />} />
           <Route path="/notification" element={<Notification />} />
+          <Route path="/floating-video-management" element={<FloatingVideoManagement />} />
+          <Route path="/sponsorship-enquiries" element={<SponsorshipEnquiries />} />
+
           <Route path="*" element={<NotFound />} />
           <Route path="/international-buyer-list" element={<InternationalBuyerList />} />
           <Route path="/international-buyer/:id" element={<InternationalBuyerRegistrationDetail />} />
