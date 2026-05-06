@@ -334,6 +334,54 @@ const ExhibitorListManage = () => {
         setPreview(null);
     };
 
+    const [selectedIds, setSelectedIds] = useState([]);
+
+    const toggleSelectAll = () => {
+        if (selectedIds.length === exhibitors.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(exhibitors.map(ex => ex._id));
+        }
+    };
+
+    const toggleSelect = (id) => {
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.length === 0) return;
+
+        const result = await Swal.fire({
+            title: 'Delete Selected?',
+            text: `You are about to delete ${selectedIds.length} exhibitors. This action cannot be undone!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete all!'
+        });
+
+        if (!result.isConfirmed) return;
+
+        setIsLoading(true);
+        try {
+            await api.delete('/api/exhibitor/bulk/delete', { data: { ids: selectedIds } });
+
+            Swal.fire('Deleted!', `${selectedIds.length} exhibitors have been removed.`, 'success');
+            setSelectedIds([]);
+            fetchExhibitors();
+        } catch (error) {
+            Swal.fire('Error', 'Failed to delete selected items', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const removeBulkImage = (index) => {
+        setBulkImages(prev => prev.filter((_, i) => i !== index));
+    };
+
     return (
         <div className="bg-[#f8f9fa] min-h-screen pt-6">
             {/* Hero Banner */}
@@ -545,17 +593,31 @@ const ExhibitorListManage = () => {
                                                     <span className="block text-xs font-bold text-gray-500 uppercase tracking-widest">
                                                         {bulkImages.length > 0 ? `${bulkImages.length} files selected` : 'Select Files'}
                                                     </span>
-                                                    <span className="block text-[10px] text-gray-400 mt-1">Upload up to 50 images at once</span>
+                                                    <span className="block text-[10px] text-gray-400 mt-1">Upload up to 100 images at once</span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {bulkImages.length > 0 && (
-                                            <div className="max-h-40 overflow-y-auto p-3 bg-gray-50 rounded-lg space-y-2 border border-gray-100">
+                                            <div className="max-h-48 overflow-y-auto p-3 bg-gray-50 rounded-lg space-y-2 border border-gray-100">
                                                 {bulkImages.map((file, idx) => (
-                                                    <div key={idx} className="flex items-center justify-between text-[10px] text-gray-500 font-bold uppercase tracking-tight">
-                                                        <span className="truncate max-w-[180px]">{file.name}</span>
-                                                        <span className="text-blue-500">{(file.size / 1024).toFixed(0)} KB</span>
+                                                    <div key={idx} className="flex items-center justify-between text-[10px] text-gray-500 font-bold uppercase tracking-tight bg-white p-2 rounded-lg border border-gray-100 shadow-sm group/item">
+                                                        <div className="flex items-center gap-2 truncate">
+                                                            <div className="w-6 h-6 bg-blue-50 rounded flex items-center justify-center text-blue-500 shrink-0">
+                                                                <ImageIcon className="w-3.5 h-3.5" />
+                                                            </div>
+                                                            <span className="truncate max-w-[150px]">{file.name}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-blue-400 font-medium lowercase">{(file.size / 1024).toFixed(0)}kb</span>
+                                                            <button 
+                                                                onClick={() => removeBulkImage(idx)}
+                                                                className="p-1 hover:bg-red-50 hover:text-red-500 rounded-md transition-colors"
+                                                                title="Remove file"
+                                                            >
+                                                                <X className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
@@ -606,15 +668,26 @@ const ExhibitorListManage = () => {
                                     </select>
                                 )}
                             </div>
-                            <div className="relative w-full md:w-64">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Search brands..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none text-xs font-medium"
-                                />
+                            <div className="flex items-center gap-3 w-full md:w-auto">
+                                {selectedIds.length > 0 && (
+                                    <button
+                                        onClick={handleBulkDelete}
+                                        className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-red-200 hover:bg-red-700 transition-all"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                        Delete ({selectedIds.length})
+                                    </button>
+                                )}
+                                <div className="relative w-full md:w-64">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search brands..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none text-xs font-medium"
+                                    />
+                                </div>
                             </div>
                         </div>
 
@@ -624,7 +697,15 @@ const ExhibitorListManage = () => {
                                 <table className="w-full text-left border-collapse">
                                     <thead>
                                         <tr className="bg-gray-50 border-b border-gray-100">
-                                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest w-20">No.</th>
+                                            <th className="px-4 py-4 w-10">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.length === exhibitors.length && exhibitors.length > 0}
+                                                    onChange={toggleSelectAll}
+                                                    className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
+                                                />
+                                            </th>
+                                            <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest w-20">No.</th>
                                             <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Brand</th>
                                             <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Category</th>
                                             <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Actions</th>
@@ -633,13 +714,21 @@ const ExhibitorListManage = () => {
                                     <tbody className="divide-y divide-gray-50">
                                         {exhibitors.length === 0 ? (
                                             <tr>
-                                                <td colSpan={4} className="px-6 py-12 text-center text-gray-400 italic text-sm">
+                                                <td colSpan={5} className="px-6 py-12 text-center text-gray-400 italic text-sm">
                                                     {isLoading ? 'Loading exhibitors...' : 'No exhibitors found matching your criteria.'}
                                                 </td>
                                             </tr>
                                         ) : exhibitors.map((ex, idx) => (
-                                            <tr key={ex._id} className="group hover:bg-green-50/20 transition-colors">
-                                                <td className="px-6 py-4">
+                                            <tr key={ex._id} className={`group hover:bg-green-50/20 transition-colors ${selectedIds.includes(ex._id) ? 'bg-green-50/40' : ''}`}>
+                                                <td className="px-4 py-4">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedIds.includes(ex._id)}
+                                                        onChange={() => toggleSelect(ex._id)}
+                                                        className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-4">
                                                     <div className="flex flex-col gap-1 items-center">
                                                         <button
                                                             disabled={idx === 0 && currentPage === 1}
@@ -689,7 +778,7 @@ const ExhibitorListManage = () => {
                                                         {ex.category || 'OTHERS'}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-4 text-center">
                                                     <div className="flex items-center justify-center gap-2">
                                                         <button
                                                             onClick={() => startEdit(ex)}
