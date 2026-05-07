@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Plus, Pencil, Trash2, Award, ToggleLeft, ToggleRight, GripVertical } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Pencil, Trash2, Award, ToggleLeft, ToggleRight, GripVertical, List, CheckCircle, XCircle } from "lucide-react";
 import Swal from "sweetalert2";
 import api from "../lib/api";
 import PageHeader from "../components/PageHeader";
@@ -7,6 +8,7 @@ import PageHeader from "../components/PageHeader";
 const EMPTY_FORM = { name: "", description: "", status: "Active", order: "" };
 
 const AwardCategoriesManage = () => {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -102,10 +104,10 @@ const AwardCategoriesManage = () => {
           alt="Award Categories Banner"
           className="absolute inset-0 w-full h-full object-cover z-0"
         />
-        
+
         {/* Dark overlay */}
         <div className="absolute inset-0 bg-black/40 z-10"></div>
-        
+
         {/* Content */}
         <div className="relative z-20 flex flex-col items-center justify-center h-full text-white px-6">
           <Award className="w-16 h-16 mb-4" />
@@ -118,6 +120,43 @@ const AwardCategoriesManage = () => {
         </div>
       </div>
 
+      <div className="w-full h-auto bg-[#eef1f5]">
+        {/* 🔹 Header */}
+        <div className="flex flex-col lg:flex-row justify-between items-center py-3 px-6 border-b border-gray-300 bg-white gap-4">
+          <div className="flex flex-col items-center lg:items-start gap-1">
+            <h1 className="text-xl font-semibold text-slate-600 uppercase tracking-tight leading-none text-center lg:text-left">
+              AWARD CATEGORIES | Awards Management Section
+            </h1>
+          </div>
+          <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
+            <button
+              onClick={() => navigate("/awards-nominations")}
+              className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
+            >
+              <Award size={12} /> Award Nominations
+            </button>
+            <button
+              onClick={() => navigate("/approved-awards-list")}
+              className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
+            >
+              <CheckCircle size={12} /> Approved Awards
+            </button>
+            <button
+              onClick={() => navigate("/award-categories-manage")}
+              className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#008d48] hover:bg-[#007a3e] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
+            >
+              <List size={12} /> Award Categories
+            </button>
+            <button
+              onClick={() => navigate("/rejected-awards-list")}
+              className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-red-500 hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
+            >
+              <XCircle size={12} /> Rejected Awards
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Main Content */}
       <div className="p-4 md:p-6 space-y-5">
         <PageHeader
@@ -125,187 +164,186 @@ const AwardCategoriesManage = () => {
           subtitle="Manage award categories for Namo Gange Global Health Excellence Awards"
         />
 
-      {/* Add Button */}
-      <div className="flex justify-end">
-        <button
-          onClick={openAdd}
-          className="flex items-center gap-2 px-5 py-2.5 bg-[#008d48] text-white rounded-lg text-[12px] font-black uppercase tracking-widest hover:bg-[#007a3e] transition-all shadow-sm"
-        >
-          <Plus className="w-4 h-4" /> Add Category
-        </button>
-      </div>
+        {/* Add Button */}
+        <div className="flex justify-end">
+          <button
+            onClick={openAdd}
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#008d48] text-white rounded-lg text-[12px] font-black uppercase tracking-widest hover:bg-[#007a3e] transition-all shadow-sm"
+          >
+            <Plus className="w-4 h-4" /> Add Category
+          </button>
+        </div>
 
-      {/* Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="flex items-center justify-between p-5 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-[#008d48] rounded-full flex items-center justify-center">
-                  <Award className="w-4 h-4 text-white" />
+        {/* Form Modal */}
+        {showForm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+              <div className="flex items-center justify-between p-5 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#008d48] rounded-full flex items-center justify-center">
+                    <Award className="w-4 h-4 text-white" />
+                  </div>
+                  <h2 className="font-black text-[#0a2e5c] text-[14px]">
+                    {editId ? "Edit Category" : "Add New Category"}
+                  </h2>
                 </div>
-                <h2 className="font-black text-[#0a2e5c] text-[14px]">
-                  {editId ? "Edit Category" : "Add New Category"}
-                </h2>
-              </div>
-              <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600 text-xl font-bold">×</button>
-            </div>
-
-            <div className="p-5 space-y-4">
-              <div>
-                <label className="text-[11px] font-bold text-slate-600 block mb-1">Category Name *</label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-                  placeholder="e.g. Best Hospital / Healthcare Institution"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[12.5px] focus:outline-none focus:ring-1 focus:ring-[#008d48]"
-                />
+                <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600 text-xl font-bold">×</button>
               </div>
 
-              <div>
-                <label className="text-[11px] font-bold text-slate-600 block mb-1">Description (Optional)</label>
-                <textarea
-                  value={form.description}
-                  onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-                  placeholder="Brief description of this award category..."
-                  rows={3}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[12.5px] focus:outline-none focus:ring-1 focus:ring-[#008d48]"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              <div className="p-5 space-y-4">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-600 block mb-1">Display Order</label>
+                  <label className="text-[11px] font-bold text-slate-600 block mb-1">Category Name *</label>
                   <input
-                    type="number"
-                    value={form.order}
-                    onChange={e => setForm(p => ({ ...p, order: e.target.value }))}
-                    placeholder="1"
-                    min="1"
+                    type="text"
+                    value={form.name}
+                    onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+                    placeholder="e.g. Best Hospital / Healthcare Institution"
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[12.5px] focus:outline-none focus:ring-1 focus:ring-[#008d48]"
                   />
                 </div>
-                <div>
-                  <label className="text-[11px] font-bold text-slate-600 block mb-1">Status</label>
-                  <select
-                    value={form.status}
-                    onChange={e => setForm(p => ({ ...p, status: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[12.5px] focus:outline-none focus:ring-1 focus:ring-[#008d48]"
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
-                </div>
-              </div>
 
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="flex-1 py-2.5 bg-[#008d48] text-white rounded-lg font-black text-[12px] uppercase tracking-widest hover:bg-[#007a3e] transition-all disabled:opacity-60"
-                >
-                  {saving ? "Saving..." : editId ? "Update Category" : "Add Category"}
-                </button>
-                <button
-                  onClick={() => setShowForm(false)}
-                  className="px-5 py-2.5 border border-slate-200 text-slate-600 rounded-lg font-bold text-[12px] hover:bg-slate-50 transition-all"
-                >
-                  Cancel
-                </button>
+                <div>
+                  <label className="text-[11px] font-bold text-slate-600 block mb-1">Description (Optional)</label>
+                  <textarea
+                    value={form.description}
+                    onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+                    placeholder="Brief description of this award category..."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[12.5px] focus:outline-none focus:ring-1 focus:ring-[#008d48]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-600 block mb-1">Display Order</label>
+                    <input
+                      type="number"
+                      value={form.order}
+                      onChange={e => setForm(p => ({ ...p, order: e.target.value }))}
+                      placeholder="1"
+                      min="1"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[12.5px] focus:outline-none focus:ring-1 focus:ring-[#008d48]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-600 block mb-1">Status</label>
+                    <select
+                      value={form.status}
+                      onChange={e => setForm(p => ({ ...p, status: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[12.5px] focus:outline-none focus:ring-1 focus:ring-[#008d48]"
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="flex-1 py-2.5 bg-[#008d48] text-white rounded-lg font-black text-[12px] uppercase tracking-widest hover:bg-[#007a3e] transition-all disabled:opacity-60"
+                  >
+                    {saving ? "Saving..." : editId ? "Update Category" : "Add Category"}
+                  </button>
+                  <button
+                    onClick={() => setShowForm(false)}
+                    className="px-5 py-2.5 border border-slate-200 text-slate-600 rounded-lg font-bold text-[12px] hover:bg-slate-50 transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="w-8 h-8 border-4 border-[#008d48] border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : categories.length === 0 ? (
-          <div className="text-center py-16 text-slate-400">
-            <Award className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p className="font-bold text-[13px]">No categories yet. Add your first one!</p>
-          </div>
-        ) : (
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-100">
-                {["Order", "Category Name", "Description", "Status", "Actions"].map(h => (
-                  <th key={h} className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {categories.map((cat) => (
-                <tr key={cat._id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <GripVertical className="w-4 h-4 text-slate-300" />
-                      <span className="text-[12px] font-black text-slate-400">{cat.order || "—"}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 bg-green-50 rounded-lg flex items-center justify-center shrink-0">
-                        <Award className="w-4 h-4 text-[#008d48]" />
+        {/* Table */}
+        <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="w-8 h-8 border-4 border-[#008d48] border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : categories.length === 0 ? (
+            <div className="text-center py-16 text-slate-400">
+              <Award className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="font-bold text-[13px]">No categories yet. Add your first one!</p>
+            </div>
+          ) : (
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-100">
+                  {["Order", "Category Name", "Description", "Status", "Actions"].map(h => (
+                    <th key={h} className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {categories.map((cat) => (
+                  <tr key={cat._id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <GripVertical className="w-4 h-4 text-slate-300" />
+                        <span className="text-[12px] font-black text-slate-400">{cat.order || "—"}</span>
                       </div>
-                      <span className="text-[13px] font-bold text-[#0a2e5c]">{cat.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-[12px] text-slate-400 font-medium">{cat.description || "—"}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => toggleStatus(cat)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black border transition-all ${
-                        cat.status === "Active"
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 bg-green-50 rounded-lg flex items-center justify-center shrink-0">
+                          <Award className="w-4 h-4 text-[#008d48]" />
+                        </div>
+                        <span className="text-[13px] font-bold text-[#0a2e5c]">{cat.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-[12px] text-slate-400 font-medium">{cat.description || "—"}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => toggleStatus(cat)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black border transition-all ${cat.status === "Active"
                           ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
                           : "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200"
-                      }`}
-                    >
-                      {cat.status === "Active"
-                        ? <ToggleRight className="w-3.5 h-3.5" />
-                        : <ToggleLeft className="w-3.5 h-3.5" />
-                      }
-                      {cat.status}
-                    </button>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => openEdit(cat)}
-                        className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
-                        title="Edit"
+                          }`}
                       >
-                        <Pencil className="w-3.5 h-3.5" />
+                        {cat.status === "Active"
+                          ? <ToggleRight className="w-3.5 h-3.5" />
+                          : <ToggleLeft className="w-3.5 h-3.5" />
+                        }
+                        {cat.status}
                       </button>
-                      <button
-                        onClick={() => handleDelete(cat._id, cat.name)}
-                        className="p-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => openEdit(cat)}
+                          className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                          title="Edit"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(cat._id, cat.name)}
+                          className="p-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
 
-      <p className="text-[11px] text-slate-400 font-medium">
-        Total: <strong>{categories.length}</strong> categories &nbsp;|&nbsp;
-        Active: <strong>{categories.filter(c => c.status === "Active").length}</strong> &nbsp;|&nbsp;
-        Inactive: <strong>{categories.filter(c => c.status === "Inactive").length}</strong>
-      </p>
-    </div>
+        <p className="text-[11px] text-slate-400 font-medium">
+          Total: <strong>{categories.length}</strong> categories &nbsp;|&nbsp;
+          Active: <strong>{categories.filter(c => c.status === "Active").length}</strong> &nbsp;|&nbsp;
+          Inactive: <strong>{categories.filter(c => c.status === "Inactive").length}</strong>
+        </p>
+      </div>
     </>
   );
 };

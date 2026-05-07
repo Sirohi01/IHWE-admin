@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, Award, CheckCircle, List, Download 
+  ArrowLeft, Award, CheckCircle, List, Download, XCircle 
 } from 'lucide-react';
 import api from "../lib/api";
 import { showSuccess, showError } from "../utils/toastMessage";
@@ -107,6 +107,12 @@ const AwardsNominationDetail = () => {
                         className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
                     >
                         <List size={12} /> Award Categories
+                    </button>
+                    <button 
+                        onClick={() => navigate("/rejected-awards-list")} 
+                        className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-red-500 hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
+                    >
+                        <CheckCircle size={12} /> Rejected Awards
                     </button>
                 </div>
             </div>
