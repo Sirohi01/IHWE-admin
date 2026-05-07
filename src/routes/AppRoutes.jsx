@@ -199,7 +199,6 @@ import CreditNote from "../pages/ihwe_client_data_2026/CreditNote";
 import TaxInvoiceDetails from "../pages/ihwe_client_data_2026/invoice/TaxInvoiceDetails";
 import InvoiceNumberDetails from "../pages/ihwe_client_data_2026/invoice/InvoiceNumberDetails";
 import Payments from "../pages/ihwe_client_data_2026/payments/Payment";
-import CreditNote from "../pages/ihwe_client_data_2026/CreditNote"
 import AgendaManagement from "../pages/AgendaManagement";
 import SpeakerRegistrationList from "../pages/SpeakerRegistrationList";
 import SpeakerRegistrationDetail from "../pages/SpeakerRegistrationDetail";

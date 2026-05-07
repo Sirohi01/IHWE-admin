@@ -22,6 +22,7 @@ const AwardsGalleryManage = () => {
     const [bulkPreviews, setBulkPreviews] = useState([]);
     const [bulkLabel, setBulkLabel] = useState('NAMO GANGE GLOBAL HEALTH EXCELLENCE AWARDS');
     const [bulkStatus, setBulkStatus] = useState('Active');
+    const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
         fetchItems();
@@ -66,6 +67,9 @@ const AwardsGalleryManage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
+        if (isUploading) return;
+        setIsUploading(true);
+        
         if (!imageFile && !editingId) {
             Swal.fire({ icon: 'error', title: 'Error', text: 'Please select an image' });
             return;
@@ -94,10 +98,14 @@ const AwardsGalleryManage = () => {
             fetchItems();
         } catch (error) {
             Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save item' });
+        } finally {
+            setIsUploading(false);
         }
     };
 
     const handleBulkUpload = async () => {
+        if (isUploading) return;
+        setIsUploading(true);
         if (bulkFiles.length === 0) {
             Swal.fire({ icon: 'error', title: 'Error', text: 'Please select at least one image' });
             return;
@@ -125,6 +133,8 @@ const AwardsGalleryManage = () => {
             fetchItems();
         } catch (error) {
             Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to upload images' });
+        } finally {
+            setIsUploading(false);
         }
     };
 
@@ -307,7 +317,7 @@ const AwardsGalleryManage = () => {
                                 className="flex items-center gap-2 px-6 py-2 bg-[#008d48] text-white rounded-lg font-bold text-sm hover:bg-[#007a3e] transition-all"
                             >
                                 <Save className="w-4 h-4" />
-                                {editingId ? 'Update' : 'Create'}
+                                {isUploading ? 'Saving...' : (editingId ? 'Update' : 'Create')}
                             </button>
                             <button
                                 type="button"
@@ -409,11 +419,11 @@ const AwardsGalleryManage = () => {
                             <button
                                 type="button"
                                 onClick={handleBulkUpload}
-                                disabled={bulkFiles.length === 0}
+                                disabled={isUploading || bulkFiles.length === 0}
                                 className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-lg font-bold text-sm hover:bg-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Save className="w-4 h-4" />
-                                Upload {bulkFiles.length} Image{bulkFiles.length !== 1 ? 's' : ''}
+                                {isUploading ? 'Uploading...' : `Upload ${bulkFiles.length} Image${bulkFiles.length !== 1 ? 's' : ''}`}
                             </button>
                             <button
                                 type="button"

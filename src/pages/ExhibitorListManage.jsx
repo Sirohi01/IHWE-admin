@@ -22,7 +22,7 @@ const EMPTY_FORM = {
     order: 0
 };
 
-const ITEMS_PER_PAGE = 10;
+
 
 const ExhibitorListManage = () => {
     const dispatch = useDispatch();
@@ -38,6 +38,7 @@ const ExhibitorListManage = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
+    const [itemsPerPage, setItemsPerPage] = useState(parseInt(localStorage.getItem('exhibitorItemsPerPage')) || 10);
 
     // Bulk Upload State
     const [isBulkMode, setIsBulkMode] = useState(false);
@@ -48,14 +49,19 @@ const ExhibitorListManage = () => {
 
     useEffect(() => {
         fetchExhibitors();
-    }, [currentPage, activeTab, searchTerm]);
+    }, [currentPage, activeTab, searchTerm, itemsPerPage]);
+
+    useEffect(() => {
+        localStorage.setItem('exhibitorItemsPerPage', itemsPerPage);
+        setCurrentPage(1); // Reset to first page when limit changes
+    }, [itemsPerPage]);
 
     const fetchExhibitors = async () => {
         setIsLoading(true);
         try {
             const params = new URLSearchParams({
                 page: currentPage,
-                limit: ITEMS_PER_PAGE,
+                limit: itemsPerPage,
                 category: activeTab,
                 search: searchTerm
             });
@@ -181,27 +187,34 @@ const ExhibitorListManage = () => {
 
     const handleSmartMove = async (index) => {
         const currentItem = exhibitors[index];
-        const currentPos = (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
+        const currentPos = (currentPage - 1) * itemsPerPage + index + 1;
 
         const { value: targetPos } = await Swal.fire({
             title: 'Move Exhibitor',
-            text: `Enter new position for "${currentItem.title}" (Current: ${currentPos})`,
-            input: 'number',
-            inputAttributes: {
-                min: 1,
-                max: totalItems,
-                step: 1
-            },
-            inputValue: currentPos,
+            html: `
+                <div class="space-y-3 p-2">
+                    <div class="text-xs text-gray-500 font-medium">Currently at position: <b class="text-green-600">${currentPos}</b></div>
+                    <input type="number" id="target-pos" class="swal2-input !m-0 !w-full" placeholder="Enter target position (1-${totalItems})" min="1" max="${totalItems}">
+                    <div class="text-[10px] text-gray-400 italic">Example: Enter 1 to move to the very beginning.</div>
+                </div>
+            `,
+            focusConfirm: false,
             showCancelButton: true,
-            confirmButtonText: 'Next',
-            confirmButtonColor: '#15803d',
+            confirmButtonText: 'Move',
+            preConfirm: () => {
+                const val = document.getElementById('target-pos').value;
+                if (!val || val < 1 || val > totalItems) {
+                    Swal.showValidationMessage(`Please enter a position between 1 and ${totalItems}`);
+                    return false;
+                }
+                return parseInt(val);
+            }
         });
 
         if (!targetPos) return;
 
-        const targetPage = Math.ceil(targetPos / ITEMS_PER_PAGE);
-        const targetIndexOnPage = (targetPos - 1) % ITEMS_PER_PAGE;
+        const targetPage = Math.ceil(targetPos / itemsPerPage);
+        const targetIndexOnPage = (targetPos - 1) % itemsPerPage;
 
         // If it's on the same page, we can show the swap/shift choice
         // If it's on a different page, we'll default to 'shift' (pushing it into that page)
@@ -748,7 +761,7 @@ const ExhibitorListManage = () => {
                                                             className="text-xs font-black text-gray-300 group-hover:text-green-600 transition-colors hover:scale-110"
                                                             title="Click to move to specific position"
                                                         >
-                                                            {(currentPage - 1) * ITEMS_PER_PAGE + idx + 1}
+                                                            {(currentPage - 1) * itemsPerPage + idx + 1}
                                                         </button>
                                                         <button
                                                             disabled={idx === exhibitors.length - 1 && currentPage === totalPages}
@@ -813,49 +826,71 @@ const ExhibitorListManage = () => {
                                 <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
                                     <div className="flex flex-col">
                                         <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} of {totalItems} brands
+                                            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} brands
                                         </div>
                                         <div className="text-[8px] text-gray-300 uppercase font-bold">Page {currentPage} of {totalPages}</div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                            disabled={currentPage === 1}
-                                            className="p-2 bg-white border border-gray-200 rounded-lg text-gray-500 disabled:opacity-30 hover:bg-gray-50 transition-all shadow-sm"
-                                        >
-                                            <ChevronLeft size={16} />
-                                        </button>
 
-                                        <div className="flex items-center gap-1">
-                                            {[...Array(totalPages)].map((_, i) => {
-                                                const page = i + 1;
-                                                // Show limited pages if too many
-                                                if (totalPages > 7 && Math.abs(page - currentPage) > 2 && page !== 1 && page !== totalPages) {
-                                                    if (page === 2 || page === totalPages - 1) return <span key={page} className="px-1 text-gray-300">...</span>;
-                                                    return null;
-                                                }
-                                                return (
-                                                    <button
-                                                        key={page}
-                                                        onClick={() => setCurrentPage(page)}
-                                                        className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${currentPage === page
-                                                            ? 'bg-green-700 text-white shadow-md'
-                                                            : 'bg-white border border-gray-100 text-gray-500 hover:bg-gray-50'
-                                                            }`}
-                                                    >
-                                                        {page}
-                                                    </button>
-                                                );
-                                            })}
+                                    <div className="flex items-center gap-6">
+                                        {/* Items Per Page Selector */}
+                                        <div className="flex items-center gap-3 border-r border-gray-200 pr-6 mr-2">
+                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Items per page:</span>
+                                            <div className="flex items-center gap-1.5">
+                                                <select
+                                                    value={itemsPerPage}
+                                                    onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
+                                                    className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none cursor-pointer shadow-sm"
+                                                >
+                                                    <option value={10}>10</option>
+                                                    <option value={20}>20</option>
+                                                    <option value={50}>50</option>
+                                                    <option value={75}>75</option>
+                                                    <option value={100}>100</option>
+                                                    <option value={200}>200</option>
+                                                    <option value={500}>500</option>
+                                                </select>
+                                            </div>
                                         </div>
 
-                                        <button
-                                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                            disabled={currentPage === totalPages}
-                                            className="p-2 bg-white border border-gray-200 rounded-lg text-gray-500 disabled:opacity-30 hover:bg-gray-50 transition-all shadow-sm"
-                                        >
-                                            <ChevronRight size={16} />
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                                disabled={currentPage === 1}
+                                                className="p-2 bg-white border border-gray-200 rounded-lg text-gray-500 disabled:opacity-30 hover:bg-gray-50 transition-all shadow-sm"
+                                            >
+                                                <ChevronLeft size={16} />
+                                            </button>
+
+                                            <div className="flex items-center gap-1">
+                                                {[...Array(totalPages)].map((_, i) => {
+                                                    const page = i + 1;
+                                                    if (totalPages > 7 && Math.abs(page - currentPage) > 2 && page !== 1 && page !== totalPages) {
+                                                        if (page === 2 || page === totalPages - 1) return <span key={page} className="px-1 text-gray-300">...</span>;
+                                                        return null;
+                                                    }
+                                                    return (
+                                                        <button
+                                                            key={page}
+                                                            onClick={() => setCurrentPage(page)}
+                                                            className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${currentPage === page
+                                                                ? 'bg-green-700 text-white shadow-md'
+                                                                : 'bg-white border border-gray-100 text-gray-500 hover:bg-gray-50'
+                                                                }`}
+                                                        >
+                                                            {page}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+
+                                            <button
+                                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                                disabled={currentPage === totalPages}
+                                                className="p-2 bg-white border border-gray-200 rounded-lg text-gray-500 disabled:opacity-30 hover:bg-gray-50 transition-all shadow-sm"
+                                            >
+                                                <ChevronRight size={16} />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             )}
