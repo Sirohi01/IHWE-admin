@@ -125,7 +125,12 @@ export const menuItems = [
         label: "E-Promotion Packages",
         icon: Package,
         path: "/e-promotion-packages",
-      }
+      },
+      {
+        label: "MSME PMS Scheme",
+        icon: List,
+        path: "/msme-pms-scheme-list",
+      },
 
     ]
   },
@@ -481,7 +486,7 @@ export const menuItems = [
   { label: "Seller Export Inquiries", path: "/seller-export-inquiries" },
   //   ]
   // },
-  
+
   // {
   //   type: "item",
   //   label: "Marketing Toolkit",
