@@ -17,19 +17,31 @@ const NewTestimonialsManagement = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState({
     settings: {
-      subtitle: "Testimonials",
-      heading: "Real Voices.<div><font color=\"#0145b2\">Real Impact.</font></div>",
-      description: "From innovation to collaboration, our global community shares how <font color=\"#0b6100\">IHWE</font> is driving meaningful connections, advancing healthcare, and building a healthier future for all.",
+      subtitle: "Voices That Inspire Change",
+      heading: "What Industry<br />Leaders Say<br />About IHWE",
+      description: "Real experiences. Real partnerships. Real impact. Discover how IHWE is transforming the global health & wellness ecosystem.",
       heroBgImage: "",
       heroBgAlt: "IHWE Expo Background",
       dividerText: "WHAT OUR EXHIBITORS & PARTNERS SAY",
-      heroStats: [],
+      heroStats: [
+        { icon: 'Users', value: '8,000+', label: 'Visitors / Delegates', color: '#004ac2ff' },
+        { icon: 'Globe', value: '1,000+', label: 'Global Buyers', color: '#005c22ff' },
+        { icon: 'Handshake', value: '150+', label: 'Exhibitors', color: '#00742aff' },
+        { icon: 'Mic2', value: '150+', label: 'Expert Speakers', color: '#005f23ff' }
+      ],
+      bottomBarStats: [
+        { icon: 'Users', label: 'Trade Visitors', value: '10,000+' },
+        { icon: 'Globe', label: 'Countries', value: '30+' },
+        { icon: 'Handshake', label: 'Exhibitors', value: '250+' },
+        { icon: 'Mic2', label: 'Expert Speakers', value: '40+' },
+        { icon: 'Users', label: 'B2B', value: 'B2B Meetings' },
+        { icon: 'Store', label: 'Organic Products', value: '500+' }
+      ],
       videoMainHeading: "Our Exhibitors",
       videoSubheading: "Hear Directly From",
       videoDescription: "Real stories from real partners who experienced the IHWE impact.",
       videoButtonText: "View More Videos",
       videoButtonPath: "#",
-      bottomBarStats: [],
       ctaMainText: "Be the Next",
       ctaSubText: "Success Story",
       ctaBottomText: "at IHWE 2026!",
@@ -69,6 +81,9 @@ const NewTestimonialsManagement = () => {
     order: 0,
     status: "active"
   });
+  const [videoFile, setVideoFile] = useState(null);
+  const [thumbnailFile, setThumbnailFile] = useState(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState("");
   const [editVideoId, setEditVideoId] = useState(null);
 
   useEffect(() => {
@@ -245,11 +260,26 @@ const NewTestimonialsManagement = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
+      const formData = new FormData();
+      Object.keys(videoForm).forEach(key => {
+        formData.append(key, videoForm[key]);
+      });
+      if (videoFile) {
+        formData.append('videoFile', videoFile);
+      }
+      if (thumbnailFile) {
+        formData.append('thumbnail', thumbnailFile);
+      }
+
       let response;
       if (editVideoId) {
-        response = await api.put(`/api/new-testimonials/videos/${editVideoId}`, videoForm);
+        response = await api.put(`/api/new-testimonials/videos/${editVideoId}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
       } else {
-        response = await api.post("/api/new-testimonials/videos", videoForm);
+        response = await api.post("/api/new-testimonials/videos", formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
       }
       if (response.data.success) {
         Swal.fire({ icon: 'success', title: 'Video Saved', timer: 1500, showConfirmButton: false });
@@ -265,6 +295,9 @@ const NewTestimonialsManagement = () => {
 
   const resetVideoForm = () => {
     setVideoForm({ title: "", location: "", videoUrl: "", order: 0, status: "active" });
+    setVideoFile(null);
+    setThumbnailFile(null);
+    setThumbnailPreview("");
     setEditVideoId(null);
   };
 
@@ -736,7 +769,7 @@ const NewTestimonialsManagement = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">YouTube / Video URL*</label>
+                        <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">YouTube / Video URL</label>
                         <div className="relative">
                            <Play size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-red-500" />
                            <input 
@@ -745,11 +778,34 @@ const NewTestimonialsManagement = () => {
                              onChange={(e) => setVideoForm({...videoForm, videoUrl: e.target.value})}
                              className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg outline-none font-medium text-xs text-blue-600"
                              placeholder="https://youtube.com/watch?v=..."
-                             required
                            />
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">OR Upload Video File</label>
+                        <input 
+                          type="file" 
+                          onChange={(e) => setVideoFile(e.target.files[0])}
+                          className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg outline-none font-bold text-xs"
+                          accept="video/*"
+                        />
+                        {videoFile && <p className="text-[10px] text-green-600 mt-1 font-bold">Selected: {videoFile.name}</p>}
+                      </div>
+                       <div>
+                         <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Video Thumbnail (Preview Image)</label>
+                         <input 
+                           type="file" 
+                           onChange={(e) => {
+                             const file = e.target.files[0];
+                             setThumbnailFile(file);
+                             if (file) setThumbnailPreview(URL.createObjectURL(file));
+                           }}
+                           className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg outline-none font-bold text-xs"
+                           accept="image/*"
+                         />
+                         {thumbnailPreview && <img src={thumbnailPreview} className="mt-2 w-20 h-20 object-cover rounded-lg border" alt="Preview" />}
+                       </div>
+                       <div className="grid grid-cols-2 gap-4">
                          <div>
                             <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Order</label>
                             <input 
@@ -795,8 +851,16 @@ const NewTestimonialsManagement = () => {
                         data.videos.map((vid, idx) => (
                           <div key={vid._id} className="p-5 hover:bg-gray-50 transition-colors flex items-center gap-5 group">
                              <div className="w-24 h-16 bg-black rounded-lg flex items-center justify-center overflow-hidden shrink-0 relative">
-                                <Play size={20} className="text-white opacity-40" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                                {vid.thumbnail ? (
+                                  <img src={`${SERVER_URL}${vid.thumbnail}`} className="w-full h-full object-cover" alt="" />
+                                ) : getYouTubeThumbnail(vid.videoUrl) ? (
+                                  <img src={getYouTubeThumbnail(vid.videoUrl)} className="w-full h-full object-cover" alt="" />
+                                ) : (
+                                  <>
+                                    <Play size={20} className="text-white opacity-40" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                                  </>
+                                )}
                              </div>
                              <div className="flex-1">
                                 <h4 className="font-black text-[#23471d] text-sm uppercase">{vid.title}</h4>
