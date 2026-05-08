@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Globallytable from "../../Components/Globallytable";
-import Textarea from "../../Components/Textarea";
-import ClientOverview from "../../Components/ClientOverview";
+import Globallytable from "../../components/Globallytable";
+import Textarea from "../../components/Textarea";
+import ClientOverview from "../../components/ClientOverview";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
 

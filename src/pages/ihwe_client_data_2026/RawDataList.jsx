@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import Globallytable from "../../Components/Globallytable";
-import UploaderTextarea from "../../Components/UploaderTextarea";
+import Globallytable from "../../components/Globallytable";
+import UploaderTextarea from "../../components/UploaderTextarea";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
 

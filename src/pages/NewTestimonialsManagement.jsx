@@ -5,7 +5,8 @@ import {
   Quote, MapPin, List, Edit, Users, Globe, 
   Handshake, Mic2, Leaf, Building2, Play, Video, 
   Settings, ChevronRight, Store, MousePointer2,
-  Layout, BarChart3, Clock, Trash, MessageSquare
+  Layout, BarChart3, Clock, Trash, MessageSquare,
+  ChevronUp, ChevronDown
 } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
 import PageHeader from '../components/PageHeader';
@@ -216,6 +217,26 @@ const NewTestimonialsManagement = () => {
       } catch (error) {
         Swal.fire("Error", "Delete failed", "error");
       }
+    }
+  };
+
+  const moveCardPosition = async (card, direction) => {
+    const currentIndex = data.cards.findIndex(c => c._id === card._id);
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    
+    if (targetIndex < 0 || targetIndex >= data.cards.length) return;
+    
+    const targetCard = data.cards[targetIndex];
+    
+    try {
+      setIsLoading(true);
+      await api.put(`/api/new-testimonials/cards/${card._id}`, { order: targetCard.order || 0 });
+      await api.put(`/api/new-testimonials/cards/${targetCard._id}`, { order: card.order || 0 });
+      fetchData();
+    } catch (error) {
+      Swal.fire("Error", "Failed to move position", "error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -605,6 +626,10 @@ const NewTestimonialsManagement = () => {
                                   <p className="text-gray-600 text-xs italic leading-relaxed line-clamp-3">"{card.quote}"</p>
                                </div>
                                <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <div className="flex flex-col gap-1 mb-1">
+                                     <button onClick={() => moveCardPosition(card, 'up')} disabled={idx === 0} className="p-1 hover:bg-gray-200 rounded text-gray-400 disabled:opacity-30"><ChevronUp size={16} /></button>
+                                     <button onClick={() => moveCardPosition(card, 'down')} disabled={idx === data.cards.length - 1} className="p-1 hover:bg-gray-200 rounded text-gray-400 disabled:opacity-30"><ChevronDown size={16} /></button>
+                                  </div>
                                   <button onClick={() => startEditCard(card)} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 shadow-sm transition-colors"><Edit2 size={16} /></button>
                                   <button onClick={() => deleteCard(card._id)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 shadow-sm transition-colors"><Trash2 size={16} /></button>
                                </div>

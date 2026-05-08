@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import Globallytable from "../../Components/Globallytable";
-import Textarea from "../../Components/Textarea";
+import Globallytable from "../../components/Globallytable";
+import Textarea from "../../components/Textarea";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
 import { useNavigate } from "react-router-dom";

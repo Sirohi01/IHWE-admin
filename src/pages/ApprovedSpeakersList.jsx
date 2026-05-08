@@ -159,6 +159,12 @@ const ApprovedSpeakersList = () => {
               <UserCheck size={12} /> Conference Agenda
             </button>
             <button
+              onClick={() => navigate("/distinguished-speakers-manage")}
+              className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#0B2C66] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
+            >
+              <Mic size={12} /> Distinguished Speakers
+            </button>
+            <button
               onClick={() => navigate("/rejected-speakers-list")}
               className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-red-500 hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
             >

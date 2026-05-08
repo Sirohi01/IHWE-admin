@@ -5,7 +5,7 @@ import {
   fetchCorporateVisitors,
   deleteCorporateVisitor,
 } from "../../features/visitor/corporateVisitorSlice";
-import ClientOverview from "../../Components/ClientOverview";
+import ClientOverview from "../../components/ClientOverview";
 import { showSuccess, showError } from "../../utils/toastMessage";
 import VisitorGloballytable from "./VisitorGloballytable";
 
