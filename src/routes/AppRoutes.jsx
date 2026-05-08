@@ -208,6 +208,7 @@ import FloatingVideoManagement from "../pages/FloatingVideoManagement";
 import SponsorshipEnquiries from "../pages/SponsorshipEnquiries";
 import RejectedSpeakersList from "../pages/RejectedSpeakersList";
 import RejectedAwardsList from "../pages/RejectedAwardsList";
+import DistinguishedSpeakersManage from "../pages/DistinguishedSpeakersManage";
 import ConferenceDayManagement from "../pages/ConferenceDayManagement";
 
 
@@ -250,6 +251,7 @@ export default function AppRoutes() {
           <Route path="/conference-testimonials-manage" element={<ConferenceTestimonialsManage />} />
           <Route path="/speaker-registration-list" element={<SpeakerNominationsList />} />
           <Route path="/approved-speakers-list" element={<ApprovedSpeakersList />} />
+          <Route path="/distinguished-speakers-manage" element={<DistinguishedSpeakersManage />} />
           <Route path="/rejected-speakers-list" element={<RejectedSpeakersList />} />
           <Route path="/speaker-registration/:id" element={<SpeakerRegistrationDetail />} />
           <Route

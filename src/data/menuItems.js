@@ -380,6 +380,7 @@ export const menuItems = [
       { label: "Conference Days Content", path: "/conference-days-manage" },
       { label: "Speaker Nomination", path: "/speaker-registration-list" },
       { label: "Approved Speakers", path: "/approved-speakers-list" },
+      { label: "Distinguished Speakers", path: "/distinguished-speakers-manage" },
       { label: "Conference Agenda", path: "/agenda-management" },
       { label: "Testimonials", path: "/conference-testimonials-manage" },
     ],
