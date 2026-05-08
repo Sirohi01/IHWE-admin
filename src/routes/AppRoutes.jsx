@@ -211,7 +211,8 @@ import RejectedSpeakersList from "../pages/RejectedSpeakersList";
 import RejectedAwardsList from "../pages/RejectedAwardsList";
 import DistinguishedSpeakersManage from "../pages/DistinguishedSpeakersManage";
 import ConferenceDayManagement from "../pages/ConferenceDayManagement";
-
+import MsmePmsSchemeList from "../pages/MsmePmsSchemeList";
+import MsmePmsSchemeDetail from "../pages/MsmePmsSchemeDetail";
 
 
 export default function AppRoutes() {
@@ -578,6 +579,8 @@ export default function AppRoutes() {
           <Route path="/award-categories-manage" element={<AwardCategoriesManage />} />
           <Route path="/awards-gallery-manage" element={<AwardsGalleryManage />} />
           <Route path="/rejected-awards-list" element={<RejectedAwardsList />} />
+          <Route path="/msme-pms-scheme-list" element={<MsmePmsSchemeList />} />
+          <Route path="/msme-pms-scheme/:id" element={<MsmePmsSchemeDetail />} />
 
         </Route>
         <Route path="*" element={<NotFound />} />
