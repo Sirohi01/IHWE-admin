@@ -86,6 +86,7 @@ import CreateServiceDetail from "../pages/service/CreateServiceDetail";
 import ServiceList from "../pages/service/ServiceList";
 import EPromotionManage from "../pages/EPromotionManage";
 import EPromotionRegisters from "../pages/EPromotionRegisters";
+import EPromotionPackages from "../pages/e_promotion/EPromotionPackages";
 import ContactEnquiries from "../pages/ContactEnquiries";
 // import BuyerRegistrations from "../pages/buyer/BuyerRegistrations";
 import BuyerRegistrationDetail from "../pages/BuyerRegistrationDetail";
@@ -553,6 +554,7 @@ export default function AppRoutes() {
           <Route path="/stall-accessories" element={<ManageAccessories />} />
           <Route path="/accessory-orders" element={<AccessoryOrders />} />
           <Route path="/exhibitor-chat" element={<ExhibitorChat />} />
+          <Route path="/e-promotion-packages" element={<EPromotionPackages />} />
           <Route path="/add-unit" element={<AddUnit />} />
           <Route path="/seller-subscription-plans" element={<SellerSubscriptionPlans />} />
           <Route path="/seller-service-requests" element={<SellerServiceRequests />} />

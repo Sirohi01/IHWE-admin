@@ -120,6 +120,12 @@ export const menuItems = [
         icon: List,
         path: "/e-promotion-registers",
       },
+      {
+        type: "item",
+        label: "E-Promotion Packages",
+        icon: Package,
+        path: "/e-promotion-packages",
+      }
 
     ]
   },
