@@ -343,6 +343,12 @@ export const menuItems = [
   },
   {
     type: "item",
+    label: "MSME PMS Page",
+    icon: Settings,
+    path: "/msme-pms-scheme-config",
+  },
+  {
+    type: "item",
     label: "Social Media",
     icon: MessageSquare,
     path: "/social-media",
