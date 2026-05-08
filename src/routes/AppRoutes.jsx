@@ -211,6 +211,7 @@ import RejectedSpeakersList from "../pages/RejectedSpeakersList";
 import RejectedAwardsList from "../pages/RejectedAwardsList";
 import DistinguishedSpeakersManage from "../pages/DistinguishedSpeakersManage";
 import ConferenceDayManagement from "../pages/ConferenceDayManagement";
+import BSMTestimonial from "../pages/buyer_saller_meet/BSMTestimonial";
 
 
 
@@ -578,6 +579,7 @@ export default function AppRoutes() {
           <Route path="/award-categories-manage" element={<AwardCategoriesManage />} />
           <Route path="/awards-gallery-manage" element={<AwardsGalleryManage />} />
           <Route path="/rejected-awards-list" element={<RejectedAwardsList />} />
+          <Route path="/bsm-testimonial" element={<BSMTestimonial />} />
 
         </Route>
         <Route path="*" element={<NotFound />} />

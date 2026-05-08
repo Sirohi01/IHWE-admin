@@ -141,6 +141,7 @@ export const menuItems = [
       { label: "International Buyer List", path: "/international-buyer-list" },
       { label: "Buyer Registration Config", path: "/buyer-registration-config" },
       { label: "International Registration Config", path: "/international-buyer-registration-config" },
+      { label: "BSM Testimonials", path: "/bsm-testimonial" }
     ],
   },
   // visitor section
@@ -481,7 +482,7 @@ export const menuItems = [
   { label: "Seller Export Inquiries", path: "/seller-export-inquiries" },
   //   ]
   // },
-  
+
   // {
   //   type: "item",
   //   label: "Marketing Toolkit",
