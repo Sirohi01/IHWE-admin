@@ -213,7 +213,8 @@ import DistinguishedSpeakersManage from "../pages/DistinguishedSpeakersManage";
 import ConferenceDayManagement from "../pages/ConferenceDayManagement";
 import MsmePmsSchemeList from "../pages/MsmePmsSchemeList";
 import MsmePmsSchemeDetail from "../pages/MsmePmsSchemeDetail";
-import MsmePmsSchemeConfig from "../pages/MsmePmsSchemeConfig";
+import MsmePmsSchemeConfig from "../pages/MsmePmsSchemeConfig"; import BSMTestimonial from "../pages/buyer_saller_meet/BSMTestimonial";
+
 
 
 export default function AppRoutes() {
@@ -583,6 +584,7 @@ export default function AppRoutes() {
           <Route path="/msme-pms-scheme-list" element={<MsmePmsSchemeList />} />
           <Route path="/msme-pms-scheme/:id" element={<MsmePmsSchemeDetail />} />
           <Route path="/msme-pms-scheme-config" element={<MsmePmsSchemeConfig />} />
+          <Route path="/bsm-testimonial" element={<BSMTestimonial />} />
 
         </Route>
         <Route path="*" element={<NotFound />} />
