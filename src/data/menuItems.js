@@ -120,6 +120,17 @@ export const menuItems = [
         icon: List,
         path: "/e-promotion-registers",
       },
+      {
+        type: "item",
+        label: "E-Promotion Packages",
+        icon: Package,
+        path: "/e-promotion-packages",
+      },
+      {
+        label: "MSME PMS Scheme",
+        icon: List,
+        path: "/msme-pms-scheme-list",
+      },
 
     ]
   },
@@ -135,6 +146,7 @@ export const menuItems = [
       { label: "International Buyer List", path: "/international-buyer-list" },
       { label: "Buyer Registration Config", path: "/buyer-registration-config" },
       { label: "International Registration Config", path: "/international-buyer-registration-config" },
+      { label: "BSM Testimonials", path: "/bsm-testimonial" }
     ],
   },
   // visitor section
@@ -332,6 +344,12 @@ export const menuItems = [
   },
   {
     type: "item",
+    label: "MSME PMS Page",
+    icon: Settings,
+    path: "/msme-pms-scheme-config",
+  },
+  {
+    type: "item",
     label: "Social Media",
     icon: MessageSquare,
     path: "/social-media",
@@ -476,7 +494,7 @@ export const menuItems = [
   { label: "Seller Export Inquiries", path: "/seller-export-inquiries" },
   //   ]
   // },
-  
+
   // {
   //   type: "item",
   //   label: "Marketing Toolkit",
