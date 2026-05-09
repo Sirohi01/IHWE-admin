@@ -378,6 +378,7 @@ export const menuItems = [
     icon: CalendarCheck,
     children: [
       { label: "Conference Days Content", path: "/conference-days-manage" },
+      { label: "Conference Tracks", path: "/conference-tracks-manage" },
       { label: "Speaker Nomination", path: "/speaker-registration-list" },
       { label: "Approved Speakers", path: "/approved-speakers-list" },
       { label: "Distinguished Speakers", path: "/distinguished-speakers-manage" },
