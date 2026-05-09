@@ -148,27 +148,27 @@ const MsmePmsSchemeList = () => {
         </div>
       )
     },
-    {
-      key: "status",
-      label: "STATUS",
-      render: (row) => (
-        <div className="relative inline-block">
-          <select
-            value={row.status}
-            onChange={(e) => handleStatusChange(row._id, e.target.value)}
-            disabled={updatingStatusId === row._id}
-            className={`px-3 py-1 text-xs font-semibold rounded border-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed pr-8 ${row.status === 'Approved' ? 'bg-green-100 text-green-800' :
-              row.status === 'Rejected' ? 'bg-red-100 text-red-800' :
-                'bg-yellow-100 text-yellow-800'
-              }`}
-          >
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
-          </select>
-        </div>
-      )
-    },
+    // {
+    //   key: "status",
+    //   label: "STATUS",
+    //   render: (row) => (
+    //     <div className="relative inline-block">
+    //       <select
+    //         value={row.status}
+    //         onChange={(e) => handleStatusChange(row._id, e.target.value)}
+    //         disabled={updatingStatusId === row._id}
+    //         className={`px-3 py-1 text-xs font-semibold rounded border-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed pr-8 ${row.status === 'Approved' ? 'bg-green-100 text-green-800' :
+    //           row.status === 'Rejected' ? 'bg-red-100 text-red-800' :
+    //             'bg-yellow-100 text-yellow-800'
+    //           }`}
+    //       >
+    //         <option value="Pending">Pending</option>
+    //         <option value="Approved">Approved</option>
+    //         <option value="Rejected">Rejected</option>
+    //       </select>
+    //     </div>
+    //   )
+    // },
     {
       key: "date",
       label: "DATE",

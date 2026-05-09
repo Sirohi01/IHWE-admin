@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText, Download, CheckCircle, XCircle } from 'lucide-react';
 import api from "../lib/api";
 import { showSuccess, showError } from "../utils/toastMessage";
+import StatusUpdateForm from "../components/StatusUpdateForm";
 
 const MsmePmsSchemeDetail = () => {
     const { id } = useParams();
@@ -208,6 +209,15 @@ const MsmePmsSchemeDetail = () => {
                         </div>
                     </div>
                 )}
+
+                {/* ── STATUS UPDATE FORM ── */}
+                <StatusUpdateForm 
+                    targetId={id} 
+                    currentStatus={application.status} 
+                    onSuccess={fetchApplicationDetail} 
+                    updateType="msme"
+                    applicationData={application}
+                />
             </div>
         </div>
     );
