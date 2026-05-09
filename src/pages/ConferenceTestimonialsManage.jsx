@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
-import api from "../lib/api";
+import api, { SERVER_URL } from "../lib/api";
 import {
     Type, Save, Plus, Trash2, Edit,
-    MessageSquare, Quote, Star, Users, MessageSquareQuote
+    MessageSquare, Quote, Star, Users, MessageSquareQuote, Image as ImageIcon, X
 } from 'lucide-react';
 
 const EMPTY_CARD = {
@@ -11,7 +11,8 @@ const EMPTY_CARD = {
     role: '',
     company: '',
     feedback: '',
-    rating: 5
+    rating: 5,
+    image: null
 };
 
 const ConferenceTestimonialsManage = () => {
@@ -24,7 +25,10 @@ const ConferenceTestimonialsManage = () => {
     });
     const [isLoading, setIsLoading] = useState(false);
     const [cardForm, setCardForm] = useState({ ...EMPTY_CARD });
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState("");
     const [isEditingCard, setIsEditingCard] = useState(null);
+    const fileInputRef = useRef(null);
 
     useEffect(() => { fetchData(); }, []);
 
@@ -61,18 +65,48 @@ const ConferenceTestimonialsManage = () => {
         }
     };
 
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setImageFile(file);
+            setImagePreview(URL.createObjectURL(file));
+        }
+    };
+
+    const removeImage = () => {
+        setImageFile(null);
+        setImagePreview("");
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        setCardForm({ ...cardForm, image: null });
+    };
+
     const handleCardSubmit = async () => {
         if (!cardForm.name || !cardForm.feedback) {
             Swal.fire('Warning', 'Name and feedback are required', 'warning');
             return;
         }
         setIsLoading(true);
+
+        const formData = new FormData();
+        formData.append('name', cardForm.name);
+        formData.append('role', cardForm.role);
+        formData.append('company', cardForm.company);
+        formData.append('feedback', cardForm.feedback);
+        formData.append('rating', cardForm.rating);
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+
         try {
             let response;
             if (isEditingCard) {
-                response = await api.put(`/api/conference-testimonials/cards/${isEditingCard}`, cardForm);
+                response = await api.put(`/api/conference-testimonials/cards/${isEditingCard}`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
             } else {
-                response = await api.post('/api/conference-testimonials/cards', cardForm);
+                response = await api.post('/api/conference-testimonials/cards', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
             }
             if (response.data.success) {
                 Swal.fire({ icon: 'success', title: isEditingCard ? 'Testimonial Updated!' : 'Testimonial Added!', timer: 1500, showConfirmButton: false });
@@ -115,14 +149,24 @@ const ConferenceTestimonialsManage = () => {
             role: card.role || '',
             company: card.company || '',
             feedback: card.feedback,
-            rating: card.rating || 5
+            rating: card.rating || 5,
+            image: card.image
         });
+        if (card.image) {
+            setImagePreview(`${SERVER_URL}${card.image}`);
+        } else {
+            setImagePreview("");
+        }
+        setImageFile(null);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const resetForm = () => {
         setIsEditingCard(null);
         setCardForm({ ...EMPTY_CARD });
+        setImageFile(null);
+        setImagePreview("");
+        if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
     return (
@@ -280,6 +324,41 @@ const ConferenceTestimonialsManage = () => {
                                     </div>
                                 </div>
                                 <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Profile Image</label>
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative w-16 h-16 border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden group">
+                                            {imagePreview ? (
+                                                <>
+                                                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                                                    <button
+                                                        onClick={removeImage}
+                                                        className="absolute inset-0 bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    >
+                                                        <X size={16} />
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <ImageIcon className="text-gray-400" size={20} />
+                                            )}
+                                        </div>
+                                        <div className="flex-1">
+                                            <input
+                                                type="file"
+                                                ref={fileInputRef}
+                                                onChange={handleImageChange}
+                                                accept="image/*"
+                                                className="hidden"
+                                            />
+                                            <button
+                                                onClick={() => fileInputRef.current.click()}
+                                                className="px-4 py-1.5 border-2 border-[#d26019] text-[#d26019] text-xs font-bold uppercase hover:bg-[#d26019] hover:text-white transition-all"
+                                            >
+                                                {imagePreview ? 'Change Image' : 'Upload Image'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Feedback</label>
                                     <textarea
                                         value={cardForm.feedback}
@@ -355,12 +434,20 @@ const ConferenceTestimonialsManage = () => {
                                             <tr key={card._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                                 <td className="py-3 px-4 text-gray-500 font-bold">{idx + 1}</td>
                                                 <td className="py-3 px-4">
-                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 font-bold text-xs ${idx % 2 === 0
-                                                        ? "bg-[#23471d]/5 border-[#23471d]/20 text-[#23471d]"
-                                                        : "bg-[#d26019]/5 border-[#d26019]/20 text-[#d26019]"
-                                                        }`}>
-                                                        {card.initials}
-                                                    </div>
+                                                    {card.image ? (
+                                                        <img
+                                                            src={`${SERVER_URL}${card.image}`}
+                                                            alt={card.name}
+                                                            className="w-10 h-10 rounded-full object-cover border-2 border-gray-100"
+                                                        />
+                                                    ) : (
+                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 font-bold text-xs ${idx % 2 === 0
+                                                            ? "bg-[#23471d]/5 border-[#23471d]/20 text-[#23471d]"
+                                                            : "bg-[#d26019]/5 border-[#d26019]/20 text-[#d26019]"
+                                                            }`}>
+                                                            {card.initials}
+                                                        </div>
+                                                    )}
                                                 </td>
                                                 <td className="py-3 px-4">
                                                     <p className="font-bold text-gray-800 text-sm whitespace-nowrap">{card.name}</p>

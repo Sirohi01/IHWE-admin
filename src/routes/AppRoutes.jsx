@@ -211,6 +211,7 @@ import RejectedSpeakersList from "../pages/RejectedSpeakersList";
 import RejectedAwardsList from "../pages/RejectedAwardsList";
 import DistinguishedSpeakersManage from "../pages/DistinguishedSpeakersManage";
 import ConferenceDayManagement from "../pages/ConferenceDayManagement";
+import ConferenceTrackManage from "../pages/ConferenceTrackManage";
 import MsmePmsSchemeList from "../pages/MsmePmsSchemeList";
 import MsmePmsSchemeDetail from "../pages/MsmePmsSchemeDetail";
 import MsmePmsSchemeConfig from "../pages/MsmePmsSchemeConfig"; import BSMTestimonial from "../pages/buyer_saller_meet/BSMTestimonial";
@@ -252,6 +253,7 @@ export default function AppRoutes() {
           <Route path="travel-accommodation-manage" element={<TravelAccommodationManage />} />
           <Route path="/agenda-management" element={<AgendaManagement />} />
           <Route path="/conference-days-manage" element={<ConferenceDayManagement />} />
+          <Route path="/conference-tracks-manage" element={<ConferenceTrackManage />} />
           <Route path="/conference-testimonials-manage" element={<ConferenceTestimonialsManage />} />
           <Route path="/speaker-registration-list" element={<SpeakerNominationsList />} />
           <Route path="/approved-speakers-list" element={<ApprovedSpeakersList />} />
