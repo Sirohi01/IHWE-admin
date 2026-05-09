@@ -20,6 +20,9 @@ const FloatingVideoManagement = () => {
 
     const [formData, setFormData] = useState({
         title: '',
+        name: '',
+        companyName: '',
+        companyNameColor: 'orange',
         video: null,
         videoPreview: null,
         status: 'active',
@@ -102,6 +105,9 @@ const FloatingVideoManagement = () => {
 
         const data = new FormData();
         data.append('title', formData.title);
+        data.append('name', formData.name);
+        data.append('companyName', formData.companyName);
+        data.append('companyNameColor', formData.companyNameColor);
         data.append('status', formData.status);
         data.append('order', formData.order);
         if (formData.video) {
@@ -137,6 +143,9 @@ const FloatingVideoManagement = () => {
     const resetForm = () => {
         setFormData({
             title: '',
+            name: '',
+            companyName: '',
+            companyNameColor: 'orange',
             video: null,
             videoPreview: null,
             status: 'active',
@@ -150,6 +159,9 @@ const FloatingVideoManagement = () => {
         setEditId(item._id);
         setFormData({
             title: item.title,
+            name: item.name || '',
+            companyName: item.companyName || '',
+            companyNameColor: item.companyNameColor || 'orange',
             video: null,
             videoPreview: item.videoUrl ? `${SERVER_URL}${item.videoUrl}` : null,
             status: item.status,
@@ -246,6 +258,79 @@ const FloatingVideoManagement = () => {
                                         placeholder="e.g. Highlights 2026"
                                         required
                                     />
+                                </div>
+                            </div>
+
+                            {/* Person Name */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                    Person Name
+                                </label>
+                                <div className="relative">
+                                    <Type className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleInputChange}
+                                        className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm"
+                                        placeholder="e.g. John Doe"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Company Name */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                    Company Name
+                                </label>
+                                <div className="relative">
+                                    <Monitor className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        name="companyName"
+                                        value={formData.companyName}
+                                        onChange={handleInputChange}
+                                        className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm"
+                                        placeholder="e.g. Acme Corp"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Company Name Color */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
+                                    Company Name Color
+                                </label>
+                                <div className="flex gap-4">
+                                    <label className="flex items-center gap-2 cursor-pointer group">
+                                        <input
+                                            type="radio"
+                                            name="companyNameColor"
+                                            value="orange"
+                                            checked={formData.companyNameColor === 'orange'}
+                                            onChange={handleInputChange}
+                                            className="hidden"
+                                        />
+                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${formData.companyNameColor === 'orange' ? 'border-[#d26019] scale-110' : 'border-gray-300'}`}>
+                                            {formData.companyNameColor === 'orange' && <div className="w-2.5 h-2.5 bg-[#d26019] rounded-full" />}
+                                        </div>
+                                        <span className={`text-xs font-bold uppercase ${formData.companyNameColor === 'orange' ? 'text-[#d26019]' : 'text-gray-400'}`}>Orange</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 cursor-pointer group">
+                                        <input
+                                            type="radio"
+                                            name="companyNameColor"
+                                            value="green"
+                                            checked={formData.companyNameColor === 'green'}
+                                            onChange={handleInputChange}
+                                            className="hidden"
+                                        />
+                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${formData.companyNameColor === 'green' ? 'border-[#23471d] scale-110' : 'border-gray-300'}`}>
+                                            {formData.companyNameColor === 'green' && <div className="w-2.5 h-2.5 bg-[#23471d] rounded-full" />}
+                                        </div>
+                                        <span className={`text-xs font-bold uppercase ${formData.companyNameColor === 'green' ? 'text-[#23471d]' : 'text-gray-400'}`}>Green</span>
+                                    </label>
                                 </div>
                             </div>
 
@@ -403,6 +488,13 @@ const FloatingVideoManagement = () => {
                                             </td>
                                             <td className="py-3 px-4">
                                                 <p className="font-bold text-gray-800 text-sm">{vid.title}</p>
+                                                {(vid.name || vid.companyName) && (
+                                                    <p className="text-[10px] font-bold uppercase mt-0.5">
+                                                        <span className="text-gray-800">{vid.name}</span>
+                                                        {vid.name && vid.companyName && <span className="text-gray-300 mx-1">|</span>}
+                                                        <span style={{ color: vid.companyNameColor === 'green' ? '#23471d' : '#d26019' }}>{vid.companyName}</span>
+                                                    </p>
+                                                )}
                                                 <p className="text-[9px] text-gray-400 font-medium uppercase mt-0.5 tracking-tighter">
                                                     Uploaded: {new Date(vid.createdAt).toLocaleDateString()}
                                                 </p>
