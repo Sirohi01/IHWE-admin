@@ -161,9 +161,9 @@ export default function ConferenceTrackManage() {
         if (newIndex < 0 || newIndex >= tracks.length) return;
 
         [newTracks[index], newTracks[newIndex]] = [newTracks[newIndex], newTracks[index]];
-        
+
         const orders = newTracks.map((t, i) => ({ id: t._id, order: i + 1 }));
-        
+
         try {
             await api.post('/api/conference-tracks/order', { orders });
             fetchTracks();
@@ -181,7 +181,7 @@ export default function ConferenceTrackManage() {
     };
 
     return (
-        <div className="p-6">
+        <div className="p-6 py-10">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold text-[#0F2854]">Conference Tracks Management</h1>
                 {editingId && (
