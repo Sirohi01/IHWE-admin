@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
-import { 
-  Save, Calendar, Image as ImageIcon, Users, List, 
+import {
+  Save, Calendar, Image as ImageIcon, Users, List,
   Plus, Trash2, Edit2, Loader2, Layout, Info, Rocket,
   Clock, FileText, Globe, Tag, ChevronDown, ChevronUp,
   Upload
@@ -68,8 +68,8 @@ const ConferenceDayManagement = () => {
     about: { title: "", description: "", descriptionSecondary: "", focusAreas: [] },
     agenda: { title: "", subtitle: "", sessions: [] },
     featuredSpeakers: [],
-    cta: { 
-      bePartTitle: "", bePartDescription: "", 
+    cta: {
+      bePartTitle: "", bePartDescription: "",
       delegatePass: { title: "", description: "" },
       sponsor: { title: "", description: "" }
     }
@@ -143,9 +143,9 @@ const ConferenceDayManagement = () => {
   const handleAddSession = () => {
     setContent({
       ...content,
-      agenda: { 
-        ...content.agenda, 
-        sessions: [...content.agenda.sessions, { time: "", session: `SESSION ${content.agenda.sessions.length + 1}`, type: "KEYNOTE", topic: "", description: "", speaker: { name: "", role: "", company: "", image: "", flag: "🇮🇳" } }] 
+      agenda: {
+        ...content.agenda,
+        sessions: [...content.agenda.sessions, { time: "", session: `SESSION ${content.agenda.sessions.length + 1}`, type: "KEYNOTE", topic: "", description: "", speaker: { name: "", role: "", company: "", image: "", flag: "🇮🇳" } }]
       }
     });
   };
@@ -158,10 +158,10 @@ const ConferenceDayManagement = () => {
 
   const handleImageUpload = async (file, type, index = null) => {
     if (!file) return;
-    
+
     const formData = new FormData();
     formData.append("image", file);
-    
+
     if (type === 'hero') setUploading({ ...uploading, hero: true });
     else if (type === 'speaker') setUploading({ ...uploading, speakers: { ...uploading.speakers, [index]: true } });
     else if (type === 'agendaSpeaker') setUploading({ ...uploading, agendaSpeakers: { ...uploading.agendaSpeakers, [index]: true } });
@@ -170,7 +170,7 @@ const ConferenceDayManagement = () => {
       const response = await api.post("/api/conference-days/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
-      
+
       if (response.data.success) {
         const imageUrl = response.data.imageUrl;
         if (type === 'hero') {
@@ -231,10 +231,10 @@ const ConferenceDayManagement = () => {
           Swal.fire('Deleted!', `Day ${day} has been removed.`, 'success');
         }
       } catch (error) {
-        // If 404, it just means the day wasn't saved in DB yet, which is fine
+
         console.log("Day not in DB, removing from UI only");
       }
-      
+
       const newDays = days.filter(d => d !== day);
       setDays(newDays);
       if (activeDay === day) {
@@ -246,10 +246,10 @@ const ConferenceDayManagement = () => {
   if (!content) return <div className="p-20 text-center text-gray-500"><Loader2 className="animate-spin mx-auto mb-4" /> Loading content structure...</div>;
 
   return (
-    <div className="p-6 space-y-6">
-      <PageHeader 
-        title="CONFERENCE DAYS CONTENT" 
-        description="Manage dynamic content, images, and speakers for each conference day." 
+    <div className="p-6 space-y-6 pt-10">
+      <PageHeader
+        title="CONFERENCE DAYS CONTENT"
+        description="Manage dynamic content, images, and speakers for each conference day."
       />
 
       {/* Day Tabs */}
@@ -262,7 +262,7 @@ const ConferenceDayManagement = () => {
             >
               Day {day}
               {days.length > 1 && (
-                <span 
+                <span
                   onClick={(e) => { e.stopPropagation(); handleDeleteDay(day); }}
                   className="opacity-0 group-hover/tab:opacity-100 p-1 hover:bg-red-50 text-red-400 rounded-full transition-all"
                 >
@@ -272,7 +272,7 @@ const ConferenceDayManagement = () => {
             </button>
           </div>
         ))}
-        <button 
+        <button
           onClick={handleAddDay}
           className="p-3 text-[#4E9F3D] hover:bg-green-50 rounded-lg transition-colors border-2 border-dashed border-gray-200 flex items-center gap-2 font-black text-[10px] uppercase tracking-widest"
         >
@@ -281,7 +281,7 @@ const ConferenceDayManagement = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8 pb-24">
-        
+
         {/* Hero Section */}
         <div className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden shadow-sm">
           <div className="bg-[#0B2C66] px-6 py-4 flex items-center gap-3">
@@ -315,16 +315,16 @@ const ConferenceDayManagement = () => {
                 <textarea value={content.hero.description} onChange={(e) => handleHeroChange('description', e.target.value)} className="w-full px-4 py-2 border-2 border-gray-100 focus:border-[#4E9F3D] outline-none rounded-md min-h-[80px]" placeholder="Brief slogan or text under heading" />
               </div>
             </div>
-            
+
             <div className="space-y-6">
-               <div className="p-4 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl">
+              <div className="p-4 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl">
                 <label className="block text-[11px] font-black text-gray-400 uppercase mb-3">Background Image</label>
                 <div className="relative group aspect-video bg-white rounded-lg overflow-hidden border-2 border-gray-100 flex items-center justify-center">
                   {content.hero.backgroundImage ? (
                     <>
                       <img src={content.hero.backgroundImage.startsWith('http') ? content.hero.backgroundImage : `${SERVER_URL}${content.hero.backgroundImage}`} alt="Hero BG" className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                         <label className="cursor-pointer bg-white p-2 rounded-full shadow-lg">
+                        <label className="cursor-pointer bg-white p-2 rounded-full shadow-lg">
                           <Upload className="text-[#0B2C66] w-5 h-5" />
                           <input type="file" className="hidden" onChange={(e) => handleImageUpload(e.target.files[0], 'hero')} />
                         </label>
@@ -360,7 +360,7 @@ const ConferenceDayManagement = () => {
                         newStats[idx].label = e.target.value;
                         setContent({ ...content, hero: { ...content.hero, stats: newStats } });
                       }} className="w-1/2 px-2 py-1 text-xs border rounded" placeholder="Label" />
-                      <button type="button" onClick={() => handleRemoveStat(idx)} className="text-red-400 hover:text-red-600"><Trash2 size={14}/></button>
+                      <button type="button" onClick={() => handleRemoveStat(idx)} className="text-red-400 hover:text-red-600"><Trash2 size={14} /></button>
                     </div>
                   ))}
                 </div>
@@ -390,7 +390,7 @@ const ConferenceDayManagement = () => {
                 <textarea value={content.about.descriptionSecondary} onChange={(e) => handleAboutChange('descriptionSecondary', e.target.value)} className="w-full px-4 py-2 border-2 border-gray-100 focus:border-[#4E9F3D] outline-none rounded-md min-h-[80px]" placeholder="Second paragraph (optional)" />
               </div>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -406,7 +406,7 @@ const ConferenceDayManagement = () => {
                         newAreas[idx] = e.target.value;
                         setContent({ ...content, about: { ...content.about, focusAreas: newAreas } });
                       }} className="w-full px-3 py-2 text-xs border rounded-md" placeholder={`Focus Area ${idx + 1}`} />
-                      <button type="button" onClick={() => handleRemoveFocusArea(idx)} className="text-red-400 hover:text-red-600"><Trash2 size={14}/></button>
+                      <button type="button" onClick={() => handleRemoveFocusArea(idx)} className="text-red-400 hover:text-red-600"><Trash2 size={14} /></button>
                     </div>
                   ))}
                   {content.about.focusAreas.length === 0 && <p className="text-center py-8 text-[11px] text-gray-400 italic">No focus areas added yet.</p>}
@@ -429,14 +429,14 @@ const ConferenceDayManagement = () => {
           </div>
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-gray-100">
-               <div>
-                  <label className="block text-[11px] font-black text-gray-400 uppercase mb-1.5">Agenda Section Title</label>
-                  <input type="text" value={content.agenda.title} onChange={(e) => handleAgendaChange('title', e.target.value)} className="w-full px-4 py-2 border-2 border-gray-100 focus:border-[#4E9F3D] outline-none rounded-md" placeholder="e.g. DAY 3 AGENDA — 23 AUGUST 2026" />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-black text-gray-400 uppercase mb-1.5">Agenda Subtitle</label>
-                  <input type="text" value={content.agenda.subtitle} onChange={(e) => handleAgendaChange('subtitle', e.target.value)} className="w-full px-4 py-2 border-2 border-gray-100 focus:border-[#4E9F3D] outline-none rounded-md" placeholder="e.g. 6 Insightful Sessions | 1 Powerful Day" />
-                </div>
+              <div>
+                <label className="block text-[11px] font-black text-gray-400 uppercase mb-1.5">Agenda Section Title</label>
+                <input type="text" value={content.agenda.title} onChange={(e) => handleAgendaChange('title', e.target.value)} className="w-full px-4 py-2 border-2 border-gray-100 focus:border-[#4E9F3D] outline-none rounded-md" placeholder="e.g. DAY 3 AGENDA — 23 AUGUST 2026" />
+              </div>
+              <div>
+                <label className="block text-[11px] font-black text-gray-400 uppercase mb-1.5">Agenda Subtitle</label>
+                <input type="text" value={content.agenda.subtitle} onChange={(e) => handleAgendaChange('subtitle', e.target.value)} className="w-full px-4 py-2 border-2 border-gray-100 focus:border-[#4E9F3D] outline-none rounded-md" placeholder="e.g. 6 Insightful Sessions | 1 Powerful Day" />
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -444,7 +444,7 @@ const ConferenceDayManagement = () => {
                 <div key={idx} className="bg-gray-50 border-2 border-gray-100 rounded-xl overflow-hidden">
                   <div className="bg-gray-100 px-4 py-2 flex items-center justify-between border-b border-gray-200">
                     <span className="text-[10px] font-black text-[#0B2C66] uppercase tracking-widest">{session.session}</span>
-                    <button type="button" onClick={() => handleRemoveSession(idx)} className="text-red-400 hover:text-red-600"><Trash2 size={14}/></button>
+                    <button type="button" onClick={() => handleRemoveSession(idx)} className="text-red-400 hover:text-red-600"><Trash2 size={14} /></button>
                   </div>
                   <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-3">
@@ -489,73 +489,73 @@ const ConferenceDayManagement = () => {
                       </div>
                     </div>
                     <div className="bg-white p-3 rounded-lg border border-gray-100 space-y-2">
-                       <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[10px] font-black text-gray-400 uppercase">Session Speaker</label>
-                          {session.speaker?.name && (
-                            content.featuredSpeakers.some(s => s.name === session.speaker.name) ? (
-                              <button 
-                                type="button" 
-                                onClick={() => {
-                                  const newFeatured = content.featuredSpeakers.filter(s => s.name !== session.speaker.name);
-                                  setContent({ ...content, featuredSpeakers: newFeatured });
-                                  Swal.fire({ icon: 'info', title: 'Removed from Featured', timer: 800, showConfirmButton: false });
-                                }}
-                                className="text-[9px] font-black text-red-500 hover:underline uppercase tracking-tighter"
-                              >
-                                - Remove from Featured
-                              </button>
-                            ) : (
-                              <button 
-                                type="button" 
-                                onClick={() => {
-                                  const speaker = session.speaker;
-                                  setContent({
-                                    ...content,
-                                    featuredSpeakers: [
-                                      ...content.featuredSpeakers,
-                                      { 
-                                        name: speaker.name, 
-                                        role: speaker.role, 
-                                        company: speaker.company, 
-                                        image: speaker.image,
-                                        category: session.type === 'KEYNOTE' ? 'KEYNOTE SPEAKER' : 'FEATURED SPEAKER'
-                                      }
-                                    ]
-                                  });
-                                  Swal.fire({ icon: 'success', title: 'Added to Featured', timer: 800, showConfirmButton: false });
-                                }}
-                                className="text-[9px] font-black text-[#4E9F3D] hover:underline uppercase tracking-tighter"
-                              >
-                                + Promote to Featured
-                              </button>
-                            )
-                          )}
-                       </div>
-                       <div className="flex gap-2 items-start">
-                          <div className="relative w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full overflow-hidden border-2 border-gray-100 group">
-                            {session.speaker?.image ? (
-                              <img src={session.speaker.image.startsWith('http') ? session.speaker.image : `${SERVER_URL}${session.speaker.image}`} alt="Speaker" className="w-full h-full object-cover" />
-                            ) : <Users className="w-full h-full p-2 text-gray-300" />}
-                            <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
-                              <Upload className="text-white w-4 h-4" />
-                              <input type="file" className="hidden" onChange={(e) => handleImageUpload(e.target.files[0], 'agendaSpeaker', idx)} />
-                            </label>
-                          </div>
-                          <div className="flex-1 space-y-2">
-                            <input type="text" value={session.speaker?.name || ""} onChange={(e) => {
-                              const newSessions = [...content.agenda.sessions];
-                              if (!newSessions[idx].speaker) newSessions[idx].speaker = {};
-                              newSessions[idx].speaker.name = e.target.value;
-                              setContent({ ...content, agenda: { ...content.agenda, sessions: newSessions } });
-                            }} className="w-full px-2 py-1 text-[10px] border rounded" placeholder="Speaker Name" />
-                             <input type="text" value={session.speaker?.role || ""} onChange={(e) => {
-                              const newSessions = [...content.agenda.sessions];
-                              if (!newSessions[idx].speaker) newSessions[idx].speaker = {};
-                              newSessions[idx].speaker.role = e.target.value;
-                              setContent({ ...content, agenda: { ...content.agenda, sessions: newSessions } });
-                            }} className="w-full px-2 py-1 text-[10px] border rounded" placeholder="Role" />
-                          </div>
-                       </div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[10px] font-black text-gray-400 uppercase">Session Speaker</label>
+                        {session.speaker?.name && (
+                          content.featuredSpeakers.some(s => s.name === session.speaker.name) ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newFeatured = content.featuredSpeakers.filter(s => s.name !== session.speaker.name);
+                                setContent({ ...content, featuredSpeakers: newFeatured });
+                                Swal.fire({ icon: 'info', title: 'Removed from Featured', timer: 800, showConfirmButton: false });
+                              }}
+                              className="text-[9px] font-black text-red-500 hover:underline uppercase tracking-tighter"
+                            >
+                              - Remove from Featured
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const speaker = session.speaker;
+                                setContent({
+                                  ...content,
+                                  featuredSpeakers: [
+                                    ...content.featuredSpeakers,
+                                    {
+                                      name: speaker.name,
+                                      role: speaker.role,
+                                      company: speaker.company,
+                                      image: speaker.image,
+                                      category: session.type === 'KEYNOTE' ? 'KEYNOTE SPEAKER' : 'FEATURED SPEAKER'
+                                    }
+                                  ]
+                                });
+                                Swal.fire({ icon: 'success', title: 'Added to Featured', timer: 800, showConfirmButton: false });
+                              }}
+                              className="text-[9px] font-black text-[#4E9F3D] hover:underline uppercase tracking-tighter"
+                            >
+                              + Promote to Featured
+                            </button>
+                          )
+                        )}
+                      </div>
+                      <div className="flex gap-2 items-start">
+                        <div className="relative w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full overflow-hidden border-2 border-gray-100 group">
+                          {session.speaker?.image ? (
+                            <img src={session.speaker.image.startsWith('http') ? session.speaker.image : `${SERVER_URL}${session.speaker.image}`} alt="Speaker" className="w-full h-full object-cover" />
+                          ) : <Users className="w-full h-full p-2 text-gray-300" />}
+                          <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
+                            <Upload className="text-white w-4 h-4" />
+                            <input type="file" className="hidden" onChange={(e) => handleImageUpload(e.target.files[0], 'agendaSpeaker', idx)} />
+                          </label>
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <input type="text" value={session.speaker?.name || ""} onChange={(e) => {
+                            const newSessions = [...content.agenda.sessions];
+                            if (!newSessions[idx].speaker) newSessions[idx].speaker = {};
+                            newSessions[idx].speaker.name = e.target.value;
+                            setContent({ ...content, agenda: { ...content.agenda, sessions: newSessions } });
+                          }} className="w-full px-2 py-1 text-[10px] border rounded" placeholder="Speaker Name" />
+                          <input type="text" value={session.speaker?.role || ""} onChange={(e) => {
+                            const newSessions = [...content.agenda.sessions];
+                            if (!newSessions[idx].speaker) newSessions[idx].speaker = {};
+                            newSessions[idx].speaker.role = e.target.value;
+                            setContent({ ...content, agenda: { ...content.agenda, sessions: newSessions } });
+                          }} className="w-full px-2 py-1 text-[10px] border rounded" placeholder="Role" />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -581,7 +581,7 @@ const ConferenceDayManagement = () => {
               {content.featuredSpeakers.map((speaker, idx) => (
                 <div key={idx} className="p-4 bg-gray-50 border-2 border-gray-100 rounded-xl relative group flex flex-col gap-3">
                   <button type="button" onClick={() => handleRemoveSpeaker(idx)} className="absolute top-2 right-2 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity z-10"><Trash2 size={16} /></button>
-                  
+
                   <div className="relative aspect-square w-24 mx-auto rounded-full overflow-hidden border-4 border-white shadow-md group/img">
                     {speaker.image ? (
                       <img src={speaker.image.startsWith('http') ? speaker.image : `${SERVER_URL}${speaker.image}`} alt="Speaker" className="w-full h-full object-cover" />
