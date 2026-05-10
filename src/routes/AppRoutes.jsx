@@ -86,6 +86,7 @@ import CreateServiceDetail from "../pages/service/CreateServiceDetail";
 import ServiceList from "../pages/service/ServiceList";
 import EPromotionManage from "../pages/EPromotionManage";
 import EPromotionRegisters from "../pages/EPromotionRegisters";
+import EPromotionPackages from "../pages/e_promotion/EPromotionPackages";
 import ContactEnquiries from "../pages/ContactEnquiries";
 // import BuyerRegistrations from "../pages/buyer/BuyerRegistrations";
 import BuyerRegistrationDetail from "../pages/BuyerRegistrationDetail";
@@ -211,6 +212,9 @@ import RejectedAwardsList from "../pages/RejectedAwardsList";
 import DistinguishedSpeakersManage from "../pages/DistinguishedSpeakersManage";
 import ConferenceDayManagement from "../pages/ConferenceDayManagement";
 import ConferenceTrackManage from "../pages/ConferenceTrackManage";
+import MsmePmsSchemeList from "../pages/MsmePmsSchemeList";
+import MsmePmsSchemeDetail from "../pages/MsmePmsSchemeDetail";
+import MsmePmsSchemeConfig from "../pages/MsmePmsSchemeConfig"; import BSMTestimonial from "../pages/buyer_saller_meet/BSMTestimonial";
 
 
 
@@ -555,6 +559,7 @@ export default function AppRoutes() {
           <Route path="/stall-accessories" element={<ManageAccessories />} />
           <Route path="/accessory-orders" element={<AccessoryOrders />} />
           <Route path="/exhibitor-chat" element={<ExhibitorChat />} />
+          <Route path="/e-promotion-packages" element={<EPromotionPackages />} />
           <Route path="/add-unit" element={<AddUnit />} />
           <Route path="/seller-subscription-plans" element={<SellerSubscriptionPlans />} />
           <Route path="/seller-service-requests" element={<SellerServiceRequests />} />
@@ -578,6 +583,10 @@ export default function AppRoutes() {
           <Route path="/award-categories-manage" element={<AwardCategoriesManage />} />
           <Route path="/awards-gallery-manage" element={<AwardsGalleryManage />} />
           <Route path="/rejected-awards-list" element={<RejectedAwardsList />} />
+          <Route path="/msme-pms-scheme-list" element={<MsmePmsSchemeList />} />
+          <Route path="/msme-pms-scheme/:id" element={<MsmePmsSchemeDetail />} />
+          <Route path="/msme-pms-scheme-config" element={<MsmePmsSchemeConfig />} />
+          <Route path="/bsm-testimonial" element={<BSMTestimonial />} />
 
         </Route>
         <Route path="*" element={<NotFound />} />

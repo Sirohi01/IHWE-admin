@@ -68,7 +68,8 @@ const Settings = () => {
     
     // Multiple MSME Logos state
     const [msmeLogos, setMsmeLogos] = useState([]);
-
+    const [showBrochurePopUp, setShowBrochurePopUp] = useState(true);
+    const [brochurePopUpDelay, setBrochurePopUpDelay] = useState(7);
 
     // Email addresses state
     const [emails, setEmails] = useState([
@@ -142,8 +143,12 @@ const Settings = () => {
                     emails, phones, addresses, mapIframe: savedIframe, 
                     marqueeText: savedMarquee, topbarDate: savedDate, supportDeskText: savedSupportDeskText,
                     companyName: sName, companyAddress: sAddress, companyGst: sGst, companyCin: sCin,
-                    fullPaymentDiscount: sDisc, availableTdsRates: sTds, authorizedSignature, companyStamp
+                    fullPaymentDiscount: sDisc, availableTdsRates: sTds, authorizedSignature, companyStamp,
+                    showBrochurePopUp: sShowPopUp, brochurePopUpDelay: sPopUpDelay
                 } = res.data.data;
+
+                if (sShowPopUp !== undefined) setShowBrochurePopUp(sShowPopUp);
+                if (sPopUpDelay !== undefined) setBrochurePopUpDelay(sPopUpDelay);
 
                 if (logo) {
                     setLogoPreview(`${SERVER_URL}${logo}`);
@@ -284,6 +289,8 @@ const Settings = () => {
             // Multiple MSME Logos
             const msmeLogosData = msmeLogos.map(({ id, preview, ...rest }) => rest);
             formData.append('msmeLogos', JSON.stringify(msmeLogosData));
+            formData.append('showBrochurePopUp', showBrochurePopUp);
+            formData.append('brochurePopUpDelay', brochurePopUpDelay);
 
 
             const res = await api.put('/api/settings', formData, {
@@ -988,6 +995,51 @@ const Settings = () => {
                                     <div className="map-preview-container" dangerouslySetInnerHTML={{ __html: mapIframe }} />
                                 </div>
                             )}
+                        </div>
+                    </div>
+
+                    {/* Brochure Pop-up Settings */}
+                    <div className="bg-white border border-gray-200 p-6 shadow-sm rounded-lg">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-rose-50 rounded">
+                                <ImageIcon className="w-5 h-5 text-rose-600" />
+                            </div>
+                            <h2 className="text-lg font-semibold text-gray-900 uppercase">Banner Pop-up Settings</h2>
+                        </div>
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                <div>
+                                    <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Show Banner Pop-up</h3>
+                                    <p className="text-[10px] text-gray-500 mt-0.5 uppercase">Toggle the secondary brochure banner</p>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        className="sr-only peer" 
+                                        checked={showBrochurePopUp}
+                                        onChange={(e) => setShowBrochurePopUp(e.target.checked)}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#23471d]"></div>
+                                </label>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                    <Calendar className="w-3.5 h-3.5" /> Delay After Close (Seconds)
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        value={brochurePopUpDelay}
+                                        onChange={(e) => setBrochurePopUpDelay(Number(e.target.value))}
+                                        className="w-full pl-3 pr-16 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d] font-bold shadow-sm"
+                                        placeholder="e.g. 7"
+                                        min="1"
+                                    />
+                                    <div className="absolute right-10 top-2 text-[10px] font-bold text-gray-400 uppercase">SEC</div>
+                                </div>
+                                <p className="text-[9px] text-gray-400 italic">Delay before the banner appears after closing the download form.</p>
+                            </div>
                         </div>
                     </div>
                 </div>

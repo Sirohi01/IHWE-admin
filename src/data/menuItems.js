@@ -120,6 +120,17 @@ export const menuItems = [
         icon: List,
         path: "/e-promotion-registers",
       },
+      {
+        type: "item",
+        label: "E-Promotion Packages",
+        icon: Package,
+        path: "/e-promotion-packages",
+      },
+      {
+        label: "MSME PMS Scheme",
+        icon: List,
+        path: "/msme-pms-scheme-list",
+      },
 
     ]
   },
@@ -135,6 +146,7 @@ export const menuItems = [
       { label: "International Buyer List", path: "/international-buyer-list" },
       { label: "Buyer Registration Config", path: "/buyer-registration-config" },
       { label: "International Registration Config", path: "/international-buyer-registration-config" },
+      { label: "BSM Testimonials", path: "/bsm-testimonial" }
     ],
   },
 
@@ -326,6 +338,12 @@ export const menuItems = [
       { label: "Meta List", path: "/meta-list" },
       { label: "Advanced SEO", path: "/advanced-seo" },
     ],
+  },
+  {
+    type: "item",
+    label: "MSME PMS Page",
+    icon: Settings,
+    path: "/msme-pms-scheme-config",
   },
   {
     type: "item",
