@@ -42,12 +42,12 @@ import {
 
 
 export const menuItems = [
-  /* ================= CRM Management Section ================= */
+
   {
     type: "heading",
     label: "Sale Management Section",
   },
-  // ihwe section 
+
   {
     type: "dropdown",
     label: "IHWE Client Data 2026",
@@ -64,7 +64,7 @@ export const menuItems = [
       { label: "Book A Stand", path: "/book-a-stand" },
     ],
   },
-  // exhibitor section
+
   {
     type: "dropdown",
     label: "Exhibitor Management",
@@ -123,7 +123,7 @@ export const menuItems = [
 
     ]
   },
-  // buyer section
+
   {
     type: "dropdown",
     label: "Buyer Management",
@@ -137,7 +137,7 @@ export const menuItems = [
       { label: "International Registration Config", path: "/international-buyer-registration-config" },
     ],
   },
-  // visitor section
+
   {
     type: "dropdown",
     label: "Visitor Management",
@@ -151,7 +151,7 @@ export const menuItems = [
       { label: "Visitor Review", path: "/ihweClientData2026/VisitorReview" },
     ],
   },
-  // seller section
+
   {
     type: "dropdown",
     label: "Seller Management",
@@ -164,9 +164,6 @@ export const menuItems = [
     ],
   },
 
-
-
-  /* ================= ANALYTICS SECTION ================= */
   {
     type: "heading",
     label: "Analytics Section",
@@ -190,7 +187,7 @@ export const menuItems = [
     path: "/click-analytics",
   },
 
-  /* ================= Website Management SECTION ================= */
+
   {
     type: "heading",
     label: "Website Section",
@@ -349,7 +346,7 @@ export const menuItems = [
     icon: MessageSquare,
   },
 
-  /* ================= Awards Section ================= */
+
   {
     type: "heading",
     label: "Awards Section",
@@ -366,8 +363,6 @@ export const menuItems = [
     ],
   },
 
-
-  /* ================= Conference Section ================= */
   {
     type: "heading",
     label: "Conference Section",
@@ -476,7 +471,7 @@ export const menuItems = [
   { label: "Seller Export Inquiries", path: "/seller-export-inquiries" },
   //   ]
   // },
-  
+
   // {
   //   type: "item",
   //   label: "Marketing Toolkit",
