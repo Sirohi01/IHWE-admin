@@ -43,6 +43,7 @@ import ManageGalleryImages from "../pages/portfolio-gallery/ManageGalleryImages"
 
 import TestimonialsManage from "../pages/TestimonialsManage";
 import NewTestimonialsManagement from "../pages/NewTestimonialsManagement";
+import ExhibitorTestimonialsManagement from "../pages/ExhibitorTestimonialsManagement";
 
 import AddVacancy from "../pages/vacancy/AddVacancy";
 import VacancyList from "../pages/vacancy/VacancyList";
@@ -273,6 +274,7 @@ export default function AppRoutes() {
           <Route path="manage-gallery-images" element={<ManageGalleryImages />} />
           <Route path="testimonials-manage" element={<TestimonialsManage />} />
           <Route path="new-testimonials-manage" element={<NewTestimonialsManagement />} />
+          <Route path="exhibitor-testimonials" element={<ExhibitorTestimonialsManagement />} />
           <Route path="add-vacancy" element={<AddVacancy />} />
           <Route path="vacancy-list" element={<VacancyList />} />
           <Route path="career-list" element={<CareerList />} />
