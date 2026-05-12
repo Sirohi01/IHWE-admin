@@ -228,6 +228,7 @@ export const menuItems = [
       { label: "Parallax Image", path: "/parallax-manage" },
       { label: "Testimonials", path: "/testimonials-manage" },
       { label: "New Testimonials", path: "/new-testimonials-manage" },
+      { label: "Exhibitor Testimonials", path: "/exhibitor-testimonials" },
       { label: "Counters", path: "/stats-manage" },
       { label: "Floating Video", path: "/floating-video-management" },
     ],
