@@ -643,7 +643,7 @@ const BookAStand = () => {
                                             <option value={0}>0% TDS</option>
                                             <option value={1}>1% TDS</option>
                                             <option value={2}>2% TDS</option>
-                                            <option value={10}>10% TDS</option>
+                                            {/* <option value={10}>10% TDS</option> */}
                                         </select>
                                         <ChevronDown size={14} className="absolute right-3 top-3 text-red-600 pointer-events-none" />
                                     </div>
