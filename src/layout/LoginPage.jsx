@@ -14,6 +14,7 @@ import {
   Headphones,
   BarChart2
 } from "lucide-react";
+import adminLogo from "../assets/adminlogonew.png";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -163,15 +164,15 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gray-200 flex items-center justify-center p-4 font-sans w-full">
-      {/* Outer Card - Equal width columns */}
+
       <div className="w-full max-w-7xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row"
         style={{ minHeight: "580px", maxHeight: "650px" }}>
 
-        {/* ===== LEFT SIDE — Wellness / Branding Panel ===== */}
+
         <div
-          className="lg:w-1/2 relative overflow-hidden flex flex-col"
+          className="lg:w-1/2 relative overflow-hidden flex flex-col bg-cover bg-center"
           style={{
-            background: "linear-gradient(160deg, #e8f5e2 0%, #c8eabc 35%, #a5d98f 65%, #2d6e2d 100%)",
+            backgroundImage: `url(${adminLogo})`,
           }}
         >
           {/* Decorative soft blob top-right */}
