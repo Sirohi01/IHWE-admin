@@ -27,7 +27,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [logo, setLogo] = useState("");
 
-  // ✅ Fetch branding settings (Logo)
+
   useEffect(() => {
     api.get("/api/settings")
       .then(res => {
