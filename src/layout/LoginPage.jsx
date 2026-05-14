@@ -242,14 +242,14 @@ export default function LoginPage() {
               </div>
 
               {/* Hello / Good Day - LARGER FONT */}
-              <div className="mb-6">
+              <div className="mb-2">
                 <p
-                  className="text-4xl text-[#1a6b1a] mb-1"
+                  className="text-4xl text-[#1a6b1a] mb-0"
                   style={{ fontFamily: "'Dancing Script', 'Brush Script MT', cursive", fontWeight: 600 }}
                 >
                   Hello!
                 </p>
-                <h1 className="text-5xl font-black text-[#1a2e1a] leading-tight tracking-tight mb-3">
+                <h1 className="text-5xl font-black text-[#1a2e1a] leading-tight tracking-tight mb-1">
                   Have a<br />Good Day
                 </h1>
                 <p className="text-sm text-[#2d5a2d] font-medium leading-relaxed">
@@ -296,7 +296,7 @@ export default function LoginPage() {
 
             {/* BOTTOM: Feature badges bar */}
             <div
-              className="flex-shrink-0 -mx-8 -mb-0 -mt-5 px-6 py-1"
+              className="flex-shrink-0 -mx-8 -mb-0 mt-3 px-6 py-1"
               style={{ background: "linear-gradient(90deg, #1a5c1a 0%, #1e6e1e 100%)" }}
             >
               <div className="grid grid-cols-3 gap-3">
