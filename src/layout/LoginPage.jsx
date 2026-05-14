@@ -10,7 +10,9 @@ import {
   Building2,
   Mail,
   Lock,
-  LogIn
+  LogIn,
+  Headphones,
+  BarChart2
 } from "lucide-react";
 
 export default function LoginPage() {
@@ -36,7 +38,6 @@ export default function LoginPage() {
       .catch(err => console.error("Error fetching login branding:", err));
   }, []);
 
-  // ✅ Check if user is already logged in
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem("adminToken") || sessionStorage.getItem("adminToken");
@@ -78,7 +79,7 @@ export default function LoginPage() {
       icon: icon,
       title: title,
       text: text,
-      confirmButtonColor: "#1a4d1a", // Updated to green
+      confirmButtonColor: "#1a4d1a",
       background: "#ffffff",
       customClass: {
         title: "text-xl font-bold",
@@ -151,9 +152,9 @@ export default function LoginPage() {
   // ✅ Show loading while checking auth
   if (isChecking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-[#1a4d1a] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-[#1a6b1a] border-t-transparent rounded-full animate-spin"></div>
           <p className="text-gray-600 font-medium">Loading...</p>
         </div>
       </div>
@@ -161,162 +162,309 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-0 sm:p-4 font-inter">
-      {/* Main Container - Tile Style (No Border Radius) */}
-      <div className="w-full max-w-6xl bg-white shadow-xl overflow-hidden flex flex-col lg:flex-row min-h-screen sm:min-h-[600px]">
+    <div className="min-h-screen bg-gray-200 flex items-center justify-center p-4 font-sans w-full">
+      {/* Outer Card - Equal width columns */}
+      <div className="w-full max-w-7xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row"
+        style={{ minHeight: "580px", maxHeight: "650px" }}>
 
-        {/* LEFT SIDE - Welcome Section (White) */}
-        <div className="lg:w-1/2 bg-white relative overflow-hidden flex items-center justify-center p-6 lg:p-12 border-r-2 border-[#1a4d1a]/10">
-          {/* Background Pattern - Subtle Green on White */}
-          <div className="absolute inset-0">
-            {/* Geometric Shapes */}
-            <div className="absolute top-20 left-10 w-64 h-64 bg-[#1a4d1a]/5 transform rotate-12"></div>
-            <div className="absolute top-40 right-10 w-48 h-48 bg-[#1a4d1a]/5 transform -rotate-12"></div>
-            <div className="absolute bottom-20 left-20 w-56 h-56 bg-[#1a4d1a]/5 transform rotate-45"></div>
+        {/* ===== LEFT SIDE — Wellness / Branding Panel ===== */}
+        <div
+          className="lg:w-1/2 relative overflow-hidden flex flex-col"
+          style={{
+            background: "linear-gradient(160deg, #e8f5e2 0%, #c8eabc 35%, #a5d98f 65%, #2d6e2d 100%)",
+          }}
+        >
+          {/* Decorative soft blob top-right */}
+          <div
+            className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-40 pointer-events-none"
+            style={{
+              background: "radial-gradient(circle, #b8e0a0 0%, transparent 70%)",
+              transform: "translate(30%, -30%)",
+            }}
+          />
+          {/* Decorative blob bottom-left */}
+          <div
+            className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-30 pointer-events-none"
+            style={{
+              background: "radial-gradient(circle, #7dc465 0%, transparent 70%)",
+              transform: "translate(-30%, 30%)",
+            }}
+          />
 
-            {/* Grid Pattern */}
-            <div className="absolute inset-0 opacity-[0.03]">
-              <div className="grid grid-cols-8 grid-rows-8 h-full w-full gap-4">
-                {[...Array(64)].map((_, i) => (
-                  <div key={i} className="bg-[#1a4d1a]"></div>
+          {/* Content container with proper spacing */}
+          <div className="relative z-10 flex flex-col h-full px-8 py-8">
+            {/* TOP: Logo + Branding */}
+            <div className="flex-shrink-0">
+              <div className="flex items-center gap-4 mb-6 -ml-7">
+                {logo ? (
+                  <img
+                    src={`${SERVER_URL}${logo}`}
+                    className="h-59 w-auto object-contain"
+                    alt="IHWE Logo"
+                  />
+                ) : (
+                  /* Fallback Logo */
+                  <div className="flex items-center gap-4">
+                    <div
+                      className="flex items-center justify-center rounded-full font-black text-white text-5xl"
+                      style={{
+                        width: "85px",
+                        height: "85px",
+                        background: "linear-gradient(135deg, #4caf50, #1a5c1a)",
+                        border: "3px solid #fff",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+                        fontFamily: "Georgia, serif",
+                      }}
+                    >
+                      9
+                    </div>
+                    <div className="leading-tight">
+                      <div className="text-base font-bold text-[#1a4d1a] uppercase tracking-wider">International</div>
+                      <div className="text-base font-bold text-[#1a4d1a] uppercase tracking-wider">Health &amp; Wellness</div>
+                      <div className="text-xl font-black uppercase tracking-wider" style={{ color: "#e65c00" }}>
+                        EXPO 2026
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* IHWE ADMIN label - LARGER FONT */}
+              <div className="mb-6">
+                <h2 className="text-4xl font-black text-[#1a4d1a] tracking-tight leading-none mb-1">
+                  IHWE ADMIN
+                </h2>
+                <p className="text-sm font-bold uppercase tracking-widest text-[#2d5a2d]">
+                  Official Management Portal
+                </p>
+                <div className="mt-2 h-0.5 w-24 bg-[#1a4d1a] rounded" />
+              </div>
+
+              {/* Hello / Good Day - LARGER FONT */}
+              <div className="mb-6">
+                <p
+                  className="text-4xl text-[#1a6b1a] mb-1"
+                  style={{ fontFamily: "'Dancing Script', 'Brush Script MT', cursive", fontWeight: 600 }}
+                >
+                  Hello!
+                </p>
+                <h1 className="text-5xl font-black text-[#1a2e1a] leading-tight tracking-tight mb-3">
+                  Have a<br />Good Day
+                </h1>
+                <p className="text-sm text-[#2d5a2d] font-medium leading-relaxed">
+                  Welcome back! Please login to continue<br />
+                  managing the International Health &amp;<br />
+                  Wellness Expo 2026.
+                </p>
+              </div>
+            </div>
+
+            {/* MIDDLE: Wellness imagery */}
+            <div className="flex-1 flex items-end justify-end relative min-h-[120px]">
+              {/* Zen stone stack */}
+              <svg
+                className="relative z-10 opacity-90 mr-4 mb-2"
+                width="100" height="130" viewBox="0 0 100 130"
+                fill="none" xmlns="http://www.w3.org/2000/svg"
+              >
+                <ellipse cx="50" cy="118" rx="38" ry="10" fill="#5a7a3a" opacity="0.5" />
+                <ellipse cx="50" cy="110" rx="35" ry="13" fill="#7aab52" opacity="0.85" />
+                <ellipse cx="50" cy="90" rx="26" ry="10" fill="#8db870" opacity="0.9" />
+                <ellipse cx="50" cy="84" rx="24" ry="9" fill="#a8c884" opacity="0.95" />
+                <ellipse cx="50" cy="68" rx="18" ry="8" fill="#bcd99a" opacity="0.95" />
+                <ellipse cx="50" cy="63" rx="16" ry="7" fill="#cce4aa" opacity="0.95" />
+                <ellipse cx="50" cy="51" rx="11" ry="6" fill="#dff0c0" opacity="0.95" />
+                <ellipse cx="50" cy="48" rx="10" ry="5" fill="#eaf7d4" opacity="0.95" />
+                <path d="M64 42 Q82 18 74 8 Q60 25 64 42Z" fill="#4caf50" opacity="0.7" />
+              </svg>
+
+              {/* Lotus flower */}
+              <svg
+                className="relative z-10 opacity-85 mr-8 mb-4"
+                width="55" height="45" viewBox="0 0 55 45"
+                fill="none" xmlns="http://www.w3.org/2000/svg"
+              >
+                <ellipse cx="27" cy="37" rx="18" ry="5" fill="#2d6e2d" opacity="0.4" />
+                <path d="M27 32 Q18 20 19 10 Q27 18 27 32Z" fill="#f5f0e8" opacity="0.9" />
+                <path d="M27 32 Q36 20 35 10 Q27 18 27 32Z" fill="#f0ebe0" opacity="0.9" />
+                <path d="M27 32 Q13 21 15 8 Q25 19 27 32Z" fill="#f8f4ec" opacity="0.85" />
+                <path d="M27 32 Q41 21 39 8 Q29 19 27 32Z" fill="#f3ede4" opacity="0.85" />
+                <circle cx="27" cy="29" r="4" fill="#f5d478" opacity="0.9" />
+              </svg>
+            </div>
+
+            {/* BOTTOM: Feature badges bar */}
+            <div
+              className="flex-shrink-0 -mx-8 -mb-0 -mt-5 px-6 py-1"
+              style={{ background: "linear-gradient(90deg, #1a5c1a 0%, #1e6e1e 100%)" }}
+            >
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { icon: <Shield size={14} />, title: "Secure Access", desc: "Your data is safe with us." },
+                  { icon: <Users size={14} />, title: "Centralized Management", desc: "Manage events, users & operations seamlessly." },
+                  { icon: <BarChart2 size={14} />, title: "Real-time Insights", desc: "Track performance & get real-time reports." },
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-2 items-start">
+                    <div
+                      className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white"
+                      style={{ background: "rgba(255,255,255,0.18)" }}
+                    >
+                      {item.icon}
+                    </div>
+                    <div>
+                      <p className="text-white text-[10px] font-bold leading-tight">{item.title}</p>
+                      <p className="text-green-200 text-[8px] leading-tight mt-0.5">{item.desc}</p>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
           </div>
-
-          {/* Content */}
-          <div className="relative z-10 text-center lg:text-left w-full">
-            {/* NEW LOGO SECTION ON LEFT */}
-            <div className="mb-10 flex flex-col items-center lg:items-start gap-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#1a4d1a] to-[#2d5a2d] transform translate-x-1 translate-y-1"></div>
-                <div className="relative bg-white border-2 border-[#1a4d1a] p-2">
-                  {logo ? (
-                    <img src={`${SERVER_URL}${logo}`} className="h-32 lg:h-36 w-auto object-contain" alt="IHWE Logo" />
-                  ) : (
-                    <div className="h-24 lg:h-28 flex items-center justify-center bg-slate-50 px-6">
-                      <span className="text-2xl font-black text-[#1a4d1a]">IHWE</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div>
-                <h2 className="text-2xl font-black text-[#1a4d1a] tracking-tight">
-                  IHWE ADMIN
-                </h2>
-                <p className="text-sm text-gray-600 font-bold uppercase tracking-wider">
-                  Official Management Portal
-                </p>
-              </div>
-              <div className="h-1 w-24 bg-[#1a4d1a]"></div>
-            </div>
-
-            {/* Welcome Text */}
-            <div className="space-y-4">
-              <h1 className="text-3xl lg:text-4xl font-black text-gray-900 leading-tight tracking-tight">
-                Hello!
-              </h1>
-              <h2 className="text-3xl lg:text-5xl font-black text-[#1a4d1a] leading-tight tracking-tight">
-                Have a<br />GOOD DAY
-              </h2>
-            </div>
-          </div>
         </div>
 
-        {/* RIGHT SIDE - Login Form (Light Grey) */}
-        <div className="lg:w-1/2 bg-slate-100 p-6 lg:p-12 flex items-center justify-center">
+        {/* ===== RIGHT SIDE — Login Form ===== */}
+        <div className="lg:w-1/2 bg-white flex flex-col items-center justify-center p-8 lg:p-10">
           <div className="w-full max-w-md">
-            <div>
-              {/* Form Branding */}
-              <div className="mb-8 text-center lg:text-left">
-                <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight">
-                  Administrator Login
-                </h3>
-                <p className="text-sm text-gray-600 font-medium">
-                  Please enter your credentials to continue
-                </p>
+            {/* Shield icon */}
+            <div className="flex justify-center mb-5">
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center"
+                style={{ background: "#f0f7f0", border: "2px solid #d4ecd4" }}
+              >
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ background: "linear-gradient(135deg, #2d8b2d, #1a5c1a)" }}
+                >
+                  <Lock size={18} className="text-white" />
+                </div>
+              </div>
+            </div>
+
+            {/* Heading */}
+            <div className="text-center mb-7">
+              <h3 className="text-2xl font-black text-gray-900">
+                Administrator Login
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Please enter your credentials to continue
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* USERNAME */}
+              <div>
+                <label htmlFor="username" className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
+                  Username
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    <Users size={16} />
+                  </span>
+                  <input
+                    id="username"
+                    type="text"
+                    value={credentials.username}
+                    onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
+                    placeholder="Enter username"
+                    className="w-full px-4 py-3 pl-10 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-[#2d8b2d] focus:ring-2 focus:ring-[#2d8b2d]/10 transition-all text-sm text-gray-700"
+                  />
+                </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
-                {/* USERNAME */}
-                <div>
-                  <label htmlFor="username" className="block text-xs font-bold text-gray-800 mb-2 uppercase tracking-wider">
-                    Username
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      id="username"
-                      type="text"
-                      value={credentials.username}
-                      onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-                      placeholder="Enter username"
-                      className="w-full px-4 py-3 pl-10 bg-white border-2 border-gray-300 focus:outline-none focus:border-[#1a4d1a] transition-all text-sm font-medium"
-                    />
-                  </div>
+              {/* PASSWORD */}
+              <div>
+                <label htmlFor="password" className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
+                  Password
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    <Lock size={16} />
+                  </span>
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={credentials.password}
+                    onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                    placeholder="••••••••"
+                    className="w-full px-4 py-3 pl-10 pr-12 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-[#2d8b2d] focus:ring-2 focus:ring-[#2d8b2d]/10 transition-all text-sm text-gray-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#2d8b2d] transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
+              </div>
 
-                {/* PASSWORD */}
-                <div>
-                  <label htmlFor="password" className="block text-xs font-bold text-gray-800 mb-2 uppercase tracking-wider">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      value={credentials.password}
-                      onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                      placeholder="••••••••"
-                      className="w-full px-4 py-3 pl-10 bg-white border-2 border-gray-300 focus:outline-none focus:border-[#1a4d1a] transition-all text-sm font-medium pr-12"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#1a4d1a] transition-colors"
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* REMEMBER ME */}
-                <div className="flex items-center pt-2">
+              {/* REMEMBER ME + FORGOT */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     id="remember"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-5 h-5 text-[#1a4d1a] border-gray-300 rounded-none focus:ring-[#1a4d1a] cursor-pointer"
+                    className="w-4 h-4 rounded border-gray-300 text-[#2d8b2d] focus:ring-[#2d8b2d] cursor-pointer"
                   />
                   <label
                     htmlFor="remember"
-                    className="ml-3 text-xs font-bold text-gray-600 cursor-pointer select-none uppercase tracking-wide"
+                    className="text-xs font-medium text-gray-600 cursor-pointer select-none"
                   >
                     Keep me logged in
                   </label>
                 </div>
-
-                {/* LOGIN BUTTON */}
                 <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-[#1a4d1a] hover:bg-[#153a15] text-white font-black py-3.5 px-4 transition-all duration-300 shadow-lg hover:shadow-2xl disabled:opacity-70 disabled:cursor-not-allowed transform hover:translate-y-[-2px] text-base uppercase tracking-widest"
+                  type="button"
+                  className="text-xs font-bold text-[#2d8b2d] hover:underline"
                 >
-                  {isLoading ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Verifying...</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center gap-2">
-                      <LogIn size={20} />
-                      <span>LOGIN</span>
-                    </div>
-                  )}
+                  Forgot Password?
                 </button>
-              </form>
+              </div>
+
+              {/* LOGIN BUTTON */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full text-white font-black py-3.5 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed text-sm uppercase tracking-widest flex items-center justify-center gap-2"
+                style={{
+                  background: isLoading
+                    ? "#2d8b2d"
+                    : "linear-gradient(90deg, #2d8b2d 0%, #1a5c1a 100%)",
+                }}
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Verifying...</span>
+                  </>
+                ) : (
+                  <>
+                    <LogIn size={18} />
+                    <span>LOGIN</span>
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* NEED HELP */}
+            <div className="mt-7 pt-5 border-t border-gray-100">
+              <p className="text-center text-xs text-gray-500 font-medium mb-3">Need help?</p>
+              <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: "#e8f5e2" }}
+                >
+                  <Headphones size={24} className="text-[#2d8b2d]" />
+                </div>
+                <div>
+                  <p className="text-md font-bold text-gray-800">Contact Support</p>
+                  <p className="text-md text-gray-500">
+                    admin@ihwe.in &nbsp;|&nbsp; +91 98765 43210
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

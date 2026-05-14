@@ -55,7 +55,7 @@ export default function AdminUser() {
         setSaving(true);
         try {
             const payload = { ...form };
-            if (!payload.password) delete payload.password; // don't send empty password on edit
+            if (!payload.password) delete payload.password;
             if (editId) {
                 await api.put(`/api/admin/update/${editId}`, payload);
             } else {
