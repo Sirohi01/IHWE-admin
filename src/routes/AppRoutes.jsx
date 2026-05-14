@@ -56,6 +56,9 @@ import ProjectList from "../pages/project/ProjectList";
 
 import AddBlogs from "../pages/Blogs/AddBlogs";
 import BlogsList from "../pages/Blogs/BlogsList";
+import ExpertInsightsManage from "../pages/Blogs/ExpertInsightsManage";
+import MediaResourcesManage from "../pages/Blogs/MediaResourcesManage";
+import NewsletterSubscribers from "../pages/Blogs/NewsletterSubscribers";
 
 import AddFacility from "../pages/facilities/AddFacility";
 import FacilityList from "../pages/facilities/FacilityList";
@@ -298,6 +301,9 @@ export default function AppRoutes() {
           <Route path="service-list" element={<ServiceList />} />
           <Route path="add-blogs" element={<AddBlogs />} />
           <Route path="blogs-list" element={<BlogsList />} />
+          <Route path="blog-experts" element={<ExpertInsightsManage />} />
+          <Route path="blog-resources" element={<MediaResourcesManage />} />
+          <Route path="blog-subscribers" element={<NewsletterSubscribers />} />
           <Route path="contact-list" element={<ContactList />} />
           <Route path="book-a-stand" element={<BookAStand />} />
           <Route
