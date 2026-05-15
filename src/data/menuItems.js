@@ -311,7 +311,16 @@ export const menuItems = [
   },
   {
     type: "dropdown",
+    label: "Media Page",
+    icon: Globe,
+    children: [
+      { label: "Media Registration Content", path: "/media-registration-manage" },
+    ],
+  },
+  {
+    type: "dropdown",
     label: "Services Page",
+
     icon: Sparkles,
     children: [
       { label: "Add Services", path: "/create-service" },
@@ -325,6 +334,9 @@ export const menuItems = [
     children: [
       { label: "Add Blogs", path: "/add-blogs" },
       { label: "Blogs List", path: "/blogs-list" },
+      { label: "Expert Insights", path: "/blog-experts" },
+      { label: "Media Resources", path: "/blog-resources" },
+      { label: "Newsletter Subscribers", path: "/blog-subscribers" },
     ],
   },
   {
