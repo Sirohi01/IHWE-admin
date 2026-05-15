@@ -219,6 +219,7 @@ import ConferenceTrackManage from "../pages/ConferenceTrackManage";
 import MsmePmsSchemeList from "../pages/MsmePmsSchemeList";
 import MsmePmsSchemeDetail from "../pages/MsmePmsSchemeDetail";
 import MsmePmsSchemeConfig from "../pages/MsmePmsSchemeConfig"; import BSMTestimonial from "../pages/buyer_saller_meet/BSMTestimonial";
+import MediaRegistrationManage from "../pages/MediaRegistrationManagement";
 
 
 
@@ -579,6 +580,7 @@ export default function AppRoutes() {
           <Route path="/notification" element={<Notification />} />
           <Route path="/floating-video-management" element={<FloatingVideoManagement />} />
           <Route path="/sponsorship-enquiries" element={<SponsorshipEnquiries />} />
+          <Route path="/media-registration-manage" element={<MediaRegistrationManage />} />
 
           <Route path="*" element={<NotFound />} />
           <Route path="/international-buyer-list" element={<InternationalBuyerList />} />

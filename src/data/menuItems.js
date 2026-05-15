@@ -308,7 +308,16 @@ export const menuItems = [
   },
   {
     type: "dropdown",
+    label: "Media Page",
+    icon: Globe,
+    children: [
+      { label: "Media Registration Content", path: "/media-registration-manage" },
+    ],
+  },
+  {
+    type: "dropdown",
     label: "Services Page",
+
     icon: Sparkles,
     children: [
       { label: "Add Services", path: "/create-service" },
