@@ -11,9 +11,15 @@ import {
   Mail,
   Lock,
   LogIn,
+  Loader2,
+  ChevronLeft,
+  User,
+  ShieldCheck,
+  Headset,
   Headphones,
   BarChart2
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import adminLogo from "../assets/adminlogonew.png";
 
 export default function LoginPage() {
@@ -28,7 +34,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [logo, setLogo] = useState("");
 
-
+  // Fetch branding settings (Logo)
   useEffect(() => {
     api.get("/api/settings")
       .then(res => {
@@ -39,6 +45,7 @@ export default function LoginPage() {
       .catch(err => console.error("Error fetching login branding:", err));
   }, []);
 
+  // Check if user is already logged in
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem("adminToken") || sessionStorage.getItem("adminToken");
@@ -74,23 +81,23 @@ export default function LoginPage() {
     checkAuth();
   }, [navigate]);
 
-  // ✅ SweetAlert Configuration
+  // SweetAlert Configuration
   const showAlert = (icon, title, text) => {
     Swal.fire({
       icon: icon,
       title: title,
       text: text,
-      confirmButtonColor: "#1a4d1a",
-      background: "#ffffff",
+      confirmButtonColor: "#23471d",
+      background: "#f8f9fa",
       customClass: {
-        title: "text-xl font-bold",
-        popup: "rounded-none",
-        confirmButton: "py-3 px-6 text-base font-semibold"
+        title: "text-xl font-bold font-inter",
+        popup: "rounded-xl",
+        confirmButton: "py-2 px-6 text-base font-semibold"
       }
     });
   };
 
-  // ✅ LOGIN FUNCTION
+  // LOGIN FUNCTION
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -127,7 +134,7 @@ export default function LoginPage() {
           text: "Welcome to IHWE Official Admin Portal",
           timer: 1500,
           showConfirmButton: false,
-          confirmButtonColor: "#1a4d1a",
+          confirmButtonColor: "#23471d",
         });
 
         navigate("/dashboard", { replace: true });
@@ -150,12 +157,12 @@ export default function LoginPage() {
     }
   };
 
-  // ✅ Show loading while checking auth
+  // Show loading while checking auth
   if (isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-[#1a6b1a] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
           <p className="text-gray-600 font-medium">Loading...</p>
         </div>
       </div>
@@ -163,313 +170,313 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-200 flex items-center justify-center p-4 font-sans w-full">
+    <div className="min-h-screen bg-[#f9fafb] font-inter flex flex-col justify-center relative">
 
-      <div className="w-full max-w-7xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row"
-        style={{ minHeight: "580px", maxHeight: "650px" }}>
+      {/* ── Animated Background ── */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <style>{`
+          @keyframes floatLeaf {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.6; }
+            33%       { transform: translateY(-22px) rotate(14deg); opacity: 1; }
+            66%       { transform: translateY(-10px) rotate(-8deg); opacity: 0.8; }
+          }
+          @keyframes drift1 {
+            0%, 100% { transform: translate(0px, 0px) scale(1); }
+            33%       { transform: translate(20px, -15px) scale(1.05); }
+            66%       { transform: translate(-10px, 10px) scale(0.97); }
+          }
+          @keyframes drift2 {
+            0%, 100% { transform: translate(0px, 0px) scale(1); }
+            33%       { transform: translate(-18px, 12px) scale(1.04); }
+            66%       { transform: translate(12px, -8px) scale(0.98); }
+          }
+          .leaf-float { animation: floatLeaf 5s ease-in-out infinite; }
+          .blob-drift1 { animation: drift1 10s ease-in-out infinite; }
+          .blob-drift2 { animation: drift2 13s ease-in-out infinite reverse; }
+          .blob-drift3 { animation: drift1 8s ease-in-out infinite reverse; }
+        `}</style>
 
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#f0f7ea] via-[#e8f5d8] to-[#f4faf0]" />
 
-        <div
-          className="lg:w-1/2 relative overflow-hidden flex flex-col bg-cover bg-center"
-          style={{
-            backgroundImage: `url(${adminLogo})`,
-          }}
-        >
-          {/* Decorative soft blob top-right */}
+        {/* Blobs */}
+        <div className="blob-drift1 absolute -top-24 -left-24 w-96 h-96 rounded-full bg-[#c5e89a]/25" />
+        <div className="blob-drift2 absolute -bottom-20 -right-20 w-80 h-80 rounded-full bg-[#8dc44f]/20" />
+        <div className="blob-drift3 absolute top-10 right-20 w-48 h-48 rounded-full bg-[#d6ffb7]/30" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-[#a8d96c]/15 animate-pulse" />
+
+        {/* Floating Leaves */}
+        {[
+          { top: "8%", left: "8%", delay: "0s" },
+          { top: "15%", right: "10%", delay: "1.5s" },
+          { top: "55%", left: "5%", delay: "2.5s" },
+          { bottom: "20%", right: "8%", delay: "0.8s" },
+          { bottom: "35%", left: "15%", delay: "3.5s" },
+          { top: "70%", right: "22%", delay: "1.2s" },
+          { top: "35%", left: "45%", delay: "4s" },
+          { top: "80%", left: "35%", delay: "2s" },
+        ].map((leaf, i) => (
           <div
-            className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-40 pointer-events-none"
+            key={i}
+            className="leaf-float absolute w-7 h-7 opacity-40"
             style={{
-              background: "radial-gradient(circle, #b8e0a0 0%, transparent 70%)",
-              transform: "translate(30%, -30%)",
+              top: leaf.top,
+              left: leaf.left,
+              right: leaf.right,
+              bottom: leaf.bottom,
+              animationDelay: leaf.delay,
             }}
-          />
-          {/* Decorative blob bottom-left */}
-          <div
-            className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-30 pointer-events-none"
-            style={{
-              background: "radial-gradient(circle, #7dc465 0%, transparent 70%)",
-              transform: "translate(-30%, 30%)",
-            }}
-          />
-
-          {/* Content container with proper spacing */}
-          <div className="relative z-10 flex flex-col h-full px-8 py-8">
-            {/* TOP: Logo + Branding */}
-            <div className="flex-shrink-0">
-              <div className="flex items-center gap-4 mb-6 -ml-7">
-                {logo ? (
-                  <img
-                    src={`${SERVER_URL}${logo}`}
-                    className="h-59 w-auto object-contain"
-                    alt="IHWE Logo"
-                  />
-                ) : (
-                  /* Fallback Logo */
-                  <div className="flex items-center gap-4">
-                    <div
-                      className="flex items-center justify-center rounded-full font-black text-white text-5xl"
-                      style={{
-                        width: "85px",
-                        height: "85px",
-                        background: "linear-gradient(135deg, #4caf50, #1a5c1a)",
-                        border: "3px solid #fff",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
-                        fontFamily: "Georgia, serif",
-                      }}
-                    >
-                      9
-                    </div>
-                    <div className="leading-tight">
-                      <div className="text-base font-bold text-[#1a4d1a] uppercase tracking-wider">International</div>
-                      <div className="text-base font-bold text-[#1a4d1a] uppercase tracking-wider">Health &amp; Wellness</div>
-                      <div className="text-xl font-black uppercase tracking-wider" style={{ color: "#e65c00" }}>
-                        EXPO 2026
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* IHWE ADMIN label - LARGER FONT */}
-              <div className="mb-6">
-                <h2 className="text-4xl font-black text-[#1a4d1a] tracking-tight leading-none mb-1">
-                  IHWE ADMIN
-                </h2>
-                <p className="text-sm font-bold uppercase tracking-widest text-[#2d5a2d]">
-                  Official Management Portal
-                </p>
-                <div className="mt-2 h-0.5 w-24 bg-[#1a4d1a] rounded" />
-              </div>
-
-              {/* Hello / Good Day - LARGER FONT */}
-              <div className="mb-2">
-                <p
-                  className="text-4xl text-[#1a6b1a] mb-0"
-                  style={{ fontFamily: "'Dancing Script', 'Brush Script MT', cursive", fontWeight: 600 }}
-                >
-                  Hello!
-                </p>
-                <h1 className="text-5xl font-black text-[#1a2e1a] leading-tight tracking-tight mb-1">
-                  Have a<br />Good Day
-                </h1>
-                <p className="text-sm text-[#2d5a2d] font-medium leading-relaxed">
-                  Welcome back! Please login to continue<br />
-                  managing the International Health &amp;<br />
-                  Wellness Expo 2026.
-                </p>
-              </div>
-            </div>
-
-            {/* MIDDLE: Wellness imagery */}
-            <div className="flex-1 flex items-end justify-end relative min-h-[120px]">
-              {/* Zen stone stack */}
-              <svg
-                className="relative z-10 opacity-90 mr-4 mb-2"
-                width="100" height="130" viewBox="0 0 100 130"
-                fill="none" xmlns="http://www.w3.org/2000/svg"
-              >
-                <ellipse cx="50" cy="118" rx="38" ry="10" fill="#5a7a3a" opacity="0.5" />
-                <ellipse cx="50" cy="110" rx="35" ry="13" fill="#7aab52" opacity="0.85" />
-                <ellipse cx="50" cy="90" rx="26" ry="10" fill="#8db870" opacity="0.9" />
-                <ellipse cx="50" cy="84" rx="24" ry="9" fill="#a8c884" opacity="0.95" />
-                <ellipse cx="50" cy="68" rx="18" ry="8" fill="#bcd99a" opacity="0.95" />
-                <ellipse cx="50" cy="63" rx="16" ry="7" fill="#cce4aa" opacity="0.95" />
-                <ellipse cx="50" cy="51" rx="11" ry="6" fill="#dff0c0" opacity="0.95" />
-                <ellipse cx="50" cy="48" rx="10" ry="5" fill="#eaf7d4" opacity="0.95" />
-                <path d="M64 42 Q82 18 74 8 Q60 25 64 42Z" fill="#4caf50" opacity="0.7" />
-              </svg>
-
-              {/* Lotus flower */}
-              <svg
-                className="relative z-10 opacity-85 mr-8 mb-4"
-                width="55" height="45" viewBox="0 0 55 45"
-                fill="none" xmlns="http://www.w3.org/2000/svg"
-              >
-                <ellipse cx="27" cy="37" rx="18" ry="5" fill="#2d6e2d" opacity="0.4" />
-                <path d="M27 32 Q18 20 19 10 Q27 18 27 32Z" fill="#f5f0e8" opacity="0.9" />
-                <path d="M27 32 Q36 20 35 10 Q27 18 27 32Z" fill="#f0ebe0" opacity="0.9" />
-                <path d="M27 32 Q13 21 15 8 Q25 19 27 32Z" fill="#f8f4ec" opacity="0.85" />
-                <path d="M27 32 Q41 21 39 8 Q29 19 27 32Z" fill="#f3ede4" opacity="0.85" />
-                <circle cx="27" cy="29" r="4" fill="#f5d478" opacity="0.9" />
-              </svg>
-            </div>
-
-            {/* BOTTOM: Feature badges bar */}
-            <div
-              className="flex-shrink-0 -mx-8 -mb-0 mt-3 px-6 py-1"
-              style={{ background: "linear-gradient(90deg, #1a5c1a 0%, #1e6e1e 100%)" }}
-            >
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { icon: <Shield size={14} />, title: "Secure Access", desc: "Your data is safe with us." },
-                  { icon: <Users size={14} />, title: "Centralized Management", desc: "Manage events, users & operations seamlessly." },
-                  { icon: <BarChart2 size={14} />, title: "Real-time Insights", desc: "Track performance & get real-time reports." },
-                ].map((item, i) => (
-                  <div key={i} className="flex gap-2 items-start">
-                    <div
-                      className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white"
-                      style={{ background: "rgba(255,255,255,0.18)" }}
-                    >
-                      {item.icon}
-                    </div>
-                    <div>
-                      <p className="text-white text-[10px] font-bold leading-tight">{item.title}</p>
-                      <p className="text-green-200 text-[8px] leading-tight mt-0.5">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          >
+            <svg viewBox="0 0 36 36" fill="none" className="w-full h-full">
+              <path
+                d="M18 3 C10 8,4 16,8 26 C12 34,26 32,30 22 C34 12,26 4,18 3Z"
+                fill="#4a8c28"
+              />
+              <line x1="18" y1="5" x2="18" y2="28" stroke="#3a7020" strokeWidth="1.2" />
+            </svg>
           </div>
-        </div>
+        ))}
+      </div>
 
-        {/* ===== RIGHT SIDE — Login Form ===== */}
-        <div className="lg:w-1/2 bg-white flex flex-col items-center justify-center p-8 lg:p-10">
-          <div className="w-full max-w-md">
-            {/* Shield icon */}
-            <div className="flex justify-center mb-5">
+      <section className="py-4 relative z-10">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="grid lg:grid-cols-2 items-stretch rounded-2xl shadow-2xl overflow-hidden bg-white border border-slate-100 min-h-[550px] lg:min-h-[550px]">
+
+              {/* LEFT SIDE - Administrative Branding */}
               <div
-                className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ background: "#f0f7f0", border: "2px solid #d4ecd4" }}
-              >
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ background: "linear-gradient(135deg, #2d8b2d, #1a5c1a)" }}
-                >
-                  <Lock size={18} className="text-white" />
-                </div>
-              </div>
-            </div>
-
-            {/* Heading */}
-            <div className="text-center mb-7">
-              <h3 className="text-2xl font-black text-gray-900">
-                Administrator Login
-              </h3>
-              <p className="text-sm text-gray-500 mt-1">
-                Please enter your credentials to continue
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* USERNAME */}
-              <div>
-                <label htmlFor="username" className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
-                  Username
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                    <Users size={16} />
-                  </span>
-                  <input
-                    id="username"
-                    type="text"
-                    value={credentials.username}
-                    onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-                    placeholder="Enter username"
-                    className="w-full px-4 py-3 pl-10 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-[#2d8b2d] focus:ring-2 focus:ring-[#2d8b2d]/10 transition-all text-sm text-gray-700"
-                  />
-                </div>
-              </div>
-
-              {/* PASSWORD */}
-              <div>
-                <label htmlFor="password" className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
-                  Password
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                    <Lock size={16} />
-                  </span>
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={credentials.password}
-                    onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                    placeholder="••••••••"
-                    className="w-full px-4 py-3 pl-10 pr-12 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-[#2d8b2d] focus:ring-2 focus:ring-[#2d8b2d]/10 transition-all text-sm text-gray-700"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#2d8b2d] transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* REMEMBER ME + FORGOT */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="remember"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 text-[#2d8b2d] focus:ring-[#2d8b2d] cursor-pointer"
-                  />
-                  <label
-                    htmlFor="remember"
-                    className="text-xs font-medium text-gray-600 cursor-pointer select-none"
-                  >
-                    Keep me logged in
-                  </label>
-                </div>
-                <button
-                  type="button"
-                  className="text-xs font-bold text-[#2d8b2d] hover:underline"
-                >
-                  Forgot Password?
-                </button>
-              </div>
-
-              {/* LOGIN BUTTON */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full text-white font-black py-3.5 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed text-sm uppercase tracking-widest flex items-center justify-center gap-2"
+                className=" relative overflow-hidden flex flex-col bg-cover bg-center"
                 style={{
-                  background: isLoading
-                    ? "#2d8b2d"
-                    : "linear-gradient(90deg, #2d8b2d 0%, #1a5c1a 100%)",
+                  backgroundImage: `url(${adminLogo})`,
                 }}
               >
-                {isLoading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Verifying...</span>
-                  </>
-                ) : (
-                  <>
-                    <LogIn size={18} />
-                    <span>LOGIN</span>
-                  </>
-                )}
-              </button>
-            </form>
-
-            {/* NEED HELP */}
-            <div className="mt-7 pt-5 border-t border-gray-100">
-              <p className="text-center text-xs text-gray-500 font-medium mb-3">Need help?</p>
-              <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+                {/* Decorative soft blob top-right */}
                 <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: "#e8f5e2" }}
-                >
-                  <Headphones size={24} className="text-[#2d8b2d]" />
+                  className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-40 pointer-events-none"
+                  style={{
+                    background: "radial-gradient(circle, #b8e0a0 0%, transparent 70%)",
+                    transform: "translate(30%, -30%)",
+                  }}
+                />
+                {/* Decorative blob bottom-left */}
+                <div
+                  className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-30 pointer-events-none"
+                  style={{
+                    background: "radial-gradient(circle, #7dc465 0%, transparent 70%)",
+                    transform: "translate(-30%, 30%)",
+                  }}
+                />
+
+                {/* Content container with proper spacing */}
+                <div className="relative z-10 flex flex-col h-full px-8 py-2">
+                  {/* TOP: Logo + Branding */}
+                  <div className="flex-shrink-0">
+                    <div className="flex items-center gap-4 mb-6 -ml-7">
+                      {logo ? (
+                        <img
+                          src={`${SERVER_URL}${logo}`}
+                          className="h-59 w-auto object-contain"
+                          alt="IHWE Logo"
+                        />
+                      ) : (
+                        /* Fallback Logo */
+                        <div className="flex items-center gap-4">
+                          <div
+                            className="flex items-center justify-center rounded-full font-black text-white text-5xl"
+                            style={{
+                              width: "85px",
+                              height: "85px",
+                              background: "linear-gradient(135deg, #4caf50, #1a5c1a)",
+                              border: "3px solid #fff",
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+                              fontFamily: "Georgia, serif",
+                            }}
+                          >
+                            9
+                          </div>
+                          <div className="leading-tight">
+                            <div className="text-base font-bold text-[#1a4d1a] uppercase tracking-wider">International</div>
+                            <div className="text-base font-bold text-[#1a4d1a] uppercase tracking-wider">Health &amp; Wellness</div>
+                            <div className="text-xl font-black uppercase tracking-wider" style={{ color: "#e65c00" }}>
+                              EXPO 2026
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* IHWE ADMIN label - LARGER FONT */}
+                    <div className="mb-6">
+                      <h2 className="text-4xl font-black text-[#1a4d1a] tracking-tight leading-none mb-1">
+                        IHWE ADMIN
+                      </h2>
+                      <p className="text-sm font-bold uppercase tracking-widest text-[#2d5a2d]">
+                        Official Management Portal
+                      </p>
+                      <div className="mt-2 h-0.5 w-24 bg-[#1a4d1a] rounded" />
+                    </div>
+
+                    {/* Hello / Good Day - LARGER FONT */}
+                    <div className="mb-2">
+                      <p
+                        className="text-4xl text-[#1a6b1a] mb-0"
+                        style={{ fontFamily: "'Dancing Script', 'Brush Script MT', cursive", fontWeight: 600 }}
+                      >
+                        Hello!
+                      </p>
+                      <h1 className="text-5xl font-black text-[#1a2e1a] leading-tight tracking-tight mb-1">
+                        Have a<br />Good Day
+                      </h1>
+                      <p className="text-sm text-[#2d5a2d] font-medium leading-relaxed">
+                        Welcome back! Please login to continue<br />
+                        managing the International Health &amp;<br />
+                        Wellness Expo 2026.
+                      </p>
+                    </div>
+                  </div>
+
+
+                  {/* BOTTOM: Feature badges bar */}
+                  <div
+                    className="flex-shrink-0 -mx-8 px-6 py-1"
+                    style={{ background: "linear-gradient(90deg, #1a5c1a 0%, #1e6e1e 100%)" }}
+                  >
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { icon: <Shield size={14} />, title: "Secure Access", desc: "Your data is safe with us." },
+                        { icon: <Users size={14} />, title: "Centralized Management", desc: "Manage events, users & operations seamlessly." },
+                        { icon: <BarChart2 size={14} />, title: "Real-time Insights", desc: "Track performance & get real-time reports." },
+                      ].map((item, i) => (
+                        <div key={i} className="flex gap-2 items-start">
+                          <div
+                            className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white"
+                            style={{ background: "rgba(255,255,255,0.18)" }}
+                          >
+                            {item.icon}
+                          </div>
+                          <div>
+                            <p className="text-white text-[10px] font-bold leading-tight">{item.title}</p>
+                            <p className="text-green-200 text-[8px] leading-tight mt-0.5">{item.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-md font-bold text-gray-800">Contact Support</p>
-                  <p className="text-md text-gray-500">
-                    admin@ihwe.in &nbsp;|&nbsp; +91 98765 43210
-                  </p>
-                </div>
+              </div>
+
+              {/* RIGHT SIDE - Form */}
+              <div className="px-8 relative flex flex-col justify-center h-full">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[#23471d]/10 to-transparent -rotate-45" />
+
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key="login-step"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-4"
+                  >
+                    <div className="text-center">
+                      <div className="w-20 h-20 mx-auto bg-gradient-to-tr from-[#23471d]/10 to-[#d26019]/10 rounded-full flex items-center justify-center mb-4 shadow-sm border border-slate-100 text-[#23471d]">
+                        <Shield size={36} strokeWidth={1.5} />
+                      </div>
+                      <h3 className="text-2xl font-bold text-slate-900 tracking-tight leading-none mb-2">
+                        Admin Login
+                      </h3>
+                      <p className="text-sm text-slate-500 leading-relaxed">
+                        Enter your credentials to manage the portal
+                      </p>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                      <div className="space-y-2">
+                        <label className="block text-xs font-bold uppercase tracking-widest text-[#23471d]">Username</label>
+                        <div className="relative group">
+                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#23471d] transition-colors">
+                            <Users size={18} />
+                          </div>
+                          <input
+                            type="text"
+                            required
+                            value={credentials.username}
+                            onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
+                            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#23471d] focus:ring-4 focus:ring-[#23471d]/10 transition-all text-sm placeholder:text-slate-400 text-slate-800 shadow-sm"
+                            placeholder="Enter username"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="block text-xs font-bold uppercase tracking-widest text-[#23471d]">Password</label>
+                        <div className="relative group">
+                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#23471d] transition-colors">
+                            <Lock size={18} />
+                          </div>
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            required
+                            value={credentials.password}
+                            onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                            className="w-full pl-12 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#23471d] focus:ring-4 focus:ring-[#23471d]/10 transition-all text-sm placeholder:text-slate-400 text-slate-800 shadow-sm"
+                            placeholder="••••••••"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-300 hover:text-[#23471d] transition-colors"
+                          >
+                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="remember"
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
+                            className="w-5 h-5 text-[#23471d] border-slate-300 rounded focus:ring-[#23471d] cursor-pointer"
+                          />
+                          <label htmlFor="remember" className="ml-3 text-xs font-bold text-slate-600 cursor-pointer select-none uppercase tracking-wide">
+                            Keep me logged in
+                          </label>
+                        </div>
+                        <button type="button" className="text-xs font-bold text-[#23471d] hover:underline uppercase tracking-wide">
+                          Forgot Password?
+                        </button>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full bg-gradient-to-r from-[#23471d] to-[#2d5a25] hover:from-[#1a3a14] hover:to-[#23471d] text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 uppercase tracking-widest text-xs shadow-xl hover:shadow-[#23471d]/30 hover:-translate-y-0.5 mt-2 disabled:opacity-50"
+                      >
+                        {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <LogIn size={18} />}
+                        <span>{isLoading ? 'Verifying...' : 'Login Now'}</span>
+                      </button>
+                    </form>
+
+                    <div className="mt-8 pt-6 border-t border-slate-100">
+                      <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <div className="w-10 h-10 bg-[#23471d]/10 rounded-full flex items-center justify-center text-[#23471d] flex-shrink-0">
+                          <Headset size={20} />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-sm">Need Help?</h4>
+                          <p className="text-xs text-slate-500 font-medium">admin@ihwe.in | +91 9654900525</p>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
