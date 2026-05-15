@@ -219,6 +219,8 @@ import ConferenceTrackManage from "../pages/ConferenceTrackManage";
 import MsmePmsSchemeList from "../pages/MsmePmsSchemeList";
 import MsmePmsSchemeDetail from "../pages/MsmePmsSchemeDetail";
 import MsmePmsSchemeConfig from "../pages/MsmePmsSchemeConfig"; import BSMTestimonial from "../pages/buyer_saller_meet/BSMTestimonial";
+import AdvisoryNominationsList from "../pages/AdvisoryNominationsList";
+import AdvisoryNominationDetail from "../pages/AdvisoryNominationDetail";
 import MediaRegistrationManage from "../pages/MediaRegistrationManagement";
 
 
@@ -597,6 +599,8 @@ export default function AppRoutes() {
           <Route path="/msme-pms-scheme/:id" element={<MsmePmsSchemeDetail />} />
           <Route path="/msme-pms-scheme-config" element={<MsmePmsSchemeConfig />} />
           <Route path="/bsm-testimonial" element={<BSMTestimonial />} />
+          <Route path="advisory-nominations" element={<AdvisoryNominationsList />} />
+          <Route path="advisory-nominations/:id" element={<AdvisoryNominationDetail />} />
 
         </Route>
         <Route path="*" element={<NotFound />} />

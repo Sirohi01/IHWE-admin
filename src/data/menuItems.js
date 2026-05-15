@@ -301,10 +301,13 @@ export const menuItems = [
     path: "/partners-manage",
   },
   {
-    type: "item",
-    label: "Add Advisory member",
+    type: "dropdown",
+    label: "Advisory Management",
     icon: Users,
-    path: "/advisory-manage",
+    children: [
+      { label: "Advisory Nominations", path: "/advisory-nominations" },
+      { label: "Manage Advisory Members", path: "/advisory-manage" },
+    ],
   },
   {
     type: "dropdown",
