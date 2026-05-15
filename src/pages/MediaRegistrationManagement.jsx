@@ -297,11 +297,11 @@ const MediaRegistrationManagement = () => {
 
     const tabs = [
         { id: 'bannerSettings', label: 'Banner Settings', icon: Globe },
-        { id: 'coverage', label: 'Featured Media', icon: LayoutGrid },
+        { id: 'coverage', label: 'Featured Media Coverage', icon: LayoutGrid },
         { id: 'press', label: 'Press Releases', icon: FileText },
         { id: 'videos', label: 'Video & TV', icon: Video },
         { id: 'partners', label: 'Media Partners', icon: Handshake },
-        { id: 'banner', label: 'Banner Logos', icon: ImageIcon },
+        { id: 'banner', label: 'FEATURED IN LEADING MEDIA', icon: ImageIcon },
         { id: 'kit', label: 'Media Kit', icon: Briefcase },
         { id: 'enquiries', label: 'PR Enquiries', icon: Mail },
     ];
@@ -406,12 +406,22 @@ const MediaRegistrationManagement = () => {
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Media Logo</label>
-                                            <input type="file" onChange={e => handleFileUpload(e, 'logo')} className="w-full" />
+                                            <input type="file" onChange={e => handleFileUpload(e, 'logo')} className="w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer bg-white p-2
+             file:mr-4 file:py-2 file:px-4
+             file:rounded-md file:border-0
+             file:text-sm file:font-semibold
+             file:bg-black file:text-white
+             hover:file:bg-gray-800" />
                                             {coverageForm.logo && <img src={`${SERVER_URL}${coverageForm.logo}`} className="h-10 mt-2 object-contain" />}
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Featured Image</label>
-                                            <input type="file" onChange={e => handleFileUpload(e, 'image')} className="w-full" />
+                                            <input type="file" onChange={e => handleFileUpload(e, 'image')} className="text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer bg-white p-2
+             file:mr-4 file:py-2 file:px-4
+             file:rounded-md file:border-0
+             file:text-sm file:font-semibold
+             file:bg-black file:text-white
+             hover:file:bg-gray-800" />
                                             {coverageForm.image && <img src={`${SERVER_URL}${coverageForm.image}`} className="h-20 mt-2 object-contain" />}
                                         </div>
                                         <div>
@@ -477,6 +487,10 @@ const MediaRegistrationManagement = () => {
                                                 <option>Lead Media</option>
                                                 <option>Global Partners</option>
                                                 <option>Supportive Media</option>
+                                                <option>Radio Partners</option>
+                                                <option>Community Partners</option>
+
+
                                             </select>
                                         </div>
                                         <div>
