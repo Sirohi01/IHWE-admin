@@ -338,6 +338,12 @@ export const menuItems = [
   },
   {
     type: "item",
+    label: "Request Expo Enquiry",
+    path: "/expo-support-enquiries",
+    icon: MessageSquare,
+  },
+  {
+    type: "item",
     label: "Sponsorship Enquiry",
     path: "/sponsorship-enquiries",
     icon: MessageSquare,

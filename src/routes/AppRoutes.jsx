@@ -203,6 +203,7 @@ import SpeakerRegistrationDetail from "../pages/SpeakerRegistrationDetail";
 import SpeakerNominationsList from "../pages/SpeakerNominationsList";
 import ApprovedSpeakersList from "../pages/ApprovedSpeakersList";
 import FloatingVideoManagement from "../pages/FloatingVideoManagement";
+import ExpoSupportEnquiries from "../pages/ExpoSupportEnquiries";
 import SponsorshipEnquiries from "../pages/SponsorshipEnquiries";
 import RejectedSpeakersList from "../pages/RejectedSpeakersList";
 import RejectedAwardsList from "../pages/RejectedAwardsList";
@@ -545,6 +546,7 @@ export default function AppRoutes() {
           <Route path="/new-leads" element={<NewLeads />} />
           <Route path="/notification" element={<Notification />} />
           <Route path="/floating-video-management" element={<FloatingVideoManagement />} />
+          <Route path="/expo-support-enquiries" element={<ExpoSupportEnquiries />} />
           <Route path="/sponsorship-enquiries" element={<SponsorshipEnquiries />} />
 
           <Route path="*" element={<NotFound />} />
