@@ -244,48 +244,48 @@ export default function LoginPage() {
             <div className="grid lg:grid-cols-2 items-stretch rounded-2xl shadow-2xl overflow-hidden bg-white border border-slate-100 min-h-[550px] lg:min-h-[550px]">
 
               {/* LEFT SIDE - Administrative Branding */}
-              <div
-                className=" relative overflow-hidden flex flex-col bg-cover bg-center"
-                style={{
-                  backgroundImage: `url(${adminLogo})`,
-                }}
-              >
-                {/* Decorative soft blob top-right */}
+              <div className="w-full flex flex-col">
                 <div
-                  className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-40 pointer-events-none"
+                  className="flex-1 px-8 py-2 relative overflow-hidden flex flex-col bg-cover bg-center"
                   style={{
-                    background: "radial-gradient(circle, #b8e0a0 0%, transparent 70%)",
-                    transform: "translate(30%, -30%)",
+                    backgroundImage: `url(${adminLogo})`,
                   }}
-                />
-                {/* Decorative blob bottom-left */}
-                <div
-                  className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-30 pointer-events-none"
-                  style={{
-                    background: "radial-gradient(circle, #7dc465 0%, transparent 70%)",
-                    transform: "translate(-30%, 30%)",
-                  }}
-                />
+                >
+                  {/* Decorative soft blob top-right */}
+                  <div
+                    className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-40 pointer-events-none"
+                    style={{
+                      background: "radial-gradient(circle, #b8e0a0 0%, transparent 70%)",
+                      transform: "translate(30%, -30%)",
+                    }}
+                  />
+                  {/* Decorative blob bottom-left */}
+                  <div
+                    className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-30 pointer-events-none"
+                    style={{
+                      background: "radial-gradient(circle, #7dc465 0%, transparent 70%)",
+                      transform: "translate(-30%, 30%)",
+                    }}
+                  />
 
-                {/* Content container with proper spacing */}
-                <div className="relative z-10 flex flex-col h-full px-8 py-2">
-                  {/* TOP: Logo + Branding */}
-                  <div className="flex-shrink-0">
-                    <div className="flex items-center gap-4 mb-6 -ml-7">
+                  {/* Content container with proper spacing */}
+                  <div className="relative z-10 flex-1 flex flex-col">
+                    {/* TOP: Logo + Branding */}
+                    <div className="mb-0">
                       {logo ? (
                         <img
                           src={`${SERVER_URL}${logo}`}
-                          className="h-59 w-auto object-contain"
+                          className="h-20 w-auto object-contain -ml-2"
                           alt="IHWE Logo"
                         />
                       ) : (
                         /* Fallback Logo */
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 mb-4">
                           <div
-                            className="flex items-center justify-center rounded-full font-black text-white text-5xl"
+                            className="flex items-center justify-center rounded-full font-black text-white text-3xl"
                             style={{
-                              width: "85px",
-                              height: "85px",
+                              width: "60px",
+                              height: "60px",
                               background: "linear-gradient(135deg, #4caf50, #1a5c1a)",
                               border: "3px solid #fff",
                               boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
@@ -295,9 +295,9 @@ export default function LoginPage() {
                             9
                           </div>
                           <div className="leading-tight">
-                            <div className="text-base font-bold text-[#1a4d1a] uppercase tracking-wider">International</div>
-                            <div className="text-base font-bold text-[#1a4d1a] uppercase tracking-wider">Health &amp; Wellness</div>
-                            <div className="text-xl font-black uppercase tracking-wider" style={{ color: "#e65c00" }}>
+                            <div className="text-sm font-bold text-[#1a4d1a] uppercase tracking-wider">International</div>
+                            <div className="text-sm font-bold text-[#1a4d1a] uppercase tracking-wider">Health &amp; Wellness</div>
+                            <div className="text-lg font-black uppercase tracking-wider" style={{ color: "#e65c00" }}>
                               EXPO 2026
                             </div>
                           </div>
@@ -305,63 +305,56 @@ export default function LoginPage() {
                       )}
                     </div>
 
-                    {/* IHWE ADMIN label - LARGER FONT */}
-                    <div className="mb-6">
-                      <h2 className="text-4xl font-black text-[#1a4d1a] tracking-tight leading-none mb-1">
+                    {/* IHWE ADMIN label */}
+                    <div className="mb-4">
+                      <h2 className="text-[20px] font-black text-slate-800 uppercase tracking-tight leading-none mb-1">
                         IHWE ADMIN
                       </h2>
-                      <p className="text-sm font-bold uppercase tracking-widest text-[#2d5a2d]">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-600">
                         Official Management Portal
                       </p>
-                      <div className="mt-2 h-0.5 w-24 bg-[#1a4d1a] rounded" />
+                      <div className="w-12 h-1 bg-[#357a38] mt-2" />
                     </div>
 
-                    {/* Hello / Good Day - LARGER FONT */}
+                    {/* Hello / Good Day */}
                     <div className="mb-2">
                       <p
-                        className="text-4xl text-[#1a6b1a] mb-0"
-                        style={{ fontFamily: "'Dancing Script', 'Brush Script MT', cursive", fontWeight: 600 }}
+                        className="text-[#357a38] text-xl mb-1 italic"
+                        style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}
                       >
                         Hello!
                       </p>
-                      <h1 className="text-5xl font-black text-[#1a2e1a] leading-tight tracking-tight mb-1">
+                      <h1 className="text-[28px] md:text-[30px] font-black text-slate-900 leading-[1.1] mb-2">
                         Have a<br />Good Day
                       </h1>
-                      <p className="text-sm text-[#2d5a2d] font-medium leading-relaxed">
+                      <p className="text-gray-700 text-[14px] leading-relaxed max-w-[280px]">
                         Welcome back! Please login to continue<br />
                         managing the International Health &amp;<br />
                         Wellness Expo 2026.
                       </p>
                     </div>
                   </div>
+                </div>
 
-
-                  {/* BOTTOM: Feature badges bar */}
-                  <div
-                    className="flex-shrink-0 -mx-8 px-6 py-1"
-                    style={{ background: "linear-gradient(90deg, #1a5c1a 0%, #1e6e1e 100%)" }}
-                  >
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { icon: <Shield size={14} />, title: "Secure Access", desc: "Your data is safe with us." },
-                        { icon: <Users size={14} />, title: "Centralized Management", desc: "Manage events, users & operations seamlessly." },
-                        { icon: <BarChart2 size={14} />, title: "Real-time Insights", desc: "Track performance & get real-time reports." },
-                      ].map((item, i) => (
-                        <div key={i} className="flex gap-2 items-start">
-                          <div
-                            className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white"
-                            style={{ background: "rgba(255,255,255,0.18)" }}
-                          >
-                            {item.icon}
-                          </div>
-                          <div>
-                            <p className="text-white text-[10px] font-bold leading-tight">{item.title}</p>
-                            <p className="text-green-200 text-[8px] leading-tight mt-0.5">{item.desc}</p>
-                          </div>
-                        </div>
-                      ))}
+                {/* BOTTOM: Feature badges bar */}
+                <div
+                  className="bg-[#24541e] p-4 grid grid-cols-3 gap-3 text-center"
+                >
+                  {[
+                    { icon: <Shield size={14} />, title: "Secure Access", desc: "Your data is safe with us." },
+                    { icon: <Users size={14} />, title: "Centralized Management", desc: "Manage everything seamlessly." },
+                    { icon: <BarChart2 size={14} />, title: "Real-time Insights", desc: "Track performance & reports." },
+                  ].map((item, i) => (
+                    <div key={i} className="flex flex-col items-center">
+                      <div
+                        className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white mb-1.5"
+                      >
+                        {item.icon}
+                      </div>
+                      <h4 className="text-white text-[10px] font-bold leading-tight mb-0.5">{item.title}</h4>
+                      <p className="text-white/80 text-[9px] leading-tight">{item.desc}</p>
                     </div>
-                  </div>
+                  ))}
                 </div>
               </div>
 
@@ -381,17 +374,17 @@ export default function LoginPage() {
                       <div className="w-20 h-20 mx-auto bg-gradient-to-tr from-[#23471d]/10 to-[#d26019]/10 rounded-full flex items-center justify-center mb-4 shadow-sm border border-slate-100 text-[#23471d]">
                         <Shield size={36} strokeWidth={1.5} />
                       </div>
-                      <h3 className="text-2xl font-bold text-slate-900 tracking-tight leading-none mb-2">
+                      <h3 className="text-[1.75rem] font-semibold text-slate-900 tracking-tight leading-none mb-2">
                         Admin Login
                       </h3>
-                      <p className="text-sm text-slate-500 leading-relaxed">
+                      <p className="text-[13.5px] text-slate-500 leading-relaxed">
                         Enter your credentials to manage the portal
                       </p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
                       <div className="space-y-2">
-                        <label className="block text-xs font-bold uppercase tracking-widest text-[#23471d]">Username</label>
+                        <label className="block text-sm font-bold uppercase tracking-widest text-[#23471d]">Username</label>
                         <div className="relative group">
                           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#23471d] transition-colors">
                             <Users size={18} />
@@ -401,14 +394,14 @@ export default function LoginPage() {
                             required
                             value={credentials.username}
                             onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-                            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#23471d] focus:ring-4 focus:ring-[#23471d]/10 transition-all text-sm placeholder:text-slate-400 text-slate-800 shadow-sm"
+                            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#23471d] focus:ring-4 focus:ring-[#23471d]/10 transition-all text-base placeholder:text-slate-400 text-slate-800 shadow-sm"
                             placeholder="Enter username"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <label className="block text-xs font-bold uppercase tracking-widest text-[#23471d]">Password</label>
+                        <label className="block text-sm font-bold uppercase tracking-widest text-[#23471d]">Password</label>
                         <div className="relative group">
                           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#23471d] transition-colors">
                             <Lock size={18} />
@@ -418,7 +411,7 @@ export default function LoginPage() {
                             required
                             value={credentials.password}
                             onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                            className="w-full pl-12 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#23471d] focus:ring-4 focus:ring-[#23471d]/10 transition-all text-sm placeholder:text-slate-400 text-slate-800 shadow-sm"
+                            className="w-full pl-12 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#23471d] focus:ring-4 focus:ring-[#23471d]/10 transition-all text-base placeholder:text-slate-400 text-slate-800 shadow-sm"
                             placeholder="••••••••"
                           />
                           <button
@@ -444,7 +437,7 @@ export default function LoginPage() {
                             Keep me logged in
                           </label>
                         </div>
-                        <button type="button" className="text-xs font-bold text-[#23471d] hover:underline uppercase tracking-wide">
+                        <button type="button" className="text-sm font-bold text-[#23471d] hover:underline uppercase tracking-wide">
                           Forgot Password?
                         </button>
                       </div>
@@ -452,7 +445,7 @@ export default function LoginPage() {
                       <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-gradient-to-r from-[#23471d] to-[#2d5a25] hover:from-[#1a3a14] hover:to-[#23471d] text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 uppercase tracking-widest text-xs shadow-xl hover:shadow-[#23471d]/30 hover:-translate-y-0.5 mt-2 disabled:opacity-50"
+                        className="w-full bg-gradient-to-r from-[#23471d] to-[#2d5a25] hover:from-[#1a3a14] hover:to-[#23471d] text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 uppercase tracking-widest text-sm shadow-xl hover:shadow-[#23471d]/30 hover:-translate-y-0.5 mt-2 disabled:opacity-50"
                       >
                         {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <LogIn size={18} />}
                         <span>{isLoading ? 'Verifying...' : 'Login Now'}</span>
@@ -460,13 +453,17 @@ export default function LoginPage() {
                     </form>
 
                     <div className="mt-8 pt-6 border-t border-slate-100">
-                      <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                        <div className="w-10 h-10 bg-[#23471d]/10 rounded-full flex items-center justify-center text-[#23471d] flex-shrink-0">
+                      <div className="flex items-center gap-4 pt-2">
+                        <div className="w-12 h-12 bg-[#23471d]/10 rounded-full flex items-center justify-center text-[#23471d] flex-shrink-0">
                           <Headset size={20} />
                         </div>
                         <div>
-                          <h4 className="font-bold text-slate-900 text-sm">Need Help?</h4>
-                          <p className="text-xs text-slate-500 font-medium">admin@ihwe.in | +91 9654900525</p>
+                          <h4 className="font-bold text-slate-900 text-base mb-1">Need Help?</h4>
+                          <div className="text-sm text-slate-500 font-medium flex flex-wrap gap-x-2">
+                            <span className="text-base">Email: <a href="mailto:admin@ihwe.in" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline font-semibold transition-colors">info@ihwe.in</a></span>
+                            <span className="text-slate-300 hidden sm:inline text-base">|</span>
+                            <span className="w-full sm:w-auto text-base">Phone: <a href="tel:+919654900525" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline font-semibold transition-colors">+91 9654900525</a></span>
+                          </div>
                         </div>
                       </div>
                     </div>
