@@ -280,7 +280,7 @@ export default function LoginPage() {
                           alt="IHWE Logo"
                         />
                       ) : (
-                        /* Fallback Logo */
+
                         <div className="flex items-center gap-4 mb-4">
                           <div
                             className="flex items-center justify-center rounded-full font-black text-white text-3xl"
@@ -306,7 +306,6 @@ export default function LoginPage() {
                       )}
                     </div>
 
-                    {/* IHWE ADMIN label */}
                     <div className="mt-10">
                       <h2 className="text-[20px] font-black text-slate-800 uppercase tracking-tight leading-none mb-1">
                         IHWE ADMIN
@@ -317,7 +316,6 @@ export default function LoginPage() {
                       <div className="w-12 h-1 bg-[#357a38] mt-2" />
                     </div>
 
-                    {/* Hello / Good Day */}
                     <div className="mb-2 mt-8">
                       <p
                         className="text-[#357a38] text-xl mb-1 italic"
@@ -337,7 +335,7 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                {/* BOTTOM: Feature badges bar */}
+
                 <div
                   className="bg-[#24541e] p-4 grid grid-cols-3 gap-3 text-center"
                 >
