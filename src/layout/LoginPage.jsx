@@ -243,7 +243,7 @@ export default function LoginPage() {
           <div className="max-w-5xl mx-auto">
             <div className="grid lg:grid-cols-2 items-stretch rounded-2xl shadow-2xl overflow-hidden bg-white border border-slate-100 min-h-[550px] lg:min-h-[550px]">
 
-              {/* LEFT SIDE - Administrative Branding */}
+
               <div className="w-full flex flex-col">
                 <div
                   className="flex-1 px-8 py-2 relative overflow-hidden flex flex-col bg-cover bg-center"
@@ -251,7 +251,7 @@ export default function LoginPage() {
                     backgroundImage: `url(${adminLogo})`,
                   }}
                 >
-                  {/* Decorative soft blob top-right */}
+
                   <div
                     className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-40 pointer-events-none"
                     style={{
@@ -259,7 +259,7 @@ export default function LoginPage() {
                       transform: "translate(30%, -30%)",
                     }}
                   />
-                  {/* Decorative blob bottom-left */}
+
                   <div
                     className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-30 pointer-events-none"
                     style={{
@@ -268,14 +268,15 @@ export default function LoginPage() {
                     }}
                   />
 
-                  {/* Content container with proper spacing */}
+
                   <div className="relative z-10 flex-1 flex flex-col">
-                    {/* TOP: Logo + Branding */}
+
                     <div className="mb-0">
                       {logo ? (
                         <img
-                          src={`${SERVER_URL}${logo}`}
-                          className="h-58 w-auto object-contain -ml-8"
+                          // src={`${SERVER_URL}${logo}`}
+                          src="/logo.png"
+                          className="h-20 w-auto object-contain -ml-4"
                           alt="IHWE Logo"
                         />
                       ) : (
@@ -306,7 +307,7 @@ export default function LoginPage() {
                     </div>
 
                     {/* IHWE ADMIN label */}
-                    <div className="mb-4">
+                    <div className="mt-10">
                       <h2 className="text-[20px] font-black text-slate-800 uppercase tracking-tight leading-none mb-1">
                         IHWE ADMIN
                       </h2>
