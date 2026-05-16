@@ -276,7 +276,7 @@ export default function LoginPage() {
                         <img
                           // src={`${SERVER_URL}${logo}`}
                           src="/logo.png"
-                          className="h-20 w-auto object-contain -ml-4"
+                          className="h-20 w-auto object-contain -ml-4 mt-4"
                           alt="IHWE Logo"
                         />
                       ) : (
