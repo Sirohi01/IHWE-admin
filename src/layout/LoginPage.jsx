@@ -318,7 +318,7 @@ export default function LoginPage() {
                     </div>
 
                     {/* Hello / Good Day */}
-                    <div className="mb-2">
+                    <div className="mb-2 mt-8">
                       <p
                         className="text-[#357a38] text-xl mb-1 italic"
                         style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}
