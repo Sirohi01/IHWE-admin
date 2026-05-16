@@ -270,13 +270,13 @@ export default function LoginPage() {
 
 
                   <div className="relative z-10 flex-1 flex flex-col">
-
-                    <div className="mb-0">
+                    {/* TOP: Logo + Branding */}
+                    <div className="mt-8 mb-8">
                       {logo ? (
                         <img
                           // src={`${SERVER_URL}${logo}`}
                           src="/logo.png"
-                          className="h-20 w-auto object-contain -ml-4 mt-4"
+                          className="h-20 w-auto object-contain -ml-2"
                           alt="IHWE Logo"
                         />
                       ) : (
@@ -310,20 +310,21 @@ export default function LoginPage() {
                       <h2 className="text-[20px] font-black text-slate-800 uppercase tracking-tight leading-none mb-1">
                         IHWE ADMIN
                       </h2>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-600">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-600 mt-2">
                         Official Management Portal
                       </p>
                       <div className="w-12 h-1 bg-[#357a38] mt-2" />
                     </div>
 
-                    <div className="mb-2 mt-8">
+                    {/* Hello / Good Day */}
+                    <div className=" mt-2 mb-2">
                       <p
                         className="text-[#357a38] text-xl mb-1 italic"
                         style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}
                       >
                         Hello!
                       </p>
-                      <h1 className="text-[28px] md:text-[30px] font-black text-slate-900 leading-[1.1] mb-2">
+                      <h1 className="text-[28px] md:text-[30px] font-black text-slate-900 leading-[1.1] mt-2 mb-8">
                         Have a<br />Good Day
                       </h1>
                       <p className="text-black font-medium text-[14px] leading-relaxed max-w-[280px]">
