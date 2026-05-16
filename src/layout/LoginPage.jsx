@@ -275,7 +275,7 @@ export default function LoginPage() {
                       {logo ? (
                         <img
                           src={`${SERVER_URL}${logo}`}
-                          className="h-20 w-auto object-contain -ml-2"
+                          className="h-58 w-auto object-contain -ml-8"
                           alt="IHWE Logo"
                         />
                       ) : (
@@ -327,7 +327,7 @@ export default function LoginPage() {
                       <h1 className="text-[28px] md:text-[30px] font-black text-slate-900 leading-[1.1] mb-2">
                         Have a<br />Good Day
                       </h1>
-                      <p className="text-gray-700 text-[14px] leading-relaxed max-w-[280px]">
+                      <p className="text-black font-medium text-[14px] leading-relaxed max-w-[280px]">
                         Welcome back! Please login to continue<br />
                         managing the International Health &amp;<br />
                         Wellness Expo 2026.
