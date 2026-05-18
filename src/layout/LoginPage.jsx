@@ -327,7 +327,12 @@ export default function LoginPage() {
                       <h1 className="text-[28px] md:text-[30px] font-black text-slate-900 leading-[1.1] mt-2 mb-8">
                         Have a<br />Good Day
                       </h1>
-                      <p className="text-black font-medium text-[14px] leading-relaxed max-w-[280px]">
+                      <p
+                        className="text-slate-950 text-[14px] leading-relaxed max-w-[280px] font-semibold"
+                        style={{
+                          textShadow: "0 2px 4px #fff, 0 -2px 4px #fff, 2px 0px 4px #fff, -2px 0px 4px #fff, 0 0 10px #fff, 0 0 15px #fff"
+                        }}
+                      >
                         Welcome back! Please login to continue<br />
                         managing the International Health &amp;<br />
                         Wellness Expo 2026.
