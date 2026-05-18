@@ -269,7 +269,7 @@ export default function Sidebar({
       >
         <div className=" sb-header relative p-4 border-b">
           <div className="">
-            {logo ? <img src={`${SERVER_URL}${logo}`} className="h-16 w-auto object-contain" alt="Logo" /> : <span className="text-xl font-black text-[#23471d]">IHWE</span>}
+            {logo ? <img src={`${SERVER_URL}${logo}`} className="h-24 object-contain" alt="Logo" /> : <span className="text-xl font-black text-[#23471d]">IHWE</span>}
           </div>
           {sidebarOpen && (
             <button onClick={() => { setSidebarOpen(false); setMobileMenuOpen(false); }} className="sb-close-btn absolute right-4 top-7 p-2 rounded-lg"><X size={20} /></button>

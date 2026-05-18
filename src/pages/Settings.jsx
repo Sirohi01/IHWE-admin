@@ -70,6 +70,7 @@ const Settings = () => {
     const [msmeLogos, setMsmeLogos] = useState([]);
     const [showBrochurePopUp, setShowBrochurePopUp] = useState(true);
     const [brochurePopUpDelay, setBrochurePopUpDelay] = useState(7);
+    const [showGovtPmsScheme, setShowGovtPmsScheme] = useState(true);
 
     // Email addresses state
     const [emails, setEmails] = useState([
@@ -144,11 +145,12 @@ const Settings = () => {
                     marqueeText: savedMarquee, topbarDate: savedDate, supportDeskText: savedSupportDeskText,
                     companyName: sName, companyAddress: sAddress, companyGst: sGst, companyCin: sCin,
                     fullPaymentDiscount: sDisc, availableTdsRates: sTds, authorizedSignature, companyStamp,
-                    showBrochurePopUp: sShowPopUp, brochurePopUpDelay: sPopUpDelay
+                    showBrochurePopUp: sShowPopUp, brochurePopUpDelay: sPopUpDelay, showGovtPmsScheme: sShowPms
                 } = res.data.data;
 
                 if (sShowPopUp !== undefined) setShowBrochurePopUp(sShowPopUp);
                 if (sPopUpDelay !== undefined) setBrochurePopUpDelay(sPopUpDelay);
+                if (sShowPms !== undefined) setShowGovtPmsScheme(sShowPms);
 
                 if (logo) {
                     setLogoPreview(`${SERVER_URL}${logo}`);
@@ -291,6 +293,7 @@ const Settings = () => {
             formData.append('msmeLogos', JSON.stringify(msmeLogosData));
             formData.append('showBrochurePopUp', showBrochurePopUp);
             formData.append('brochurePopUpDelay', brochurePopUpDelay);
+            formData.append('showGovtPmsScheme', showGovtPmsScheme);
 
 
             const res = await api.put('/api/settings', formData, {
@@ -1039,6 +1042,33 @@ const Settings = () => {
                                     <div className="absolute right-10 top-2 text-[10px] font-bold text-gray-400 uppercase">SEC</div>
                                 </div>
                                 <p className="text-[9px] text-gray-400 italic">Delay before the banner appears after closing the download form.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Government MSME PMS Scheme Settings */}
+                    <div className="bg-white border border-gray-200 p-6 shadow-sm rounded-lg">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-emerald-50 rounded">
+                                <CheckCircle className="w-5 h-5 text-emerald-600" />
+                            </div>
+                            <h2 className="text-lg font-semibold text-gray-900 uppercase font-sans">Govt PMS Scheme Settings</h2>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                <div>
+                                    <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Show PMS Scheme Menu & Banner</h3>
+                                    <p className="text-[10px] text-gray-500 mt-0.5 uppercase">Toggle Government MSME PMS Scheme visibility</p>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        className="sr-only peer" 
+                                        checked={showGovtPmsScheme}
+                                        onChange={(e) => setShowGovtPmsScheme(e.target.checked)}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#23471d]"></div>
+                                </label>
                             </div>
                         </div>
                     </div>
