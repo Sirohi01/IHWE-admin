@@ -223,6 +223,7 @@ import MsmePmsSchemeConfig from "../pages/MsmePmsSchemeConfig"; import BSMTestim
 import AdvisoryNominationsList from "../pages/AdvisoryNominationsList";
 import AdvisoryNominationDetail from "../pages/AdvisoryNominationDetail";
 import MediaRegistrationManage from "../pages/MediaRegistrationManagement";
+import ChairmanMessage from "../pages/ChairmanMessage";
 
 
 
@@ -603,6 +604,7 @@ export default function AppRoutes() {
           <Route path="/bsm-testimonial" element={<BSMTestimonial />} />
           <Route path="advisory-nominations" element={<AdvisoryNominationsList />} />
           <Route path="advisory-nominations/:id" element={<AdvisoryNominationDetail />} />
+          <Route path="chairman-message" element={<ChairmanMessage />} />
 
         </Route>
         <Route path="*" element={<NotFound />} />
