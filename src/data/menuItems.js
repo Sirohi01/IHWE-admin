@@ -307,6 +307,7 @@ export const menuItems = [
     children: [
       { label: "Advisory Nominations", path: "/advisory-nominations" },
       { label: "Manage Advisory Members", path: "/advisory-manage" },
+      { label: "Chairman Message", path: "/chairman-message" },
     ],
   },
   {
