@@ -224,6 +224,9 @@ import AdvisoryNominationsList from "../pages/AdvisoryNominationsList";
 import AdvisoryNominationDetail from "../pages/AdvisoryNominationDetail";
 import MediaRegistrationManage from "../pages/MediaRegistrationManagement";
 import ChairmanMessage from "../pages/ChairmanMessage";
+import PartnerRegistrationsList from "../pages/PartnerRegistrationsList";
+import PartnerRegistrationDetail from "../pages/PartnerRegistrationDetail";
+
 
 
 
@@ -604,6 +607,9 @@ export default function AppRoutes() {
           <Route path="/bsm-testimonial" element={<BSMTestimonial />} />
           <Route path="advisory-nominations" element={<AdvisoryNominationsList />} />
           <Route path="advisory-nominations/:id" element={<AdvisoryNominationDetail />} />
+          <Route path="partner-registrations" element={<PartnerRegistrationsList />} />
+          <Route path="partner-registrations/:id" element={<PartnerRegistrationDetail />} />
+
           <Route path="chairman-message" element={<ChairmanMessage />} />
 
         </Route>
