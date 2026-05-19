@@ -386,6 +386,13 @@ export const menuItems = [
   },
   {
     type: "item",
+    label: "Sponsor Packages & Matrix",
+    path: "/sponsor-comparison-manage",
+    icon: MessageSquare,
+  },
+
+  {
+    type: "item",
     label: "Contact Enquiry",
     path: "/contact-enquiries",
     icon: MessageSquare,
