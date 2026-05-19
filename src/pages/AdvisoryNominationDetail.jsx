@@ -99,7 +99,7 @@ const AdvisoryNominationDetail = () => {
       .document-header { border-bottom: 3px solid #1f2937; margin-bottom: 20px; padding-bottom: 10px; }
     }
     @media screen {
-      .print-container { max-width: 1200px; margin: 40px auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+      .print-container { width: 100%; background: white; padding: 16px; }
       body { background: #f3f4f6; }
     }
   `;
@@ -138,8 +138,8 @@ const AdvisoryNominationDetail = () => {
     return (
         <>
             <style>{printStyles}</style>
-            <div className="print-container">
-                <div className="max-w-7xl mx-auto">
+            <div className="print-container mt-6">
+                <div className="w-full px-4">
                     
                     {/* Control Header (Hidden in Print) */}
                     <div className="flex justify-between items-start mb-8 no-print border-b border-gray-100 pb-6">

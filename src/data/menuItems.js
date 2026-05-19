@@ -295,11 +295,15 @@ export const menuItems = [
     path: "/exhibitor-list-manage",
   },
   {
-    type: "item",
-    label: "Add Partners",
+    type: "dropdown",
+    label: "Partner Management",
     icon: Handshake,
-    path: "/partners-manage",
+    children: [
+      { label: "Partner Registrations", path: "/partner-registrations" },
+      { label: "Manage Partners", path: "/partners-manage" },
+    ],
   },
+
   {
     type: "dropdown",
     label: "Advisory Management",
