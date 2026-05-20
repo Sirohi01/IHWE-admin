@@ -84,6 +84,7 @@ import TargetAudience from "../pages/TargetAudience";
 import OrganizedBy from "../pages/OrganizedBy";
 import WhyExhibitManage from "../pages/WhyExhibitManage";
 import SponsorComparisonManage from "../pages/SponsorComparisonManage";
+import PartnerCategories from "../pages/PartnerCategories";
 import WhyVisitManagement from "../pages/WhyVisitManagement";
 import ExhibitorProfileManage from "../pages/ExhibitorProfileManage";
 import HeroImages from "../pages/HeroImages";
@@ -266,6 +267,7 @@ export default function AppRoutes() {
           <Route path="organized-by" element={<OrganizedBy />} />
           <Route path="why-exhibit-manage" element={<WhyExhibitManage />} />
           <Route path="sponsor-comparison-manage" element={<SponsorComparisonManage />} />
+          <Route path="partner-categories" element={<PartnerCategories />} />
           <Route path="travel-accommodation-manage" element={<TravelAccommodationManage />} />
           <Route path="/agenda-management" element={<AgendaManagement />} />
           <Route path="/conference-days-manage" element={<ConferenceDayManagement />} />
