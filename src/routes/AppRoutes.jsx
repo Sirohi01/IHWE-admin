@@ -228,6 +228,7 @@ import ChairmanMessage from "../pages/ChairmanMessage";
 import PartnerRegistrationsList from "../pages/PartnerRegistrationsList";
 import PartnerRegistrationDetail from "../pages/PartnerRegistrationDetail";
 import HotelStayPartnerManage from "../pages/HotelStayPartnerManage";
+import TravelPartnerManage from "../pages/TravelPartnerManage";
 
 
 
@@ -613,6 +614,7 @@ export default function AppRoutes() {
           <Route path="partner-registrations" element={<PartnerRegistrationsList />} />
           <Route path="partner-registrations/:id" element={<PartnerRegistrationDetail />} />
           <Route path="hotel-stay-partner-manage" element={<HotelStayPartnerManage />} />
+          <Route path="travel-partner-manage" element={<TravelPartnerManage />} />
 
           <Route path="chairman-message" element={<ChairmanMessage />} />
 
