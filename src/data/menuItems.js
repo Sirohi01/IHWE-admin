@@ -301,6 +301,7 @@ export const menuItems = [
     children: [
       { label: "Partner Registrations", path: "/partner-registrations" },
       { label: "Manage Partners", path: "/partners-manage" },
+      { label: "Partner Categories", path: "/partner-categories" },
     ],
   },
 
