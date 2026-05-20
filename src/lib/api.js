@@ -215,4 +215,55 @@ export const socialMediaApi = {
   },
 };
 
+export const printingBrandingPartnerApi = {
+  get: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/printing-branding-partner"));
+    return payload.success ? payload.data : null;
+  },
+  save: async (data) => {
+    const payload = unwrapApiResponse(await api.post("/api/printing-branding-partner", data));
+    return payload.success ? payload.data : null;
+  },
+  uploadImage: async (formData) => {
+    const payload = unwrapApiResponse(await api.post("/api/printing-branding-partner/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    }));
+    return payload;
+  }
+};
+
+export const logisticPartnerApi = {
+  get: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/logistic-partner"));
+    return payload.success ? payload.data : null;
+  },
+  save: async (data) => {
+    const payload = unwrapApiResponse(await api.post("/api/logistic-partner", data));
+    return payload.success ? payload.data : null;
+  },
+  uploadImage: async (formData) => {
+    const payload = unwrapApiResponse(await api.post("/api/logistic-partner/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    }));
+    return payload;
+  }
+};
+
+export const hospitalityPartnerApi = {
+  get: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/hospitality-partner"));
+    return payload.success ? payload.data : null;
+  },
+  save: async (data) => {
+    const payload = unwrapApiResponse(await api.post("/api/hospitality-partner", data));
+    return payload.success ? payload.data : null;
+  },
+  uploadImage: async (formData) => {
+    const payload = unwrapApiResponse(await api.post("/api/hospitality-partner/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    }));
+    return payload;
+  }
+};
+
 export default api;

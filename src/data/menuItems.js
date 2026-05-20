@@ -302,6 +302,9 @@ export const menuItems = [
       { label: "Partner Registrations", path: "/partner-registrations" },
       { label: "Manage Partners", path: "/partners-manage" },
       { label: "Partner Categories", path: "/partner-categories" },
+      { label: "Logistics", path: "/logistic-partner-manage" },
+      { label: "Printing & Branding", path: "/printing-branding-partner-manage" },
+      { label: "Hospitality", path: "/hospitality-partner-manage" },
     ],
   },
 
