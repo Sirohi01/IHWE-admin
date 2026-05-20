@@ -304,6 +304,9 @@ export const menuItems = [
       { label: "Hotel Stay Partner", path: "/hotel-stay-partner-manage" },
       { label: "Travel Partner", path: "/travel-partner-manage" },
       { label: "Partner Categories", path: "/partner-categories" },
+      { label: "Logistics", path: "/logistic-partner-manage" },
+      { label: "Printing & Branding", path: "/printing-branding-partner-manage" },
+      { label: "Hospitality", path: "/hospitality-partner-manage" },
     ],
   },
 
