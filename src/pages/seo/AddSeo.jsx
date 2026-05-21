@@ -68,19 +68,41 @@ const AddSeo = () => {
 
     const fetchDynamicPages = async () => {
         try {
+            // Get all static paths to avoid duplicates using a Set
+            const staticPaths = pagesList.map(p => p.path);
+            const seenPaths = new Set(staticPaths);
+
             // Fetch Service Pages
             const serviceRes = await api.get('/api/service-details');
-            const services = serviceRes.data.success ? serviceRes.data.data.map(item => ({
-                name: `Service / ${item.serviceTitle}`,
-                path: `/industry-zone/${item.slug || item.serviceCardId}`
-            })) : [];
+            const services = [];
+            if (serviceRes.data.success) {
+                serviceRes.data.data.forEach(item => {
+                    const path = `/industry-zone/${item.slug || item.serviceCardId}`;
+                    if (!seenPaths.has(path)) {
+                        seenPaths.add(path);
+                        services.push({
+                            name: `Service / ${item.serviceTitle}`,
+                            path
+                        });
+                    }
+                });
+            }
 
             // Fetch Custom Pages
             const customRes = await api.get('/api/custom-pages');
-            const custom = customRes.data.success ? customRes.data.data.map(item => ({
-                name: `Page / ${item.title}`,
-                path: `/${item.slug}`
-            })) : [];
+            const custom = [];
+            if (customRes.data.success) {
+                customRes.data.data.forEach(item => {
+                    const path = `/${item.slug}`;
+                    if (!seenPaths.has(path)) {
+                        seenPaths.add(path);
+                        custom.push({
+                            name: `Page / ${item.title}`,
+                            path
+                        });
+                    }
+                });
+            }
 
             setDynamicPages({ services, custom });
         } catch (error) {
