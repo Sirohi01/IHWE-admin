@@ -221,7 +221,7 @@ export const printingBrandingPartnerApi = {
     return payload.success ? payload.data : null;
   },
   save: async (data) => {
-    const payload = unwrapApiResponse(await api.post("/api/printing-branding-partner", data));
+    const payload = unwrapApiResponse(await api.put("/api/printing-branding-partner", data));
     return payload.success ? payload.data : null;
   },
   uploadImage: async (formData) => {
@@ -238,7 +238,7 @@ export const logisticPartnerApi = {
     return payload.success ? payload.data : null;
   },
   save: async (data) => {
-    const payload = unwrapApiResponse(await api.post("/api/logistic-partner", data));
+    const payload = unwrapApiResponse(await api.put("/api/logistic-partner", data));
     return payload.success ? payload.data : null;
   },
   uploadImage: async (formData) => {
@@ -255,7 +255,7 @@ export const hospitalityPartnerApi = {
     return payload.success ? payload.data : null;
   },
   save: async (data) => {
-    const payload = unwrapApiResponse(await api.post("/api/hospitality-partner", data));
+    const payload = unwrapApiResponse(await api.put("/api/hospitality-partner", data));
     return payload.success ? payload.data : null;
   },
   uploadImage: async (formData) => {
