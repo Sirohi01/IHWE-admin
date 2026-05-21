@@ -302,6 +302,7 @@ export const menuItems = [
       { label: "Partner Registrations", path: "/partner-registrations" },
       { label: "Manage Partners", path: "/partners-manage" },
       { label: "Hotel Stay Partner", path: "/hotel-stay-partner-manage" },
+      { label: "Fabrication Partner", path: "/fabrication-partner-manage" },
       { label: "Travel Partner", path: "/travel-partner-manage" },
       { label: "Partner Categories", path: "/partner-categories" },
       { label: "Logistics", path: "/logistic-partner-manage" },
