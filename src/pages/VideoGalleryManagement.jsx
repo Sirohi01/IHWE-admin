@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api, { SERVER_URL } from "../lib/api";
 import {
     Save, Play, Plus, Trash2, Edit,
-    Video, Youtube, FileVideo, Package, Type
+    Video, Youtube, FileVideo, Layers
 } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 
@@ -13,11 +14,14 @@ const EMPTY_FORM = {
     category: 'video',
     mediaType: 'video',
     videoUrl: '',
-    image: '', // thumbnail
+    image: '',
+    galleryCategoryId: '',
 };
 
 const VideoGalleryManagement = () => {
+    const location = useLocation();
     const [items, setItems] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [form, setForm] = useState({ ...EMPTY_FORM });
     const [isEditing, setIsEditing] = useState(null);
@@ -26,8 +30,41 @@ const VideoGalleryManagement = () => {
     const videoInputRef = useRef(null);
 
     useEffect(() => {
+        fetchCategories();
         fetchData();
     }, []);
+
+    // Handle edit state passed from VideoList page
+    useEffect(() => {
+        if (location.state?.editItem) {
+            const item = location.state.editItem;
+            const isUrlLink = item.videoUrl && (item.videoUrl.startsWith('http') || item.videoUrl.includes('youtube.com') || item.videoUrl.includes('youtu.be'));
+            setVideoType(isUrlLink ? 'link' : 'upload');
+            setIsEditing(item._id);
+            setForm({
+                title: item.title || '',
+                description: item.description || '',
+                category: item.category,
+                mediaType: item.mediaType,
+                videoUrl: item.videoUrl || '',
+                image: item.image || '',
+                galleryCategoryId: item.galleryCategoryId?._id || item.galleryCategoryId || '',
+            });
+            setVideoFile(null);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Clear state to avoid re-triggering
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
+
+    const fetchCategories = async () => {
+        try {
+            const res = await api.get('/api/gallery-category?type=video');
+            if (res.data.success) setCategories(res.data.data);
+        } catch (err) {
+            console.error('Failed to fetch video categories', err);
+        }
+    };
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -65,12 +102,10 @@ const VideoGalleryManagement = () => {
             Swal.fire('Warning', 'Please enter a video title', 'warning');
             return;
         }
-
         if (videoType === 'link' && !form.videoUrl) {
             Swal.fire('Warning', 'Please enter a YouTube link', 'warning');
             return;
         }
-
         if (videoType === 'upload' && !videoFile && !form.videoUrl) {
             Swal.fire('Warning', 'Please upload a video file', 'warning');
             return;
@@ -84,6 +119,9 @@ const VideoGalleryManagement = () => {
             }
 
             const payload = { ...form, videoUrl };
+            // Only include galleryCategoryId if a category is selected
+            if (!payload.galleryCategoryId) delete payload.galleryCategoryId;
+
             let response;
             if (isEditing) {
                 response = await api.put(`/api/gallery/${isEditing}`, payload);
@@ -118,21 +156,13 @@ const VideoGalleryManagement = () => {
             confirmButtonColor: '#d33',
             confirmButtonText: 'Yes, delete!'
         });
-
         if (!result.isConfirmed) return;
-
         setIsLoading(true);
         try {
             await api.delete(`/api/gallery/${id}`);
-            Swal.fire({
-                icon: 'success',
-                title: 'Deleted!',
-                timer: 1200,
-                showConfirmButton: false
-            });
+            Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
             fetchData();
         } catch (error) {
-            console.error('Error deleting video:', error);
             Swal.fire('Error', 'Failed to delete', 'error');
         } finally {
             setIsLoading(false);
@@ -141,15 +171,16 @@ const VideoGalleryManagement = () => {
 
     const startEdit = (item) => {
         setIsEditing(item._id);
-        const isUrlLink = item.videoUrl.startsWith('http') || item.videoUrl.includes('youtube.com') || item.videoUrl.includes('youtu.be');
+        const isUrlLink = item.videoUrl && (item.videoUrl.startsWith('http') || item.videoUrl.includes('youtube.com') || item.videoUrl.includes('youtu.be'));
         setVideoType(isUrlLink ? 'link' : 'upload');
         setForm({
             title: item.title || '',
             description: item.description || '',
             category: item.category,
             mediaType: item.mediaType,
-            videoUrl: item.videoUrl,
+            videoUrl: item.videoUrl || '',
             image: item.image || '',
+            galleryCategoryId: item.galleryCategoryId?._id || item.galleryCategoryId || '',
         });
         setVideoFile(null);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -164,19 +195,27 @@ const VideoGalleryManagement = () => {
     };
 
     const getYouTubeThumbnail = (url) => {
+        if (!url) return null;
         let videoId = "";
-        if (url.includes("youtube.com/watch?v=")) videoId = url.split("v=")[1].split("&")[0];
-        else if (url.includes("youtu.be/")) videoId = url.split("youtu.be/")[1].split("?")[0];
-        else if (url.includes("youtube.com/embed/")) videoId = url.split("embed/")[1].split("?")[0];
-        else if (url.includes("youtube.com/shorts/")) videoId = url.split("shorts/")[1].split("?")[0];
+        if (url.includes("youtube.com/watch?v=")) videoId = url.split("v=")[1]?.split("&")[0];
+        else if (url.includes("youtu.be/")) videoId = url.split("youtu.be/")[1]?.split("?")[0];
+        else if (url.includes("youtube.com/embed/")) videoId = url.split("embed/")[1]?.split("?")[0];
+        else if (url.includes("youtube.com/shorts/")) videoId = url.split("shorts/")[1]?.split("?")[0];
         return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
+    };
+
+    const getCategoryName = (item) => {
+        if (!item.galleryCategoryId) return '—';
+        const catId = item.galleryCategoryId?._id || item.galleryCategoryId;
+        const cat = categories.find(c => c._id === catId);
+        return cat?.title || '—';
     };
 
     return (
         <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
             <PageHeader
                 title="VIDEO GALLERY MANAGEMENT"
-                description="Upload video files or add YouTube links to your gallery"
+                description="Upload video files or add YouTube links to your video gallery categories"
             />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
@@ -187,8 +226,9 @@ const VideoGalleryManagement = () => {
                             {isEditing ? <Edit className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
                             {isEditing ? 'Edit Video Entry' : 'Add New Video Entry'}
                         </h2>
-                        
+
                         <div className="space-y-4">
+                            {/* Video Source Type */}
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Video Source Type</label>
                                 <div className="flex gap-2">
@@ -209,6 +249,7 @@ const VideoGalleryManagement = () => {
                                 </div>
                             </div>
 
+                            {/* Video Input */}
                             {videoType === 'link' ? (
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">YouTube URL</label>
@@ -234,10 +275,7 @@ const VideoGalleryManagement = () => {
                                                     <p className="text-xs font-bold truncate">{videoFile.name}</p>
                                                     <p className="text-[10px] text-gray-400">{(videoFile.size / (1024 * 1024)).toFixed(2)} MB</p>
                                                 </div>
-                                                <button 
-                                                    onClick={() => setVideoFile(null)}
-                                                    className="p-1 text-red-500 hover:bg-red-50 rounded"
-                                                >
+                                                <button onClick={() => setVideoFile(null)} className="p-1 text-red-500 hover:bg-red-50 rounded">
                                                     <Trash2 size={14} />
                                                 </button>
                                             </div>
@@ -257,19 +295,14 @@ const VideoGalleryManagement = () => {
                                             <label className="flex flex-col items-center justify-center py-6 px-4 border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#23471d] hover:bg-gray-50 transition-all group">
                                                 <Video className="w-8 h-8 text-gray-400 mb-2 group-hover:text-[#23471d]" />
                                                 <span className="text-xs text-gray-400 group-hover:text-[#23471d]">Click to upload local video</span>
-                                                <input 
-                                                    ref={videoInputRef} 
-                                                    type="file" 
-                                                    className="hidden" 
-                                                    onChange={handleVideoChange} 
-                                                    accept="video/*" 
-                                                />
+                                                <input ref={videoInputRef} type="file" className="hidden" onChange={handleVideoChange} accept="video/*" />
                                             </label>
                                         )}
                                     </div>
                                 </div>
                             )}
 
+                            {/* Video Title */}
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Video Title</label>
                                 <input
@@ -281,6 +314,29 @@ const VideoGalleryManagement = () => {
                                 />
                             </div>
 
+                            {/* Category Selector */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1 flex items-center gap-1">
+                                    <Layers size={11} /> Video Category
+                                </label>
+                                <select
+                                    value={form.galleryCategoryId}
+                                    onChange={(e) => setForm({ ...form, galleryCategoryId: e.target.value })}
+                                    className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-sm bg-white"
+                                >
+                                    <option value="">— Select Category —</option>
+                                    {categories.map(cat => (
+                                        <option key={cat._id} value={cat._id}>{cat.title}</option>
+                                    ))}
+                                </select>
+                                {categories.length === 0 && (
+                                    <p className="text-[10px] text-orange-500 mt-1">
+                                        No categories yet. Create one in "Video Categories".
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Action Buttons */}
                             <div className="flex gap-2 pt-2">
                                 <button
                                     onClick={handleSubmit}
@@ -294,8 +350,8 @@ const VideoGalleryManagement = () => {
                                     )}
                                 </button>
                                 {isEditing && (
-                                    <button 
-                                        onClick={resetForm} 
+                                    <button
+                                        onClick={resetForm}
                                         className="px-6 py-3 border-2 border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-colors text-sm"
                                     >
                                         Cancel
@@ -317,29 +373,28 @@ const VideoGalleryManagement = () => {
                                 {items.length} VIDEOS
                             </span>
                         </div>
-                        
+
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b-2 border-gray-200 bg-gray-50">
                                         <th className="text-left py-3 px-4 text-[10px] font-black text-gray-500 uppercase w-12 text-center">NO.</th>
                                         <th className="text-left py-3 px-4 text-[10px] font-black text-gray-500 uppercase">VIDEO DETAILS</th>
+                                        <th className="text-left py-3 px-4 text-[10px] font-black text-gray-500 uppercase">CATEGORY</th>
                                         <th className="text-left py-3 px-4 text-[10px] font-black text-gray-500 uppercase w-24">SOURCE</th>
-                                        <th className="text-center py-3 px-4 text-[10px] font-black text-gray-500 uppercase w-24">LAST UPDATED BY</th>
                                         <th className="text-center py-3 px-4 text-[10px] font-black text-gray-500 uppercase w-24">ACTIONS</th>
                                     </tr>
-
                                 </thead>
                                 <tbody>
                                     {isLoading && items.length === 0 ? (
                                         <tr>
-                                            <td colSpan={4} className="py-20 text-center">
+                                            <td colSpan={5} className="py-20 text-center">
                                                 <div className="w-10 h-10 border-4 border-[#23471d] border-t-transparent rounded-full animate-spin mx-auto"></div>
                                             </td>
                                         </tr>
                                     ) : items.length === 0 ? (
                                         <tr>
-                                            <td colSpan={4} className="py-20 text-center text-gray-400 italic">
+                                            <td colSpan={5} className="py-20 text-center text-gray-400 italic">
                                                 No videos found in your gallery.
                                             </td>
                                         </tr>
@@ -350,12 +405,14 @@ const VideoGalleryManagement = () => {
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-16 h-10 rounded-lg overflow-hidden bg-gray-100 border border-gray-100 flex items-center justify-center text-[#23471d] relative group/preview">
                                                         {item.videoUrl && (item.videoUrl.startsWith('http') || item.videoUrl.includes('youtube.com') || item.videoUrl.includes('youtu.be')) ? (
-                                                            <img 
-                                                                src={getYouTubeThumbnail(item.videoUrl)} 
-                                                                className="w-full h-full object-cover" 
+                                                            <img
+                                                                src={getYouTubeThumbnail(item.videoUrl)}
+                                                                className="w-full h-full object-cover"
                                                                 alt={item.title}
                                                                 onError={(e) => { e.target.src = "https://placehold.co/64x40?text=NA"; }}
                                                             />
+                                                        ) : item.videoUrl ? (
+                                                            <video src={`${SERVER_URL}${item.videoUrl}#t=0.5`} className="w-full h-full object-cover" preload="metadata" muted playsInline />
                                                         ) : (
                                                             <Play className="w-5 h-5 fill-current" />
                                                         )}
@@ -364,13 +421,18 @@ const VideoGalleryManagement = () => {
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <h3 className="font-bold text-slate-800 uppercase tracking-tight line-clamp-1">{item.title}</h3>
+                                                        <h3 className="font-bold text-slate-800 uppercase tracking-tight line-clamp-1 text-xs">{item.title}</h3>
                                                         <p className="text-[10px] text-slate-400 italic line-clamp-1">{item.videoUrl}</p>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="py-3 px-4">
-                                                {(item.videoUrl.startsWith('http') || item.videoUrl.includes('youtube.com') || item.videoUrl.includes('youtu.be')) ? (
+                                                <span className="text-[10px] font-bold bg-[#23471d]/10 text-[#23471d] px-2 py-1 rounded uppercase">
+                                                    {getCategoryName(item)}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                {item.videoUrl && (item.videoUrl.startsWith('http') || item.videoUrl.includes('youtube.com') || item.videoUrl.includes('youtu.be')) ? (
                                                     <span className="flex items-center gap-1.5 text-[9px] font-black uppercase text-red-600 bg-red-50 px-2 py-1 rounded">
                                                         <Youtube size={10} /> YouTube
                                                     </span>
@@ -380,30 +442,17 @@ const VideoGalleryManagement = () => {
                                                     </span>
                                                 )}
                                             </td>
-                                            <td className="py-3 px-4 text-center">
-                                                <div className="flex flex-col gap-1 items-center">
-                                                    <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
-                                                        {item.updatedBy || 'System'}
-                                                    </span>
-                                                    <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
-                                                        {item.updatedAt ? new Date(item.updatedAt).toLocaleString('en-GB', { 
-                                                            day: '2-digit', month: 'short', year: 'numeric', 
-                                                            hour: '2-digit', minute: '2-digit', hour12: true 
-                                                        }) : 'N/A'}
-                                                    </span>
-                                                </div>
-                                            </td>
                                             <td className="py-3 px-4">
                                                 <div className="flex items-center justify-center gap-3">
-                                                    <button 
-                                                        onClick={() => startEdit(item)} 
+                                                    <button
+                                                        onClick={() => startEdit(item)}
                                                         className="text-blue-500 hover:text-blue-700 transition-colors p-1"
                                                         title="Edit Entry"
                                                     >
                                                         <Edit size={16} />
                                                     </button>
-                                                    <button 
-                                                        onClick={() => handleDelete(item._id)} 
+                                                    <button
+                                                        onClick={() => handleDelete(item._id)}
                                                         className="text-red-400 hover:text-red-600 transition-colors p-1"
                                                         title="Delete Entry"
                                                     >

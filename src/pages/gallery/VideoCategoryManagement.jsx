@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import {
-    Save, Image as ImageIcon, Plus, Trash2, Edit,
-    Layers, Images, Camera
+    Image as ImageIcon, Plus, Trash2, Edit,
+    Layers, Video, Camera
 } from 'lucide-react';
 import api, { SERVER_URL } from '../../lib/api';
 import PageHeader from '../../components/PageHeader';
@@ -15,49 +15,25 @@ const EMPTY_FORM = {
     order: 0,
 };
 
-const GalleryCategory = () => {
+const VideoCategoryManagement = () => {
     const navigate = useNavigate();
-    const location = useLocation();
     const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [form, setForm] = useState({ ...EMPTY_FORM });
-    const [isEditing, setIsEditing] = useState(null); // holds _id when editing
+    const [isEditing, setIsEditing] = useState(null);
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState('');
     const fileInputRef = useRef(null);
 
     useEffect(() => { fetchCategories(); }, []);
 
-    useEffect(() => {
-        if (location.state?.editItem) {
-            const item = location.state.editItem;
-            // If _id is the same as title, it's likely not a real category ID yet
-            const actualId = (item._id && item._id !== item.title) ? item._id : null;
-            
-            console.log('Starting edit for category:', item);
-            setIsEditing(actualId);
-            setForm({ 
-                title: item.title, 
-                heading: item.heading || '', 
-                coverImageAlt: item.coverImageAlt || '',
-                order: item.order || 0
-            });
-            setImagePreview(item.coverImage ? `${SERVER_URL}${item.coverImage}` : '');
-            setImageFile(null);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            // Clear state after reading to prevent re-triggering on refresh
-            window.history.replaceState({}, document.title);
-        }
-    }, [location.state]);
-
     const fetchCategories = async () => {
         setIsLoading(true);
         try {
-            const res = await api.get('/api/gallery-category?type=gallery');
+            const res = await api.get('/api/gallery-category?type=video');
             if (res.data.success) setCategories(res.data.data);
         } catch (err) {
-            console.error('Failed to fetch categories', err);
+            console.error('Failed to fetch video categories', err);
         } finally {
             setIsLoading(false);
         }
@@ -82,14 +58,8 @@ const GalleryCategory = () => {
             formData.append('heading', form.heading);
             formData.append('coverImageAlt', form.coverImageAlt);
             formData.append('order', form.order);
+            formData.append('type', 'video');
             if (imageFile) formData.append('coverImage', imageFile);
-
-            console.log('Final Submit Data:', {
-                isEditing,
-                url: isEditing ? `/api/gallery-category/${isEditing}` : '/api/gallery-category',
-                type: 'gallery',
-                form
-            });
 
             let res;
             if (isEditing) {
@@ -101,8 +71,6 @@ const GalleryCategory = () => {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
             }
-
-            console.log('Submit Response:', res.data);
 
             if (res.data.success) {
                 Swal.fire({
@@ -144,11 +112,10 @@ const GalleryCategory = () => {
     };
 
     const startEdit = (cat) => {
-        console.log('Starting edit for category:', cat);
         setIsEditing(cat._id);
-        setForm({ 
-            title: cat.title, 
-            heading: cat.heading || '', 
+        setForm({
+            title: cat.title,
+            heading: cat.heading || '',
             coverImageAlt: cat.coverImageAlt || '',
             order: cat.order || 0
         });
@@ -168,8 +135,8 @@ const GalleryCategory = () => {
     return (
         <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
             <PageHeader
-                title="GALLERY CATEGORY MANAGEMENT"
-                description="Create and manage photo gallery event categories"
+                title="VIDEO CATEGORY MANAGEMENT"
+                description="Create and manage categories for your video gallery"
             />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
@@ -193,21 +160,21 @@ const GalleryCategory = () => {
                                     value={form.title}
                                     onChange={(e) => setForm({ ...form, title: e.target.value })}
                                     className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
-                                    placeholder="e.g. Event Collection"
+                                    placeholder="e.g. Event Highlights 2024"
                                 />
                             </div>
 
                             {/* Heading */}
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
-                                    Gallery Heading
+                                    Video Gallery Heading
                                 </label>
                                 <input
                                     type="text"
                                     value={form.heading}
                                     onChange={(e) => setForm({ ...form, heading: e.target.value })}
                                     className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
-                                    placeholder="e.g. General Gallery"
+                                    placeholder="e.g. Conference Videos 2024"
                                 />
                             </div>
 
@@ -228,7 +195,7 @@ const GalleryCategory = () => {
                             {/* Cover Image */}
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
-                                    Cover Image
+                                    Cover Image (Thumbnail)
                                 </label>
                                 {imagePreview ? (
                                     <div className="relative h-36 border-2 border-gray-200 overflow-hidden mb-2">
@@ -299,7 +266,7 @@ const GalleryCategory = () => {
                         {/* Table Header */}
                         <div className="bg-[#23471d] px-5 py-3 flex items-center justify-between">
                             <h2 className="text-white font-bold flex items-center gap-2">
-                                <Layers className="w-4 h-4" /> Gallery Categories List
+                                <Layers className="w-4 h-4" /> Video Categories List
                             </h2>
                             <span className="bg-[#d26019] text-white text-xs font-black px-3 py-1 uppercase tracking-wider">
                                 {categories.length} CATEGORIES
@@ -316,20 +283,21 @@ const GalleryCategory = () => {
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">TITLE</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">HEADING</th>
                                         <th className="text-center py-3 px-4 text-xs font-bold text-gray-500 uppercase">ORDER</th>
+                                        <th className="text-center py-3 px-4 text-xs font-bold text-gray-500 uppercase">LAST UPDATED</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">ACTIONS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {isLoading ? (
                                         <tr>
-                                            <td colSpan={5} className="text-center py-12">
+                                            <td colSpan={7} className="text-center py-12">
                                                 <div className="w-8 h-8 border-4 border-[#23471d] border-t-transparent rounded-full animate-spin mx-auto" />
                                             </td>
                                         </tr>
                                     ) : !categories.length ? (
                                         <tr>
-                                            <td colSpan={5} className="text-center py-12 text-gray-400 italic">
-                                                No gallery categories found. Create your first category.
+                                            <td colSpan={7} className="text-center py-12 text-gray-400 italic">
+                                                No video categories found. Create your first category.
                                             </td>
                                         </tr>
                                     ) : categories.map((cat, idx) => (
@@ -359,6 +327,19 @@ const GalleryCategory = () => {
                                                     {cat.order || 0}
                                                 </span>
                                             </td>
+                                            <td className="py-3 px-4 text-center">
+                                                <div className="flex flex-col gap-1 items-center">
+                                                    <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                                                        {cat.updatedBy || 'System'}
+                                                    </span>
+                                                    <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                                                        {cat.updatedAt ? new Date(cat.updatedAt).toLocaleString('en-GB', {
+                                                            day: '2-digit', month: 'short', year: 'numeric',
+                                                            hour: '2-digit', minute: '2-digit', hour12: true
+                                                        }) : 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </td>
                                             <td className="py-3 px-4">
                                                 <div className="flex items-center gap-1">
                                                     {/* Edit */}
@@ -369,15 +350,15 @@ const GalleryCategory = () => {
                                                     >
                                                         <Edit size={15} />
                                                     </button>
-                                                    {/* Add Images */}
+                                                    {/* Manage Videos */}
                                                     <button
-                                                        onClick={() => navigate('/manage-gallery-images', {
-                                                            state: { categoryId: cat.title, categoryTitle: cat.title }
+                                                        onClick={() => navigate('/video-list', {
+                                                            state: { categoryId: cat._id, categoryTitle: cat.title }
                                                         })}
                                                         className="p-1.5 text-[#23471d] hover:bg-green-50 rounded transition-colors"
-                                                        title="Manage Images in this Category"
+                                                        title="Manage Videos in this Category"
                                                     >
-                                                        <Images size={15} />
+                                                        <Video size={15} />
                                                     </button>
                                                     {/* Delete */}
                                                     <button
@@ -402,4 +383,4 @@ const GalleryCategory = () => {
     );
 };
 
-export default GalleryCategory;
+export default VideoCategoryManagement;
