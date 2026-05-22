@@ -26,60 +26,59 @@ const GalleryList = () => {
     const fetchGalleries = async () => {
         setIsLoading(true);
         try {
-            // Fetch both categories and gallery items
-            const [catRes, galleryRes] = await Promise.all([
-                api.get("/api/gallery-category"),
-                api.get("/api/gallery")
+            // Fetch ALL categories (gallery + video + media) and ALL items
+            const [catRes, galleryRes, videoRes, mediaRes] = await Promise.all([
+                api.get("/api/gallery-category"),         // all categories
+                api.get("/api/gallery?category=gallery"), // photo items
+                api.get("/api/gallery?category=video"),   // video items
+                api.get("/api/gallery?category=media"),   // media items
             ]);
 
             let categoryMap = {};
             if (catRes.data.success) {
                 setCategories(catRes.data.data);
                 catRes.data.data.forEach(cat => {
-                    categoryMap[cat.title] = cat;
+                    categoryMap[cat._id] = cat;
                 });
             }
 
-            if (galleryRes.data.success) {
-                const items = galleryRes.data.data;
-                // Group by title
-                const groups = {};
-                items.forEach(item => {
-                    const title = item.title || "General Gallery";
-                    if (!groups[title]) {
-                        const catData = categoryMap[title];
-                        groups[title] = {
-                            ...(catData || {}),
-                            _id: catData?._id || title,
-                            title: title,
-                            category: item.category,
-                            status: "active",
-                            createdAt: catData?.createdAt || item.createdAt,
-                            coverImage: catData?.coverImage || "",
-                            images: []
-                        };
-                    }
-                    groups[title].images.push(item);
-                });
-                
-                // Add categories that have NO images yet but have a cover image
-                Object.values(categoryMap).forEach(cat => {
-                    if (!groups[cat.title]) {
-                        groups[cat.title] = {
-                            ...cat,
-                            _id: cat._id,
-                            title: cat.title,
-                            category: "photo", // Default
-                            status: "active",
-                            createdAt: cat.createdAt,
-                            coverImage: cat.coverImage,
-                            images: []
-                        };
-                    }
-                });
+            // Combine all items
+            const allItems = [
+                ...(galleryRes.data.success ? galleryRes.data.data : []),
+                ...(videoRes.data.success ? videoRes.data.data : []),
+                ...(mediaRes.data.success ? mediaRes.data.data : []),
+            ];
 
-                setGalleries(Object.values(groups));
-            }
+            // Start with all categories (all types), empty images array
+            const groups = {};
+            Object.values(categoryMap).forEach(cat => {
+                groups[cat._id] = {
+                    ...cat,
+                    _id: cat._id,
+                    title: cat.title,
+                    category: cat.type || "gallery",
+                    status: cat.status || "active",
+                    createdAt: cat.createdAt,
+                    coverImage: cat.coverImage || "",
+                    images: []
+                };
+            });
+
+            // Assign items to their category group
+            allItems.forEach(item => {
+                const catId = item.galleryCategoryId?._id || item.galleryCategoryId;
+                if (catId && groups[catId]) {
+                    groups[catId].images.push(item);
+                } else {
+                    // Fallback: match by title
+                    const matchedCat = Object.values(categoryMap).find(c => c.title === item.title);
+                    if (matchedCat && groups[matchedCat._id]) {
+                        groups[matchedCat._id].images.push(item);
+                    }
+                }
+            });
+
+            setGalleries(Object.values(groups));
         } catch (error) {
             console.error("Failed to fetch galleries", error);
         } finally {
@@ -343,26 +342,29 @@ const GalleryList = () => {
                                 <div key={gallery._id} className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden group hover:shadow-2xl transition-all duration-300">
                                     <div className="relative aspect-video overflow-hidden">
                                         <img
-                                            src={`${SERVER_URL}${gallery.coverImage || gallery.images[0]?.image || gallery.mainImage}`} // Use coverImage first
+                                            src={`${SERVER_URL}${gallery.coverImage || gallery.images[0]?.image || gallery.mainImage}`}
                                             alt={gallery.title}
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                             onError={(e) => { e.target.src = "https://placehold.co/400x225?text=No+Preview"; }}
                                         />
+                                        {/* Count badge - top left */}
+                                        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm">
+                                            <span className="text-[10px] font-bold text-[#1A3263] uppercase tracking-wider">
+                                                {gallery.images?.length || 0} {gallery.category === 'video' ? 'Videos' : gallery.category === 'media' ? 'Media' : 'Images'}
+                                            </span>
+                                        </div>
+                                        {/* Delete button - top right, no overlap */}
                                         <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
-                                                onClick={() => handleDelete(gallery)} // Use gallery for handleDelete
+                                                onClick={() => handleDelete(gallery)}
                                                 className="p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-colors"
                                             >
                                                 <Trash2 size={14} />
                                             </button>
                                         </div>
-                                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm">
-                                            <span className="text-[10px] font-bold text-[#1A3263] uppercase tracking-wider">
-                                                {gallery.images?.length || 0} Images
-                                            </span>
-                                        </div>
+                                        {/* Type badge - bottom left */}
                                         <div className="absolute bottom-3 left-3">
-                                            <span className="bg-[#1e3a8a] text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-md uppercase">
+                                            <span className={`text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-md uppercase ${gallery.category === 'video' ? 'bg-red-600' : gallery.category === 'media' ? 'bg-purple-700' : 'bg-[#1e3a8a]'}`}>
                                                 {gallery.category}
                                             </span>
                                         </div>
@@ -381,10 +383,18 @@ const GalleryList = () => {
                                         
                                         <div className="flex gap-2 mt-auto">
                                             <button 
-                                                onClick={() => navigate('/manage-gallery-images', { state: { categoryId: gallery.title, categoryTitle: gallery.title } })}
+                                                onClick={() => {
+                                                    if (gallery.category === 'video') {
+                                                        navigate('/video-list', { state: { categoryId: gallery._id, categoryTitle: gallery.title } });
+                                                    } else if (gallery.category === 'media') {
+                                                        navigate('/manage-gallery-images', { state: { categoryId: gallery._id, categoryTitle: gallery.title, categoryType: 'media' } });
+                                                    } else {
+                                                        navigate('/manage-gallery-images', { state: { categoryId: gallery._id, categoryTitle: gallery.title, categoryType: 'gallery' } });
+                                                    }
+                                                }}
                                                 className="flex-1 bg-gray-900 text-white py-2 rounded-lg text-xs font-bold hover:bg-[#1e3a8a] transition-all flex items-center justify-center gap-2"
                                             >
-                                                <ImageIcon size={14} /> Manage Images
+                                                <ImageIcon size={14} /> Manage
                                             </button>
                                             <button 
                                                 onClick={() => navigate('/gallery-category', { state: { editItem: gallery } })}

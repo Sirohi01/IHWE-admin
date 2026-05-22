@@ -25,7 +25,7 @@ const AddGalleryImages = () => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const res = await api.get("/api/gallery-category");
+                const res = await api.get("/api/gallery-category?type=gallery");
                 if (res.data.success) setCategories(res.data.data);
             } catch (err) {
                 console.error("Failed to fetch categories", err);

@@ -24,6 +24,7 @@ import WhoWeAre from "../pages/WhoWeAre";
 import Services from "../pages/Services";
 import FAQManage from "../pages/FAQManage";
 import HealthcareSectorsManagement from "../pages/HealthcareSectorsManagement";
+import EPromotionWebManagement from "../pages/EPromotionWebManagement";
 import AddPdf from "../pages/AddPdf";
 import StatsCounter from "../pages/StatsCounter";
 import MarqueeManage from "../pages/MarqueeManage";
@@ -101,6 +102,8 @@ import ImageGalleryManagement from "../pages/ImageGalleryManagement";
 import VideoGalleryManagement from "../pages/VideoGalleryManagement";
 import MediaGalleryManagement from "../pages/MediaGalleryManagement";
 import MediaCategoryManagement from "../pages/gallery/MediaCategoryManagement";
+import VideoCategoryManagement from "../pages/gallery/VideoCategoryManagement";
+import VideoList from "../pages/gallery/VideoList";
 import ClickAnalytics from "../pages/ClickAnalytics";
 import ManageStalls from "../pages/ManageStalls";
 import ManageRegistrations from "../pages/ManageRegistrations";
@@ -230,6 +233,7 @@ export default function AppRoutes() {
           />
           <Route path="featured-services" element={<Services />} />
           <Route path="healthcare-sectors" element={<HealthcareSectorsManagement />} />
+          <Route path="epromotion" element={<EPromotionWebManagement />} />
           <Route path="faq-manage" element={<FAQManage />} />
           <Route path="add-pdf" element={<AddPdf />} />
           <Route path="stats-counter" element={<StatsCounter />} />
@@ -362,6 +366,8 @@ export default function AppRoutes() {
           <Route path="advisory-manage" element={<AdvisoryManagement />} />
           <Route path="gallery-images" element={<ImageGalleryManagement />} />
           <Route path="gallery-videos" element={<VideoGalleryManagement />} />
+          <Route path="video-category" element={<VideoCategoryManagement />} />
+          <Route path="video-list" element={<VideoList />} />
           <Route path="media-category" element={<MediaCategoryManagement />} />
           <Route path="gallery-media" element={<MediaGalleryManagement />} />
           <Route path="profiles" element={<IndividualProfile />} />

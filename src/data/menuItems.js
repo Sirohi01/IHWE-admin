@@ -212,6 +212,7 @@ export const menuItems = [
       { label: "Who We Are", path: "/who-we-are" },
       { label: "Featured Services", path: "/featured-services" },
       { label: "Healthcare Sectors", path: "/healthcare-sectors" },
+      { label: "E-Promotion Web", path: "/epromotion" },
       { label: "FAQ Management", path: "/faq-manage" },
       { label: "Glimpse Event", path: "/glimpse" },
       { label: "Our Clients", path: "/clients" },
@@ -253,11 +254,13 @@ export const menuItems = [
     icon: Images,
     children: [
       { label: "Gallery Categories", path: "/gallery-category" },
-      { label: "View All Listings", path: "/gallery-list" },
       { label: "Add Gallery Images", path: "/add-gallery-images" },
+      { label: "Video Categories", path: "/video-category" },
       { label: "Add Video", path: "/gallery-videos" },
+      { label: "Video Listings", path: "/video-list" },
       { label: "Media Categories", path: "/media-category" },
       { label: "Media Photo Management", path: "/gallery-media" },
+      { label: "View All Listings", path: "/gallery-list" },
     ],
   },
   {
