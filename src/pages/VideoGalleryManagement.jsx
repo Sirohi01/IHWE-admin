@@ -4,7 +4,7 @@ import Swal from 'sweetalert2';
 import api, { SERVER_URL } from "../lib/api";
 import {
     Save, Play, Plus, Trash2, Edit,
-    Video, Youtube, FileVideo, Layers
+    Video, Youtube, FileVideo, Layers, Instagram, Camera
 } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 
@@ -25,9 +25,12 @@ const VideoGalleryManagement = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [form, setForm] = useState({ ...EMPTY_FORM });
     const [isEditing, setIsEditing] = useState(null);
-    const [videoType, setVideoType] = useState('link'); // 'link' or 'upload'
+    const [videoType, setVideoType] = useState('youtube'); // 'youtube', 'instagram', or 'upload'
     const [videoFile, setVideoFile] = useState(null);
     const videoInputRef = useRef(null);
+    const [coverImageFile, setCoverImageFile] = useState(null);
+    const [coverImagePreview, setCoverImagePreview] = useState('');
+    const coverImageInputRef = useRef(null);
 
     useEffect(() => {
         fetchCategories();
@@ -38,8 +41,9 @@ const VideoGalleryManagement = () => {
     useEffect(() => {
         if (location.state?.editItem) {
             const item = location.state.editItem;
-            const isUrlLink = item.videoUrl && (item.videoUrl.startsWith('http') || item.videoUrl.includes('youtube.com') || item.videoUrl.includes('youtu.be'));
-            setVideoType(isUrlLink ? 'link' : 'upload');
+            const isYoutube = item.videoUrl && (item.videoUrl.includes('youtube.com') || item.videoUrl.includes('youtu.be'));
+            const isInstagram = item.videoUrl && (item.videoUrl.includes('instagram.com') || item.videoUrl.includes('instagr.am'));
+            setVideoType(isYoutube ? 'youtube' : isInstagram ? 'instagram' : 'upload');
             setIsEditing(item._id);
             setForm({
                 title: item.title || '',
@@ -51,6 +55,8 @@ const VideoGalleryManagement = () => {
                 galleryCategoryId: item.galleryCategoryId?._id || item.galleryCategoryId || '',
             });
             setVideoFile(null);
+            setCoverImageFile(null);
+            setCoverImagePreview(item.image ? `${SERVER_URL}${item.image}` : '');
             window.scrollTo({ top: 0, behavior: 'smooth' });
             // Clear state to avoid re-triggering
             window.history.replaceState({}, document.title);
@@ -102,8 +108,12 @@ const VideoGalleryManagement = () => {
             Swal.fire('Warning', 'Please enter a video title', 'warning');
             return;
         }
-        if (videoType === 'link' && !form.videoUrl) {
+        if (videoType === 'youtube' && !form.videoUrl) {
             Swal.fire('Warning', 'Please enter a YouTube link', 'warning');
+            return;
+        }
+        if (videoType === 'instagram' && !form.videoUrl) {
+            Swal.fire('Warning', 'Please enter an Instagram link', 'warning');
             return;
         }
         if (videoType === 'upload' && !videoFile && !form.videoUrl) {
@@ -118,7 +128,17 @@ const VideoGalleryManagement = () => {
                 videoUrl = await uploadVideo();
             }
 
-            const payload = { ...form, videoUrl };
+            let imageUrl = form.image;
+            if (coverImageFile) {
+                const formData = new FormData();
+                formData.append('file', coverImageFile);
+                const uploadRes = await api.post("/api/gallery/upload", formData, {
+                    headers: { "Content-Type": "multipart/form-data" }
+                });
+                imageUrl = uploadRes.data.url;
+            }
+
+            const payload = { ...form, videoUrl, image: imageUrl };
             // Only include galleryCategoryId if a category is selected
             if (!payload.galleryCategoryId) delete payload.galleryCategoryId;
 
@@ -171,8 +191,9 @@ const VideoGalleryManagement = () => {
 
     const startEdit = (item) => {
         setIsEditing(item._id);
-        const isUrlLink = item.videoUrl && (item.videoUrl.startsWith('http') || item.videoUrl.includes('youtube.com') || item.videoUrl.includes('youtu.be'));
-        setVideoType(isUrlLink ? 'link' : 'upload');
+        const isYoutube = item.videoUrl && (item.videoUrl.includes('youtube.com') || item.videoUrl.includes('youtu.be'));
+        const isInstagram = item.videoUrl && (item.videoUrl.includes('instagram.com') || item.videoUrl.includes('instagr.am'));
+        setVideoType(isYoutube ? 'youtube' : isInstagram ? 'instagram' : 'upload');
         setForm({
             title: item.title || '',
             description: item.description || '',
@@ -183,6 +204,8 @@ const VideoGalleryManagement = () => {
             galleryCategoryId: item.galleryCategoryId?._id || item.galleryCategoryId || '',
         });
         setVideoFile(null);
+        setCoverImageFile(null);
+        setCoverImagePreview(item.image ? `${SERVER_URL}${item.image}` : '');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -190,8 +213,11 @@ const VideoGalleryManagement = () => {
         setIsEditing(null);
         setForm({ ...EMPTY_FORM });
         setVideoFile(null);
-        setVideoType('link');
+        setCoverImageFile(null);
+        setCoverImagePreview('');
+        setVideoType('youtube');
         if (videoInputRef.current) videoInputRef.current.value = '';
+        if (coverImageInputRef.current) coverImageInputRef.current.value = '';
     };
 
     const getYouTubeThumbnail = (url) => {
@@ -202,6 +228,28 @@ const VideoGalleryManagement = () => {
         else if (url.includes("youtube.com/embed/")) videoId = url.split("embed/")[1]?.split("?")[0];
         else if (url.includes("youtube.com/shorts/")) videoId = url.split("shorts/")[1]?.split("?")[0];
         return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
+    };
+
+    const getInstagramThumbnail = (url) => {
+        if (!url) return null;
+        let shortcode = "";
+        if (url.includes("instagram.com/reel/")) {
+            shortcode = url.split("instagram.com/reel/")[1]?.split("/")[0]?.split("?")[0];
+        } else if (url.includes("instagram.com/p/")) {
+            shortcode = url.split("instagram.com/p/")[1]?.split("/")[0]?.split("?")[0];
+        } else if (url.includes("instagr.am/p/")) {
+            shortcode = url.split("instagr.am/p/")[1]?.split("/")[0]?.split("?")[0];
+        }
+        return shortcode ? `https://www.instagram.com/p/${shortcode}/media/?size=l` : null;
+    };
+
+    const getInstagramEmbedUrl = (url) => {
+        if (!url) return "";
+        let cleanUrl = url.split("?")[0];
+        if (!cleanUrl.endsWith("/")) {
+            cleanUrl += "/";
+        }
+        return `${cleanUrl}embed/`;
     };
 
     const getCategoryName = (item) => {
@@ -231,13 +279,20 @@ const VideoGalleryManagement = () => {
                             {/* Video Source Type */}
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Video Source Type</label>
-                                <div className="flex gap-2">
+                                <div className="flex flex-wrap gap-2">
                                     <button
                                         type="button"
-                                        onClick={() => setVideoType('link')}
-                                        className={`flex-1 py-2 px-3 rounded border-2 font-bold text-xs uppercase transition-all flex items-center justify-center gap-2 ${videoType === 'link' ? 'border-[#d26019] bg-[#d26019] text-white shadow-md' : 'border-gray-200 text-gray-400 hover:border-gray-300'}`}
+                                        onClick={() => setVideoType('youtube')}
+                                        className={`flex-1 py-2 px-3 rounded border-2 font-bold text-xs uppercase transition-all flex items-center justify-center gap-2 ${videoType === 'youtube' ? 'border-red-500 bg-red-500 text-white shadow-md' : 'border-gray-200 text-gray-400 hover:border-gray-300'}`}
                                     >
-                                        <Youtube size={14} /> YouTube Link
+                                        <Youtube size={14} /> YouTube
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setVideoType('instagram')}
+                                        className={`flex-1 py-2 px-3 rounded border-2 font-bold text-xs uppercase transition-all flex items-center justify-center gap-2 ${videoType === 'instagram' ? 'border-[#e1306c] bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white shadow-md' : 'border-gray-200 text-gray-400 hover:border-gray-300'}`}
+                                    >
+                                        <Instagram size={14} /> Instagram
                                     </button>
                                     <button
                                         type="button"
@@ -250,7 +305,7 @@ const VideoGalleryManagement = () => {
                             </div>
 
                             {/* Video Input */}
-                            {videoType === 'link' ? (
+                            {videoType === 'youtube' ? (
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">YouTube URL</label>
                                     <div className="relative">
@@ -262,6 +317,20 @@ const VideoGalleryManagement = () => {
                                             placeholder="e.g. https://www.youtube.com/watch?v=..."
                                         />
                                         <Youtube className="absolute left-3 top-2.5 text-red-500" size={16} />
+                                    </div>
+                                </div>
+                            ) : videoType === 'instagram' ? (
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Instagram URL</label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            value={form.videoUrl}
+                                            onChange={(e) => setForm({ ...form, videoUrl: e.target.value })}
+                                            className="w-full px-4 py-2 pl-10 border-2 border-gray-200 focus:border-[#d26019] outline-none shadow-sm text-sm"
+                                            placeholder="e.g. https://www.instagram.com/reel/..."
+                                        />
+                                        <Instagram className="absolute left-3 top-2.5 text-pink-500" size={16} />
                                     </div>
                                 </div>
                             ) : (
@@ -336,6 +405,47 @@ const VideoGalleryManagement = () => {
                                 )}
                             </div>
 
+                            {/* Video Cover Image (Thumbnail) */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
+                                    Video Thumbnail / Cover Image (Optional)
+                                </label>
+                                {coverImagePreview ? (
+                                    <div className="relative h-28 border-2 border-gray-200 overflow-hidden mb-2">
+                                        <img src={coverImagePreview} className="w-full h-full object-cover" alt="Cover Preview" />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setCoverImageFile(null);
+                                                setCoverImagePreview('');
+                                                setForm({ ...form, image: '' });
+                                                if (coverImageInputRef.current) coverImageInputRef.current.value = '';
+                                            }}
+                                            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full shadow-md"
+                                        >
+                                            <Trash2 size={12} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <label className="flex flex-col items-center justify-center h-20 border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#23471d] hover:bg-gray-50 transition-all group mb-2">
+                                        <Camera className="w-6 h-6 text-gray-400 mb-1 group-hover:text-[#23471d]" />
+                                        <span className="text-xs text-gray-400 group-hover:text-[#23471d]">Click to upload thumbnail</span>
+                                        <input
+                                            ref={coverImageInputRef}
+                                            type="file"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files[0];
+                                                if (!file) return;
+                                                setCoverImageFile(file);
+                                                setCoverImagePreview(URL.createObjectURL(file));
+                                            }}
+                                            accept="image/*"
+                                        />
+                                    </label>
+                                )}
+                            </div>
+
                             {/* Action Buttons */}
                             <div className="flex gap-2 pt-2">
                                 <button
@@ -404,13 +514,27 @@ const VideoGalleryManagement = () => {
                                             <td className="py-3 px-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-16 h-10 rounded-lg overflow-hidden bg-gray-100 border border-gray-100 flex items-center justify-center text-[#23471d] relative group/preview">
-                                                        {item.videoUrl && (item.videoUrl.startsWith('http') || item.videoUrl.includes('youtube.com') || item.videoUrl.includes('youtu.be')) ? (
+                                                        {item.image ? (
+                                                            <img
+                                                                src={`${SERVER_URL}${item.image}`}
+                                                                className="w-full h-full object-cover"
+                                                                alt={item.title}
+                                                            />
+                                                        ) : item.videoUrl && (item.videoUrl.includes('youtube.com') || item.videoUrl.includes('youtu.be')) ? (
                                                             <img
                                                                 src={getYouTubeThumbnail(item.videoUrl)}
                                                                 className="w-full h-full object-cover"
                                                                 alt={item.title}
                                                                 onError={(e) => { e.target.src = "https://placehold.co/64x40?text=NA"; }}
                                                             />
+                                                        ) : item.videoUrl && (item.videoUrl.includes('instagram.com') || item.videoUrl.includes('instagr.am')) ? (
+                                                            <div className="w-full h-full pointer-events-none overflow-hidden relative flex items-center justify-center bg-black">
+                                                                <iframe 
+                                                                    src={getInstagramEmbedUrl(item.videoUrl)} 
+                                                                    className="w-[125%] h-[200%] border-0 opacity-80"
+                                                                    scrolling="no"
+                                                                />
+                                                            </div>
                                                         ) : item.videoUrl ? (
                                                             <video src={`${SERVER_URL}${item.videoUrl}#t=0.5`} className="w-full h-full object-cover" preload="metadata" muted playsInline />
                                                         ) : (
@@ -432,9 +556,13 @@ const VideoGalleryManagement = () => {
                                                 </span>
                                             </td>
                                             <td className="py-3 px-4">
-                                                {item.videoUrl && (item.videoUrl.startsWith('http') || item.videoUrl.includes('youtube.com') || item.videoUrl.includes('youtu.be')) ? (
+                                                {item.videoUrl && (item.videoUrl.includes('youtube.com') || item.videoUrl.includes('youtu.be')) ? (
                                                     <span className="flex items-center gap-1.5 text-[9px] font-black uppercase text-red-600 bg-red-50 px-2 py-1 rounded">
                                                         <Youtube size={10} /> YouTube
+                                                    </span>
+                                                ) : item.videoUrl && (item.videoUrl.includes('instagram.com') || item.videoUrl.includes('instagr.am')) ? (
+                                                    <span className="flex items-center gap-1.5 text-[9px] font-black uppercase text-pink-600 bg-pink-50 px-2 py-1 rounded">
+                                                        <Instagram size={10} /> Instagram
                                                     </span>
                                                 ) : (
                                                     <span className="flex items-center gap-1.5 text-[9px] font-black uppercase text-blue-600 bg-blue-50 px-2 py-1 rounded">
