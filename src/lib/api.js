@@ -166,11 +166,12 @@ export const internationalBuyerApi = {
 };
 
 export const otpApi = {
-  request: async (identifier, type, name) => {
+  request: async (identifier, type, name, source) => {
     const response = await api.post("/api/otp/request", {
       identifier,
       type,
       name,
+      source,
     });
     return unwrapApiResponse(response);
   },
