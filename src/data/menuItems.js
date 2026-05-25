@@ -60,7 +60,7 @@ export const menuItems = [
       { label: "Cold Client List", path: "/ihweClientData2026/coldClientList" },
       { label: "Master Data", path: "/ihweClientData2026/masterData" },
       { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
-      { label: "Confirmed Client List", path: "/ihweClientData2026/confirmClientList" },
+      { label: "Confirmed Client List", path: "/exhibitor-bookings" },
       { label: "Book A Stand", path: "/book-a-stand" },
     ],
   },

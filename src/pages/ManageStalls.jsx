@@ -197,7 +197,7 @@ const ManageStalls = () => {
     const labelCls = "block text-[11px] font-medium text-black mb-1 uppercase tracking-tight";
 
     return (
-        <div className="bg-white shadow-md p-6 min-h-screen font-inter uppercase">
+        <div className="bg-white shadow-md p-6 min-h-screen font-inter uppercase mt-6">
             <PageHeader
                 title="STALL INVENTORY MANAGEMENT"
                 description="Create and manage exhibition stalls, sizes, and events"
@@ -421,26 +421,25 @@ const ManageStalls = () => {
                                                 </div>
                                             </td>
                                             <td className="py-4 px-4 text-center">
-                                                <span className={`inline-block px-3 py-1 rounded-[2px] text-[9px] font-bold uppercase tracking-widest shadow-sm ${
-                                                    stall.status === 'available' ? 'bg-green-500 text-white' :
-                                                    stall.status === 'booked' ? 'bg-red-500 text-white' :
-                                                    'bg-amber-500 text-white'
-                                                }`}>
+                                                <span className={`inline-block px-3 py-1 rounded-[2px] text-[9px] font-bold uppercase tracking-widest shadow-sm ${stall.status === 'available' ? 'bg-green-500 text-white' :
+                                                        stall.status === 'booked' ? 'bg-red-500 text-white' :
+                                                            'bg-amber-500 text-white'
+                                                    }`}>
                                                     {stall.status}
                                                 </span>
                                             </td>
                                             <td className="py-4 px-4">
                                                 <div className="flex items-center justify-center gap-3">
-                                                    <button 
-                                                        onClick={() => startEdit(stall)} 
-                                                        className="text-blue-600 hover:bg-blue-50 p-1.5 transition-all rounded-[2px] border border-blue-100 bg-blue-50/30" 
+                                                    <button
+                                                        onClick={() => startEdit(stall)}
+                                                        className="text-blue-600 hover:bg-blue-50 p-1.5 transition-all rounded-[2px] border border-blue-100 bg-blue-50/30"
                                                         title="Edit"
                                                     >
                                                         <Edit size={16} />
                                                     </button>
-                                                    <button 
-                                                        onClick={() => handleDelete(stall._id)} 
-                                                        className="text-red-600 hover:bg-red-50 p-1.5 transition-all rounded-[2px] border border-red-100 bg-red-50/30" 
+                                                    <button
+                                                        onClick={() => handleDelete(stall._id)}
+                                                        className="text-red-600 hover:bg-red-50 p-1.5 transition-all rounded-[2px] border border-red-100 bg-red-50/30"
                                                         title="Delete"
                                                     >
                                                         <Trash2 size={16} />
@@ -460,7 +459,7 @@ const ManageStalls = () => {
                                 <span className="mx-2 text-gray-300">|</span>
                                 SHOWING <span className="text-red-600">{currentItems.length}</span> OF <span className="text-red-600">{filteredStalls.length}</span> RECORDS
                             </div>
-                            
+
                             <div className="flex items-center gap-1">
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
@@ -469,7 +468,7 @@ const ManageStalls = () => {
                                 >
                                     PREV
                                 </button>
-                                
+
                                 {[...Array(totalPages)].map((_, i) => {
                                     const pageNum = i + 1;
                                     // Show first, last, and pages around current
@@ -478,11 +477,10 @@ const ManageStalls = () => {
                                             <button
                                                 key={pageNum}
                                                 onClick={() => setCurrentPage(pageNum)}
-                                                className={`px-3 py-1.5 border text-[10px] font-black transition-all rounded-[2px] ${
-                                                    currentPage === pageNum 
-                                                    ? 'bg-[#23471d] border-[#23471d] text-white shadow-md scale-110' 
-                                                    : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-100'
-                                                }`}
+                                                className={`px-3 py-1.5 border text-[10px] font-black transition-all rounded-[2px] ${currentPage === pageNum
+                                                        ? 'bg-[#23471d] border-[#23471d] text-white shadow-md scale-110'
+                                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-100'
+                                                    }`}
                                             >
                                                 {pageNum}
                                             </button>

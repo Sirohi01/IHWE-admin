@@ -131,7 +131,7 @@ export default function EPromotionPackages() {
     return (
         <div className="p-6 min-h-screen bg-[#f8f9fa] font-inter">
             {/* Header */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-8 mt-6">
                 <div>
                     <h1 className="text-2xl font-black text-[#23471d] uppercase tracking-tight">E-Promotion Packages</h1>
                     <p className="text-xs text-gray-400 mt-1">Configure and manage promotional tiers for the IHWE platform</p>

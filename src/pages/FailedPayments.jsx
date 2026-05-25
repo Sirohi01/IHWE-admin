@@ -72,7 +72,7 @@ const FailedPayments = () => {
     const fmt = (r, n) => `${r.participation?.currency === 'USD' ? '$' : '₹'} ${Number(n || 0).toLocaleString('en-IN')}`;
 
     return (
-        <div className="p-6 bg-white min-h-screen font-inter">
+        <div className="p-6 bg-white min-h-screen font-inter mt-6">
             <PageHeader
                 title="FAILED PAYMENTS"
                 description="Exhibitor registrations where online payment was attempted but failed"

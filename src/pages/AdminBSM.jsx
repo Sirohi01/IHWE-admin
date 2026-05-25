@@ -140,7 +140,7 @@ const AdminBSM = () => {
 
     return (
         <div className="p-6 bg-gray-50 min-h-screen">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-6 mt-6">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800">Buyer Seller Meet (BSM) Portal</h1>
                     <p className="text-sm text-gray-500">Manage matchmaking and meeting schedules</p>
@@ -211,7 +211,7 @@ const AdminBSM = () => {
                                         <div className="flex flex-col gap-2">
                                             {m.location && <span className="flex items-center gap-1 text-xs font-medium text-gray-600"><MapPin size={12} /> {m.location}</span>}
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${m.status === 'Approved' ? 'bg-green-100 text-green-700' :
-                                                    m.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                                                m.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
                                                 }`}>
                                                 {m.status}
                                             </span>

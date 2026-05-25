@@ -158,7 +158,7 @@ export default function ExhibitorProductsProfile() {
     ) : [];
 
     return (
-        <div className="p-6 max-w-[1600px] mx-auto space-y-6">
+        <div className="p-6 max-w-[1600px] mx-auto space-y-6 mt-6">
             <PageHeader
                 title="Seller Products Management"
                 subtitle="Manage product catalogs for sellers with active subscriptions."
@@ -197,9 +197,8 @@ export default function ExhibitorProductsProfile() {
                                         {exh.registrationId || exh.location}
                                     </p>
                                     {exh.planName && (
-                                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase mt-0.5 inline-block ${
-                                            selectedExhibitor?._id === exh._id ? 'bg-white/20 text-white' : 'bg-green-50 text-green-700'
-                                        }`}>
+                                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase mt-0.5 inline-block ${selectedExhibitor?._id === exh._id ? 'bg-white/20 text-white' : 'bg-green-50 text-green-700'
+                                            }`}>
                                             {exh.planName}
                                         </span>
                                     )}
