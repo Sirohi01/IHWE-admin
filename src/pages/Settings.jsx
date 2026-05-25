@@ -33,6 +33,10 @@ const Settings = () => {
     const [logo, setLogo] = useState(null);
     const [logoPreview, setLogoPreview] = useState('');
 
+    // Email Logo state (separate logo used only in email receipts)
+    const [emailLogo, setEmailLogo] = useState(null);
+    const [emailLogoPreview, setEmailLogoPreview] = useState('');
+
     // Brochure state
     const [brochureFile, setBrochureFile] = useState(null);
     const [brochurePreview, setBrochurePreview] = useState('');
@@ -158,6 +162,9 @@ const Settings = () => {
                 if (logo) {
                     setLogoPreview(`${SERVER_URL}${logo}`);
                 }
+                if (res.data.data.emailLogo) {
+                    setEmailLogoPreview(`${SERVER_URL}${res.data.data.emailLogo}`);
+                }
                 if (exhibitorBrochurePdf) {
                     setBrochurePreview(`${SERVER_URL}${exhibitorBrochurePdf}`);
                 }
@@ -250,6 +257,9 @@ const Settings = () => {
             if (logo) {
                 formData.append('logo', logo);
             }
+            if (emailLogo) {
+                formData.append('emailLogo', emailLogo);
+            }
             if (brochureFile) {
                 formData.append('exhibitorBrochurePdf', brochureFile);
             }
@@ -323,6 +333,10 @@ const Settings = () => {
                     setLogoPreview(`${SERVER_URL}${res.data.data.logo}`);
                     setLogo(null);
                 }
+                if (res.data.data.emailLogo) {
+                    setEmailLogoPreview(`${SERVER_URL}${res.data.data.emailLogo}`);
+                    setEmailLogo(null);
+                }
                 if (res.data.data.exhibitorBrochurePdf) {
                     setBrochurePreview(`${SERVER_URL}${res.data.data.exhibitorBrochurePdf}`);
                     setBrochureFile(null);
@@ -384,6 +398,18 @@ const Settings = () => {
             const reader = new FileReader();
             reader.onloadend = () => {
                 setLogoPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleEmailLogoUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setEmailLogo(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setEmailLogoPreview(reader.result);
             };
             reader.readAsDataURL(file);
         }
@@ -679,6 +705,38 @@ const Settings = () => {
                                         <div className="flex flex-col items-center py-4">
                                             <ImageIcon className="w-8 h-8 text-gray-300 mb-2" />
                                             <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Click to upload logo</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Email Logo Upload */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    Email Logo <span className="text-[10px] text-orange-500 normal-case font-normal ml-1">(Used in payment receipt emails)</span>
+                                </label>
+                                <div className="border border-dashed border-orange-300 p-4 text-center relative group min-h-[160px] flex items-center justify-center bg-orange-50/20 rounded-lg hover:border-orange-500 transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleEmailLogoUpload}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {emailLogoPreview ? (
+                                        <div className="relative w-full h-full flex flex-col items-center justify-center">
+                                            <div className="w-24 h-24 mb-2 p-2 border border-orange-100 bg-white rounded flex items-center justify-center">
+                                                <img src={emailLogoPreview.startsWith('http') || emailLogoPreview.startsWith('data:') || emailLogoPreview.startsWith('blob:') ? emailLogoPreview : `${SERVER_URL}${emailLogoPreview}`} alt="Email Logo Preview" className="max-w-full max-h-full object-contain" />
+                                            </div>
+                                            <p className="text-[9px] font-semibold text-orange-500 uppercase tracking-widest mt-1">Email Logo Set ✓</p>
+                                            <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded pointer-events-none">
+                                                <span className="text-xs font-bold text-gray-600 bg-white/90 px-2 py-1 rounded shadow-sm">Change Email Logo</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center py-4">
+                                            <Mail className="w-8 h-8 text-orange-200 mb-2" />
+                                            <p className="text-[10px] font-semibold text-orange-400 uppercase tracking-widest">Click to upload email logo</p>
+                                            <p className="text-[9px] text-gray-400 mt-1">Falls back to Website Logo if not set</p>
                                         </div>
                                     )}
                                 </div>
