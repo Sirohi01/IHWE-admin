@@ -52,7 +52,7 @@ const ACTIONS = [
   {
     key: "proposal",
     label: "Send Proposal",
-    route: "/estimates",
+    route: "/",
     iconBg: "bg-orange-50",
     icon: (
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -66,7 +66,7 @@ const ACTIONS = [
   {
     key: "brochure",
     label: "Share Brochure",
-    route: null,
+    route: "/",
     iconBg: "bg-amber-50",
     icon: (
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -79,7 +79,7 @@ const ACTIONS = [
   {
     key: "invoice",
     label: "Generate Invoice",
-    route: "/invoice",
+    route: "/",
     iconBg: "bg-blue-50",
     icon: (
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
