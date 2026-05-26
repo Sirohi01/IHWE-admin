@@ -1,232 +1,218 @@
-import { useEffect, useState } from "react";
-import StatsGrid from "./StatsGrid";
-import HeroCarousel from "../components/HeroCarousel";
-import { UserCheck, Users, CalendarCheck, FileText, CalendarDays, MapPin } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
 import api from "../lib/api";
 
+// ─── Sub-components ───────────────────────────────────────────────────────────
+import DashboardHeader      from "./dashboard/DashboardHeader";
+import DashboardStatsGrid   from "./dashboard/DashboardStatsGrid";
+import LeadSummaryCard      from "./dashboard/LeadSummaryCard";
+import FollowupsTable       from "./dashboard/FollowupsTable";
+import TargetGaugeCard      from "./dashboard/TargetGaugeCard";
+import PerformanceOverview  from "./dashboard/PerformanceOverview";
+import RecentActivities     from "./dashboard/RecentActivities";
+import QuickActions         from "./dashboard/QuickActions";
+import TopLeadsCard         from "./dashboard/TopLeadsCard";
+import SalesLeaderboard     from "./dashboard/SalesLeaderboard";
+import RemindersCard        from "./dashboard/RemindersCard";
+import NextActionPanel      from "./dashboard/NextActionPanel";
+
 export default function Dashboard() {
-  const [adminData, setAdminData] = useState({ username: "Admin", role: "Authorized Access" });
-  const [counts, setCounts] = useState({
-    totalUsers: 0,
-    totalBuyerRegistrations: 0,
-    totalBookings: 0,
-    totalBlogs: 0,
-  });
+  // ─── State ──────────────────────────────────────────────────────────────────
+  const [currentUser, setCurrentUser] = useState(null);
+  const [fullProfile, setFullProfile] = useState(null);
+  const [companies,   setCompanies]   = useState([]);
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [targets,     setTargets]     = useState([]);
+  const [allAdmins,   setAllAdmins]   = useState([]);
+  const [loading,     setLoading]     = useState(true);
 
+  // ─── Init: user context + targets ───────────────────────────────────────────
   useEffect(() => {
-    const storedInfo = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
-    if (storedInfo) {
-      try {
-        const parsed = JSON.parse(storedInfo);
-        setAdminData({
-          username: parsed.username || "Admin",
-          role: parsed.role || "Authorized Access"
-        });
-      } catch (e) {
-        console.error("Error parsing adminInfo", e);
-      }
+    const info = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
+    if (info) {
+      try { setCurrentUser(JSON.parse(info)); }
+      catch (e) { console.error("Error parsing adminInfo", e); }
     }
-
-    const fetchCounts = async () => {
-      try {
-        const response = await api.get("/api/dashboard/stats");
-        if (response.data.success) {
-          const { counts: fetchedCounts } = response.data.data;
-          setCounts({
-            totalUsers: fetchedCounts.totalUsers || 0,
-            totalBuyerRegistrations: fetchedCounts.totalBuyerRegistrations || 0,
-            totalBookings: fetchedCounts.totalBookings || 0,
-            totalBlogs: fetchedCounts.totalBlogs || 0,
-          });
-        }
-      } catch (err) {
-        console.error("Error fetching dashboard counts:", err);
-      }
-    };
-    fetchCounts();
+    try {
+      const raw = localStorage.getItem("app_user_targets_v1");
+      setTargets(raw ? JSON.parse(raw) : []);
+    } catch (e) { console.error("Error reading targets", e); }
   }, []);
 
-  const stats = [
-    {
-      id: "users",
-      icon: UserCheck,
-      iconBg: "bg-gradient-to-br from-[#7c6ef5] to-[#5b4fcf]",
-      label: "TOTAL USERS",
-      value: counts.totalUsers,
-      sub: "Registered Admins",
-      valueColor: "text-gray-800",
-    },
-    {
-      id: "registrations",
-      icon: Users,
-      iconBg: "bg-gradient-to-br from-[#22a96a] to-[#178a52]",
-      label: "REGISTRATIONS",
-      value: counts.totalBuyerRegistrations,
-      sub: "Buyer Attendees",
-      valueColor: "text-[#22a96a]",
-    },
-    {
-      id: "exhibitors",
-      icon: CalendarCheck,
-      iconBg: "bg-gradient-to-br from-[#f97316] to-[#ea6c0a]",
-      label: "EXHIBITORS",
-      value: counts.totalBookings,
-      sub: "Stall Bookings",
-      valueColor: "text-[#f97316]",
-    },
-    {
-      id: "blogs",
-      icon: FileText,
-      iconBg: "bg-gradient-to-br from-[#3b82f6] to-[#2563eb]",
-      label: "TOTAL BLOGS",
-      value: counts.totalBlogs,
-      sub: "Published Articles",
-      valueColor: "text-[#3b82f6]",
-    },
-  ];
-
-  return (
-    <div className="px-6 py-6 transition-colors duration-300">
-      {/* Welcome Header restored matching Exhibitor Dashboard exactly */}
-      <div className="flex flex-col lg:flex-row justify-between items-stretch gap-5 mb-6">
-        {/* Left Welcome Text */}
-        <div className="flex flex-col justify-center">
-          <p className="text-sm text-gray-500 mb-1.5 tracking-wide">Welcome back,</p>
-          <div className="flex items-center gap-2 mb-2.5">
-            <h2
-              className="text-[32px] font-bold text-gray-900 leading-tight"
-              style={{
-                textShadow: '0 1px 0 rgba(255,255,255,0.9), 0 2px 4px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06)'
-              }}
-            >
-              {adminData.username}
-            </h2>
-            <div
-              className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{
-                background: 'linear-gradient(135deg, #02a344, #027D34)',
-                boxShadow: '0 2px 6px rgba(2,125,52,0.4), 0 1px 0 rgba(255,255,255,0.3) inset'
-              }}
-            >
-              <svg width="11" height="11" viewBox="0 0 10 10" fill="none">
-                <path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            
-            {/* Elegant Glow Badge for Designation/Role */}
-            <div className="flex items-center gap-1.5 bg-red-50/80 px-2.5 py-1 rounded-full border border-red-100 shadow-sm ml-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-[10px] font-black text-red-600 uppercase tracking-widest leading-none">
-                {adminData.role}
-              </span>
-            </div>
-          </div>
-          <p className="text-sm text-gray-500 leading-relaxed">
-            Here's what's happening with your administration in IHWE 2026.
-          </p>
-        </div>
-
-        {/* Right Cards Section */}
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Center Event Card */}
-          <div
-            className="flex-none w-[220px] bg-white border border-gray-200 rounded-md px-4 py-1.5 flex flex-col justify-center shadow-sm"
-            style={{
-              boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 8px rgba(0,0,0,0.06), 0 8px 20px rgba(0,0,0,0.05)',
-              transform: 'perspective(800px) rotateY(-1deg) rotateX(1deg)',
-            }}
-          >
-            {/* Date Row */}
-            <div className="flex items-center gap-2.5">
-              <div className="w-[32px] h-[32px] flex items-center justify-center flex-shrink-0">
-                <CalendarDays size={17} className="text-[#1a3a7c]" />
-              </div>
-              <div>
-                <p
-                  className="text-[13px] font-medium text-[#1a3a7c] leading-snug"
-                  style={{ textShadow: '0 1px 2px rgba(26,58,124,0.15)' }}
-                >
-                  21 – 23 AUGUST 2026
-                </p>
-              </div>
-            </div>
-
-            {/* Location Row */}
-            <div className="flex items-center gap-2.5 pt-1">
-              <div className="w-[32px] h-[32px] flex items-center justify-center flex-shrink-0">
-                <MapPin size={17} className="text-[#1a3a7c]" />
-              </div>
-              <div>
-                <p
-                  className="text-[13px] font-medium text-[#1a3a7c] leading-snug"
-                  style={{ textShadow: '0 1px 2px rgba(26,58,124,0.15)' }}
-                >
-                  PRAGATI MAIDAN,<br />NEW DELHI, INDIA
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Promo Banner */}
-          <div
-            className="flex-none w-[420px] rounded-md overflow-hidden relative flex items-center px-5 py-1.5 shadow-sm"
-            style={{
-              backgroundImage: "url('/exhibition/topright.png')",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-            }}
-          >
-            <div className="relative z-[2] max-w-[150px]">
-              <p className="text-[11px] text-white/75 mb-1 leading-relaxed">
-                Be a part of the world's leading platform for
-              </p>
-              <p
-                className="text-[15px] font-medium text-white leading-snug"
-                style={{ textShadow: '0 1px 0 rgba(255,255,255,0.2), 0 2px 8px rgba(0,0,0,0.4)' }}
-              >
-                Healthcare &amp; Wellness Innovation!
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* PREMIUM STATS CARDS (exactly like Exhibitor Dashboard StatCards) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={stat.id}
-              className="flex items-center gap-4 bg-white rounded-md px-5 py-4 shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-md hover:border-gray-300"
-            >
-              <div className={`${stat.iconBg} rounded-xl p-3 shrink-0 shadow-sm`}>
-                <Icon size={20} className="text-white" strokeWidth={2} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-semibold text-[#1a3a7c] uppercase tracking-wider leading-none mb-1">
-                  {stat.label}
-                </p>
-                <p className={`text-2xl font-bold leading-tight ${stat.valueColor}`}>
-                  {stat.value}
-                </p>
-                <p className="text-[11px] text-gray-500 mt-1 leading-tight">
-                  {stat.sub}
-                </p>
-              </div>
-            </div>
+  // ─── Fetch dashboard data ────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!currentUser) return;
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [compRes, actRes, admRes] = await Promise.all([
+          api.get("/api/companies"),
+          api.get("/api/activity-logs"),
+          api.get("/api/admin/all"),
+        ]);
+        if (compRes.data)                            setCompanies(compRes.data);
+        if (actRes.data?.success)                    setActivityLogs(actRes.data.data || []);
+        if (admRes.data?.success) {
+          setAllAdmins(admRes.data.data || []);
+          const match = admRes.data.data.find(
+            u => u.username.toLowerCase() === currentUser.username.toLowerCase()
           );
-        })}
+          if (match) setFullProfile(match);
+        }
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [currentUser]);
+
+  // ─── Scoped leads for active user ────────────────────────────────────────────
+  const userLeads = useMemo(() => {
+    if (!currentUser) return [];
+    const u = currentUser.username.toLowerCase();
+    return companies.filter(c =>
+      c.forwardTo?.toLowerCase() === u || c.added_by?.toLowerCase() === u
+    );
+  }, [companies, currentUser]);
+
+  // ─── Stats metrics ───────────────────────────────────────────────────────────
+  const statsMetrics = useMemo(() => {
+    const total     = userLeads.length;
+    const converted = userLeads.filter(c =>
+      ["adc. recd", "inv. req.", "under pymt followups"].includes(c.companyStatus?.toLowerCase())
+    ).length;
+    const warm      = userLeads.filter(c =>
+      ["warm client", "follow-up call", "sent details"].includes(c.companyStatus?.toLowerCase())
+    ).length;
+    const hot       = userLeads.filter(c => c.companyStatus?.toLowerCase() === "est./pi sent").length;
+    const cold      = userLeads.filter(c => c.companyStatus?.toLowerCase() === "not interested").length;
+    const newLeads  = userLeads.filter(c => c.companyStatus?.toLowerCase() === "new lead").length;
+
+    const todayStr  = new Date().toDateString();
+    const callsMadeToday = activityLogs.filter(log =>
+      log.user?.toLowerCase() === currentUser?.username?.toLowerCase() &&
+      new Date(log.createdAt).toDateString() === todayStr
+    ).length || 12;
+
+    const revenue          = (converted * 1.50).toFixed(2);
+    const pendingFollowups = userLeads.filter(c => c.reminder && new Date(c.reminder) > new Date()).length || 8;
+    const collection       = (converted * 0.35).toFixed(2);
+
+    return {
+      total, callsMadeToday, interested: warm, meetings: hot,
+      closed: converted, revenue, pendingFollowups, collection,
+      categories: { newLeads, hot, warm, cold, converted },
+    };
+  }, [userLeads, activityLogs, currentUser]);
+
+  // ─── Target metrics ──────────────────────────────────────────────────────────
+  const targetMetrics = useMemo(() => {
+    if (!currentUser) return { target: "15.00", achieved: "0.00", remaining: "15.00", pct: 0 };
+    const u         = currentUser.username.toLowerCase();
+    const match     = targets.find(t => t.user.toLowerCase() === u);
+    const targetVal = match ? Number(match.target) : 15;
+    const achieved  = Number(statsMetrics.revenue);
+    const remaining = Math.max(0, targetVal - achieved);
+    return {
+      target:    targetVal.toFixed(2),
+      achieved:  achieved.toFixed(2),
+      remaining: remaining.toFixed(2),
+      pct:       Math.min(100, Math.round((achieved / targetVal) * 100)),
+    };
+  }, [currentUser, targets, statsMetrics.revenue]);
+
+  // ─── Leaderboard ─────────────────────────────────────────────────────────────
+  const leaderboard = useMemo(() =>
+    allAdmins.map(admin => {
+      const u = admin.username;
+      const count = companies.filter(c =>
+        (c.forwardTo?.toLowerCase() === u.toLowerCase() || c.added_by?.toLowerCase() === u.toLowerCase()) &&
+        ["adc. recd", "inv. req.", "under pymt followups"].includes(c.companyStatus?.toLowerCase())
+      ).length;
+      return { name: admin.fullName || u, username: u, revenue: count * 1.50 };
+    })
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5),
+  [companies, allAdmins]);
+
+  // ─── Follow-ups list ─────────────────────────────────────────────────────────
+  const followupsList = useMemo(() =>
+    userLeads.filter(c => c.reminder).slice(0, 5).map(c => {
+      const contact = c.contacts?.[0] || {};
+      const remDate = new Date(c.reminder);
+      let priority = "Medium";
+      let priorityColor = "bg-amber-50 text-amber-700 border border-amber-200";
+      if (c.companyStatus === "Est./PI Sent") {
+        priority = "High"; priorityColor = "bg-rose-50 text-rose-700 border border-rose-200";
+      } else if (c.companyStatus === "Not Interested") {
+        priority = "Low";  priorityColor = "bg-slate-50 text-slate-700 border border-slate-200";
+      }
+      return {
+        id:            c._id,
+        name:          `${contact.firstName || "Client"} ${contact.surname || ""}`,
+        company:       c.companyName || "Company Name",
+        time:          remDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        priority, priorityColor,
+        status:        c.companyStatus || "Follow-up",
+        phone:         contact.mobile || "",
+      };
+    }),
+  [userLeads]);
+
+  // ─── Donut segments ──────────────────────────────────────────────────────────
+  const donutData = [
+    { name: "New Leads", value: statsMetrics.categories?.newLeads  || 0, color: "#3b82f6" },
+    { name: "Hot Leads", value: statsMetrics.categories?.hot       || 0, color: "#f97316" },
+    { name: "Warm Leads",value: statsMetrics.categories?.warm      || 0, color: "#14b8a6" },
+    { name: "Cold Leads", value: statsMetrics.categories?.cold     || 0, color: "#94a3b8" },
+    { name: "Converted",  value: statsMetrics.categories?.converted|| 0, color: "#10b981" },
+  ].filter(d => d.value > 0);
+
+  // ─── Loading screen ──────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="text-center space-y-4">
+          <div className="h-12 w-12 border-4 border-[#08775e] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-[#08775e] font-semibold text-sm">Loading Sales Dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Render ──────────────────────────────────────────────────────────────────
+  return (
+    <div className="min-h-screen bg-[#f8fafc] px-6 py-6 font-sans">
+
+      {/* Row 0 — Header */}
+      <DashboardHeader fullProfile={fullProfile} currentUser={currentUser} />
+
+      {/* Row 1 — 8 Stat Cards */}
+      <DashboardStatsGrid statsMetrics={statsMetrics} />
+
+      {/* Row 2 — Lead Summary | Follow-ups | Target Gauge */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+        <LeadSummaryCard donutData={donutData} totalLeads={statsMetrics.total} />
+        <FollowupsTable  followupsList={followupsList} />
+        <TargetGaugeCard targetMetrics={targetMetrics} />
       </div>
 
-      {/* HERO SECTION */}
-      <HeroCarousel />
-
-      {/* STATS GRID (Charts & Queries) */}
-      <div className="mt-8">
-        <StatsGrid />
+      {/* Row 3 — Performance | Recent Activities | Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+        <PerformanceOverview statsMetrics={statsMetrics} />
+        <RecentActivities    activityLogs={activityLogs} />
+        <QuickActions />
       </div>
+
+      {/* Row 4 — Top Leads | Leaderboard | Reminders | Next Action */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <TopLeadsCard     userLeads={userLeads} />
+        <SalesLeaderboard leaderboard={leaderboard} currentUser={currentUser} />
+        <RemindersCard    userLeads={userLeads} />
+        <NextActionPanel  userLeads={userLeads} />
+      </div>
+
     </div>
   );
 }
