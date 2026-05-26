@@ -13,6 +13,8 @@ import {
   FileText,
   CalendarCheck,
   Image as ImageIcon,
+  CalendarDays,
+  MapPin,
 } from "lucide-react";
 
 import {
@@ -119,6 +121,22 @@ const Dashboard = () => {
   const [trendData, setTrendData] = useState([]);
   const [projectTypes, setProjectTypes] = useState([]);
   const [recentContacts, setRecentContacts] = useState([]);
+  const [adminData, setAdminData] = useState({ username: "Admin", role: "Authorized Access" });
+
+  useEffect(() => {
+    const storedInfo = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
+    if (storedInfo) {
+      try {
+        const parsed = JSON.parse(storedInfo);
+        setAdminData({
+          username: parsed.username || "Admin",
+          role: parsed.role || "Authorized Access"
+        });
+      } catch (e) {
+        console.error("Error parsing adminInfo", e);
+      }
+    }
+  }, []);
 
   const MONTH_LABELS = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -240,68 +258,8 @@ const Dashboard = () => {
 
   return (
     <>
-
-      {/* Background Image */}
-      {/* <div className="relative w-full h-64 overflow-hidden rounded">
-
-        <img
-          src="/dashbordBan.png"
-          alt="banner"
-          className="absolute inset-0 w-full h-full object-cover z-0"
-        />
-        <div className="absolute inset-0 bg-black/1 z-[1]" />
-        <div
-          className="absolute inset-0 opacity-[0.05] z-[2]"
-          style={{
-            backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
-            backgroundSize: '28px 28px'
-          }}
-        />
-        <div className="absolute left-0 top-6 bottom-6 w-1 rounded-full bg-gradient-to-b from-[#d26019]/0 via-[#d26019] to-[#d26019]/0 z-[2]" />
-        <div className="relative z-10 h-full flex items-center justify-between px-10">
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#d26019] animate-pulse" />
-              <p className="text-sm font-bold text-slate-200 uppercase tracking-[0.20em]">
-                9th Edition · IHWE Global · Admin Portal
-              </p>
-            </div>
-
-            <h1 className="text-3xl font-semibold text-white leading-tight tracking-tight mb-1.5">
-              Welcome Back! 👋
-            </h1>
-
-            <p className="text-lg font-medium text-slate-200">
-              Manage your platform, track registrations and monitor activity.
-            </p>
-          </div>
-
-          <div className="hidden md:flex flex-col items-end gap-3">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/10">
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[10px] font-black text-white uppercase tracking-widest">
-                System Online
-              </span>
-            </div>
-
-            <div className="px-4 py-2 rounded-xl bg-[#d26019]/20 border border-[#d26019]/10">
-              <p className="text-[10px] font-black text-[#d26019] uppercase tracking-widest">
-                {new Date().toLocaleDateString('en-IN', {
-                  weekday: 'long',
-                  day: '2-digit',
-                  month: 'long',
-                  year: 'numeric'
-                })}
-              </p>
-            </div>
-          </div>
-        </div>
-
-      </div> */}
-
-      <div className="w-full min-h-screen p-6">
+      <div className="w-full">
         <ToastContainer />
-
 
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
