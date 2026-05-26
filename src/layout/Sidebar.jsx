@@ -52,6 +52,23 @@ export default function Sidebar({
       .catch(err => console.error("Error fetching sidebar settings:", err));
   }, []);
 
+  const [fullProfile, setFullProfile] = useState(null);
+
+  useEffect(() => {
+    if (currentUser?.username) {
+      api.get("/api/admin/all")
+        .then(res => {
+          if (res.data.success) {
+            const match = res.data.data.find(u => u.username.toLowerCase() === currentUser.username.toLowerCase());
+            if (match) {
+              setFullProfile(match);
+            }
+          }
+        })
+        .catch(err => console.error("Error fetching full admin profile:", err));
+    }
+  }, [currentUser]);
+
   const [roleData, setRoleData] = useState(null);
 
   useEffect(() => {
@@ -459,18 +476,22 @@ export default function Sidebar({
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#06d6a0] bg-slate-800 flex items-center justify-center shadow-lg">
-                    <span className="text-white text-lg font-bold uppercase">
-                      {currentUser.username ? currentUser.username[0] : 'A'}
-                    </span>
+                    {fullProfile?.hodImage ? (
+                      <img src={fullProfile.hodImage} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white text-lg font-bold uppercase">
+                        {currentUser.username ? currentUser.username[0] : 'A'}
+                      </span>
+                    )}
                   </div>
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#061d49] animate-pulse" />
                 </div>
                 <div className="min-w-0">
                   <h4 className="text-[14px] font-bold text-white leading-tight truncate">
-                    {currentUser.username}
+                    {fullProfile?.fullName || currentUser.username}
                   </h4>
                   <p className="text-[11px] text-emerald-400 font-bold leading-tight mt-0.5 truncate uppercase tracking-wider">
-                    {currentUser.role}
+                    {fullProfile?.designation || currentUser.role}
                   </p>
                   <div className="flex items-center gap-1 mt-1">
                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
