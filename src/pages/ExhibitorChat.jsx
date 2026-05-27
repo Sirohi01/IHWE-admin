@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { io } from "socket.io-client";
 import { Send, MessageSquare, Search, ArrowLeft, Check, CheckCheck } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
@@ -23,6 +24,7 @@ function Ticks({ msg }) {
 }
 
 export default function ExhibitorChat() {
+    const location = useLocation();
     const [socket, setSocket] = useState(null);
     const [rooms, setRooms] = useState([]);
     const [activeRoom, setActiveRoom] = useState(null);
@@ -69,9 +71,8 @@ export default function ExhibitorChat() {
         });
 
         s.on("room_updated", (data) => {
-            // Safety: Only add/update if it's assigned to currently logged-in admin
-            // (Super admins are also filtered now as per user request)
-            if (data.spokenWith && data.spokenWith.toLowerCase() !== adminName.toLowerCase()) return;
+            // Safety: Only filter if NOT a super-admin
+            if (adminRole !== "super-admin" && data.spokenWith && data.spokenWith.toLowerCase() !== adminName.toLowerCase()) return;
 
             setRooms(prev => {
                 const exists = prev.find(r => r._id === data.roomId);
@@ -104,9 +105,22 @@ export default function ExhibitorChat() {
 
     useEffect(() => {
         api.get(`/api/chat/rooms?adminUsername=${encodeURIComponent(adminName)}&adminRole=${encodeURIComponent(adminRole)}`).then(res => {
-            if (res.data.success) setRooms(res.data.data);
+            if (res.data.success) {
+                const fetchedRooms = res.data.data;
+                setRooms(fetchedRooms);
+
+                // Auto-select room passed from dashboard click
+                const queryParams = new URLSearchParams(location.search);
+                const queryRoomId = queryParams.get("roomId");
+                const targetRoomId = location.state?.activeRoomId || queryRoomId;
+
+                if (targetRoomId) {
+                    const match = fetchedRooms.find(r => r._id === targetRoomId);
+                    if (match) setActiveRoom(match);
+                }
+            }
         });
-    }, [adminName]);
+    }, [adminName, location.state?.activeRoomId, location.search]);
 
     useEffect(() => {
         if (!activeRoom) return;
@@ -189,8 +203,11 @@ export default function ExhibitorChat() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between">
-                                        <p className={`text-[12px] truncate ${room.unreadAdmin > 0 ? "font-black text-slate-900" : "font-bold text-slate-700"}`}>
-                                            {room.exhibitorName || room.buyerName || "Unknown"}
+                                        <p className={`text-[12px] truncate ${room.unreadAdmin > 0 ? "font-black text-slate-900" : "font-bold text-slate-700"} flex items-center gap-1.5`}>
+                                            <span className={`text-[7px] px-1 py-0.5 rounded-sm font-black uppercase flex-shrink-0 leading-none ${room.isBuyer ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
+                                                {room.isBuyer ? 'Buyer' : 'Exhibitor'}
+                                            </span>
+                                            <span className="truncate">{room.exhibitorName || room.buyerName || "Unknown"}</span>
                                         </p>
                                         <p className="text-[9px] text-slate-400 flex-shrink-0 ml-1">{timeAgo(room.lastMessageAt)}</p>
                                     </div>
@@ -198,9 +215,6 @@ export default function ExhibitorChat() {
                                         {(room.registrationId || room.stallNo) && (
                                             <p className="text-[9px] text-[#23471d] font-bold">{room.registrationId}{room.stallNo ? ` · ${room.stallNo}` : ""}</p>
                                         )}
-                                        <span className={`text-[8px] px-1 rounded-sm font-black uppercase ${room.isBuyer ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
-                                            {room.isBuyer ? 'Buyer' : 'Exhibitor'}
-                                        </span>
                                     </div>
                                     {room.spokenWith && adminRole === 'super-admin' && (
                                         <p className="text-[9px] text-slate-400">RM: {room.spokenWith}</p>

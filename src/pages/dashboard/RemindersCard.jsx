@@ -2,7 +2,7 @@ export default function RemindersCard({ userLeads }) {
   const upcoming = userLeads.filter(c => c.reminder && new Date(c.reminder) > new Date()).slice(0, 3);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm lg:col-span-3 flex flex-col justify-between">
+    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm lg:col-span-3 flex flex-col justify-start">
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Reminders</h3>
         <span className="text-[10px] text-slate-400 font-bold uppercase">To-Do</span>

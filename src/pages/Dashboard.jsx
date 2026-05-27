@@ -196,7 +196,7 @@ export default function Dashboard() {
         <TopLeadsCard     userLeads={userLeads} />
         <SalesLeaderboard leaderboard={leaderboard} currentUser={currentUser} />
         <RemindersCard    userLeads={userLeads} />
-        <NextActionPanel  userLeads={userLeads} />
+        <NextActionPanel />
       </div>
 
     </div>

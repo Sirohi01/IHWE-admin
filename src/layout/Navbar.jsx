@@ -105,7 +105,7 @@ export default function Navbar({
     // Socket for chat notifications
     const adminInfo2 = JSON.parse(localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo") || "{}");
     const adminId = adminInfo2._id || adminInfo2.id || "admin";
-    const adminName2 = adminInfo2.username || "Admin";
+    const adminName2 = adminInfo2.fullName || adminInfo2.username || "Admin";
     const adminRole2 = adminInfo2.role || "";
 
     // Load existing unread count on mount
@@ -123,6 +123,7 @@ export default function Navbar({
 
     // room_updated fires for every new message — increment if exhibitor sent it
     s.on("room_updated", (data) => {
+      if (adminRole2 !== "super-admin" && data.spokenWith && data.spokenWith.toLowerCase() !== adminName2.toLowerCase()) return;
       if (data.lastSenderType === "exhibitor" && !window.location.pathname.includes("exhibitor-chat")) {
         setChatUnread(prev => prev + 1);
       }

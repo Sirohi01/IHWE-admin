@@ -5,7 +5,7 @@ export default function TopLeadsCard({ userLeads }) {
   const hotLeads = userLeads.filter(c => c.companyStatus?.toLowerCase() === "est./pi sent").slice(0, 3);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm lg:col-span-3 flex flex-col justify-between">
+    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm lg:col-span-3 flex flex-col justify-start">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Top Leads (High Potential)</h3>
         <Link to="/ihweClientData2026/hotClientList" className="text-[10px] font-black text-[#08775e] hover:underline uppercase">
