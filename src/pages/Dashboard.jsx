@@ -180,7 +180,7 @@ export default function Dashboard() {
     { name: "Warm Leads",value: statsMetrics.categories?.warm      || 0, color: "#ffa800" },
     { name: "Cold Leads", value: statsMetrics.categories?.cold     || 0, color: "#00a499" },
     { name: "Converted",  value: statsMetrics.categories?.converted|| 0, color: "#845ef7" },
-  ].filter(d => d.value > 0);
+  ];
 
   return (
     <div className="min-h-screen bg-[#f8fafc] px-3 sm:px-6 py-3 font-sans">

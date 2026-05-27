@@ -22,13 +22,14 @@ export default function LeadSummaryCard({ donutData, totalLeads }) {
             <circle cx="60" cy="60" r="46" fill="none" stroke="#f1f5f9" strokeWidth="16" />
             {/* Segments */}
             {(() => {
-              const total = donutData.reduce((s, d) => s + d.value, 0) || 1;
-              const gap = donutData.length > 1 ? 3 : 0;
-              let offset = 0;
-              if (donutData.length === 0) {
+              const total = donutData.reduce((s, d) => s + d.value, 0);
+              // If all zero, just show grey track
+              if (total === 0) {
                 return <circle cx="60" cy="60" r="46" fill="none" stroke="#e2e8f0" strokeWidth="16" />;
               }
-              return donutData.map((d, i) => {
+              const gap = 3;
+              let offset = 0;
+              return donutData.filter(d => d.value > 0).map((d, i) => {
                 const segLen = (d.value / total) * circumference - gap;
                 const dashArray = `${Math.max(segLen, 0)} ${circumference - Math.max(segLen, 0)}`;
                 const dashOffset = circumference * 0.25 - offset;
@@ -56,24 +57,20 @@ export default function LeadSummaryCard({ donutData, totalLeads }) {
 
         {/* Legend (Right) */}
         <div className="flex-1 space-y-2 text-[11px] font-semibold text-slate-600 pl-2 min-w-0">
-          {donutData.length === 0 ? (
-            <div className="text-slate-400 italic text-[10px] text-center py-4">No active leads data</div>
-          ) : (
-            donutData.map((d, i) => {
-              const pct = totalLeads > 0 ? Math.round((d.value / totalLeads) * 100) : 0;
-              return (
-                <div key={i} className="flex items-center gap-2 min-w-0">
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
-                  <div className="flex items-center justify-between w-full min-w-0 gap-1">
-                    <span className="text-slate-700 font-bold truncate text-[10px]">{d.name}</span>
-                    <span className="text-slate-500 font-bold flex-shrink-0 text-[10px]">
-                      {d.value} <span className="text-slate-400">({pct}%)</span>
-                    </span>
-                  </div>
+          {donutData.map((d, i) => {
+            const pct = totalLeads > 0 ? Math.round((d.value / totalLeads) * 100) : 0;
+            return (
+              <div key={i} className="flex items-center gap-2 min-w-0">
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
+                <div className="flex items-center justify-between w-full min-w-0 gap-1">
+                  <span className="text-slate-700 font-bold truncate text-[10px]">{d.name}</span>
+                  <span className="text-slate-500 font-bold flex-shrink-0 text-[10px]">
+                    {d.value} <span className="text-slate-400">({pct}%)</span>
+                  </span>
                 </div>
-              );
-            })
-          )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
