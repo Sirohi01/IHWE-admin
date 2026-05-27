@@ -74,7 +74,7 @@ export default function DashboardStatsGrid({ statsMetrics }) {
 
           {/* Text block */}
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold text-black leading-none mb-1 truncate">{s.label}</p>
+            <p className="text-[10px] font-semibold text-black leading-tight mb-2 truncate">{s.label}</p>
             <h3 className="text-[18px] font-semibold text-slate-900 leading-none mb-2">{s.value}</h3>
             <p className={`text-[10px] font-semibold leading-none flex items-center gap-0.5 ${s.up ? "text-emerald-500" : "text-red-500"}`}>
               {s.up ? "↑" : "↓"} {s.trend} vs yesterday
