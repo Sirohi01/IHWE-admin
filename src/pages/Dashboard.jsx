@@ -67,8 +67,14 @@ export default function Dashboard() {
     fetchData();
   }, [currentUser]);
 
-  // ─── Scoped leads — backend already filters by user (forwardTo OR added_by) ──
-  const userLeads = useMemo(() => companies, [companies]);
+  // ─── Scoped leads for active user ────────────────────────────────────────────
+  const userLeads = useMemo(() => {
+    if (!currentUser) return [];
+    const u = currentUser.username.toLowerCase();
+    return companies.filter(c =>
+      c.forwardTo?.toLowerCase() === u || c.added_by?.toLowerCase() === u
+    );
+  }, [companies, currentUser]);
 
   // ─── Stats metrics ───────────────────────────────────────────────────────────
   const statsMetrics = useMemo(() => {
