@@ -47,7 +47,7 @@ export default function Dashboard() {
         const [compRes, actRes, admRes] = await Promise.all([
           api.get("/api/companies"),
           api.get("/api/activity-logs"),
-          api.get("/api/admin/all"),
+          api.get("/api/admin/public-list"),
         ]);
         if (compRes.data)                            setCompanies(compRes.data);
         if (actRes.data?.success)                    setActivityLogs(actRes.data.data || []);
