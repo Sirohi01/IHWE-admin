@@ -2,7 +2,7 @@ import { Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function TopLeadsCard({ userLeads }) {
-  const hotLeads = userLeads.filter(c => c.companyStatus === "Est./PI Sent").slice(0, 3);
+  const hotLeads = userLeads.filter(c => c.companyStatus?.toLowerCase() === "est./pi sent").slice(0, 3);
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm lg:col-span-3 flex flex-col justify-between">

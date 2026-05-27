@@ -162,11 +162,11 @@ export default function Dashboard() {
 
   // ─── Donut segments ──────────────────────────────────────────────────────────
   const donutData = [
-    { name: "New Leads", value: statsMetrics.categories?.newLeads  || 0, color: "#3b82f6" },
-    { name: "Hot Leads", value: statsMetrics.categories?.hot       || 0, color: "#f97316" },
-    { name: "Warm Leads",value: statsMetrics.categories?.warm      || 0, color: "#14b8a6" },
-    { name: "Cold Leads", value: statsMetrics.categories?.cold     || 0, color: "#94a3b8" },
-    { name: "Converted",  value: statsMetrics.categories?.converted|| 0, color: "#10b981" },
+    { name: "New Leads", value: statsMetrics.categories?.newLeads  || 0, color: "#0b57d0" },
+    { name: "Hot Leads", value: statsMetrics.categories?.hot       || 0, color: "#f24259" },
+    { name: "Warm Leads",value: statsMetrics.categories?.warm      || 0, color: "#ffa800" },
+    { name: "Cold Leads", value: statsMetrics.categories?.cold     || 0, color: "#00a499" },
+    { name: "Converted",  value: statsMetrics.categories?.converted|| 0, color: "#845ef7" },
   ].filter(d => d.value > 0);
 
   return (

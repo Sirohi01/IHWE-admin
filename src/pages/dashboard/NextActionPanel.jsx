@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function NextActionPanel({ userLeads }) {
   const navigate = useNavigate();
-  const hotLeads = userLeads.filter(c => c.companyStatus === "Est./PI Sent");
+  const hotLeads = userLeads.filter(c => c.companyStatus?.toLowerCase() === "est./pi sent");
   const displayLeads = hotLeads.slice(0, 2);
 
   return (
