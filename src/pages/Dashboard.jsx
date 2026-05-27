@@ -169,24 +169,10 @@ export default function Dashboard() {
     { name: "Converted",  value: statsMetrics.categories?.converted|| 0, color: "#10b981" },
   ].filter(d => d.value > 0);
 
-  // ─── Loading screen ──────────────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="text-center space-y-4">
-          <div className="h-12 w-12 border-4 border-[#08775e] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-[#08775e] font-semibold text-sm">Loading Sales Dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // ─── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#f8fafc] px-6 py-6 font-sans">
-
       {/* Row 0 — Header */}
-      <DashboardHeader fullProfile={fullProfile} currentUser={currentUser} />
+      <DashboardHeader fullProfile={fullProfile} currentUser={currentUser} loading={loading} />
 
       {/* Row 1 — 8 Stat Cards */}
       <DashboardStatsGrid statsMetrics={statsMetrics} />

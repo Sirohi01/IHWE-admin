@@ -1,6 +1,6 @@
 import { CalendarDays, MapPin } from "lucide-react";
 
-export default function DashboardHeader({ fullProfile, currentUser }) {
+export default function DashboardHeader({ fullProfile, currentUser, loading }) {
   return (
     <div className="flex justify-between items-stretch gap-5 mb-3">
       {/* Left Welcome Info */}
@@ -27,9 +27,17 @@ export default function DashboardHeader({ fullProfile, currentUser }) {
             </svg>
           </div>
         </div>
-        <p className="text-lg text-gray-500 leading-relaxed">
-          Here's what's happening with your participation in IHWE 2026.
-        </p>
+        <div className="flex items-center gap-2.5 mt-0.5">
+          <p className="text-xs text-gray-500 leading-relaxed">
+            Here's what's happening with your participation in IHWE 2026.
+          </p>
+          {loading && (
+            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[#08775e] text-[9px] font-black uppercase tracking-wider animate-pulse shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+              Syncing Live Data...
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-4">
