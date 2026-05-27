@@ -18,7 +18,8 @@ export default function NextActionPanel() {
   const [rooms, setRooms] = useState([]);
   const [onlineExhibitors, setOnlineExhibitors] = useState(new Set());
 
-  const adminInfo = JSON.parse(localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo") || "{}");
+  const raw = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
+  const adminInfo = raw && raw !== "null" ? JSON.parse(raw) : {};
   const adminId = adminInfo._id || adminInfo.id || "admin";
   const adminName = adminInfo.fullName || adminInfo.username || "Admin";
   const adminRole = adminInfo.role || "";
@@ -71,7 +72,7 @@ export default function NextActionPanel() {
   const totalUnread = rooms.reduce((s, r) => s + (r.unreadAdmin || 0), 0);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm lg:col-span-3 flex flex-col justify-between hover:shadow-md transition-all duration-300 relative overflow-hidden group" style={{ minHeight: '235px' }}>
+    <div className="bg-white rounded-lg border border-slate-100 p-5 shadow-sm lg:col-span-3 col-span-1 flex flex-col justify-between hover:shadow-md transition-all duration-300 relative overflow-hidden group" style={{ minHeight: '235px' }}>
       {/* Decorative subtle header line */}
       <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#23471d] via-[#3a7031] to-[#d26019] opacity-70" />
 
@@ -181,3 +182,4 @@ export default function NextActionPanel() {
     </div>
   );
 }
+

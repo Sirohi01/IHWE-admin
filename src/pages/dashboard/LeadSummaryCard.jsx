@@ -4,7 +4,7 @@ export default function LeadSummaryCard({ donutData, totalLeads }) {
   const circumference = 2 * Math.PI * 46; // ≈ 289.03
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm lg:col-span-3 flex flex-col justify-between" style={{ minHeight: '260px' }}>
+    <div className="bg-white rounded-lg border border-slate-200 p-5 shadow-sm lg:col-span-3 col-span-1 flex flex-col justify-between" style={{ minHeight: '260px' }}>
       {/* Top Header */}
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-md font-black text-[#1e2e5c] tracking-tight">Lead Summary</h3>
@@ -55,21 +55,21 @@ export default function LeadSummaryCard({ donutData, totalLeads }) {
         </div>
 
         {/* Legend (Right) */}
-        <div className="flex-1 space-y-2.5 text-[11px] font-semibold text-slate-600 pl-2">
+        <div className="flex-1 space-y-2 text-[11px] font-semibold text-slate-600 pl-2 min-w-0">
           {donutData.length === 0 ? (
             <div className="text-slate-400 italic text-[10px] text-center py-4">No active leads data</div>
           ) : (
             donutData.map((d, i) => {
               const pct = totalLeads > 0 ? Math.round((d.value / totalLeads) * 100) : 0;
               return (
-                <div key={i} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
-                    <span className="text-slate-700 font-bold">{d.name}</span>
+                <div key={i} className="flex items-center gap-2 min-w-0">
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
+                  <div className="flex items-center justify-between w-full min-w-0 gap-1">
+                    <span className="text-slate-700 font-bold truncate text-[10px]">{d.name}</span>
+                    <span className="text-slate-500 font-bold flex-shrink-0 text-[10px]">
+                      {d.value} <span className="text-slate-400">({pct}%)</span>
+                    </span>
                   </div>
-                  <span className="text-slate-500 font-bold ml-auto">
-                    {d.value} <span className="text-slate-400 font-semibold">({pct}%)</span>
-                  </span>
                 </div>
               );
             })
@@ -89,3 +89,4 @@ export default function LeadSummaryCard({ donutData, totalLeads }) {
     </div>
   );
 }
+

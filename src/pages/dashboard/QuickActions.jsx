@@ -1,4 +1,7 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import CallingDialerModal from "./CallingDialerModal";
+import WhatsAppSenderModal from "./WhatsAppSenderModal";
 
 const ACTIONS = [
   {
@@ -39,7 +42,8 @@ const ACTIONS = [
   {
     key: "schedule",
     label: "Schedule Meeting",
-    route: "/reminder",
+    route: null,
+    disabled: true,
     iconBg: "bg-blue-50",
     icon: (
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -52,7 +56,8 @@ const ACTIONS = [
   {
     key: "proposal",
     label: "Send Proposal",
-    route: "/",
+    route: null,
+    disabled: true,
     iconBg: "bg-orange-50",
     icon: (
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -66,7 +71,8 @@ const ACTIONS = [
   {
     key: "brochure",
     label: "Share Brochure",
-    route: "/",
+    route: null,
+    disabled: true,
     iconBg: "bg-amber-50",
     icon: (
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -79,7 +85,8 @@ const ACTIONS = [
   {
     key: "invoice",
     label: "Generate Invoice",
-    route: "/",
+    route: null,
+    disabled: true,
     iconBg: "bg-blue-50",
     icon: (
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -90,14 +97,15 @@ const ACTIONS = [
     ),
   },
   {
-    key: "payLink",
-    label: "Share Payment Link",
-    route: null,
+    key: "callHistory",
+    label: "Call History",
+    route: "/call-history",
     iconBg: "bg-rose-50",
     icon: (
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.07 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+        <polyline points="1 4 1 10 7 10" />
+        <path d="M3.51 15a9 9 0 1 0 .49-3.51" />
       </svg>
     ),
   },
@@ -105,35 +113,66 @@ const ACTIONS = [
 
 export default function QuickActions() {
   const navigate = useNavigate();
+  const [isDialerOpen, setIsDialerOpen] = useState(false);
+  const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
 
   const handleClick = (action) => {
-    if (action.route) navigate(action.route);
-    else window.open("https://web.whatsapp.com", "_blank");
+    if (action.disabled) return;
+    if (action.key === "callNow") {
+      setIsDialerOpen(true);
+    } else if (action.key === "whatsapp") {
+      setIsWhatsAppOpen(true);
+    } else if (action.route) {
+      navigate(action.route);
+    }
   };
 
   return (
-    <div
-      className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm lg:col-span-3 flex flex-col"
-      style={{ minHeight: '240px', maxHeight: '240px' }}
-    >
-      <h3 className="text-lg font-black text-slate-800 mb-3 shrink-0">Quick Actions</h3>
+    <>
+      <div
+        className="bg-white rounded-lg border border-slate-200 p-5 shadow-sm lg:col-span-3 col-span-1 flex flex-col"
+        style={{ minHeight: '240px', maxHeight: '240px' }}
+      >
+        <h3 className="text-lg font-black text-slate-800 mb-3 shrink-0">Quick Actions</h3>
 
-      <div className="grid grid-cols-4 gap-2 flex-1 content-center">
-        {ACTIONS.map((action) => (
-          <button
-            key={action.key}
-            onClick={() => handleClick(action)}
-            className="flex flex-col items-center gap-1.5 p-2 rounded-xl hover:bg-slate-50 transition group"
-          >
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${action.iconBg} group-hover:scale-105 transition`}>
-              {action.icon}
-            </div>
-            <span className="text-[9px] font-semibold text-slate-600 text-center leading-tight">
-              {action.label}
-            </span>
-          </button>
-        ))}
+        <div className="grid grid-cols-4 gap-2 flex-1 content-center">
+          {ACTIONS.map((action) => (
+            <button
+              key={action.key}
+              onClick={() => handleClick(action)}
+              title={action.disabled ? "Coming soon" : action.label}
+              className={`flex flex-col items-center gap-1.5 p-2 rounded-xl transition group ${
+                action.disabled
+                  ? "opacity-40 cursor-not-allowed"
+                  : "hover:bg-slate-50"
+              }`}
+            >
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${action.iconBg} ${!action.disabled ? "group-hover:scale-105" : ""} transition`}>
+                {action.icon}
+              </div>
+              <span className="text-[9px] font-semibold text-slate-600 text-center leading-tight">
+                {action.label}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
+
+      {isDialerOpen && (
+        <CallingDialerModal 
+          onClose={() => setIsDialerOpen(false)} 
+          onCallLogged={() => {
+            // Refresh parent state or reload if needed
+          }}
+        />
+      )}
+
+      {isWhatsAppOpen && (
+        <WhatsAppSenderModal 
+          onClose={() => setIsWhatsAppOpen(false)} 
+        />
+      )}
+    </>
   );
 }
+

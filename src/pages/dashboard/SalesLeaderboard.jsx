@@ -1,6 +1,6 @@
 export default function SalesLeaderboard({ leaderboard, currentUser }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm lg:col-span-3 flex flex-col justify-start">
+    <div className="bg-white rounded-lg border border-slate-200 p-5 shadow-sm lg:col-span-3 col-span-1 flex flex-col justify-start">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Sales Leaderboard</h3>
         <span className="text-[10px] font-bold text-slate-400 uppercase">Team ranking</span>
@@ -37,3 +37,4 @@ export default function SalesLeaderboard({ leaderboard, currentUser }) {
     </div>
   );
 }
+

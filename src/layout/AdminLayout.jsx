@@ -18,11 +18,15 @@ export default function AdminLayout({ onLogout }) {
         setSidebarOpen={setSidebarOpen}
         handleLogout={onLogout}
         mobileMenuOpen={mobileMenuOpen}
-        setMobileMenuOpen={setMobileMenuOpen}
+        setMobileMenuOpen={(val) => {
+          // On mobile open, always expand sidebar to full width
+          if (val) setSidebarOpen(true);
+          setMobileMenuOpen(val);
+        }}
       />
 
       {/* PAGE BODY */}
-      <div className="flex pt-16 flex-1 ">
+      <div className="flex pt-[64px] flex-1 ">
         {/* SIDEBAR (fixed position) */}
         <Sidebar
           sidebarOpen={sidebarOpen}

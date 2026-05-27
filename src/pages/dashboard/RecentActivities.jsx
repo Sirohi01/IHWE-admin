@@ -29,7 +29,7 @@ const iconBg = [
 export default function RecentActivities({ activityLogs }) {
   return (
     <div
-      className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm lg:col-span-4 flex flex-col"
+      className="bg-white rounded-lg border border-slate-200 p-5 shadow-sm lg:col-span-4 col-span-1 flex flex-col"
       style={{ minHeight: '240px', maxHeight: '240px' }}
     >
       {/* Header */}
@@ -66,4 +66,5 @@ export default function RecentActivities({ activityLogs }) {
     </div>
   );
 }
+
 

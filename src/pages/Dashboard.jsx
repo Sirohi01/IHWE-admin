@@ -93,10 +93,10 @@ export default function Dashboard() {
     const callsMadeToday = activityLogs.filter(log =>
       log.user?.toLowerCase() === currentUser?.username?.toLowerCase() &&
       new Date(log.createdAt).toDateString() === todayStr
-    ).length || 12;
+    ).length;
 
     const revenue          = (converted * 1.50).toFixed(2);
-    const pendingFollowups = userLeads.filter(c => c.reminder && new Date(c.reminder) > new Date()).length || 8;
+    const pendingFollowups = userLeads.filter(c => c.reminder && new Date(c.reminder) > new Date()).length;
     const collection       = (converted * 0.35).toFixed(2);
 
     return {
@@ -142,20 +142,33 @@ export default function Dashboard() {
       const contact = c.contacts?.[0] || {};
       const remDate = new Date(c.reminder);
       let priority = "Medium";
-      let priorityColor = "bg-amber-50 text-amber-700 border border-amber-200";
+      let priorityColor = "bg-amber-50 text-amber-600 border border-amber-200";
       if (c.companyStatus === "Est./PI Sent") {
-        priority = "High"; priorityColor = "bg-rose-50 text-rose-700 border border-rose-200";
+        priority = "High"; priorityColor = "bg-rose-50 text-rose-600 border border-rose-200";
       } else if (c.companyStatus === "Not Interested") {
-        priority = "Low";  priorityColor = "bg-slate-50 text-slate-700 border border-slate-200";
+        priority = "Low";  priorityColor = "bg-emerald-50 text-emerald-600 border border-emerald-200";
       }
+      const lastConv = c.lastNote || c.companyStatus || "Follow-up scheduled";
+      const convTime = c.updatedAt
+        ? (() => {
+            const diff = Math.floor((Date.now() - new Date(c.updatedAt)) / 86400000);
+            if (diff === 0) return "Today";
+            if (diff === 1) return "Yesterday";
+            return `${diff} days ago`;
+          })()
+        : "";
+
       return {
         id:            c._id,
-        name:          `${contact.firstName || "Client"} ${contact.surname || ""}`,
+        name:          `${contact.firstName || "Client"} ${contact.surname || ""}`.trim(),
         company:       c.companyName || "Company Name",
         time:          remDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        date:          remDate.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
         priority, priorityColor,
         status:        c.companyStatus || "Follow-up",
         phone:         contact.mobile || "",
+        lastConv,
+        convTime,
       };
     }),
   [userLeads]);
@@ -170,7 +183,7 @@ export default function Dashboard() {
   ].filter(d => d.value > 0);
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] px-6 py-6 font-sans">
+    <div className="min-h-screen bg-[#f8fafc] px-3 sm:px-6 py-3 font-sans">
       {/* Row 0 — Header */}
       <DashboardHeader fullProfile={fullProfile} currentUser={currentUser} loading={loading} />
 
@@ -178,21 +191,21 @@ export default function Dashboard() {
       <DashboardStatsGrid statsMetrics={statsMetrics} />
 
       {/* Row 2 — Lead Summary | Follow-ups | Target Gauge */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 mb-3">
         <LeadSummaryCard donutData={donutData} totalLeads={statsMetrics.total} />
         <FollowupsTable  followupsList={followupsList} />
         <TargetGaugeCard targetMetrics={targetMetrics} />
       </div>
 
       {/* Row 3 — Performance | Recent Activities | Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 mb-3">
         <PerformanceOverview statsMetrics={statsMetrics} />
         <RecentActivities    activityLogs={activityLogs} />
         <QuickActions />
       </div>
 
       {/* Row 4 — Top Leads | Leaderboard | Reminders | Next Action */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" style={{ minHeight: '220px' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-stretch">
         <TopLeadsCard     userLeads={userLeads} />
         <SalesLeaderboard leaderboard={leaderboard} currentUser={currentUser} />
         <RemindersCard    userLeads={userLeads} />

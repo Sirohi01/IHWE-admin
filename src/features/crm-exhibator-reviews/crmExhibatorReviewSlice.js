@@ -180,10 +180,8 @@
 // export default crmExhibatorReviewSlice.reducer;
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "../../lib/api";
 import { createActivityLogThunk } from "../activityLog/activityLogSlice";
-
-const BASE_URL = import.meta.env.VITE_API_URL;
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
@@ -203,7 +201,7 @@ export const fetchReviews = createAsyncThunk(
   "reviews/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${BASE_URL}/api/crm-exhibator-reviews`);
+      const res = await api.get(`/api/crm-exhibator-reviews`);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -216,7 +214,7 @@ export const fetchReviewById = createAsyncThunk(
   "reviews/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${BASE_URL}/api/crm-exhibator-reviews/${id}`);
+      const res = await api.get(`/api/crm-exhibator-reviews/${id}`);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -229,8 +227,8 @@ export const createReview = createAsyncThunk(
   "reviews/create",
   async (reviewData, { dispatch, rejectWithValue }) => {
     try {
-      const res = await axios.post(
-        `${BASE_URL}/api/crm-exhibator-reviews`,
+      const res = await api.post(
+        `/api/crm-exhibator-reviews`,
         reviewData,
       );
 
@@ -265,8 +263,8 @@ export const updateReview = createAsyncThunk(
   "reviews/update",
   async ({ id, reviewData }, { dispatch, rejectWithValue }) => {
     try {
-      const res = await axios.put(
-        `${BASE_URL}/api/crm-exhibator-reviews/${id}`,
+      const res = await api.put(
+        `/api/crm-exhibator-reviews/${id}`,
         reviewData,
       );
 
@@ -304,7 +302,7 @@ export const deleteReview = createAsyncThunk(
       const { reviews } = getState().reviews;
       const reviewToDelete = reviews.find((r) => r._id === id);
 
-      const res = await axios.delete(`${BASE_URL}/api/crm-exhibator-reviews/${id}`);
+      const res = await api.delete(`/api/crm-exhibator-reviews/${id}`);
 
       const { userId, userName } = getUserInfo();
 

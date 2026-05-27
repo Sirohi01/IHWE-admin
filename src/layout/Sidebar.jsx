@@ -40,6 +40,16 @@ export default function Sidebar({
     }
   }, []);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileMenuOpen]);
+
   const [logo, setLogo] = useState("");
 
   useEffect(() => {
@@ -53,21 +63,52 @@ export default function Sidebar({
   }, []);
 
   const [fullProfile, setFullProfile] = useState(null);
+  const [allAdmins, setAllAdmins] = useState([]);
+  const [companies, setCompanies] = useState([]);
 
   useEffect(() => {
     if (currentUser?.username) {
+      // Full profile with hodImage — needs /api/admin/all
       api.get("/api/admin/all")
         .then(res => {
           if (res.data.success) {
             const match = res.data.data.find(u => u.username.toLowerCase() === currentUser.username.toLowerCase());
-            if (match) {
-              setFullProfile(match);
-            }
+            if (match) setFullProfile(match);
           }
         })
         .catch(err => console.error("Error fetching full admin profile:", err));
+
+      // Same API as Sales Leaderboard — for rank calculation only
+      api.get("/api/admin/public-list")
+        .then(res => {
+          if (res.data.success) setAllAdmins(res.data.data || []);
+        })
+        .catch(err => console.error("Error fetching admin public list:", err));
+
+      api.get("/api/companies")
+        .then(res => {
+          if (res.data) setCompanies(res.data);
+        })
+        .catch(err => console.error("Error fetching companies for rank:", err));
     }
   }, [currentUser]);
+
+  // ─── Real rank — same logic as Sales Leaderboard in Dashboard ────────────
+  const myRank = useMemo(() => {
+    if (!currentUser || allAdmins.length === 0) return null;
+    const CONVERTED = ["adc. recd", "inv. req.", "under pymt followups"];
+    const scores = allAdmins.map(admin => {
+      const u = admin.username.toLowerCase();
+      const count = companies.filter(c =>
+        (c.forwardTo?.toLowerCase() === u || c.added_by?.toLowerCase() === u) &&
+        CONVERTED.includes(c.companyStatus?.toLowerCase())
+      ).length;
+      return { username: u, revenue: count * 1.50 };
+    }).sort((a, b) => b.revenue - a.revenue);
+
+    const idx = scores.findIndex(s => s.username === currentUser.username.toLowerCase());
+    return idx >= 0 ? idx + 1 : null;
+  }, [currentUser, allAdmins, companies]);
 
   const [roleData, setRoleData] = useState(null);
 
@@ -391,13 +432,19 @@ export default function Sidebar({
       `}</style>
 
       {mobileMenuOpen && (
-        <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={() => setMobileMenuOpen(false)} />
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
+          onClick={() => setMobileMenuOpen(false)}
+        />
       )}
 
       <aside
         id="dh-sidebar"
         style={cssVars}
-        className={`fixed top-0 left-0 bottom-0 border-r border-white/10 shadow-xl z-50 transition-all duration-300 flex flex-col ${sidebarOpen ? "w-[240px]" : "w-[70px] -translate-x-full lg:translate-x-0"} ${mobileMenuOpen ? "translate-x-0" : ""}`}
+        className={`fixed top-0 left-0 bottom-0 border-r border-white/10 shadow-xl z-50 transition-all duration-300 flex flex-col
+          ${sidebarOpen ? "w-[240px]" : "w-[70px]"}
+          ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+        `}
       >
         {/* Background Layer mimicking Exhibitor Sidebar */}
         <div className="absolute inset-0 bg-[#061d49] z-0 pointer-events-none" />
@@ -507,7 +554,7 @@ export default function Sidebar({
                     Your Rank
                   </p>
                   <p className="text-xl font-black text-[#06d6a0] leading-none mb-1">
-                    # 1
+                    {myRank !== null ? `# ${myRank}` : "—"}
                   </p>
                   <p className="text-[9px] text-white/60 font-medium leading-none">
                     In Admin Team

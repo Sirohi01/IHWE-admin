@@ -5,83 +5,84 @@ export default function DashboardStatsGrid({ statsMetrics }) {
     {
       label: "Total Leads",
       value: statsMetrics.total,
-      icon: <Users size={16} strokeWidth={2.5} />,
-      iconBg: "bg-emerald-50 text-emerald-600",
-      trend: "▲ 12% vs yesterday",
-      trendColor: "text-emerald-500",
+      icon: <Users size={22} strokeWidth={1.8} />,
+      iconColor: "text-emerald-500",
+      trend: "12%", up: true,
     },
     {
-      label: "Calls Made",
+      label: "Calls Made Today",
       value: statsMetrics.callsMadeToday,
-      icon: <Phone size={16} strokeWidth={2.5} />,
-      iconBg: "bg-blue-50 text-blue-600",
-      trend: "▲ 14% vs yesterday",
-      trendColor: "text-emerald-500",
+      icon: <Phone size={22} strokeWidth={1.8} />,
+      iconColor: "text-blue-500",
+      trend: "14%", up: true,
     },
     {
-      label: "Interested",
+      label: "Interested Clients",
       value: statsMetrics.interested,
-      icon: <Flame size={16} strokeWidth={2.5} />,
-      iconBg: "bg-rose-50 text-rose-600",
-      trend: "▲ 9% vs yesterday",
-      trendColor: "text-emerald-500",
+      icon: <Flame size={22} strokeWidth={1.8} />,
+      iconColor: "text-rose-500",
+      trend: "9%", up: true,
     },
     {
-      label: "Meetings",
+      label: "Meetings Scheduled",
       value: statsMetrics.meetings,
-      icon: <Calendar size={16} strokeWidth={2.5} />,
-      iconBg: "bg-teal-50 text-teal-600",
-      trend: "▲ 6% vs yesterday",
-      trendColor: "text-emerald-500",
+      icon: <Calendar size={22} strokeWidth={1.8} />,
+      iconColor: "text-teal-500",
+      trend: "6%", up: true,
     },
     {
-      label: "Stalls Closed",
+      label: "Stall Bookings Closed",
       value: statsMetrics.closed,
-      icon: <ShoppingBag size={16} strokeWidth={2.5} />,
-      iconBg: "bg-amber-50 text-amber-600",
-      trend: "▲ 25% vs yesterday",
-      trendColor: "text-emerald-500",
+      icon: <ShoppingBag size={22} strokeWidth={1.8} />,
+      iconColor: "text-amber-500",
+      trend: "25%", up: true,
     },
     {
-      label: "Revenue",
+      label: "Revenue Generated",
       value: `₹ ${statsMetrics.revenue} L`,
-      icon: <IndianRupee size={16} strokeWidth={2.5} />,
-      iconBg: "bg-emerald-50 text-emerald-600",
-      trend: "▲ 18% vs yesterday",
-      trendColor: "text-emerald-500",
+      icon: <IndianRupee size={22} strokeWidth={1.8} />,
+      iconColor: "text-emerald-500",
+      trend: "18%", up: true,
     },
     {
-      label: "Pending F/U",
+      label: "Pending Follow-ups",
       value: statsMetrics.pendingFollowups,
-      icon: <Clock size={16} strokeWidth={2.5} />,
-      iconBg: "bg-pink-50 text-pink-600",
-      trend: "▼ 8% vs yesterday",
-      trendColor: "text-red-500",
+      icon: <Clock size={22} strokeWidth={1.8} />,
+      iconColor: "text-pink-500",
+      trend: "8%", up: false,
     },
     {
-      label: "Pending Pay",
+      label: "Collection Pending",
       value: `₹ ${statsMetrics.collection} L`,
-      icon: <Wallet size={16} strokeWidth={2.5} />,
-      iconBg: "bg-purple-50 text-purple-600",
-      trend: "▼ 5% vs yesterday",
-      trendColor: "text-red-500",
+      icon: <Wallet size={22} strokeWidth={1.8} />,
+      iconColor: "text-purple-500",
+      trend: "5%", up: false,
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2 mb-2">
       {stats.map((s, i) => (
-        <div key={i} className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition">
-          <div className="flex items-center gap-2 mb-3">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${s.iconBg}`}>
-              {s.icon}
-            </div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{s.label}</span>
+        <div
+          key={i}
+          className="bg-white rounded-lg border border-slate-100 px-3 py-4 shadow-sm hover:shadow-md transition flex items-center gap-3"
+        >
+          {/* Icon — left, colored, no background */}
+          <div className={`flex-shrink-0 ${s.iconColor}`}>
+            {s.icon}
           </div>
-          <h3 className="text-2xl font-black text-slate-900 leading-none">{s.value}</h3>
-          <span className={`text-[9px] font-bold block mt-1 ${s.trendColor}`}>{s.trend}</span>
+
+          {/* Text block */}
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold text-black leading-none mb-1 truncate">{s.label}</p>
+            <h3 className="text-[18px] font-semibold text-slate-900 leading-none mb-2">{s.value}</h3>
+            <p className={`text-[10px] font-semibold leading-none flex items-center gap-0.5 ${s.up ? "text-emerald-500" : "text-red-500"}`}>
+              {s.up ? "↑" : "↓"} {s.trend} vs yesterday
+            </p>
+          </div>
         </div>
       ))}
     </div>
   );
 }
+

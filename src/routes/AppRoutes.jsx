@@ -181,6 +181,7 @@ import BuyerList from "../pages/buyer/BuyerList";
 import ManageAccessories from "../pages/ManageAccessories";
 import AccessoryOrders from "../pages/AccessoryOrders";
 import ExhibitorChat from "../pages/ExhibitorChat";
+import CallHistory from "../pages/CallHistory";
 import AddUnit from "../pages/admin_management/AddUnit";
 import MarketingToolkitManage from "../pages/MarketingToolkitManage";
 import ExhibitorProductsProfile from "../pages/ExhibitorProductsProfile";
@@ -594,6 +595,7 @@ export default function AppRoutes() {
           <Route path="/stall-accessories" element={<ManageAccessories />} />
           <Route path="/accessory-orders" element={<AccessoryOrders />} />
           <Route path="/exhibitor-chat" element={<ExhibitorChat />} />
+          <Route path="/call-history" element={<CallHistory />} />
           <Route path="/e-promotion-packages" element={<EPromotionPackages />} />
           <Route path="/add-unit" element={<AddUnit />} />
           <Route path="/seller-subscription-plans" element={<SellerSubscriptionPlans />} />

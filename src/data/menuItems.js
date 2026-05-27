@@ -18,6 +18,7 @@ import {
   Rocket,
   MessageSquare,
   HelpCircle,
+  Phone,
   TrendingUp,
   Share2,
   List,
@@ -191,6 +192,12 @@ export const menuItems = [
     label: "Activity Logs",
     icon: Activity,
     path: "/activity-logs",
+  },
+  {
+    type: "item",
+    label: "Call History",
+    icon: Phone,
+    path: "/call-history",
   },
   {
     type: "item",
