@@ -206,7 +206,7 @@ export default function Dashboard() {
       </div>
 
       {/* Row 4 — Top Leads | Leaderboard | Reminders | Next Action */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" style={{ minHeight: '220px' }}>
         <TopLeadsCard     userLeads={userLeads} />
         <SalesLeaderboard leaderboard={leaderboard} currentUser={currentUser} />
         <RemindersCard    userLeads={userLeads} />

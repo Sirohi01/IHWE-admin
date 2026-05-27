@@ -13,7 +13,7 @@ export default function TopLeadsCard({ userLeads }) {
         </Link>
       </div>
 
-      <div className="space-y-3 flex-1">
+      <div className="space-y-3 flex-1 overflow-y-auto" style={{ maxHeight: '140px' }}>
         {hotLeads.length === 0 ? (
           <div className="text-center py-8 text-slate-400 italic">No high-potential hot leads assigned</div>
         ) : (

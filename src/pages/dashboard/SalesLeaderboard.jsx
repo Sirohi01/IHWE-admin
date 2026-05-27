@@ -6,7 +6,7 @@ export default function SalesLeaderboard({ leaderboard, currentUser }) {
         <span className="text-[10px] font-bold text-slate-400 uppercase">Team ranking</span>
       </div>
 
-      <div className="space-y-2 flex-1">
+      <div className="space-y-2 flex-1 overflow-y-auto" style={{ maxHeight: '140px' }}>
         {leaderboard.map((item, i) => {
           const isActiveUser = item.username.toLowerCase() === (currentUser?.username?.toLowerCase() || "");
           return (

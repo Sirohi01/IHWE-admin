@@ -8,7 +8,7 @@ export default function RemindersCard({ userLeads }) {
         <span className="text-[10px] text-slate-400 font-bold uppercase">To-Do</span>
       </div>
 
-      <div className="space-y-3 flex-1">
+      <div className="space-y-3 flex-1 overflow-y-auto" style={{ maxHeight: '140px' }}>
         {upcoming.length > 0 ? (
           upcoming.map((item, i) => (
             <div key={i} className="flex gap-2.5 text-xs">

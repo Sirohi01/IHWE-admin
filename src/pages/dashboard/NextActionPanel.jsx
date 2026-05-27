@@ -19,7 +19,7 @@ export default function NextActionPanel({ userLeads }) {
         </p>
       </div>
 
-      <div className="space-y-2 mt-4">
+      <div className="space-y-2 mt-4 overflow-y-auto" style={{ maxHeight: '120px' }}>
         {displayLeads.length > 0 ? (
           displayLeads.map((item, i) => (
             <div key={i} className="flex justify-between items-center bg-white/10 rounded-xl p-2.5 border border-white/5">

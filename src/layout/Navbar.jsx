@@ -16,7 +16,7 @@ import { motion } from "framer-motion";
 import Swal from "sweetalert2";
 import { logout } from "../utils/auth";
 import { io } from "socket.io-client";
-import { SERVER_URL } from "../lib/api";
+import api, { SERVER_URL } from "../lib/api";
 import { BiSupport } from "react-icons/bi";
 import { RiContactsLine, RiListCheck2, RiAlarmWarningLine, RiUserAddLine } from "react-icons/ri";
 import { IoNotificationsOutline } from "react-icons/io5";
@@ -47,6 +47,7 @@ export default function Navbar({
   const [chatUnread, setChatUnread] = useState(0);
   const navigate = useNavigate();
 
+  const [fullProfile, setFullProfile] = useState(null);
   const [adminData, setAdminData] = useState({ username: "Admin", role: "Authorized Access" });
   const [greeting, setGreeting] = useState({ text: "", icon: null, color: "" });
   // 🏢 Company redux data – robust extraction
@@ -130,6 +131,21 @@ export default function Navbar({
     return () => { clearInterval(interval); s.disconnect(); };
   }, []);
 
+  useEffect(() => {
+    if (adminData?.username && adminData.username !== "Admin") {
+      api.get("/api/admin/all")
+        .then(res => {
+          if (res.data.success) {
+            const match = res.data.data.find(u => u.username.toLowerCase() === adminData.username.toLowerCase());
+            if (match) {
+              setFullProfile(match);
+            }
+          }
+        })
+        .catch(err => console.error("Error fetching full admin profile in Navbar:", err));
+    }
+  }, [adminData]);
+
   // 🔥 PROPER LOGOUT WITH SWEETALERT
   const handleLogout = async () => {
     const result = await Swal.fire({
@@ -159,19 +175,19 @@ export default function Navbar({
   };
 
   return (
-    <nav className={`fixed top-0 right-0 z-50 h-22 bg-white/80 backdrop-blur-lg border-b border-slate-200/60 shadow-sm transition-all duration-300 ${sidebarOpen ? 'left-[240px]' : 'left-[70px]'}`}>
+    <nav className={`fixed top-0 right-0 z-50 h-16 bg-gradient-to-r from-[#051c47] via-[#082b6b] to-[#051c47] border-b border-blue-900/50 shadow-[0_4px_20px_rgba(0,0,0,0.15)] transition-all duration-300 ${sidebarOpen ? 'left-[240px]' : 'left-[70px]'}`}>
       <div className="flex items-center justify-between h-full px-4 sm:px-6">
 
         {/* LEFT – MOBILE TOGGLE & GREETING */}
         <div className="flex items-center gap-4">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-lg hover:bg-slate-100 transition-all duration-200"
+            className="lg:hidden p-2 rounded-lg hover:bg-white/10 text-white transition-all duration-200"
           >
             {mobileMenuOpen ? (
-              <X size={20} className="text-slate-700" />
+              <X size={20} />
             ) : (
-              <Menu size={20} className="text-slate-700" />
+              <Menu size={20} />
             )}
           </button>
 
@@ -180,30 +196,22 @@ export default function Navbar({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="hidden sm:flex items-center gap-3 bg-slate-50/50 px-4 py-2 rounded-xl border border-slate-200/60 group transition-all duration-300 hover:bg-white hover:border-blue-600/30 hover:shadow-[0_2px_10px_-3px_rgba(30,58,138,0.1)]"
+            className="hidden sm:flex items-center gap-3 bg-white/5 px-4 py-2 rounded-xl border border-white/10 group transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
           >
             {/* Icon Circle */}
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white border border-slate-100 shadow-sm transition-all duration-500 group-hover:scale-110">
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 border border-white/10 shadow-sm transition-all duration-500 group-hover:scale-110">
               {greeting.icon}
             </div>
 
             {/* Text Content */}
             <div className="flex flex-col leading-tight">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[12px] font-medium text-slate-500 tracking-tight">
-                  {greeting.text},
-                </span>
-                <span className="text-[12px] font-bold text-[#23471d] tracking-tight">
-                  {adminData.username}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 mt-0.5">
+              <div className="flex items-center gap-2">
                 <div className="relative">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                  <div className="absolute inset-0 w-1.5 h-1.5 rounded-full bg-green-500 animate-ping opacity-75" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                  <div className="absolute inset-0 w-1.5 h-1.5 rounded-full bg-green-400 animate-ping opacity-75" />
                 </div>
-                <span className="text-[9px] font-bold text-red-600 uppercase tracking-widest">
-                  {adminData.role}
+                <span className="text-[12px] font-black text-white uppercase tracking-widest">
+                  User Interface
                 </span>
               </div>
             </div>
@@ -213,21 +221,21 @@ export default function Navbar({
         {/* RIGHT – ICONS */}
         <div className="flex items-center gap-2 sm:gap-4 relative">
 
-          {/* UTILITY ICONS GROUP */}
-          <div className="flex items-center gap-8 relative px-3 py-1.5 bg-slate-50/50 rounded-2xl border border-slate-200/40 shadow-inner">
+          {/* UTILITY ICONS GROUP (Premium Floating White Pill) */}
+          <div className="flex items-center gap-3.5 sm:gap-4 relative px-4 py-2 bg-white rounded-full border border-white/20 shadow-[0_4px_25px_rgba(0,0,0,0.18)]">
 
             {/* Live Chat */}
             <motion.div
-              whileHover={{ scale: 1.1, y: -2 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05, y: -1 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => { navigate("/exhibitor-chat"); setChatUnread(0); }}
-              className="group relative flex items-center justify-center w-10 h-10 bg-white rounded-xl cursor-pointer border border-slate-200/60 hover:border-blue-500/30 transition-all duration-300 shadow-sm hover:shadow-md"
+              className="group relative flex items-center justify-center w-10 h-10 bg-white rounded-xl cursor-pointer border border-slate-100 hover:bg-slate-50 transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-md"
             >
-              <BiSupport size={18} className="text-[#23471d] group-hover:text-blue-600 transition-colors duration-300" />
+              <BiSupport size={19} className="text-[#23471d] transition-colors duration-300" />
               {chatUnread > 0 && (
                 <div className="absolute -top-1.5 -right-1.5">
                   <div className="absolute inset-0 rounded-full bg-[#d26019] animate-ping opacity-25" />
-                  <span className="relative bg-[#d26019] text-white text-[9px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm">
+                  <span className="relative bg-[#d26019] text-white text-[9.5px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm">
                     {chatUnread > 99 ? "99+" : chatUnread}
                   </span>
                 </div>
@@ -241,13 +249,13 @@ export default function Navbar({
 
             {/* Reminder List */}
             <motion.div
-              whileHover={{ scale: 1.1, y: -2 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05, y: -1 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/reminder')}
-              className="group relative hidden sm:flex items-center justify-center w-10 h-10 bg-white rounded-xl cursor-pointer border border-slate-200/60 hover:border-amber-500/30 transition-all duration-300 shadow-sm hover:shadow-md"
+              className="group relative hidden sm:flex items-center justify-center w-10 h-10 bg-white rounded-xl cursor-pointer border border-slate-100 hover:bg-slate-50 transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-md"
             >
-              <RiAlarmWarningLine size={18} className="text-[#23471d] group-hover:text-amber-600 transition-colors duration-300" />
-              <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm">
+              <RiAlarmWarningLine size={19} className="text-[#23471d] transition-colors duration-300" />
+              <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9.5px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm">
                 1
               </span>
               <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1.5 bg-slate-900/90 backdrop-blur-md text-white text-[10px] font-bold rounded-lg opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-50 shadow-xl border border-white/10 whitespace-nowrap">
@@ -258,13 +266,13 @@ export default function Navbar({
 
             {/* Notification */}
             <motion.div
-              whileHover={{ scale: 1.1, y: -2 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05, y: -1 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/notification')}
-              className="group relative flex items-center justify-center w-10 h-10 bg-white rounded-xl cursor-pointer border border-slate-200/60 hover:border-red-500/30 transition-all duration-300 shadow-sm hover:shadow-md"
+              className="group relative flex items-center justify-center w-10 h-10 bg-white rounded-xl cursor-pointer border border-slate-100 hover:bg-slate-50 transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-md"
             >
-              <IoNotificationsOutline size={18} className="text-[#23471d] group-hover:text-red-500 transition-colors duration-300" />
-              <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm">
+              <IoNotificationsOutline size={19} className="text-[#23471d] transition-colors duration-300" />
+              <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9.5px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm">
                 2
               </span>
               <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1.5 bg-slate-900/90 backdrop-blur-md text-white text-[10px] font-bold rounded-lg opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-50 shadow-xl border border-white/10 whitespace-nowrap">
@@ -275,13 +283,13 @@ export default function Navbar({
 
             {/* To-Do List */}
             <motion.div
-              whileHover={{ scale: 1.1, y: -2 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05, y: -1 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/to-do-list')}
-              className="group relative hidden md:flex items-center justify-center w-10 h-10 bg-white rounded-xl cursor-pointer border border-slate-200/60 hover:border-emerald-500/30 transition-all duration-300 shadow-sm hover:shadow-md"
+              className="group relative hidden md:flex items-center justify-center w-10 h-10 bg-white rounded-xl cursor-pointer border border-slate-100 hover:bg-slate-50 transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-md"
             >
-              <RiListCheck2 size={18} className="text-[#23471d] group-hover:text-emerald-600 transition-colors duration-300" />
-              <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm">
+              <RiListCheck2 size={19} className="text-[#23471d] transition-colors duration-300" />
+              <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9.5px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm">
                 4
               </span>
               <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1.5 bg-slate-900/90 backdrop-blur-md text-white text-[10px] font-bold rounded-lg opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-50 shadow-xl border border-white/10 whitespace-nowrap">
@@ -292,14 +300,14 @@ export default function Navbar({
 
             {/* New Leads */}
             <motion.div
-              whileHover={{ scale: 1.1, y: -2 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05, y: -1 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/ihweClientData2026/newLeadList')}
-              className="group relative hidden lg:flex items-center justify-center w-10 h-10 bg-white rounded-xl cursor-pointer border border-slate-200/60 hover:border-indigo-500/30 transition-all duration-300 shadow-sm hover:shadow-md"
+              className="group relative hidden lg:flex items-center justify-center w-10 h-10 bg-white rounded-xl cursor-pointer border border-slate-100 hover:bg-slate-50 transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-md"
             >
-              <RiUserAddLine size={18} className="text-[#23471d] group-hover:text-indigo-600 transition-colors duration-300" />
+              <RiUserAddLine size={19} className="text-[#23471d] transition-colors duration-300" />
               {newLeadsCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm">
+                <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9.5px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm">
                   {newLeadsCount > 99 ? '99+' : newLeadsCount}
                 </span>
               )}
@@ -311,21 +319,29 @@ export default function Navbar({
 
           </div>
 
-          {/* Profile with Lottie Animation */}
+          {/* User Profile Button matching Exhibitor style */}
           <button
             onClick={() => {
               setProfileOpen(!profileOpen);
               setActiveTitle(null);
             }}
-            className="relative flex items-center gap-2 p-1.5 rounded-full hover:bg-[#23471d]/10 transition-all duration-200 hover:scale-105"
+            className="flex items-center gap-2 pl-2 pr-1.5 py-1 bg-white/5 border border-white/10 rounded-full hover:shadow-md hover:bg-white/10 hover:border-white/20 transition-all duration-300 shadow-sm cursor-pointer"
+            id="user-profile-trigger"
           >
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-[#23471d] flex-shrink-0 flex items-center justify-center shadow-md hover:shadow-lg transition-shadow duration-200">
-              <DotLottieReact
-                src="https://lottie.host/58dbdff1-ac25-407c-bb37-5a283535e9a2/S1kH2ZgNwu.lottie"
-                loop
-                autoplay
-                style={{ width: '100%', height: '100%', transform: 'scale(1.2)' }}
-              />
+            <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-[#06d6a0] bg-slate-800 flex items-center justify-center shadow-sm">
+              {fullProfile?.hodImage ? (
+                <img src={fullProfile.hodImage} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-[11px] font-black uppercase">
+                  {adminData.username ? adminData.username[0] : 'A'}
+                </div>
+              )}
+            </div>
+            <span className="text-[10px] font-extrabold text-slate-200 uppercase tracking-widest hidden md:block max-w-[120px] truncate">
+              {fullProfile?.fullName || adminData.username}
+            </span>
+            <div className="p-0.5 text-slate-400">
+              <Menu size={13} className="text-slate-300" />
             </div>
           </button>
 
@@ -338,9 +354,13 @@ export default function Navbar({
               className="whitespace-nowrap absolute right-0 top-16 w-56 bg-white border border-slate-200 shadow-2xl rounded-xl overflow-hidden"
             >
               {/* Header */}
-              <div className="px-4 py-3 bg-gradient-to-r from-slate-50 to-white border-b border-slate-200">
-                <p className="text-xs text-slate-500 font-medium">Admin Panel</p>
-                <p className="text-sm font-bold text-slate-800">{adminData.username}</p>
+              <div className="px-4 py-3 border-b border-slate-50 bg-slate-50/50">
+                <p className="text-[11px] font-black text-slate-800 uppercase tracking-widest leading-none mb-1">
+                  {fullProfile?.fullName || adminData.username}
+                </p>
+                <p className="text-[9px] font-bold text-slate-400 truncate">
+                  {fullProfile?.email || 'admin@ihwe.in'}
+                </p>
               </div>
 
               {/* Manage Admin Users */}
