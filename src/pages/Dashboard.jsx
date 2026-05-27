@@ -45,7 +45,7 @@ export default function Dashboard() {
       try {
         setLoading(true);
         const [compRes, actRes, admRes] = await Promise.all([
-          api.get("/api/companies"),
+          api.get(`/api/companies?dashboard=true&username=${encodeURIComponent(currentUser.username)}&role=${encodeURIComponent(currentUser.role || '')}`),
           api.get("/api/activity-logs"),
           api.get("/api/admin/public-list"),
         ]);
@@ -67,14 +67,8 @@ export default function Dashboard() {
     fetchData();
   }, [currentUser]);
 
-  // ─── Scoped leads for active user ────────────────────────────────────────────
-  const userLeads = useMemo(() => {
-    if (!currentUser) return [];
-    const u = currentUser.username.toLowerCase();
-    return companies.filter(c =>
-      c.forwardTo?.toLowerCase() === u || c.added_by?.toLowerCase() === u
-    );
-  }, [companies, currentUser]);
+  // ─── Scoped leads — backend already filters by user (forwardTo OR added_by) ──
+  const userLeads = useMemo(() => companies, [companies]);
 
   // ─── Stats metrics ───────────────────────────────────────────────────────────
   const statsMetrics = useMemo(() => {
