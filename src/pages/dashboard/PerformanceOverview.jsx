@@ -20,9 +20,9 @@ export default function PerformanceOverview({ statsMetrics }) {
         <h3 className="text-base font-bold text-slate-800">Daily Performance Overview</h3>
         <button className="flex items-center gap-1.5 text-[12px] font-medium text-slate-600 border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-slate-50 transition">
           Today
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          {/* <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
             <path d="M2 3.5L5 6.5L8 3.5" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+          </svg> */}
         </button>
       </div>
 
