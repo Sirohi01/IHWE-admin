@@ -144,12 +144,13 @@ export default function WhatsAppSenderModal({ onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm"
+      style={{ paddingTop: '72px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}
       onClick={onClose}
     >
       <div
         className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col relative animate-in fade-in zoom-in-95 duration-200"
-        style={{ height: '640px' }}
+        style={{ height: '100%', maxHeight: '640px' }}
         onClick={e => e.stopPropagation()}
       >
 

@@ -272,8 +272,11 @@ export default function CallingDialerModal({ onClose, onCallLogged }) {
   const filteredList = getFiltered();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-100 overflow-hidden flex flex-col relative animate-in fade-in zoom-in-95 duration-200" style={{ height: '520px' }}>
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm"
+      style={{ paddingTop: '72px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}
+    >
+      <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-100 overflow-hidden flex flex-col relative animate-in fade-in zoom-in-95 duration-200" style={{ height: '100%', maxHeight: '520px' }}>
 
         {/* Dynamic header depending on state */}
         {callState === "select" && (
