@@ -12,7 +12,7 @@ export default function SalesLeaderboard({ leaderboard, currentUser }) {
           return (
             <div
               key={i}
-              className={`flex items-center justify-between p-2 rounded-xl border ${
+              className={`flex items-center justify-between p-3 rounded-xl border ${
                 isActiveUser
                   ? "bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm"
                   : "bg-white border-slate-100 text-slate-800"
@@ -22,10 +22,14 @@ export default function SalesLeaderboard({ leaderboard, currentUser }) {
                 <span className={`text-[11px] font-black w-4 text-center ${i === 0 ? 'text-amber-500' : 'text-slate-400'}`}>
                   {i + 1}
                 </span>
-                <div className={`w-6 h-6 rounded-full overflow-hidden flex items-center justify-center ${
-                  isActiveUser ? 'bg-emerald-200 border-2 border-emerald-400' : 'bg-slate-100'
+                <div className={`w-8 h-8 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 ${
+                  isActiveUser ? 'border-2 border-emerald-400' : 'bg-slate-100'
                 }`}>
-                  <span className="text-[9px] font-bold uppercase">{item.name?.[0] || 'S'}</span>
+                  {item.hodImage ? (
+                    <img src={item.hodImage} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-[10px] font-bold uppercase">{item.name?.[0] || 'S'}</span>
+                  )}
                 </div>
                 <span className="text-[11px] font-bold truncate max-w-[90px]">{item.name}</span>
               </div>
