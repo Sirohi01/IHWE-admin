@@ -29,26 +29,26 @@ const iconBg = [
 export default function RecentActivities({ activityLogs }) {
   return (
     <div
-      className="bg-white rounded-lg border border-slate-200 p-5 shadow-sm lg:col-span-4 col-span-1 flex flex-col"
-      style={{ minHeight: '240px', maxHeight: '240px' }}
+      className="bg-white rounded-lg border border-slate-200 p-2 shadow-sm lg:col-span-4 col-span-1 flex flex-col"
+      
     >
       {/* Header */}
-      <div className="flex justify-between items-center mb-4 shrink-0">
-        <h3 className="text-lg font-black text-slate-800">Recent Activities</h3>
+      <div className="flex justify-between items-center mb-2 shrink-0">
+        <h3 className="text-base font-black text-slate-800">Recent Activities</h3>
         <button className="text-[11px] font-bold text-[#08775e] hover:underline">View All</button>
       </div>
 
       {/* Scrollable list — fills remaining space and scrolls */}
       <div
-        className="flex-1 overflow-y-auto space-y-3 pr-1"
-        style={{ scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}
+        className="flex-1 overflow-y-auto space-y-1.5 pr-1"
+        style={{ maxHeight: "100px", scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}
       >
         {activityLogs.length === 0 ? (
-          <p className="text-slate-400 italic text-center py-6 text-xs">No recent activities found</p>
+          <p className="text-slate-400 italic text-center py-2 text-xs">No recent activities found</p>
         ) : (
           activityLogs.map((log, i) => (
             <div key={i} className="flex items-start gap-3">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${iconBg[i % iconBg.length]}`}>
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${iconBg[i % iconBg.length]}`}>
                 <ActivityIcon message={log.details || log.message} />
               </div>
               <div className="flex-1 min-w-0">

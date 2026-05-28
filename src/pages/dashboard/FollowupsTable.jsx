@@ -28,9 +28,9 @@ export default function FollowupsTable({ followupsList }) {
   const navigate = useNavigate();
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-5 shadow-sm lg:col-span-6 col-span-1" style={{ maxHeight: '300px' }}>
+    <div className="bg-white rounded-lg border border-slate-200 p-2.5 shadow-sm lg:col-span-6 col-span-1">
       {/* Header */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-2 flex-shrink-0">
         <h3 className="text-base font-bold text-slate-800">Today's Follow-ups</h3>
         <Link to="/ihweClientData2026/warmClientList" className="text-sm font-semibold text-blue-500 hover:underline">
           View All
@@ -38,98 +38,98 @@ export default function FollowupsTable({ followupsList }) {
       </div>
 
       <div className="overflow-x-auto -mx-1 px-1">
-        <div className="overflow-y-auto" style={{ maxHeight: '220px' }}>
-        <table className="w-full text-left">
-          <thead className="sticky top-0 bg-white z-10">
-            <tr className="border-b border-slate-100">
-              <th className="pb-3 text-[12px] font-semibold text-slate-500">Client Name</th>
-              <th className="pb-3 text-[12px] font-semibold text-slate-500">Company</th>
-              <th className="pb-3 text-[12px] font-semibold text-slate-500">Time</th>
-              <th className="pb-3 text-[12px] font-semibold text-slate-500">Priority</th>
-              <th className="pb-3 text-[12px] font-semibold text-slate-500">Last Conversation</th>
-              <th className="pb-3 text-[12px] font-semibold text-slate-500 text-center">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {followupsList.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="py-10 text-center text-slate-400 italic text-sm">
-                  No scheduled follow-ups for today
-                </td>
+        <div className="overflow-y-auto pr-1" style={{ maxHeight: '140px', scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}>
+          <table className="w-full text-left">
+            <thead className="sticky top-0 bg-white z-10">
+              <tr className="border-b border-slate-100">
+                <th className="pb-1.5 text-[12px] font-semibold text-slate-500">Client Name</th>
+                <th className="pb-1.5 text-[12px] font-semibold text-slate-500">Company</th>
+                <th className="pb-1.5 text-[12px] font-semibold text-slate-500">Time</th>
+                <th className="pb-1.5 text-[12px] font-semibold text-slate-500">Priority</th>
+                <th className="pb-1.5 text-[12px] font-semibold text-slate-500">Last Conversation</th>
+                <th className="pb-1.5 text-[12px] font-semibold text-slate-500 text-center">Action</th>
               </tr>
-            ) : (
-              followupsList.map((item, i) => (
-                <tr
-                  key={i}
-                  onClick={() => navigate(`/client-overview/${item.id}`)}
-                  className="border-b border-slate-50 hover:bg-slate-50/60 transition cursor-pointer"
-                >
-                  {/* Client Name */}
-                  <td className="py-3.5 pr-3">
-                    <span className="text-[13px] font-semibold text-slate-500">{item.name}</span>
-                  </td>
-
-                  {/* Company */}
-                  <td className="py-3.5 pr-3">
-                    <span className="text-[13px] text-slate-500">{item.company}</span>
-                  </td>
-
-                  {/* Time */}
-                  <td className="py-3.5 pr-3">
-                    <span className="text-[13px] text-slate-700">{item.time}</span>
-                  </td>
-
-                  {/* Priority badge */}
-                  <td className="py-3.5 pr-3">
-                    <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold ${item.priorityColor}`}>
-                      {item.priority}
-                    </span>
-                  </td>
-
-                  {/* Last Conversation */}
-                  <td className="py-3.5 pr-3">
-                    <p className="text-[12px] text-slate-700 leading-snug">{item.lastConv}</p>
-                    {item.convTime && (
-                      <p className="text-[10px] text-slate-400 mt-0.5">{item.convTime}</p>
-                    )}
-                  </td>
-
-                  {/* Action buttons */}
-                  <td className="py-3.5" onClick={e => e.stopPropagation()}>
-                    <div className="flex items-center justify-center gap-1.5">
-                      {/* Call */}
-                      <a
-                        href={`tel:${item.phone}`}
-                        className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition"
-                        title="Call"
-                      >
-                        <PhoneIcon />
-                      </a>
-                      {/* WhatsApp */}
-                      <a
-                        href={`https://wa.me/${item.phone?.replace(/\D/g, '')}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition"
-                        title="WhatsApp"
-                      >
-                        <WhatsAppIcon />
-                      </a>
-                      {/* Calendar / Reminder */}
-                      <button
-                        onClick={() => navigate(`/client-overview/${item.id}`)}
-                        className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 text-blue-500 flex items-center justify-center hover:bg-blue-100 transition"
-                        title="View"
-                      >
-                        <CalIcon />
-                      </button>
-                    </div>
+            </thead>
+            <tbody>
+              {followupsList.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="py-4 text-center text-slate-400 italic text-sm">
+                    No scheduled follow-ups for today
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                followupsList.map((item, i) => (
+                  <tr
+                    key={i}
+                    onClick={() => navigate(`/client-overview/${item.id}`)}
+                    className="border-b border-slate-50 hover:bg-slate-50/60 transition cursor-pointer"
+                  >
+                    {/* Client Name */}
+                    <td className="py-1.5 pr-3">
+                      <span className="text-[13px] font-semibold text-slate-500">{item.name}</span>
+                    </td>
+
+                    {/* Company */}
+                    <td className="py-1.5 pr-3">
+                      <span className="text-[13px] text-slate-500">{item.company}</span>
+                    </td>
+
+                    {/* Time */}
+                    <td className="py-1.5 pr-3">
+                      <span className="text-[13px] text-slate-700">{item.time}</span>
+                    </td>
+
+                    {/* Priority badge */}
+                    <td className="py-1.5 pr-3">
+                      <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold ${item.priorityColor}`}>
+                        {item.priority}
+                      </span>
+                    </td>
+
+                    {/* Last Conversation */}
+                    <td className="py-1.5 pr-3">
+                      <p className="text-[12px] text-slate-700 leading-snug">{item.lastConv}</p>
+                      {item.convTime && (
+                        <p className="text-[10px] text-slate-400 mt-0.5">{item.convTime}</p>
+                      )}
+                    </td>
+
+                    {/* Action buttons */}
+                    <td className="py-1.5" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center justify-center gap-1.5">
+                        {/* Call */}
+                        <a
+                          href={`tel:${item.phone}`}
+                          className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition"
+                          title="Call"
+                        >
+                          <PhoneIcon />
+                        </a>
+                        {/* WhatsApp */}
+                        <a
+                          href={`https://wa.me/${item.phone?.replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition"
+                          title="WhatsApp"
+                        >
+                          <WhatsAppIcon />
+                        </a>
+                        {/* Calendar / Reminder */}
+                        <button
+                          onClick={() => navigate(`/client-overview/${item.id}`)}
+                          className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 text-blue-500 flex items-center justify-center hover:bg-blue-100 transition"
+                          title="View"
+                        >
+                          <CalIcon />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

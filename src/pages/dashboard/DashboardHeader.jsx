@@ -2,7 +2,7 @@ import { CalendarDays, MapPin } from "lucide-react";
 
 export default function DashboardHeader({ fullProfile, currentUser, loading }) {
   return (
-    <div className="flex flex-col lg:flex-row lg:justify-between lg:items-stretch gap-3 mb-3">
+    <div className="flex flex-col lg:flex-row lg:justify-between lg:items-stretch gap-3 mb-1">
       {/* Left Welcome Info */}
       <div className="flex flex-col justify-center">
         <p className="text-base lg:text-lg text-gray-500 mb-1 tracking-wide">Welcome back,</p>
@@ -38,7 +38,7 @@ export default function DashboardHeader({ fullProfile, currentUser, loading }) {
       <div className="flex flex-col sm:flex-row gap-3">
         {/* Middle Event Details Card */}
         <div
-          className="flex-none sm:w-[220px] bg-white border border-gray-200 rounded-md px-4 py-2 lg:py-1.5 flex flex-col justify-center text-left"
+          className="flex-none sm:w-[220px] bg-white border border-gray-200 rounded-md px-3 py-1.5 flex flex-col justify-center text-left"
           style={{
             boxShadow: '0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 8px rgba(0,0,0,0.06), 0 8px 20px rgba(0,0,0,0.05)',
             transform: 'perspective(800px) rotateY(-1deg) rotateX(1deg)',
@@ -64,7 +64,7 @@ export default function DashboardHeader({ fullProfile, currentUser, loading }) {
 
         {/* Right Banner */}
         <div
-          className="flex-none sm:w-[420px] rounded-md overflow-hidden relative flex items-center px-5 py-3 lg:py-1.5 text-left min-h-[80px]"
+          className="flex-none sm:w-[420px] rounded-md overflow-hidden relative flex items-center px-4 py-1 text-left min-h-[56px]"
           style={{
             backgroundImage: "url('/exhibition/topright.png')",
             backgroundSize: "cover",

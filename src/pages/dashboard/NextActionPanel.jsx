@@ -72,18 +72,18 @@ export default function NextActionPanel() {
   const totalUnread = rooms.reduce((s, r) => s + (r.unreadAdmin || 0), 0);
 
   return (
-    <div className="bg-white rounded-lg border border-slate-100 p-5 shadow-sm lg:col-span-3 col-span-1 flex flex-col justify-between hover:shadow-md transition-all duration-300 relative overflow-hidden group" style={{ minHeight: '235px' }}>
+    <div className="bg-white rounded-lg border border-slate-100 p-2 shadow-sm lg:col-span-3 col-span-1 flex flex-col justify-between hover:shadow-md transition-all duration-300 relative overflow-hidden group" >
       {/* Decorative subtle header line */}
       <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#23471d] via-[#3a7031] to-[#d26019] opacity-70" />
 
       {/* Premium Header */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-1">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-[#23471d]/5 flex items-center justify-center text-[#23471d] shadow-sm border border-[#23471d]/10">
             <MessageSquare size={15} className="animate-pulse" />
           </div>
           <div>
-            <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest leading-none">Live Support</h3>
+            <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest leading-none">Live Support</h3>
             <span className="text-[8px] text-slate-400 font-extrabold uppercase tracking-wider mt-1 block">Assigned Messenger</span>
           </div>
         </div>
@@ -104,10 +104,10 @@ export default function NextActionPanel() {
       </div>
 
       {/* Dynamic Chats List Area */}
-      <div className="space-y-2 flex-1 overflow-y-auto mt-1 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent pr-1" style={{ maxHeight: '145px' }}>
+      <div className="space-y-2 flex-1 overflow-y-auto mt-1 pr-1" style={{ maxHeight: '85px', scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}>
         {rooms.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center mb-2 border border-slate-100">
+            <div className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center mb-1 border border-slate-100">
               <MessageSquare size={16} className="text-slate-300 stroke-[1.5]" />
             </div>
             <div className="text-[10px] text-slate-400 font-black uppercase tracking-wider">
@@ -120,7 +120,7 @@ export default function NextActionPanel() {
             <button
               key={room._id}
               onClick={() => navigate("/exhibitor-chat", { state: { activeRoomId: room._id } })}
-              className="w-full flex items-center justify-between p-2.5 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50/20 hover:bg-slate-50 transition-all duration-200 text-left group/item relative overflow-hidden shadow-sm"
+              className="w-full flex items-center justify-between p-1.5 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50/20 hover:bg-slate-50 transition-all duration-200 text-left group/item relative overflow-hidden shadow-sm"
             >
               {/* Subtle hover accent line */}
               <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#23471d] scale-y-0 group-hover/item:scale-y-100 transition-transform duration-200" />
@@ -170,10 +170,10 @@ export default function NextActionPanel() {
       </div>
 
       {/* Footer Nav Link */}
-      <div className="border-t border-slate-100/80 pt-3 mt-3">
+      <div className="border-t border-slate-100/80 pt-1.5 mt-1.5">
         <Link
           to="/exhibitor-chat"
-          className="w-full h-8.5 bg-slate-50 hover:bg-[#23471d] text-[9.5px] font-black text-slate-700 hover:text-white uppercase tracking-wider flex items-center justify-center gap-1.5 rounded-xl transition-all duration-300 border border-slate-100 shadow-sm group"
+          className="w-full h-6 bg-slate-50 hover:bg-[#23471d] text-[9.5px] font-black text-slate-700 hover:text-white uppercase tracking-wider flex items-center justify-center gap-1.5 rounded-xl transition-all duration-300 border border-slate-100 shadow-sm group"
         >
           Open Chat Messenger 
           <ArrowRight size={12} className="transform group-hover:translate-x-1 transition-transform duration-200" />

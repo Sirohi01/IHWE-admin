@@ -183,7 +183,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] px-3 sm:px-6 py-3 font-sans">
+    <div className="w-full bg-[#f8fafc] px-3 sm:px-6 py-2 font-sans">
       {/* Row 0 — Header */}
       <DashboardHeader fullProfile={fullProfile} currentUser={currentUser} loading={loading} />
 
@@ -191,21 +191,21 @@ export default function Dashboard() {
       <DashboardStatsGrid statsMetrics={statsMetrics} />
 
       {/* Row 2 — Lead Summary | Follow-ups | Target Gauge */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 mb-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-2 mb-1.5">
         <LeadSummaryCard donutData={donutData} totalLeads={statsMetrics.total} />
         <FollowupsTable  followupsList={followupsList} />
         <TargetGaugeCard targetMetrics={targetMetrics} />
       </div>
 
       {/* Row 3 — Performance | Recent Activities | Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 mb-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-2 mb-1.5">
         <PerformanceOverview statsMetrics={statsMetrics} />
         <RecentActivities    activityLogs={activityLogs} />
         <QuickActions />
       </div>
 
       {/* Row 4 — Top Leads | Leaderboard | Reminders | Next Action */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-stretch">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 items-stretch">
         <TopLeadsCard     userLeads={userLeads} />
         <SalesLeaderboard leaderboard={leaderboard} currentUser={currentUser} />
         <RemindersCard    userLeads={userLeads} />

@@ -2,13 +2,13 @@ export default function RemindersCard({ userLeads }) {
   const upcoming = userLeads.filter(c => c.reminder && new Date(c.reminder) > new Date()).slice(0, 3);
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-5 shadow-sm lg:col-span-3 col-span-1 flex flex-col justify-start">
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Reminders</h3>
+    <div className="bg-white rounded-lg border border-slate-200 p-2 shadow-sm lg:col-span-3 col-span-1 flex flex-col justify-start">
+      <div className="flex justify-between items-center mb-1">
+        <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">Reminders</h3>
         <span className="text-[10px] text-slate-400 font-bold uppercase">To-Do</span>
       </div>
 
-      <div className="space-y-3 flex-1 overflow-y-auto" style={{ maxHeight: '140px' }}>
+      <div className="space-y-1.5 flex-1 overflow-y-auto pr-1" style={{ maxHeight: '85px', scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}>
         {upcoming.length > 0 ? (
           upcoming.map((item, i) => (
             <div key={i} className="flex gap-2.5 text-xs">

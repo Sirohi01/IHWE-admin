@@ -14,9 +14,9 @@ const cards = [
 
 export default function PerformanceOverview({ statsMetrics }) {
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-5 shadow-sm lg:col-span-5 col-span-1 flex flex-col">
+    <div className="bg-white rounded-lg border border-slate-200 p-2 shadow-sm lg:col-span-5 col-span-1 flex flex-col">
       {/* Header */}
-      <div className="flex justify-between items-center mb-4 shrink-0">
+      <div className="flex justify-between items-center mb-2 shrink-0">
         <h3 className="text-base font-bold text-slate-800">Daily Performance Overview</h3>
         <button className="flex items-center gap-1.5 text-[12px] font-medium text-slate-600 border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-slate-50 transition">
           Today
@@ -31,7 +31,7 @@ export default function PerformanceOverview({ statsMetrics }) {
         {cards.map((card, i) => (
           <div
             key={i}
-            className="bg-white rounded-lg border border-slate-100 p-3 flex flex-col shadow-sm"
+            className="bg-white rounded-lg border border-slate-100 p-1.5 flex flex-col shadow-sm"
           >
             {/* Label — colored */}
             <span className="text-[12px] font-semibold mb-1" style={{ color: card.color }}>
@@ -39,12 +39,12 @@ export default function PerformanceOverview({ statsMetrics }) {
             </span>
 
             {/* Value — large, colored */}
-            <span className="text-[18px] font-black leading-none mb-2 truncate" style={{ color: card.color }}>
+            <span className="text-[15px] font-black leading-none mb-1 truncate" style={{ color: card.color }}>
               {card.prefix}{statsMetrics[card.valueKey]}{card.suffix}
             </span>
 
             {/* Sparkline */}
-            <div className="flex-1 min-h-[60px] w-full">
+            <div className="flex-1 min-h-[30px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={card.data} margin={{ top: 4, right: 2, left: 2, bottom: 4 }}>
                   <defs>

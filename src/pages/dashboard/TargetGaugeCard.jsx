@@ -5,8 +5,8 @@ export default function TargetGaugeCard({ targetMetrics }) {
   const currentMonth = new Date().toLocaleString("en-IN", { month: "long", year: "numeric" });
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-5 shadow-sm lg:col-span-3 col-span-1 flex flex-col justify-between">
-      <div className="flex justify-between items-center mb-2">
+    <div className="bg-white rounded-lg border border-slate-200 p-2.5 shadow-sm lg:col-span-3 col-span-1 flex flex-col justify-between">
+      <div className="flex justify-between items-center mb-1">
         <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Target vs Achievement</h3>
         <span className="text-[10px] bg-slate-50 border border-slate-200 px-2 py-0.5 font-bold uppercase rounded-md text-slate-600">
           {currentMonth}
@@ -14,12 +14,11 @@ export default function TargetGaugeCard({ targetMetrics }) {
       </div>
 
       {/* Pure SVG half-donut gauge */}
-      <div className="flex flex-col items-center mt-3">
-        <div className="relative" style={{ width: '180px', height: '98px' }}>
+      <div className="flex flex-col items-center mt-1">
+        <div className="relative" style={{ width: '110px', height: '60px' }}>
           <svg
             viewBox="0 0 200 110"
-            width="180"
-            height="98"
+            width="110" height="60"
             xmlns="http://www.w3.org/2000/svg"
             style={{ overflow: 'visible' }}
           >
@@ -44,14 +43,14 @@ export default function TargetGaugeCard({ targetMetrics }) {
           </svg>
           {/* Percentage label */}
           <div className="absolute inset-0 flex flex-col items-center justify-end pb-2">
-            <p className="text-2xl font-black text-slate-900 leading-none">{targetMetrics.pct}%</p>
+            <p className="text-lg font-black text-slate-900 leading-none">{targetMetrics.pct}%</p>
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 block">Achieved</span>
           </div>
         </div>
       </div>
 
       {/* Details Row */}
-      <div className="grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 mt-4 text-center">
+      <div className="grid grid-cols-3 gap-2 border-t border-slate-100 pt-2 mt-2 text-center">
         <div>
           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Target</p>
           <h5 className="text-[11px] font-black text-slate-900 leading-none">₹ {targetMetrics.target} L</h5>
@@ -67,7 +66,7 @@ export default function TargetGaugeCard({ targetMetrics }) {
       </div>
 
       {/* Status badge */}
-      <div className="flex items-center gap-2 bg-emerald-50/70 border border-emerald-100 rounded-xl p-2.5 mt-3 shadow-inner">
+      <div className="flex items-center gap-2 bg-emerald-50/70 border border-emerald-100 rounded-xl p-2.5 mt-1 shadow-inner">
         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
         <span className="text-[9px] font-extrabold text-emerald-700 leading-snug">
           You are on track! Keep pushing to achieve your target.

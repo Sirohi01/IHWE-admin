@@ -12,10 +12,10 @@ export default function TopLeadsCard({ userLeads }) {
     .slice(0, 3);
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-5 shadow-sm lg:col-span-3 col-span-1 flex flex-col">
+    <div className="bg-white rounded-lg border border-slate-200 p-2 shadow-sm lg:col-span-3 col-span-1 flex flex-col">
       {/* Header */}
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-base font-bold text-slate-800">Top Leads (High Potential)</h3>
+      <div className="flex justify-between items-center mb-1">
+        <h3 className="text-sm font-bold text-slate-800">Top Leads (High Potential)</h3>
         <Link to="/ihweClientData2026/hotClientList" className="text-sm font-semibold text-blue-500 hover:underline">
           View All
         </Link>
@@ -23,7 +23,7 @@ export default function TopLeadsCard({ userLeads }) {
 
       {/* Column headers */}
       {hotLeads.length > 0 && (
-        <div className="flex items-center mb-2 px-1">
+        <div className="flex items-center mb-1 px-1">
           <div className="flex-1" />
           <div className="w-12 text-[11px] font-semibold text-slate-400 text-center">Score</div>
           <div className="w-20 text-[11px] font-semibold text-slate-400 text-center">Est. Value</div>
@@ -32,7 +32,7 @@ export default function TopLeadsCard({ userLeads }) {
       )}
 
       {/* Rows */}
-      <div className="space-y-3 flex-1 overflow-y-auto">
+      <div className="space-y-3 flex-1 overflow-y-auto pr-1" style={{ maxHeight: '85px', scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}>
         {hotLeads.length === 0 ? (
           <div className="text-center py-8 text-slate-400 italic text-sm">
             No high-potential leads assigned
@@ -48,10 +48,10 @@ export default function TopLeadsCard({ userLeads }) {
               <div
                 key={i}
                 onClick={() => navigate(`/client-overview/${lead._id}`)}
-                className="flex items-center gap-3 py-2 border-b border-slate-50 hover:bg-slate-50/60 transition cursor-pointer"
+                className="flex items-center gap-3 py-0.5 border-b border-slate-50 hover:bg-slate-50/60 transition cursor-pointer"
               >
                 {/* Avatar */}
-                <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-sm font-black text-slate-500 flex-shrink-0">
+                <div className="w-6 h-6 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-sm font-black text-slate-500 flex-shrink-0">
                   {lead.companyName?.[0]?.toUpperCase() || "L"}
                 </div>
 
@@ -83,7 +83,7 @@ export default function TopLeadsCard({ userLeads }) {
                 <a
                   href={`tel:${contact.mobile || ""}`}
                   onClick={e => e.stopPropagation()}
-                  className="w-12 py-1 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 text-[11px] font-semibold text-center hover:bg-emerald-100 transition flex-shrink-0"
+                  className="w-10 py-0 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 text-[11px] font-semibold text-center hover:bg-emerald-100 transition flex-shrink-0"
                 >
                   Call
                 </a>
