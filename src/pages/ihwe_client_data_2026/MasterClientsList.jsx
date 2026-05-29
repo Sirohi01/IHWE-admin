@@ -36,13 +36,10 @@ const MasterClientsList = () => {
   const dispatch = useDispatch();
 
   const companiesState = useSelector((state) => state.companies);
-  const companiesArray = getArrayFromSlice(companiesState, "companies");
+  const companiesArray = Array.isArray(companiesState?.companies) ? companiesState.companies : [];
+  const pagination = companiesState?.pagination;
   const isLoading = companiesState?.loading ?? false;
   const error = companiesState?.error ?? null;
-
-  useEffect(() => {
-    dispatch(fetchCompanies());
-  }, [dispatch]);
 
   // --- STATS CALCULATION ---
   const stats = useMemo(() => {
@@ -86,40 +83,31 @@ const MasterClientsList = () => {
     endDate: "",
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
   const [selectedRows, setSelectedRows] = useState([]);
 
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      dispatch(fetchCompanies({
+        page: currentPage,
+        limit: pageSize,
+        search: globalSearch,
+        status: filters.status,
+        source: filters.source,
+        industry: filters.industry
+      }));
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [dispatch, currentPage, pageSize, globalSearch, filters.status, filters.source, filters.industry]);
+
   // --- FILTERING LOGIC ---
-  const filteredRows = useMemo(() => {
-    return companiesArray.filter((c) => {
-      const matchSearch =
-        globalSearch === "" ||
-        (c.companyName || "").toLowerCase().includes(globalSearch.toLowerCase()) ||
-        (c.contacts && c.contacts.some(contact => (contact.email || "").toLowerCase().includes(globalSearch.toLowerCase()))) ||
-        (c.contacts && c.contacts.some(contact => (contact.mobile || "").includes(globalSearch)));
+  // Now handled by the backend, so we just use the array directly
+  const filteredRows = companiesArray;
 
-      const matchSource = filters.source === "" || (c.dataSource || "").toLowerCase() === filters.source.toLowerCase();
-      const matchStatus = filters.status === "" || (c.companyStatus || "").toLowerCase() === filters.status.toLowerCase();
-      const matchIndustry = filters.industry === "" || (c.businessNature || "").toLowerCase() === filters.industry.toLowerCase();
-
-      const cityStateVal = `${c.city || ""} ${c.state || ""}`.toLowerCase();
-      const matchCityState = filters.cityState === "" || cityStateVal.includes(filters.cityState.toLowerCase());
-
-      let matchDate = true;
-      if (filters.startDate || filters.endDate) {
-        const cDate = new Date(c.createdAt || c.updatedAt);
-        if (!isNaN(cDate)) {
-          if (filters.startDate) matchDate = matchDate && cDate >= new Date(filters.startDate);
-          if (filters.endDate) matchDate = matchDate && cDate <= new Date(filters.endDate);
-        }
-      }
-
-      return matchSearch && matchSource && matchStatus && matchIndustry && matchCityState && matchDate;
-    });
-  }, [companiesArray, globalSearch, filters]);
-
-  const totalPages = Math.ceil(filteredRows.length / pageSize);
-  const paginatedRows = filteredRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const totalPages = pagination?.totalPages || 1;
+  const totalCount = pagination?.total || filteredRows.length;
+  const paginatedRows = filteredRows;
 
   // --- ACTIONS ---
   const toggleSelectAll = () => {
@@ -173,11 +161,11 @@ const MasterClientsList = () => {
   const uniqueIndustries = [...new Set(companiesArray.map(c => c.businessNature).filter(Boolean))];
 
   return (
-    <div className="w-full bg-[#f8fafc] min-h-[calc(100vh-60px)] flex flex-col">
+    <div className="w-full bg-[#f8fafc] h-[calc(100vh-110px)] flex flex-col font-sans text-slate-800 p-4 md:px-6 lg:px-8 overflow-hidden">
       {selectedClient ? (
         <ClientOverview client={selectedClient} onBack={() => setSelectedClient(null)} />
       ) : (
-        <div className="p-2 md:p-3 max-w-[1600px] mx-auto w-full flex-grow flex flex-col font-sans">
+        <div className="w-full flex-grow flex flex-col min-h-0">
 
           {/* TOP BAR */}
           <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-2 mb-2">
@@ -356,8 +344,8 @@ const MasterClientsList = () => {
           </div>
 
           {/* DATA TABLE */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-grow flex flex-col" ref={printref}>
-            <div className="overflow-x-auto overflow-y-hidden flex-grow relative">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-grow flex flex-col min-h-0" ref={printref}>
+            <div className="overflow-auto flex-grow relative custom-scrollbar">
               <table className="w-full text-left border-collapse whitespace-nowrap text-[10px]">
                 <thead>
                   <tr className="bg-[#0f172a] text-white text-[10px] uppercase tracking-wider">
@@ -459,17 +447,20 @@ const MasterClientsList = () => {
                               {/* <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-bold text-[9px]">
                                 {(row.forwardTo || "V").charAt(0).toUpperCase()}
                               </div> */}
-                              <div className="flex flex-col">
-                                <span className="text-[10px] font-medium text-slate-800">{toTitleCase(row.forwardTo) || "Unassigned"}</span>
-                                <span className="text-[9px] text-slate-500"> 27 May 2026 (Call)</span>
-                              </div>
+                              <span className="text-[10px] font-medium text-slate-800">{toTitleCase(row.forwardTo) || "Unassigned"}</span> <span> |  </span>
+                              <span className="text-[9px] text-slate-500">
+                                {row.updatedAt ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt)) : "-"} (Call)
+                              </span>
                             </div>
                           </td>
                           <td className="px-2 py-1.5">
-                            <div className="flex flex-col">
-                              <span className="text-[10px] font-medium text-slate-800"> 29 May 2026</span>
-                              <span className="text-[9px] text-slate-500"> 11:00 AM</span>
-                            </div>
+                            {row.reminder ? (
+                              <span className="text-[10px] font-medium text-slate-800 whitespace-nowrap">
+                                {new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.reminder))}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-slate-400">-</span>
+                            )}
                           </td>
                         </tr>
                       );
@@ -482,7 +473,7 @@ const MasterClientsList = () => {
             {/* PAGINATION */}
             <div className="bg-white border-t border-slate-200 px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="text-xs text-slate-500">
-                Showing {paginatedRows.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to {Math.min(currentPage * pageSize, filteredRows.length)} of {filteredRows.length} leads
+                Showing {paginatedRows.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} leads
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1">

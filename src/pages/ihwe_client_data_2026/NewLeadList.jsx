@@ -16,22 +16,40 @@ const NewLeadList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [filterSource, setFilterSource] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterIndustry, setFilterIndustry] = useState('');
 
   // 🏢 Company redux data
   const companiesState = useSelector((state) => state.companies);
-  const companiesArray = Array.isArray(companiesState?.companies) ? companiesState.companies : [];
+  const newLeadCompanies = Array.isArray(companiesState?.companies) ? companiesState.companies : [];
+  const pagination = companiesState?.pagination;
   const isLoading = companiesState?.loading ?? false;
 
   useEffect(() => {
-    dispatch(fetchCompanies());
-  }, [dispatch]);
+    const delayDebounceFn = setTimeout(() => {
+      dispatch(fetchCompanies({
+        page,
+        limit,
+        search: searchTerm,
+        status: filterStatus || 'New Lead',
+        source: filterSource,
+        industry: filterIndustry,
+        startDate,
+        endDate
+      }));
+    }, 400);
 
-  // Filter only New Lead companies
-  const newLeadCompanies = companiesArray.filter(
-    (company) => company.companyStatus === "New Lead" || (company.companyStatus || "").toLowerCase() === "new"
-  ).filter(company =>
-    (company.companyName || "").toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    return () => clearTimeout(delayDebounceFn);
+  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, filterStatus, filterIndustry]);
+
+  const uniqueSources = [...new Set(newLeadCompanies.map(c => c.dataSource).filter(Boolean))];
+  const uniqueStatuses = [...new Set(newLeadCompanies.map(c => c.companyStatus).filter(Boolean))];
+  const uniqueIndustries = [...new Set(newLeadCompanies.map(c => c.businessNature).filter(Boolean))];
 
   const getStatusStyle = (status) => {
     const s = (status || "").toLowerCase();
@@ -61,14 +79,14 @@ const NewLeadList = () => {
     return <Phone size={12} className="text-slate-400" />;
   };
 
-  const totalLeads = newLeadCompanies.length;
+  const totalLeads = pagination?.total || newLeadCompanies.length;
   // Dummy stats for the UI to match the image
   const todaysLeads = Math.min(7, totalLeads);
   const thisWeekLeads = Math.min(18, totalLeads);
   const thisMonthLeads = Math.max(72, totalLeads);
 
   return (
-    <div className="w-full bg-[#f8fafc] min-h-[calc(100vh-60px)] flex flex-col font-sans text-slate-800 p-2 md:p-3 overflow-x-hidden">
+    <div className="w-full bg-[#f8fafc] h-[calc(100vh-110px)] flex flex-col font-sans text-slate-800 p-4 md:px-6 lg:px-8 overflow-hidden">
 
       {/* TOP HEADER */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-4">
@@ -106,10 +124,10 @@ const NewLeadList = () => {
       </div>
 
       {/* MAIN CONTENT AREA */}
-      <div className="flex flex-col xl:flex-row gap-4 flex-grow items-stretch">
+      <div className="flex flex-col xl:flex-row gap-4 flex-grow items-stretch min-h-0">
 
         {/* LEFT COLUMN: STATS & TABLE */}
-        <div className="flex-grow flex flex-col gap-4 w-full xl:w-[78%]">
+        <div className="flex-grow flex flex-col gap-4 w-full xl:w-[78%] min-h-0">
 
           {/* STATS CARDS (5 Cards) */}
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
@@ -181,24 +199,40 @@ const NewLeadList = () => {
                     className="w-full pl-7 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
-                <select className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
+                <select value={filterSource} onChange={e => { setFilterSource(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
                   <option value="">Source</option>
+                  {uniqueSources.map((s, i) => <option key={i} value={s}>{s}</option>)}
                 </select>
-                <select className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
+                <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
                   <option value="">Status</option>
+                  {uniqueStatuses.map((s, i) => <option key={i} value={s}>{s}</option>)}
                 </select>
-                <select className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
+                <select value={filterIndustry} onChange={e => { setFilterIndustry(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
                   <option value="">Industry</option>
+                  {uniqueIndustries.map((s, i) => <option key={i} value={s}>{s}</option>)}
                 </select>
-                <button className="flex items-center gap-1.5 py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-                  <Calendar size={12} /> Date Range
-                </button>
+                <div className="flex items-center gap-1.5 py-1 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700">
+                  <Calendar size={12} className="text-slate-500" />
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
+                    className="bg-transparent text-[10px] py-0.5 outline-none text-slate-700 w-[85px] cursor-pointer"
+                  />
+                  <span className="text-slate-400">-</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
+                    className="bg-transparent text-[10px] py-0.5 outline-none text-slate-700 w-[85px] cursor-pointer"
+                  />
+                </div>
                 {/* <button className="flex items-center gap-1.5 py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 hover:bg-slate-50 transition-colors">
                   <Filter size={12} /> More Filters
                 </button> */}
               </div>
               <div className="flex items-center gap-2">
-                <button className="flex items-center gap-1 py-1.5 px-2 text-slate-500 hover:text-slate-700 transition-colors text-[10px] font-medium">
+                <button onClick={() => { setStartDate(''); setEndDate(''); setSearchTerm(''); setFilterSource(''); setFilterStatus(''); setFilterIndustry(''); setPage(1); }} className="flex items-center gap-1 py-1.5 px-2 text-slate-500 hover:text-slate-700 transition-colors text-[10px] font-medium">
                   <RefreshCw size={12} /> Reset
                 </button>
                 <button className="flex items-center gap-1.5 py-1.5 px-3 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 hover:bg-slate-50 transition-colors">
@@ -208,7 +242,7 @@ const NewLeadList = () => {
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto overflow-y-hidden flex-grow">
+            <div className="overflow-auto flex-grow relative">
               <table className="w-full text-left border-collapse whitespace-nowrap text-[10px]">
                 <thead>
                   <tr className="bg-[#0f172a] text-white uppercase tracking-wider">
@@ -231,7 +265,7 @@ const NewLeadList = () => {
                   ) : newLeadCompanies.length === 0 ? (
                     <tr><td colSpan="9" className="text-center py-8 text-slate-500">No new leads found.</td></tr>
                   ) : (
-                    newLeadCompanies.slice(0, 12).map((row, i) => {
+                    newLeadCompanies.map((row, i) => {
                       const status = row.companyStatus || "New";
                       const style = getStatusStyle(status);
                       const statusBg = style.split(' ')[0];
@@ -267,14 +301,14 @@ const NewLeadList = () => {
                             </div>
                           </td>
                           <td className="px-2 py-1.5">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 whitespace-nowrap">
                               <div className="shrink-0 p-1 bg-slate-100 rounded-full">
                                 {getConvIcon("WhatsApp")}
                               </div>
-                              <div className="flex flex-col">
-                                <span className="text-[10px] font-medium text-slate-800">27 May 2026, 11:00 AM</span>
-                                <span className="text-[9px] text-slate-500">(WhatsApp)</span>
-                              </div>
+                              <span className="text-[10px] font-medium text-slate-800 whitespace-nowrap">
+                                {row.updatedAt ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt)) : "-"}
+                              </span>
+                              <span className="text-[9px] text-slate-500">(WhatsApp)</span>
                             </div>
                           </td>
                           <td className="px-2 py-1.5 text-right">
@@ -291,20 +325,25 @@ const NewLeadList = () => {
             </div>
 
             <div className="p-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500 bg-slate-50/50">
-              <div>Showing 1 to {Math.min(10, totalLeads)} of {totalLeads} new leads</div>
+              <div>Showing {totalLeads === 0 ? 0 : (page - 1) * limit + 1} to {Math.min(page * limit, totalLeads)} of {totalLeads} new leads</div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1">
-                  <button className="w-6 h-6 rounded flex items-center justify-center hover:bg-slate-200">«</button>
-                  <button className="w-6 h-6 rounded flex items-center justify-center hover:bg-slate-200">‹</button>
-                  <button className="w-6 h-6 rounded flex items-center justify-center bg-blue-600 text-white font-medium">1</button>
-                  <button className="w-6 h-6 rounded flex items-center justify-center hover:bg-slate-200">›</button>
-                  <button className="w-6 h-6 rounded flex items-center justify-center hover:bg-slate-200">»</button>
+                  <button onClick={() => setPage(1)} disabled={page === 1} className="w-6 h-6 rounded flex items-center justify-center hover:bg-slate-200 disabled:opacity-50">«</button>
+                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="w-6 h-6 rounded flex items-center justify-center hover:bg-slate-200 disabled:opacity-50">‹</button>
+                  <button className="w-6 h-6 rounded flex items-center justify-center bg-blue-600 text-white font-medium">{page}</button>
+                  <button onClick={() => setPage(p => Math.min(pagination?.totalPages || 1, p + 1))} disabled={page >= (pagination?.totalPages || 1)} className="w-6 h-6 rounded flex items-center justify-center hover:bg-slate-200 disabled:opacity-50">›</button>
+                  <button onClick={() => setPage(pagination?.totalPages || 1)} disabled={page >= (pagination?.totalPages || 1)} className="w-6 h-6 rounded flex items-center justify-center hover:bg-slate-200 disabled:opacity-50">»</button>
                 </div>
                 <div className="flex items-center gap-2">
                   <span>Rows per page:</span>
-                  <select className="border border-slate-200 rounded py-0.5 px-1 bg-white outline-none">
-                    <option>10</option>
-                    <option>20</option>
+                  <select
+                    value={limit}
+                    onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
+                    className="border border-slate-200 rounded py-0.5 px-1 bg-white outline-none cursor-pointer"
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
                   </select>
                 </div>
               </div>
@@ -339,7 +378,7 @@ const NewLeadList = () => {
                 </div>
               ))}
             </div>
-            <button className="w-full mt-1.5 text-[8px] font-bold text-blue-600 hover:text-blue-700 flex items-center justify-center gap-1">
+            <button onClick={() => navigate("/ihweClientData2026/followUpList")} className="w-full mt-1.5 text-[8px] font-bold text-blue-600 hover:text-blue-700 flex items-center justify-center gap-1">
               View All Follow-Ups (16) <ArrowRight size={8} />
             </button>
           </div>
@@ -407,19 +446,19 @@ const NewLeadList = () => {
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
             <h3 className="text-[11px] font-bold text-slate-800 mb-1">Quick Actions</h3>
             <div className="grid grid-cols-2 gap-1.5">
-              <button className="flex items-center gap-1.5 p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded transition-colors border border-emerald-100">
+              <button onClick={() => navigate("/ihweClientData2026/addNewClients")} className="flex items-center gap-1.5 p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded transition-colors border border-emerald-100">
                 <Plus size={12} />
                 <span className="text-[9px] font-bold">Add Lead</span>
               </button>
-              <button className="flex items-center gap-1.5 p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors border border-blue-100">
+              <button onClick={() => navigate("/ihweClientData2026/uploadExhibitor")} className="flex items-center gap-1.5 p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors border border-blue-100">
                 <Upload size={12} />
                 <span className="text-[9px] font-bold">Import</span>
               </button>
-              <button className="flex items-center gap-1.5 p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded transition-colors border border-emerald-100">
+              <button onClick={() => navigate("/whatsapp-logs")} className="flex items-center gap-1.5 p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded transition-colors border border-emerald-100">
                 <FaWhatsapp size={12} />
                 <span className="text-[9px] font-bold">WhatsApp</span>
               </button>
-              <button className="flex items-center gap-1.5 p-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded transition-colors border border-purple-100">
+              <button onClick={() => navigate("/activity-logs")} className="flex items-center gap-1.5 p-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded transition-colors border border-purple-100">
                 <CalendarDays size={12} />
                 <span className="text-[9px] font-bold">Schedule</span>
               </button>
