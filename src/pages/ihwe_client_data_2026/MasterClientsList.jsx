@@ -161,11 +161,11 @@ const MasterClientsList = () => {
   const uniqueIndustries = [...new Set(companiesArray.map(c => c.businessNature).filter(Boolean))];
 
   return (
-    <div className="w-full bg-[#f8fafc] h-[calc(100vh-110px)] flex flex-col font-sans text-slate-800 p-4 md:px-6 lg:px-8 overflow-hidden">
+    <div className="w-full bg-[#f8fafc] min-h-[calc(100vh-110px)] xl:h-[calc(100vh-110px)] flex flex-col font-sans text-slate-800 p-4 md:px-6 lg:px-8 xl:overflow-hidden">
       {selectedClient ? (
         <ClientOverview client={selectedClient} onBack={() => setSelectedClient(null)} />
       ) : (
-        <div className="w-full flex-grow flex flex-col min-h-0">
+        <div className="w-full flex-grow flex flex-col xl:min-h-0">
 
           {/* TOP BAR */}
           <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-2 mb-2">
@@ -344,7 +344,7 @@ const MasterClientsList = () => {
           </div>
 
           {/* DATA TABLE */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-grow flex flex-col min-h-0" ref={printref}>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-grow flex flex-col min-h-[400px] xl:min-h-0" ref={printref}>
             <div className="overflow-auto flex-grow relative custom-scrollbar">
               <table className="w-full text-left border-collapse whitespace-nowrap text-[10px]">
                 <thead>

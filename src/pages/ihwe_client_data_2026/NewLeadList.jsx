@@ -86,7 +86,7 @@ const NewLeadList = () => {
   const thisMonthLeads = Math.max(72, totalLeads);
 
   return (
-    <div className="w-full bg-[#f8fafc] h-[calc(100vh-110px)] flex flex-col font-sans text-slate-800 p-4 md:px-6 lg:px-8 overflow-hidden">
+    <div className="w-full bg-[#f8fafc] min-h-[calc(100vh-110px)] xl:h-[calc(100vh-110px)] flex flex-col font-sans text-slate-800 p-4 md:px-6 lg:px-8 xl:overflow-hidden">
 
       {/* TOP HEADER */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-4">
@@ -124,10 +124,10 @@ const NewLeadList = () => {
       </div>
 
       {/* MAIN CONTENT AREA */}
-      <div className="flex flex-col xl:flex-row gap-4 flex-grow items-stretch min-h-0">
+      <div className="flex flex-col xl:flex-row gap-4 flex-grow items-stretch xl:min-h-0">
 
         {/* LEFT COLUMN: STATS & TABLE */}
-        <div className="flex-grow flex flex-col gap-4 w-full xl:w-[78%] min-h-0">
+        <div className="flex-grow flex flex-col gap-4 w-full xl:w-[78%] xl:min-h-0">
 
           {/* STATS CARDS (5 Cards) */}
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
@@ -353,7 +353,7 @@ const NewLeadList = () => {
         </div>
 
         {/* RIGHT COLUMN: SIDEBAR */}
-        <div className="w-full xl:w-[20%] flex flex-col gap-1.5 shrink-0">
+        <div className="w-full xl:w-[20%] flex flex-col gap-4 xl:gap-1.5 shrink-0 xl:justify-between xl:h-full">
 
           {/* Follow-Ups Due */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
@@ -362,7 +362,9 @@ const NewLeadList = () => {
               {[
                 { name: "GreenLife Ayurveda", date: "27 May, 11:00 AM", type: "WhatsApp", icon: <MessageCircle size={12} className="text-emerald-500" />, tagBg: "bg-emerald-50 text-emerald-600", iconBg: "bg-emerald-50" },
                 { name: "Nature's Harmony", date: "28 May, 03:00 PM", type: "Call", icon: <Phone size={12} className="text-emerald-500" />, tagBg: "bg-emerald-50 text-emerald-600", iconBg: "bg-emerald-50" },
-                { name: "Herbal King", date: "28 May, 05:00 PM", type: "Email", icon: <Mail size={12} className="text-blue-500" />, tagBg: "bg-blue-50 text-blue-600", iconBg: "bg-blue-50" }
+                { name: "Herbal King", date: "28 May, 05:00 PM", type: "Email", icon: <Mail size={12} className="text-blue-500" />, tagBg: "bg-blue-50 text-blue-600", iconBg: "bg-blue-50" },
+                { name: "Wellness Center", date: "29 May, 10:00 AM", type: "Call", icon: <Phone size={12} className="text-emerald-500" />, tagBg: "bg-emerald-50 text-emerald-600", iconBg: "bg-emerald-50" },
+                { name: "Ayush Pharma", date: "29 May, 01:30 PM", type: "WhatsApp", icon: <MessageCircle size={12} className="text-emerald-500" />, tagBg: "bg-emerald-50 text-emerald-600", iconBg: "bg-emerald-50" },
               ].map((fu, idx) => (
                 <div key={idx} className="flex items-start gap-2">
                   <div className={`w-7 h-7 rounded-full ${fu.iconBg} flex items-center justify-center shrink-0`}>
