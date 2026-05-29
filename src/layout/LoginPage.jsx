@@ -20,7 +20,7 @@ import {
   BarChart2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import adminLogo from "../assets/adminlogonew.png";
+import adminLogo from "../assets/adminlogonew.webp";
 
 export default function LoginPage() {
   const navigate = useNavigate();
