@@ -27,12 +27,33 @@ const AddSeo = () => {
         isActive: true
     });
 
+    const [dynamicPages, setDynamicPages] = useState({
+        services: [],
+        custom: []
+    });
+
+    const [existingSeoItems, setExistingSeoItems] = useState([]);
+
     // Editor Refs
     const ogEditorRef = useRef(null);
     const schemaEditorRef = useRef(null);
     const canonicalEditorRef = useRef(null);
 
+    const fetchExistingSeo = async () => {
+        try {
+            const res = await api.get('/api/seo/all');
+            if (res.data.success) {
+                setExistingSeoItems(res.data.data);
+            }
+        } catch (err) {
+            console.error("Error fetching existing SEO data:", err);
+        }
+    };
+
     useEffect(() => {
+        fetchDynamicPages();
+        fetchExistingSeo();
+
         if (location.state && location.state.seoData) {
             const data = location.state.seoData;
             setFormData({
@@ -58,6 +79,184 @@ const AddSeo = () => {
             }, 100);
         }
     }, [location.state]);
+
+    const fetchDynamicPages = async () => {
+        try {
+            // Get all static paths to avoid duplicates using a Set
+            const staticPaths = pagesList.map(p => p.path);
+            const seenPaths = new Set(staticPaths);
+
+            // Fetch Service Pages
+            const serviceRes = await api.get('/api/service-details');
+            const services = [];
+            if (serviceRes.data.success) {
+                serviceRes.data.data.forEach(item => {
+                    const path = `/industry-zone/${item.slug || item.serviceCardId}`;
+                    if (!seenPaths.has(path)) {
+                        seenPaths.add(path);
+                        services.push({
+                            name: `Service / ${item.serviceTitle}`,
+                            path
+                        });
+                    }
+                });
+            }
+
+            // Fetch Custom Pages
+            const customRes = await api.get('/api/custom-pages');
+            const custom = [];
+            if (customRes.data.success) {
+                customRes.data.data.forEach(item => {
+                    const path = `/${item.slug}`;
+                    if (!seenPaths.has(path)) {
+                        seenPaths.add(path);
+                        custom.push({
+                            name: `Page / ${item.title}`,
+                            path
+                        });
+                    }
+                });
+            }
+
+            setDynamicPages({ services, custom });
+        } catch (error) {
+            console.error("Error fetching dynamic pages:", error);
+        }
+    };
+
+    const getExistingSeo = (path) => {
+        if (!path) return null;
+        if (isEditMode && formData.page === path) {
+            return { page: path }; // Dummy object to satisfy truthy check
+        }
+        return existingSeoItems.find(item => item.page === path);
+    };
+
+    const isPagePathInOptions = (path) => {
+        if (!path) return false;
+        if (pagesList.some(p => p.path === path)) return true;
+        if (dynamicPages.services.some(p => p.path === path)) return true;
+        if (dynamicPages.custom.some(p => p.path === path)) return true;
+        return false;
+    };
+
+    const getPageName = (path) => {
+        const found = pagesList.find(p => p.path === path);
+        if (found) return found.name;
+        
+        const foundService = dynamicPages.services.find(p => p.path === path);
+        if (foundService) return foundService.name;
+        
+        const foundCustom = dynamicPages.custom.find(p => p.path === path);
+        if (foundCustom) return foundCustom.name;
+        
+        return path;
+    };
+
+    const renderPageOption = (page, index, prefix) => {
+        const existing = getExistingSeo(page.path);
+        const optionStyle = existing 
+            ? { color: '#16a34a', backgroundColor: '#f0fdf4', fontWeight: 'bold' }
+            : { color: '#dc2626', backgroundColor: '#fef2f2' };
+            
+        return (
+            <option 
+                key={`${prefix}-${index}`} 
+                value={page.path}
+                style={optionStyle}
+            >
+                {existing ? '✓' : '✗'} {page.name} ({page.path})
+            </option>
+        );
+    };
+
+    const handlePageSelect = (e) => {
+        const selectedPage = e.target.value;
+        if (!selectedPage) {
+            setFormData({
+                page: "",
+                metaTitle: "",
+                metaKeywords: "",
+                metaDescription: "",
+                openGraphTags: "",
+                schemaMarkup: "",
+                canonicalTag: "",
+                ogImage: null,
+                ogImagePreview: null,
+                isActive: true
+            });
+            setIsEditMode(false);
+            setEditId(null);
+            if (ogEditorRef.current) ogEditorRef.current.innerText = "";
+            if (schemaEditorRef.current) schemaEditorRef.current.innerText = "";
+            if (canonicalEditorRef.current) canonicalEditorRef.current.innerText = "";
+            return;
+        }
+
+        const existing = existingSeoItems.find(item => item.page === selectedPage);
+        if (existing) {
+            setFormData({
+                page: selectedPage,
+                metaTitle: existing.metaTitle || "",
+                metaKeywords: existing.metaKeywords || "",
+                metaDescription: existing.metaDescription || "",
+                openGraphTags: existing.openGraphTags || "",
+                schemaMarkup: existing.schemaMarkup || "",
+                canonicalTag: existing.canonicalTag || "",
+                ogImage: null,
+                ogImagePreview: existing.ogImage ? `${SERVER_URL}${existing.ogImage}` : null,
+                isActive: existing.isActive
+            });
+            setEditId(existing._id);
+            setIsEditMode(true);
+
+            setTimeout(() => {
+                if (ogEditorRef.current) ogEditorRef.current.innerText = existing.openGraphTags || "";
+                if (schemaEditorRef.current) schemaEditorRef.current.innerText = existing.schemaMarkup || "";
+                if (canonicalEditorRef.current) canonicalEditorRef.current.innerText = existing.canonicalTag || "";
+            }, 50);
+
+            Swal.fire({
+                icon: 'info',
+                title: 'Existing SEO Data Loaded',
+                text: `We found and loaded existing SEO tags for ${selectedPage}. Saving will update this record.`,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        } else {
+            setFormData({
+                page: selectedPage,
+                metaTitle: "",
+                metaKeywords: "",
+                metaDescription: "",
+                openGraphTags: "",
+                schemaMarkup: "",
+                canonicalTag: "",
+                ogImage: null,
+                ogImagePreview: null,
+                isActive: true
+            });
+            setIsEditMode(false);
+            setEditId(null);
+            if (ogEditorRef.current) ogEditorRef.current.innerText = "";
+            if (schemaEditorRef.current) schemaEditorRef.current.innerText = "";
+            if (canonicalEditorRef.current) canonicalEditorRef.current.innerText = "";
+
+            Swal.fire({
+                icon: 'success',
+                title: 'New Page Selected',
+                text: `Create new SEO tags for ${selectedPage}.`,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        }
+    };
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -155,6 +354,8 @@ const AddSeo = () => {
                     confirmButtonColor: '#134698',
                     timer: 2000
                 });
+
+                fetchExistingSeo(); // Refresh local SEO cache list!
 
                 if (isEditMode) {
                     navigate('/meta-list');
@@ -304,23 +505,40 @@ const AddSeo = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="md:col-span-2">
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                            <label className="block text-xs font-bold text-gray-700 mb-1">
                                 Select Page <span className="text-red-500">*</span>
                             </label>
                             <select
                                 name="page"
                                 value={formData.page}
-                                onChange={handleInputChange}
-                                className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
-                                disabled={isEditMode}
+                                onChange={handlePageSelect}
+                                className="w-full px-3 py-2.5 border-2 border-gray-300 focus:outline-none focus:border-[#134698] font-semibold transition-colors text-xs shadow-sm bg-white"
                             >
                                 <option value="">-- Select a Page --</option>
-                                {pagesList.map((page, index) => (
-                                    <option key={index} value={page.path}>
-                                        {page.name} ({page.path})
+                                {!isPagePathInOptions(formData.page) && formData.page && (
+                                    <option value={formData.page} style={getExistingSeo(formData.page) ? { color: '#16a34a', fontWeight: 'bold' } : { color: '#dc2626' }}>
+                                        {getPageName(formData.page)} ({formData.page})
                                     </option>
-                                ))}
+                                )}
+                                <optgroup label="Static Pages">
+                                    {pagesList.map((page, index) => renderPageOption(page, index, 'static'))}
+                                </optgroup>
+
+                                {dynamicPages.services.length > 0 && (
+                                    <optgroup label="Featured Service Pages">
+                                        {dynamicPages.services.map((page, index) => renderPageOption(page, index, 'service'))}
+                                    </optgroup>
+                                )}
+
+                                {dynamicPages.custom.length > 0 && (
+                                    <optgroup label="Custom Pages">
+                                        {dynamicPages.custom.map((page, index) => renderPageOption(page, index, 'custom'))}
+                                    </optgroup>
+                                )}
                             </select>
+                            <p className="text-[10px] text-gray-400 mt-1 font-medium">
+                                <span className="text-green-600 font-bold">Green pages (✓)</span> have existing SEO data. <span className="text-red-500 font-bold">Red pages (✗)</span> are pending. Selecting any page will load its metadata automatically.
+                            </p>
                         </div>
 
                         <div>

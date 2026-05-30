@@ -151,7 +151,7 @@ const ManageStallRates = () => {
     };
 
     return (
-        <div className="p-6 bg-white min-h-screen font-inter uppercase">
+        <div className="p-6 bg-white min-h-screen font-inter uppercase mt-6">
             <PageHeader title="STALL PRICING MASTER" description="Set pricing per event, currency, and stall type" />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
@@ -165,7 +165,7 @@ const ManageStallRates = () => {
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
                             <div className="mb-3">
                                 <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Exhibition Event *</label>
-                                <select required value={rateForm.eventId} onChange={(e) => setRateForm({...rateForm, eventId: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px] appearance-none bg-white">
+                                <select required value={rateForm.eventId} onChange={(e) => setRateForm({ ...rateForm, eventId: e.target.value })} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px] appearance-none bg-white">
                                     <option value="">Select Event</option>
                                     {events.map(e => <option key={e._id} value={e._id}>{e.name}</option>)}
                                 </select>
@@ -174,14 +174,14 @@ const ManageStallRates = () => {
                             <div className="grid grid-cols-2 gap-3 mb-3">
                                 <div>
                                     <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Currency *</label>
-                                    <select value={rateForm.currency} onChange={(e) => setRateForm({...rateForm, currency: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px] appearance-none bg-white">
+                                    <select value={rateForm.currency} onChange={(e) => setRateForm({ ...rateForm, currency: e.target.value })} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px] appearance-none bg-white">
                                         <option value="INR">INR (₹)</option>
                                         <option value="USD">USD ($)</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Stall Type *</label>
-                                    <select value={rateForm.stallType} onChange={(e) => setRateForm({...rateForm, stallType: e.target.value})} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px] appearance-none bg-white">
+                                    <select value={rateForm.stallType} onChange={(e) => setRateForm({ ...rateForm, stallType: e.target.value })} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px] appearance-none bg-white">
                                         <option value="Shell Space">Shell Space</option>
                                         <option value="Raw Space">Raw Space</option>
                                     </select>
@@ -192,12 +192,12 @@ const ManageStallRates = () => {
                                 <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Rate Per Sq m *</label>
                                 <div className="relative">
                                     <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                                    <input type="number" required value={rateForm.ratePerSqm} onChange={(e) => setRateForm({...rateForm, ratePerSqm: e.target.value})} className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" />
+                                    <input type="number" required value={rateForm.ratePerSqm} onChange={(e) => setRateForm({ ...rateForm, ratePerSqm: e.target.value })} className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" />
                                 </div>
                             </div>
 
                             <div className="pt-2 border-t border-slate-100 flex justify-end gap-2">
-                                {isEditing && <button type="button" onClick={() => { setIsEditing(null); setRateForm({...EMPTY_RATE}); }} className="px-6 py-2 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all rounded-[2px]">Cancel</button>}
+                                {isEditing && <button type="button" onClick={() => { setIsEditing(null); setRateForm({ ...EMPTY_RATE }); }} className="px-6 py-2 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all rounded-[2px]">Cancel</button>}
                                 <button type="submit" disabled={isLoading} className="px-8 py-2 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-sm">
                                     {isLoading ? 'Saving...' : (isEditing ? 'Update Rate' : 'Save Rate Detail')}
                                 </button>
@@ -255,16 +255,16 @@ const ManageStallRates = () => {
                                             </td>
                                             <td className="py-4 px-4">
                                                 <div className="flex items-center justify-center gap-3">
-                                                    <button 
-                                                        onClick={() => { setIsEditing(rate._id); setRateForm({ eventId: rate.eventId?._id || '', currency: rate.currency, stallType: rate.stallType, ratePerSqm: rate.ratePerSqm }); }} 
-                                                        className="text-blue-600 hover:bg-blue-50 p-1.5 transition-all rounded-[2px] border border-blue-200 bg-blue-50/30" 
+                                                    <button
+                                                        onClick={() => { setIsEditing(rate._id); setRateForm({ eventId: rate.eventId?._id || '', currency: rate.currency, stallType: rate.stallType, ratePerSqm: rate.ratePerSqm }); }}
+                                                        className="text-blue-600 hover:bg-blue-50 p-1.5 transition-all rounded-[2px] border border-blue-200 bg-blue-50/30"
                                                         title="Edit"
                                                     >
                                                         <Edit size={16} />
                                                     </button>
-                                                    <button 
-                                                        onClick={() => handleDelete(rate._id)} 
-                                                        className="text-red-600 hover:bg-red-50 p-1.5 transition-all rounded-[2px] border border-red-200 bg-red-50/30" 
+                                                    <button
+                                                        onClick={() => handleDelete(rate._id)}
+                                                        className="text-red-600 hover:bg-red-50 p-1.5 transition-all rounded-[2px] border border-red-200 bg-red-50/30"
                                                         title="Delete"
                                                     >
                                                         <Trash2 size={16} />

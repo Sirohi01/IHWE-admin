@@ -3,6 +3,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { createActivityLogThunk } from "../../features/activityLog/activityLogSlice";
 import Swal from "sweetalert2";
+import api from "../../lib/api";
 
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
@@ -26,26 +27,29 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 };
 
 const LOCAL_STORAGE_KEY = "app_user_targets_v1";
-const USER_LIST = [
-  "Abhay Raj", "Rohit", "ADMIN", "Chiranjeev Sharma", "Manoj Mishra",
-  "Prerna Pandey", "Rishav Singh", "Shrigi Rawat", "Sumit Mistra", "Tanya Jaiswal", "Vijay Sharma",
-];
 
 const AddTarget = () => {
   const dispatch = useDispatch();
+  const [adminUsers, setAdminUsers] = useState([]);
+
+  useEffect(() => {
+    api.get("/api/admin/all")
+      .then(res => {
+        if (res.data.success) {
+          setAdminUsers(res.data.data || []);
+        }
+      })
+      .catch(err => console.error("Error fetching admin users:", err));
+  }, []);
+
   const [editingTarget, setEditingTarget] = useState(null);
   const [formData, setFormData] = useState({ user: "", target: "", status: "Active" });
   const [targets, setTargets] = useState(() => {
     try {
-      const raw = sessionStorage.getItem(LOCAL_STORAGE_KEY);
+      const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (raw) return JSON.parse(raw);
     } catch (e) {}
-    return [
-      { id: 1, user: "sumit mishra", target: 100, status: "Active" },
-      { id: 2, user: "Chiranjeev Sharma", target: 100, status: "Active" },
-      { id: 3, user: "prerna pandey", target: 100, status: "Active" },
-      { id: 4, user: "abhay raj", target: 100, status: "Active" },
-    ];
+    return [];
   });
 
   const [searchText, setSearchText] = useState("");
@@ -61,7 +65,7 @@ const AddTarget = () => {
   };
 
   useEffect(() => {
-    try { sessionStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(targets)); } catch (e) {}
+    try { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(targets)); } catch (e) {}
   }, [targets]);
 
   const handleChange = (e) => setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -196,7 +200,11 @@ const AddTarget = () => {
                   <label className={labelCls}>Assign User <span className="text-red-500">*</span></label>
                   <select name="user" value={formData.user} onChange={handleChange} className={inputCls} disabled={!!editingTarget} required>
                     <option value="">Select User</option>
-                    {USER_LIST.map((user) => <option key={user} value={user}>{user}</option>)}
+                    {adminUsers.map((u) => (
+                      <option key={u._id} value={u.username}>
+                        {u.fullName || u.username} ({u.username})
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>

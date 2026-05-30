@@ -214,269 +214,329 @@ const FAQManage = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
-            <PageHeader
+        <>
+            <div className="relative w-full h-64 overflow-hidden rounded mt-8">
+                {/* Background Image */}
+                <img
+                    src="/home.png"
+                    alt="banner"
+                    className="absolute inset-0 w-full h-full object-cover z-0"
+                />
+
+                {/* Halka dark overlay */}
+                <div className="absolute inset-0 bg-black/40 z-[1]" />
+
+                {/* Dot grid */}
+                <div className="absolute inset-0 opacity-[0.05] z-[2]"
+                    style={{
+                        backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+                        backgroundSize: '28px 28px'
+                    }}
+                />
+
+                {/* Orange left accent bar */}
+                <div className="absolute left-0 top-6 bottom-6 w-1 rounded-full bg-gradient-to-b from-[#d26019]/0 via-[#d26019] to-[#d26019]/0 z-[2]" />
+
+                {/* Content */}
+                <div className="relative z-10 h-full flex items-center justify-between px-10">
+
+                    <div>
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#d26019] animate-pulse" />
+                            <p className="text-sm font-bold text-slate-200 uppercase tracking-[0.20em]">
+                                Admin Panel · System · CMS
+                            </p>
+                        </div>
+                        <h1 className="text-3xl font-semibold text-white leading-tight tracking-tight mb-1">
+                            FAQ MANAGEMENT
+                        </h1>
+                        <p className="text-lg font-medium text-slate-200">
+                            Manage FAQ section headings and individual question & answer cards
+                        </p>
+                    </div>
+
+                    <div className="hidden md:flex flex-col items-end gap-3">
+                        {/* Online badge */}
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/10 backdrop-blur-sm">
+                            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                            <span className="text-[10px] font-black text-white uppercase tracking-widest">System Online</span>
+                        </div>
+
+                        {/* Date */}
+                        <div className="px-4 py-2 rounded-xl bg-[#d26019]/20 border border-[#d26019]/20">
+                            <p className="text-[10px] font-black text-[#d26019] uppercase tracking-widest">
+                                {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div className="bg-white shadow-md p-6 min-h-screen">
+                {/* <PageHeader
                 title="FAQ MANAGEMENT"
                 description="Manage FAQ section headings and individual question & answer cards"
-            />
+            /> */}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
-                {/* LEFT: Headings + Item Form */}
-                <div className="lg:col-span-1 space-y-6">
-                    {/* Section Headings */}
-                    <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
-                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[#23471d]">
-                            <Type className="w-5 h-5 text-[#d26019]" /> Section Headings
-                        </h2>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Eyebrow Text</label>
-                                <input
-                                    type="text"
-                                    value={data.subheading}
-                                    onChange={(e) => setData({ ...data, subheading: e.target.value })}
-                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
-                                    placeholder="e.g. Support & Info"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Main Title</label>
-                                <input
-                                    type="text"
-                                    value={data.heading}
-                                    onChange={(e) => setData({ ...data, heading: e.target.value })}
-                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight text-[#d26019]">Highlight Text (Orange)</label>
-                                <input
-                                    type="text"
-                                    value={data.highlightText}
-                                    onChange={(e) => setData({ ...data, highlightText: e.target.value })}
-                                    className="w-full px-4 py-2 border-2 border-[#d26019] focus:border-[#23471d] outline-none shadow-sm"
-                                    placeholder="Text to highlight in orange..."
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Short Description</label>
-                                <textarea
-                                    value={data.description}
-                                    onChange={(e) => setData({ ...data, description: e.target.value })}
-                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none h-24 shadow-sm"
-                                />
-                            </div>
-
-                            {/* DEFAULT VISUAL UPLOAD */}
-                            <div className="pt-4 border-t border-gray-100">
-                                <label className="block text-sm font-bold text-[#d26019] mb-2 uppercase tracking-tight">
-                                    Default Visual (Required 4:3)
-                                </label>
-                                <p className="text-[10px] text-gray-400 mb-3 font-bold uppercase tracking-tighter italic">Recommended: 800 x 600 PX | Max: 100KB</p>
-                                
-                                {defaultImagePreview ? (
-                                    <div className="relative aspect-[4/3] border-2 border-white overflow-hidden mb-2 shadow-md bg-white">
-                                        <img src={defaultImagePreview} className="w-full h-full object-cover" alt="Default Visual Preview" />
-                                        <button
-                                            onClick={() => { setDefaultImageFile(null); setDefaultImagePreview(''); setData({ ...data, defaultImage: '' }); if (defaultFileInputRef.current) defaultFileInputRef.current.value = ''; }}
-                                            className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full shadow-lg"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <label className="flex flex-col items-center justify-center aspect-[4/3] border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#23471d] hover:bg-gray-50 transition-all shadow-inner">
-                                        <ImageIcon className="w-8 h-8 text-gray-300 mb-2" />
-                                        <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">Upload Default</span>
-                                        <input ref={defaultFileInputRef} type="file" className="hidden" onChange={handleDefaultImageChange} accept="image/*" />
-                                    </label>
-                                )}
-                                
-                                <div className="mt-3">
-                                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Default Image Alt Text (SEO)</label>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
+                    {/* LEFT: Headings + Item Form */}
+                    <div className="lg:col-span-1 space-y-6">
+                        {/* Section Headings */}
+                        <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
+                            <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[#23471d]">
+                                <Type className="w-5 h-5 text-[#d26019]" /> Section Headings
+                            </h2>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Eyebrow Text</label>
                                     <input
                                         type="text"
-                                        value={data.defaultImageAlt}
-                                        onChange={(e) => setData({ ...data, defaultImageAlt: e.target.value })}
-                                        className="w-full px-3 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none text-xs"
-                                        placeholder="SEO description for the default image..."
+                                        value={data.subheading}
+                                        onChange={(e) => setData({ ...data, subheading: e.target.value })}
+                                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
+                                        placeholder="e.g. Support & Info"
                                     />
                                 </div>
-                            </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Main Title</label>
+                                    <input
+                                        type="text"
+                                        value={data.heading}
+                                        onChange={(e) => setData({ ...data, heading: e.target.value })}
+                                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight text-[#d26019]">Highlight Text (Orange)</label>
+                                    <input
+                                        type="text"
+                                        value={data.highlightText}
+                                        onChange={(e) => setData({ ...data, highlightText: e.target.value })}
+                                        className="w-full px-4 py-2 border-2 border-[#d26019] focus:border-[#23471d] outline-none shadow-sm"
+                                        placeholder="Text to highlight in orange..."
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-tight">Short Description</label>
+                                    <textarea
+                                        value={data.description}
+                                        onChange={(e) => setData({ ...data, description: e.target.value })}
+                                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none h-24 shadow-sm"
+                                    />
+                                </div>
 
-                            <button
-                                onClick={handleHeadingSave}
-                                disabled={isLoading}
-                                className="w-full py-3 bg-[#23471d] text-white font-bold hover:bg-[#1a3615] transition-all flex items-center justify-center gap-3 shadow-lg hover:shadow-xl mt-4"
-                            >
-                                {isLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                : <><Save className="w-5 h-5" /> Save All Headings & Visuals</>}
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* FAQ Item Form */}
-                    <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
-                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[#d26019]">
-                            {isEditingItem ? <Edit className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-                            {isEditingItem ? 'Edit FAQ Item' : 'Add New FAQ'}
-                        </h2>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Question *</label>
-                                <input
-                                    type="text"
-                                    value={itemForm.question}
-                                    onChange={(e) => setItemForm({ ...itemForm, question: e.target.value })}
-                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
-                                    placeholder="e.g. What is IHWE 2026?"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Answer *</label>
-                                <textarea
-                                    value={itemForm.answer}
-                                    onChange={(e) => setItemForm({ ...itemForm, answer: e.target.value })}
-                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none h-28 shadow-sm"
-                                    placeholder="Type detailed answer here..."
-                                />
-                            </div>
-
-                            {/* Image Upload */}
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
-                                    Synced Visual (4:3)
-                                </label>
-                                {imagePreview ? (
-                                    <div className="relative aspect-[4/3] border-2 border-white overflow-hidden mb-2 shadow-md bg-white">
-                                        <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
-                                        <button
-                                            onClick={() => { setImageFile(null); setImagePreview(''); setItemForm({ ...itemForm, image: '' }); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-                                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full shadow-lg"
-                                        >
-                                            <Trash2 size={12} />
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <label className="flex flex-col items-center justify-center aspect-[4/3] border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#23471d] transition-colors bg-gray-50">
-                                        <ImageIcon className="w-8 h-8 text-gray-300 mb-1" />
-                                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Upload Custom image</span>
-                                        <input ref={fileInputRef} type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
+                                {/* DEFAULT VISUAL UPLOAD */}
+                                <div className="pt-4 border-t border-gray-100">
+                                    <label className="block text-sm font-bold text-[#d26019] mb-2 uppercase tracking-tight">
+                                        Default Visual (Required 4:3)
                                     </label>
-                                )}
-                                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight text-center leading-tight mt-1 mb-2">
-                                    800 x 600 PX | MAX: 100KB
-                                </p>
-                                <input
-                                    type="text"
-                                    value={itemForm.imageAlt}
-                                    onChange={(e) => setItemForm({ ...itemForm, imageAlt: e.target.value })}
-                                    className="w-full px-3 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none text-xs shadow-sm"
-                                    placeholder="Alt Text for SEO..."
-                                />
-                            </div>
+                                    <p className="text-[10px] text-gray-400 mb-3 font-bold uppercase tracking-tighter italic">Recommended: 800 x 600 PX | Max: 100KB</p>
 
-                            <div className="flex gap-2">
+                                    {defaultImagePreview ? (
+                                        <div className="relative aspect-[4/3] border-2 border-white overflow-hidden mb-2 shadow-md bg-white">
+                                            <img src={defaultImagePreview} className="w-full h-full object-cover" alt="Default Visual Preview" />
+                                            <button
+                                                onClick={() => { setDefaultImageFile(null); setDefaultImagePreview(''); setData({ ...data, defaultImage: '' }); if (defaultFileInputRef.current) defaultFileInputRef.current.value = ''; }}
+                                                className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full shadow-lg"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <label className="flex flex-col items-center justify-center aspect-[4/3] border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#23471d] hover:bg-gray-50 transition-all shadow-inner">
+                                            <ImageIcon className="w-8 h-8 text-gray-300 mb-2" />
+                                            <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">Upload Default</span>
+                                            <input ref={defaultFileInputRef} type="file" className="hidden" onChange={handleDefaultImageChange} accept="image/*" />
+                                        </label>
+                                    )}
+
+                                    <div className="mt-3">
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Default Image Alt Text (SEO)</label>
+                                        <input
+                                            type="text"
+                                            value={data.defaultImageAlt}
+                                            onChange={(e) => setData({ ...data, defaultImageAlt: e.target.value })}
+                                            className="w-full px-3 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none text-xs"
+                                            placeholder="SEO description for the default image..."
+                                        />
+                                    </div>
+                                </div>
+
                                 <button
-                                    onClick={handleItemSubmit}
+                                    onClick={handleHeadingSave}
                                     disabled={isLoading}
-                                    className="flex-1 py-2.5 bg-[#d26019] text-white font-bold hover:bg-orange-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                    className="w-full py-3 bg-[#23471d] text-white font-bold hover:bg-[#1a3615] transition-all flex items-center justify-center gap-3 shadow-lg hover:shadow-xl mt-4"
                                 >
-                                    {isLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        : isEditingItem ? <><Edit className="w-4 h-4" /> Update FAQ</> : <><Plus className="w-4 h-4" /> Add FAQ</>}
+                                    {isLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        : <><Save className="w-5 h-5" /> Save All Headings & Visuals</>}
                                 </button>
-                                {isEditingItem && (
-                                    <button onClick={resetForm} className="px-4 py-2.5 border-2 border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-colors text-sm">
-                                        Cancel
+                            </div>
+                        </div>
+
+                        {/* FAQ Item Form */}
+                        <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
+                            <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[#d26019]">
+                                {isEditingItem ? <Edit className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                                {isEditingItem ? 'Edit FAQ Item' : 'Add New FAQ'}
+                            </h2>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Question *</label>
+                                    <input
+                                        type="text"
+                                        value={itemForm.question}
+                                        onChange={(e) => setItemForm({ ...itemForm, question: e.target.value })}
+                                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
+                                        placeholder="e.g. What is IHWE 2026?"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Answer *</label>
+                                    <textarea
+                                        value={itemForm.answer}
+                                        onChange={(e) => setItemForm({ ...itemForm, answer: e.target.value })}
+                                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none h-28 shadow-sm"
+                                        placeholder="Type detailed answer here..."
+                                    />
+                                </div>
+
+                                {/* Image Upload */}
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                        Synced Visual (4:3)
+                                    </label>
+                                    {imagePreview ? (
+                                        <div className="relative aspect-[4/3] border-2 border-white overflow-hidden mb-2 shadow-md bg-white">
+                                            <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
+                                            <button
+                                                onClick={() => { setImageFile(null); setImagePreview(''); setItemForm({ ...itemForm, image: '' }); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                                                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full shadow-lg"
+                                            >
+                                                <Trash2 size={12} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <label className="flex flex-col items-center justify-center aspect-[4/3] border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#23471d] transition-colors bg-gray-50">
+                                            <ImageIcon className="w-8 h-8 text-gray-300 mb-1" />
+                                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Upload Custom image</span>
+                                            <input ref={fileInputRef} type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
+                                        </label>
+                                    )}
+                                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight text-center leading-tight mt-1 mb-2">
+                                        800 x 600 PX | MAX: 100KB
+                                    </p>
+                                    <input
+                                        type="text"
+                                        value={itemForm.imageAlt}
+                                        onChange={(e) => setItemForm({ ...itemForm, imageAlt: e.target.value })}
+                                        className="w-full px-3 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none text-xs shadow-sm"
+                                        placeholder="Alt Text for SEO..."
+                                    />
+                                </div>
+
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={handleItemSubmit}
+                                        disabled={isLoading}
+                                        className="flex-1 py-2.5 bg-[#d26019] text-white font-bold hover:bg-orange-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                    >
+                                        {isLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            : isEditingItem ? <><Edit className="w-4 h-4" /> Update FAQ</> : <><Plus className="w-4 h-4" /> Add FAQ</>}
                                     </button>
-                                )}
+                                    {isEditingItem && (
+                                        <button onClick={resetForm} className="px-4 py-2.5 border-2 border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-colors text-sm">
+                                            Cancel
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* RIGHT: FAQ Items Table */}
-                <div className="lg:col-span-2">
-                    <div className="bg-white border-2 border-gray-200 shadow-sm">
-                        <div className="bg-[#23471d] px-5 py-3 flex items-center justify-between">
-                            <h2 className="text-white font-bold flex items-center gap-2">
-                                <HelpCircle className="w-4 h-4" /> FAQ Items List
-                            </h2>
-                            <span className="bg-[#d26019] text-white text-xs font-black px-3 py-1 uppercase tracking-wider">
-                                {data.items?.length || 0} FAQs
-                            </span>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b-2 border-gray-200 bg-gray-50">
-                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase w-10">NO.</th>
-                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">IMAGE</th>
-                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">QUESTION & ANSWER</th>
-                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">LAST UPDATED BY</th>
-                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">ACTIONS</th>
+                    {/* RIGHT: FAQ Items Table */}
+                    <div className="lg:col-span-2">
+                        <div className="bg-white border-2 border-gray-200 shadow-sm">
+                            <div className="bg-[#23471d] px-5 py-3 flex items-center justify-between">
+                                <h2 className="text-white font-bold flex items-center gap-2">
+                                    <HelpCircle className="w-4 h-4" /> FAQ Items List
+                                </h2>
+                                <span className="bg-[#d26019] text-white text-xs font-black px-3 py-1 uppercase tracking-wider">
+                                    {data.items?.length || 0} FAQs
+                                </span>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="border-b-2 border-gray-200 bg-gray-50">
+                                            <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase w-10">NO.</th>
+                                            <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">IMAGE</th>
+                                            <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">QUESTION & ANSWER</th>
+                                            <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">LAST UPDATED BY</th>
+                                            <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">ACTIONS</th>
 
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {!data.items?.length ? (
-                                        <tr>
-                                            <td colSpan={4} className="text-center py-12 text-gray-400">
-                                                No FAQ items found. Add your first FAQ using the form.
-                                            </td>
                                         </tr>
-                                    ) : data.items.map((item, idx) => (
-                                        <tr key={item._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                            <td className="py-3 px-4 text-gray-500 font-bold">{idx + 1}</td>
-                                            <td className="py-3 px-4">
-                                                {item.image ? (
-                                                    <img src={`${SERVER_URL}${item.image}`} alt={item.imageAlt} className="w-14 h-10 object-cover rounded border border-gray-200" />
-                                                ) : (
-                                                    <div className="w-14 h-10 bg-gray-100 rounded border border-gray-200 flex items-center justify-center">
-                                                        <ImageIcon size={14} className="text-gray-400" />
+                                    </thead>
+                                    <tbody>
+                                        {!data.items?.length ? (
+                                            <tr>
+                                                <td colSpan={4} className="text-center py-12 text-gray-400">
+                                                    No FAQ items found. Add your first FAQ using the form.
+                                                </td>
+                                            </tr>
+                                        ) : data.items.map((item, idx) => (
+                                            <tr key={item._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                                <td className="py-3 px-4 text-gray-500 font-bold">{idx + 1}</td>
+                                                <td className="py-3 px-4">
+                                                    {item.image ? (
+                                                        <img src={`${SERVER_URL}${item.image}`} alt={item.imageAlt} className="w-14 h-10 object-cover rounded border border-gray-200" />
+                                                    ) : (
+                                                        <div className="w-14 h-10 bg-gray-100 rounded border border-gray-200 flex items-center justify-center">
+                                                            <ImageIcon size={14} className="text-gray-400" />
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="py-3 px-4 max-w-sm">
+                                                    <p className="font-bold text-gray-800 text-sm">{item.question}</p>
+                                                    <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{item.answer}</p>
+                                                    {item.imageAlt && (
+                                                        <p className="text-[10px] text-[#23471d] mt-1 font-semibold">Alt: {item.imageAlt}</p>
+                                                    )}
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <div className="flex flex-col gap-1 items-center">
+                                                        <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
+                                                            {item.updatedBy || 'System'}
+                                                        </span>
+                                                        <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
+                                                            {item.updatedAt ? new Date(item.updatedAt).toLocaleString('en-GB', {
+                                                                day: '2-digit', month: 'short', year: 'numeric',
+                                                                hour: '2-digit', minute: '2-digit', hour12: true
+                                                            }) : 'N/A'}
+                                                        </span>
                                                     </div>
-                                                )}
-                                            </td>
-                                            <td className="py-3 px-4 max-w-sm">
-                                                <p className="font-bold text-gray-800 text-sm">{item.question}</p>
-                                                <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{item.answer}</p>
-                                                {item.imageAlt && (
-                                                    <p className="text-[10px] text-[#23471d] mt-1 font-semibold">Alt: {item.imageAlt}</p>
-                                                )}
-                                            </td>
-                                            <td className="py-3 px-4">
-                                                <div className="flex flex-col gap-1 items-center">
-                                                    <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
-                                                        {item.updatedBy || 'System'}
-                                                    </span>
-                                                    <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
-                                                        {item.updatedAt ? new Date(item.updatedAt).toLocaleString('en-GB', { 
-                                                            day: '2-digit', month: 'short', year: 'numeric', 
-                                                            hour: '2-digit', minute: '2-digit', hour12: true 
-                                                        }) : 'N/A'}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="py-3 px-4">
+                                                </td>
+                                                <td className="py-3 px-4">
 
-                                                <div className="flex items-center gap-2">
-                                                    <button onClick={() => startEdit(item)} className="text-blue-500 hover:text-blue-700 p-1 transition-colors" title="Edit">
-                                                        <Edit size={16} />
-                                                    </button>
-                                                    <button onClick={() => handleDeleteItem(item._id)} className="text-red-500 hover:text-red-700 p-1 transition-colors" title="Delete">
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                                    <div className="flex items-center gap-2">
+                                                        <button onClick={() => startEdit(item)} className="text-blue-500 hover:text-blue-700 p-1 transition-colors" title="Edit">
+                                                            <Edit size={16} />
+                                                        </button>
+                                                        <button onClick={() => handleDeleteItem(item._id)} className="text-red-500 hover:text-red-700 p-1 transition-colors" title="Delete">
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 

@@ -1,16 +1,16 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import Swal from 'sweetalert2';
 import api from "../lib/api";
 import { motion } from "framer-motion";
 import {
-    Users, Search, Eye, Mail, Phone, Building,
-    ChevronLeft, ChevronRight
+    Users, Search, Eye, Mail, Phone, Building
 } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import PageHeader from '../components/PageHeader';
 import { createActivityLogThunk } from '../features/activityLog/activityLogSlice';
 import { SERVER_URL } from '../lib/api';
+import Globallytable from '../components/Globallytable';
+import Textarea from '../components/Textarea';
 
 const fixUrl = (url) => {
     if (!url || url === 'undefined' || url === 'null') return null;
@@ -23,29 +23,10 @@ const fixUrl = (url) => {
     return `${SERVER_URL}${cleanPath}`;
 };
 
-const DetailItem = ({ label, value, highlight = false, isLink = false }) => (
-    <div className="min-w-0 font-inter">
-        <p className={`block text-[11px] font-medium uppercase tracking-tight mb-1 ${label === 'Highlight Text (Orange)' ? 'text-[#d26019]' : 'text-black'}`}>{label}</p>
-        {isLink ? (
-            <a href={value?.startsWith('http') ? value : `https://${value}`} target="_blank" rel="noreferrer" className="text-sm font-bold text-blue-600 hover:underline break-all">{value || 'N/A'}</a>
-        ) : (
-            <p className={`text-sm font-semibold uppercase ${highlight ? 'text-red-600' : 'text-gray-700'} break-words`}>{value || 'N/A'}</p>
-        )}
-    </div>
-);
-
-const DetailRow = ({ label, value }) => (
-    <div className="flex justify-between items-start gap-4 py-2 border-b border-slate-100 last:border-0">
-        <span className="text-[10px] text-slate-500 font-bold uppercase shrink-0">{label}</span>
-        <span className="text-xs font-black text-slate-800 text-right break-all flex-1 min-w-0">{value || 'N/A'}</span>
-    </div>
-);
-
 const ManageRegistrations = () => {
     const [registrations, setRegistrations] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedReg, setSelectedReg] = useState(null);
+    const [registrationType, setRegistrationType] = useState('all'); // 'all', 'exhibitor-only', 'domestic-exhibitor', 'international-exhibitor', 'seller'
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const filterType = searchParams.get('type'); // 'current' or 'incoming'
@@ -117,8 +98,6 @@ const ManageRegistrations = () => {
                 pctButtons += `<button type="button" ${isAlreadyPaid ? 'disabled' : ''} data-pct="${p}" onclick="window.selectPct(${p},${installmentBase},'${cur}')" `
                     + `class="pct-btn" style="${btnStyle}">${planLabel}</button>`;
             });
-
-            // If all phases are done but balance still remaining, add "Pay Remaining" button
             const allPhasesDone = history.length >= defaultPcts.length;
             if (allPhasesDone && remainingAmount > 0) {
                 const remainBtnStyle = 'padding:5px 10px;border:2px solid #23471d;border-radius:6px;font-weight:900;font-size:11px;background:#23471d;color:#fff;cursor:pointer;white-space:nowrap;';
@@ -308,7 +287,7 @@ const ManageRegistrations = () => {
                 + '<label style="display:block;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;margin-bottom:6px">Transaction / Reference ID *</label>'
                 + '<input id="swal-txid" style="width:100%;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-weight:700;font-size:13px;box-sizing:border-box" placeholder="UTR / Ref No. / Cheque No."></div>'
                 + '<div style="margin-bottom:12px">'
-                + '<label style="display:block;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;margin-bottom:6px">Upload Receipt (PDF / Image) *</label>'
+                + '<label style="display:block;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;margin-bottom:6px">Upload Receipt *</label>'
                 + '<input type="file" id="swal-file" style="width:100%;padding:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-size:12px;box-sizing:border-box" accept="image/*"></div>'
                 + '<div><label style="display:block;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;margin-bottom:6px">Admin Notes</label>'
                 + '<textarea id="swal-notes" style="width:100%;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-weight:600;font-size:12px;box-sizing:border-box;resize:none;height:70px" placeholder="Internal notes..."></textarea></div>';
@@ -441,9 +420,9 @@ const ManageRegistrations = () => {
 
     const columns = [
         {
-            key: "exhibitor",
+            accessor: "exhibitorName",
             label: "EXHIBITOR",
-            render: (row) => (
+            render: (value, row) => (
                 <div className="flex items-center gap-3 font-inter">
                     <div className="w-10 h-10 rounded-sm border border-slate-200 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
                         {row.companyLogoUrl ? (
@@ -461,7 +440,28 @@ const ManageRegistrations = () => {
                         )}
                     </div>
                     <div className="flex flex-col min-w-0">
-                        <span className="font-semibold text-red-600 text-sm uppercase tracking-tight leading-none mb-1 truncate">{row.exhibitorName}</span>
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold text-red-600 text-sm uppercase tracking-tight leading-none truncate">{row.exhibitorName}</span>
+                            {row.participation?.currency === 'USD' ? (
+                                <span className="text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest border bg-purple-50 text-purple-700 border-purple-200">
+                                    International
+                                </span>
+                            ) : (
+                                <span className="text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest border bg-blue-50 text-blue-700 border-blue-200">
+                                    Domestic
+                                </span>
+                            )}
+                            {row.isSeller && row.sellerSubscription?.status === 'active' && (
+                                <span className="text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest border bg-green-50 text-green-700 border-green-200">
+                                    Seller • Pro
+                                </span>
+                            )}
+                            {row.isSeller && row.sellerSubscription?.status !== 'active' && (
+                                <span className="text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest border bg-orange-50 text-orange-700 border-orange-200">
+                                    Seller
+                                </span>
+                            )}
+                        </div>
                         <span className="text-[10px] text-black font-medium uppercase tracking-widest leading-none truncate">{row.natureOfBusiness}</span>
                         <div className="mt-1.5 flex items-center gap-1.5">
                             <span className="text-[9px] bg-slate-100 px-1.5 py-0.5 rounded font-medium text-black uppercase tracking-tighter border border-slate-200">Event: <span className="text-red-500 font-bold">{row.eventId?.name || 'N/A'}</span></span>
@@ -471,9 +471,9 @@ const ManageRegistrations = () => {
             )
         },
         {
-            key: "stall",
+            accessor: "participation.stallFor",
             label: "STALL DETAILS",
-            render: (row) => (
+            render: (value, row) => (
                 <div className="flex flex-col font-inter">
                     <span className="font-semibold text-[#d26019] text-xs uppercase tracking-tight">STALL: {row.participation?.stallFor || 'A/A'}</span>
                     <span className="text-[10px] text-black font-medium uppercase tracking-tighter mt-1">{row.participation?.stallType} | {row.participation?.stallSize} sqm</span>
@@ -481,9 +481,9 @@ const ManageRegistrations = () => {
             )
         },
         {
-            key: "contacts",
+            accessor: "contact1.email",
             label: "CONTACT",
-            render: (row) => (
+            render: (value, row) => (
                 <div className="space-y-1 font-inter">
                     <div className="flex items-center gap-2 text-xs font-semibold text-black">
                         <Mail size={12} className="text-[#23471d]" />
@@ -497,9 +497,9 @@ const ManageRegistrations = () => {
             )
         },
         {
-            key: "payment",
+            accessor: "participation.total",
             label: "FINANCIALS",
-            render: (row) => (
+            render: (value, row) => (
                 <div className="flex flex-col font-inter">
                     <div className="flex items-center gap-1 mb-1">
                         <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-[2px] border ${row.paymentMode === 'online' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-slate-50 text-slate-700 border-slate-200'}`}>
@@ -520,9 +520,9 @@ const ManageRegistrations = () => {
             )
         },
         {
-            key: "reference",
+            accessor: "referredBy",
             label: "SOURCE & LEAD",
-            render: (row) => (
+            render: (value, row) => (
                 <div className="flex flex-col gap-1.5 font-inter">
                     <div className="text-[9px] space-y-0.5">
                         <p className="text-black font-medium uppercase tracking-widest leading-none">Referred By</p>
@@ -539,9 +539,9 @@ const ManageRegistrations = () => {
             )
         },
         {
-            key: "status",
+            accessor: "status",
             label: "STATUS",
-            render: (row) => (
+            render: (value, row) => (
                 <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase flex items-center gap-1.5 w-fit border ${row.status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
                     row.status === 'paid' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
                         row.status === 'advance-paid' ? 'bg-cyan-50 text-cyan-700 border-cyan-200' :
@@ -555,10 +555,10 @@ const ManageRegistrations = () => {
             )
         },
         {
-            key: "actions",
+            accessor: "_id",
             label: "ACTIONS",
-            render: (row) => (
-                <div className="flex items-center gap-2 flex-wrap">
+            render: (value, row) => (
+                <div className="flex items-center gap-2 flex-wrap justify-center">
                     <button
                         onClick={() => navigate(`/exhibitor-booking/${row._id}`)}
                         className="p-2 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-[2px] transition-all border border-gray-200"
@@ -570,20 +570,26 @@ const ManageRegistrations = () => {
                         <button
                             onClick={() => handleStatusUpdate(row._id, 'advance-paid', row)}
                             title="Record Next Installment"
-                            className="px-2 py-1 bg-cyan-600 text-white text-[9px] font-black uppercase rounded-[2px] border border-cyan-700 hover:bg-cyan-700 transition-all whitespace-nowrap"
+                            className="px-2 py-1 bg-[#337ab7] text-white text-[9px] font-black uppercase rounded-[2px] border border-[#286090] hover:bg-[#286090] transition-all whitespace-nowrap"
                         >
                             + Installment
                         </button>
                     )}
                     <select
                         onChange={(e) => handleStatusUpdate(row._id, e.target.value, row)}
-                        className="text-[10px] font-bold border-2 border-gray-200 rounded-[2px] px-2 py-1 outline-none bg-white focus:border-[#23471d]"
+                        className="text-[10px] font-bold border-2 border-gray-200 rounded-[2px] px-2 py-1 outline-none bg-white focus:border-[#337ab7]"
                         value={row.status}
                     >
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
-                        <option value="paid">Paid (Full)</option>
-                        <option value="advance-paid">Installment Paid</option>
+                        {(row.paymentPlanType === 'full' || !row.paymentPlanType) ? (
+                            <option value="paid">Paid (Full)</option>
+                        ) : (
+                            <option value="advance-paid">Installment Paid</option>
+                        )}
+                        {row.status === 'advance-paid' && (
+                            <option value="paid">Paid (Full Settlement)</option>
+                        )}
                         <option value="confirmed">Confirmed</option>
                         <option value="rejected">Rejected</option>
                         <option value="payment-failed">Payment Failed</option>
@@ -595,18 +601,23 @@ const ManageRegistrations = () => {
 
     const filteredRegs = registrations.filter(r => {
         if (r.status === 'payment-failed') return false;
+        if (registrationType !== 'all') {
+            const isDomestic = r.participation?.currency !== 'USD';
+            const isInternational = r.participation?.currency === 'USD';
 
-        const exhibitorName = (r.exhibitorName || '').toLowerCase();
-        const stallNo = (r.participation?.stallFor || r.participation?.stallNo || '').toLowerCase();
-        const eventName = (r.eventId?.name || '').toLowerCase();
-        const searchTermLower = (searchTerm || '').toLowerCase();
-
-        const matchesSearch =
-            exhibitorName.includes(searchTermLower) ||
-            stallNo.includes(searchTermLower) ||
-            eventName.includes(searchTermLower);
-
-        if (!matchesSearch) return false;
+            if (registrationType === 'exhibitor-only') {
+                if (r.isSeller) return false;
+            }
+            if (registrationType === 'domestic-exhibitor') {
+                if (!isDomestic) return false;
+            }
+            if (registrationType === 'international-exhibitor') {
+                if (!isInternational) return false;
+            }
+            if (registrationType === 'seller') {
+                if (!r.isSeller) return false;
+            }
+        }
 
         const today = new Date();
         const eventStartDate = r.eventId?.startDate ? new Date(r.eventId.startDate) : null;
@@ -623,111 +634,59 @@ const ManageRegistrations = () => {
         return true;
     });
 
-    const PAGE_SIZE = 10;
-    const [currentPage, setCurrentPage] = useState(1);
-
-    useEffect(() => { setCurrentPage(1); }, [searchTerm]);
-
-    const totalPages = Math.ceil(filteredRegs.length / PAGE_SIZE);
-    const paginatedRegs = filteredRegs.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
     return (
-        <div className="p-6 bg-white min-h-screen">
-            <PageHeader
-                title={filterType === 'current' ? "CURRENT EXHIBITOR BOOKINGS" : filterType === 'incoming' ? "INCOMING EXHIBITOR BOOKINGS" : "ALL EXHIBITOR BOOKINGS"}
-                description={filterType === 'current' ? "Monitor active registrations for upcoming or ongoing shows" : "Preview bookings for future exhibition cycles"}
-            />
+        <div className="w-full h-auto bg-[#eef1f5] pb-6 min-h-screen font-sans animate-fade-in" style={{ marginTop: "30px" }}>
+            <div className="w-full bg-white">
+                <div className="w-full bg-white flex flex-col sm:flex-row justify-between items-center px-4 py-1 mb-3">
+                    <h1 className="text-xl text-gray-500 mb-2 lg:mb-0 uppercase font-normal">
+                        {filterType === 'current' ? "CURRENT EXHIBITOR BOOKINGS" : filterType === 'incoming' ? "INCOMING EXHIBITOR BOOKINGS" : "ALL EXHIBITOR BOOKINGS"}
+                    </h1>
+                </div>
+            </div>
+            <div className="bg-white mx-3 p-2 rounded shadow-sm">
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center pr-4 pt-2 gap-4">
+                    <h1 className="text-base font-normal text-gray-800 px-2 uppercase">
+                        Exhibitor Bookings
+                    </h1>
+                    <div className="flex flex-wrap justify-start md:justify-end gap-2 mb-1">
+                        {[
+                            { value: 'all', label: 'All Exhibitors' },
+                            { value: 'domestic-exhibitor', label: 'Domestic Exhibitors' },
+                            { value: 'international-exhibitor', label: 'International Exhibitors' },
+                            { value: 'seller', label: 'Sellers Only' }
+                        ].map(type => (
+                            <button
+                                key={type.value}
+                                onClick={() => setRegistrationType(type.value)}
+                                className={`px-2.5 py-1 text-xs font-medium rounded-[2px] transition-all border ${registrationType === type.value
+                                        ? 'bg-[#286090] border-[#286090] text-white shadow-inner font-bold'
+                                        : 'bg-[#337ab7] border-[#337ab7] hover:bg-[#286090] text-white'
+                                    }`}
+                            >
+                                {type.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                <hr className="opacity-10 mb-2" />
 
-            <div className="mt-6 space-y-4">
-                <div className="bg-white shadow-md border-2 border-gray-200 rounded-[2px] px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
-                    <div className="relative flex-1 md:w-80">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                        <input
-                            type="text"
-                            placeholder="Search by company or stall..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-[2px] text-sm outline-none focus:border-[#23471d] transition-all font-medium text-slate-800"
+                {/* 🔹 Data Table - Compact sizing applied */}
+                <div className="text-xs [&_td]:py-2 [&_td]:px-3 [&_th]:py-2 [&_th]:px-3 overflow-x-auto">
+                    {isLoading ? (
+                        <div className="text-center text-gray-500 py-12 font-bold uppercase tracking-widest text-xs italic">Loading bookings...</div>
+                    ) : (
+                        <Globallytable
+                            rows={filteredRegs}
+                            colomns={columns}
+                            extrabutton={true}
                         />
-                    </div>
+                    )}
                 </div>
+            </div>
 
-                <div className="bg-white border-2 border-gray-200 shadow-sm overflow-x-auto">
-                    <div className="bg-[#23471d] px-5 py-3 flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                            <Users className="w-5 h-5 text-white/80" />
-                            <h2 className="text-white font-bold text-base uppercase tracking-tight font-inter">Exhibitor Bookings</h2>
-                        </div>
-                        <span className="bg-[#d26019] text-white text-[10px] font-black px-3 py-1 uppercase tracking-wider shadow-sm">
-                            {filteredRegs.length} RECORDS
-                        </span>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm" style={{minWidth: '900px'}}>
-                            <thead>
-                                <tr className="border-b-2 border-gray-200 bg-gray-50/50">
-                                    <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center w-12 tracking-tight">No.</th>
-                                    {columns.map((col, idx) => (
-                                        <th key={idx} className={`py-4 px-4 text-[11px] font-medium text-black uppercase tracking-tight ${col.key === 'actions' || col.key === 'status' ? 'text-center' : 'text-left'}`}>
-                                            {col.label}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100 font-inter">
-                                {isLoading ? (
-                                    <tr><td colSpan={columns.length + 1} className="py-12 text-center text-gray-400 font-bold uppercase tracking-widest text-xs italic">Loading bookings...</td></tr>
-                                ) : filteredRegs.length === 0 ? (
-                                    <tr><td colSpan={columns.length + 1} className="py-12 text-center text-gray-400 font-bold uppercase tracking-widest text-xs italic">No registrations found</td></tr>
-                                ) : (
-                                    paginatedRegs.map((row, idx) => (
-                                        <tr key={row._id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0 group">
-                                            <td className="py-3 px-4 text-gray-400 font-bold text-center text-xs">{(currentPage - 1) * PAGE_SIZE + idx + 1}</td>
-                                            {columns.map((col, colIdx) => (
-                                                <td key={colIdx} className={`py-3 px-4 ${col.key === 'actions' || col.key === 'status' ? 'text-center' : 'text-left'}`}>
-                                                    {col.render ? col.render(row) : row[col.key]}
-                                                </td>
-                                            ))}
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div className="bg-white px-5 py-3 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3 bg-gray-50/30">
-                        <div className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">
-                            Showing <span className="text-red-600 font-black">{filteredRegs.length > 0 ? (currentPage - 1) * PAGE_SIZE + 1 : 0}–{Math.min(currentPage * PAGE_SIZE, filteredRegs.length)}</span> of <span className="text-red-600 font-black">{filteredRegs.length}</span> registrations
-                        </div>
-                        {totalPages > 1 && (
-                            <div className="flex items-center gap-1.5">
-                                <button
-                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                    disabled={currentPage === 1}
-                                    className="p-1 px-3 border border-slate-200 bg-white text-slate-800 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 transition-all rounded-[2px]"
-                                >
-                                    <ChevronLeft size={16} />
-                                </button>
-                                {[...Array(totalPages)].map((_, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => setCurrentPage(i + 1)}
-                                        className={`w-8 h-8 text-[11px] font-black border transition-all rounded-[2px] ${currentPage === i + 1 ? 'bg-[#23471d] text-white border-[#23471d]' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'}`}
-                                    >
-                                        {i + 1}
-                                    </button>
-                                ))}
-                                <button
-                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                    disabled={currentPage === totalPages}
-                                    className="p-1 px-3 border border-slate-200 bg-white text-slate-800 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 transition-all rounded-[2px]"
-                                >
-                                    <ChevronRight size={16} />
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
+            {/* 🔹 Notes Section - Compact Textarea */}
+            <div className="bg-white shadow-md m-3 [&_textarea]:text-xs [&_textarea]:p-2 [&_textarea]:h-auto">
+                <Textarea />
             </div>
         </div>
     );

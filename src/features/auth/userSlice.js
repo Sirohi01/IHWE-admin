@@ -13,14 +13,14 @@ const getUserInfo = () => {
 };
 
 // Base API URL (.env file se)
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 // 1️⃣ GET all users
 export const fetchUsers = createAsyncThunk(
   "users/fetchUsers",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${BASE_URL}/users`);
+      const response = await axios.get(`${BASE_URL}/api/users`);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -49,7 +49,7 @@ export const fetchUserById = createAsyncThunk(
   "users/fetchUserById",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${BASE_URL}/users/${id}`);
+      const response = await axios.get(`${BASE_URL}/api/users/${id}`);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -62,7 +62,7 @@ export const createUser = createAsyncThunk(
   "users/createUser",
   async (userData, { dispatch, rejectWithValue }) => {
     try {
-      const response = await axios.post(`${BASE_URL}/users`, userData);
+      const response = await axios.post(`${BASE_URL}/api/users`, userData);
       const { userId, userName } = getUserInfo();
 
       if (userId) {
@@ -91,7 +91,7 @@ export const updateUser = createAsyncThunk(
   "users/updateUser",
   async ({ id, updates }, { dispatch, rejectWithValue }) => {
     try {
-      const response = await axios.put(`${BASE_URL}/users/${id}`, updates);
+      const response = await axios.put(`${BASE_URL}/api/users/${id}`, updates);
       const { userId, userName } = getUserInfo();
 
       if (userId) {
@@ -123,7 +123,7 @@ export const deleteUser = createAsyncThunk(
       const { users } = getState().users;
       const userToDelete = users.find(u => u._id === id);
 
-      await axios.delete(`${BASE_URL}/users/${id}`);
+      await axios.delete(`${BASE_URL}/api/users/${id}`);
       const { userId, userName } = getUserInfo();
 
       if (userId) {

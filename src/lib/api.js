@@ -18,6 +18,11 @@ const getBaseUrl = () => {
 export const SERVER_URL = getBaseUrl();
 export const API_URL = `${SERVER_URL}/api`;
 
+// Determine Frontend URL (Main Website)
+export const FRONTEND_URL = (import.meta.env.VITE_FRONTEND_URL ||
+  (window.location.hostname === "localhost" ? "http://localhost:8080" : window.location.origin.replace(/:\/\/admin\./, "://"))
+).replace(/\/$/, "");
+
 const api = axios.create({
   baseURL: SERVER_URL,
 });
@@ -45,6 +50,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+
 // ✅ RESPONSE INTERCEPTOR (FIXED)
 api.interceptors.response.use(
   (response) => response,
@@ -70,6 +76,20 @@ api.interceptors.response.use(
 );
 
 const unwrapApiResponse = (response) => response?.data ?? response;
+
+export const heroApi = {
+  getAll: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/hero/all"));
+    return payload.success ? payload.data : [];
+  },
+};
+
+export const settingsApi = {
+  get: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/settings"));
+    return payload.success ? payload.data : null;
+  },
+};
 
 export const heroBackgroundApi = {
   getAll: async () => {
@@ -121,12 +141,37 @@ export const buyerRegistrationApi = {
   },
 };
 
+export const internationalBuyerApi = {
+  submit: async (payload) => {
+    const isFormData = payload instanceof FormData;
+    const response = await api.post("/api/international-buyer/register", payload, {
+      headers: isFormData
+        ? { "Content-Type": "multipart/form-data" }
+        : { "Content-Type": "application/json" },
+    });
+    return unwrapApiResponse(response);
+  },
+  getAll: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/international-buyer"));
+    return payload.success ? payload.data : [];
+  },
+  delete: async (id) => {
+    const response = await api.delete(`/api/international-buyer/${id}`);
+    return unwrapApiResponse(response);
+  },
+  getConfig: async () => {
+    const response = await api.get("/api/international-buyer/config");
+    return unwrapApiResponse(response);
+  },
+};
+
 export const otpApi = {
-  request: async (identifier, type, name) => {
+  request: async (identifier, type, name, source) => {
     const response = await api.post("/api/otp/request", {
       identifier,
       type,
       name,
+      source,
     });
     return unwrapApiResponse(response);
   },
@@ -162,6 +207,64 @@ export const crmApi = {
     const payload = unwrapApiResponse(await api.get(`/api/crm-cities${query}`));
     return Array.isArray(payload) ? payload : payload.data || [];
   },
+};
+
+export const socialMediaApi = {
+  get: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/social-media"));
+    return payload.success ? payload.data : null;
+  },
+};
+
+export const printingBrandingPartnerApi = {
+  get: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/printing-branding-partner"));
+    return payload.success ? payload.data : null;
+  },
+  save: async (data) => {
+    const payload = unwrapApiResponse(await api.put("/api/printing-branding-partner", data));
+    return payload.success ? payload.data : null;
+  },
+  uploadImage: async (formData) => {
+    const payload = unwrapApiResponse(await api.post("/api/printing-branding-partner/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    }));
+    return payload;
+  }
+};
+
+export const logisticPartnerApi = {
+  get: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/logistic-partner"));
+    return payload.success ? payload.data : null;
+  },
+  save: async (data) => {
+    const payload = unwrapApiResponse(await api.put("/api/logistic-partner", data));
+    return payload.success ? payload.data : null;
+  },
+  uploadImage: async (formData) => {
+    const payload = unwrapApiResponse(await api.post("/api/logistic-partner/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    }));
+    return payload;
+  }
+};
+
+export const hospitalityPartnerApi = {
+  get: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/hospitality-partner"));
+    return payload.success ? payload.data : null;
+  },
+  save: async (data) => {
+    const payload = unwrapApiResponse(await api.put("/api/hospitality-partner", data));
+    return payload.success ? payload.data : null;
+  },
+  uploadImage: async (formData) => {
+    const payload = unwrapApiResponse(await api.post("/api/hospitality-partner/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    }));
+    return payload;
+  }
 };
 
 export default api;

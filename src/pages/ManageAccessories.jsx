@@ -8,7 +8,7 @@ const EMPTY = {
     length: '', width: '', height: '', dimensionUnit: 'ft',
     price: '', gstPercent: 18, unit: '',
     hsnCode: '', sacCode: '',
-    category: 'General', includedQty: 1, availableQty: 0,
+    category: 'Furniture', includedQty: 1, availableQty: 0,
     isActive: true, sortOrder: 0,
 };
 
@@ -26,6 +26,8 @@ export default function ManageAccessories() {
     const [tab, setTab] = useState('all');
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 10;
 
     const load = async () => {
         setLoading(true);
@@ -104,6 +106,8 @@ export default function ManageAccessories() {
     };
 
     const filtered = tab === 'all' ? items : items.filter(i => i.type === tab);
+    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+    const paginatedItems = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
     return (
         <div className="p-6 min-h-screen bg-gray-50 font-inter">
@@ -143,7 +147,7 @@ export default function ManageAccessories() {
             {/* Tabs */}
             <div className="flex gap-1 mb-4 bg-white border border-gray-200 p-1 w-fit shadow-sm">
                 {[['all', 'All'], ['complimentary', 'Complimentary'], ['purchasable', 'Purchasable']].map(([v, l]) => (
-                    <button key={v} onClick={() => setTab(v)}
+                    <button key={v} onClick={() => { setTab(v); setCurrentPage(1); }}
                         className={`px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${tab === v ? 'bg-[#23471d] text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100'}`}>
                         {l}
                     </button>
@@ -172,7 +176,7 @@ export default function ManageAccessories() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {filtered.map((item, i) => (
+                                {paginatedItems.map((item, i) => (
                                     <tr key={item._id} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
                                         <td className="py-2.5 px-4">
                                             <div className="flex items-center gap-3">
@@ -238,13 +242,35 @@ export default function ManageAccessories() {
                                 ))}
                             </tbody>
                         </table>
+                        
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                            <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between bg-white">
+                                <p className="text-[11px] font-bold text-gray-500">
+                                    Showing <span className="text-gray-900">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="text-gray-900">{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)}</span> of <span className="text-gray-900">{filtered.length}</span> results
+                                </p>
+                                <div className="flex items-center gap-1">
+                                    <button 
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                        className="px-2 py-1 text-[11px] font-bold border border-gray-200 rounded disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                                    >Prev</button>
+                                    <span className="text-[11px] font-bold px-2 text-gray-600">Page {currentPage} of {totalPages}</span>
+                                    <button 
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages}
+                                        className="px-2 py-1 text-[11px] font-bold border border-gray-200 rounded disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                                    >Next</button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
 
             {/* Form Modal */}
             {showForm && (
-                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="fixed inset-0 bg-black/60 z-[110] flex items-center justify-center p-4 backdrop-blur-sm">
                     <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl rounded-sm">
                         <div className="flex items-center justify-between px-6 py-4 bg-[#23471d] sticky top-0 z-10">
                             <div className="flex items-center gap-3">
@@ -299,7 +325,16 @@ export default function ManageAccessories() {
                                         </div>
                                         <div>
                                             <label className={lCls}>Item Category</label>
-                                            <input value={form.category} onChange={e => inp('category', e.target.value)} className={iCls} placeholder="Furniture, Power, etc." />
+                                            <select value={form.category} onChange={e => inp('category', e.target.value)} className={iCls}>
+                                                <option value="Furniture">Furniture</option>
+                                                <option value="Electrical">Electrical</option>
+                                                <option value="Branding">Branding</option>
+                                                <option value="Technology">Technology</option>
+                                                <option value="Utilities">Utilities</option>
+                                                <option value="Hospitality">Hospitality</option>
+                                                <option value="Manpower">Manpower</option>
+                                                <option value="Others">Others</option>
+                                            </select>
                                         </div>
                                         <div>
                                             <label className={lCls}>Billing Type</label>

@@ -3,6 +3,8 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { useState } from "react";
 import Sidebar from "./Sidebar";
+import WhatsAppFloat from "../components/WhatsAppFloat";
+import SocialSidebar from "../components/SocialSidebar";
 
 export default function AdminLayout({ onLogout }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -16,11 +18,15 @@ export default function AdminLayout({ onLogout }) {
         setSidebarOpen={setSidebarOpen}
         handleLogout={onLogout}
         mobileMenuOpen={mobileMenuOpen}
-        setMobileMenuOpen={setMobileMenuOpen}
+        setMobileMenuOpen={(val) => {
+          // On mobile open, always expand sidebar to full width
+          if (val) setSidebarOpen(true);
+          setMobileMenuOpen(val);
+        }}
       />
 
       {/* PAGE BODY */}
-      <div className="flex pt-14 flex-1 ">
+      <div className="flex pt-[64px] flex-1 ">
         {/* SIDEBAR (fixed position) */}
         <Sidebar
           sidebarOpen={sidebarOpen}
@@ -33,11 +39,11 @@ export default function AdminLayout({ onLogout }) {
         <div
           className={`
             flex flex-col flex-1 transition-all duration-300 overflow-hidden
-            ${sidebarOpen ? "lg:ml-74" : "lg:ml-20"}
+            ${sidebarOpen ? "lg:ml-[240px]" : "lg:ml-[70px]"}
           `}
         >
           {/* MAIN CONTENT - Reduced and consistent padding */}
-          <main className="flex-1 p-3 sm:p-4 lg:p-4 overflow-hidden">
+          <main className="flex-1 overflow-hidden">
             <div className="w-full">
               <Outlet />
             </div>
@@ -47,6 +53,10 @@ export default function AdminLayout({ onLogout }) {
           <Footer />
         </div>
       </div>
+
+      {/* Floating Widgets */}
+      <WhatsAppFloat />
+      <SocialSidebar />
     </div>
   );
 }

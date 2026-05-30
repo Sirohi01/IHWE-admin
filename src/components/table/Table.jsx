@@ -24,6 +24,7 @@ export default function Table({
                 <th
                   key={`${col.key}-${index}`}
                   className={`px-6 py-4 font-bold text-white uppercase text-xs ${col.headerClassName || 'text-left'}`}
+                  style={col.width ? { width: col.width, minWidth: col.width } : {}}
                 >
                   {col.label}
                 </th>

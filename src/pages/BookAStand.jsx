@@ -56,6 +56,8 @@ const BookAStand = () => {
         landlineNo: '',
         gstNo: '',
         panNo: '',
+        aadhaarNo: '',
+        registrantType: 'registered',
         natureOfBusiness: '',
         fasciaName: '',
         contact1: { title: 'Mr.', firstName: '', lastName: '', email: '', designation: '', mobile: '', alternateNo: '' },
@@ -86,14 +88,17 @@ const BookAStand = () => {
         amountPaid: 0,
         balanceAmount: 0,
         financeBreakdown: {
-            grossCost: 0,
-            stallDiscount: { percentage: 0, amount: 0 },
+            grossAmount: 0,
+            stallDiscountPercent: 0,
+            stallDiscountAmount: 0,
             subtotal1: 0,
-            fullPaymentDiscount: { percentage: 0, amount: 0 },
-            subtotal2: 0,
-            tdsDeduction: { percentage: 0, amount: 0 },
-            gst: 0,
-            totalAmount: 0,
+            discountPercent: 0,
+            discountAmount: 0,
+            subtotal: 0,
+            gstAmount: 0,
+            tdsPercent: 0,
+            tdsAmount: 0,
+            netPayable: 0,
             isFullPayment: false
         }
     });
@@ -192,10 +197,10 @@ const BookAStand = () => {
         const currentEvent = events.find(e => e._id === selectedEventId);
         const plans = currentEvent?.paymentPlans || [];
         const selectedPlan = plans.find(p => p.id === formData.paymentPlanType);
-        
+
         // A payment is "full" if the plan ID is 'full' OR if the percentage is 100
         const isFull = formData.paymentPlanType === 'full' || (selectedPlan && Number(selectedPlan.percentage) === 100);
-        
+
         const fpDiscountPct = isFull ? (settings?.fullPaymentDiscount || 0) : 0;
         const fpDiscountAmt = Math.round(subtotal1 * fpDiscountPct / 100);
         const subtotal2 = subtotal1 - fpDiscountAmt;
@@ -278,6 +283,7 @@ const BookAStand = () => {
                 ...formData,
                 eventId: selectedEventId,
                 filledBy: currentUser?.username || 'Admin',
+                filledByFullName: currentUser?.fullName || currentUser?.username || 'Admin',
                 status: 'pending',
                 paymentMode: 'manual',
                 amountPaid: 0,
@@ -325,6 +331,8 @@ const BookAStand = () => {
                         landlineNo: '',
                         gstNo: '',
                         panNo: '',
+                        aadhaarNo: '',
+                        registrantType: 'registered',
                         natureOfBusiness: '',
                         fasciaName: '',
                         contact1: { title: 'Mr.', firstName: '', lastName: '', email: '', designation: '', mobile: '', alternateNo: '' },
@@ -355,14 +363,17 @@ const BookAStand = () => {
                         amountPaid: 0,
                         balanceAmount: 0,
                         financeBreakdown: {
-                            grossCost: 0,
-                            stallDiscount: { percentage: 0, amount: 0 },
+                            grossAmount: 0,
+                            stallDiscountPercent: 0,
+                            stallDiscountAmount: 0,
                             subtotal1: 0,
-                            fullPaymentDiscount: { percentage: 0, amount: 0 },
-                            subtotal2: 0,
-                            tdsDeduction: { percentage: 0, amount: 0 },
-                            gst: 0,
-                            totalAmount: 0,
+                            discountPercent: 0,
+                            discountAmount: 0,
+                            subtotal: 0,
+                            gstAmount: 0,
+                            tdsPercent: 0,
+                            tdsAmount: 0,
+                            netPayable: 0,
                             isFullPayment: false
                         }
                     });
@@ -449,7 +460,7 @@ const BookAStand = () => {
 
 
     return (
-        <div className="bg-white shadow-md mt-4 p-4 min-h-screen font-inter animate-fadeIn">
+        <div className="bg-white shadow-md mt-8 p-4 min-h-screen font-inter animate-fadeIn">
             {/* HEADER */}
             <div className="flex flex-col sm:flex-row justify-between items-center pb-3 border-b border-gray-100">
                 <div>
@@ -522,8 +533,7 @@ const BookAStand = () => {
                                 <select required value={formData.participation.stallNo} onChange={(e) => handleStallSelect(e.target.value)} className={inputClasses}>
                                     <option value="">-- Choose Available Stall --</option>
                                     {availableStalls.filter(s =>
-                                        (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId) ||
-                                        (typeof s.event === 'string' ? s.event === selectedEventId : s.event?._id === selectedEventId)
+                                        (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId)
                                     ).map(s => (
                                         <option key={s._id} value={s._id}>{s.stallNumber} ({s.area} sqm � {s.plScheme})</option>
                                     ))}
@@ -564,29 +574,86 @@ const BookAStand = () => {
                         })()}
 
                         {/* PAYMENT PLAN & TDS CONTROL */}
-                        <div className="p-4 bg-[#f8fafc] border border-slate-200 rounded-[2px] mt-3">
-                            <label className={labelClasses}>Apply TDS Deduction *</label>
-                            <div className="flex flex-wrap gap-4 items-center">
-                                <div className="w-48 relative">
-                                    <select 
-                                        value={formData.chosenTdsPercent} 
-                                        onChange={(e) => setFormData(prev => ({ ...prev, chosenTdsPercent: Number(e.target.value) }))} 
-                                        className="w-full h-9 rounded-[2px] border border-slate-400 px-3 text-[12px] font-black text-red-600 bg-white focus:border-[#23471d] outline-none appearance-none"
-                                    >
-                                        <option value={0}>0% TDS</option>
-                                        <option value={1}>1% TDS</option>
-                                        <option value={2}>2% TDS</option>
-                                        <option value={10}>10% TDS</option>
-                                    </select>
-                                    <ChevronDown size={14} className="absolute right-3 top-3 text-red-600 pointer-events-none" />
-                                </div>
+                        <div className="p-4 bg-[#f8fafc] border border-slate-200 rounded-[2px] mt-3 space-y-3">
 
-                                <div className="text-right ml-auto min-w-[120px]">
+                            {(() => {
+                                const currentEvent = events.find(e => e._id === selectedEventId);
+                                const plans = currentEvent?.paymentPlans || [];
+                                const fullPlan = plans.find(p => Number(p.percentage) === 100 || p.id === 'full');
+                                // First installment phase (lowest %)
+                                const firstInstallPlan = plans
+                                    .filter(p => Number(p.percentage) < 100)
+                                    .sort((a, b) => Number(a.percentage) - Number(b.percentage))[0];
+                                const isFullSelected = formData.paymentPlanType === 'full' || formData.paymentPlanType === fullPlan?.id;
+                                return (
+                                    <div>
+                                        <label className={labelClasses}>Payment Plan *</label>
+                                        <div className="flex flex-wrap gap-2 mt-1">
+                                            {/* Full Payment */}
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData(prev => ({
+                                                    ...prev,
+                                                    paymentPlanType: fullPlan?.id || 'full',
+                                                    paymentPlanLabel: fullPlan?.label || 'Full Payment'
+                                                }))}
+                                                className={`px-4 py-1.5 text-[11px] font-black uppercase rounded-[2px] border transition-all ${isFullSelected
+                                                    ? 'bg-[#23471d] text-white border-[#23471d]'
+                                                    : 'bg-white text-slate-600 border-slate-300 hover:border-[#23471d]'
+                                                    }`}
+                                            >
+                                                Full Payment{settings?.fullPaymentDiscount > 0 ? ` (${settings.fullPaymentDiscount}% discount)` : ''}
+                                            </button>
+                                            {/* Installment — sets Phase 1 automatically */}
+                                            {firstInstallPlan && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData(prev => ({
+                                                        ...prev,
+                                                        paymentPlanType: firstInstallPlan.id,
+                                                        paymentPlanLabel: firstInstallPlan.label
+                                                    }))}
+                                                    className={`px-4 py-1.5 text-[11px] font-black uppercase rounded-[2px] border transition-all ${!isFullSelected
+                                                        ? 'bg-[#1a3a6b] text-white border-[#1a3a6b]'
+                                                        : 'bg-white text-slate-600 border-slate-300 hover:border-[#1a3a6b]'
+                                                        }`}
+                                                >
+                                                    Installment ({firstInstallPlan.percentage}% Now)
+                                                </button>
+                                            )}
+                                        </div>
+                                        <p className="text-[10px] text-slate-400 mt-1.5 font-medium">
+                                            Selected: <span className="font-black text-slate-700">{formData.paymentPlanLabel}</span>
+                                            {isFullSelected && settings?.fullPaymentDiscount > 0 && (
+                                                <span className="ml-2 text-[#23471d] font-black">— {settings.fullPaymentDiscount}% discount applied</span>
+                                            )}
+                                        </p>
+                                    </div>
+                                );
+                            })()}
+                            <div className="flex items-end justify-between gap-4">
+                                <div>
+                                    <label className={labelClasses}>Apply TDS Deduction *</label>
+                                    <div className="w-48 relative mt-1">
+                                        <select
+                                            value={formData.chosenTdsPercent}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, chosenTdsPercent: Number(e.target.value) }))}
+                                            className="w-full h-9 rounded-[2px] border border-slate-400 px-3 text-[12px] font-black text-red-600 bg-white focus:border-[#23471d] outline-none appearance-none"
+                                        >
+                                            <option value={0}>0% TDS</option>
+                                            <option value={1}>1% TDS</option>
+                                            <option value={2}>2% TDS</option>
+                                            {/* <option value={10}>10% TDS</option> */}
+                                        </select>
+                                        <ChevronDown size={14} className="absolute right-3 top-3 text-red-600 pointer-events-none" />
+                                    </div>
+                                </div>
+                                <div className="text-right">
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
-                                        Total Payable (Net)
+                                        Net Payable (After TDS)
                                     </p>
                                     <p className="text-xl font-black text-[#23471d] leading-none">
-                                        {formData.participation.currency} {formData.amountPaid?.toLocaleString()}
+                                        {formData.participation.currency} {formData.financeBreakdown?.netPayable?.toLocaleString() || 0}
                                     </p>
                                 </div>
                             </div>
@@ -713,6 +780,96 @@ const BookAStand = () => {
                                     <option>Retailer</option><option>Service Provider</option><option>University</option><option>Others</option>
                                 </select>
                             </div> */}
+                        </div>
+
+                        {/* REGISTRANT TYPE + GST / PAN / AADHAAR */}
+                        <div className="mt-3 p-3 border border-slate-300 rounded-[2px] bg-slate-50/60">
+                            <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest mb-2">Exhibitor Registration Type *</p>
+                            <div className="flex gap-6 mb-3">
+                                <label className="flex items-center gap-2 cursor-pointer group">
+                                    <input
+                                        type="radio"
+                                        name="registrantType"
+                                        value="registered"
+                                        checked={formData.registrantType === 'registered'}
+                                        onChange={() => setFormData(prev => ({ ...prev, registrantType: 'registered', panNo: '', aadhaarNo: '' }))}
+                                        className="accent-[#23471d] w-4 h-4"
+                                    />
+                                    <span className="text-[11px] font-bold text-slate-800 group-hover:text-[#23471d] transition-colors">
+                                        Registered Exhibitor
+                                        <span className="ml-1.5 text-[9px] font-black text-[#23471d] bg-green-50 border border-green-200 px-1.5 py-0.5 rounded-[2px] uppercase tracking-wider">GST Required</span>
+                                    </span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer group">
+                                    <input
+                                        type="radio"
+                                        name="registrantType"
+                                        value="unregistered"
+                                        checked={formData.registrantType === 'unregistered'}
+                                        onChange={() => setFormData(prev => ({ ...prev, registrantType: 'unregistered', gstNo: '' }))}
+                                        className="accent-[#d26019] w-4 h-4"
+                                    />
+                                    <span className="text-[11px] font-bold text-slate-800 group-hover:text-[#d26019] transition-colors">
+                                        Unregistered Buyer
+                                        <span className="ml-1.5 text-[9px] font-black text-[#d26019] bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded-[2px] uppercase tracking-wider">PAN + Aadhaar Required</span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
+                                {formData.registrantType === 'registered' ? (
+                                    <>
+                                        <div>
+                                            <label className={labelClasses}>GST No. (GSTIN) *</label>
+                                            <input
+                                                required
+                                                type="text"
+                                                value={formData.gstNo}
+                                                onChange={(e) => handleSelectChange('gstNo', e.target.value.toUpperCase())}
+                                                className={inputClasses}
+                                                placeholder="e.g. 07AABCU9603R1ZX"
+                                                maxLength={15}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className={labelClasses}>Fascia Name *</label>
+                                            <input required type="text" value={formData.fasciaName} onChange={(e) => handleSelectChange('fasciaName', e.target.value)} className={inputClasses} placeholder="Name on stall board" />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div>
+                                            <label className={labelClasses}>PAN Card No. *</label>
+                                            <input
+                                                required
+                                                type="text"
+                                                value={formData.panNo}
+                                                onChange={(e) => handleSelectChange('panNo', e.target.value.toUpperCase())}
+                                                className={inputClasses}
+                                                placeholder="e.g. ABCDE1234F"
+                                                maxLength={10}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className={labelClasses}>Aadhaar Card No. *</label>
+                                            <input
+                                                required
+                                                type="text"
+                                                value={formData.aadhaarNo || ''}
+                                                onChange={(e) => handleSelectChange('aadhaarNo', e.target.value.replace(/\D/g, '').slice(0, 12))}
+                                                className={inputClasses}
+                                                placeholder="12-digit Aadhaar number"
+                                                maxLength={12}
+                                                inputMode="numeric"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className={labelClasses}>Fascia Name *</label>
+                                            <input required type="text" value={formData.fasciaName} onChange={(e) => handleSelectChange('fasciaName', e.target.value)} className={inputClasses} placeholder="Name on stall board" />
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -853,7 +1010,7 @@ const BookAStand = () => {
                     <div className="px-2">
                         <div className="bg-white border border-slate-200 rounded-[2px] p-5 shadow-sm relative overflow-hidden group">
                             <div className="absolute top-0 left-0 w-1 h-full bg-[#23471d]"></div>
-                            
+
                             <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
                                 <div className="flex items-center gap-2">
                                     <ShieldCheck size={18} className="text-[#23471d]" />
@@ -861,7 +1018,7 @@ const BookAStand = () => {
                                 </div>
                                 <span className="px-2 py-0.5 text-[8px] font-black uppercase bg-slate-100 text-slate-500 rounded border border-slate-200 tracking-widest">Calculated Live</span>
                             </div>
-                            
+
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
                                 {/* Gross Cost */}
                                 <div className="space-y-1">
@@ -953,30 +1110,30 @@ const BookAStand = () => {
                         </div>
                     </div>
 
-                        {/* FOOTER ACTIONS */}
-                        <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 px-2">
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center gap-2">
-                                <ShieldCheck size={14} className="text-[#23471d]" />
-                                Secure Admin Manual Booking
-                            </p>
-                            <div className="flex gap-3">
-                                <button type="button" onClick={() => window.location.reload()}
-                                    className="px-8 py-2 bg-slate-50 border border-slate-200 text-slate-400 text-[11px] font-bold uppercase tracking-widest hover:bg-slate-100 transition-all rounded-[2px]">
-                                    Reset
-                                </button>
-                                <button type="submit" disabled={isLoading}
-                                    className="px-10 py-2 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-lg flex items-center gap-2 group">
-                                    {isLoading
-                                        ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        : <><span>Proceed Registration</span><ChevronRight size={15} className="group-hover:translate-x-1 transition-transform" /></>
-                                    }
-                                </button>
-                            </div>
+                    {/* FOOTER ACTIONS */}
+                    <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 px-2">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center gap-2">
+                            <ShieldCheck size={14} className="text-[#23471d]" />
+                            Secure Admin Manual Booking
+                        </p>
+                        <div className="flex gap-3">
+                            <button type="button" onClick={() => window.location.reload()}
+                                className="px-8 py-2 bg-slate-50 border border-slate-200 text-slate-400 text-[11px] font-bold uppercase tracking-widest hover:bg-slate-100 transition-all rounded-[2px]">
+                                Reset
+                            </button>
+                            <button type="submit" disabled={isLoading}
+                                className="px-10 py-2 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-lg flex items-center gap-2 group">
+                                {isLoading
+                                    ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    : <><span>Proceed Registration</span><ChevronRight size={15} className="group-hover:translate-x-1 transition-transform" /></>
+                                }
+                            </button>
                         </div>
-                    </form>
-                )}
-            </div>
-        );
+                    </div>
+                </form>
+            )}
+        </div>
+    );
 };
 
 export default BookAStand;

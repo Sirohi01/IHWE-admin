@@ -468,8 +468,8 @@ const HeroSlider = () => {
       key: "title",
       label: "TITLE",
       render: (row) => (
-        <div 
-          className="font-medium text-gray-900 max-w-[250px] line-clamp-2" 
+        <div
+          className="font-medium text-gray-900 max-w-[250px] line-clamp-2 [&_*]:!text-sm [&_*]:!font-medium [&_*]:!leading-tight [&_*]:!m-0 [&_*]:!p-0"
           dangerouslySetInnerHTML={{ __html: row.title }}
         />
       )
@@ -547,637 +547,608 @@ const HeroSlider = () => {
   ];
 
   return (
-    <div className="bg-white shadow-md mt-6 p-6">
-      <div className="w-full">
-        <PageHeader
-          title="HERO SLIDER MANAGEMENT"
-          description="Manage hero section slides"
+    <>
+      <div className="relative w-full h-64 overflow-hidden rounded mt-8">
+        {/* Background Image */}
+        <img
+          src="/home.png"
+          alt="banner"
+          className="absolute inset-0 w-full h-full object-cover z-0"
         />
 
-        <div className="bg-white border-2 border-gray-200 p-6 mb-6 shadow-lg">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-blue-50">
-              <Image className="w-4 h-4 text-blue-600" />
+        {/* Halka dark overlay */}
+        <div className="absolute inset-0 bg-black/40 z-[1]" />
+
+        {/* Dot grid */}
+        <div className="absolute inset-0 opacity-[0.05] z-[2]"
+          style={{
+            backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+            backgroundSize: '28px 28px'
+          }}
+        />
+
+        {/* Orange left accent bar */}
+        <div className="absolute left-0 top-6 bottom-6 w-1 rounded-full bg-gradient-to-b from-[#d26019]/0 via-[#d26019] to-[#d26019]/0 z-[2]" />
+
+        {/* Content */}
+        <div className="relative z-10 h-full flex items-center justify-between px-10">
+
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#d26019] animate-pulse" />
+              <p className="text-sm font-bold text-slate-200 uppercase tracking-[0.20em]">
+                Admin Panel · System · CMS
+              </p>
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              {editMode ? 'Edit Hero Slide' : 'Create New Hero Slide'}
-            </h2>
+            <h1 className="text-3xl font-semibold text-white leading-tight tracking-tight mb-1">
+              Hero Slider
+            </h1>
+            <p className="text-lg font-medium text-slate-200">
+              Manage hero section slides
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-[11px] font-semibold text-gray-700">
-                  Subtitle *
-                </label>
-                <div className="flex items-center gap-1">
-                  <span className="text-[9px] font-bold text-gray-400 uppercase">Size</span>
-                  <div className="flex items-center border-2 border-gray-300 rounded overflow-hidden h-6 bg-white shadow-sm">
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        const newSize = Math.max(1, parseInt(formData.subtitleFontSize || 0) - 1);
-                        setFormData(prev => ({ ...prev, subtitleFontSize: newSize.toString() }));
-                      }}
-                      className="px-1.5 h-full hover:bg-gray-100 border-r border-gray-300 transition-colors text-[10px] font-bold"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      name="subtitleFontSize"
-                      value={formData.subtitleFontSize}
-                      onChange={handleInputChange}
-                      className="w-10 h-full text-center text-[10px] focus:outline-none border-0"
-                    />
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        const newSize = parseInt(formData.subtitleFontSize || 0) + 1;
-                        setFormData(prev => ({ ...prev, subtitleFontSize: newSize.toString() }));
-                      }}
-                      className="px-1.5 h-full hover:bg-gray-100 border-l border-gray-300 transition-colors text-[10px] font-bold"
-                    >
-                      +
-                    </button>
+          <div className="hidden md:flex flex-col items-end gap-3">
+            {/* Online badge */}
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/10 backdrop-blur-sm">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[10px] font-black text-white uppercase tracking-widest">System Online</span>
+            </div>
+
+            {/* Date */}
+            <div className="px-4 py-2 rounded-xl bg-[#d26019]/20 border border-[#d26019]/20">
+              <p className="text-[10px] font-black text-[#d26019] uppercase tracking-widest">
+                {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div className="bg-gray-50 shadow-md  p-6">
+        <div className="w-full ">
+          <div className="border border-gray-200 rounded-lg p-6 mb-6 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-blue-50">
+                <Image className="w-4 h-4 text-blue-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">
+                {editMode ? 'Edit Hero Slide' : 'Create New Hero Slide'}
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[11px] font-semibold text-gray-700">
+                    Subtitle *
+                  </label>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[9px] font-bold text-gray-400 uppercase">Size</span>
+                    <div className="flex items-center border-2 border-gray-300 rounded overflow-hidden h-6 bg-white shadow-sm">
+                      <button
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          const newSize = Math.max(1, parseInt(formData.subtitleFontSize || 0) - 1);
+                          setFormData(prev => ({ ...prev, subtitleFontSize: newSize.toString() }));
+                        }}
+                        className="px-1.5 h-full hover:bg-gray-100 border-r border-gray-300 transition-colors text-[10px] font-bold"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        name="subtitleFontSize"
+                        value={formData.subtitleFontSize}
+                        onChange={handleInputChange}
+                        className="w-10 h-full text-center text-[10px] focus:outline-none border-0"
+                      />
+                      <button
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          const newSize = parseInt(formData.subtitleFontSize || 0) + 1;
+                          setFormData(prev => ({ ...prev, subtitleFontSize: newSize.toString() }));
+                        }}
+                        className="px-1.5 h-full hover:bg-gray-100 border-l border-gray-300 transition-colors text-[10px] font-bold"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 </div>
+                <input
+                  type="text"
+                  name="subtitle"
+                  value={formData.subtitle}
+                  onChange={handleInputChange}
+                  placeholder="e.g., PREMIUM INTERIOR"
+                  className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+                />
               </div>
-              <input
-                type="text"
-                name="subtitle"
-                value={formData.subtitle}
-                onChange={handleInputChange}
-                placeholder="e.g., PREMIUM INTERIOR"
-                className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
-              />
-            </div>
 
-            <div>
-              <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                Status
-              </label>
-              <select
-                name="isActive"
-                value={formData.isActive}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
-              >
-                <option value={true}>Active</option>
-                <option value={false}>Inactive</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                Order Number
-              </label>
-              <input
-                type="number"
-                name="order"
-                value={formData.order}
-                onChange={handleInputChange}
-                placeholder="Slide order..."
-                className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                Alt Text (SEO)
-              </label>
-              <input
-                type="text"
-                name="altText"
-                value={formData.altText}
-                onChange={handleInputChange}
-                placeholder="Image alt text..."
-                className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
-              />
-            </div>
-
-            {/* Title 1 & Title 2 side by side */}
-            <div className="md:col-span-2">
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-[11px] font-semibold text-gray-700">
-                  Hero Title 1 *
+              <div>
+                <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                  Status
                 </label>
-                <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-bold text-gray-400 uppercase">Default: 45px</span>
-                  <div className="flex items-center border-2 border-gray-300 rounded overflow-hidden h-6 bg-white shadow-sm">
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        const newSize = Math.max(1, parseInt(formData.titleFontSize || 0) - 1);
-                        setFormData(prev => ({ ...prev, titleFontSize: newSize.toString() }));
-                      }}
-                      className="px-1.5 h-full hover:bg-gray-100 border-r border-gray-300 transition-colors text-[10px] font-bold"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      name="titleFontSize"
-                      value={formData.titleFontSize}
-                      onChange={handleInputChange}
-                      className="w-10 h-full text-center text-[10px] focus:outline-none border-0"
-                    />
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        const newSize = parseInt(formData.titleFontSize || 0) + 1;
-                        setFormData(prev => ({ ...prev, titleFontSize: newSize.toString() }));
-                      }}
-                      className="px-1.5 h-full hover:bg-gray-100 border-l border-gray-300 transition-colors text-[10px] font-bold"
-                    >
-                      +
-                    </button>
+                <select
+                  name="isActive"
+                  value={formData.isActive}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+                >
+                  <option value={true}>Active</option>
+                  <option value={false}>Inactive</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                  Order Number
+                </label>
+                <input
+                  type="number"
+                  name="order"
+                  value={formData.order}
+                  onChange={handleInputChange}
+                  placeholder="Slide order..."
+                  className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                  Alt Text (SEO)
+                </label>
+                <input
+                  type="text"
+                  name="altText"
+                  value={formData.altText}
+                  onChange={handleInputChange}
+                  placeholder="Image alt text..."
+                  className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+                />
+              </div>
+
+              {/* Title 1 Full Width */}
+              <div className="md:col-span-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-2 gap-2">
+                  <div className="flex items-center gap-4">
+                    <label className="block text-[11px] font-bold text-gray-800 uppercase tracking-wider">
+                      Hero Title 1 *
+                    </label>
+                    <div className="flex items-center gap-3 border-l pl-4 border-gray-200">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'rgb(245, 118, 0)' }}></div>
+                        <span className="text-[10px] font-bold text-gray-500 uppercase">Orange: <span className="text-gray-900">245 118 0</span></span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'rgb(0, 179, 255)' }}></div>
+                        <span className="text-[10px] font-bold text-gray-500 uppercase">Blue: <span className="text-gray-900">0 179 255</span></span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'rgb(143, 238, 124)' }}></div>
+                        <span className="text-[10px] font-bold text-gray-500 uppercase">Green: <span className="text-gray-900">143 238 124</span></span>
+                      </div>
+                    </div>
                   </div>
+                  <span className="text-[9px] font-bold text-gray-400 uppercase bg-gray-50 px-2 py-0.5 rounded border border-gray-100">Size controlled via Editor</span>
+                </div>
+                <RichTextEditor
+                  value={formData.title}
+                  onChange={(content) => setFormData(prev => ({ ...prev, title: content }))}
+                  placeholder="Enter Hero Title 1 (e.g. India's Largest B2B Health & Wellness Expo 2026)..."
+                  minHeight="150px"
+                  fontSize={formData.titleFontSize}
+                />
+              </div>
+
+              {/* Hero Title 2 Full Width */}
+              <div className="md:col-span-4">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[11px] font-semibold text-gray-700">
+                    Hero Title 2 <span className="text-gray-400 font-normal">(optional – shown below Title 1)</span>
+                  </label>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase">Size controlled via Editor</span>
+                  </div>
+                <RichTextEditor
+                  value={formData.title2}
+                  onChange={(content) => setFormData(prev => ({ ...prev, title2: content }))}
+                  placeholder="Enter Hero Title 2 (e.g. Connect with 200+ Exhibitors | Meet 10,000+ Buyers)..."
+                  minHeight="150px"
+                  fontSize={formData.title2FontSize}
+                />
+              </div>
+
+              {/* Description full row */}
+              <div className="md:col-span-4">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[11px] font-semibold text-gray-700">
+                    Description *
+                  </label>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase">Size controlled via Editor</span>
+                  </div>
+                <RichTextEditor
+                  value={formData.description}
+                  onChange={(content) => setFormData(prev => ({ ...prev, description: content }))}
+                  placeholder="Enter description..."
+                  minHeight="120px"
+                  fontSize={formData.descriptionFontSize}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-4 md:col-span-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Button 1 Name
+                  </label>
+                  <input
+                    type="text"
+                    name="button1Name"
+                    value={formData.button1Name}
+                    onChange={handleInputChange}
+                    placeholder="e.g., View Our Projects"
+                    className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Button 1 URL
+                  </label>
+                  <input
+                    type="text"
+                    name="button1Url"
+                    value={formData.button1Url}
+                    onChange={handleInputChange}
+                    placeholder="e.g., /projects-list"
+                    className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Button 2 Name
+                  </label>
+                  <input
+                    type="text"
+                    name="button2Name"
+                    value={formData.button2Name}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Get Free Consultation"
+                    className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Button 2 URL
+                  </label>
+                  <input
+                    type="text"
+                    name="button2Url"
+                    value={formData.button2Url}
+                    onChange={handleInputChange}
+                    placeholder="e.g., /contact-list"
+                    className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Button 3 Name
+                  </label>
+                  <input
+                    type="text"
+                    name="button3Name"
+                    value={formData.button3Name}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Attend Conference"
+                    className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Button 3 URL
+                  </label>
+                  <input
+                    type="text"
+                    name="button3Url"
+                    value={formData.button3Url}
+                    onChange={handleInputChange}
+                    placeholder="e.g., /conference"
+                    className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+                  />
                 </div>
               </div>
-              <RichTextEditor
-                value={formData.title}
-                onChange={(content) => setFormData(prev => ({ ...prev, title: content }))}
-                placeholder="Enter Hero Title 1 (e.g. India's Largest B2B Health & Wellness Expo 2026)..."
-                minHeight="150px"
-                fontSize={formData.titleFontSize}
-              />
-            </div>
 
-            {/* Hero Title 2 */}
-            <div className="md:col-span-2">
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-[11px] font-semibold text-gray-700">
-                  Hero Title 2 <span className="text-gray-400 font-normal">(optional – shown below Title 1)</span>
-                </label>
-                <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-bold text-gray-400 uppercase">Default: 45px</span>
-                  <div className="flex items-center border-2 border-gray-300 rounded overflow-hidden h-6 bg-white shadow-sm">
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        const newSize = Math.max(1, parseInt(formData.title2FontSize || 0) - 1);
-                        setFormData(prev => ({ ...prev, title2FontSize: newSize.toString() }));
-                      }}
-                      className="px-1.5 h-full hover:bg-gray-100 border-r border-gray-300 transition-colors text-[10px] font-bold"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      name="title2FontSize"
-                      value={formData.title2FontSize}
-                      onChange={handleInputChange}
-                      className="w-10 h-full text-center text-[10px] focus:outline-none border-0"
-                    />
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        const newSize = parseInt(formData.title2FontSize || 0) + 1;
-                        setFormData(prev => ({ ...prev, title2FontSize: newSize.toString() }));
-                      }}
-                      className="px-1.5 h-full hover:bg-gray-100 border-l border-gray-300 transition-colors text-[10px] font-bold"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <RichTextEditor
-                value={formData.title2}
-                onChange={(content) => setFormData(prev => ({ ...prev, title2: content }))}
-                placeholder="Enter Hero Title 2 (e.g. Connect with 200+ Exhibitors | Meet 10,000+ Buyers)..."
-                minHeight="150px"
-                fontSize={formData.title2FontSize}
-              />
-            </div>
-
-            {/* Description full row */}
-            <div className="md:col-span-4">
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-[11px] font-semibold text-gray-700">
-                  Description *
-                </label>
-                <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-bold text-gray-400 uppercase">Default: 16px</span>
-                  <div className="flex items-center border-2 border-gray-300 rounded overflow-hidden h-6 bg-white shadow-sm">
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        const newSize = Math.max(1, parseInt(formData.descriptionFontSize || 0) - 1);
-                        setFormData(prev => ({ ...prev, descriptionFontSize: newSize.toString() }));
-                      }}
-                      className="px-1.5 h-full hover:bg-gray-100 border-r border-gray-300 transition-colors text-[10px] font-bold"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      name="descriptionFontSize"
-                      value={formData.descriptionFontSize}
-                      onChange={handleInputChange}
-                      className="w-10 h-full text-center text-[10px] focus:outline-none border-0"
-                    />
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        const newSize = parseInt(formData.descriptionFontSize || 0) + 1;
-                        setFormData(prev => ({ ...prev, descriptionFontSize: newSize.toString() }));
-                      }}
-                      className="px-1.5 h-full hover:bg-gray-100 border-l border-gray-300 transition-colors text-[10px] font-bold"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <RichTextEditor
-                value={formData.description}
-                onChange={(content) => setFormData(prev => ({ ...prev, description: content }))}
-                placeholder="Enter description..."
-                minHeight="120px"
-                fontSize={formData.descriptionFontSize}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-4 md:col-span-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Button 1 Name
+              <div className="md:col-span-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Hero Image (1600 * 600 - 16:6 Ratio) <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="text"
-                  name="button1Name"
-                  value={formData.button1Name}
-                  onChange={handleInputChange}
-                  placeholder="e.g., View Our Projects"
-                  className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-sm shadow-lg"
                 />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Button 1 URL
-                </label>
-                <input
-                  type="text"
-                  name="button1Url"
-                  value={formData.button1Url}
-                  onChange={handleInputChange}
-                  placeholder="e.g., /projects-list"
-                  className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Button 2 Name
-                </label>
-                <input
-                  type="text"
-                  name="button2Name"
-                  value={formData.button2Name}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Get Free Consultation"
-                  className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Button 2 URL
-                </label>
-                <input
-                  type="text"
-                  name="button2Url"
-                  value={formData.button2Url}
-                  onChange={handleInputChange}
-                  placeholder="e.g., /contact-list"
-                  className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Button 3 Name
-                </label>
-                <input
-                  type="text"
-                  name="button3Name"
-                  value={formData.button3Name}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Attend Conference"
-                  className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Button 3 URL
-                </label>
-                <input
-                  type="text"
-                  name="button3Url"
-                  value={formData.button3Url}
-                  onChange={handleInputChange}
-                  placeholder="e.g., /conference"
-                  className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
-                />
-              </div>
-            </div>
-
-            <div className="md:col-span-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Hero Image (1600 * 600 - 16:6 Ratio) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="w-full px-4 py-3 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-sm shadow-lg"
-              />
                 {imagePreview && (
                   <div className="mt-3 w-full border-2 border-[#23471d] shadow-lg overflow-hidden" style={{ aspectRatio: '16/6' }}>
                     <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                   </div>
                 )}
+              </div>
+
             </div>
 
-          </div>
-
-          <div className="flex items-center justify-end gap-3 mt-6">
-            <button
-              onClick={() => setShowSchedule(true)}
-              className="px-6 py-3 bg-purple-600 text-white font-bold transition-all shadow-lg hover:shadow-xl flex items-center gap-2 uppercase tracking-wider text-sm"
-            >
-              <Calendar className="w-4 h-4" />
-              Schedule
-            </button>
-
-            <button
-              onClick={handleReset}
-              className="px-6 py-3 bg-gray-500 text-white font-bold transition-all shadow-lg hover:shadow-xl uppercase tracking-wider text-sm"
-            >
-              Cancel
-            </button>
-
-            <button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className="px-6 py-3 bg-[#9E2A3A] text-white font-bold transition-all shadow-lg hover:shadow-xl flex items-center gap-2 uppercase tracking-wider text-sm disabled:opacity-50"
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>{editMode ? 'Updating...' : 'Creating...'}</span>
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4" />
-                  <span>{editMode ? 'Update Slide' : 'Create Slide'}</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        <div className="bg-white border-2 border-gray-200 overflow-hidden shadow-lg">
-          <div className="px-6 py-4 border-b bg-[#23471d]">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold text-white">Hero Slides List</h2>
-                <p className="text-sm text-blue-100 mt-0.5">
-                  Showing {filteredSlides.length} of {slides.length} slides
-                </p>
-              </div>
-
-              <div className="relative w-72">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search slides..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full h-10 pl-10 pr-4 text-sm border-2 border-gray-300 focus:outline-none focus:border-white transition-colors shadow-lg"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="w-12 h-12 border-4 border-[#134698] border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            ) : (
-              <Table
-                columns={columns}
-                data={paginatedSlides}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onView={handleView}
-                wrapperClassName="orange-scrollbar"
-              />
-            )}
-          </div>
-
-          <div className="mt-4 px-4 pb-4 bg-white">
-            <Pagination
-              currentPage={currentPage}
-              totalItems={filteredSlides.length}
-              itemsPerPage={itemsPerPage}
-              onPageChange={setCurrentPage}
-              label="slides"
-            />
-          </div>
-        </div>
-      </div>
-
-      {showSchedule && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-white w-full max-w-lg shadow-2xl p-6 animate-slide-up">
-            <h3 className="text-xl font-bold mb-4 text-gray-900 flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Schedule Slide
-            </h3>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700">Start Date *</label>
-                <input
-                  type="date"
-                  name="startDate"
-                  value={schedule.startDate}
-                  onChange={handleScheduleChange}
-                  className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] shadow-lg"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700">Start Time *</label>
-                <input
-                  type="time"
-                  name="startTime"
-                  value={schedule.startTime}
-                  onChange={handleScheduleChange}
-                  className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] shadow-lg"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700">End Date</label>
-                <input
-                  type="date"
-                  name="endDate"
-                  value={schedule.endDate}
-                  onChange={handleScheduleChange}
-                  className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] shadow-lg"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700">End Time</label>
-                <input
-                  type="time"
-                  name="endTime"
-                  value={schedule.endTime}
-                  onChange={handleScheduleChange}
-                  className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] shadow-lg"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 mt-6">
+            <div className="flex items-center justify-end gap-3 mt-6">
               <button
-                onClick={() => setShowSchedule(false)}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 transition shadow-lg"
+                onClick={() => setShowSchedule(true)}
+                className="px-6 py-3 bg-purple-600 text-white font-bold transition-all shadow-lg hover:shadow-xl flex items-center gap-2 uppercase tracking-wider text-sm"
+              >
+                <Calendar className="w-4 h-4" />
+                Schedule
+              </button>
+
+              <button
+                onClick={handleReset}
+                className="px-6 py-3 bg-gray-500 text-white font-bold transition-all shadow-lg hover:shadow-xl uppercase tracking-wider text-sm"
               >
                 Cancel
               </button>
+
               <button
-                onClick={handleScheduleSave}
-                className="px-4 py-2 bg-[#1e3a8a] text-white hover:bg-blue-800 transition shadow-lg"
+                onClick={handleSubmit}
+                disabled={isLoading}
+                className="px-6 py-3 bg-[#9E2A3A] text-white font-bold transition-all shadow-lg hover:shadow-xl flex items-center gap-2 uppercase tracking-wider text-sm disabled:opacity-50"
               >
-                Save Schedule
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>{editMode ? 'Updating...' : 'Creating...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" />
+                    <span>{editMode ? 'Update Slide' : 'Create Slide'}</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
-        </div>
-      )}
 
-      {viewModal && viewData && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={() => setViewModal(false)}>
-          <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl animate-slide-up" onClick={(e) => e.stopPropagation()}>
-            <div className="bg-[#1e3a8a] text-white px-6 py-4 flex items-center justify-between sticky top-0 z-10">
-              <h3 className="text-xl font-bold">View Slide Details</h3>
-              <button onClick={() => setViewModal(false)} className="text-white hover:text-gray-200">
-                <X className="w-6 h-6" />
-              </button>
+          <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden shadow-lg">
+            <div className="px-6 py-4 border-b bg-[#23471d] rounded-t-lg">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-white">Hero Slides List</h2>
+                  <p className="text-sm text-blue-100 mt-0.5">
+                    Showing {filteredSlides.length} of {slides.length} slides
+                  </p>
+                </div>
+
+                <div className="relative w-72">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search slides..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full h-10 pl-10 pr-4 text-sm border-2 border-gray-300 bg-white rounded focus:outline-none focus:border-white transition-colors shadow-lg"
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="p-6 space-y-6">
-              <div className="border-2 border-gray-300 p-4">
-                <h4 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  <Image className="w-5 h-5" />
-                  Hero Image
-                </h4>
-                <img
-                  src={`${API_URL}${viewData.image}`}
-                  alt={viewData.title}
-                  className="w-full h-80 object-cover border-2 border-gray-300 shadow-lg"
+            <div className="bg-white">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="w-12 h-12 border-4 border-[#134698] border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <Table
+                  columns={columns}
+                  data={paginatedSlides}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onView={handleView}
+                  wrapperClassName="orange-scrollbar"
                 />
-                <p className="mt-2 text-sm text-gray-500">
-                  <span className="font-semibold">Alt Text:</span> {viewData.altText || "N/A"}
-                </p>
+              )}
+            </div>
+
+            <div className="mt-4 px-4 pb-4 bg-white">
+              <Pagination
+                currentPage={currentPage}
+                totalItems={filteredSlides.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+                label="slides"
+              />
+            </div>
+          </div>
+        </div>
+
+        {showSchedule && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
+            <div className="bg-white w-full max-w-lg shadow-2xl p-6 animate-slide-up">
+              <h3 className="text-xl font-bold mb-4 text-gray-900 flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Schedule Slide
+              </h3>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Start Date *</label>
+                  <input
+                    type="date"
+                    name="startDate"
+                    value={schedule.startDate}
+                    onChange={handleScheduleChange}
+                    className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] shadow-lg"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Start Time *</label>
+                  <input
+                    type="time"
+                    name="startTime"
+                    value={schedule.startTime}
+                    onChange={handleScheduleChange}
+                    className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] shadow-lg"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">End Date</label>
+                  <input
+                    type="date"
+                    name="endDate"
+                    value={schedule.endDate}
+                    onChange={handleScheduleChange}
+                    className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] shadow-lg"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">End Time</label>
+                  <input
+                    type="time"
+                    name="endTime"
+                    value={schedule.endTime}
+                    onChange={handleScheduleChange}
+                    className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] shadow-lg"
+                  />
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="border-2 border-gray-200 p-4">
-                  <p className="text-sm font-semibold text-gray-500 mb-1">SUBTITLE</p>
-                  <p className="text-lg text-gray-900">{viewData.subtitle}</p>
-                </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setShowSchedule(false)}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 transition shadow-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleScheduleSave}
+                  className="px-4 py-2 bg-[#1e3a8a] text-white hover:bg-blue-800 transition shadow-lg"
+                >
+                  Save Schedule
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
-                <div className="border-2 border-gray-200 p-4">
-                  <p className="text-sm font-semibold text-gray-500 mb-1">TITLE</p>
-                  <p className="text-xl font-bold text-gray-900">{viewData.title}</p>
-                </div>
-
-                <div className="border-2 border-gray-200 p-4">
-                  <p className="text-sm font-semibold text-gray-500 mb-1">HIGHLIGHT</p>
-                  <p className="text-xl font-bold text-[#DE802B]">{viewData.highlight}</p>
-                </div>
-
-                <div className="border-2 border-gray-200 p-4">
-                  <p className="text-sm font-semibold text-gray-500 mb-1">STATUS</p>
-                  <span className={`inline-block px-3 py-1 text-xs font-semibold ${viewData.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                    }`}>
-                    {viewData.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
+        {viewModal && viewData && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={() => setViewModal(false)}>
+            <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl animate-slide-up" onClick={(e) => e.stopPropagation()}>
+              <div className="bg-[#1e3a8a] text-white px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+                <h3 className="text-xl font-bold">View Slide Details</h3>
+                <button onClick={() => setViewModal(false)} className="text-white hover:text-gray-200">
+                  <X className="w-6 h-6" />
+                </button>
               </div>
 
-              <div className="border-2 border-gray-200 p-4">
-                <p className="text-sm font-semibold text-gray-500 mb-2">DESCRIPTION</p>
-                <p className="text-gray-700 leading-relaxed">{viewData.description}</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="border-2 border-gray-200 p-4">
-                  <p className="text-sm font-semibold text-gray-500 mb-1">BUTTON 1</p>
-                  <p className="text-gray-900 font-medium">{viewData.button1Name}</p>
-                  <p className="text-gray-600 text-sm">{viewData.button1Url}</p>
-                </div>
-                <div className="border-2 border-gray-200 p-4">
-                  <p className="text-sm font-semibold text-gray-500 mb-1">BUTTON 2</p>
-                  <p className="text-gray-900 font-medium">{viewData.button2Name}</p>
-                  <p className="text-gray-600 text-sm">{viewData.button2Url}</p>
-                </div>
-              </div>
-
-              {viewData.schedule?.startDate && (
-                <div className="border-2 border-blue-200 bg-blue-50 p-4">
-                  <h4 className="text-lg font-bold text-blue-900 mb-3 flex items-center gap-2">
-                    <Calendar className="w-5 h-5" />
-                    Schedule Information
+              <div className="p-6 space-y-6">
+                <div className="border-2 border-gray-300 p-4">
+                  <h4 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <Image className="w-5 h-5" />
+                    Hero Image
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-blue-700">Start Date & Time</p>
-                      <p className="text-gray-900">
-                        {new Date(viewData.schedule.startDate + 'T' + viewData.schedule.startTime).toLocaleString()}
-                      </p>
-                    </div>
-                    {viewData.schedule.endDate && (
-                      <div>
-                        <p className="text-sm font-semibold text-blue-700">End Date & Time</p>
-                        <p className="text-gray-900">
-                          {new Date(viewData.schedule.endDate + 'T' + viewData.schedule.endTime).toLocaleString()}
-                        </p>
-                      </div>
-                    )}
-                    <div className="md:col-span-2">
-                      <p className="text-sm font-semibold text-blue-700 mb-1">Time Status</p>
-                      <TimeRemaining schedule={viewData.schedule} />
-                    </div>
+                  <img
+                    src={`${API_URL}${viewData.image}`}
+                    alt={viewData.title}
+                    className="w-full h-80 object-cover border-2 border-gray-300 shadow-lg"
+                  />
+                  <p className="mt-2 text-sm text-gray-500">
+                    <span className="font-semibold">Alt Text:</span> {viewData.altText || "N/A"}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="border-2 border-gray-200 p-4">
+                    <p className="text-sm font-semibold text-gray-500 mb-1">SUBTITLE</p>
+                    <p className="text-lg text-gray-900">{viewData.subtitle}</p>
+                  </div>
+
+                  <div className="border-2 border-gray-200 p-4">
+                    <p className="text-sm font-semibold text-gray-500 mb-1">TITLE</p>
+                    <p className="text-xl font-bold text-gray-900">{viewData.title}</p>
+                  </div>
+
+                  <div className="border-2 border-gray-200 p-4">
+                    <p className="text-sm font-semibold text-gray-500 mb-1">HIGHLIGHT</p>
+                    <p className="text-xl font-bold text-[#DE802B]">{viewData.highlight}</p>
+                  </div>
+
+                  <div className="border-2 border-gray-200 p-4">
+                    <p className="text-sm font-semibold text-gray-500 mb-1">STATUS</p>
+                    <span className={`inline-block px-3 py-1 text-xs font-semibold ${viewData.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                      {viewData.isActive ? 'Active' : 'Inactive'}
+                    </span>
                   </div>
                 </div>
-              )}
 
-              <div className="border-t-2 border-gray-200 pt-4 text-sm text-gray-600">
-                <div className="flex justify-between">
-                  <span>Created: {viewData.createdAt ? new Date(viewData.createdAt).toLocaleString() : 'N/A'}</span>
-                  <span>Updated: {viewData.updatedAt ? new Date(viewData.updatedAt).toLocaleString() : 'N/A'}</span>
+                <div className="border-2 border-gray-200 p-4">
+                  <p className="text-sm font-semibold text-gray-500 mb-2">DESCRIPTION</p>
+                  <p className="text-gray-700 leading-relaxed">{viewData.description}</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="border-2 border-gray-200 p-4">
+                    <p className="text-sm font-semibold text-gray-500 mb-1">BUTTON 1</p>
+                    <p className="text-gray-900 font-medium">{viewData.button1Name}</p>
+                    <p className="text-gray-600 text-sm">{viewData.button1Url}</p>
+                  </div>
+                  <div className="border-2 border-gray-200 p-4">
+                    <p className="text-sm font-semibold text-gray-500 mb-1">BUTTON 2</p>
+                    <p className="text-gray-900 font-medium">{viewData.button2Name}</p>
+                    <p className="text-gray-600 text-sm">{viewData.button2Url}</p>
+                  </div>
+                </div>
+
+                {viewData.schedule?.startDate && (
+                  <div className="border-2 border-blue-200 bg-blue-50 p-4">
+                    <h4 className="text-lg font-bold text-blue-900 mb-3 flex items-center gap-2">
+                      <Calendar className="w-5 h-5" />
+                      Schedule Information
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-blue-700">Start Date & Time</p>
+                        <p className="text-gray-900">
+                          {new Date(viewData.schedule.startDate + 'T' + viewData.schedule.startTime).toLocaleString()}
+                        </p>
+                      </div>
+                      {viewData.schedule.endDate && (
+                        <div>
+                          <p className="text-sm font-semibold text-blue-700">End Date & Time</p>
+                          <p className="text-gray-900">
+                            {new Date(viewData.schedule.endDate + 'T' + viewData.schedule.endTime).toLocaleString()}
+                          </p>
+                        </div>
+                      )}
+                      <div className="md:col-span-2">
+                        <p className="text-sm font-semibold text-blue-700 mb-1">Time Status</p>
+                        <TimeRemaining schedule={viewData.schedule} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="border-t-2 border-gray-200 pt-4 text-sm text-gray-600">
+                  <div className="flex justify-between">
+                    <span>Created: {viewData.createdAt ? new Date(viewData.createdAt).toLocaleString() : 'N/A'}</span>
+                    <span>Updated: {viewData.updatedAt ? new Date(viewData.updatedAt).toLocaleString() : 'N/A'}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <style>{`
+        <style>{`
         @keyframes fade-in {
           from { opacity: 0; }
           to { opacity: 1; }
@@ -1193,7 +1164,8 @@ const HeroSlider = () => {
           animation: slide-up 0.3s ease-out;
         }
       `}</style>
-    </div>
+      </div>
+    </>
   );
 };
 

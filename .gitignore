@@ -48,3 +48,6 @@ coverage/
 *.pid
 *.seed
 *.pid.lock
+
+# Lock files
+package-lock.json

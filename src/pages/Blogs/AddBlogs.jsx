@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { List, FileText, Globe, Code, Link as LinkIcon, Image as ImageIcon, Save, Trash2, Edit, Plus, Upload, Eye as EyeIcon, Check, Zap, Building2, Sparkles, Smartphone, Heart, Smile, Search, Calendar, TrendingUp, Rocket, Layers } from "lucide-react";
+import { List, FileText, Globe, Code, Link as LinkIcon, Image as ImageIcon, Save, Trash2, Edit, Plus, Upload, Eye as EyeIcon, Check, Sparkles, Heart, Smile, Calendar, Layers, Scale, Newspaper, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import api, { API_URL, SERVER_URL } from "../../lib/api";
@@ -7,13 +7,13 @@ import PageHeader from "../../components/PageHeader";
 import RichTextEditor from "../../components/RichTextEditor";
 
 const CATEGORY_OPTIONS = [
-  { label: "Technology", icon: Zap },
-  { label: "Industry", icon: Building2 },
-  { label: "Innovation", icon: Sparkles },
-  { label: "Devices", icon: Smartphone },
   { label: "Healthcare", icon: Heart },
   { label: "Wellness", icon: Smile },
-  { label: "Research", icon: Search },
+  { label: "Innovation", icon: Sparkles },
+  { label: "Policy & Industry", icon: Scale },
+  { label: "Events & Highlights", icon: Calendar },
+  { label: "Exhibitor News", icon: Users },
+  { label: "Press Releases", icon: Newspaper },
   { label: "General", icon: Layers },
 ];
 
@@ -33,6 +33,7 @@ const AddBlogs = () => {
     tags: [],
     status: "draft",
     featured: false,
+    isTrending: false,
     metaTitle: "",
     metaDescription: "",
     imageAlt: "",
@@ -71,18 +72,13 @@ const AddBlogs = () => {
   };
 
   const getIconName = (IconComp) => {
-    if (IconComp === Zap) return 'Zap';
-    if (IconComp === Building2) return 'Building2';
-    if (IconComp === Sparkles) return 'Sparkles';
-    if (IconComp === Smartphone) return 'Smartphone';
     if (IconComp === Heart) return 'Heart';
     if (IconComp === Smile) return 'Smile';
-    if (IconComp === Search) return 'Search';
-    if (IconComp === FileText) return 'FileText';
+    if (IconComp === Sparkles) return 'Sparkles';
+    if (IconComp === Scale) return 'Scale';
     if (IconComp === Calendar) return 'Calendar';
-    if (IconComp === TrendingUp) return 'TrendingUp';
-    if (IconComp === Globe) return 'Globe';
-    if (IconComp === Rocket) return 'Rocket';
+    if (IconComp === Users) return 'Users';
+    if (IconComp === Newspaper) return 'Newspaper';
     if (IconComp === Layers) return 'Layers';
     return 'Layers';
   };
@@ -202,6 +198,7 @@ const AddBlogs = () => {
       formData.append("metaKeywords", blogData.metaKeywords);
       formData.append("status", blogData.status);
       formData.append("featured", blogData.featured);
+      formData.append("isTrending", blogData.isTrending);
       formData.append("metaTitle", blogData.metaTitle);
       formData.append("metaDescription", blogData.metaDescription);
       formData.append("imageAlt", blogData.imageAlt);
@@ -250,6 +247,7 @@ const AddBlogs = () => {
           tags: [],
           status: "draft",
           featured: false,
+          isTrending: false,
           metaTitle: "",
           metaDescription: "",
           imageAlt: "",
@@ -299,6 +297,7 @@ const AddBlogs = () => {
         tags: editBlog.tags || [],
         status: editBlog.status || "draft",
         featured: editBlog.featured || false,
+        isTrending: editBlog.isTrending || false,
         metaTitle: editBlog.metaTitle || "",
         metaDescription: editBlog.metaDescription || "",
         imageAlt: editBlog.imageAlt || "",
@@ -377,7 +376,21 @@ const AddBlogs = () => {
                     className="w-4 h-4 text-[#134698] border-gray-300 rounded focus:ring-[#134698]"
                   />
                   <label htmlFor="featured" className="text-xs font-bold text-gray-700 uppercase tracking-tight cursor-pointer">
-                    Add to home page
+                    Featured (Hero)
+                  </label>
+                </div>
+
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded border border-gray-100">
+                  <input
+                    type="checkbox"
+                    name="isTrending"
+                    id="isTrending"
+                    checked={blogData.isTrending}
+                    onChange={handleInputChange}
+                    className="w-4 h-4 text-[#134698] border-gray-300 rounded focus:ring-[#134698]"
+                  />
+                  <label htmlFor="isTrending" className="text-xs font-bold text-gray-700 uppercase tracking-tight cursor-pointer">
+                    Trending
                   </label>
                 </div>
               </div>

@@ -3,7 +3,7 @@ import Swal from 'sweetalert2';
 import api, { SERVER_URL } from "../lib/api";
 import {
     Save, Image as ImageIcon, Plus, Trash2, Edit,
-    Users, Briefcase, Building, Type
+    Users, Briefcase, Building, Linkedin, Globe, X, ArrowUp10
 } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 
@@ -12,7 +12,10 @@ const EMPTY_MEMBER = {
     role: '',
     organization: '',
     image: '',
-    imageAlt: ''
+    imageAlt: '',
+    linkedin: '',
+    country: 'India',
+    displayOrder: 0
 };
 
 const AdvisoryManagement = () => {
@@ -43,6 +46,18 @@ const AdvisoryManagement = () => {
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        if (file.size > 500 * 1024) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Image Too Large',
+                text: 'Image size should not exceed 500KB.',
+                confirmButtonColor: '#23471d'
+            });
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
+
         setImageFile(file);
         setImagePreview(URL.createObjectURL(file));
     };
@@ -77,7 +92,11 @@ const AdvisoryManagement = () => {
                 return;
             }
 
-            const payload = { ...memberForm, image: imageUrl };
+            const payload = { 
+                ...memberForm, 
+                image: imageUrl,
+                displayOrder: memberForm.displayOrder !== '' ? Number(memberForm.displayOrder) : 0
+            };
             if (!payload.imageAlt) payload.imageAlt = payload.name;
 
             let response;
@@ -134,7 +153,10 @@ const AdvisoryManagement = () => {
             role: member.role,
             organization: member.organization,
             image: member.image,
-            imageAlt: member.imageAlt || ''
+            imageAlt: member.imageAlt || '',
+            linkedin: member.linkedin || '',
+            country: member.country || 'India',
+            displayOrder: member.displayOrder !== undefined ? member.displayOrder : 0
         });
         setImagePreview(member.image || '');
         setImageFile(null);
@@ -153,131 +175,145 @@ const AdvisoryManagement = () => {
         <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
             <PageHeader
                 title="ADVISORY BOARD MANAGEMENT"
-                description="Manage advisory board members, their roles, and organizations"
+                description="Create and manage your esteemed advisory board members"
             />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
-                {/* LEFT: Member Form */}
-                <div className="lg:col-span-1">
-                    <div className="bg-white border-2 border-gray-200 p-6 shadow-sm sticky top-6">
-                        <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d]">
+                
+                {/* LEFT: FORM SECTION */}
+                <div className="lg:col-span-1 space-y-6">
+                    <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
+                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[#23471d]">
                             {isEditingId ? <Edit className="w-5 h-5 text-[#d26019]" /> : <Plus className="w-5 h-5 text-[#d26019]" />}
-                            {isEditingId ? 'Edit Advisory Member' : 'Add Advisory Member'}
+                            {isEditingId ? 'Edit Member Details' : 'Add New Member'}
                         </h2>
                         
-                        <div className="space-y-5">
+                        <div className="space-y-4">
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Member Name</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Users size={14} className="text-gray-400" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={memberForm.name}
-                                        onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })}
-                                        className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
-                                        placeholder="e.g. Dr. Rajiv Chhibber"
-                                    />
-                                </div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
+                                <input
+                                    type="text"
+                                    value={memberForm.name}
+                                    onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })}
+                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm"
+                                    placeholder="e.g. Dr. Soumya Swaminathan"
+                                />
                             </div>
 
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Role / Designation</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Briefcase size={14} className="text-gray-400" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={memberForm.role}
-                                        onChange={(e) => setMemberForm({ ...memberForm, role: e.target.value })}
-                                        className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
-                                        placeholder="e.g. Vice President"
-                                    />
-                                </div>
+                                <input
+                                    type="text"
+                                    value={memberForm.role}
+                                    onChange={(e) => setMemberForm({ ...memberForm, role: e.target.value })}
+                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm"
+                                    placeholder="e.g. Chairman"
+                                />
                             </div>
 
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Organization</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Building size={14} className="text-gray-400" />
-                                    </div>
+                                <input
+                                    type="text"
+                                    value={memberForm.organization}
+                                    onChange={(e) => setMemberForm({ ...memberForm, organization: e.target.value })}
+                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm"
+                                    placeholder="e.g. WHO (Former Chief Scientist)"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Country</label>
                                     <input
                                         type="text"
-                                        value={memberForm.organization}
-                                        onChange={(e) => setMemberForm({ ...memberForm, organization: e.target.value })}
-                                        className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
-                                        placeholder="e.g. SMT Ltd."
+                                        value={memberForm.country}
+                                        onChange={(e) => setMemberForm({ ...memberForm, country: e.target.value })}
+                                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm"
+                                        placeholder="e.g. India"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Display Order</label>
+                                    <input
+                                        type="number"
+                                        value={memberForm.displayOrder}
+                                        onChange={(e) => setMemberForm({ ...memberForm, displayOrder: e.target.value })}
+                                        className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm"
+                                        placeholder="e.g. 1"
+                                        min="0"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Member Photo</label>
-                                {imagePreview ? (
-                                    <div className="relative h-48 border-2 border-gray-200 overflow-hidden mb-2 group">
-                                        <img 
-                                            src={imagePreview.startsWith('blob:') ? imagePreview : `${SERVER_URL}${imagePreview}`} 
-                                            className="w-full h-full object-cover" 
-                                            alt="Preview" 
-                                        />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <button
-                                                onClick={() => { setImageFile(null); setImagePreview(''); setMemberForm({ ...memberForm, image: '' }); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-                                                className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#23471d] hover:bg-gray-50 transition-all">
-                                        <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
-                                        <span className="text-sm text-gray-500 font-medium">Click to upload photo</span>
-                                        <span className="text-[10px] text-gray-400 mt-1 uppercase">JPG, PNG or WEBP</span>
-                                        <input ref={fileInputRef} type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
-                                    </label>
-                                )}
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">LinkedIn URL</label>
+                                <input
+                                    type="text"
+                                    value={memberForm.linkedin}
+                                    onChange={(e) => setMemberForm({ ...memberForm, linkedin: e.target.value })}
+                                    className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm"
+                                    placeholder="https://linkedin.com/in/..."
+                                />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Image Alt Text (SEO)</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Type size={14} className="text-gray-400" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={memberForm.imageAlt}
-                                        onChange={(e) => setMemberForm({ ...memberForm, imageAlt: e.target.value })}
-                                        className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm"
-                                        placeholder="Alt text for screen readers..."
-                                    />
+                                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-tight">Member Portrait</label>
+                                <div className="grid grid-cols-1 gap-4">
+                                     <div className="border-2 border-dashed border-gray-300 hover:border-[#23471d] transition-colors p-3 bg-gray-50">
+                                         <input
+                                             type="file"
+                                             ref={fileInputRef}
+                                             accept="image/*"
+                                             onChange={handleImageChange}
+                                             className="w-full text-[10px] text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:border-0 file:text-[10px] file:font-bold file:bg-[#23471d] file:text-white hover:file:bg-[#d26019] file:cursor-pointer cursor-pointer uppercase"
+                                         />
+                                         <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase">Max: 500KB</p>
+                                     </div>
+
+                                     {imagePreview ? (
+                                         <div className="relative h-48 group">
+                                             <img 
+                                                src={imagePreview.startsWith('blob:') ? imagePreview : `${SERVER_URL}${imagePreview}`} 
+                                                className="w-full h-full object-cover border-2 border-gray-200 shadow-sm object-top" 
+                                                alt="Preview" 
+                                             />
+                                             <button
+                                                 type="button"
+                                                 onClick={() => { setImageFile(null); setImagePreview(''); setMemberForm({ ...memberForm, image: '' }); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                                                 className="absolute bottom-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg"
+                                             >
+                                                 <Trash2 size={14} />
+                                             </button>
+                                         </div>
+                                     ) : (
+                                         <div className="w-full h-48 bg-gray-100 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400">
+                                             <ImageIcon className="w-8 h-8 mb-1 opacity-20" />
+                                             <p className="text-[10px] font-bold uppercase">No image selected</p>
+                                         </div>
+                                     )}
+
+                                     <input
+                                         type="text"
+                                         value={memberForm.imageAlt}
+                                         onChange={(e) => setMemberForm({ ...memberForm, imageAlt: e.target.value })}
+                                         className="w-full px-3 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none text-xs shadow-sm bg-white"
+                                         placeholder="Image Alt Text..."
+                                     />
                                 </div>
                             </div>
 
-                            <div className="flex gap-3 pt-2">
+                            <div className="flex gap-2 pt-2">
                                 <button
                                     onClick={handleSubmit}
                                     disabled={isLoading}
-                                    className="flex-1 py-3 bg-[#23471d] text-white font-bold hover:bg-[#1a3615] transition-all flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
+                                    className="flex-1 py-2.5 bg-[#23471d] text-white font-bold hover:bg-[#1a3615] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                                 >
-                                    {isLoading ? (
-                                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    ) : (
-                                        <>
-                                            <Save size={18} />
-                                            {isEditingId ? 'Update Member' : 'Save Member'}
-                                        </>
-                                    )}
+                                    {isLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        : isEditingId ? <><Edit className="w-4 h-4" /> Update Profile</> : <><Plus className="w-4 h-4" /> Add Member</>}
                                 </button>
                                 {isEditingId && (
-                                    <button 
-                                        onClick={resetForm} 
-                                        className="px-6 py-3 border-2 border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-colors shadow-sm"
-                                    >
+                                    <button onClick={resetForm} className="px-4 py-2.5 border-2 border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-colors text-sm">
                                         Cancel
                                     </button>
                                 )}
@@ -286,87 +322,82 @@ const AdvisoryManagement = () => {
                     </div>
                 </div>
 
-                {/* RIGHT: Members List Table */}
+                {/* RIGHT: LIST SECTION */}
                 <div className="lg:col-span-2">
-                    <div className="bg-white border-2 border-gray-200 shadow-sm overflow-hidden">
-                        <div className="bg-[#23471d] px-4 py-2.5 flex items-center justify-between">
-                            <h2 className="text-white text-sm font-bold flex items-center gap-2 uppercase tracking-wider">
-                                <Users className="w-4 h-4" /> Advisory Members List
+                    <div className="bg-white border-2 border-gray-200 shadow-sm">
+                        <div className="bg-[#23471d] px-5 py-3 flex items-center justify-between">
+                            <h2 className="text-white font-bold flex items-center gap-2">
+                                <Users className="w-4 h-4" /> Board Members List
                             </h2>
-                            <span className="bg-[#d26019] text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
-                                {members.length} Members
+                            <span className="bg-[#d26019] text-white text-xs font-black px-3 py-1 uppercase tracking-wider">
+                                {members.length} MEMBERS
                             </span>
                         </div>
                         
                         <div className="overflow-x-auto">
-                            <table className="w-full text-[12px]">
+                            <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="border-b border-gray-200 bg-gray-50">
-                                        <th className="text-left py-2.5 px-4 text-[10px] font-black text-gray-500 uppercase tracking-widest w-16">Photo</th>
-                                        <th className="text-left py-2.5 px-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Member Details</th>
-                                        <th className="text-left py-2.5 px-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Organization</th>
-                                        <th className="text-center py-2.5 px-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">LAST UPDATED BY</th>
-                                        <th className="text-right py-2.5 px-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Actions</th>
-
+                                    <tr className="border-b-2 border-gray-200 bg-gray-50">
+                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase w-10">NO.</th>
+                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">IMAGE</th>
+                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">NAME</th>
+                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">DESIGNATION & ORG</th>
+                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase text-center w-24">ORDER</th>
+                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase w-20">ACTIONS</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {members.length === 0 ? (
+                                <tbody>
+                                    {!members?.length ? (
                                         <tr>
-                                            <td colSpan={4} className="text-center py-10 text-gray-400 italic">
-                                                No advisory members found.
+                                            <td colSpan={6} className="text-center py-12 text-gray-400">
+                                                No board members cataloged yet.
                                             </td>
                                         </tr>
-                                    ) : members.map((member) => (
-                                        <tr key={member._id} className="hover:bg-gray-50/50 transition-colors group/row">
-                                            <td className="py-2.5 px-4">
-                                                <div className="w-12 h-12 rounded overflow-hidden border border-gray-200">
-                                                    <img 
-                                                        src={`${SERVER_URL}${member.image}`} 
-                                                        alt={member.imageAlt} 
-                                                        className="w-full h-full object-cover" 
-                                                    />
-                                                </div>
+                                    ) : members.map((member, idx) => (
+                                        <tr key={member._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                            <td className="py-3 px-4 text-gray-500 font-bold">{idx + 1}</td>
+                                            <td className="py-3 px-4">
+                                                {member.image ? (
+                                                    <img src={`${SERVER_URL}${member.image}`} alt={member.imageAlt} className="w-10 h-12 object-cover border border-gray-200 object-top" />
+                                                ) : (
+                                                    <div className="w-10 h-12 bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400">
+                                                        <ImageIcon size={14} />
+                                                    </div>
+                                                )}
                                             </td>
-                                            <td className="py-2.5 px-4">
-                                                <div className="flex flex-col">
-                                                    <span className="font-bold text-slate-700 text-sm">{member.name}</span>
-                                                    <span className="text-[#d26019] text-[10px] font-bold uppercase tracking-wide mt-0.5">{member.role}</span>
-                                                </div>
+                                            <td className="py-3 px-4">
+                                                <p className="font-bold text-gray-800 text-sm">{member.name}</p>
+                                                {member.country && (
+                                                    <span className="inline-block text-[9px] font-bold text-green-700 bg-green-50 border border-green-200 rounded px-1.5 py-0.5 mt-1 uppercase tracking-wider">
+                                                        {member.country}
+                                                    </span>
+                                                )}
                                             </td>
-                                            <td className="py-2.5 px-4">
-                                                <span className="inline-flex items-center px-2 py-0.5 bg-slate-50 text-slate-500 text-[9px] font-bold rounded uppercase tracking-tighter border border-slate-100">
-                                                    {member.organization}
+                                            <td className="py-3 px-4 text-xs text-gray-600">
+                                                <div className="font-bold text-gray-700">{member.role}</div>
+                                                <div className="text-gray-500">{member.organization}</div>
+                                                {member.linkedin && (
+                                                    <a 
+                                                        href={member.linkedin} 
+                                                        target="_blank" 
+                                                        rel="noreferrer" 
+                                                        className="inline-flex items-center gap-1 text-[#0077b5] hover:underline font-semibold mt-1"
+                                                    >
+                                                        <Linkedin size={10} /> LinkedIn
+                                                    </a>
+                                                )}
+                                            </td>
+                                            <td className="py-3 px-4 text-center">
+                                                <span className="bg-gray-100 text-gray-700 text-xs font-bold px-2.5 py-1 rounded border border-gray-200">
+                                                    {member.displayOrder || 0}
                                                 </span>
                                             </td>
-                                            <td className="py-2.5 px-4 text-center">
-                                                <div className="flex flex-col gap-1 items-center">
-                                                    <span className="font-bold text-red-600 underline underline-offset-2 uppercase text-[10px]">
-                                                        {member.updatedBy || 'System'}
-                                                    </span>
-                                                    <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
-                                                        {member.updatedAt ? new Date(member.updatedAt).toLocaleString('en-GB', { 
-                                                            day: '2-digit', month: 'short', year: 'numeric', 
-                                                            hour: '2-digit', minute: '2-digit', hour12: true 
-                                                        }) : 'N/A'}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="py-2.5 px-4 text-right">
-
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <button 
-                                                        onClick={() => startEdit(member)} 
-                                                        className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded transition-all"
-                                                        title="Edit Member"
-                                                    >
+                                            <td className="py-3 px-4">
+                                                <div className="flex items-center gap-2">
+                                                    <button onClick={() => startEdit(member)} className="text-blue-500 hover:text-blue-700 p-1 transition-colors" title="Edit">
                                                         <Edit size={16} />
                                                     </button>
-                                                    <button 
-                                                        onClick={() => handleDelete(member._id)} 
-                                                        className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-all"
-                                                        title="Delete Member"
-                                                    >
+                                                    <button onClick={() => handleDelete(member._id)} className="text-red-500 hover:text-red-700 p-1 transition-colors" title="Delete">
                                                         <Trash2 size={16} />
                                                     </button>
                                                 </div>

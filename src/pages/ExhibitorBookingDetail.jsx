@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
     ArrowLeft, Building2, User, CreditCard, Layers,
     FileText, Info, Receipt, ExternalLink, Pencil, Save, X,
     MapPin, Phone, Mail, Globe, Briefcase, Tag, Calendar,
-    CheckCircle2, Users, Award, History, Package, Plus, Trash2, ShoppingCart, Gift, RefreshCw, Upload, FolderPlus, Download, Image as ImageIcon
+    CheckCircle2, Users, Award, History, Package, Plus, Trash2, ShoppingCart, Gift, RefreshCw, Upload, FolderPlus, Download, Image as ImageIcon, Send, MessageSquare
 } from 'lucide-react';
 import api, { SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
@@ -76,7 +76,429 @@ const TABS = [
     { id: 'documents', label: 'Documents', icon: FileText },
     { id: 'msme', label: 'MSME', icon: Award },
     { id: 'accessories', label: 'Accessories', icon: Package },
+    { id: 'seller', label: 'Seller Portal', icon: ShoppingCart },
 ];
+
+function SellerKycSection({ reg, id, onRefresh }) {
+    const [saving, setSaving] = useState(false);
+    const [kycStatus, setKycStatus] = useState(reg.kycStatus || 'pending');
+    const [paymentVerStatus, setPaymentVerStatus] = useState(reg.paymentVerificationStatus || 'pending');
+    const [bankVerStatus, setBankVerStatus] = useState(reg.bankVerificationStatus || 'pending');
+
+    useEffect(() => {
+        setKycStatus(reg.kycStatus || 'pending');
+        setPaymentVerStatus(reg.paymentVerificationStatus || 'pending');
+        setBankVerStatus(reg.bankVerificationStatus || 'pending');
+    }, [reg]);
+
+    const handleUpdate = async (fields, label) => {
+        setSaving(true);
+        try {
+            const res = await api.put(`/api/exhibitor-registration/${id}`, fields);
+            if (res.data.success) {
+                if (fields.kycStatus) setKycStatus(fields.kycStatus);
+                if (fields.paymentVerificationStatus) setPaymentVerStatus(fields.paymentVerificationStatus);
+                if (fields.bankVerificationStatus) setBankVerStatus(fields.bankVerificationStatus);
+                Swal.fire({ icon: 'success', title: label, timer: 1200, showConfirmButton: false });
+                onRefresh();
+            }
+        } catch { Swal.fire('Error', 'Failed to update', 'error'); }
+        finally { setSaving(false); }
+    };
+
+    const KYC_DOCS = [
+        { label: 'GST Certificate', field: 'gstCertificate' },
+        { label: 'PAN Card', field: 'panCard' },
+        { label: 'Registration Certificate', field: 'registrationCertificate' },
+        { label: 'Authorized Signatory ID', field: 'authorizedSignatoryId' },
+    ];
+
+    const statusBadge = (status) => ({
+        approved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        rejected: 'bg-red-50 text-red-700 border-red-200',
+        under_review: 'bg-blue-50 text-blue-700 border-blue-200',
+        pending: 'bg-amber-50 text-amber-700 border-amber-200',
+    }[status] || 'bg-slate-50 text-slate-700 border-slate-200');
+
+    const ActionBtns = ({ current, onApprove, onReject, onReview, onReset }) => (
+        <div className="flex items-center gap-2 flex-wrap">
+            <button onClick={onApprove} disabled={saving || current === 'approved'}
+                className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white text-[10px] font-black uppercase rounded disabled:opacity-40 hover:bg-emerald-700 transition-colors">
+                <CheckCircle2 size={11} /> Approve
+            </button>
+            <button onClick={onReview} disabled={saving || current === 'under_review'}
+                className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 text-white text-[10px] font-black uppercase rounded disabled:opacity-40 hover:bg-blue-600 transition-colors">
+                Under Review
+            </button>
+            <button onClick={onReject} disabled={saving || current === 'rejected'}
+                className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white text-[10px] font-black uppercase rounded disabled:opacity-40 hover:bg-red-700 transition-colors">
+                <X size={11} /> Reject
+            </button>
+            <button onClick={onReset} disabled={saving || current === 'pending'}
+                className="px-3 py-1.5 bg-slate-200 text-slate-700 text-[10px] font-black uppercase rounded disabled:opacity-40 hover:bg-slate-300 transition-colors">
+                Reset
+            </button>
+        </div>
+    );
+
+    return (
+        <div className="space-y-4">
+            {/* ── KYC Documents ── */}
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden font-inter">
+                <SH title="Seller KYC Documents & Verification" icon={CheckCircle2} actions={
+                    <span className={`px-3 py-1 text-[10px] font-black uppercase border rounded-full ${statusBadge(kycStatus)}`}>
+                        KYC: {kycStatus}
+                    </span>
+                } />
+                <div className="p-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                        {KYC_DOCS.map(({ label, field }) => {
+                            const url = reg.kycDocuments?.[field];
+                            const resolvedUrl = url ? (url.startsWith('http') ? url : `${SERVER_URL}${url}`) : null;
+                            const isPdf = url?.toLowerCase().includes('.pdf');
+                            return (
+                                <div key={field} className="flex flex-col border border-gray-100 rounded overflow-hidden bg-white shadow-sm">
+                                    <div className="px-2 py-1.5 bg-slate-50 border-b border-gray-100 flex items-center justify-between">
+                                        <span className="text-[9px] font-black text-gray-500 uppercase tracking-wider">{label}</span>
+                                        {resolvedUrl && (
+                                            <a href={resolvedUrl} target="_blank" rel="noopener noreferrer" className="text-[#23471d] hover:text-[#d26019]">
+                                                <ExternalLink size={10} />
+                                            </a>
+                                        )}
+                                    </div>
+                                    <div className="aspect-square bg-slate-100 flex items-center justify-center overflow-hidden">
+                                        {isPdf ? (
+                                            <div className="flex flex-col items-center gap-1">
+                                                <FileText size={28} className="text-[#23471d]" />
+                                                <span className="text-[8px] font-bold text-gray-400 uppercase">PDF</span>
+                                            </div>
+                                        ) : resolvedUrl ? (
+                                            <img src={resolvedUrl} alt={label} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="flex flex-col items-center gap-1 text-gray-300">
+                                                <FileText size={24} />
+                                                <span className="text-[8px] font-bold uppercase">Not Uploaded</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="px-2 py-1 text-center">
+                                        <span className={`text-[9px] font-black uppercase ${resolvedUrl ? 'text-emerald-600' : 'text-red-400'}`}>
+                                            {resolvedUrl ? '✓ Uploaded' : '✗ Missing'}
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <div className="flex items-center gap-2 pt-3 border-t border-gray-100 flex-wrap">
+                        <span className="text-[10px] font-black text-gray-500 uppercase mr-1">KYC:</span>
+                        <ActionBtns
+                            current={kycStatus}
+                            onApprove={() => handleUpdate({ kycStatus: 'approved' }, 'KYC Approved')}
+                            onReview={() => handleUpdate({ kycStatus: 'reupload' }, 'KYC set to Re-upload')}
+                            onReject={() => handleUpdate({ kycStatus: 'rejected' }, 'KYC Rejected')}
+                            onReset={() => handleUpdate({ kycStatus: 'pending' }, 'KYC Reset')}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Payment Verification ── */}
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden font-inter">
+                <SH title="Payment Verification" icon={CreditCard} actions={
+                    <span className={`px-3 py-1 text-[10px] font-black uppercase border rounded-full ${statusBadge(paymentVerStatus)}`}>
+                        {paymentVerStatus.replace('_', ' ')}
+                    </span>
+                } />
+                <div className="p-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                        {[
+                            { label: 'Amount Paid', value: `₹ ${Number(reg.amountPaid || 0).toLocaleString('en-IN')}` },
+                            { label: 'Balance', value: `₹ ${Number(reg.balanceAmount || 0).toLocaleString('en-IN')}` },
+                            { label: 'Payment Mode', value: reg.paymentMode || '—' },
+                            { label: 'Transactions', value: reg.paymentHistory?.length || 0 },
+                        ].map(({ label, value }) => (
+                            <div key={label} className="p-3 bg-slate-50 border border-slate-100 rounded">
+                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+                                <p className="text-sm font-black text-slate-800">{value}</p>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex items-center gap-2 pt-3 border-t border-gray-100 flex-wrap">
+                        <span className="text-[10px] font-black text-gray-500 uppercase mr-1">Payment:</span>
+                        <ActionBtns
+                            current={paymentVerStatus}
+                            onApprove={() => handleUpdate({ paymentVerificationStatus: 'approved' }, 'Payment Verified')}
+                            onReview={() => handleUpdate({ paymentVerificationStatus: 'under_review' }, 'Payment set to Under Review')}
+                            onReject={() => handleUpdate({ paymentVerificationStatus: 'rejected' }, 'Payment Rejected')}
+                            onReset={() => handleUpdate({ paymentVerificationStatus: 'pending' }, 'Payment Reset')}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Bank Details Verification ── */}
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden font-inter">
+                <SH title="Bank Details Verification" icon={CreditCard} actions={
+                    <span className={`px-3 py-1 text-[10px] font-black uppercase border rounded-full ${statusBadge(bankVerStatus)}`}>
+                        {bankVerStatus.replace('_', ' ')}
+                    </span>
+                } />
+                <div className="p-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                        {[
+                            { label: 'Bank Name', value: reg.bankDetails?.bankName || '—' },
+                            { label: 'Account Holder', value: reg.bankDetails?.accountHolder || '—' },
+                            { label: 'Account Number', value: reg.bankDetails?.accountNumber || '—' },
+                            { label: 'IFSC Code', value: reg.bankDetails?.ifscCode || '—' },
+                            { label: 'Branch', value: reg.bankDetails?.branch || '—' },
+                            { label: 'Account Type', value: reg.bankDetails?.accountType || '—' },
+                        ].map(({ label, value }) => (
+                            <div key={label} className="p-3 bg-slate-50 border border-slate-100 rounded">
+                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+                                <p className="text-sm font-black text-slate-800">{value}</p>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex items-center gap-2 pt-3 border-t border-gray-100 flex-wrap">
+                        <span className="text-[10px] font-black text-gray-500 uppercase mr-1">Bank:</span>
+                        <ActionBtns
+                            current={bankVerStatus}
+                            onApprove={() => handleUpdate({ bankVerificationStatus: 'approved' }, 'Bank Details Verified')}
+                            onReview={() => handleUpdate({ bankVerificationStatus: 'under_review' }, 'Bank set to Under Review')}
+                            onReject={() => handleUpdate({ bankVerificationStatus: 'rejected' }, 'Bank Details Rejected')}
+                            onReset={() => handleUpdate({ bankVerificationStatus: 'pending' }, 'Bank Reset')}
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function SellerTab({ reg, id, onRefresh }) {
+    const [saving, setSaving] = useState(false);
+    const [subscriptionPlans, setSubscriptionPlans] = useState([]);
+    const [loadingPlans, setLoadingPlans] = useState(true);
+    const [form, setForm] = useState({
+        isSeller: reg.isSeller || false,
+        sellerStatus: reg.sellerStatus || 'none',
+        sellerSubscription: {
+            status: reg.sellerSubscription?.status || 'inactive',
+            planId: reg.sellerSubscription?.planId || '',
+            plan: reg.sellerSubscription?.plan || '',
+            expiresAt: reg.sellerSubscription?.expiresAt ? new Date(reg.sellerSubscription.expiresAt).toISOString().split('T')[0] : ''
+        },
+        bankDetails: {
+            bankName: reg.bankDetails?.bankName || '',
+            accountHolder: reg.bankDetails?.accountHolder || '',
+            accountNumber: reg.bankDetails?.accountNumber || '',
+            ifscCode: reg.bankDetails?.ifscCode || '',
+            branch: reg.bankDetails?.branch || '',
+            accountType: reg.bankDetails?.accountType || 'Current'
+        }
+    });
+
+    // Fetch subscription plans from admin
+    useEffect(() => {
+        const fetchPlans = async () => {
+            try {
+                const res = await api.get('/api/seller-subscription-plans/active');
+                if (res.data.success) {
+                    setSubscriptionPlans(res.data.data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch subscription plans:', err);
+            } finally {
+                setLoadingPlans(false);
+            }
+        };
+        fetchPlans();
+    }, []);
+
+    useEffect(() => {
+        setForm({
+            isSeller: reg.isSeller || false,
+            sellerStatus: reg.sellerStatus || 'none',
+            sellerSubscription: {
+                status: reg.sellerSubscription?.status || 'inactive',
+                planId: reg.sellerSubscription?.planId || '',
+                plan: reg.sellerSubscription?.plan || '',
+                expiresAt: reg.sellerSubscription?.expiresAt ? new Date(reg.sellerSubscription.expiresAt).toISOString().split('T')[0] : ''
+            },
+            bankDetails: {
+                bankName: reg.bankDetails?.bankName || '',
+                accountHolder: reg.bankDetails?.accountHolder || '',
+                accountNumber: reg.bankDetails?.accountNumber || '',
+                ifscCode: reg.bankDetails?.ifscCode || '',
+                branch: reg.bankDetails?.branch || '',
+                accountType: reg.bankDetails?.accountType || 'Current'
+            }
+        });
+    }, [reg]);
+
+    const handlePlanChange = (planId) => {
+        const selectedPlan = subscriptionPlans.find(p => p._id === planId);
+        setForm(p => ({
+            ...p,
+            sellerSubscription: {
+                ...p.sellerSubscription,
+                planId: planId,
+                plan: selectedPlan?.name || ''
+            }
+        }));
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            // Clean up empty ObjectId fields before sending
+            const payload = {
+                ...form,
+                sellerSubscription: {
+                    ...form.sellerSubscription,
+                    planId: form.sellerSubscription.planId || null,
+                    expiresAt: form.sellerSubscription.expiresAt || null,
+                    plan: form.sellerSubscription.plan || null,
+                }
+            };
+            const res = await api.put(`/api/exhibitor-registration/${id}`, payload);
+            if (res.data.success) {
+                Swal.fire({ icon: 'success', title: 'Seller Settings Updated', timer: 1200, showConfirmButton: false });
+                onRefresh();
+            }
+        } catch { Swal.fire('Error', 'Update failed', 'error'); }
+        finally { setSaving(false); }
+    };
+
+    const formatPrice = (price, currency) => {
+        if (currency === 'INR') return `₹ ${price.toLocaleString()}`;
+        return `${currency} ${price.toLocaleString()}`;
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden font-inter">
+                <SH title="Seller Status & Subscription" icon={ShoppingCart} actions={
+                    <button onClick={handleSave} disabled={saving} className="flex items-center gap-1 px-3 py-1 bg-[#d26019] text-white text-[10px] font-bold uppercase rounded-[2px] disabled:opacity-60 transition-all hover:bg-[#a84c14]">
+                        <Save size={11} /> {saving ? 'Saving...' : 'Update Seller Settings'}
+                    </button>
+                } />
+                <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Is Registered as Seller?</label>
+                        <select value={form.isSeller} onChange={e => setForm(p => ({ ...p, isSeller: e.target.value === 'true' }))}
+                            className="w-full h-9 px-3 border border-gray-200 rounded text-sm font-bold outline-none focus:border-[#23471d] bg-slate-50">
+                            <option value="false">No (Exhibitor Only)</option>
+                            <option value="true">Yes (Exhibitor + Seller)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Registration Review Status</label>
+                        <select value={form.sellerStatus} onChange={e => setForm(p => ({ ...p, sellerStatus: e.target.value }))}
+                            className={`w-full h-9 px-3 border border-gray-200 rounded text-sm font-bold outline-none focus:border-[#23471d] ${
+                                form.sellerStatus === 'active' ? 'text-green-600' : form.sellerStatus === 'pending' ? 'text-orange-500' : ''
+                            }`}>
+                            <option value="none">None</option>
+                            <option value="pending">Pending Approval</option>
+                            <option value="active">Active / Approved</option>
+                            <option value="expired">Expired</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Subscription Status</label>
+                        <select value={form.sellerSubscription.status} onChange={e => setForm(p => ({ ...p, sellerSubscription: { ...p.sellerSubscription, status: e.target.value } }))}
+                            className={`w-full h-9 px-3 border border-gray-200 rounded text-sm font-bold outline-none focus:border-[#23471d] ${
+                                form.sellerSubscription.status === 'active' ? 'text-green-600 bg-green-50' : ''
+                            }`}>
+                            <option value="inactive">Inactive</option>
+                            <option value="active">Active (Paid)</option>
+                            <option value="expired">Expired</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Subscription Plan</label>
+                        {loadingPlans ? (
+                            <div className="w-full h-9 px-3 border border-gray-200 rounded bg-slate-50 flex items-center">
+                                <span className="text-xs text-gray-400">Loading plans...</span>
+                            </div>
+                        ) : subscriptionPlans.length === 0 ? (
+                            <div className="w-full h-9 px-3 border border-red-200 rounded bg-red-50 flex items-center">
+                                <span className="text-xs text-red-500">No plans available</span>
+                            </div>
+                        ) : (
+                            <select 
+                                value={form.sellerSubscription.planId} 
+                                onChange={e => handlePlanChange(e.target.value)}
+                                className="w-full h-9 px-3 border border-gray-200 rounded text-sm font-bold outline-none focus:border-[#23471d] bg-slate-50"
+                            >
+                                <option value="">Select a plan...</option>
+                                {subscriptionPlans.map(plan => (
+                                    <option key={plan._id} value={plan._id}>
+                                        {plan.name} - {formatPrice(plan.price, plan.currency)} ({plan.durationDays} days)
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
+                    <div>
+                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Subscription Expiry Date</label>
+                        <input type="date" value={form.sellerSubscription.expiresAt} onChange={e => setForm(p => ({ ...p, sellerSubscription: { ...p.sellerSubscription, expiresAt: e.target.value } }))}
+                            className="w-full h-9 px-3 border border-gray-200 rounded text-sm font-bold outline-none focus:border-[#23471d]" />
+                    </div>
+                </div>
+                
+                {/* Show selected plan features */}
+                {form.sellerSubscription.planId && (
+                    <div className="px-4 pb-4">
+                        {(() => {
+                            const selectedPlan = subscriptionPlans.find(p => p._id === form.sellerSubscription.planId);
+                            if (!selectedPlan) return null;
+                            return (
+                                <div className="bg-slate-50 border border-slate-200 rounded p-3">
+                                    <p className="text-[9px] font-black text-gray-500 uppercase mb-2">Plan Features Included:</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedPlan.features?.map((f, i) => (
+                                            <span key={i} className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-[10px] px-2 py-1 rounded font-medium">
+                                                <CheckCircle2 size={10} /> {f.label}
+                                            </span>
+                                        ))}
+                                        {(!selectedPlan.features || selectedPlan.features.length === 0) && (
+                                            <span className="text-xs text-gray-400 italic">No features defined</span>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })()}
+                    </div>
+                )}
+            </div>
+
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden font-inter">
+                <SH title="Seller Bank Payout Details" icon={CreditCard} />
+                <div className="grid grid-cols-2 md:grid-cols-3 border-l border-t border-gray-100">
+                    {[
+                        { k: 'bankName', l: 'Bank Name' },
+                        { k: 'accountHolder', l: 'Account Holder' },
+                        { k: 'accountNumber', l: 'Account Number' },
+                        { k: 'ifscCode', l: 'IFSC Code' },
+                        { k: 'branch', l: 'Branch' },
+                        { k: 'accountType', l: 'Account Type' }
+                    ].map(({ k, l }) => (
+                        <div key={k} className="p-3 border-r border-b border-gray-100">
+                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">{l}</p>
+                            <input type="text" value={form.bankDetails[k] || ''} onChange={e => setForm(p => ({ ...p, bankDetails: { ...p.bankDetails, [k]: e.target.value } }))}
+                                className="w-full h-8 px-2 border border-slate-100 rounded text-xs font-black text-slate-700 outline-none focus:border-[#23471d]" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* ── KYC Documents & Approval ── */}
+            <SellerKycSection reg={reg} id={id} onRefresh={onRefresh} />
+        </div>
+    );
+}
 
 // ─── Tab Components ───────────────────────────────────────────────────────────
 
@@ -474,11 +896,158 @@ function ContactsTab({ reg, id, onRefresh }) {
     );
 }
 
-function PaymentTab({ reg, fmt }) {
+function PaymentTab({ reg, fmt, id, onRefresh }) {
     const fb = reg.financeBreakdown || {};
+    const [penaltyAmount, setPenaltyAmount] = useState('');
+    const [penaltyReason, setPenaltyReason] = useState('');
+    const [showPenaltyHistory, setShowPenaltyHistory] = useState(false);
+    const [showManualPayment, setShowManualPayment] = useState(false);
+    const [manualPayment, setManualPayment] = useState({
+        amount: '', method: 'Cash', transactionId: '', notes: '',
+        paidAt: new Date().toISOString().split('T')[0]
+    });
+    const [paymentDueDate, setPaymentDueDate] = useState(
+        reg.paymentDueDate ? new Date(reg.paymentDueDate).toISOString().split('T')[0] : ''
+    );
+    const [saving, setSaving] = useState(false);
+
+    const handleAddManualPayment = async () => {
+        if (!manualPayment.amount || Number(manualPayment.amount) <= 0) {
+            Swal.fire('Error', 'Please enter a valid amount', 'error'); return;
+        }
+        setSaving(true);
+        try {
+            const res = await api.post(`/api/payment/manual/${id}`, {
+                amount: Number(manualPayment.amount),
+                method: manualPayment.method,
+                transactionId: manualPayment.transactionId,
+                notes: manualPayment.notes,
+                paidAt: manualPayment.paidAt
+            });
+            if (res.data.success) {
+                Swal.fire({ icon: 'success', title: 'Payment Recorded!', timer: 1500, showConfirmButton: false });
+                setShowManualPayment(false);
+                setManualPayment({ amount: '', method: 'Cash', transactionId: '', notes: '', paidAt: new Date().toISOString().split('T')[0] });
+                onRefresh();
+            }
+        } catch (e) { Swal.fire('Error', e.response?.data?.message || 'Failed to record payment', 'error'); }
+        finally { setSaving(false); }
+    };
+
+    const daysOverdue = reg.paymentDueDate
+        ? Math.max(0, Math.floor((new Date() - new Date(reg.paymentDueDate)) / (1000 * 60 * 60 * 24)))
+        : 0;
+
+    const handleAddPenalty = async () => {
+        if (penaltyAmount <= 0) {
+            Swal.fire('Error', 'Please enter a valid penalty amount', 'error');
+            return;
+        }
+        if (!penaltyReason.trim()) {
+            Swal.fire('Error', 'Please enter a reason for the penalty', 'error');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            const res = await api.post(`/api/penalty/add/${id}`, {
+                amount: penaltyAmount,
+                reason: penaltyReason
+            });
+            if (res.data.success) {
+                Swal.fire({ icon: 'success', title: 'Penalty Added', timer: 1500, showConfirmButton: false });
+                onRefresh();
+            }
+        } catch (error) {
+            Swal.fire('Error', error.response?.data?.message || 'Failed to add penalty', 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleRemovePenalty = async () => {
+        const result = await Swal.fire({
+            title: 'Remove Penalty?',
+            text: 'This will remove the penalty amount from this booking.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            confirmButtonText: 'Yes, remove it!'
+        });
+
+        if (!result.isConfirmed) return;
+
+        setSaving(true);
+        try {
+            const res = await api.delete(`/api/penalty/remove/${id}`);
+            if (res.data.success) {
+                setPenaltyAmount(0);
+                setPenaltyReason('');
+                Swal.fire({ icon: 'success', title: 'Penalty Removed', timer: 1500, showConfirmButton: false });
+                onRefresh();
+            }
+        } catch (error) {
+            Swal.fire('Error', error.response?.data?.message || 'Failed to remove penalty', 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleUpdateDueDate = async () => {
+        if (!paymentDueDate) {
+            Swal.fire('Error', 'Please select a due date', 'error');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            const res = await api.put(`/api/payment-delay/due-date/${id}`, { dueDate: paymentDueDate });
+            if (res.data.success) {
+                Swal.fire({ icon: 'success', title: 'Due Date Updated', timer: 1500, showConfirmButton: false });
+                onRefresh();
+            }
+        } catch (error) {
+            Swal.fire('Error', error.response?.data?.message || 'Failed to update due date', 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleSendWarning = async (type) => {
+        const result = await Swal.fire({
+            title: `Send ${type === 'both' ? 'Email & WhatsApp' : type.toUpperCase()} Warning?`,
+            text: 'This will send a payment reminder to the exhibitor.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#f59e0b',
+            confirmButtonText: 'Yes, send it!'
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+            const res = await api.post(`/api/payment-delay/send-warning/${id}`, { type });
+            if (res.data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Warning Sent!',
+                    html: `
+                        <p>Email: ${res.data.data.emailSent ? '✅ Sent' : '❌ Failed'}</p>
+                        <p>WhatsApp: ${res.data.data.whatsappSent ? '✅ Sent' : '❌ Failed'}</p>
+                    `,
+                    timer: 2000
+                });
+                onRefresh();
+            }
+        } catch (error) {
+            Swal.fire('Error', error.response?.data?.message || 'Failed to send warning', 'error');
+        }
+    };
+
     return (
         <div className="space-y-4">
-            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+            {/* ── Financial Summary ── */}
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Financial Summary & Deductions" icon={CreditCard} />
                 <div className="grid grid-cols-2 md:grid-cols-4 border-l border-t border-gray-100">
                     <Field label="Gross Stall Cost" value={fmt(fb.grossAmount || reg.participation?.amount)} />
@@ -498,29 +1067,234 @@ function PaymentTab({ reg, fmt }) {
                         <p className="text-[14px] font-black text-rose-800">{fmt(reg.balanceAmount)}</p>
                     </div>
                     <Field label="Current Status" value={reg.status?.toUpperCase()} />
-                    <Field label="Payment Mode (Latest)" value={reg.manualPaymentDetails?.method || reg.paymentMode || 'N/A'} />
+                    <Field label="Payment Plan" value={reg.paymentPlanLabel || reg.paymentPlanType || 'N/A'} />
                 </div>
-                {(reg.manualPaymentDetails?.transactionId || reg.paymentId) && (
-                    <div className="px-4 py-3 bg-slate-50 border-t border-gray-100 flex items-center justify-between">
-                        <div>
-                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1">Latest Transaction / Razorpay ID</p>
-                            <p className="text-xs font-bold text-slate-700 font-mono break-all">{reg.manualPaymentDetails?.transactionId || reg.paymentId}</p>
+                {(reg.penaltyAmount > 0 || reg.totalPayable > 0) && (
+                    <div className="grid grid-cols-3 border-t border-gray-100">
+                        <div className="p-3 border-r border-gray-100 bg-gray-50/50">
+                            <p className="text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Balance Amount</p>
+                            <p className="text-[13px] font-black text-gray-800">{fmt(reg.balanceAmount)}</p>
                         </div>
-                        {reg.manualPaymentDetails?.updatedAt && (
-                            <p className="text-[9px] font-bold text-slate-400 italic">Last Updated: {new Date(reg.manualPaymentDetails.updatedAt).toLocaleString()}</p>
-                        )}
+                        <div className="p-3 border-r border-gray-100 bg-red-50/30">
+                            <p className="text-[9px] font-black text-red-500 uppercase tracking-wider mb-1">Penalty</p>
+                            <p className="text-[13px] font-black text-red-700">{fmt(reg.penaltyAmount || 0)}</p>
+                        </div>
+                        <div className="p-3 bg-amber-50/30">
+                            <p className="text-[9px] font-black text-amber-600 uppercase tracking-wider mb-1">Total Payable</p>
+                            <p className="text-[14px] font-black text-amber-800">{fmt(reg.totalPayable || reg.balanceAmount)}</p>
+                        </div>
                     </div>
                 )}
             </div>
 
+            {/* ── Installment Breakdown ── */}
+            {reg.installments?.length > 0 && (
+                <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                    <SH title="Installment Breakdown" icon={CreditCard} />
+                    <div className="divide-y divide-gray-100">
+                        {reg.installments.map((inst, i) => {
+                            const isPaid = inst.status === 'paid';
+                            const isOverdue = inst.dueDate && new Date(inst.dueDate) < new Date() && !isPaid;
+                            const paidPct = inst.dueAmount > 0 ? Math.round((inst.paidAmount || 0) / inst.dueAmount * 100) : 0;
+                            return (
+                                <div key={i} className={`p-4 flex items-center justify-between gap-4 ${isOverdue ? 'bg-red-50/30' : ''}`}>
+                                    <div className="flex items-center gap-3 flex-1">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-[10px] font-black ${isPaid ? 'bg-emerald-100 text-emerald-700' : isOverdue ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                                            {isPaid ? '✓' : `${inst.percentage}%`}
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs font-black text-gray-800">{inst.label}</p>
+                                            <p className="text-[10px] text-gray-500">
+                                                Due: {inst.dueDate ? new Date(inst.dueDate).toLocaleDateString('en-IN') : 'Not set'}
+                                                {isOverdue && <span className="ml-2 text-red-600 font-bold">OVERDUE</span>}
+                                            </p>
+                                            {inst.paidAmount > 0 && inst.paidAmount < inst.dueAmount && (
+                                                <div className="mt-1">
+                                                    <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                                        <div className="bg-[#23471d] h-1.5 rounded-full" style={{ width: `${paidPct}%` }} />
+                                                    </div>
+                                                    <p className="text-[9px] text-gray-500 mt-0.5">{paidPct}% paid ({fmt(inst.paidAmount)} of {fmt(inst.dueAmount)})</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm font-black text-gray-800">{fmt(inst.dueAmount)}</p>
+                                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${isPaid ? 'bg-emerald-100 text-emerald-700' : isOverdue ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                                            {inst.status}
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Manual Payment Entry ── */}
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Add Manual Payment" icon={Plus} actions={
+                    <button onClick={() => setShowManualPayment(p => !p)} className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30">
+                        {showManualPayment ? <X size={11} /> : <Plus size={11} />} {showManualPayment ? 'Cancel' : 'Add Payment'}
+                    </button>
+                } />
+                {showManualPayment && (
+                    <div className="p-4 space-y-3">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <div>
+                                <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Amount (₹) *</label>
+                                <input type="number" value={manualPayment.amount} onChange={e => setManualPayment(p => ({ ...p, amount: e.target.value }))}
+                                    placeholder="e.g. 50000" className="w-full h-9 px-3 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#23471d]" />
+                            </div>
+                            <div>
+                                <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Payment Method *</label>
+                                <select value={manualPayment.method} onChange={e => setManualPayment(p => ({ ...p, method: e.target.value }))}
+                                    className="w-full h-9 px-3 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#23471d]">
+                                    {['Cash', 'Cheque', 'Bank Transfer', 'UPI', 'DD', 'NEFT', 'RTGS', 'Other'].map(m => <option key={m}>{m}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Payment Date *</label>
+                                <input type="date" value={manualPayment.paidAt} onChange={e => setManualPayment(p => ({ ...p, paidAt: e.target.value }))}
+                                    className="w-full h-9 px-3 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#23471d]" />
+                            </div>
+                            <div>
+                                <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Transaction / Cheque ID</label>
+                                <input type="text" value={manualPayment.transactionId} onChange={e => setManualPayment(p => ({ ...p, transactionId: e.target.value }))}
+                                    placeholder="TXN ID / Cheque No." className="w-full h-9 px-3 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#23471d]" />
+                            </div>
+                            <div className="col-span-2">
+                                <label className="block text-[9px] font-black text-gray-500 uppercase tracking-wider mb-1">Notes</label>
+                                <input type="text" value={manualPayment.notes} onChange={e => setManualPayment(p => ({ ...p, notes: e.target.value }))}
+                                    placeholder="Optional notes..." className="w-full h-9 px-3 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#23471d]" />
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+                            <button onClick={handleAddManualPayment} disabled={saving}
+                                className="flex items-center gap-2 px-5 py-2 bg-[#23471d] text-white text-xs font-bold uppercase rounded hover:bg-[#1a3516] disabled:opacity-50">
+                                <Plus size={14} /> {saving ? 'Saving...' : 'Record Payment'}
+                            </button>
+                            <p className="text-[10px] text-gray-400">Updates amountPaid, balanceAmount and sends receipt email.</p>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* ── Penalty Management ── */}
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Penalty Management" icon={CreditCard} actions={
+                    reg.penaltyHistory?.length > 0 && (
+                        <button onClick={() => setShowPenaltyHistory(p => !p)} className="flex items-center gap-1 px-3 py-1 bg-white/20 text-white text-[10px] font-bold uppercase rounded-[2px] hover:bg-white/30">
+                            History ({reg.penaltyHistory.length})
+                        </button>
+                    )
+                } />
+                <div className="p-4 space-y-3">
+                    {reg.penaltyAmount > 0 && (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-black text-red-800">Current Penalty: {fmt(reg.penaltyAmount)}</p>
+                                {reg.penaltyReason && <p className="text-[10px] text-red-600 mt-0.5">Reason: {reg.penaltyReason}</p>}
+                                {reg.penaltyAddedBy && <p className="text-[10px] text-red-500 mt-0.5">Added by: {reg.penaltyAddedBy}</p>}
+                            </div>
+                            <button onClick={handleRemovePenalty} disabled={saving}
+                                className="px-3 py-1.5 bg-red-500 text-white text-[10px] font-bold uppercase rounded hover:bg-red-600 disabled:opacity-50">
+                                Remove
+                            </button>
+                        </div>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <input type="number" value={penaltyAmount} onChange={e => setPenaltyAmount(e.target.value)}
+                            placeholder="Penalty amount (₹)" className="h-9 px-3 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#23471d]" />
+                        <input type="text" value={penaltyReason} onChange={e => setPenaltyReason(e.target.value)}
+                            placeholder="Reason for penalty" className="h-9 px-3 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#23471d]" />
+                        <button onClick={handleAddPenalty} disabled={saving}
+                            className="h-9 bg-[#23471d] text-white text-xs font-bold uppercase rounded hover:bg-[#1a3516] disabled:opacity-50">
+                            {saving ? 'Saving...' : 'Add Penalty'}
+                        </button>
+                    </div>
+                    {showPenaltyHistory && reg.penaltyHistory?.length > 0 && (
+                        <div className="mt-2 border border-gray-100 rounded overflow-hidden">
+                            <table className="w-full text-xs">
+                                <thead className="bg-gray-50">
+                                    <tr>{['Amount', 'Reason', 'Added By', 'Date', 'Removed'].map(h => <th key={h} className="px-3 py-2 text-[9px] font-black text-gray-500 uppercase text-left">{h}</th>)}</tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {reg.penaltyHistory.map((ph, i) => (
+                                        <tr key={i} className={ph.removedAt ? 'opacity-50' : ''}>
+                                            <td className="px-3 py-2 font-bold text-red-700">{fmt(ph.amount)}</td>
+                                            <td className="px-3 py-2 text-gray-600">{ph.reason}</td>
+                                            <td className="px-3 py-2 text-gray-500">{ph.addedBy}</td>
+                                            <td className="px-3 py-2 text-gray-500">{ph.addedAt ? new Date(ph.addedAt).toLocaleDateString('en-IN') : '—'}</td>
+                                            <td className="px-3 py-2 text-gray-500">{ph.removedAt ? new Date(ph.removedAt).toLocaleDateString('en-IN') : '—'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* ── Due Date & Warnings ── */}
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                <SH title="Payment Due Date & Reminders" icon={Calendar} />
+                <div className="p-4 space-y-3">
+                    {daysOverdue > 0 && (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded flex items-center gap-2">
+                            <span className="text-red-600 font-black text-sm">⚠️</span>
+                            <p className="text-xs font-black text-red-800">Payment overdue by {daysOverdue} days!</p>
+                            {reg.warningCount > 0 && <span className="ml-auto text-[10px] text-red-500">{reg.warningCount} warning(s) sent</span>}
+                        </div>
+                    )}
+                    <div className="flex gap-2">
+                        <input type="date" value={paymentDueDate} onChange={e => setPaymentDueDate(e.target.value)}
+                            className="flex-1 h-9 px-3 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#23471d]" />
+                        <button onClick={handleUpdateDueDate} disabled={saving}
+                            className="h-9 px-4 bg-blue-500 text-white text-xs font-bold uppercase rounded hover:bg-blue-600 disabled:opacity-50">
+                            Set Due Date
+                        </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                        <button onClick={() => handleSendWarning('email')} className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase rounded hover:bg-blue-100">
+                            <Mail size={12} /> Email Warning
+                        </button>
+                        <button onClick={() => handleSendWarning('whatsapp')} className="flex items-center gap-1.5 px-3 py-2 bg-green-50 text-green-700 text-[10px] font-bold uppercase rounded hover:bg-green-100">
+                            <MessageSquare size={12} /> WhatsApp Warning
+                        </button>
+                        <button onClick={() => handleSendWarning('both')} className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 text-amber-700 text-[10px] font-bold uppercase rounded hover:bg-amber-100">
+                            <Send size={12} /> Send Both
+                        </button>
+                    </div>
+                    {reg.warningHistory?.length > 0 && (
+                        <details className="mt-1">
+                            <summary className="text-[10px] font-black text-gray-500 uppercase cursor-pointer hover:text-gray-700">
+                                Warning History ({reg.warningHistory.length})
+                            </summary>
+                            <div className="mt-2 space-y-1">
+                                {reg.warningHistory.slice(-5).reverse().map((w, i) => (
+                                    <div key={i} className="flex items-center gap-2 text-[10px] text-gray-500 py-1 border-b border-gray-50">
+                                        <span className="font-bold text-gray-700">{new Date(w.sentAt).toLocaleDateString('en-IN')}</span>
+                                        <span className="uppercase bg-gray-100 px-1.5 py-0.5 rounded">{w.type}</span>
+                                        <span>{w.daysOverdue} days overdue</span>
+                                        <span className="ml-auto text-gray-400">by {w.sentBy}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </details>
+                    )}
+                </div>
+            </div>
+
+            {/* ── Payment History ── */}
             {reg.paymentHistory?.length > 0 && (
-                <div className="bg-white border border-gray-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                     <SH title="Transaction Audit History" icon={History} />
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="bg-slate-100 border-b border-gray-200">
-                                    {['#', 'Type', 'Amount', 'Method / Mode', 'Txn ID', 'Date'].map(h => (
+                                    {['#', 'Type', 'Amount', 'Method', 'Txn ID', 'Date', 'Notes'].map(h => (
                                         <th key={h} className="py-2.5 px-4 text-[9px] font-black text-slate-500 uppercase text-left">{h}</th>
                                     ))}
                                 </tr>
@@ -528,26 +1302,24 @@ function PaymentTab({ reg, fmt }) {
                             <tbody className="divide-y divide-gray-100">
                                 {reg.paymentHistory.map((h, i) => {
                                     const rawType = (h.paymentType || 'payment').toLowerCase();
-                                    const isInstallment = ['advance', 'balance', 'installment'].includes(rawType);
-                                    const label = isInstallment ? 'INSTALLMENT' : rawType.toUpperCase();
-                                    const badgeClass = isInstallment ? 'bg-cyan-100 text-cyan-800' : 'bg-emerald-100 text-emerald-800';
-
+                                    const isManual = h.paymentMode === 'manual' || ['cash','cheque','bank transfer','upi','dd','neft','rtgs'].includes((h.method||'').toLowerCase());
+                                    const isInstallment = rawType.includes('installment') || rawType.includes('advance') || rawType.includes('phase');
+                                    const badgeClass = isManual ? 'bg-purple-100 text-purple-800' : isInstallment ? 'bg-cyan-100 text-cyan-800' : 'bg-emerald-100 text-emerald-800';
                                     return (
                                         <tr key={i} className="hover:bg-slate-50/80 transition-colors">
                                             <td className="py-3 px-4 text-xs text-gray-400 font-bold">#{i + 1}</td>
                                             <td className="py-3 px-4">
                                                 <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${badgeClass}`}>
-                                                    {label}
+                                                    {isManual ? 'MANUAL' : isInstallment ? 'INSTALLMENT' : rawType.toUpperCase()}
                                                 </span>
                                             </td>
                                             <td className="py-3 px-4 text-[13px] font-black text-slate-800">{fmt(h.amount)}</td>
-                                            <td className="py-3 px-4 text-xs font-bold text-slate-600 uppercase italic">
-                                                {h.method || h.paymentMode || 'Manual'}
-                                            </td>
+                                            <td className="py-3 px-4 text-xs font-bold text-slate-600 uppercase">{h.method || h.paymentMode || 'Online'}</td>
                                             <td className="py-3 px-4 text-xs text-slate-500 font-mono">{h.transactionId || h.razorpayPaymentId || '—'}</td>
                                             <td className="py-3 px-4 text-xs font-bold text-slate-500">
                                                 {h.paidAt ? new Date(h.paidAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                                             </td>
+                                            <td className="py-3 px-4 text-xs text-slate-400">{h.notes || '—'}</td>
                                         </tr>
                                     );
                                 })}
@@ -559,8 +1331,7 @@ function PaymentTab({ reg, fmt }) {
         </div>
     );
 }
-
-function DocumentsTab({ reg }) {
+function DocumentsTab({ reg, id, onRefresh }) {
     const registrationDocs = [
         { label: 'Registration Form (PDF)', url: fixUrl(reg.registrationPdfUrl), color: 'bg-[#23471d]' },
         { label: 'Payment Receipt (PDF)', url: fixUrl(reg.receiptPdfUrl), color: 'bg-[#d26019]' },
@@ -568,7 +1339,7 @@ function DocumentsTab({ reg }) {
     ].filter(d => d.url);
 
     const kycDocs = [
-        { label: 'Company Logo', url: fixUrl(reg.companyLogoUrl || reg.companyLogo) },
+        { label: 'Company Logo', url: fixUrl(reg.companyLogoUrl || reg.companyLogo || reg.logo) },
         { label: 'PAN Card (Front)', url: fixUrl(reg.panCardFrontUrl || reg.panFrontUrl || reg.panCardFront || reg.panFront) },
         { label: 'PAN Card (Back)', url: fixUrl(reg.panCardBackUrl || reg.panBackUrl || reg.panCardBack || reg.panBack) },
         { label: 'Aadhaar Card (Front)', url: fixUrl(reg.aadhaarCardFrontUrl || reg.aadhaarFrontUrl || reg.aadhaarCardFront || reg.aadhaarFront) },
@@ -576,6 +1347,16 @@ function DocumentsTab({ reg }) {
         { label: 'GST Certificate', url: fixUrl(reg.gstCertificateUrl || reg.gstCertUrl || reg.gstCertificate || reg.gstCert) },
         { label: 'Cancelled Cheque', url: fixUrl(reg.cancelledChequeUrl || reg.chequeUrl || reg.cancelledCheque || reg.cheque) },
         { label: 'Representative Photo', url: fixUrl(reg.representativePhotoUrl || reg.photoUrl || reg.representativePhoto || reg.photo) },
+    ].filter(d => d.url);
+
+    // Seller KYC docs (uploaded via seller profile page)
+    const sellerKycDocs = [
+        { label: 'GST Certificate', url: fixUrl(reg.kycDocuments?.gstCertificate) },
+        { label: 'PAN Card', url: fixUrl(reg.kycDocuments?.panCard) },
+        { label: 'Registration Certificate', url: fixUrl(reg.kycDocuments?.registrationCertificate) },
+        { label: 'Authorized Signatory ID', url: fixUrl(reg.kycDocuments?.authorizedSignatoryId) },
+        { label: 'Company Brochure', url: fixUrl(reg.brochure) },
+        { label: 'Product Catalogue', url: fixUrl(reg.productCatalogue) },
     ].filter(d => d.url);
 
     return (
@@ -600,10 +1381,48 @@ function DocumentsTab({ reg }) {
 
             <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <SH title="Business & KYC Documentation (Admin Management)" icon={Layers} />
-                <KycDocsGrid reg={reg} id={reg._id} onRefresh={() => window.location.reload()} />
+                <KycDocsGrid reg={reg} id={reg._id} onRefresh={onRefresh || (() => window.location.reload())} />
             </div>
 
-            <SpecialDocsSection reg={reg} id={reg._id} onRefresh={() => window.location.reload()} />
+            {/* Seller Profile KYC Docs */}
+            {sellerKycDocs.length > 0 && (
+                <div className="bg-white border border-gray-100 shadow-sm overflow-hidden">
+                    <SH title="Seller Profile KYC Documents" icon={CheckCircle2} actions={
+                        <span className={`px-3 py-1 text-[10px] font-black uppercase border rounded-full ${
+                            reg.kycStatus === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                            reg.kycStatus === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                            'bg-amber-50 text-amber-700 border-amber-200'
+                        }`}>KYC: {reg.kycStatus || 'pending'}</span>
+                    } />
+                    <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                        {sellerKycDocs.map(({ label, url }) => {
+                            const isPdf = url?.toLowerCase().includes('.pdf');
+                            return (
+                                <div key={label} className="flex flex-col border border-gray-100 rounded overflow-hidden bg-white shadow-sm">
+                                    <div className="px-2 py-1.5 bg-slate-50 border-b border-gray-100 flex items-center justify-between">
+                                        <span className="text-[9px] font-black text-gray-500 uppercase tracking-wider truncate">{label}</span>
+                                        <a href={url} target="_blank" rel="noopener noreferrer" className="text-[#23471d] hover:text-[#d26019] ml-1 flex-shrink-0">
+                                            <ExternalLink size={10} />
+                                        </a>
+                                    </div>
+                                    <div className="aspect-square bg-slate-100 flex items-center justify-center overflow-hidden">
+                                        {isPdf ? (
+                                            <div className="flex flex-col items-center gap-1">
+                                                <FileText size={24} className="text-[#23471d]" />
+                                                <span className="text-[8px] font-bold text-gray-400 uppercase">PDF</span>
+                                            </div>
+                                        ) : (
+                                            <img src={url} alt={label} className="w-full h-full object-cover" />
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            <SpecialDocsSection reg={reg} id={reg._id} onRefresh={onRefresh || (() => window.location.reload())} />
         </div>
     );
 }
@@ -1205,6 +2024,7 @@ function AccessoriesTab({ reg, id }) {
 export default function ExhibitorBookingDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const [reg, setReg] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
@@ -1228,7 +2048,7 @@ export default function ExhibitorBookingDetail() {
     if (!reg) return (
         <div className="p-8 text-center">
             <p className="text-gray-500 font-bold mb-4">Booking not found</p>
-            <button onClick={() => navigate('/exhibitor-bookings')} className="px-4 py-2 bg-[#23471d] text-white text-sm font-bold rounded-sm">Back</button>
+            <button onClick={() => navigate(location.state?.from || '/exhibitor-bookings')} className="px-4 py-2 bg-[#23471d] text-white text-sm font-bold rounded-sm">Back</button>
         </div>
     );
 
@@ -1236,10 +2056,10 @@ export default function ExhibitorBookingDetail() {
     const fmt = (n) => `${cur}${Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 
     return (
-        <div className="p-6 min-h-screen bg-gray-50 font-inter">
+        <div className="p-6 min-h-screen bg-gray-50 font-inter" style={{ marginTop: "30px" }}>
             {/* Back + Title */}
             <div className="flex items-center gap-3 mb-4">
-                <button onClick={() => navigate('/exhibitor-bookings')}
+                <button onClick={() => navigate(location.state?.from || '/exhibitor-bookings')}
                     className="flex items-center gap-1.5 text-gray-500 hover:text-[#23471d] text-sm font-medium transition-colors">
                     <ArrowLeft className="w-4 h-4" /> Back
                 </button>
@@ -1284,10 +2104,11 @@ export default function ExhibitorBookingDetail() {
             {/* Tab Content */}
             {reg && activeTab === 'overview' && <OverviewTab reg={reg} fmt={fmt} id={id} onRefresh={fetchReg} />}
             {reg && activeTab === 'contacts' && <ContactsTab reg={reg} id={id} onRefresh={fetchReg} />}
-            {reg && activeTab === 'payment' && <PaymentTab reg={reg} fmt={fmt} />}
-            {reg && activeTab === 'documents' && <DocumentsTab reg={reg} />}
+            {reg && activeTab === 'payment' && <PaymentTab reg={reg} fmt={fmt} id={id} onRefresh={fetchReg} />}
+            {reg && activeTab === 'documents' && <DocumentsTab reg={reg} id={id} onRefresh={fetchReg} />}
             {reg && activeTab === 'msme' && <MSMETab reg={reg} id={id} onRefresh={fetchReg} />}
             {reg && activeTab === 'accessories' && <AccessoriesTab reg={reg} id={id} />}
+            {reg && activeTab === 'seller' && <SellerTab reg={reg} id={id} onRefresh={fetchReg} />}
         </div>
     );
 }

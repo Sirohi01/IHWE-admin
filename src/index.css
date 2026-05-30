@@ -137,3 +137,11 @@
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
 }
+
+/* ================= MODAL SCROLL LOCK ================= */
+/* Applied to <html> when any modal is open */
+html.modal-open,
+html.modal-open body {
+  overflow: hidden !important;
+  height: 100% !important;
+}
