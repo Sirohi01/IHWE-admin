@@ -32,7 +32,7 @@ export default function TopLeadsCard({ userLeads }) {
       )}
 
       {/* Rows */}
-      <div className="space-y-3 flex-1 overflow-y-auto pr-1" style={{ maxHeight: '85px', scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}>
+      <div className="space-y-3 flex-1 overflow-y-auto pr-1" style={{ maxHeight: '125px', scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}>
         {hotLeads.length === 0 ? (
           <div className="text-center py-8 text-slate-400 italic text-sm">
             No high-potential leads assigned

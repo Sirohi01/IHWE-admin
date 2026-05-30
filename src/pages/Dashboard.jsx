@@ -14,6 +14,7 @@ import TopLeadsCard         from "./dashboard/TopLeadsCard";
 import SalesLeaderboard     from "./dashboard/SalesLeaderboard";
 import RemindersCard        from "./dashboard/RemindersCard";
 import NextActionPanel      from "./dashboard/NextActionPanel";
+import AccountDashboard     from "./dashboard/AccountDashboard";
 
 export default function Dashboard() {
   // ─── State ──────────────────────────────────────────────────────────────────
@@ -181,6 +182,11 @@ export default function Dashboard() {
     { name: "Cold Leads", value: statsMetrics.categories?.cold     || 0, color: "#00a499" },
     { name: "Converted",  value: statsMetrics.categories?.converted|| 0, color: "#845ef7" },
   ];
+
+  const isAccountRole = currentUser?.role?.toLowerCase() === "account user" || currentUser?.role?.toLowerCase() === "account admin";
+  if (isAccountRole) {
+    return <AccountDashboard currentUser={currentUser} loading={loading} />;
+  }
 
   return (
     <div className="w-full bg-[#f8fafc] px-3 sm:px-6 py-2 font-sans">
