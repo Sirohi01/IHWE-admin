@@ -23,6 +23,11 @@ const NewLeadList = () => {
   const [filterSource, setFilterSource] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterIndustry, setFilterIndustry] = useState('');
+  const [filterAssignedTo, setFilterAssignedTo] = useState('');
+
+  // Auth State
+  const { user } = useSelector(state => state.auth);
+  const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, '') === 'superadmin';
 
   // 🏢 Company redux data
   const companiesState = useSelector((state) => state.companies);
@@ -39,17 +44,19 @@ const NewLeadList = () => {
         status: filterStatus || 'New Lead',
         source: filterSource,
         industry: filterIndustry,
+        forwardTo: filterAssignedTo,
         startDate,
         endDate
       }));
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, filterStatus, filterIndustry]);
+  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, filterStatus, filterIndustry, filterAssignedTo]);
 
   const uniqueSources = [...new Set(newLeadCompanies.map(c => c.dataSource).filter(Boolean))];
   const uniqueStatuses = [...new Set(newLeadCompanies.map(c => c.companyStatus).filter(Boolean))];
   const uniqueIndustries = [...new Set(newLeadCompanies.map(c => c.businessNature).filter(Boolean))];
+  const uniqueAssignedTo = [...new Set(newLeadCompanies.map(c => c.forwardTo).filter(Boolean))];
 
   const getStatusStyle = (status) => {
     const s = (status || "").toLowerCase();
@@ -97,7 +104,9 @@ const NewLeadList = () => {
               {totalLeads}
             </span>
           </h1>
-          <p className="text-xs text-slate-500 mt-1 font-medium">Leads assigned to you that are newly generated</p>
+          <p className="text-xs text-slate-500 mt-1 font-medium">
+            {isSuperAdmin ? "All newly generated leads from different sources" : "Leads assigned to you that are newly generated"}
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 xl:gap-3 w-full xl:w-auto">
@@ -187,55 +196,63 @@ const NewLeadList = () => {
           <div className="flex-grow flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-h-0">
 
             {/* Filter Bar */}
-            <div className="p-2 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
+            <div className={`p-2 border-b flex flex-wrap items-center justify-between gap-2 transition-colors ${isSuperAdmin ? 'bg-[#1e1b4b] border-[#1e1b4b] text-white rounded-t-xl' : 'bg-white border-slate-100 text-slate-700'}`}>
               <div className="flex flex-wrap items-center gap-2">
                 <div className="relative min-w-[180px]">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={12} />
+                  <Search className={`absolute left-2.5 top-1/2 -translate-y-1/2 ${isSuperAdmin ? 'text-slate-300' : 'text-slate-400'}`} size={12} />
                   <input
                     type="text"
-                    placeholder="Search within my leads..."
+                    placeholder="Search lead by name, company, email, mobile..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-7 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+                    className={`w-full pl-7 pr-3 py-1.5 border rounded text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500 ${isSuperAdmin ? 'bg-indigo-900/50 border-indigo-500/30 text-white placeholder-slate-400' : 'bg-slate-50 border-slate-200 text-slate-700'}`}
                   />
                 </div>
-                <select value={filterSource} onChange={e => { setFilterSource(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
+                
+                <select value={filterSource} onChange={e => { setFilterSource(e.target.value); setPage(1); }} className={`py-1.5 px-2 border rounded text-[10px] font-medium outline-none cursor-pointer ${isSuperAdmin ? 'bg-blue-600 border-blue-500 text-white' : 'bg-white border-slate-200 text-slate-700'}`}>
                   <option value="">Source</option>
                   {uniqueSources.map((s, i) => <option key={i} value={s}>{s}</option>)}
                 </select>
-                <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
+                
+                <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }} className={`py-1.5 px-2 border rounded text-[10px] font-medium outline-none cursor-pointer ${isSuperAdmin ? 'bg-purple-600 border-purple-500 text-white' : 'bg-white border-slate-200 text-slate-700'}`}>
                   <option value="">Status</option>
                   {uniqueStatuses.map((s, i) => <option key={i} value={s}>{s}</option>)}
                 </select>
-                <select value={filterIndustry} onChange={e => { setFilterIndustry(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
+                
+                {isSuperAdmin && (
+                  <select value={filterAssignedTo} onChange={e => { setFilterAssignedTo(e.target.value); setPage(1); }} className="py-1.5 px-2 border rounded text-[10px] font-medium outline-none cursor-pointer bg-teal-600 border-teal-500 text-white">
+                    <option value="">Assigned To</option>
+                    {uniqueAssignedTo.map((s, i) => <option key={i} value={s}>{s}</option>)}
+                  </select>
+                )}
+
+                <select value={filterIndustry} onChange={e => { setFilterIndustry(e.target.value); setPage(1); }} className={`py-1.5 px-2 border rounded text-[10px] font-medium outline-none cursor-pointer ${isSuperAdmin ? 'bg-orange-500 border-orange-400 text-white' : 'bg-white border-slate-200 text-slate-700'}`}>
                   <option value="">Industry</option>
                   {uniqueIndustries.map((s, i) => <option key={i} value={s}>{s}</option>)}
                 </select>
-                <div className="flex items-center gap-1.5 py-1 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700">
-                  <Calendar size={12} className="text-slate-500" />
+                
+                <div className={`flex items-center gap-1.5 py-1 px-2 border rounded text-[10px] font-medium ${isSuperAdmin ? 'bg-[#1e1b4b] border-indigo-500/30' : 'bg-white border-slate-200 text-slate-700'}`}>
+                  <Calendar size={12} className={isSuperAdmin ? "text-slate-300" : "text-slate-500"} />
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
-                    className="bg-transparent text-[10px] py-0.5 outline-none text-slate-700 w-[85px] cursor-pointer"
+                    className={`bg-transparent text-[10px] py-0.5 outline-none w-[85px] cursor-pointer ${isSuperAdmin ? 'text-white' : 'text-slate-700'}`}
                   />
-                  <span className="text-slate-400">-</span>
+                  <span className={isSuperAdmin ? "text-slate-400" : "text-slate-400"}>-</span>
                   <input
                     type="date"
                     value={endDate}
                     onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
-                    className="bg-transparent text-[10px] py-0.5 outline-none text-slate-700 w-[85px] cursor-pointer"
+                    className={`bg-transparent text-[10px] py-0.5 outline-none w-[85px] cursor-pointer ${isSuperAdmin ? 'text-white' : 'text-slate-700'}`}
                   />
                 </div>
-                {/* <button className="flex items-center gap-1.5 py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-                  <Filter size={12} /> More Filters
-                </button> */}
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => { setStartDate(''); setEndDate(''); setSearchTerm(''); setFilterSource(''); setFilterStatus(''); setFilterIndustry(''); setPage(1); }} className="flex items-center gap-1 py-1.5 px-2 text-slate-500 hover:text-slate-700 transition-colors text-[10px] font-medium">
+                <button onClick={() => { setStartDate(''); setEndDate(''); setSearchTerm(''); setFilterSource(''); setFilterStatus(''); setFilterIndustry(''); setFilterAssignedTo(''); setPage(1); }} className={`flex items-center gap-1 py-1.5 px-2 transition-colors text-[10px] font-medium ${isSuperAdmin ? 'text-white hover:text-slate-200 bg-indigo-900/50 rounded border border-indigo-500/30' : 'text-slate-500 hover:text-slate-700'}`}>
                   <RefreshCw size={12} /> Reset
                 </button>
-                <button className="flex items-center gap-1.5 py-1.5 px-3 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+                <button className={`flex items-center gap-1.5 py-1.5 px-3 border rounded text-[10px] font-medium transition-colors ${isSuperAdmin ? 'bg-emerald-600 border-emerald-500 text-white hover:bg-emerald-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
                   <Download size={12} /> Export
                 </button>
               </div>
@@ -254,6 +271,7 @@ const NewLeadList = () => {
                     <th className="px-2 py-2 font-medium">Source</th>
                     <th className="px-2 py-2 font-medium">Industry</th>
                     <th className="px-2 py-2 font-medium">Status</th>
+                    {isSuperAdmin && <th className="px-2 py-2 font-medium">Assigned To</th>}
                     <th className="px-2 py-2 font-medium">Lead Score</th>
                     <th className="px-2 py-2 font-medium">Last Conversation / Handled By</th>
                     <th className="px-2 py-2 w-10"></th>
@@ -294,6 +312,11 @@ const NewLeadList = () => {
                               {toTitleCase(status)}
                             </span>
                           </td>
+                          {isSuperAdmin && (
+                            <td className="px-2 py-1.5 text-slate-800 font-semibold text-[10px]">
+                              {toTitleCase(row.forwardTo) || "Unassigned"}
+                            </td>
+                          )}
                           <td className="px-2 py-1.5">
                             <div className="flex items-center gap-0.5 text-emerald-500 text-[9px]">
                               <FaStar /><FaStar /><FaStar /><FaRegStar className="text-slate-300" /><FaRegStar className="text-slate-300" />
@@ -355,39 +378,40 @@ const NewLeadList = () => {
         {/* RIGHT COLUMN: SIDEBAR */}
         <div className="w-full xl:w-[20%] flex flex-col gap-4 xl:gap-1.5 shrink-0 xl:justify-between xl:h-full">
 
-          {/* Follow-Ups Due */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
-            <h3 className="text-[11px] font-bold text-slate-800 mb-1">Follow-Ups Due <span className="text-[8px] text-slate-400 font-normal ml-1">(Next 7 Days)</span></h3>
-            <div className="flex flex-col gap-1">
-              {[
-                { name: "GreenLife Ayurveda", date: "27 May, 11:00 AM", type: "WhatsApp", icon: <MessageCircle size={12} className="text-emerald-500" />, tagBg: "bg-emerald-50 text-emerald-600", iconBg: "bg-emerald-50" },
-                { name: "Nature's Harmony", date: "28 May, 03:00 PM", type: "Call", icon: <Phone size={12} className="text-emerald-500" />, tagBg: "bg-emerald-50 text-emerald-600", iconBg: "bg-emerald-50" },
-                { name: "Herbal King", date: "28 May, 05:00 PM", type: "Email", icon: <Mail size={12} className="text-blue-500" />, tagBg: "bg-blue-50 text-blue-600", iconBg: "bg-blue-50" },
-                { name: "Wellness Center", date: "29 May, 10:00 AM", type: "Call", icon: <Phone size={12} className="text-emerald-500" />, tagBg: "bg-emerald-50 text-emerald-600", iconBg: "bg-emerald-50" },
-                { name: "Ayush Pharma", date: "29 May, 01:30 PM", type: "WhatsApp", icon: <MessageCircle size={12} className="text-emerald-500" />, tagBg: "bg-emerald-50 text-emerald-600", iconBg: "bg-emerald-50" },
-              ].map((fu, idx) => (
-                <div key={idx} className="flex items-start gap-2">
-                  <div className={`w-7 h-7 rounded-full ${fu.iconBg} flex items-center justify-center shrink-0`}>
-                    {fu.icon}
+          {!isSuperAdmin && (
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
+              <h3 className="text-[11px] font-bold text-slate-800 mb-1">Follow-Ups Due <span className="text-[8px] text-slate-400 font-normal ml-1">(Next 7 Days)</span></h3>
+              <div className="flex flex-col gap-1">
+                {[
+                  { name: "GreenLife Ayurveda", date: "27 May, 11:00 AM", type: "WhatsApp", icon: <MessageCircle size={12} className="text-emerald-500" />, tagBg: "bg-emerald-50 text-emerald-600", iconBg: "bg-emerald-50" },
+                  { name: "Nature's Harmony", date: "28 May, 03:00 PM", type: "Call", icon: <Phone size={12} className="text-emerald-500" />, tagBg: "bg-emerald-50 text-emerald-600", iconBg: "bg-emerald-50" },
+                  { name: "Herbal King", date: "28 May, 05:00 PM", type: "Email", icon: <Mail size={12} className="text-blue-500" />, tagBg: "bg-blue-50 text-blue-600", iconBg: "bg-blue-50" },
+                  { name: "Wellness Center", date: "29 May, 10:00 AM", type: "Call", icon: <Phone size={12} className="text-emerald-500" />, tagBg: "bg-emerald-50 text-emerald-600", iconBg: "bg-emerald-50" },
+                  { name: "Ayush Pharma", date: "29 May, 01:30 PM", type: "WhatsApp", icon: <MessageCircle size={12} className="text-emerald-500" />, tagBg: "bg-emerald-50 text-emerald-600", iconBg: "bg-emerald-50" },
+                ].map((fu, idx) => (
+                  <div key={idx} className="flex items-start gap-2">
+                    <div className={`w-7 h-7 rounded-full ${fu.iconBg} flex items-center justify-center shrink-0`}>
+                      {fu.icon}
+                    </div>
+                    <div className="flex-grow">
+                      <div className="text-[10px] font-bold text-slate-800 leading-tight">{fu.name}</div>
+                      <div className="text-[8px] text-slate-500 mt-0.5">{fu.date}</div>
+                    </div>
+                    <div className={`px-1.5 py-0.5 rounded text-[8px] font-semibold ${fu.tagBg}`}>
+                      {fu.type}
+                    </div>
                   </div>
-                  <div className="flex-grow">
-                    <div className="text-[10px] font-bold text-slate-800 leading-tight">{fu.name}</div>
-                    <div className="text-[8px] text-slate-500 mt-0.5">{fu.date}</div>
-                  </div>
-                  <div className={`px-1.5 py-0.5 rounded text-[8px] font-semibold ${fu.tagBg}`}>
-                    {fu.type}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              <button onClick={() => navigate("/ihweClientData2026/followUpList")} className="w-full mt-1.5 text-[8px] font-bold text-blue-600 hover:text-blue-700 flex items-center justify-center gap-1">
+                View All Follow-Ups (16) <ArrowRight size={8} />
+              </button>
             </div>
-            <button onClick={() => navigate("/ihweClientData2026/followUpList")} className="w-full mt-1.5 text-[8px] font-bold text-blue-600 hover:text-blue-700 flex items-center justify-center gap-1">
-              View All Follow-Ups (16) <ArrowRight size={8} />
-            </button>
-          </div>
+          )}
 
           {/* Leads by Source (Donut Chart) */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
-            <h3 className="text-[11px] font-bold text-slate-800 mb-1">Leads by Source</h3>
+            <h3 className="text-[11px] font-bold text-slate-800 mb-1">{isSuperAdmin ? "Leads by Source (This Week)" : "Leads by Source"}</h3>
             <div className="flex items-center justify-between gap-2">
               {/* CSS Donut Chart */}
               <div className="relative w-12 h-12 rounded-full shrink-0 shadow-sm" style={{ background: `conic-gradient(#0ea5e9 0% 33%, #8b5cf6 33% 58%, #10b981 58% 79%, #f59e0b 79% 92%, #94a3b8 92% 100%)` }}>
@@ -418,31 +442,58 @@ const NewLeadList = () => {
             </div>
           </div>
 
-          {/* Recent Activities */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
-            <h3 className="text-[11px] font-bold text-slate-800 mb-1">Recent Activities</h3>
-            <div className="flex flex-col gap-1.5 relative">
-              <div className="absolute left-[9px] top-2 bottom-2 w-px bg-slate-100"></div>
-              {[
-                { icon: <Phone size={8} className="text-emerald-600" />, bg: "bg-emerald-50 border-emerald-100", text: "Spoke with Nature's Harmony", date: "28 May, 03:00 PM" },
-                { icon: <Mail size={8} className="text-blue-600" />, bg: "bg-blue-50 border-blue-100", text: "Sent email to Herbal King", date: "27 May, 05:00 PM" },
-                { icon: <FaWhatsapp size={8} className="text-emerald-600" />, bg: "bg-emerald-50 border-emerald-100", text: "WhatsApp chat with GreenLife", date: "27 May, 11:00 AM" }
-              ].map((act, i) => (
-                <div key={i} className="flex items-start gap-2 relative z-10">
-                  <div className={`w-5 h-5 rounded-full border ${act.bg} flex items-center justify-center bg-white shrink-0 mt-0.5`}>
-                    {act.icon}
+          {isSuperAdmin && (
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
+              <h3 className="text-[11px] font-bold text-slate-800 mb-1.5">Lead Status Overview</h3>
+              <div className="flex flex-col gap-1.5">
+                {[
+                  { label: "New", count: Math.ceil(totalLeads * 0.38), pct: "38%", color: "bg-emerald-500" },
+                  { label: "Contacted", count: Math.ceil(totalLeads * 0.28), pct: "28%", color: "bg-blue-500" },
+                  { label: "Interested", count: Math.ceil(totalLeads * 0.19), pct: "19%", color: "bg-purple-500" },
+                  { label: "Not Contacted", count: Math.ceil(totalLeads * 0.09), pct: "9%", color: "bg-orange-500" },
+                  { label: "Converted", count: Math.ceil(totalLeads * 0.06), pct: "6%", color: "bg-teal-500" },
+                ].map((s, i) => (
+                  <div key={i} className="flex items-center justify-between text-[8px]">
+                    <span className="text-slate-700 w-16">{s.label}</span>
+                    <div className="flex-grow mx-2 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className={`h-full ${s.color} rounded-full`} style={{ width: s.pct }}></div>
+                    </div>
+                    <div className="flex items-center gap-1 w-10 justify-end">
+                      <span className="font-bold text-slate-800">{s.count}</span>
+                      <span className="text-slate-400">({s.pct})</span>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-[9px] font-medium text-slate-700 leading-tight">{act.text}</div>
-                    <div className="text-[8px] text-slate-400 mt-0.5">{act.date}</div>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-            <button className="w-full mt-1.5 text-[8px] font-bold text-blue-600 hover:text-blue-700 flex items-center justify-center gap-1">
-              View All Activities <ArrowRight size={8} />
-            </button>
-          </div>
+          )}
+
+          {!isSuperAdmin && (
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
+              <h3 className="text-[11px] font-bold text-slate-800 mb-1">Recent Activities</h3>
+              <div className="flex flex-col gap-1.5 relative">
+                <div className="absolute left-[9px] top-2 bottom-2 w-px bg-slate-100"></div>
+                {[
+                  { icon: <Phone size={8} className="text-emerald-600" />, bg: "bg-emerald-50 border-emerald-100", text: "Spoke with Nature's Harmony", date: "28 May, 03:00 PM" },
+                  { icon: <Mail size={8} className="text-blue-600" />, bg: "bg-blue-50 border-blue-100", text: "Sent email to Herbal King", date: "27 May, 05:00 PM" },
+                  { icon: <FaWhatsapp size={8} className="text-emerald-600" />, bg: "bg-emerald-50 border-emerald-100", text: "WhatsApp chat with GreenLife", date: "27 May, 11:00 AM" }
+                ].map((act, i) => (
+                  <div key={i} className="flex items-start gap-2 relative z-10">
+                    <div className={`w-5 h-5 rounded-full border ${act.bg} flex items-center justify-center bg-white shrink-0 mt-0.5`}>
+                      {act.icon}
+                    </div>
+                    <div>
+                      <div className="text-[9px] font-medium text-slate-700 leading-tight">{act.text}</div>
+                      <div className="text-[8px] text-slate-400 mt-0.5">{act.date}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button className="w-full mt-1.5 text-[8px] font-bold text-blue-600 hover:text-blue-700 flex items-center justify-center gap-1">
+                View All Activities <ArrowRight size={8} />
+              </button>
+            </div>
+          )}
 
           {/* Quick Actions */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
@@ -460,12 +511,39 @@ const NewLeadList = () => {
                 <FaWhatsapp size={12} />
                 <span className="text-[9px] font-bold">WhatsApp</span>
               </button>
-              <button onClick={() => navigate("/activity-logs")} className="flex items-center gap-1.5 p-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded transition-colors border border-purple-100">
-                <CalendarDays size={12} />
-                <span className="text-[9px] font-bold">Schedule</span>
+              <button className="flex items-center gap-1.5 p-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded transition-colors border border-purple-100">
+                <Users size={12} />
+                <span className="text-[9px] font-bold">Assign Leads</span>
               </button>
             </div>
           </div>
+
+          {/* Top Assigned Executives (Super Admin Only) */}
+          {isSuperAdmin && (
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
+              <h3 className="text-[11px] font-bold text-slate-800 mb-1.5">Top Assigned Executives</h3>
+              <div className="flex flex-col gap-1.5">
+                {[
+                  { name: "Vijay Sharma", init: "VS", count: 12, color: "bg-emerald-500" },
+                  { name: "Rahul Verma", init: "RV", count: 7, color: "bg-blue-500" },
+                  { name: "Neha Patil", init: "NP", count: 5, color: "bg-purple-500" }
+                ].map((exec, i) => (
+                  <div key={i} className="flex items-center justify-between text-[9px]">
+                    <div className="flex items-center gap-1.5">
+                      <div className={`w-5 h-5 rounded-full ${exec.color} text-white flex items-center justify-center font-bold text-[8px]`}>
+                        {exec.init}
+                      </div>
+                      <span className="font-semibold text-slate-800">{exec.name}</span>
+                    </div>
+                    <span className="text-slate-600 font-medium">{exec.count} Leads</span>
+                  </div>
+                ))}
+              </div>
+              <button className="w-full mt-2 py-1 bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 rounded text-[8px] font-bold transition-colors">
+                View All Executives
+              </button>
+            </div>
+          )}
 
         </div>
       </div>
