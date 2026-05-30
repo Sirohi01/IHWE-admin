@@ -247,11 +247,8 @@ const ConfirmClientList = () => {
         ))}
       </select>
 
-      <button className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:bg-slate-50 transition-colors">
-        <Search size={14} /> More Filters
-      </button>
 
-      <button
+      {/* <button
         className="p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-emerald-600 hover:border-emerald-200 transition-colors"
         onClick={() => {
           setSearchTerm('');
@@ -261,7 +258,7 @@ const ConfirmClientList = () => {
         }}
       >
         <RefreshCw size={14} />
-      </button>
+      </button> */}
     </>
   );
 
@@ -339,126 +336,121 @@ const ConfirmClientList = () => {
 
   const rightSidebar = (
     <>
-      <div className="flex flex-col gap-3">
-        {/* Conversion Overview */}
-        <div className="bg-white rounded-xl border border-gray-100 p-3">
-          <h3 className="text-[13px] font-semibold text-[#0F172A] mb-2">Conversion Overview</h3>
-          <div className="flex items-center justify-between gap-1">
-            <div className="relative w-[56px] h-[56px] shrink-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: "This Month", value: 32, color: "#059669" }, // Emerald 600
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={18}
-                    outerRadius={26}
-                    paddingAngle={0}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    <Cell fill="#059669" />
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center mt-1">
-                <h3 className="text-[14px] font-bold text-[#0F172A] leading-none">32</h3>
-                <p className="text-[7px] text-gray-500 uppercase tracking-wider">Total</p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-1.5 flex-grow">
-              {[
-                { name: "This Month", value: 32, pct: "100%", color: "#059669" },
-                { name: "Last Month", value: 27, pct: "100%", color: "#cbd5e1" },
-              ].map((item) => (
-                <div key={item.name} className="flex items-center justify-between text-[10px]">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: item.color }} />
-                    <span className="font-medium text-[#0F172A] truncate">{item.name}</span>
-                  </div>
-                  <span className="font-semibold text-[#0F172A] shrink-0 ml-1">{item.value} <span className="text-gray-400 font-normal">({item.pct})</span></span>
-                </div>
-              ))}
+      {/* Conversion Overview */}
+      <div className="bg-white rounded-xl border border-gray-100 p-3">
+        <h3 className="text-[13px] font-semibold text-[#0F172A] mb-2">Conversion Overview</h3>
+        <div className="flex items-center justify-between gap-1">
+          <div className="relative w-[56px] h-[56px] shrink-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: "This Month", value: 32, color: "#059669" }, // Emerald 600
+                  ]}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={18}
+                  outerRadius={26}
+                  paddingAngle={0}
+                  dataKey="value"
+                  stroke="none"
+                >
+                  <Cell fill="#059669" />
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center mt-1">
+              <h3 className="text-[14px] font-bold text-[#0F172A] leading-none">32</h3>
+              <p className="text-[7px] text-gray-500 uppercase tracking-wider">Total</p>
             </div>
           </div>
-        </div>
-
-        {/* Industry Wise Conversions */}
-        <div className="bg-white rounded-xl border border-gray-100 p-3">
-          <h3 className="text-[13px] font-semibold text-[#0F172A] mb-2">Industry Wise Conversions</h3>
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-1.5 flex-grow">
             {[
-              { label: "Healthcare", count: 12, pct: "38%", color: "bg-emerald-600" },
-              { label: "FMCG", count: 8, pct: "25%", color: "bg-blue-600" },
-              { label: "Retail", count: 5, pct: "16%", color: "bg-orange-500" },
-              { label: "Biotechnology", count: 4, pct: "13%", color: "bg-purple-600" },
-              { label: "Manufacturing", count: 3, pct: "9%", color: "bg-sky-500" },
-            ].map((s, i) => (
-              <div key={i} className="flex items-center justify-between text-[10px]">
-                <span className="text-slate-700 w-24 font-medium pr-2 shrink-0">{s.label}</span>
-                <div className="flex-grow mx-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div className={`h-full ${s.color} rounded-full`} style={{ width: s.pct }}></div>
+              { name: "This Month", value: 32, pct: "100%", color: "#059669" },
+              { name: "Last Month", value: 27, pct: "100%", color: "#cbd5e1" },
+            ].map((item) => (
+              <div key={item.name} className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: item.color }} />
+                  <span className="font-medium text-[#0F172A] truncate">{item.name}</span>
                 </div>
-                <div className="flex items-center gap-1 w-12 justify-end shrink-0">
-                  <span className="font-semibold text-slate-800">{s.count}</span>
-                  <span className="text-slate-400 text-[9px]">({s.pct})</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Conversions */}
-        <div className="bg-white rounded-xl border border-gray-100 p-3">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-[13px] font-semibold text-[#0F172A]">Recent Conversions</h3>
-          </div>
-          <div className="flex flex-col gap-2.5">
-            {[
-              { name: "GreenLife Ayurveda", date: "27 May 2026" },
-              { name: "Nature's Harmony Pvt. Ltd.", date: "26 May 2026" },
-              { name: "Wellness World", date: "25 May 2026" },
-              { name: "Herbal King Exports", date: "24 May 2026" },
-              { name: "Arogya Organics", date: "23 May 2026" },
-            ].map((lead, i) => (
-              <div key={i} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                    <Users size={12} className="fill-emerald-600" />
-                  </div>
-                  <span className="text-[10px] font-medium text-slate-700 truncate max-w-[130px]">{lead.name}</span>
-                </div>
-                <span className="text-[9px] text-slate-400 font-medium shrink-0">{lead.date}</span>
+                <span className="font-semibold text-[#0F172A] shrink-0 ml-1">{item.value} <span className="text-gray-400 font-normal">({item.pct})</span></span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
+      {/* Industry Wise Conversions */}
+      <div className="bg-white rounded-xl border border-gray-100 p-3">
+        <h3 className="text-[14px] font-semibold text-[#0F172A] mb-2">Industry Wise Conversions</h3>
+        <div className="flex flex-col gap-2.5">
+          {[
+            { label: "Healthcare", count: 12, pct: "38%", color: "bg-emerald-600" },
+            { label: "FMCG", count: 8, pct: "25%", color: "bg-blue-600" },
+            { label: "Retail", count: 5, pct: "16%", color: "bg-orange-500" },
+            { label: "Biotechnology", count: 4, pct: "13%", color: "bg-purple-600" },
+            { label: "Manufacturing", count: 3, pct: "9%", color: "bg-sky-500" },
+          ].map((s, i) => (
+            <div key={i} className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-700 w-24 font-medium pr-2 shrink-0">{s.label}</span>
+              <div className="flex-grow mx-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div className={`h-full ${s.color} rounded-full`} style={{ width: s.pct }}></div>
+              </div>
+              <div className="flex items-center gap-1 w-12 justify-end shrink-0">
+                <span className="font-semibold text-slate-800">{s.count}</span>
+                <span className="text-slate-400 text-[9px]">({s.pct})</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent Conversions */}
+      <div className="bg-white rounded-xl border border-gray-100 p-3">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-[14px] font-semibold text-[#0F172A]">Recent Conversions</h3>
+        </div>
+        <div className="flex flex-col gap-2.5">
+          {[
+            { name: "GreenLife Ayurveda", date: "27 May 2026" },
+            { name: "Nature's Harmony Pvt. Ltd.", date: "26 May 2026" },
+            { name: "Wellness World", date: "25 May 2026" },
+            { name: "Herbal King Exports", date: "24 May 2026" },
+            { name: "Arogya Organics", date: "23 May 2026" },
+          ].map((lead, i) => (
+            <div key={i} className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Users size={12} className="fill-emerald-600" />
+                </div>
+                <span className="text-[11px] font-medium text-slate-700 truncate max-w-[130px]">{lead.name}</span>
+              </div>
+              <span className="text-[9px] text-slate-400 font-medium shrink-0">{lead.date}</span>
+            </div>
+          ))}
+        </div>
+      </div>
       {/* Quick Actions */}
-      <div className="flex-grow flex flex-col">
-        <div className="bg-white rounded-xl border border-gray-100 p-3 flex-grow">
-          <h3 className="text-[13px] font-semibold text-[#0F172A] mb-2">Quick Actions</h3>
-          <div className="grid grid-cols-2 gap-2">
-            <button className="h-[34px] rounded-lg bg-[#EEF9F2] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
-              <FaWhatsapp size={12} className="text-green-600 shrink-0" />
-              <span className="text-[9px] font-bold text-green-700 leading-tight">Send Bulk WhatsApp</span>
-            </button>
-            <button className="h-[34px] rounded-lg bg-[#FFF3E0] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
-              <CalendarDays size={12} className="text-orange-600 shrink-0" />
-              <span className="text-[9px] font-bold text-orange-700 leading-tight">Schedule Follow-Up</span>
-            </button>
-            <button className="h-[34px] rounded-lg bg-[#F3E8FF] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
-              <Mail size={12} className="text-purple-600 shrink-0" />
-              <span className="text-[9px] font-bold text-purple-700 leading-tight">Send Email</span>
-            </button>
-            <button className="h-[34px] rounded-lg bg-[#E0F2FE] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
-              <FileText size={12} className="text-blue-600 shrink-0" />
-              <span className="text-[9px] font-bold text-blue-700 leading-tight">Create Proposal</span>
-            </button>
-          </div>
+      <div className="bg-white rounded-xl border border-gray-100 p-3">
+        <h3 className="text-[14px] font-semibold text-[#0F172A] mb-2">Quick Actions</h3>
+        <div className="grid grid-cols-2 gap-2">
+          <button className="h-[34px] rounded-lg bg-[#EEF9F2] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
+            <FaWhatsapp size={12} className="text-green-600 shrink-0" />
+            <span className="text-[9px] font-bold text-green-700 leading-tight">Send Bulk WhatsApp</span>
+          </button>
+          <button className="h-[34px] rounded-lg bg-[#FFF3E0] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
+            <CalendarDays size={12} className="text-orange-600 shrink-0" />
+            <span className="text-[9px] font-bold text-orange-700 leading-tight">Schedule Follow-Up</span>
+          </button>
+          <button className="h-[34px] rounded-lg bg-[#F3E8FF] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
+            <Mail size={12} className="text-purple-600 shrink-0" />
+            <span className="text-[9px] font-bold text-purple-700 leading-tight">Send Email</span>
+          </button>
+          <button className="h-[34px] rounded-lg bg-[#E0F2FE] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
+            <FileText size={12} className="text-blue-600 shrink-0" />
+            <span className="text-[9px] font-bold text-blue-700 leading-tight">Create Proposal</span>
+          </button>
         </div>
       </div>
     </>
