@@ -62,7 +62,7 @@ export const menuItems = [
       { label: "Master Data", path: "/ihweClientData2026/masterData" },
       { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
       // { label: "Confirmed Client List", path: "/exhibitor-bookings" },
-      { label: "Confirmed Client List", path: "ihweClientData2026/confirmClientList" },
+      { label: "Converted Clients", path: "/ihweClientData2026/confirmClientList" },
       { label: "Book A Stand", path: "/book-a-stand" },
     ],
   },
@@ -698,8 +698,8 @@ export const menuItems = [
     children: [
       { label: "Sales Report", path: "/accounts/salesreport" },
       //{ label: "Payments & Invoice Reports", path: "/accounts/" },
-     // { label: "Debit Note Reports", path: "/accounts/" },
-    //  { label: "PI Reports", path: "/accounts/" },
+      // { label: "Debit Note Reports", path: "/accounts/" },
+      //  { label: "PI Reports", path: "/accounts/" },
     ],
   },
 ];
