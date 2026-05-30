@@ -14,7 +14,7 @@ export default function AccountQuickActions() {
       colors: "bg-[#f0faf2] hover:bg-[#e1f7e6] border-[#ccefd7] text-[#15803d]"
     },
     {
-      label: "Add Receipt",
+      label: "Add Payment",
       icon: FilePlus,
       colors: "bg-[#f0f7ff] hover:bg-[#e0efff] border-[#cce3ff] text-[#1d4ed8]"
     },
@@ -74,17 +74,16 @@ export default function AccountQuickActions() {
           return (
             <button
               key={i}
-              disabled={act.label !== "Add Receipt"}
+              disabled={act.label !== "Add Payment"}
               onClick={() => {
-                if (act.label === "Add Receipt") {
+                if (act.label === "Add Payment") {
                   navigate("/dashboard/add-payment");
                 }
               }}
-              className={`border rounded-lg px-1 py-1.5 flex flex-col items-center justify-center text-center transition-all duration-350 ${act.colors} ${
-                act.label === "Add Receipt"
-                  ? "cursor-pointer hover:shadow-sm hover:scale-102"
-                  : "opacity-50 cursor-not-allowed pointer-events-none"
-              }`}
+              className={`border rounded-lg px-1 py-1.5 flex flex-col items-center justify-center text-center transition-all duration-350 ${act.colors} ${act.label === "Add Payment"
+                ? "cursor-pointer hover:shadow-sm hover:scale-102"
+                : "opacity-50 cursor-not-allowed pointer-events-none"
+                }`}
             >
               <Icon size={13} className="mb-0.5 shrink-0" strokeWidth={2.5} />
               <span className="text-[8px] font-black leading-tight uppercase tracking-tight">
