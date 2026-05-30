@@ -37,7 +37,7 @@ export default function UpcomingDueDates() {
       {/* Header */}
       <div className="flex items-center justify-between gap-2 mb-1 pb-0.5 border-b border-slate-100 shrink-0">
         <div>
-          <h3 className="text-[12px] font-black text-slate-800 tracking-tight">
+          <h3 className="text-[12px] font-md text-slate-800 tracking-tight">
             Upcoming Due Dates
           </h3>
           <p className="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
@@ -64,24 +64,24 @@ export default function UpcomingDueDates() {
               <span className="text-[10.5px] font-black text-slate-800 leading-none">
                 {item.day}
               </span>
-              <span className="text-[6px] font-black text-rose-500 uppercase tracking-widest leading-none mt-0.5">
+              <span className="text-[6px] font-md text-rose-500 uppercase tracking-widest leading-none mt-0.5">
                 {item.month}
               </span>
             </div>
 
             {/* Client Info details */}
             <div className="flex-1 min-w-0">
-              <h4 className="text-[10.5px] font-black text-slate-800 leading-tight truncate">
+              <h4 className="text-[10.5px] font-md text-slate-800 leading-tight truncate">
                 {item.company}
               </h4>
-              <p className="text-[8px] text-slate-400 font-extrabold mt-0 uppercase tracking-wider leading-none">
+              <p className="text-[8px] text-slate-400 font-md mt-0 uppercase tracking-wider leading-none">
                 INV: {item.invoice}
               </p>
             </div>
 
             {/* Pricing Amount & Overdue indicator badge */}
             <div className="text-right shrink-0">
-              <span className="text-[10.5px] font-black text-slate-800 block leading-none">
+              <span className="text-[10.5px] font-bold text-slate-800 block leading-none">
                 {item.amount}
               </span>
               <span className={`inline-flex px-1 py-0.2 rounded text-[7px] font-black border uppercase tracking-wider mt-0.5 ${item.badgeClass}`}>

@@ -118,7 +118,7 @@ export default function AddPayment() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2 pb-1.5 border-b border-slate-200">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-md">
-            <span className="text-[17px] font-black">₹</span>
+            <span className="text-[17px] font-md">₹</span>
           </div>
           <div>
             <h1 className="text-[18px] font-md text-slate-800 tracking-tight flex items-center gap-2 leading-none">
@@ -132,7 +132,7 @@ export default function AddPayment() {
 
         <button
           onClick={() => navigate("/dashboard")}
-          className="flex items-center gap-1.5 px-2.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-lg shadow-sm text-[10.5px] font-black text-slate-700 transition cursor-pointer"
+          className="flex items-center gap-1.5 px-2.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-lg shadow-sm text-[10.5px] font-md text-slate-700 transition cursor-pointer"
         >
           <ArrowLeft size={12} strokeWidth={2.5} />
           <span>Back</span>
@@ -146,8 +146,8 @@ export default function AddPayment() {
 
           {/* SECTION 1: Payment Information */}
           <div className="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm flex flex-col gap-2.5">
-            <h3 className="text-[11.5px] font-black text-slate-800 tracking-tight flex items-center gap-1 pb-1 border-b border-slate-100 uppercase">
-              <span className="w-4 h-4 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center text-[9px] font-black">1</span>
+            <h3 className="text-[11.5px] font-md text-slate-800 tracking-tight flex items-center gap-1 pb-1 border-b border-slate-100 uppercase">
+              <span className="w-4 h-4 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center text-[9px] font-md">1</span>
               Payment Information
             </h3>
 
@@ -186,7 +186,7 @@ export default function AddPayment() {
                   type="text"
                   value={formatCurrency(activeClient.outstanding)}
                   disabled
-                  className="px-2 py-1 text-[10.5px] font-black text-slate-500 bg-slate-100/70 border border-slate-200 rounded-lg outline-none"
+                  className="px-2 py-1 text-[10.5px] font-md text-slate-500 bg-slate-100/70 border border-slate-200 rounded-lg outline-none"
                 />
               </div>
 
@@ -207,7 +207,7 @@ export default function AddPayment() {
               <div className="flex flex-col gap-0.5">
                 <label className="text-[8.5px] font-extrabold uppercase text-slate-400 tracking-wider">Payment Status</label>
                 <div className="px-2 py-1 text-[10.5px] bg-slate-50/50 border border-slate-200 rounded-lg flex items-center h-[28px]">
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-100 text-[8.5px] font-black text-emerald-700 uppercase tracking-wider leading-none">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-100 text-[8.5px] font-md text-emerald-700 uppercase tracking-wider leading-none">
                     Received
                   </span>
                 </div>
@@ -269,7 +269,7 @@ export default function AddPayment() {
                     }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight">Advance Payment</span>
+                    <span className="text-[10px] font-md text-slate-800 uppercase tracking-tight">Advance Payment</span>
                     <input
                       type="radio"
                       checked={paymentType === "advance"}
@@ -291,7 +291,7 @@ export default function AddPayment() {
                     }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight">Running Payment</span>
+                    <span className="text-[10px] font-md text-slate-800 uppercase tracking-tight">Running Payment</span>
                     <input
                       type="radio"
                       checked={paymentType === "running"}
@@ -313,7 +313,7 @@ export default function AddPayment() {
                     }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight">Final Payment</span>
+                    <span className="text-[10px] font-md text-slate-800 uppercase tracking-tight">Final Payment</span>
                     <input
                       type="radio"
                       checked={paymentType === "final"}
@@ -335,7 +335,7 @@ export default function AddPayment() {
                     }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight">Settlement Amount</span>
+                    <span className="text-[10px] font-md text-slate-800 uppercase tracking-tight">Settlement Amount</span>
                     <input
                       type="radio"
                       checked={paymentType === "settlement"}
@@ -355,8 +355,8 @@ export default function AddPayment() {
 
           {/* SECTION 2: Payment Details */}
           <div className="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm flex flex-col gap-2.5">
-            <h3 className="text-[11.5px] font-black text-slate-800 tracking-tight flex items-center gap-1 pb-1 border-b border-slate-100 uppercase">
-              <span className="w-4 h-4 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center text-[9px] font-black">2</span>
+            <h3 className="text-[11.5px] font-md text-slate-800 tracking-tight flex items-center gap-1 pb-1 border-b border-slate-100 uppercase">
+              <span className="w-4 h-4 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center text-[9px] font-md">2</span>
               Payment Details
             </h3>
 
@@ -402,7 +402,7 @@ export default function AddPayment() {
                   type="text"
                   value={formatCurrency(netReceived)}
                   disabled
-                  className="px-2 py-1 text-[10.5px] font-black text-indigo-750 bg-indigo-50/50 border border-indigo-200 rounded-lg outline-none shadow-inner"
+                  className="px-2 py-1 text-[10.5px] font-md text-indigo-750 bg-indigo-50/50 border border-indigo-200 rounded-lg outline-none shadow-inner"
                 />
               </div>
             </div>
@@ -427,7 +427,7 @@ export default function AddPayment() {
                     <UploadCloud size={14} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <label className="text-[10.5px] font-black text-indigo-600 hover:text-indigo-700 cursor-pointer hover:underline flex items-center gap-1">
+                    <label className="text-[10.5px] font-md text-indigo-600 hover:text-indigo-700 cursor-pointer hover:underline flex items-center gap-1">
                       <span>Click to upload</span>
                       <span className="text-slate-450 font-bold hover:no-underline">or drag and drop</span>
                       <input type="file" onChange={handleFileChange} className="hidden" accept=".jpg,.jpeg,.png,.pdf" />
@@ -442,7 +442,7 @@ export default function AddPayment() {
                   </div>
                 </div>
 
-                <label className="px-2.5 py-1 bg-white border border-slate-200 hover:bg-slate-50 text-[9px] font-black tracking-tight text-slate-700 rounded-lg shadow-sm transition cursor-pointer shrink-0">
+                <label className="px-2.5 py-1 bg-white border border-slate-200 hover:bg-slate-50 text-[9px] font-md tracking-tight text-slate-700 rounded-lg shadow-sm transition cursor-pointer shrink-0">
                   Browse Files
                   <input type="file" onChange={handleFileChange} className="hidden" accept=".jpg,.jpeg,.png,.pdf" />
                 </label>
@@ -453,8 +453,8 @@ export default function AddPayment() {
 
           {/* SECTION 3: Bank Details */}
           <div className="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm flex flex-col gap-2.5">
-            <h3 className="text-[11.5px] font-black text-slate-800 tracking-tight flex items-center gap-1 pb-1 border-b border-slate-100 uppercase">
-              <span className="w-4 h-4 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center text-[9px] font-black">3</span>
+            <h3 className="text-[11.5px] font-md text-slate-800 tracking-tight flex items-center gap-1 pb-1 border-b border-slate-100 uppercase">
+              <span className="w-4 h-4 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center text-[9px] font-md">3</span>
               Bank Details <span className="text-[9px] font-bold text-slate-400 leading-none normal-case">(If applicable)</span>
             </h3>
 
@@ -514,7 +514,7 @@ export default function AddPayment() {
                 onChange={(e) => setSaveBankDetails(e.target.checked)}
                 className="accent-indigo-600 w-3 h-3 rounded cursor-pointer"
               />
-              <label htmlFor="saveBank" className="text-[9.5px] font-black text-slate-600 select-none cursor-pointer">
+              <label htmlFor="saveBank" className="text-[9.5px] font-md text-slate-600 select-none cursor-pointer">
                 Save this bank detail for future use
               </label>
             </div>
@@ -526,7 +526,7 @@ export default function AddPayment() {
             <button
               type="button"
               onClick={() => navigate("/dashboard")}
-              className="px-3 py-1.5 border border-slate-250 hover:bg-slate-50 text-[9.5px] font-black text-slate-600 rounded-lg shadow-sm transition cursor-pointer"
+              className="px-3 py-1.5 border border-slate-250 hover:bg-slate-50 text-[9.5px] font-md text-slate-600 rounded-lg shadow-sm transition cursor-pointer"
             >
               ✕ Cancel
             </button>
@@ -535,14 +535,14 @@ export default function AddPayment() {
               <button
                 type="button"
                 onClick={handleDraftSave}
-                className="px-3 py-1.5 bg-indigo-50/50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100/60 text-[9.5px] font-black rounded-lg shadow-sm transition cursor-pointer"
+                className="px-3 py-1.5 bg-indigo-50/50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100/60 text-[9.5px] font-md rounded-lg shadow-sm transition cursor-pointer"
               >
                 Save as Draft
               </button>
 
               <button
                 type="submit"
-                className="px-3.5 py-1.5 bg-[#095b55] hover:bg-[#074742] text-white text-[9.5px] font-black rounded-lg shadow-md transition flex items-center gap-1 cursor-pointer"
+                className="px-3.5 py-1.5 bg-[#095b55] hover:bg-[#074742] text-white text-[9.5px] font-md rounded-lg shadow-md transition flex items-center gap-1 cursor-pointer"
               >
                 <Check size={12} strokeWidth={3} />
                 <span>Save Payment</span>
@@ -557,7 +557,7 @@ export default function AddPayment() {
 
           {/* CARD 1: Payment Summary */}
           <div className="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm flex flex-col justify-between">
-            <h3 className="text-[11px] font-black text-slate-800 tracking-tight flex items-center gap-1 pb-1 border-b border-slate-100 uppercase mb-2">
+            <h3 className="text-[11px] font-md text-slate-800 tracking-tight flex items-center gap-1 pb-1 border-b border-slate-100 uppercase mb-2">
               <FileText size={12} className="text-indigo-600" />
               Payment Summary
             </h3>
@@ -574,7 +574,7 @@ export default function AddPayment() {
               </div>
               <div className="flex justify-between items-center">
                 <span>Total Amount</span>
-                <span className="text-slate-800 font-black">{formatCurrency(activeClient.total)}</span>
+                <span className="text-slate-800 font-md">{formatCurrency(activeClient.total)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span>Paid Amount</span>
@@ -582,7 +582,7 @@ export default function AddPayment() {
               </div>
               <div className="flex justify-between items-center">
                 <span>Outstanding Amount</span>
-                <span className="text-slate-800 font-black text-amber-600">{formatCurrency(activeClient.outstanding)}</span>
+                <span className="text-slate-800 font-md text-amber-600">{formatCurrency(activeClient.outstanding)}</span>
               </div>
 
               {/* Dotted spacer */}
@@ -590,7 +590,7 @@ export default function AddPayment() {
 
               <div className="flex justify-between items-center">
                 <span>Received Amount</span>
-                <span className="text-emerald-600 font-black">{formatCurrency(parseFloat(receivedAmount) || 0)}</span>
+                <span className="text-emerald-600 font-md">{formatCurrency(parseFloat(receivedAmount) || 0)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span>TDS Deducted</span>
@@ -606,15 +606,15 @@ export default function AddPayment() {
 
               {/* Large highlight block */}
               <div className="bg-indigo-50/50 border border-indigo-150 rounded-xl p-2 flex items-center justify-between mt-0.5 shadow-sm">
-                <span className="text-indigo-850 text-[10px] font-black uppercase tracking-tight">Net Received</span>
-                <span className="text-indigo-700 text-[13px] font-black tracking-tight">{formatCurrency(netReceived)}</span>
+                <span className="text-indigo-850 text-[10px] font-md uppercase tracking-tight">Net Received</span>
+                <span className="text-indigo-700 text-[13px] font-md tracking-tight">{formatCurrency(netReceived)}</span>
               </div>
             </div>
           </div>
 
           {/* CARD 2: Quick Actions */}
           <div className="bg-white border border-slate-200 rounded-xl p-2.5 shadow-sm flex flex-col justify-between">
-            <h3 className="text-[11px] font-black text-slate-800 tracking-tight flex items-center gap-1 pb-1 border-b border-slate-100 uppercase mb-1">
+            <h3 className="text-[11px] font-md text-slate-800 tracking-tight flex items-center gap-1 pb-1 border-b border-slate-100 uppercase mb-1">
               <CreditCard size={12} className="text-indigo-600" />
               Quick Actions
             </h3>
@@ -624,7 +624,7 @@ export default function AddPayment() {
               <button
                 type="button"
                 onClick={() => Swal.fire("View Invoice", `Opening estimated sheet for ${activeClient.invoice}`, "info")}
-                className="py-1.5 flex items-center justify-between text-[10px] font-black text-slate-700 hover:text-indigo-600 text-left transition cursor-pointer"
+                className="py-1.5 flex items-center justify-between text-[10px] font-md text-slate-700 hover:text-indigo-600 text-left transition cursor-pointer"
               >
                 <div className="flex items-center gap-1.5">
                   <Eye size={12} className="text-slate-400" />
@@ -636,7 +636,7 @@ export default function AddPayment() {
               <button
                 type="button"
                 onClick={() => Swal.fire("Download Receipt", "PDF file will download once you save this payment entry.", "warning")}
-                className="py-1.5 flex items-center justify-between text-[10px] font-black text-slate-700 hover:text-indigo-600 text-left transition cursor-pointer"
+                className="py-1.5 flex items-center justify-between text-[10px] font-md text-slate-700 hover:text-indigo-600 text-left transition cursor-pointer"
               >
                 <div className="flex items-center gap-1.5">
                   <Download size={12} className="text-slate-400" />
@@ -648,7 +648,7 @@ export default function AddPayment() {
               <button
                 type="button"
                 onClick={() => Swal.fire("Send Receipt Email", `Preparing direct email draft to financial desks.`, "question")}
-                className="py-1.5 flex items-center justify-between text-[10px] font-black text-slate-700 hover:text-indigo-600 text-left transition cursor-pointer"
+                className="py-1.5 flex items-center justify-between text-[10px] font-md text-slate-700 hover:text-indigo-600 text-left transition cursor-pointer"
               >
                 <div className="flex items-center gap-1.5">
                   <Mail size={12} className="text-slate-400" />
@@ -660,7 +660,7 @@ export default function AddPayment() {
               <button
                 type="button"
                 onClick={() => Swal.fire("WhatsApp Reminder", "Initiating WhatsApp desktop gateway queue...", "info")}
-                className="py-1.5 flex items-center justify-between text-[10px] font-black text-slate-700 hover:text-indigo-600 text-left transition cursor-pointer"
+                className="py-1.5 flex items-center justify-between text-[10px] font-md text-slate-700 hover:text-indigo-600 text-left transition cursor-pointer"
               >
                 <div className="flex items-center gap-1.5">
                   <MessageCircle size={12} className="text-slate-400" />
@@ -674,14 +674,14 @@ export default function AddPayment() {
           {/* CARD 3: Recent Payments */}
           <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col justify-between">
             <div className="flex justify-between items-center pb-2 border-b border-slate-100 mb-3">
-              <h3 className="text-[12px] font-black text-slate-800 tracking-tight flex items-center gap-1 uppercase">
+              <h3 className="text-[12px] font-md text-slate-800 tracking-tight flex items-center gap-1 uppercase">
                 <Building2 size={13} className="text-indigo-600" />
                 Recent Payments
               </h3>
               <button
                 type="button"
                 onClick={() => Swal.fire("All Ledger Entries", "Redirecting to payments index tab...", "info")}
-                className="text-[10px] font-black text-indigo-600 hover:underline hover:text-indigo-700"
+                className="text-[10px] font-md text-indigo-600 hover:underline hover:text-indigo-700"
               >
                 View All
               </button>
@@ -692,36 +692,36 @@ export default function AddPayment() {
               {/* Item 1 */}
               <div className="flex justify-between items-start gap-2 text-[11px]">
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-black text-slate-800 truncate">GreenLife Ayurveda Pvt. Ltd.</h4>
+                  <h4 className="font-md text-slate-800 truncate">GreenLife Ayurveda Pvt. Ltd.</h4>
                   <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5 leading-none">RCPT/26-27/0001 • 15 May 2026</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="font-black text-slate-800 block leading-tight">₹ 50,000.00</span>
-                  <span className="inline-block px-1.5 py-0.5 text-[8px] font-black bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase rounded tracking-wide mt-0.5 leading-none">Received</span>
+                  <span className="font-md text-slate-800 block leading-tight">₹ 50,000.00</span>
+                  <span className="inline-block px-1.5 py-0.5 text-[8px] font-md bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase rounded tracking-wide mt-0.5 leading-none">Received</span>
                 </div>
               </div>
 
               {/* Item 2 */}
               <div className="flex justify-between items-start gap-2 text-[11px] pt-2.5 border-t border-slate-100">
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-black text-slate-800 truncate">Wellness Forever</h4>
+                  <h4 className="font-md text-slate-800 truncate">Wellness Forever</h4>
                   <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5 leading-none">RCPT/26-27/0001 • 10 May 2026</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="font-black text-slate-800 block leading-tight">₹ 25,000.00</span>
-                  <span className="inline-block px-1.5 py-0.5 text-[8px] font-black bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase rounded tracking-wide mt-0.5 leading-none">Received</span>
+                  <span className="font-md text-slate-800 block leading-tight">₹ 25,000.00</span>
+                  <span className="inline-block px-1.5 py-0.5 text-[8px] font-md bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase rounded tracking-wide mt-0.5 leading-none">Received</span>
                 </div>
               </div>
 
               {/* Item 3 */}
               <div className="flex justify-between items-start gap-2 text-[11px] pt-2.5 border-t border-slate-100">
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-black text-slate-800 truncate">Herbal Care India Pvt. Ltd.</h4>
+                  <h4 className="font-md text-slate-800 truncate">Herbal Care India Pvt. Ltd.</h4>
                   <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5 leading-none">RCPT/26-27/0001 • 05 May 2026</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="font-black text-slate-800 block leading-tight">₹ 75,000.00</span>
-                  <span className="inline-block px-1.5 py-0.5 text-[8px] font-black bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase rounded tracking-wide mt-0.5 leading-none">Received</span>
+                  <span className="font-md text-slate-800 block leading-tight">₹ 75,000.00</span>
+                  <span className="inline-block px-1.5 py-0.5 text-[8px] font-md bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase rounded tracking-wide mt-0.5 leading-none">Received</span>
                 </div>
               </div>
             </div>

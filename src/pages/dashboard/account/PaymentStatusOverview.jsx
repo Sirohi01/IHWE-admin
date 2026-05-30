@@ -11,7 +11,7 @@ export default function PaymentStatusOverview() {
     <div className="bg-white rounded-xl border border-slate-200 p-2.5 shadow-sm flex flex-col justify-between h-full">
       {/* Title */}
       <div className="shrink-0 mb-1.5 pb-1 border-b border-slate-100">
-        <h3 className="text-[12.5px] font-black text-slate-800 tracking-tight">
+        <h3 className="text-[12.5px] font-md text-slate-800 tracking-tight">
           Payment Status Overview
         </h3>
         <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">

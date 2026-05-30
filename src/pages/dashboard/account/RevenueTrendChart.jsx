@@ -62,7 +62,7 @@ export default function RevenueTrendChart() {
       {/* Header Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1 shrink-0">
         <div>
-          <h3 className="text-[12.5px] font-black text-slate-800 tracking-tight">
+          <h3 className="text-[12.5px] font-md text-slate-800 tracking-tight">
             Revenue Collection Trend
           </h3>
           <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
@@ -76,11 +76,10 @@ export default function RevenueTrendChart() {
             <button
               key={t}
               onClick={() => setTimeframe(t)}
-              className={`px-2 py-0.5 rounded-md text-[9.5px] font-black transition-all ${
-                timeframe === t
-                  ? "bg-white text-emerald-600 shadow-sm border border-slate-100"
-                  : "text-slate-500 hover:text-slate-800"
-              }`}
+              className={`px-2 py-0.5 rounded-md text-[9.5px] font-black transition-all ${timeframe === t
+                ? "bg-white text-emerald-600 shadow-sm border border-slate-100"
+                : "text-slate-500 hover:text-slate-800"
+                }`}
             >
               {t}
             </button>
@@ -92,18 +91,16 @@ export default function RevenueTrendChart() {
       <div className="flex items-center gap-3 mb-1 px-1 shrink-0">
         <button
           onClick={() => setShowRevenue(!showRevenue)}
-          className={`flex items-center gap-1.5 text-[9.5px] font-black transition-all ${
-            showRevenue ? "opacity-100" : "opacity-40"
-          }`}
+          className={`flex items-center gap-1.5 text-[9.5px] font-black transition-all ${showRevenue ? "opacity-100" : "opacity-40"
+            }`}
         >
           <span className="w-2.5 h-1 bg-emerald-500 rounded-full inline-block" />
           <span className="text-slate-700">Revenue Collected (₹)</span>
         </button>
         <button
           onClick={() => setShowTarget(!showTarget)}
-          className={`flex items-center gap-1.5 text-[9.5px] font-black transition-all ${
-            showTarget ? "opacity-100" : "opacity-40"
-          }`}
+          className={`flex items-center gap-1.5 text-[9.5px] font-black transition-all ${showTarget ? "opacity-100" : "opacity-40"
+            }`}
         >
           <span className="w-2.5 h-1 bg-blue-500 rounded-full inline-block" />
           <span className="text-slate-700">Collection Target (₹)</span>

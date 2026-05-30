@@ -85,7 +85,7 @@ export default function RecentTransactionsTable() {
       {/* Header */}
       <div className="flex items-center justify-between gap-2 mb-1.5 pb-1 border-b border-slate-100 shrink-0">
         <div>
-          <h3 className="text-[13.5px] font-black text-slate-800 tracking-tight">
+          <h3 className="text-[13.5px] font-md text-slate-800 tracking-tight">
             Recent Transactions
           </h3>
           <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
@@ -117,14 +117,14 @@ export default function RecentTransactionsTable() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {transactions.map((row, idx) => (
-              <tr key={idx} className="hover:bg-slate-50/50 transition-colors font-extrabold text-slate-700">
-                <td className="py-1 px-2 font-black text-[#0369a1] hover:underline cursor-pointer">
+              <tr key={idx} className="hover:bg-slate-50/50 transition-colors font-md text-slate-700">
+                <td className="py-1 px-2 font-md text-[#0369a1] hover:underline cursor-pointer">
                   {row.invoice}
                 </td>
-                <td className="py-1 px-1 text-[11px] font-black text-slate-800">{row.company}</td>
-                <td className="py-1 px-1 font-black text-emerald-600">{row.amount}</td>
+                <td className="py-1 px-1 text-[11px] font-md text-slate-800">{row.company}</td>
+                <td className="py-1 px-1 font-md text-emerald-600">{row.amount}</td>
                 <td className="py-1 px-1 text-center">
-                  <span className={`inline-flex px-1 py-0.2 rounded text-[7.5px] font-black border uppercase tracking-wider ${getModeBadge(row.mode)}`}>
+                  <span className={`inline-flex px-1 py-0.2 rounded text-[7.5px] font-md border uppercase tracking-wider ${getModeBadge(row.mode)}`}>
                     {row.mode}
                   </span>
                 </td>

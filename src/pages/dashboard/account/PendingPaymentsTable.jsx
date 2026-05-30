@@ -106,7 +106,7 @@ export default function PendingPaymentsTable() {
       {/* Header */}
       <div className="flex items-center justify-between gap-2 mb-1.5 pb-1 border-b border-slate-100 shrink-0">
         <div>
-          <h3 className="text-[12.5px] font-black text-slate-800 tracking-tight">
+          <h3 className="text-[12.5px] font-md text-slate-800 tracking-tight">
             Top Pending Payments
           </h3>
           <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
@@ -138,20 +138,20 @@ export default function PendingPaymentsTable() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {pendingData.map((row, idx) => (
-              <tr key={idx} className="hover:bg-slate-50/50 transition-colors font-extrabold text-slate-700">
+              <tr key={idx} className="hover:bg-slate-50/50 transition-colors font-semibold text-slate-700">
                 <td className="py-1 px-2">
                   <div className="flex flex-col">
-                    <span className="text-[11px] font-black text-slate-800 leading-tight">
+                    <span className="text-[11px] font-md text-slate-800 leading-tight">
                       {row.company}
                     </span>
-                    <span className="text-[8.5px] text-slate-400 font-bold leading-none mt-0.5">
+                    <span className="text-[9px] text-slate-400 font-bold leading-none mt-0.5">
                       {row.contact.name}
                     </span>
                   </div>
                 </td>
-                <td className="py-1 px-1 font-black text-slate-800">{row.total}</td>
+                <td className="py-1 px-1 font-md text-slate-800">{row.total}</td>
                 <td className="py-1 px-1 text-slate-500">{row.paid}</td>
-                <td className="py-1 px-1 text-red-600 font-black">{row.due}</td>
+                <td className="py-1 px-1 text-red-600 font-md">{row.due}</td>
                 <td className="py-1 px-1 text-slate-600">{row.dueDate}</td>
                 <td className="py-1 px-1 text-slate-500">{row.lastReminder}</td>
                 <td className="py-1 px-1 text-center">
