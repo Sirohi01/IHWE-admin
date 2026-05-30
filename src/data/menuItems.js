@@ -686,5 +686,19 @@ export const menuItems = [
     icon: Palette,
     path: "/sidebar-customize",
   },
-
+  {
+    type: "heading",
+    label: "Account Section",
+  },
+  {
+    type: "dropdown",
+    label: "Reports",
+    icon: FileText,
+    children: [
+      { label: "Sales Report", path: "/accounts/salesreport" },
+      //{ label: "Payments & Invoice Reports", path: "/accounts/" },
+     // { label: "Debit Note Reports", path: "/accounts/" },
+    //  { label: "PI Reports", path: "/accounts/" },
+    ],
+  },
 ];

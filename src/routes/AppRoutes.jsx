@@ -239,7 +239,8 @@ import PartnerRegistrationDetail from "../pages/PartnerRegistrationDetail";
 import HotelStayPartnerManage from "../pages/HotelStayPartnerManage";
 import FabricationPartnerManage from "../pages/FabricationPartnerManage";
 import TravelPartnerManage from "../pages/TravelPartnerManage";
-
+//Account Section
+import SalesReport from "../pages/accounts/SalesReport";
 
 
 
@@ -585,6 +586,10 @@ export default function AppRoutes() {
           />
           <Route path="ihweClientData2026/AddStatus" element={<AddStatus />} />
           <Route path="ihweClientData2026/AddTarget" element={<AddTarget />} />
+         // ############################# -- Account Section
+             <Route path="accounts/salesreport" element={<SalesReport />} />
+           
+        // ############################# -- Account Section
           <Route path="/client-overview/:id" element={<ClientOverview1 />} />
           <Route path="/business-type" element={<BusinessType />} />
           <Route path="/annual-turnover" element={<AnnualTurnover />} />
