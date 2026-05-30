@@ -189,6 +189,7 @@ import Reminder from "../pages/navbar_page/Reminder";
 import ToDoList from "../pages/navbar_page/ToDoList";
 import NewLeads from "../pages/navbar_page/NewLeads";
 import Notification from "../pages/navbar_page/Notification";
+import PerformaInvoices from "../pages/PerformaInvoices";
 import NotFound from "../pages/NotFound";
 import BannerManagement from "../pages/BannerManagement";
 import SellerSubscriptionPlans from "../pages/add_by_admin/SellerSubscriptionPlans";
@@ -297,6 +298,7 @@ export default function AppRoutes() {
             path="exhibitor-profile-manage"
             element={<ExhibitorProfileManage />}
           />
+          <Route path="performa-invoice" element={<PerformaInvoices />} />
           <Route path="e-promotion-manage" element={<EPromotionManage />} />
           <Route path="why-visit-manage" element={<WhyVisitManagement />} />
           <Route path="marquee-text" element={<MarqueeManage />} />
