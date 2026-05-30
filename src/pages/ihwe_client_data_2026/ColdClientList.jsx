@@ -288,131 +288,126 @@ const ColdClientList = () => {
 
   const rightSidebar = (
     <>
-      <div className="flex flex-col gap-1">
-        {/* Lead Status Overview */}
-        <div className="bg-white rounded-xl border border-gray-100 p-3">
-          <h3 className="text-[13px] font-semibold text-[#0F172A] mb-2">Lead Status Overview</h3>
-          <div className="flex items-center justify-between gap-2">
-            <div className="relative w-[70px] h-[70px] shrink-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: "On Hold", value: 14, color: "#f97316" },
-                      { name: "Lost", value: 13, color: "#ef4444" }
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={22}
-                    outerRadius={32}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {[
-                      { color: "#f97316" },
-                      { color: "#ef4444" }
-                    ].map((entry, index) => (
-                      <Cell key={index} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <h3 className="text-[14px] font-bold text-[#0F172A] leading-none">27</h3>
-                <p className="text-[9px] text-gray-500">Total</p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-1.5 flex-grow">
-              {[
-                { name: "On Hold", value: 14, pct: "52%", color: "#f97316" },
-                { name: "Lost", value: 13, pct: "48%", color: "#ef4444" }
-              ].map((item) => (
-                <div key={item.name} className="flex items-center justify-between text-[10px]">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: item.color }} />
-                    <span className="font-medium text-[#0F172A] truncate">{item.name}</span>
-                  </div>
-                  <span className="font-semibold text-[#0F172A] shrink-0 ml-1">{item.value} <span className="text-gray-400 font-normal">({item.pct})</span></span>
-                </div>
-              ))}
+      {/* Lead Status Overview */}
+      <div className="bg-white rounded-xl border border-gray-100 p-3">
+        <h3 className="text-[14px] font-semibold text-[#0F172A] mb-2">Lead Status Overview</h3>
+        <div className="flex items-center justify-between gap-2">
+          <div className="relative w-[70px] h-[70px] shrink-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: "On Hold", value: 14, color: "#f97316" },
+                    { name: "Lost", value: 13, color: "#ef4444" }
+                  ]}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={22}
+                  outerRadius={32}
+                  dataKey="value"
+                  stroke="none"
+                >
+                  {[
+                    { color: "#f97316" },
+                    { color: "#ef4444" }
+                  ].map((entry, index) => (
+                    <Cell key={index} fill={entry.color} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <h3 className="text-[14px] font-bold text-[#0F172A] leading-none">27</h3>
+              <p className="text-[9px] text-gray-500">Total</p>
             </div>
           </div>
-        </div>
-
-        {/* Hold Leads by Reason */}
-        <div className="bg-white rounded-xl border border-gray-100 p-3">
-          <h3 className="text-[13px] font-semibold text-[#0F172A] mb-2">Hold Leads by Reason</h3>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5 flex-grow">
             {[
-              { label: "Budget Approval Pending", count: 4, pct: "29%", color: "bg-orange-500" },
-              { label: "Decision in Next Quarter", count: 3, pct: "21%", color: "bg-orange-400" },
-              { label: "Requirement on Hold", count: 3, pct: "21%", color: "bg-orange-400" },
-              { label: "Comparing Vendors", count: 2, pct: "14%", color: "bg-orange-300" },
-              { label: "Internal Discussion", count: 2, pct: "14%", color: "bg-orange-300" },
-            ].map((s, i) => (
-              <div key={i} className="flex items-center justify-between text-[10px]">
-                <span className="text-slate-700 w-[145px] font-medium pr-2 shrink-0">{s.label}</span>
-                <div className="flex-grow mx-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div className={`h-full ${s.color} rounded-full`} style={{ width: s.pct }}></div>
+              { name: "On Hold", value: 14, pct: "52%", color: "#f97316" },
+              { name: "Lost", value: 13, pct: "48%", color: "#ef4444" }
+            ].map((item) => (
+              <div key={item.name} className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: item.color }} />
+                  <span className="font-medium text-[#0F172A] truncate">{item.name}</span>
                 </div>
-                <div className="flex items-center gap-1 w-12 justify-end shrink-0">
-                  <span className="font-semibold text-slate-800">{s.count}</span>
-                  <span className="text-slate-400 text-[9px]">({s.pct})</span>
-                </div>
+                <span className="font-semibold text-[#0F172A] shrink-0 ml-1">{item.value} <span className="text-gray-400 font-normal">({item.pct})</span></span>
               </div>
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Lost Leads by Reason */}
-        <div className="bg-white rounded-xl border border-gray-100 p-3">
-          <h3 className="text-[13px] font-semibold text-[#0F172A] mb-2">Lost Leads by Reason</h3>
-          <div className="flex flex-col gap-2">
-            {[
-              { label: "Chose Competitor", count: 5, pct: "39%", color: "bg-red-600" },
-              { label: "Not a Good Fit", count: 3, pct: "23%", color: "bg-red-500" },
-              { label: "Pricing Issues", count: 3, pct: "23%", color: "bg-red-500" },
-              { label: "No Response", count: 1, pct: "8%", color: "bg-red-400" },
-              { label: "Not Interested", count: 1, pct: "8%", color: "bg-red-400" },
-            ].map((s, i) => (
-              <div key={i} className="flex items-center justify-between text-[10px]">
-                <span className="text-slate-700 w-32 font-medium truncate pr-2">{s.label}</span>
-                <div className="flex-grow mx-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div className={`h-full ${s.color} rounded-full`} style={{ width: s.pct }}></div>
-                </div>
-                <div className="flex items-center gap-1 w-12 justify-end shrink-0">
-                  <span className="font-semibold text-slate-800">{s.count}</span>
-                  <span className="text-slate-400 text-[9px]">({s.pct})</span>
-                </div>
+      {/* Hold Leads by Reason */}
+      <div className="bg-white rounded-xl border border-gray-100 p-3">
+        <h3 className="text-[14px] font-semibold text-[#0F172A] mb-2">Hold Leads by Reason</h3>
+        <div className="flex flex-col gap-2">
+          {[
+            { label: "Budget Approval Pending", count: 4, pct: "29%", color: "bg-orange-500" },
+            { label: "Decision in Next Quarter", count: 3, pct: "21%", color: "bg-orange-400" },
+            { label: "Requirement on Hold", count: 3, pct: "21%", color: "bg-orange-400" },
+            { label: "Comparing Vendors", count: 2, pct: "14%", color: "bg-orange-300" },
+            { label: "Internal Discussion", count: 2, pct: "14%", color: "bg-orange-300" },
+          ].map((s, i) => (
+            <div key={i} className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-700 w-[145px] font-medium pr-2 shrink-0">{s.label}</span>
+              <div className="flex-grow mx-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div className={`h-full ${s.color} rounded-full`} style={{ width: s.pct }}></div>
               </div>
-            ))}
-          </div>
+              <div className="flex items-center gap-1 w-12 justify-end shrink-0">
+                <span className="font-semibold text-slate-800">{s.count}</span>
+                <span className="text-slate-400 text-[9px]">({s.pct})</span>
+              </div>
+            </div>
+          ))}
         </div>
+      </div>
 
+      {/* Lost Leads by Reason */}
+      <div className="bg-white rounded-xl border border-gray-100 p-3">
+        <h3 className="text-[14px] font-semibold text-[#0F172A] mb-2">Lost Leads by Reason</h3>
+        <div className="flex flex-col gap-2">
+          {[
+            { label: "Chose Competitor", count: 5, pct: "39%", color: "bg-red-600" },
+            { label: "Not a Good Fit", count: 3, pct: "23%", color: "bg-red-500" },
+            { label: "Pricing Issues", count: 3, pct: "23%", color: "bg-red-500" },
+            { label: "No Response", count: 1, pct: "8%", color: "bg-red-400" },
+            { label: "Not Interested", count: 1, pct: "8%", color: "bg-red-400" },
+          ].map((s, i) => (
+            <div key={i} className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-700 w-32 font-medium truncate pr-2">{s.label}</span>
+              <div className="flex-grow mx-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div className={`h-full ${s.color} rounded-full`} style={{ width: s.pct }}></div>
+              </div>
+              <div className="flex items-center gap-1 w-12 justify-end shrink-0">
+                <span className="font-semibold text-slate-800">{s.count}</span>
+                <span className="text-slate-400 text-[9px]">({s.pct})</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="mt-auto">
-        <div className="bg-white rounded-xl border border-gray-100 p-2">
-          <h3 className="text-[13px] font-semibold text-[#0F172A] mb-2">Quick Actions</h3>
-          <div className="grid grid-cols-2 gap-2">
-            <button className="h-[34px] rounded-lg bg-[#EEF9F2] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
-              <FaWhatsapp size={12} className="text-green-600 shrink-0" />
-              <span className="text-[9px] font-bold text-green-700 leading-tight">Send Bulk WhatsApp</span>
-            </button>
-            <button className="h-[34px] rounded-lg bg-[#FFF3E0] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
-              <CalendarDays size={12} className="text-orange-600 shrink-0" />
-              <span className="text-[9px] font-bold text-orange-700 leading-tight">Schedule Follow-Up</span>
-            </button>
-            <button className="h-[34px] rounded-lg bg-[#F3E8FF] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
-              <Mail size={12} className="text-purple-600 shrink-0" />
-              <span className="text-[9px] font-bold text-purple-700 leading-tight">Send Email</span>
-            </button>
-            <button className="h-[34px] rounded-lg bg-[#E0F2FE] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
-              <UserPlus size={12} className="text-blue-600 shrink-0" />
-              <span className="text-[9px] font-bold text-blue-700 leading-tight">Add to Nurture List</span>
-            </button>
-          </div>
+      <div className="bg-white rounded-xl border border-gray-100 p-2">
+        <h3 className="text-[14px] font-semibold text-[#0F172A] mb-2">Quick Actions</h3>
+        <div className="grid grid-cols-2 gap-2">
+          <button className="h-[34px] rounded-lg bg-[#EEF9F2] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
+            <FaWhatsapp size={12} className="text-green-600 shrink-0" />
+            <span className="text-[9px] font-bold text-green-700 leading-tight">Send Bulk WhatsApp</span>
+          </button>
+          <button className="h-[34px] rounded-lg bg-[#FFF3E0] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
+            <CalendarDays size={12} className="text-orange-600 shrink-0" />
+            <span className="text-[9px] font-bold text-orange-700 leading-tight">Schedule Follow-Up</span>
+          </button>
+          <button className="h-[34px] rounded-lg bg-[#F3E8FF] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
+            <Mail size={12} className="text-purple-600 shrink-0" />
+            <span className="text-[9px] font-bold text-purple-700 leading-tight">Send Email</span>
+          </button>
+          <button className="h-[34px] rounded-lg bg-[#E0F2FE] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
+            <UserPlus size={12} className="text-blue-600 shrink-0" />
+            <span className="text-[9px] font-bold text-blue-700 leading-tight">Add to Nurture List</span>
+          </button>
         </div>
       </div>
     </>

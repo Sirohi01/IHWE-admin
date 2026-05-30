@@ -315,140 +315,135 @@ const HotClientList = () => {
 
   const rightSidebar = (
     <>
-      <div className="flex flex-col gap-1">
-        {/* Hot Leads Overview */}
-        <div className="bg-white rounded-xl border border-gray-100 p-3">
-          <h3 className="text-[13px] font-semibold text-[#0F172A] mb-2">Hot Leads Overview</h3>
-          <div className="flex items-center justify-between gap-2">
-            <div className="relative w-[70px] h-[70px] shrink-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: "In Discussion", value: 11, color: "#f97316" },
-                      { name: "Proposal Sent", value: 5, color: "#eab308" },
-                      { name: "Ready to Convert", value: 2, color: "#10b981" }
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={22}
-                    outerRadius={32}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {[
-                      { color: "#f97316" },
-                      { color: "#eab308" },
-                      { color: "#10b981" }
-                    ].map((entry, index) => (
-                      <Cell key={index} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <h3 className="text-[14px] font-bold text-[#0F172A] leading-none">{totalLeads}</h3>
-                <p className="text-[9px] text-gray-500">Total</p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-1.5 flex-grow">
-              {[
-                { name: "In Discussion", value: 11, pct: "61%", color: "#f97316" },
-                { name: "Proposal Sent", value: 5, pct: "28%", color: "#eab308" },
-                { name: "Ready to Convert", value: 2, pct: "11%", color: "#10b981" }
-              ].map((item) => (
-                <div key={item.name} className="flex items-center justify-between text-[10px]">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: item.color }} />
-                    <span className="font-medium text-[#0F172A] truncate">{item.name}</span>
-                  </div>
-                  <span className="font-semibold text-[#0F172A] shrink-0 ml-1">{item.value} <span className="text-gray-400 font-normal">({item.pct})</span></span>
-                </div>
-              ))}
+      {/* Hot Leads Overview */}
+      <div className="bg-white rounded-xl border border-gray-100 p-3">
+        <h3 className="text-[13px] font-semibold text-[#0F172A] mb-2">Hot Leads Overview</h3>
+        <div className="flex items-center justify-between gap-2">
+          <div className="relative w-[70px] h-[70px] shrink-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: "In Discussion", value: 11, color: "#f97316" },
+                    { name: "Proposal Sent", value: 5, color: "#eab308" },
+                    { name: "Ready to Convert", value: 2, color: "#10b981" }
+                  ]}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={22}
+                  outerRadius={32}
+                  dataKey="value"
+                  stroke="none"
+                >
+                  {[
+                    { color: "#f97316" },
+                    { color: "#eab308" },
+                    { color: "#10b981" }
+                  ].map((entry, index) => (
+                    <Cell key={index} fill={entry.color} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <h3 className="text-[14px] font-bold text-[#0F172A] leading-none">{totalLeads}</h3>
+              <p className="text-[9px] text-gray-500">Total</p>
             </div>
           </div>
-        </div>
-
-        {/* Lead Score Distribution */}
-        <div className="bg-white rounded-xl border border-gray-100 p-3">
-          <h3 className="text-[13px] font-semibold text-[#0F172A] mb-2">Lead Score Distribution</h3>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 flex-grow">
             {[
-              { label: "90 - 100", count: 6, pct: "33%", color: "bg-rose-500" },
-              { label: "80 - 89", count: 7, pct: "29%", color: "bg-orange-500" },
-              { label: "70 - 79", count: 3, pct: "17%", color: "bg-yellow-500" },
-              { label: "Below 70", count: 2, pct: "11%", color: "bg-emerald-500" },
-            ].map((s, i) => (
-              <div key={i} className="flex items-center justify-between text-[10px]">
-                <span className="text-slate-700 w-12 font-medium">{s.label}</span>
-                <div className="flex-grow mx-2 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div className={`h-full ${s.color} rounded-full`} style={{ width: s.pct }}></div>
+              { name: "In Discussion", value: 11, pct: "61%", color: "#f97316" },
+              { name: "Proposal Sent", value: 5, pct: "28%", color: "#eab308" },
+              { name: "Ready to Convert", value: 2, pct: "11%", color: "#10b981" }
+            ].map((item) => (
+              <div key={item.name} className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: item.color }} />
+                  <span className="font-medium text-[#0F172A] truncate">{item.name}</span>
                 </div>
-                <div className="flex items-center gap-1 w-10 justify-end">
-                  <span className="font-semibold text-slate-800">{s.count}</span>
-                  <span className="text-slate-400">({s.pct})</span>
-                </div>
+                <span className="font-semibold text-[#0F172A] shrink-0 ml-1">{item.value} <span className="text-gray-400 font-normal">({item.pct})</span></span>
               </div>
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Top Hot Leads by Score */}
-        <div className="bg-white rounded-xl border border-gray-100 p-3">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-[13px] font-semibold text-[#0F172A]">Top Hot Leads by Score</h3>
-          </div>
-          <div className="flex flex-col gap-2">
-            {[
-              { name: "GreenLife Ayurveda", score: 95, icon: <FaWhatsapp size={10} className="text-emerald-500" /> },
-              { name: "Nature's Harmony Pvt. Ltd.", score: 92, icon: <FaWhatsapp size={10} className="text-emerald-500" /> },
-              { name: "Wellness World", score: 90, icon: <FaWhatsapp size={10} className="text-emerald-500" /> },
-            ].map((l, i) => (
-              <div key={i} className={`flex items-center justify-between ${i !== 2 ? 'pb-2 border-b border-gray-50' : ''}`}>
-                <div className="flex items-center gap-2 overflow-hidden">
-                  <div className="w-5 h-5 rounded-full bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
-                    {l.icon}
-                  </div>
-                  <span className="font-medium text-[#0F172A] text-[10px] truncate">{l.name}</span>
-                </div>
-                <span className="shrink-0 h-4 px-1.5 rounded bg-rose-50 text-rose-600 text-[9px] font-bold flex items-center justify-center ml-2">
-                  {l.score}/100
-                </span>
+      {/* Lead Score Distribution */}
+      <div className="bg-white rounded-xl border border-gray-100 p-3">
+        <h3 className="text-[14px] font-semibold text-[#0F172A] mb-2">Lead Score Distribution</h3>
+        <div className="flex flex-col gap-1.5">
+          {[
+            { label: "90 - 100", count: 6, pct: "33%", color: "bg-rose-500" },
+            { label: "80 - 89", count: 7, pct: "29%", color: "bg-orange-500" },
+            { label: "70 - 79", count: 3, pct: "17%", color: "bg-yellow-500" },
+            { label: "Below 70", count: 2, pct: "11%", color: "bg-emerald-500" },
+          ].map((s, i) => (
+            <div key={i} className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-700 w-12 font-medium">{s.label}</span>
+              <div className="flex-grow mx-2 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div className={`h-full ${s.color} rounded-full`} style={{ width: s.pct }}></div>
               </div>
-            ))}
-            <div className="mt-1 pt-2 border-t border-gray-100">
-              <button className="w-full flex items-center justify-center gap-1 text-[10px] font-semibold text-slate-600 hover:text-slate-800 transition-all">
-                <span>View All Hot Leads</span>
-                <ArrowRight size={10} />
-              </button>
+              <div className="flex items-center gap-1 w-10 justify-end">
+                <span className="font-semibold text-slate-800">{s.count}</span>
+                <span className="text-slate-400">({s.pct})</span>
+              </div>
             </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Top Hot Leads by Score */}
+      <div className="bg-white rounded-xl border border-gray-100 p-3">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-[14px] font-semibold text-[#0F172A]">Top Hot Leads by Score</h3>
+        </div>
+        <div className="flex flex-col gap-2">
+          {[
+            { name: "GreenLife Ayurveda", score: 95, icon: <FaWhatsapp size={10} className="text-emerald-500" /> },
+            { name: "Nature's Harmony Pvt. Ltd.", score: 92, icon: <FaWhatsapp size={10} className="text-emerald-500" /> },
+            { name: "Wellness World", score: 90, icon: <FaWhatsapp size={10} className="text-emerald-500" /> },
+          ].map((l, i) => (
+            <div key={i} className={`flex items-center justify-between ${i !== 2 ? 'pb-2 border-b border-gray-50' : ''}`}>
+              <div className="flex items-center gap-2 overflow-hidden">
+                <div className="w-5 h-5 rounded-full bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
+                  {l.icon}
+                </div>
+                <span className="font-medium text-[#0F172A] text-[11px] truncate">{l.name}</span>
+              </div>
+              <span className="shrink-0 h-4 px-1.5 rounded bg-rose-50 text-rose-600 text-[9px] font-bold flex items-center justify-center ml-2">
+                {l.score}/100
+              </span>
+            </div>
+          ))}
+          <div className="mt-1 pt-2 border-t border-gray-100">
+            <button className="w-full flex items-center justify-center gap-1 text-[10px] font-semibold text-slate-600 hover:text-slate-800 transition-all">
+              <span>View All Hot Leads</span>
+              <ArrowRight size={10} />
+            </button>
           </div>
         </div>
-
       </div>
 
       {/* Quick Actions */}
-      <div className="mt-auto">
-        <div className="bg-white rounded-xl border border-gray-100 p-3">
-          <h3 className="text-[13px] font-semibold text-[#0F172A] mb-2">Quick Actions</h3>
-          <div className="grid grid-cols-2 gap-2">
-            <button className="h-[34px] rounded-lg bg-[#EEF9F2] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
-              <FaWhatsapp size={12} className="text-green-600 shrink-0" />
-              <span className="text-[9px] font-bold text-green-700 leading-tight">Send Bulk WhatsApp</span>
-            </button>
-            <button className="h-[34px] rounded-lg bg-[#FFF3E0] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
-              <CalendarDays size={12} className="text-orange-600 shrink-0" />
-              <span className="text-[9px] font-bold text-orange-700 leading-tight">Schedule Follow-Up</span>
-            </button>
-            <button className="h-[34px] rounded-lg bg-[#F3E8FF] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
-              <Mail size={12} className="text-purple-600 shrink-0" />
-              <span className="text-[9px] font-bold text-purple-700 leading-tight">Send Email</span>
-            </button>
-            <button className="h-[34px] rounded-lg bg-[#E0F2FE] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
-              <Phone size={12} className="text-blue-600 shrink-0" />
-              <span className="text-[9px] font-bold text-blue-700 leading-tight">Make a Call</span>
-            </button>
-          </div>
+      <div className="bg-white rounded-xl border border-gray-100 p-3">
+        <h3 className="text-[14px] font-semibold text-[#0F172A] mb-2">Quick Actions</h3>
+        <div className="grid grid-cols-2 gap-2">
+          <button className="h-[34px] rounded-lg bg-[#EEF9F2] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
+            <FaWhatsapp size={12} className="text-green-600 shrink-0" />
+            <span className="text-[9px] font-bold text-green-700 leading-tight">Send Bulk WhatsApp</span>
+          </button>
+          <button className="h-[34px] rounded-lg bg-[#FFF3E0] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
+            <CalendarDays size={12} className="text-orange-600 shrink-0" />
+            <span className="text-[9px] font-bold text-orange-700 leading-tight">Schedule Follow-Up</span>
+          </button>
+          <button className="h-[34px] rounded-lg bg-[#F3E8FF] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
+            <Mail size={12} className="text-purple-600 shrink-0" />
+            <span className="text-[9px] font-bold text-purple-700 leading-tight">Send Email</span>
+          </button>
+          <button className="h-[34px] rounded-lg bg-[#E0F2FE] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
+            <Phone size={12} className="text-blue-600 shrink-0" />
+            <span className="text-[9px] font-bold text-blue-700 leading-tight">Make a Call</span>
+          </button>
         </div>
       </div>
     </>

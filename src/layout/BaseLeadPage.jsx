@@ -35,7 +35,7 @@ const BaseLeadPage = ({
     <div className="w-full bg-[#f8fafc] min-h-[calc(100vh-110px)] xl:h-[calc(100vh-110px)] flex flex-col font-sans text-slate-800 p-4 md:px-6 lg:px-8 xl:overflow-hidden">
 
       {/* TOP HEADER */}
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-4">
+      {/* <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
             {title}
@@ -51,14 +51,24 @@ const BaseLeadPage = ({
         <div className="flex flex-wrap items-center gap-2 xl:gap-3 w-full xl:w-auto">
           {headerActions}
         </div>
-      </div>
+      </div> */}
 
       {/* MAIN CONTENT AREA */}
       <div className="flex flex-col xl:flex-row gap-4 flex-grow items-stretch xl:min-h-0">
 
         {/* LEFT COLUMN: STATS & TABLE */}
         <div className="flex-grow flex flex-col gap-4 w-full xl:w-[78%] xl:min-h-0">
-
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
+              {title}
+              {badgeCount !== undefined && (
+                <span className="bg-emerald-100 text-emerald-700 text-sm py-1 px-3 rounded-full font-semibold">
+                  {badgeCount}
+                </span>
+              )}
+            </h1>
+            <p className="text-xs text-slate-500 mt-1 font-medium">{subtitle}</p>
+          </div>
           {/* STATS CARDS */}
           {statCards && (
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
