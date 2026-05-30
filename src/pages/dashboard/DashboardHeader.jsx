@@ -13,14 +13,28 @@ export default function DashboardHeader({ fullProfile, currentUser, loading }) {
           >
             {fullProfile?.fullName || currentUser?.username}.
           </h2>
-          <div
-            className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #02a344, #027D34)', boxShadow: '0 2px 6px rgba(2,125,52,0.4), 0 1px 0 rgba(255,255,255,0.3) inset' }}
-          >
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
+          <>
+            <style>{`
+              @keyframes wave {
+                0% { transform: rotate( 0.0deg) }
+                10% { transform: rotate(14.0deg) }
+                20% { transform: rotate(-8.0deg) }
+                30% { transform: rotate(14.0deg) }
+                40% { transform: rotate(-4.0deg) }
+                50% { transform: rotate(10.0deg) }
+                60% { transform: rotate( 0.0deg) }
+                100% { transform: rotate( 0.0deg) }
+              }
+              .waving-hand {
+                animation-name: wave;
+                animation-duration: 2.5s;
+                animation-iteration-count: infinite;
+                transform-origin: 70% 70%;
+                display: inline-block;
+              }
+            `}</style>
+            <span className="text-[18px] waving-hand select-none ml-1">👋</span>
+          </>
         </div>
         <div className="flex items-center gap-2.5 mt-0.5 flex-wrap">
           <p className="text-xs lg:text-sm text-gray-500 leading-relaxed">
