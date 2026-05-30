@@ -2,7 +2,11 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     ChevronRight, List, Plus, Trash2, FileText,
-    Save, Download, MessageCircle, Mail, X, CheckSquare
+    Save, Download, MessageCircle, X, CheckSquare, Bookmark,
+    FileSpreadsheet,
+    File,
+    MessageCircleMore,
+    Mail,
 } from 'lucide-react';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -91,10 +95,10 @@ const QuickAction = ({ icon: Icon, color, label, sub }) => (
     <button className="flex items-center justify-between w-full p-2.5 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50/40 transition group">
         <div className="flex items-center gap-2.5">
             <div className={`w-7 h-7 rounded ${color} flex items-center justify-center`}>
-                <Icon className="w-3.5 h-3.5 text-white" />
+                <Icon className="w-5 h-5 " />
             </div>
             <div className="text-left">
-                <p className="text-xs font-semibold text-gray-800">{label}</p>
+                <p className={`text-[9px] font-semibold ${label === "Save Draft" ? "text-green-700" : label === "Generate Estimate" ? "text-green-700" : label === "Download PDF" ? "text-gray-800" : label === "Send via WhatsApp" ? "text-green-700" : label === "Send via Email" ? "text-gray-800" : "text-gray-800"}`}>{label}</p>
                 <p className="text-[10px] text-gray-400">{sub}</p>
             </div>
         </div>
@@ -179,7 +183,7 @@ export const PerformaInvoices = () => {
                 `}
             </style>
             {/* ── page header ── */}
-            <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
                 <div>
                     <h1 className="text-lg font-bold text-gray-900">Create Estimate (Proforma Invoice)</h1>
                     <div className="flex items-center gap-1 mt-0.5 text-xs text-gray-400">
@@ -200,9 +204,9 @@ export const PerformaInvoices = () => {
             </div>
 
             {/* ── body ── */}
-            <div className="p-4 flex gap-4 items-start">
+            <div className="px-3.5 pt-3.5 pb-1 flex gap-3 items-start">
                 {/* ── LEFT FORM ── */}
-                <div className="flex-1 space-y-4 min-w-0">
+                <div className="flex-1 space-y-3 min-w-0">
 
                     {/* SECTION 1 – Estimate Details */}
                     <div className="bg-white rounded-lg border border-gray-200 p-5">
@@ -241,7 +245,7 @@ export const PerformaInvoices = () => {
                                     placeholder="Hall No.-12, Ground Floor, ITPO, Pragati Maidan"
                                     value={form.consigneeAddress}
                                     onChange={(e) => setField('consigneeAddress', e.target.value)}
-                                    className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 resize-none bg-white"
+                                    className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 resize-y bg-white"
                                 />
                             </div>
                             <div>
@@ -300,7 +304,7 @@ export const PerformaInvoices = () => {
                                 </thead>
                                 <tbody>
                                     {items.map((item, idx) => (
-                                        <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50/50">
+                                        <tr key={item.id} className=" hover:bg-gray-50/50">
                                             <td className="px-2 py-2 font-semibold text-gray-500">{idx + 1}</td>
                                             <td className="px-2 py-1 min-w-[160px]  ">
                                                 <div className='border border-gray-200 rounded'>
@@ -362,13 +366,13 @@ export const PerformaInvoices = () => {
                         {/* Add Item */}
                         <button
                             onClick={addItem}
-                            className="mt-3 flex items-center gap-1.5 border border-gray-300 rounded px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"
+                            className="mt-2 flex items-center gap-1.5 border border-gray-300 rounded px-3 py-1.5 text-xs font-semibold text-gray-600  transition bg-green-100/70"
                         >
                             <Plus className="w-3.5 h-3.5" /> Add Item
                         </button>
 
                         {/* GST / Final Amount / Remarks row */}
-                        <div className="mt-4 grid grid-cols-3 gap-3 items-end border-t border-gray-100 pt-4">
+                        <div className="mt-2 grid grid-cols-3 gap-3 items-end border-t border-gray-100 pt-1">
                             <div>
                                 <Label required>GST %</Label>
                                 <Select options={GST_OPTIONS} value={gstOption} onChange={(e) => setGstOption(e.target.value)} />
@@ -393,12 +397,12 @@ export const PerformaInvoices = () => {
                     <div className="bg-white rounded-lg border border-gray-200 p-5">
                         <SectionHead num="3" label="Remarks / Notes" />
                         <textarea
-                            rows={4}
+                            rows={3}
                             maxLength={500}
                             placeholder="Type your notes or any special instructions here..."
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
-                            className="w-full border border-gray-300 rounded px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-blue-500 resize-none bg-white"
+                            className="w-full border border-gray-300 rounded px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-blue-500 resize-y bg-white"
                         />
                         <p className="text-[10px] text-gray-400 mt-1">{notes.length} / 500 Characters</p>
                     </div>
@@ -418,7 +422,7 @@ export const PerformaInvoices = () => {
                 </div>
 
                 {/* ── RIGHT SIDEBAR ── */}
-                <div className="w-72 flex-shrink-0 space-y-4">
+                <div className="w-72 flex-shrink-0 space-y-3">
                     {/* Estimate Summary */}
                     <div className="bg-white rounded-lg border border-gray-200 p-4">
                         <div className="flex items-center gap-2 mb-4">
@@ -428,43 +432,43 @@ export const PerformaInvoices = () => {
 
                         <div className="space-y-2.5 text-xs">
                             <div className="flex justify-between text-gray-600">
-                                <span>Sub Total</span>
+                                <span className="font-semibold text-gray-800">Sub Total</span>
                                 <span className="font-semibold text-gray-800">{fmt(subTotal)}</span>
                             </div>
                             <div className="flex justify-between text-gray-600">
-                                <span>Discount</span>
+                                <span className="font-semibold text-gray-800">Discount</span>
                                 <div className="flex items-center gap-1">
-                                    <span className="text-red-500 font-semibold">- {fmt(discount)}</span>
+                                    <span className="text-green-800 font-semibold">- {fmt(discount)}</span>
                                 </div>
                             </div>
                             <div className="flex justify-between text-gray-600 border-t border-dashed border-gray-200 pt-2">
-                                <span>Taxable Amount</span>
+                                <span className="font-semibold text-gray-800">Taxable Amount</span>
                                 <span className="font-semibold text-gray-800">{fmt(taxable)}</span>
                             </div>
 
                             <div className="mt-1 space-y-1.5 pt-1">
                                 <div className="flex justify-between text-gray-500">
-                                    <span>CGST ({isIGST ? 0 : gstPct / 2}%)</span>
-                                    <span>{fmt(cgst)}</span>
+                                    <span className="font-semibold text-gray-800">CGST ({isIGST ? 0 : gstPct / 2}%)</span>
+                                    <span className="font-semibold text-gray-800">{fmt(cgst)}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-500">
-                                    <span>SGST ({isIGST ? 0 : gstPct / 2}%)</span>
-                                    <span>{fmt(sgst)}</span>
+                                    <span className="font-semibold text-gray-800">SGST ({isIGST ? 0 : gstPct / 2}%)</span>
+                                    <span className="font-semibold text-gray-800">{fmt(sgst)}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-500">
-                                    <span>IGST ({isIGST ? gstPct : 0}%)</span>
-                                    <span>{fmt(igst)}</span>
+                                    <span className="font-semibold text-gray-800">IGST ({isIGST ? gstPct : 0}%)</span>
+                                    <span className="font-semibold text-gray-800">{fmt(igst)}</span>
                                 </div>
                             </div>
 
                             <div className="flex justify-between text-gray-600 border-t border-dashed border-gray-200 pt-2">
-                                <span>Total Tax</span>
-                                <span className="font-semibold text-gray-800">{fmt(totalTax)}</span>
+                                <span className="font-bold text-black">Total Tax</span>
+                                <span className="font-bold text-black">{fmt(totalTax)}</span>
                             </div>
                         </div>
 
                         {/* Grand Total */}
-                        <div className="mt-3 bg-blue-100 rounded-lg px-4 py-3 flex items-center justify-between">
+                        <div className="mt-3 bg-blue-100 rounded-lg px-4 py-[8px] flex items-center justify-between">
                             <span className="text-blue-800 text-base font-black">Grand Total</span>
                             <span className="text-blue-800 text-base font-black">{fmt(grandTotal)}</span>
                         </div>
@@ -472,13 +476,13 @@ export const PerformaInvoices = () => {
 
                     {/* Quick Actions */}
                     <div className="bg-white rounded-lg border border-gray-200 p-4">
-                        <h3 className="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wider">Quick Actions</h3>
+                        <h3 className="text-xs font-extrabold text-gray-800 mb-3 uppercase tracking-wider">Quick Actions</h3>
                         <div className="space-y-2">
-                            <QuickAction icon={Save} color="bg-blue-500" label="Save Draft" sub="Save as draft for later" />
-                            <QuickAction icon={CheckSquare} color="bg-green-600" label="Generate Estimate" sub="Create Proforma Invoice" />
-                            <QuickAction icon={Download} color="bg-red-500" label="Download PDF" sub="Download estimate as PDF" />
-                            <QuickAction icon={MessageCircle} color="bg-green-500" label="Send via WhatsApp" sub="Share estimate on WhatsApp" />
-                            <QuickAction icon={Mail} color="bg-blue-400" label="Send via Email" sub="Email estimate to client" />
+                            <QuickAction icon={Bookmark} color="bg-blue-100 text-blue-500" label="Save Draft" sub="Save as draft for later" />
+                            <QuickAction icon={FileSpreadsheet} color="bg-green-100 text-green-600" label="Generate Estimate" sub="Create Proforma Invoice" />
+                            <QuickAction icon={File} color="bg-red-100 text-red-500" label="Download PDF" sub="Download estimate as PDF" />
+                            <QuickAction icon={MessageCircleMore} color="bg-green-100 text-green-600" label="Send via WhatsApp" sub="Share estimate on WhatsApp" />
+                            <QuickAction icon={Mail} color="bg-blue-100 text-blue-500" label="Send via Email" sub="Email estimate to client" />
                         </div>
                     </div>
                 </div>
