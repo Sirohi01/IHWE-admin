@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { CalendarRange, ChevronDown, Plus, Download } from "lucide-react";
 import { motion } from "framer-motion";
 import Swal from "sweetalert2";
@@ -14,6 +15,7 @@ import UpcomingDueDates from "./account/UpcomingDueDates";
 import GstSummary from "./account/GstSummary";
 
 export default function AccountDashboard({ currentUser, loading }) {
+  const navigate = useNavigate();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedRange, setSelectedRange] = useState("This Month (01 May - 31 May 2026)");
 
@@ -72,8 +74,8 @@ export default function AccountDashboard({ currentUser, loading }) {
           </button>
 
           <button
-            disabled
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-xl shadow-sm text-[11px] font-black opacity-50 cursor-not-allowed pointer-events-none"
+            onClick={() => navigate("/dashboard/add-payment")}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm text-[11px] font-black transition cursor-pointer"
           >
             <Plus size={13} strokeWidth={2.5} />
             <span>Add Payment</span>

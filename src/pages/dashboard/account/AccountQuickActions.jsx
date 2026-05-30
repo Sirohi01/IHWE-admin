@@ -3,8 +3,10 @@ import {
   PhoneForwarded, FileSpreadsheet, Percent, RotateCcw, LayoutGrid
 } from "lucide-react";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 export default function AccountQuickActions() {
+  const navigate = useNavigate();
   const actions = [
     {
       label: "Create Invoice",
@@ -53,17 +55,6 @@ export default function AccountQuickActions() {
     }
   ];
 
-  const handleActionClick = (actionName) => {
-    Swal.fire({
-      title: actionName,
-      text: `You have triggered the "${actionName}" action. The financial wizard is preparing the corresponding form interface.`,
-      icon: "success",
-      confirmButtonColor: "#095b55",
-      timer: 2000,
-      showConfirmButton: false
-    });
-  };
-
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-2.5 shadow-sm h-full flex flex-col justify-between">
       {/* Title */}
@@ -83,8 +74,17 @@ export default function AccountQuickActions() {
           return (
             <button
               key={i}
-              disabled
-              className={`border rounded-lg px-1 py-1.5 flex flex-col items-center justify-center text-center transition-all duration-300 ${act.colors} opacity-50 cursor-not-allowed pointer-events-none`}
+              disabled={act.label !== "Add Receipt"}
+              onClick={() => {
+                if (act.label === "Add Receipt") {
+                  navigate("/dashboard/add-payment");
+                }
+              }}
+              className={`border rounded-lg px-1 py-1.5 flex flex-col items-center justify-center text-center transition-all duration-350 ${act.colors} ${
+                act.label === "Add Receipt"
+                  ? "cursor-pointer hover:shadow-sm hover:scale-102"
+                  : "opacity-50 cursor-not-allowed pointer-events-none"
+              }`}
             >
               <Icon size={13} className="mb-0.5 shrink-0" strokeWidth={2.5} />
               <span className="text-[8px] font-black leading-tight uppercase tracking-tight">

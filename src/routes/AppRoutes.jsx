@@ -213,6 +213,7 @@ import CreditNote from "../pages/ihwe_client_data_2026/CreditNote";
 import TaxInvoiceDetails from "../pages/ihwe_client_data_2026/invoice/TaxInvoiceDetails";
 import InvoiceNumberDetails from "../pages/ihwe_client_data_2026/invoice/InvoiceNumberDetails";
 import Payments from "../pages/ihwe_client_data_2026/payments/Payment";
+import AddPayment from "../pages/dashboard/account/AddPayment";
 import AgendaManagement from "../pages/AgendaManagement";
 import SpeakerRegistrationList from "../pages/SpeakerRegistrationList";
 import SpeakerRegistrationDetail from "../pages/SpeakerRegistrationDetail";
@@ -252,6 +253,7 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="role-permissions" element={<RolePermissions />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="dashboard/add-payment" element={<AddPayment />} />
           <Route path="dashboard-banners" element={<BannerManagement />} />
           <Route path="click-analytics" element={<ClickAnalytics />} />
           <Route path="about-us" element={<About />} />
