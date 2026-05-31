@@ -443,7 +443,7 @@ const CreateDebitNote = () => {
                     </div>
 
                     {/* Action Bar */}
-                    <div className="flex items-center justify-between pt-2">
+                    <div className="flex items-center justify-between  rounded-xl border border-gray-200 p-4 shadow-sm bg-white">
                         <button
                             onClick={() => navigate(-1)}
                             className="flex items-center gap-1.5 border border-gray-300 rounded-lg px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition bg-white shadow-sm"
