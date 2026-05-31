@@ -168,7 +168,7 @@ export const PerformaInvoices = () => {
 
     // ── render ────────────────────────────────────────────────────────────────────
     return (
-        <div className="min-h-screen bg-gray-50 mt-6">
+        <div className="min-h-screen bg-gray-50 mt-4">
             <style>
                 {`
                 /* Hide number input spinners on this page */

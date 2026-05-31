@@ -39,6 +39,8 @@ import {
   Package,
   ShoppingCart,
   Award,
+  File,
+  FileType,
 } from "lucide-react";
 
 
@@ -690,6 +692,18 @@ export const menuItems = [
   {
     type: "heading",
     label: "Account Section",
+  },
+  {
+    type: "item",
+    label: "Create Debit Note",
+    icon: File,
+    path: "/create-debit-note",
+  },
+  {
+    type: "item",
+    label: "Create Estimate",
+    icon: FileType,
+    path: "/performa-invoice",
   },
   {
     type: "dropdown",

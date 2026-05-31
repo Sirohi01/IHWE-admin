@@ -242,6 +242,7 @@ import FabricationPartnerManage from "../pages/FabricationPartnerManage";
 import TravelPartnerManage from "../pages/TravelPartnerManage";
 //Account Section
 import SalesReport from "../pages/accounts/SalesReport";
+import CreateDebitNote from "../pages/CreateDebitNote";
 
 
 
@@ -299,6 +300,7 @@ export default function AppRoutes() {
             element={<ExhibitorProfileManage />}
           />
           <Route path="performa-invoice" element={<PerformaInvoices />} />
+          <Route path="create-debit-note" element={<CreateDebitNote />} />
           <Route path="e-promotion-manage" element={<EPromotionManage />} />
           <Route path="why-visit-manage" element={<WhyVisitManagement />} />
           <Route path="marquee-text" element={<MarqueeManage />} />
@@ -589,8 +591,8 @@ export default function AppRoutes() {
           <Route path="ihweClientData2026/AddStatus" element={<AddStatus />} />
           <Route path="ihweClientData2026/AddTarget" element={<AddTarget />} />
          // ############################# -- Account Section
-             <Route path="accounts/salesreport" element={<SalesReport />} />
-           
+          <Route path="accounts/salesreport" element={<SalesReport />} />
+
         // ############################# -- Account Section
           <Route path="/client-overview/:id" element={<ClientOverview1 />} />
           <Route path="/business-type" element={<BusinessType />} />
