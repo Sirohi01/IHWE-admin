@@ -172,7 +172,7 @@ const CreateDebitNote = () => {
     const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
     return (
-        <div className="min-h-screen bg-gray-50/50 pb-5 mt-5">
+        <div className="min-h-screen bg-gray-50/50 pb-5 mt-4">
             <style>
                 {`
                 /* Hide number input spinners on this page */
@@ -187,7 +187,7 @@ const CreateDebitNote = () => {
                 `}
             </style>
             {/* Header */}
-            <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+            <div className="bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between sticky top-0 z-10">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
                         <FileText className="w-5 h-5" />
@@ -206,12 +206,12 @@ const CreateDebitNote = () => {
                 </button>
             </div>
 
-            <div className="max-w-[1400px] mx-auto px-6 pt-3 flex gap-3 items-start">
+            <div className="max-w-[1400px] mx-auto px-4 pt-3 flex gap-3 items-start">
                 {/* ── LEFT FORM ── */}
                 <div className="flex-1 space-y-3 min-w-0">
 
                     {/* SECTION 1 – Source */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                         <SectionHead num="1" label="Debit Note Source" />
 
                         <div className="grid grid-cols-5 gap-4">
@@ -260,7 +260,7 @@ const CreateDebitNote = () => {
                     </div>
 
                     {/* SECTION 2 – Details */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                         <SectionHead num="2" label="Debit Note Details" />
 
                         <div className="grid grid-cols-4 gap-4 mb-3">
@@ -321,7 +321,7 @@ const CreateDebitNote = () => {
                     </div>
 
                     {/* SECTION 3 – Items */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                         <SectionHead num="3" label="Item / Charge Details" />
 
                         <div className="overflow-x-none border border-gray-200 rounded-lg">
@@ -411,7 +411,7 @@ const CreateDebitNote = () => {
                     </div>
 
                     {/* SECTION 4 – Additional Info */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                         <SectionHead num="4" label={<>Additional Information <span className="text-gray-500 font-normal text-xs ml-0.5">(Optional)</span></>} />
 
                         <div className="grid grid-cols-2 gap-6">
@@ -462,7 +462,7 @@ const CreateDebitNote = () => {
                 </div>
 
                 {/* ── RIGHT SIDEBAR ── */}
-                <div className="w-[340px] flex-shrink-0 space-y-3">
+                <div className="w-[250px] flex-shrink-0 space-y-3">
 
                     {/* Summary */}
                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -507,8 +507,8 @@ const CreateDebitNote = () => {
                             </div>
 
                             <div className="mt-4 bg-purple-100/50 rounded-lg px-4 py-3 flex items-center justify-between border border-purple-100">
-                                <span className="text-purple-700 text-sm font-bold">Total Debit Note Amount</span>
-                                <span className="text-purple-700 text-lg font-bold">₹ 25,000.00</span>
+                                <span className="text-purple-700 text-[9px] font-bold whitespace-nowrap">Total Debit Note Amount</span>
+                                <span className="text-purple-700 text-md font-bold whitespace-nowrap">₹ 25,000.00</span>
                             </div>
                         </div>
                     </div>

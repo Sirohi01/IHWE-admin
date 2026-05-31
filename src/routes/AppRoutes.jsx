@@ -243,6 +243,7 @@ import TravelPartnerManage from "../pages/TravelPartnerManage";
 //Account Section
 import SalesReport from "../pages/accounts/SalesReport";
 import CreateDebitNote from "../pages/CreateDebitNote";
+import CreateInvoicePage from "../pages/CreateInvoice";
 
 
 
@@ -301,6 +302,7 @@ export default function AppRoutes() {
           />
           <Route path="performa-invoice" element={<PerformaInvoices />} />
           <Route path="create-debit-note" element={<CreateDebitNote />} />
+          <Route path="page-create-invoice" element={<CreateInvoicePage />} />
           <Route path="e-promotion-manage" element={<EPromotionManage />} />
           <Route path="why-visit-manage" element={<WhyVisitManagement />} />
           <Route path="marquee-text" element={<MarqueeManage />} />
