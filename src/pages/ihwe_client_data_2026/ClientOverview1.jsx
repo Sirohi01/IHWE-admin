@@ -106,6 +106,9 @@ const ClientOverview1 = () => {
       setReviewData((prev) => ({
         ...prev,
         cmpny_id: company._id,
+        evnt_id: company.eventName || "",
+        event_name: company.eventName || "",
+        assigned_to: company.forwardTo || "",
       }));
     }
   }, [company]);
@@ -142,16 +145,30 @@ const ClientOverview1 = () => {
     e.preventDefault();
 
     try {
-      await dispatch(createReview(reviewData)).unwrap();
+      const previousAssignee = company.forwardTo || "";
+      const newAssignee = reviewData.assigned_to || "";
+      const assigneeChanged = newAssignee && newAssignee !== previousAssignee;
 
-      await dispatch(
-        updateCompany({
-          id: company._id,
-          data: {
-            companyStatus: reviewData.status_short,
-          },
-        })
-      ).unwrap();
+      // Create the review entry
+      await dispatch(createReview({
+        ...reviewData,
+        forward_to: newAssignee || previousAssignee,
+      })).unwrap();
+      const companyUpdates = {
+        companyStatus: reviewData.status_short || company.companyStatus,
+      };
+      if (assigneeChanged) {
+        companyUpdates.forwardTo = newAssignee;
+        dispatch(createReview({
+          cmpny_id: company._id,
+          type: "log",
+          re_msg: `Lead forwarded from "${previousAssignee || "Unassigned"}" to "${newAssignee}"`,
+          evnt_id: company.eventName || "",
+          event_name: company.eventName || "",
+        }));
+      }
+
+      await dispatch(updateCompany({ id: company._id, data: companyUpdates })).unwrap();
 
       Swal.fire({
         icon: "success",
@@ -161,15 +178,16 @@ const ClientOverview1 = () => {
       });
 
       dispatch(fetchReviews());
+      dispatch(fetchCompanies());
 
       setReviewData({
         cmpny_id: company._id,
-        evnt_id: "",
-        event_name: "",
+        evnt_id: company.eventName || "",
+        event_name: company.eventName || "",
         status_short: "",
         reminder_dt: "",
         forward_to: "",
-        assigned_to: "",
+        assigned_to: newAssignee || previousAssignee,
         follow_up_date: "",
         re_msg: "",
       });
@@ -722,9 +740,9 @@ const ClientOverview1 = () => {
                   <label className="text-xs font-semibold mb-1 block">Forward On</label>
                   <SearchableDropdown
                     options={users?.map((u) => ({ label: u.fullName || u.username, value: u.username })) || []}
-                    value={reviewData.assigned_to || company?.forwardTo || ""}
+                    value={reviewData.assigned_to}
                     onChange={(e) => setReviewData(prev => ({ ...prev, assigned_to: e.target.value }))}
-                    placeholder="Select Assigned To"
+                    placeholder={company?.forwardTo ? `Current: ${company.forwardTo}` : "Select Assigned To"}
                     name="AssignedTo"
                   />
                 </div>
@@ -732,7 +750,7 @@ const ClientOverview1 = () => {
                 <div>
                   <label className="text-xs font-semibold mb-1 block">Follow Up Date</label>
                   <input
-                    type="date"
+                    type="datetime-local"
                     value={reviewData.follow_up_date}
                     onChange={(e) => setReviewData(prev => ({ ...prev, follow_up_date: e.target.value }))}
                     className="w-full h-10 border border-[#dbe1ea] px-3 outline-none text-sm"
