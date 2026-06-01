@@ -394,7 +394,7 @@ const ClientOverview1 = () => {
             Master List
           </button>
 
-          <button className="h-9 px-5 rounded-xl border border-violet-300 text-violet-600 bg-white hover:bg-violet-50 text-sm font-semibold">
+          <button disabled className="h-9 px-5 rounded-xl border border-violet-300 text-violet-300 bg-white text-sm font-semibold cursor-not-allowed opacity-70">
             Add MSME Details
           </button>
 
@@ -608,62 +608,74 @@ const ClientOverview1 = () => {
                   title: "Proposals / Broucher",
                   color: "purple-600",
                   onClick: null,
+                  disabled: true,
                 },
                 {
                   icon: Receipt,
                   title: "Proforma Invoice",
                   color: "orange-600",
                   onClick: null,
+                  disabled: true,
                 },
                 {
                   icon: Folder,
                   title: "Documentation",
                   color: "blue-600",
                   onClick: null,
+                  disabled: true,
                 },
                 {
                   icon: Wallet,
                   title: "Payments",
                   color: "green-600",
                   onClick: null,
+                  disabled: true,
                 },
                 {
                   icon: UserCircle,
                   title: "Contact Details",
                   color: "indigo-600",
                   onClick: null,
+                  disabled: true,
                 },
                 {
                   icon: FaWhatsapp,
                   title: "WhatsApp Chat",
                   color: "green-500",
                   onClick: () => setShowWhatsAppModal(true),
+                  disabled: false,
                 },
                 {
                   icon: Mail,
                   title: "Email",
                   color: "blue-600",
                   onClick: () => setShowEmailModal(true),
+                  disabled: false,
                 },
                 {
                   icon: Phone,
                   title: "Call",
                   color: "teal-600",
                   onClick: () => setShowCallModal(true),
+                  disabled: false,
                 },
               ].map((item, index) => (
                 <div
                   key={index}
-                  onClick={item.onClick || undefined}
-                  className="h-[40px] rounded-2xl border border-gray-300 px-3 flex items-center justify-between cursor-pointer hover:shadow-md hover:bg-orange-50 hover:border-orange-300 transition-all group"
+                  onClick={!item.disabled ? item.onClick || undefined : undefined}
+                  className={`h-[40px] rounded-2xl border px-3 flex items-center justify-between transition-all ${
+                    item.disabled
+                      ? "border-gray-200 bg-gray-50 cursor-not-allowed opacity-80"
+                      : "border-gray-300 cursor-pointer hover:shadow-md hover:bg-orange-50 hover:border-orange-300 group"
+                  }`}
                 >
                   <div className="flex items-center gap-4">
 
-                    <div className="w-12 h-12 rounded-xl bg-gray-100 group-hover:bg-orange-100 flex items-center justify-center transition-colors">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${item.disabled ? "bg-gray-100" : "bg-gray-100 group-hover:bg-orange-100"}`}>
                       <item.icon size={22} className={`text-${item.color}`} />
                     </div>
 
-                    <span className="text-[11px] text-[#0f172a] group-hover:text-orange-600 transition-colors">
+                    <span className={`text-[11px] transition-colors ${item.disabled ? "text-gray-400" : "text-[#0f172a] group-hover:text-orange-600"}`}>
                       {item.title}
                     </span>
                   </div>
