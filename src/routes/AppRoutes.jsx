@@ -446,6 +446,8 @@ export default function AppRoutes() {
             <Route path="whatsapp-logs" element={<WhatsAppLogs />} />
             <Route path="activity-logs" element={<ActivityLogs />} />
             <Route path="manage-roles" element={<RoleManagement />} />
+            <Route path="manage-departments" element={<DepartmentManagement />} />
+            <Route path="manage-designations" element={<DesignationManagement />} />
             <Route path="response-templates" element={<ResponseTemplates />} />
             <Route path="policy-manager" element={<PolicyManager />} />
             <Route path="exhibitor-hero-slider" element={<ExhibitorHeroSlider />} />
