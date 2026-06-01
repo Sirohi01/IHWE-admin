@@ -340,10 +340,10 @@ const AddNatureOfBusiness = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider">
-                                <th className="p-4 font-bold border-b">No.</th>
+                                <th className="p-4 font-bold border-b">S.No.</th>
                                 <th className="p-4 font-bold border-b">Business Name</th>
                                 <th className="p-4 font-bold border-b text-center">Status</th>
-                                <th className="p-4 font-bold border-b text-center">Created At</th>
+                                {/* <th className="p-4 font-bold border-b text-center">Created At</th> */}
                                 <th className="p-4 font-bold border-b text-center">Updated By</th>
                                 <th className="p-4 font-bold border-b text-center">Actions</th>
                             </tr>
@@ -375,9 +375,9 @@ const AddNatureOfBusiness = () => {
                                                 {nature.nature_status}
                                             </span>
                                         </td>
-                                        <td className="p-4 text-sm text-center text-gray-500 whitespace-nowrap">
+                                        {/* <td className="p-4 text-sm text-center text-gray-500 whitespace-nowrap">
                                             {new Date(nature.added).toLocaleDateString()}
-                                        </td>
+                                        </td> */}
                                         <td className="p-4 text-sm text-center text-gray-500">
                                             {nature.updated_by ? (
                                                 <div className="flex flex-col items-center gap-1">

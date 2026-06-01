@@ -179,7 +179,7 @@ const AddStatus = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider">
-                <th className="p-4 font-bold border-b">No.</th>
+                <th className="p-4 font-bold border-b">S.No.</th>
                 <th className="p-4 font-bold border-b">Name</th>
                 <th className="p-4 font-bold border-b text-center">Status</th>
                 <th className="p-4 font-bold border-b text-center">Created / Updated</th>
@@ -193,7 +193,7 @@ const AddStatus = () => {
                 paginated.map((item, index) => (
                   <tr key={item._id} className="hover:bg-gray-50 transition-colors">
                     <td className="p-4 text-sm font-medium text-gray-900">{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                    <td className="p-4"><div className="font-bold text-[#23471d]">{item.name}</div></td>
+                    <td className="p-4"><div className="font-md text-[#23471d]">{item.name}</div></td>
                     <td className="p-4 text-center">
                       <span className={`inline-flex px-2 py-1 text-[10px] font-bold rounded-full ${item.status === "active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{item.status}</span>
                     </td>
