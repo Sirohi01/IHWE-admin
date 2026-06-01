@@ -370,7 +370,7 @@ const ClientOverview1 = () => {
 
       {/* TOP HEADER */}
 
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-1">
 
         <div>
           <h1 className="text-[22px] font-md text-[#0f172a]">
@@ -384,7 +384,7 @@ const ClientOverview1 = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
 
           <button onClick={() => navigate("/ihweClientData2026/addNewClients")} className="h-9 px-5 rounded-xl border bg-white hover:bg-gray-50 text-sm font-semibold">
             Add Client
