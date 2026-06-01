@@ -168,7 +168,7 @@ export const PerformaInvoices = () => {
 
     // ── render ────────────────────────────────────────────────────────────────────
     return (
-        <div className="min-h-screen bg-gray-50 mt-6">
+        <div className="min-h-screen bg-gray-50 mt-4">
             <style>
                 {`
                 /* Hide number input spinners on this page */
@@ -422,7 +422,7 @@ export const PerformaInvoices = () => {
                 </div>
 
                 {/* ── RIGHT SIDEBAR ── */}
-                <div className="w-72 flex-shrink-0 space-y-3">
+                <div className="w-80 flex-shrink-0 space-y-3">
                     {/* Estimate Summary */}
                     <div className="bg-white rounded-lg border border-gray-200 p-4">
                         <div className="flex items-center gap-2 mb-4">

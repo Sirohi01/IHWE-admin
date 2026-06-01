@@ -244,6 +244,8 @@ const TravelPartnerManage = lazy(() => import("../pages/TravelPartnerManage"));
 const PerformaInvoices = lazy(() => import("../pages/PerformaInvoices"));
 //Account Section
 const SalesReport = lazy(() => import("../pages/accounts/SalesReport"));
+const CreateDebitNote = lazy(() => import("../pages/CreateDebitNote"));
+const CreateInvoicePage = lazy(() => import("../pages/CreateInvoice"));
 // Sales Tools
 const SalesTools = lazy(() => import("../pages/sales_tools/SalesTools"));
 // Communication
