@@ -162,11 +162,11 @@ const WarmClientList = () => {
         Follow-Up Date <CalendarDays size={12} className="text-slate-500" />
       </button>
       <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
-        <option value="">Status ⌄</option>
+        <option value="">Status</option>
         {uniqueStatuses.map((s, i) => <option key={i} value={s}>{s}</option>)}
       </select>
       <select value={filterSource} onChange={e => { setFilterSource(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
-        <option value="">Source ⌄</option>
+        <option value="">Source</option>
         {uniqueSources.map((s, i) => <option key={i} value={s}>{s}</option>)}
       </select>
       <button className="flex items-center gap-2 py-1.5 px-3 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700">
@@ -272,11 +272,11 @@ const WarmClientList = () => {
     <>
       <div className="bg-white rounded-xl border border-gray-100 p-3">
         <h3 className="text-[14px] font-semibold text-[#0F172A] mb-3">Follow-Up Overview</h3>
-        <div className="flex flex-col items-center gap-4">
-          <div className="relative w-[100px] h-[100px]">
+        <div className="flex flex-row items-center gap-4">
+          <div className="relative w-[90px] h-[90px] shrink-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={overviewData} cx="50%" cy="50%" innerRadius={30} outerRadius={45} dataKey="value" stroke="none">
+                <Pie data={overviewData} cx="50%" cy="50%" innerRadius={28} outerRadius={40} dataKey="value" stroke="none">
                   {overviewData.map((entry, index) => (
                     <Cell key={index} fill={entry.color} />
                   ))}
@@ -288,14 +288,14 @@ const WarmClientList = () => {
               <p className="text-[9px] text-gray-500">Total</p>
             </div>
           </div>
-          <div className="w-full space-y-2">
+          <div className="flex-1 space-y-2">
             {overviewData.map((item) => (
               <div key={item.name} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full" style={{ background: item.color }} />
-                  <span className="text-[10px] font-medium text-[#0F172A]">{item.name}</span>
+                  <span className="text-[10px] font-medium text-[#0F172A] leading-none">{item.name}</span>
                 </div>
-                <span className="text-[10px] font-semibold text-[#0F172A]">
+                <span className="text-[10px] font-semibold text-[#0F172A] leading-none">
                   {item.value} <span className="text-gray-400 font-normal">({item.percentage})</span>
                 </span>
               </div>
@@ -313,10 +313,10 @@ const WarmClientList = () => {
           {overdueLeads.map((lead, index) => (
             <div key={index} className={`flex items-center justify-between pb-3 ${index !== overdueLeads.length - 1 ? "border-b border-gray-100" : ""}`}>
               <div>
-                <h4 className="text-[11px] font-semibold text-[#0F172A]">{lead.company}</h4>
-                <p className="text-[9px] text-gray-500 mt-0.5">Due: {lead.date}</p>
+                <h4 className="text-[11px] font-semibold text-[#0F172A] leading-tight">{lead.company}</h4>
+                <p className="text-[9px] text-gray-500 mt-0.5 leading-none">Due: {lead.date}</p>
               </div>
-              <span className="px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 text-[9px] font-semibold flex items-center justify-center text-center leading-tight">
+              <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-[10px] font-semibold flex items-center justify-center text-center leading-tight">
                 {lead.days}
               </span>
             </div>
@@ -329,23 +329,23 @@ const WarmClientList = () => {
       </div>
 
       <div className="bg-white rounded-xl border border-gray-100 p-3">
-        <h3 className="text-[14px] font-semibold text-[#0F172A] mb-2">Quick Actions</h3>
-        <div className="grid grid-cols-2 gap-2">
-          <button className="h-[40px] rounded-lg bg-[#F8F1FF] flex items-center justify-center gap-1.5 hover:opacity-90">
+        <h3 className="text-[14px] font-semibold text-[#0F172A] mb-3">Quick Actions</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <button className="h-[40px] rounded-lg bg-[#F8F1FF] flex items-center justify-center gap-1.5 hover:opacity-90 px-2">
             <CalendarDays size={14} className="text-purple-600 shrink-0" />
-            <span className="text-[9px] font-medium text-[#0F172A] leading-tight text-left">Schedule<br />Follow-Up</span>
+            <span className="text-[10px] font-medium text-[#0F172A] leading-tight text-left">Schedule<br />Follow-Up</span>
           </button>
-          <button className="h-[40px] rounded-lg bg-[#EEF9F2] flex items-center justify-center gap-1.5 hover:opacity-90">
+          <button className="h-[40px] rounded-lg bg-[#EEF9F2] flex items-center justify-center gap-1.5 hover:opacity-90 px-2">
             <Phone size={14} className="text-green-600 shrink-0" />
-            <span className="text-[9px] font-medium text-[#0F172A] leading-tight text-left">Log Call</span>
+            <span className="text-[10px] font-medium text-[#0F172A] leading-tight text-left">Log Call</span>
           </button>
-          <button className="h-[40px] rounded-lg bg-[#EEF9F2] flex items-center justify-center gap-1.5 hover:opacity-90">
+          <button className="h-[40px] rounded-lg bg-[#EEF9F2] flex items-center justify-center gap-1.5 hover:opacity-90 px-2">
             <MessageCircle size={14} className="text-green-600 shrink-0" />
-            <span className="text-[9px] font-medium text-[#0F172A] leading-tight text-left">Send<br />WhatsApp</span>
+            <span className="text-[10px] font-medium text-[#0F172A] leading-tight text-left">Send<br />WhatsApp</span>
           </button>
-          <button className="h-[40px] rounded-lg bg-[#F4F7FF] flex items-center justify-center gap-1.5 hover:opacity-90">
+          <button className="h-[40px] rounded-lg bg-[#F4F7FF] flex items-center justify-center gap-1.5 hover:opacity-90 px-2">
             <Mail size={14} className="text-blue-600 shrink-0" />
-            <span className="text-[9px] font-medium text-[#0F172A] leading-tight text-left">Send Email</span>
+            <span className="text-[10px] font-medium text-[#0F172A] leading-tight text-left">Send Email</span>
           </button>
         </div>
       </div>
@@ -354,8 +354,8 @@ const WarmClientList = () => {
         <div className="flex items-start gap-2 mb-3">
           <Bell size={16} className="text-[#0F172A] mt-0.5 shrink-0" />
           <div>
-            <h3 className="text-[13px] font-semibold text-[#0F172A]">Reminder Settings</h3>
-            <p className="text-[9px] text-gray-500 mt-0.5">Get reminded before follow-up is due</p>
+            <h3 className="text-[13px] font-semibold text-[#0F172A] leading-tight">Reminder Settings</h3>
+            <p className="text-[9px] text-gray-500 mt-0.5 leading-none">Get reminded before follow-up is due</p>
           </div>
         </div>
         <div className="flex items-center justify-between mb-3">
@@ -373,8 +373,8 @@ const WarmClientList = () => {
             <option>1 Day Before</option>
           </select>
         </div>
-        <div>
-          <p className="text-[10px] font-medium text-[#0F172A] mb-2">Send reminder via</p>
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-medium text-[#0F172A]">Send via</span>
           <div className="flex items-center gap-4">
             <label className="flex items-center gap-1.5 text-[10px] cursor-pointer">
               <input type="checkbox" defaultChecked className="accent-blue-600 w-3 h-3" /> WhatsApp
@@ -429,6 +429,7 @@ const WarmClientList = () => {
       pagination={paginationBar}
       isAllSelected={isAllSelected}
       onSelectAll={onSelectAll}
+      cardsInRow={5}
       onReset={() => {
         setSearchTerm('');
         setFilterSource('');

@@ -185,22 +185,22 @@ const ColdClientList = () => {
         />
       </div>
       <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
-        <option value="">Status ⌄</option>
+        <option value="">Status</option>
         <option value="On Hold">On Hold</option>
         <option value="Lost">Lost</option>
       </select>
       <select value={filterReason} onChange={e => { setFilterReason(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
-        <option value="">Reason ⌄</option>
+        <option value="">Reason</option>
         <option value="Budget">Budget</option>
         <option value="Competitor">Competitor</option>
         <option value="Not interested">Not interested</option>
       </select>
       <select value={filterSource} onChange={e => { setFilterSource(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
-        <option value="">Source ⌄</option>
+        <option value="">Source</option>
         {uniqueSources.map((s, i) => <option key={i} value={s}>{s}</option>)}
       </select>
       <select value={filterIndustry} onChange={e => { setFilterIndustry(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
-        <option value="">Industry ⌄</option>
+        <option value="">Industry</option>
         {uniqueIndustries.map((s, i) => <option key={i} value={s}>{s}</option>)}
       </select>
     </>

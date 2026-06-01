@@ -189,21 +189,21 @@ const HotClientList = () => {
         />
       </div>
       <select value={filterSource} onChange={e => { setFilterSource(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
-        <option value="">Source ⌄</option>
+        <option value="">Source</option>
         {uniqueSources.map((s, i) => <option key={i} value={s}>{s}</option>)}
       </select>
       <select value={filterIndustry} onChange={e => { setFilterIndustry(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
-        <option value="">Industry ⌄</option>
+        <option value="">Industry</option>
         {uniqueIndustries.map((s, i) => <option key={i} value={s}>{s}</option>)}
       </select>
       <select value={filterLeadScore} onChange={e => { setFilterLeadScore(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
-        <option value="">Lead Score ⌄</option>
+        <option value="">Lead Score</option>
         <option value="90">90 - 100</option>
         <option value="80">80 - 89</option>
         <option value="70">70 - 79</option>
       </select>
       <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
-        <option value="">Status ⌄</option>
+        <option value="">Status</option>
         {uniqueStatuses.map((s, i) => <option key={i} value={s}>{s}</option>)}
       </select>
     </>
