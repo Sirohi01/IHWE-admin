@@ -5,7 +5,6 @@ import AdminLayout from "../layout/AdminLayout";
 import AdminUser from "../layout/AdminUser";
 
 import Dashboard from "../pages/Dashboard";
-import ChangePassword from "../pages/ChangePassword";
 import Crosual from "../pages/HomeSlider";
 import EventHighlightsPage from "../pages/EventHighlights";
 import FestivalCarousel from "../pages/FestivalCarousel";
@@ -126,7 +125,9 @@ import TravelAccommodationManage from "../pages/TravelAccommodationManage";
 import AdminBSM from "../pages/AdminBSM";
 import ActivityLogs from "../pages/ActivityLogs";
 import RoleManagement from "../pages/RoleManagement";
+import DepartmentManagement from "../pages/DepartmentManagement";
 import RolePermissions from "../pages/RolePermissions";
+import DesignationManagement from "../pages/DesignationManagement";
 import PolicyManager from "../pages/PolicyManager";
 import Settings from "../pages/Settings";
 import ConferenceTestimonialsManage from "../pages/ConferenceTestimonialsManage";
@@ -242,6 +243,10 @@ import FabricationPartnerManage from "../pages/FabricationPartnerManage";
 import TravelPartnerManage from "../pages/TravelPartnerManage";
 //Account Section
 import SalesReport from "../pages/accounts/SalesReport";
+// Sales Tools
+import SalesTools from "../pages/sales_tools/SalesTools";
+// Communication
+import Communication from "../pages/communication/Communication";
 
 
 
@@ -424,7 +429,6 @@ export default function AppRoutes() {
           <Route path="media-category" element={<MediaCategoryManagement />} />
           <Route path="gallery-media" element={<MediaGalleryManagement />} />
           <Route path="profiles" element={<IndividualProfile />} />
-          <Route path="change-password" element={<ChangePassword />} />
           <Route path="festival-carousels" element={<FestivalCarousel />} />
           <Route path="carousel" element={<Crosual />} />
           <Route path="event-highlights" element={<EventHighlightsPage />} />
@@ -438,6 +442,8 @@ export default function AppRoutes() {
           <Route path="whatsapp-logs" element={<WhatsAppLogs />} />
           <Route path="activity-logs" element={<ActivityLogs />} />
           <Route path="manage-roles" element={<RoleManagement />} />
+          <Route path="manage-departments" element={<DepartmentManagement />} />
+          <Route path="manage-designations" element={<DesignationManagement />} />
           <Route path="response-templates" element={<ResponseTemplates />} />
           <Route path="policy-manager" element={<PolicyManager />} />
           <Route
@@ -644,6 +650,17 @@ export default function AppRoutes() {
           <Route path="travel-partner-manage" element={<TravelPartnerManage />} />
 
           <Route path="chairman-message" element={<ChairmanMessage />} />
+
+          {/* Sales Tools */}
+          <Route path="sales-tools/proposals" element={<SalesTools activeTab="proposals" />} />
+          <Route path="sales-tools/quotations" element={<SalesTools activeTab="quotations" />} />
+          <Route path="sales-tools/lead-assignment" element={<SalesTools activeTab="lead-assignment" />} />
+
+          {/* Communication */}
+          <Route path="communication/calls" element={<Communication activeTab="calls" />} />
+          <Route path="communication/whatsapp" element={<Communication activeTab="whatsapp" />} />
+          <Route path="communication/emails" element={<Communication activeTab="emails" />} />
+          <Route path="communication/meetings" element={<Communication activeTab="meetings" />} />
 
         </Route>
         <Route path="*" element={<NotFound />} />
