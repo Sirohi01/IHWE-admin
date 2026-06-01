@@ -333,7 +333,7 @@ const AddCategory = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider">
-                <th className="p-4 font-bold border-b">No.</th>
+                <th className="p-4 font-bold border-b">S.No.</th>
                 <th className="p-4 font-bold border-b">Category Name</th>
                 <th className="p-4 font-bold border-b">Status</th>
                 <th className="p-4 font-bold border-b text-center">Created At</th>

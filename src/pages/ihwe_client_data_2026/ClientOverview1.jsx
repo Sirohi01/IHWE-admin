@@ -386,19 +386,19 @@ const ClientOverview1 = () => {
 
         <div className="flex items-center gap-3">
 
-          <button className="h-11 px-5 rounded-xl border bg-white hover:bg-gray-50 text-sm font-semibold">
+          <button onClick={() => navigate("/ihweClientData2026/addNewClients")} className="h-9 px-5 rounded-xl border bg-white hover:bg-gray-50 text-sm font-semibold">
             Add Client
           </button>
 
-          <button className="h-11 px-5 rounded-xl border bg-white hover:bg-gray-50 text-sm font-semibold">
+          <button onClick={() => navigate("/ihweClientData2026/masterData")} className="h-9 px-5 rounded-xl border bg-white hover:bg-gray-50 text-sm font-semibold">
             Master List
           </button>
 
-          <button className="h-11 px-5 rounded-xl border border-violet-300 text-violet-600 bg-white hover:bg-violet-50 text-sm font-semibold">
+          <button className="h-9 px-5 rounded-xl border border-violet-300 text-violet-600 bg-white hover:bg-violet-50 text-sm font-semibold">
             Add MSME Details
           </button>
 
-          <button className="h-11 px-5 rounded-xl border border-green-300 text-green-600 bg-white hover:bg-green-50 text-sm font-semibold flex items-center gap-2">
+          <button onClick={() => setShowWhatsAppModal(true)} className="h-9 px-5 rounded-xl border border-green-300 text-green-600 bg-white hover:bg-green-50 text-sm font-semibold flex items-center gap-2">
             <FaWhatsapp />
             Send WhatsApp
           </button>
@@ -407,7 +407,7 @@ const ClientOverview1 = () => {
 
       {/* MAIN LAYOUT */}
 
-      <div className="grid grid-cols-1 min-[1300px]:grid-cols-[1fr_360px] gap-3 items-stretch">
+      <div className="grid grid-cols-1 min-[1300px]:grid-cols-[1fr_360px] gap-1 items-stretch">
 
         {/* LEFT SECTION */}
 
@@ -461,8 +461,12 @@ const ClientOverview1 = () => {
                     <UserCircle className="text-[#4338ca] flex-shrink-0" size={16} />
                     <span className="font-medium text-gray-700">
                       {company.contacts?.[0]?.firstName
-                        ? `${company.contacts[0].firstName} ${company.contacts[0].surname || ""}`.trim()
-                        : company.companyName}
+                        ? `${company?.contacts[0]?.firstName} ${company?.contacts[0]?.surname || ""}`.trim()
+                        : company?.companyName}
+                    </span>
+                    <span className="text-gray-400">/</span>
+                    <span className="font-medium text-gray-700">
+                      {company?.contacts[0]?.designation}
                     </span>
                     <span className="text-gray-400">-</span>
                     <a href={`tel:${company.contacts?.[0]?.mobile}`} className="text-[#4338ca] hover:underline font-medium">
