@@ -386,19 +386,19 @@ const ClientOverview1 = () => {
 
         <div className="flex items-center gap-3">
 
-          <button className="h-11 px-5 rounded-xl border bg-white hover:bg-gray-50 text-sm font-semibold">
+          <button onClick={() => navigate("/ihweClientData2026/addNewClients")} className="h-9 px-5 rounded-xl border bg-white hover:bg-gray-50 text-sm font-semibold">
             Add Client
           </button>
 
-          <button className="h-11 px-5 rounded-xl border bg-white hover:bg-gray-50 text-sm font-semibold">
+          <button onClick={() => navigate("/ihweClientData2026/masterData")} className="h-9 px-5 rounded-xl border bg-white hover:bg-gray-50 text-sm font-semibold">
             Master List
           </button>
 
-          <button className="h-11 px-5 rounded-xl border border-violet-300 text-violet-600 bg-white hover:bg-violet-50 text-sm font-semibold">
+          <button className="h-9 px-5 rounded-xl border border-violet-300 text-violet-600 bg-white hover:bg-violet-50 text-sm font-semibold">
             Add MSME Details
           </button>
 
-          <button className="h-11 px-5 rounded-xl border border-green-300 text-green-600 bg-white hover:bg-green-50 text-sm font-semibold flex items-center gap-2">
+          <button className="h-9 px-5 rounded-xl border border-green-300 text-green-600 bg-white hover:bg-green-50 text-sm font-semibold flex items-center gap-2">
             <FaWhatsapp />
             Send WhatsApp
           </button>
