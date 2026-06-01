@@ -20,16 +20,7 @@ const toTitleCase = (str) => {
   return str.replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
-const dummyHotRows = [
-  { id: 1, name: "GreenLife Ayurveda", industry: "Ayurveda & Herbs", source: "Website", score: 95, status: "In Discussion", lastDate: "27 May 2026", lastTime: "11:00 AM", lastType: "WhatsApp", nextAction: "Follow-up Call", nextDate: "Today, 04:00 PM" },
-  { id: 2, name: "Nature's Harmony Pvt. Ltd.", industry: "Health & Wellness", source: "Referral", score: 92, status: "Proposal Sent", lastDate: "28 May 2026", lastTime: "03:00 PM", lastType: "Call", nextAction: "Send Proposal", nextDate: "Today, 05:00 PM" },
-  { id: 3, name: "Wellness World", industry: "Wellness Products", source: "Trade Show", score: 90, status: "In Discussion", lastDate: "29 May 2026", lastTime: "02:00 PM", lastType: "WhatsApp", nextAction: "Demo Call", nextDate: "Tomorrow, 11:00 AM" },
-  { id: 4, name: "Herbal King Exports", industry: "Herbal Products", source: "Social Media", score: 88, status: "In Discussion", lastDate: "28 May 2026", lastTime: "05:00 PM", lastType: "Email", nextAction: "Follow-up Email", nextDate: "Today, 01:00 PM" },
-  { id: 5, name: "Arogya Organics", industry: "Organic Food", source: "Google Ads", score: 85, status: "Proposal Sent", lastDate: "26 May 2026", lastTime: "11:00 AM", lastType: "Call", nextAction: "Negotiation Call", nextDate: "Tomorrow, 04:00 PM" },
-  { id: 6, name: "Pureveda Solutions", industry: "Healthcare", source: "Email Campaign", score: 83, status: "In Discussion", lastDate: "27 May 2026", lastTime: "10:30 AM", lastType: "WhatsApp", nextAction: "Product Demo", nextDate: "30 May 2026, 11:00 AM" },
-  { id: 7, name: "Shakti Bio Products", industry: "Biotechnology", source: "Referral", score: 82, status: "In Discussion", lastDate: "30 May 2026", lastTime: "11:30 AM", lastType: "WhatsApp", nextAction: "Follow-up Call", nextDate: "30 May 2026, 04:00 PM" },
-  { id: 8, name: "Holistic Nutrition Co.", industry: "Nutrition", source: "Website", score: 80, status: "Ready to Convert", lastDate: "28 May 2026", lastTime: "04:00 PM", lastType: "Call", nextAction: "Final Discussion", nextDate: "Tomorrow, 12:00 PM" },
-];
+// Removed dummy rows
 
 const HotClientList = () => {
   const dispatch = useDispatch();
@@ -54,31 +45,28 @@ const HotClientList = () => {
   const allCompanies = Array.isArray(companiesState?.companies) ? companiesState.companies : [];
   const isLoading = companiesState?.loading ?? false;
 
+  const pagination = companiesState?.pagination;
+
   useEffect(() => {
-    dispatch(fetchCompanies({ status: 'Est./PI Sent' })); // Or whatever the real status is for 'Hot'
-  }, [dispatch]);
+    const delayDebounceFn = setTimeout(() => {
+      dispatch(fetchCompanies({
+        page,
+        limit,
+        search: searchTerm,
+        status: filterStatus || 'Est./PI Sent', // Default hot lead status
+        source: filterSource,
+        industry: filterIndustry,
+      }));
+    }, 400);
 
-  // Dummy Hot filtering logic
-  const filteredDummyRows = dummyHotRows.filter(r => {
-    const s = searchTerm.toLowerCase();
-    const matchSearch = s === '' || (r.name.toLowerCase().includes(s) || r.industry.toLowerCase().includes(s));
-    const matchSource = filterSource === '' || r.source === filterSource;
-    const matchIndustry = filterIndustry === '' || r.industry === filterIndustry;
-    const matchStatus = filterStatus === '' || r.status === filterStatus;
-    const matchScore = filterLeadScore === '' ||
-      (filterLeadScore === '90' ? r.score >= 90 :
-        filterLeadScore === '80' ? (r.score >= 80 && r.score < 90) :
-          filterLeadScore === '70' ? (r.score >= 70 && r.score < 80) : true);
-    return matchSearch && matchSource && matchIndustry && matchStatus && matchScore;
-  });
+    return () => clearTimeout(delayDebounceFn);
+  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, filterIndustry]);
 
-  const totalPages = Math.ceil(filteredDummyRows.length / limit) || 1;
-  const paginatedRows = filteredDummyRows.slice((page - 1) * limit, page * limit);
-  const totalLeads = filteredDummyRows.length;
+  const totalLeads = pagination?.total || allCompanies.length;
 
-  const isAllSelected = paginatedRows.length > 0 && selectedIds.length === paginatedRows.length;
+  const isAllSelected = allCompanies.length > 0 && selectedIds.length === allCompanies.length;
   const onSelectAll = (e) => {
-    if (e.target.checked) setSelectedIds(paginatedRows.map(r => r.id));
+    if (e.target.checked) setSelectedIds(allCompanies.map(r => r._id));
     else setSelectedIds([]);
   };
 
@@ -86,9 +74,9 @@ const HotClientList = () => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const uniqueSources = [...new Set(dummyHotRows.map(r => r.source).filter(Boolean))];
-  const uniqueIndustries = [...new Set(dummyHotRows.map(r => r.industry).filter(Boolean))];
-  const uniqueStatuses = [...new Set(dummyHotRows.map(r => r.status).filter(Boolean))];
+  const uniqueSources = [...new Set(allCompanies.map(r => r.dataSource).filter(Boolean))];
+  const uniqueIndustries = [...new Set(allCompanies.map(r => r.businessNature).filter(Boolean))];
+  const uniqueStatuses = [...new Set(allCompanies.map(r => r.companyStatus).filter(Boolean))];
 
   const getSourceStyle = (source) => {
     const s = (source || "").toLowerCase();
@@ -224,52 +212,53 @@ const HotClientList = () => {
   // Table Headers
   const tableHeaders = (
     <>
-      <th className="px-2 py-2 font-medium">Company / Lead</th>
+      <th className="px-2 py-2 font-medium">Company Name</th>
       <th className="px-2 py-2 font-medium">Source</th>
+      <th className="px-2 py-2 font-medium">Industry</th>
       <th className="px-2 py-2 font-medium">Lead Score</th>
       <th className="px-2 py-2 font-medium">Status</th>
       <th className="px-2 py-2 font-medium">Last Conversation</th>
-      <th className="px-2 py-2 font-medium">Next Action</th>
       <th className="px-2 py-2 w-10">Action</th>
     </>
   );
 
   const tableBody = (
     <>
-      {paginatedRows.length === 0 ? (
+      {isLoading ? (
+        <tr><td colSpan="8" className="text-center py-8 text-slate-500">Loading leads...</td></tr>
+      ) : allCompanies.length === 0 ? (
         <tr>
-          <td colSpan="7" className="px-2 py-4 text-center text-slate-500 font-medium">No results found</td>
+          <td colSpan="8" className="px-2 py-4 text-center text-slate-500 font-medium">No results found</td>
         </tr>
-      ) : paginatedRows.map((row, i) => {
-        const style = getStatusStyle(row.status);
+      ) : allCompanies.map((row, i) => {
+        const style = getStatusStyle(row.companyStatus || "Est./PI Sent");
         const statusBg = style.split(' ')[0];
         const statusText = style.split(' ')[1];
         const statusDot = style.split(' ')[3]?.replace('dot-', 'bg-') || "bg-slate-500";
+        const source = row.dataSource || "Website";
 
         return (
-          <tr key={row.id} className="hover:bg-slate-50 transition-colors">
+          <tr key={row._id || i} className="hover:bg-slate-50 transition-colors">
             <td className="px-2 py-2 text-center">
               <input
                 type="checkbox"
                 className="w-3 h-3 accent-blue-500 cursor-pointer rounded-sm"
-                checked={selectedIds.includes(row.id)}
-                onChange={() => onSelectRow(row.id)}
+                checked={selectedIds.includes(row._id)}
+                onChange={() => onSelectRow(row._id)}
               />
             </td>
-            <td className="px-2 py-2">
-              <div className="font-semibold text-slate-800 text-[11px] cursor-pointer hover:text-blue-600">
-                <Link to={`/client-overview/${row.id}`}>{row.name}</Link>
-              </div>
-              <div className="text-[9px] text-slate-500">{row.industry}</div>
+            <td className="px-2 py-2 font-semibold text-slate-800 text-[11px] cursor-pointer hover:text-blue-600">
+              <Link to={`/client-overview/${row._id}`}>{toTitleCase(row.companyName)}</Link>
             </td>
             <td className="px-2 py-2">
-              <span className={`px-1.5 py-0.5 rounded font-semibold text-[9px] ${getSourceStyle(row.source)}`}>
-                @{row.source}
+              <span className={`px-1.5 py-0.5 rounded font-semibold text-[9px] ${getSourceStyle(source)}`}>
+                @{toTitleCase(source)}
               </span>
             </td>
+            <td className="px-2 py-2 text-slate-600">{toTitleCase(row.businessNature) || "-"}</td>
             <td className="px-2 py-2">
               <div className="flex flex-col gap-0.5">
-                <span className="font-bold text-rose-500 text-[10px]">{row.score}/100</span>
+                <span className="font-bold text-rose-500 text-[10px]">{row.leadScore || 85}/100</span>
                 <div className="flex text-[8px] text-rose-500">
                   <FaStar /><FaStar /><FaStar /><FaStar /><FaStar />
                 </div>
@@ -278,31 +267,23 @@ const HotClientList = () => {
             <td className="px-2 py-2">
               <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-medium border ${statusBg} ${statusText} border-transparent`}>
                 <span className={`w-1 h-1 rounded-full ${statusDot}`}></span>
-                {row.status}
+                {toTitleCase(row.companyStatus || "Est./PI Sent")}
               </span>
             </td>
             <td className="px-2 py-2">
               <div className="flex items-center gap-1.5">
-                {row.lastType === 'WhatsApp' ? <div className="p-1 bg-emerald-50 rounded-full"><FaWhatsapp className="text-emerald-500" size={10} /></div> :
-                  row.lastType === 'Call' ? <div className="p-1 bg-blue-50 rounded-full"><Phone className="text-blue-500" size={10} /></div> :
-                    <div className="p-1 bg-slate-100 rounded-full"><Mail className="text-slate-500" size={10} /></div>}
+                <div className="p-1 bg-slate-100 rounded-full"><MessageCircle className="text-slate-500" size={10} /></div>
                 <div>
-                  <div className="text-[9px] font-medium text-slate-800">{row.lastDate}</div>
-                  <div className="text-[8px] text-slate-500">{row.lastTime}</div>
+                  <div className="text-[9px] font-medium text-slate-800">
+                    {row.updatedAt ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt)) : "-"}
+                  </div>
+                  <div className="text-[8px] text-slate-500">
+                    {row.updatedAt ? new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt)) : "-"}
+                  </div>
                 </div>
               </div>
             </td>
-            <td className="px-2 py-2">
-              <div className="flex items-center gap-1.5">
-                {row.nextAction.includes('Call') ? <div className="p-1"><Phone className="text-rose-500" size={10} /></div> :
-                  <div className="p-1"><CalendarDays className="text-rose-500" size={10} /></div>}
-                <div>
-                  <div className="text-[9px] font-medium text-slate-800">{row.nextAction}</div>
-                  <div className="text-[8px] text-rose-500 font-semibold">{row.nextDate}</div>
-                </div>
-              </div>
-            </td>
-            <td className="px-2 py-2 text-center">
+            <td className="px-2 py-2 text-right">
               <button className="text-slate-400 hover:text-slate-700">
                 <MoreVertical size={14} />
               </button>
@@ -449,32 +430,25 @@ const HotClientList = () => {
     </>
   );
 
-  const pagination = (
+  const paginationBar = (
     <>
       <div className="text-slate-500">
-        Showing {paginatedRows.length > 0 ? (page - 1) * limit + 1 : 0} to {Math.min(page * limit, totalLeads)} of {totalLeads} leads
+        Showing {totalLeads === 0 ? 0 : (page - 1) * limit + 1} to {Math.min(page * limit, totalLeads)} of {totalLeads} leads
       </div>
       <div className="flex items-center gap-1">
         <button onClick={() => setPage(1)} disabled={page === 1} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">«</button>
         <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">‹</button>
 
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-          <button
-            key={p}
-            onClick={() => setPage(p)}
-            className={`w-6 h-6 rounded font-bold flex items-center justify-center ${page === p ? 'bg-[#00a65a] text-white' : 'hover:bg-slate-100'}`}
-          >
-            {p}
-          </button>
-        ))}
+        <button className={`w-6 h-6 rounded font-bold flex items-center justify-center bg-[#00a65a] text-white`}>
+          {page}
+        </button>
 
-        <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">›</button>
-        <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">»</button>
+        <button onClick={() => setPage(p => Math.min(pagination?.totalPages || 1, p + 1))} disabled={page >= (pagination?.totalPages || 1)} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">›</button>
+        <button onClick={() => setPage(pagination?.totalPages || 1)} disabled={page >= (pagination?.totalPages || 1)} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">»</button>
       </div>
       <div className="flex items-center gap-2 text-slate-500">
         <span>Rows per page:</span>
         <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }} className="border border-slate-200 rounded py-0.5 px-1 bg-white outline-none cursor-pointer text-slate-700">
-          <option value={8}>8</option>
           <option value={10}>10</option>
           <option value={20}>20</option>
           <option value={50}>50</option>
@@ -494,7 +468,7 @@ const HotClientList = () => {
       tableHeaders={tableHeaders}
       tableBody={tableBody}
       rightSidebar={rightSidebar}
-      pagination={pagination}
+      pagination={paginationBar}
       isAllSelected={isAllSelected}
       onSelectAll={onSelectAll}
       onReset={() => {

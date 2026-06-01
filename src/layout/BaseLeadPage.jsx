@@ -131,7 +131,7 @@ const BaseLeadPage = ({
         </div>
 
         {/* RIGHT COLUMN: SIDEBAR */}
-        <div className="w-full xl:w-[20%] flex flex-col gap-4 shrink-0 xl:h-full">
+        <div className="w-full xl:w-[20%] flex flex-col justify-between shrink-0 xl:h-full">
           {rightSidebar}
         </div>
 

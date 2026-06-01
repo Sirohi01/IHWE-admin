@@ -20,18 +20,7 @@ const toTitleCase = (str) => {
   return str.replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
-const dummyRows = [
-  { id: 1, name: "HealthPlus Solutions", industry: "Healthcare", status: "On Hold", reason: "Budget Approval Pending", source: "Website", date: "28 May 2026", value: "₹ 2,40,000" },
-  { id: 2, name: "NutriCare Pvt. Ltd.", industry: "Nutrition", status: "On Hold", reason: "Decision in Next Quarter", source: "Referral", date: "26 May 2026", value: "₹ 1,80,000" },
-  { id: 3, name: "MediWell Clinic", industry: "Healthcare", status: "Lost", reason: "Chose Competitor", source: "Trade Show", date: "25 May 2026", value: "₹ 1,25,000" },
-  { id: 4, name: "BioLife Sciences", industry: "Biotechnology", status: "Lost", reason: "Not a Good Fit", source: "Website", date: "24 May 2026", value: "₹ 95,000" },
-  { id: 5, name: "Fit & Active Gym", industry: "Fitness", status: "On Hold", reason: "Requirement on Hold", source: "Social Media", date: "22 May 2026", value: "₹ 1,10,000" },
-  { id: 6, name: "Care Point Hospital", industry: "Healthcare", status: "Lost", reason: "No Response", source: "Referral", date: "21 May 2026", value: "₹ 2,75,000" },
-  { id: 7, name: "Herbalife Stores", industry: "Retail", status: "On Hold", reason: "Comparing Vendors", source: "Google Ads", date: "20 May 2026", value: "₹ 75,000" },
-  { id: 8, name: "PharmaCare Distributors", industry: "Pharmaceuticals", status: "Lost", reason: "Pricing Issues", source: "Email Campaign", date: "19 May 2026", value: "₹ 1,45,000" },
-  { id: 9, name: "Wellness Tracks", industry: "Wellness", status: "On Hold", reason: "Internal Discussion", source: "Website", date: "18 May 2026", value: "₹ 90,000" },
-  { id: 10, name: "OrthoLife Clinic", industry: "Healthcare", status: "Lost", reason: "Not Interested", source: "Trade Show", date: "17 May 2026", value: "₹ 1,35,000" },
-];
+// Removed dummy rows
 
 const ColdClientList = () => {
   const dispatch = useDispatch();
@@ -55,28 +44,28 @@ const ColdClientList = () => {
   const allCompanies = Array.isArray(companiesState?.companies) ? companiesState.companies : [];
   const isLoading = companiesState?.loading ?? false;
 
+  const pagination = companiesState?.pagination;
+
   useEffect(() => {
-    dispatch(fetchCompanies());
-  }, [dispatch]);
+    const delayDebounceFn = setTimeout(() => {
+      dispatch(fetchCompanies({
+        page,
+        limit,
+        search: searchTerm,
+        status: filterStatus || 'On Hold', // default to something representing cold leads if needed, or leave it to show both hold/lost
+        source: filterSource,
+        industry: filterIndustry,
+      }));
+    }, 400);
 
-  // Dummy filtering logic
-  const filteredDummyRows = dummyRows.filter(r => {
-    const s = searchTerm.toLowerCase();
-    const matchSearch = s === '' || (r.name.toLowerCase().includes(s) || r.industry.toLowerCase().includes(s));
-    const matchSource = filterSource === '' || r.source === filterSource;
-    const matchIndustry = filterIndustry === '' || r.industry === filterIndustry;
-    const matchStatus = filterStatus === '' || r.status === filterStatus;
-    const matchReason = filterReason === '' || r.reason.includes(filterReason);
-    return matchSearch && matchSource && matchIndustry && matchStatus && matchReason;
-  });
+    return () => clearTimeout(delayDebounceFn);
+  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, filterIndustry]);
 
-  const totalPages = Math.ceil(filteredDummyRows.length / limit) || 1;
-  const paginatedRows = filteredDummyRows.slice((page - 1) * limit, page * limit);
-  const totalLeads = filteredDummyRows.length;
+  const totalLeads = pagination?.total || allCompanies.length;
 
-  const isAllSelected = paginatedRows.length > 0 && selectedIds.length === paginatedRows.length;
+  const isAllSelected = allCompanies.length > 0 && selectedIds.length === allCompanies.length;
   const onSelectAll = (e) => {
-    if (e.target.checked) setSelectedIds(paginatedRows.map(r => r.id));
+    if (e.target.checked) setSelectedIds(allCompanies.map(r => r._id));
     else setSelectedIds([]);
   };
 
@@ -84,8 +73,8 @@ const ColdClientList = () => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const uniqueSources = [...new Set(dummyRows.map(r => r.source).filter(Boolean))];
-  const uniqueIndustries = [...new Set(dummyRows.map(r => r.industry).filter(Boolean))];
+  const uniqueSources = [...new Set(allCompanies.map(r => r.dataSource).filter(Boolean))];
+  const uniqueIndustries = [...new Set(allCompanies.map(r => r.businessNature).filter(Boolean))];
 
   const getSourceStyle = (source) => {
     const s = (source || "").toLowerCase();
@@ -232,48 +221,53 @@ const ColdClientList = () => {
 
   const tableBody = (
     <>
-      {paginatedRows.length === 0 ? (
+      {isLoading ? (
+        <tr><td colSpan="8" className="text-center py-8 text-slate-500">Loading leads...</td></tr>
+      ) : allCompanies.length === 0 ? (
         <tr>
-          <td colSpan="7" className="px-2 py-4 text-center text-slate-500 font-medium">No results found</td>
+          <td colSpan="8" className="px-2 py-4 text-center text-slate-500 font-medium">No results found</td>
         </tr>
-      ) : paginatedRows.map((row, i) => {
+      ) : allCompanies.map((row, i) => {
+        const source = row.dataSource || "Website";
         return (
-          <tr key={row.id} className="hover:bg-slate-50 transition-colors">
+          <tr key={row._id || i} className="hover:bg-slate-50 transition-colors">
             <td className="px-2 py-2 text-center">
               <input
                 type="checkbox"
                 className="w-3 h-3 accent-blue-500 cursor-pointer rounded-sm"
-                checked={selectedIds.includes(row.id)}
-                onChange={() => onSelectRow(row.id)}
+                checked={selectedIds.includes(row._id)}
+                onChange={() => onSelectRow(row._id)}
               />
             </td>
             <td className="px-2 py-2">
               <div className="font-semibold text-slate-800 text-[11px] cursor-pointer hover:text-blue-600">
-                <Link to={`/client-overview/${row.id}`}>{row.name}</Link>
+                <Link to={`/client-overview/${row._id}`}>{toTitleCase(row.companyName)}</Link>
               </div>
-              <div className="text-[9px] text-slate-500">{row.industry}</div>
+              <div className="text-[9px] text-slate-500">{toTitleCase(row.businessNature) || "-"}</div>
             </td>
             <td className="px-2 py-2 text-center">
-              <span className={`inline-flex px-2 py-0.5 rounded font-semibold text-[9px] ${getStatusStyle(row.status)}`}>
-                {row.status}
+              <span className={`inline-flex px-2 py-0.5 rounded font-semibold text-[9px] ${getStatusStyle(row.companyStatus)}`}>
+                {toTitleCase(row.companyStatus || "Lost/Hold")}
               </span>
             </td>
             <td className="px-2 py-2 text-slate-700 font-medium text-[9px]">
-              {row.reason}
+              {row.reason || "-"}
             </td>
             <td className="px-2 py-2">
-              <span className={`px-1.5 py-0.5 rounded font-semibold text-[9px] flex inline-flex items-center gap-1 ${getSourceStyle(row.source)}`}>
-                <span className="text-[10px]">⊕</span> {row.source}
+              <span className={`px-1.5 py-0.5 rounded font-semibold text-[9px] flex inline-flex items-center gap-1 ${getSourceStyle(source)}`}>
+                <span className="text-[10px]">⊕</span> {toTitleCase(source)}
               </span>
             </td>
             <td className="px-2 py-2">
               <div className="flex items-center gap-1.5">
                 <CalendarDays className="text-slate-400" size={10} />
-                <div className="text-[10px] font-medium text-slate-800">{row.date}</div>
+                <div className="text-[10px] font-medium text-slate-800">
+                  {row.updatedAt ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt)) : "-"}
+                </div>
               </div>
             </td>
             <td className="px-2 py-2 font-medium text-slate-800 text-[10px]">
-              {row.value}
+              {row.value || "-"}
             </td>
             <td className="px-2 py-2 text-center">
               <button className="text-slate-400 hover:text-slate-700">
@@ -413,27 +407,21 @@ const ColdClientList = () => {
     </>
   );
 
-  const pagination = (
+  const paginationBar = (
     <>
       <div className="text-slate-500">
-        Showing {paginatedRows.length > 0 ? (page - 1) * limit + 1 : 0} to {Math.min(page * limit, totalLeads)} of {totalLeads} leads
+        Showing {totalLeads === 0 ? 0 : (page - 1) * limit + 1} to {Math.min(page * limit, totalLeads)} of {totalLeads} leads
       </div>
       <div className="flex items-center gap-1">
         <button onClick={() => setPage(1)} disabled={page === 1} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">«</button>
         <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">‹</button>
 
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-          <button
-            key={p}
-            onClick={() => setPage(p)}
-            className={`w-6 h-6 rounded font-bold flex items-center justify-center ${page === p ? 'bg-[#00a65a] text-white' : 'hover:bg-slate-100'}`}
-          >
-            {p}
-          </button>
-        ))}
+        <button className={`w-6 h-6 rounded font-bold flex items-center justify-center bg-[#00a65a] text-white`}>
+          {page}
+        </button>
 
-        <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">›</button>
-        <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">»</button>
+        <button onClick={() => setPage(p => Math.min(pagination?.totalPages || 1, p + 1))} disabled={page >= (pagination?.totalPages || 1)} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">›</button>
+        <button onClick={() => setPage(pagination?.totalPages || 1)} disabled={page >= (pagination?.totalPages || 1)} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">»</button>
       </div>
       <div className="flex items-center gap-2 text-slate-500">
         <span>Rows per page:</span>
@@ -448,16 +436,16 @@ const ColdClientList = () => {
 
   return (
     <BaseLeadPage
-      title="Hold / Lost Leads"
-      subtitle="Leads that are currently on hold or lost"
-      badgeCount={<span className="text-rose-500 bg-rose-50 inline-block px-1 rounded-full border-none">27</span>}
+      title="Hold & Lost Leads"
+      subtitle="Track leads that need re-engagement or reasons for drop-offs"
+      badgeCount={<><AlertCircle size={12} className="inline mr-1 text-slate-500" />27</>}
       headerActions={headerActions}
       statCards={statCards}
       filterBar={filterBar}
       tableHeaders={tableHeaders}
       tableBody={tableBody}
       rightSidebar={rightSidebar}
-      pagination={pagination}
+      pagination={paginationBar}
       isAllSelected={isAllSelected}
       onSelectAll={onSelectAll}
       onReset={() => {
