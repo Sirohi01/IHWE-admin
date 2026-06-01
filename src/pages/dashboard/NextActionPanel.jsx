@@ -41,7 +41,7 @@ export default function NextActionPanel() {
       setRooms(prev => prev.map(r => r._id === msg.roomId ? {
         ...r, lastMessage: msg.message, lastMessageAt: msg.createdAt,
         lastSenderType: msg.senderType,
-        unreadAdmin: (r.unreadAdmin || 0) + (msg.senderType === "exhibitor" ? 1 : 0)
+        unreadAdmin: (r.unreadAdmin || 0) + ((['exhibitor','buyer'].includes(msg.senderType) ? 1 : 0))
       } : r).sort((a, b) => new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0)));
     });
 
