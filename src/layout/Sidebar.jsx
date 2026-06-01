@@ -131,7 +131,7 @@ export default function Sidebar({
 
     const perms = roleData?.permissions || {};
     const roleSlug = currentUser.role.toLowerCase().replace(/[^a-z]/g, '');
-    const isSuperAdmin = roleSlug === 'superadmin';
+    const isSuperAdmin = roleSlug === 'superadmin' || roleSlug === 'ihwesuperadministrator';
 
     const results = [];
     let currentSection = null;

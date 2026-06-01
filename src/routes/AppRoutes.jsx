@@ -249,7 +249,9 @@ const SalesTools = lazy(() => import("../pages/sales_tools/SalesTools"));
 // Communication
 const Communication = lazy(() => import("../pages/communication/Communication"));
 
-
+// Hero Slider
+const ExhibitorHeroSlider = lazy(() => import("../pages/ExhibitorHeroSlider"));
+const UpcomingEvent = lazy(() => import("../pages/UpcomingEvent"));
 
 export default function AppRoutes() {
   return (
@@ -446,6 +448,8 @@ export default function AppRoutes() {
             <Route path="manage-roles" element={<RoleManagement />} />
             <Route path="response-templates" element={<ResponseTemplates />} />
             <Route path="policy-manager" element={<PolicyManager />} />
+            <Route path="exhibitor-hero-slider" element={<ExhibitorHeroSlider />} />
+            <Route path="upcoming-events" element={<UpcomingEvent />} />
             <Route
               path="ihweClientData2026/addNewClients"
               element={<AddNewClients />}
