@@ -461,8 +461,12 @@ const ClientOverview1 = () => {
                     <UserCircle className="text-[#4338ca] flex-shrink-0" size={16} />
                     <span className="font-medium text-gray-700">
                       {company.contacts?.[0]?.firstName
-                        ? `${company.contacts[0].firstName} ${company.contacts[0].surname || ""}`.trim()
-                        : company.companyName}
+                        ? `${company?.contacts[0]?.firstName} ${company?.contacts[0]?.surname || ""}`.trim()
+                        : company?.companyName}
+                    </span>
+                    <span className="text-gray-400">/</span>
+                    <span className="font-medium text-gray-700">
+                      {company?.contacts[0]?.designation}
                     </span>
                     <span className="text-gray-400">-</span>
                     <a href={`tel:${company.contacts?.[0]?.mobile}`} className="text-[#4338ca] hover:underline font-medium">
