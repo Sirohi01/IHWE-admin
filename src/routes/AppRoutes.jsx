@@ -23,6 +23,8 @@ import WhoWeAre from "../pages/WhoWeAre";
 import Services from "../pages/Services";
 import FAQManage from "../pages/FAQManage";
 import HealthcareSectorsManagement from "../pages/HealthcareSectorsManagement";
+import ExhibitorHeroSlider from "../pages/ExhibitorHeroSlider";
+import UpcomingEvent from "../pages/UpcomingEvent";
 import EPromotionWebManagement from "../pages/EPromotionWebManagement";
 import AddPdf from "../pages/AddPdf";
 import StatsCounter from "../pages/StatsCounter";
@@ -446,6 +448,8 @@ export default function AppRoutes() {
           <Route path="manage-designations" element={<DesignationManagement />} />
           <Route path="response-templates" element={<ResponseTemplates />} />
           <Route path="policy-manager" element={<PolicyManager />} />
+          <Route path="exhibitor-hero-slider" element={<ExhibitorHeroSlider />} />
+          <Route path="upcoming-events" element={<UpcomingEvent />} />
           <Route
             path="ihweClientData2026/addNewClients"
             element={<AddNewClients />}

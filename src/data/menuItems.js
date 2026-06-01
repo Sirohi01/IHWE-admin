@@ -594,6 +594,18 @@ export const menuItems = [
   },
   {
     type: "item",
+    label: "Exhibitor Hero Slider",
+    icon: Images,
+    path: "/exhibitor-hero-slider",
+  },
+  {
+    type: "item",
+    label: "Upcoming Event",
+    icon: CalendarCheck,
+    path: "/upcoming-events",
+  },
+  {
+    type: "item",
     label: "Email Logs",
     icon: ClipboardList,
     path: "/email-logs",
