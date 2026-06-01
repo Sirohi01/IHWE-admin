@@ -148,7 +148,7 @@ const ExhibitorHeroSlider = () => {
                                             onChange={handleImageChange}
                                             className="w-full text-[10px] text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:border-0 file:text-[10px] file:font-bold file:bg-[#23471d] file:text-white hover:file:bg-[#d26019] file:cursor-pointer cursor-pointer uppercase"
                                         />
-                                        <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase">Max: 5MB</p>
+                                        <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase">Max: 5MB | 1300 x 600 px</p>
                                     </div>
 
                                     {imagePreview ? (
