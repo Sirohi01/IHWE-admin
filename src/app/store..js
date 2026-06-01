@@ -29,6 +29,7 @@ import primaryProductReducer from "../features/add_by_admin/primary_product/Prim
 import secondaryProductReducer from "../features/add_by_admin/secondary_product/SecondaryProductSlice";
 import meetingPriorityReducer from "../features/add_by_admin/meeting-priority/MeetingPrioritySlice";
 import unitReducer from "../features/add_by_admin/unit/UnitSlice";
+import nextActionReducer from "../features/add_by_admin/nextAction/nextActionSlice";
 
 export const store = configureStore({
   reducer: {
@@ -62,6 +63,7 @@ export const store = configureStore({
     secondaryProduct: secondaryProductReducer,
     meetingPriority: meetingPriorityReducer,
     unit: unitReducer,
+    nextActions: nextActionReducer,
   },
 });
 

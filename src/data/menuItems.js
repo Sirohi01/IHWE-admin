@@ -651,6 +651,7 @@ export const menuItems = [
       { label: "Add Data Source", path: "/ihweClientData2026/AddDataSource" },
       { label: "Add Event", path: "/ihweClientData2026/AddEvent" },
       { label: "Add Nature Of Business", path: "/ihweClientData2026/AddNatureOfBusiness" },
+      { label: "Add Next Action", path: "/ihweClientData2026/AddNextAction" },
       { label: "Add Remark Length Fixed", path: "/ihweClientData2026/AddRemarkLengthFixed" },
       { label: "Add Status", path: "/ihweClientData2026/AddStatus" },
       { label: "Add Target", path: "/ihweClientData2026/AddTarget" },

@@ -163,6 +163,7 @@ import AddCrmWhatsappMessage from "../pages/add_by_admin/AddCrmWhatsappMessage";
 import AddDataSource from "../pages/add_by_admin/AddDataSource";
 import AddEvent from "../pages/add_by_admin/AddEvent";
 import AddNatureOfBusiness from "../pages/add_by_admin/AddNatureOfBusiness";
+import AddNextAction from "../pages/add_by_admin/AddNextAction";
 import AddRemarkLengthFixed from "../pages/add_by_admin/AddRemarkLengthFixed";
 import AddStatus from "../pages/add_by_admin/AddStatus";
 import AddTarget from "../pages/add_by_admin/AddTarget";
@@ -594,6 +595,7 @@ export default function AppRoutes() {
           />
           <Route path="ihweClientData2026/AddStatus" element={<AddStatus />} />
           <Route path="ihweClientData2026/AddTarget" element={<AddTarget />} />
+          <Route path="ihweClientData2026/AddNextAction" element={<AddNextAction />} />
          // ############################# -- Account Section
              <Route path="accounts/salesreport" element={<SalesReport />} />
            
