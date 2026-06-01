@@ -148,9 +148,9 @@ export default function Sidebar({
           visibleChildren = item.children; // Show all children for super-admin
         } else {
           if (item.type === "item") {
-            isVisible = perms[item.label] === true;
+            isVisible = perms[item.label] === true || (item.label === "Exhibitor Registration" && perms["Book A Stand"] === true);
           } else if (item.type === "dropdown") {
-            visibleChildren = item.children?.filter(child => perms[child.label] === true);
+            visibleChildren = item.children?.filter(child => perms[child.label] === true || (child.label === "Exhibitor Registration" && perms["Book A Stand"] === true));
             isVisible = visibleChildren && visibleChildren.length > 0;
           }
         }
