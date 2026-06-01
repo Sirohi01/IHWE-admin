@@ -308,7 +308,7 @@ export default function LoginPage() {
 
                     <div className="mt-10">
                       <h2 className="text-[20px] font-black text-slate-800 uppercase tracking-tight leading-none mb-1">
-                        IHWE ADMIN
+                        User Interface
                       </h2>
                       <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-600 mt-2">
                         Official Management Portal
@@ -380,7 +380,7 @@ export default function LoginPage() {
                         <Shield size={36} strokeWidth={1.5} />
                       </div>
                       <h3 className="text-[1.75rem] font-semibold text-slate-900 tracking-tight leading-none mb-2">
-                        Admin Login
+                        User Login
                       </h3>
                       <p className="text-[13.5px] text-slate-500 leading-relaxed">
                         Enter your credentials to manage the portal

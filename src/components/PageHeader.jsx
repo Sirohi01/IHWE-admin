@@ -15,7 +15,7 @@ const PageHeader = ({
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         {/* Left Content */}
         <div>
-          <h1 className="text-3xl font-black text-[#23471d] uppercase tracking-tight">
+          <h1 className="text-3xl font-md text-[#23471d] uppercase tracking-tight">
             {title}
           </h1>
           {description && (

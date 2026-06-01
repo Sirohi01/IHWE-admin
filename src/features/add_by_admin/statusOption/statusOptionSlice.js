@@ -65,11 +65,12 @@ export const updateStatusOption = createAsyncThunk(
       const user = userStr ? JSON.parse(userStr) : {};
       const userId = sessionStorage.getItem("user_id") || user._id;
       const userName = user.name || "User";
+      const adminInfo = JSON.parse(localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo") || "{}");
+      const updatedByName = adminInfo.fullName || adminInfo.name || adminInfo.username || userName || "Admin";
 
-      // ✅ updated_by add karo
       const dataWithUser = {
         ...data,
-        updated_by: userId || null,
+        updated_by: updatedByName,
       };
 
       const res = await axios.put(

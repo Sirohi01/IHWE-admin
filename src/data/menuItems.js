@@ -45,15 +45,15 @@ import {
 
 
 export const menuItems = [
-
   {
-    type: "heading",
-    label: "Sale Management Section",
+    type: "item",
+    label: "Sales Dashboard",
+    icon: LayoutDashboard,
+    path: "/dashboard",
   },
-
   {
     type: "dropdown",
-    label: "IHWE Client Data 2026",
+    label: "IHWE 2026",
     icon: FileText,
     children: [
       { label: "Add New Leads", path: "/ihweClientData2026/addNewClients" },
@@ -63,10 +63,39 @@ export const menuItems = [
       { label: "Hold / Lost Leads", path: "/ihweClientData2026/coldClientList" },
       { label: "Master Data", path: "/ihweClientData2026/masterData" },
       { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
-      // { label: "Confirmed Client List", path: "/exhibitor-bookings" },
       { label: "Converted Clients", path: "/ihweClientData2026/confirmClientList" },
-      { label: "Book A Stand", path: "/book-a-stand" },
+      { label: "Exhibitor Registration", path: "/book-a-stand" },
     ],
+  },
+  {
+    type: "dropdown",
+    label: "Organic Expo 2026",
+    icon: FileText,
+    children: [
+      { label: "Add New Leads", path: "/organicExpo/addNewClients" },
+      { label: "New Leads List", path: "/organicExpo/newLeadList" },
+      { label: "Follow-Ups", path: "/organicExpo/warmClientList" },
+      { label: "Hot Leads", path: "/organicExpo/hotClientList" },
+      { label: "Hold / Lost Leads", path: "/organicExpo/coldClientList" },
+      { label: "Master Data", path: "/organicExpo/masterData" },
+      { label: "Raw Data List", path: "/organicExpo/rawDataList" },
+      { label: "Converted Clients", path: "/organicExpo/confirmClientList" },
+      { label: "Book A Stand", path: "/organicExpo/book-a-stand" },
+    ],
+  },
+
+  {
+    type: "item",
+    label: "Sales Tools",
+    icon: FileText,
+    path: "/sales-tools/proposals",
+  },
+
+  {
+    type: "item",
+    label: "Communication",
+    icon: MessageSquare,
+    path: "/communication/calls",
   },
 
   {
@@ -183,12 +212,6 @@ export const menuItems = [
   {
     type: "heading",
     label: "Analytics Section",
-  },
-  {
-    type: "item",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    path: "/dashboard",
   },
   {
     type: "item",
@@ -573,6 +596,18 @@ export const menuItems = [
   },
   {
     type: "item",
+    label: "Exhibitor Hero Slider",
+    icon: Images,
+    path: "/exhibitor-hero-slider",
+  },
+  {
+    type: "item",
+    label: "Upcoming Event",
+    icon: CalendarCheck,
+    path: "/upcoming-events",
+  },
+  {
+    type: "item",
     label: "Email Logs",
     icon: ClipboardList,
     path: "/email-logs",
@@ -630,6 +665,7 @@ export const menuItems = [
       { label: "Add Data Source", path: "/ihweClientData2026/AddDataSource" },
       { label: "Add Event", path: "/ihweClientData2026/AddEvent" },
       { label: "Add Nature Of Business", path: "/ihweClientData2026/AddNatureOfBusiness" },
+      { label: "Add Next Action", path: "/ihweClientData2026/AddNextAction" },
       { label: "Add Remark Length Fixed", path: "/ihweClientData2026/AddRemarkLengthFixed" },
       { label: "Add Status", path: "/ihweClientData2026/AddStatus" },
       { label: "Add Target", path: "/ihweClientData2026/AddTarget" },
@@ -649,33 +685,17 @@ export const menuItems = [
     icon: ShoppingCart,
     path: "/accessory-orders",
   },
-
-
-
   {
-    type: "item",
-    label: "Manage Admin Users",
-    icon: ShieldCheck,
-    path: "/admin-users",
-  },
-  {
-    type: "item",
-    label: "Manage Roles",
+    type: "dropdown",
+    label: "User Management",
     icon: Users,
-    path: "/manage-roles",
-  },
-  {
-    type: "item",
-    label: "Role Permissions",
-    icon: ShieldCheck,
-    path: "/role-permissions",
-  },
-
-  {
-    type: "item",
-    label: "Change Password",
-    icon: Lock,
-    path: "/change-password",
+    children: [
+      { label: "Users Id Management", path: "/admin-users" },
+      { label: "User Access Management", path: "/role-permissions" },
+      { label: "User Role Management", path: "/manage-roles" },
+      { label: "Department Management", path: "/manage-departments" },
+      { label: "Designation Management", path: "/manage-designations" },
+    ],
   },
   {
     type: "item",

@@ -41,6 +41,7 @@ import {
     updateCompany,
 } from "../../features/company/companySlice";
 import { createActivityLogThunk } from "../../features/activityLog/activityLogSlice";
+import SearchableDropdown from "../../components/SearchableDropdown";
 
 // Helper function to safely extract an array from any Redux slice
 const getArrayFromSlice = (sliceState, fallbackKey) => {
@@ -86,7 +87,8 @@ const AddNewClients = () => {
         eventName: "",
         reminder: "",
         forwardTo: "",
-        added_by:"",
+        followUpDate: "",
+        added_by: "",
         updated_by: "",
         contacts: [
             {
@@ -110,11 +112,13 @@ const AddNewClients = () => {
     const categoriesState = useSelector((state) => state.categories);
     const categoriesArray = getArrayFromSlice(categoriesState, "categories")
         .slice()
+        .filter(cat => cat?.cat_status?.toLowerCase() === 'active')
         .sort((a, b) => (a?.cat_name || "").localeCompare(b?.cat_name || ""));
 
     const naturesState = useSelector((state) => state.natures);
     const naturesArray = getArrayFromSlice(naturesState, "natures")
         .slice()
+        .filter(n => n?.nature_status?.toLowerCase() === 'active')
         .sort((a, b) => (a?.nature_name || "").localeCompare(b?.nature_name || ""));
 
     const countriesState = useSelector((state) => state.countries);
@@ -233,6 +237,7 @@ const AddNewClients = () => {
                     eventName: companyToEdit.eventName || "",
                     reminder: formatReminderDate(companyToEdit.reminder) || "",
                     forwardTo: companyToEdit.forwardTo || "",
+                    followUpDate: formatReminderDate(companyToEdit.followUpDate) || "",
                     added_by: companyToEdit.added_by || "",
                     updated_by: companyToEdit.updated_by || "",
                     contacts: companyToEdit.contacts.length > 0
@@ -292,6 +297,15 @@ const AddNewClients = () => {
         e.preventDefault();
 
         // --- VALIDATIONS ---
+        if (!formData.category) {
+            Swal.fire({ title: "Missing Category", text: "Please select a Category.", icon: "warning", confirmButtonColor: "#23471d" });
+            return;
+        }
+        if (!formData.businessNature) {
+            Swal.fire({ title: "Missing Business Nature", text: "Please select a Nature of Business.", icon: "warning", confirmButtonColor: "#23471d" });
+            return;
+        }
+
         const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
 
         if (!emailRegex.test(formData.email)) {
@@ -325,7 +339,8 @@ const AddNewClients = () => {
                 const userObjStr = localStorage.getItem("user") || sessionStorage.getItem("user");
                 if (userObjStr) {
                     const userObj = JSON.parse(userObjStr);
-                    if (userObj.name) userName = userObj.name;
+                    if (userObj.username) userName = userObj.username;
+                    else if (userObj.fullName) userName = userObj.fullName;
                 }
             } catch (e) {
                 console.error("Error parsing user data:", e);
@@ -380,6 +395,13 @@ const AddNewClients = () => {
             }
         } catch (err) {
             console.error("Failed to save company:", err);
+            const errorMsg = typeof err === 'string' ? err : err?.message || err?.data?.message || "An error occurred while saving the data.";
+            Swal.fire({
+                title: "Error!",
+                text: errorMsg,
+                icon: "error",
+                confirmButtonColor: "#d33"
+            });
         } finally {
             setIsSaving(false);
         }
@@ -407,15 +429,13 @@ const AddNewClients = () => {
             contacts: [{ title: "", firstName: "", surname: "", designation: "", email: "", mobile: "", alternate: "" }],
         });
     };
-
-    // Design Constants matching Buyer Registration & Standard Admin UI
-    const inputClasses = "rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-900 font-medium shadow-none outline-none px-3 w-full text-left";
+    const inputClasses = "rounded-[2px] border border-slate-400 py-1.5 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-900 font-medium shadow-none outline-none px-3 w-full text-left";
     const labelClasses = "text-[11px] font-bold text-slate-800 mb-1 block capitalize font-inter";
     const sectionHeaderClasses = "text-[16px] font-medium text-[#23471d] pb-1 border-b border-gray-300 mb-2 font-inter";
 
     return (
         <>
-            <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-inter animate-fadeIn">
+            <div className="bg-white shadow-md mt-1 p-6 min-h-screen font-inter animate-fadeIn">
 
                 {/* ── HEADER AREA ── */}
                 <div className="flex flex-col lg:flex-row justify-between items-center pb-4 border-b border-gray-300 gap-4">
@@ -479,32 +499,34 @@ const AddNewClients = () => {
                             </div>
                             <div>
                                 <label className={labelClasses}>Category <span className="text-red-500">*</span></label>
-                                <select required value={formData.category} onChange={(e) => handleChange("category", e.target.value)} className={inputClasses}>
-                                    <option value="">Select Category</option>
-                                    {categoriesArray.map((cat, i) => (
-                                        <option key={i} value={cat?.cat_name}>{cat?.cat_name}</option>
-                                    ))}
-                                </select>
+                                <SearchableDropdown
+                                    name="category"
+                                    value={formData.category}
+                                    onChange={(e) => handleChange("category", e.target.value)}
+                                    placeholder="Select Category"
+                                    options={categoriesArray.map(c => ({ label: c.cat_name, value: c.cat_name }))}
+                                />
                             </div>
                             <div>
                                 <label className={labelClasses}>Nature of Business <span className="text-red-500">*</span></label>
-                                <select required value={formData.businessNature} onChange={(e) => handleChange("businessNature", e.target.value)} className={inputClasses}>
-                                    <option value="">Select Business Nature</option>
-                                    {naturesArray.map((nature, i) => (
-                                        <option key={i} value={nature?.nature_name}>{nature?.nature_name}</option>
-                                    ))}
-                                </select>
+                                <SearchableDropdown
+                                    name="businessNature"
+                                    value={formData.businessNature}
+                                    onChange={(e) => handleChange("businessNature", e.target.value)}
+                                    placeholder="Select Business Nature"
+                                    options={naturesArray.map(n => ({ label: n.nature_name, value: n.nature_name }))}
+                                />
                             </div>
                             <div>
-                                <label className={labelClasses}>Company Website <span className="text-red-500">*</span></label>
-                                <input required type="text" value={formData.website} onChange={(e) => handleChange("website", e.target.value)} className={inputClasses} placeholder="Write Here.." />
+                                <label className={labelClasses}>Company Website <span className="text-gray-400 font-normal normal-case">(Optional)</span></label>
+                                <input type="text" value={formData.website} onChange={(e) => handleChange("website", e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
                             <div>
                                 <label className={labelClasses}>Official Email <span className="text-red-500">*</span></label>
                                 <input required type="email" value={formData.email} onChange={(e) => handleChange("email", e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
                             <div>
-                                <label className={labelClasses}>Landline No.</label>
+                                <label className={labelClasses}>Landline No.<span className="text-gray-400 font-normal normal-case">(Optional)</span></label>
                                 <input type="text" value={formData.landline} onChange={(e) => handleChange("landline", e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
                         </div>
@@ -514,15 +536,7 @@ const AddNewClients = () => {
                     <div className="space-y-2 px-2">
                         <h3 className={sectionHeaderClasses}>Location & Address</h3>
 
-                        {/* ✅ CONDITION 1: Domestic — India badge dikhao, dropdown nahi */}
-                        {formData.clientType === "Domestic" && (
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="text-[11px] font-bold text-slate-600 uppercase tracking-widest">Country:</span>
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#eaf3de] text-[#23471d] text-[11px] font-bold rounded-[2px] border border-[#c0dd97] uppercase tracking-widest">
-                                    🇮🇳 India
-                                </span>
-                            </div>
-                        )}
+                        {/* Country indicator removed per user request */}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-x-2 gap-y-2">
                             <div className="md:col-span-2 lg:col-span-2">
@@ -534,33 +548,38 @@ const AddNewClients = () => {
                             {formData.clientType === "International" && (
                                 <div>
                                     <label className={labelClasses}>Country <span className="text-red-500">*</span></label>
-                                    <select required value={formData.country} onChange={(e) => { handleChange("country", e.target.value); handleChange("state", ""); handleChange("city", ""); }} className={inputClasses}>
-                                        <option value="">Select Country</option>
-                                        {countriesArray.map((country, i) => (
-                                            <option key={i} value={country?.name}>{country?.name}</option>
-                                        ))}
-                                    </select>
+                                    <SearchableDropdown
+                                        name="country"
+                                        value={formData.country}
+                                        onChange={(e) => { handleChange("country", e.target.value); handleChange("state", ""); handleChange("city", ""); }}
+                                        placeholder="Select Country"
+                                        options={countriesArray.map(country => ({ label: country?.name, value: country?.name }))}
+                                    />
                                 </div>
                             )}
 
                             <div>
                                 <label className={labelClasses}>State <span className="text-red-500">*</span></label>
-                                <select required value={formData.state} onChange={(e) => { handleChange("state", e.target.value); handleChange("city", ""); }} disabled={!formData.country} className={`${inputClasses} disabled:bg-slate-50`}>
-                                    <option value="">Select State</option>
-                                    {filteredStates.map((state, i) => (
-                                        <option key={i} value={state?.name}>{state?.name}</option>
-                                    ))}
-                                </select>
+                                <SearchableDropdown
+                                    name="state"
+                                    value={formData.state}
+                                    onChange={(e) => { handleChange("state", e.target.value); handleChange("city", ""); }}
+                                    placeholder="Select State"
+                                    options={filteredStates.map(state => ({ label: state?.name, value: state?.name }))}
+                                    disabled={!formData.country}
+                                />
                             </div>
 
                             <div>
                                 <label className={labelClasses}>City / Town <span className="text-red-500">*</span></label>
-                                <select required value={formData.city} onChange={(e) => handleChange("city", e.target.value)} disabled={!formData.state} className={`${inputClasses} disabled:bg-slate-50`}>
-                                    <option value="">Select City</option>
-                                    {filteredCities.map((city, i) => (
-                                        <option key={i} value={city?.name}>{city?.name}</option>
-                                    ))}
-                                </select>
+                                <SearchableDropdown
+                                    name="city"
+                                    value={formData.city}
+                                    onChange={(e) => handleChange("city", e.target.value)}
+                                    placeholder="Select City"
+                                    options={filteredCities.map(city => ({ label: city?.name, value: city?.name }))}
+                                    disabled={!formData.state}
+                                />
                             </div>
 
                             {/* ✅ CONDITION 3: Pin Code — sirf Domestic mein dikhega */}
@@ -603,12 +622,12 @@ const AddNewClients = () => {
                                             <input required type="text" value={contact.firstName} onChange={(e) => handleContactChange(index, "firstName", e.target.value)} className={inputClasses} placeholder="Write Here.." />
                                         </div>
                                         <div className="lg:col-span-1">
-                                            <label className={labelClasses}>Surname <span className="text-red-500">*</span></label>
-                                            <input required type="text" value={contact.surname} onChange={(e) => handleContactChange(index, "surname", e.target.value)} className={inputClasses} placeholder="Write Here.." />
+                                            <label className={labelClasses}>Surname <span className="text-gray-400 font-normal normal-case">(Optional)</span></label>
+                                            <input type="text" value={contact.surname} onChange={(e) => handleContactChange(index, "surname", e.target.value)} className={inputClasses} placeholder="Write Here.." />
                                         </div>
                                         <div>
-                                            <label className={labelClasses}>Designation <span className="text-red-500">*</span></label>
-                                            <input required type="text" value={contact.designation} onChange={(e) => handleContactChange(index, "designation", e.target.value)} className={inputClasses} placeholder="Write Here.." />
+                                            <label className={labelClasses}>Designation <span className="text-gray-400 font-normal normal-case">(Optional)</span></label>
+                                            <input type="text" value={contact.designation} onChange={(e) => handleContactChange(index, "designation", e.target.value)} className={inputClasses} placeholder="Write Here.." />
                                         </div>
                                         <div className="lg:col-span-1">
                                             <label className={labelClasses}>Email <span className="text-red-500">*</span></label>
@@ -622,7 +641,7 @@ const AddNewClients = () => {
                                             }} className={inputClasses} placeholder="Write Here.." />
                                         </div>
                                         <div>
-                                            <label className={labelClasses}>Alternate No.</label>
+                                            <label className={labelClasses}>Alternate No.<span className="text-gray-400 font-normal normal-case">(Optional)</span></label>
                                             <input type="text" maxLength={formData.clientType === "Domestic" ? 10 : 20} value={contact.alternate} onChange={(e) => {
                                                 const val = formData.clientType === "Domestic" ? e.target.value.replace(/\D/g, "") : e.target.value.replace(/[^\d+]/g, "");
                                                 handleContactChange(index, "alternate", val);
@@ -637,19 +656,20 @@ const AddNewClients = () => {
                     {/* SECTION: CRM & TRACKING */}
                     <div className="space-y-4 px-2 pb-2">
                         <h3 className={sectionHeaderClasses}>CRM & Tracking</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-x-6 gap-y-4">
                             <div>
                                 <label className={labelClasses}>Data Source <span className="text-red-500">*</span></label>
-                                <select required value={formData.dataSource} onChange={(e) => handleChange("dataSource", e.target.value)} className={inputClasses}>
-                                    <option value="">Select Source</option>
-                                    {dataSourcesArray.map((source, i) => (
-                                        <option key={i} value={source?.source_name}>{source?.source_name}</option>
-                                    ))}
-                                </select>
+                                <SearchableDropdown
+                                    name="dataSource"
+                                    value={formData.dataSource}
+                                    onChange={(e) => handleChange("dataSource", e.target.value)}
+                                    placeholder="Select Source"
+                                    options={dataSourcesArray.map(source => ({ label: source?.source_name, value: source?.source_name }))}
+                                />
                             </div>
                             <div>
                                 <label className={labelClasses}>Event Attribution <span className="text-red-500">*</span></label>
-                                <select required value={formData.eventName} onChange={(e) => handleChange("eventName", e.target.value)} className={inputClasses}>
+                                <select required disabled value={formData.eventName} onChange={(e) => handleChange("eventName", e.target.value)} className={`${inputClasses} bg-slate-50 cursor-not-allowed appearance-none`}>
                                     <option value="">Select Event</option>
                                     {events.filter(e => e.status === "active").map((event, i) => (
                                         <option key={i} value={event.name}>{event.name}</option>
@@ -657,17 +677,23 @@ const AddNewClients = () => {
                                 </select>
                             </div>
                             <div>
-                                <label className={labelClasses}>Reminder <span className="text-red-500">*</span></label>
+                                <label className={labelClasses}>Lead Date <span className="text-red-500">*</span></label>
                                 <input required type="datetime-local" value={formData.reminder} onChange={(e) => handleChange("reminder", e.target.value)} readOnly={!!id} className={`${inputClasses} ${id ? "bg-slate-50 cursor-not-allowed" : ""}`} />
                             </div>
                             <div>
-                                <label className={labelClasses}>Forward To <span className="text-red-500">*</span></label>
-                                <select required value={formData.forwardTo} onChange={(e) => handleChange("forwardTo", e.target.value)} disabled={!!id} className={`${inputClasses} ${id ? "bg-slate-50 cursor-not-allowed" : ""}`}>
-                                    <option value="">Select User</option>
-                                    {users?.map((user, i) => (
-                                        <option key={i} value={user?.username}>{user?.username}</option>
-                                    ))}
-                                </select>
+                                <label className={labelClasses}>Assigned To <span className="text-red-500">*</span></label>
+                                <SearchableDropdown
+                                    name="forwardTo"
+                                    value={formData.forwardTo}
+                                    onChange={(e) => handleChange("forwardTo", e.target.value)}
+                                    placeholder="Select User"
+                                    options={users?.map(user => ({ label: user?.fullName || user?.username, value: user?.username }))}
+                                    disabled={!!id}
+                                />
+                            </div>
+                            <div>
+                                <label className={labelClasses}>Follow Up Date <span className="text-red-500">*</span></label>
+                                <input required type="datetime-local" value={formData.followUpDate} onChange={(e) => handleChange("followUpDate", e.target.value)} className={inputClasses} />
                             </div>
                         </div>
                     </div>
