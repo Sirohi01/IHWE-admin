@@ -33,7 +33,7 @@ export const fetchAdmins = createAsyncThunk(
   "users/fetchAdmins",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/api/admin/all');
+      const response = await api.get('/api/admin/public-list');
       if (response.data.success) {
         return response.data.data;
       }

@@ -25,8 +25,8 @@ export default function SalesLeaderboard({ leaderboard, currentUser }) {
                 <div className={`w-6 h-6 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 ${
                   isActiveUser ? 'border-2 border-emerald-400' : 'bg-slate-100'
                 }`}>
-                  {item.hodImage ? (
-                    <img src={item.hodImage} alt="" className="w-full h-full object-cover" />
+                  {item.profileImage ? (
+                    <img src={item.profileImage} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-[10px] font-bold uppercase">{item.name?.[0] || 'S'}</span>
                   )}

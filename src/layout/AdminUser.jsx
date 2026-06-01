@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Search, UserPlus, Eye, Upload, Check, EyeOff, CheckCircle, XCircle, Pencil, Trash2, X, BadgeCheck, Users } from 'lucide-react';
+import { Search, UserPlus, Eye, Upload, Check, EyeOff, CheckCircle, XCircle, Pencil, Trash2, X, BadgeCheck, Users, Filter } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api, { otpApi } from '../lib/api';
 import Pagination from '../components/Pagination';
+import SearchableDropdown from '../components/SearchableDropdown';
 
 const EMPTY_FORM = {
     title: '',
@@ -19,18 +20,28 @@ const EMPTY_FORM = {
     hodEmail: '',
     hodDesignation: '',
     hodImage: '',
+    reportingToName: '',
+    reportingToMobile: '',
+    reportingToEmail: '',
+    reportingToDesignation: '',
+    reportingToImage: '',
+    profileImage: '',
     role: '',
     status: 'Active'
 };
-const iCls = 'w-full h-9 px-3 border border-gray-500 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]';
+const iCls = 'w-full h-8 px-2.5 border border-gray-500 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]';
 const lCls = 'text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1 block';
 
 export default function AdminUser() {
     const [admins, setAdmins] = useState([]);
     const [roles, setRoles] = useState([]);
+    const [departments, setDepartments] = useState([]);
+    const [designations, setDesignations] = useState([]);
     const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('Active');
     const [showPwd, setShowPwd] = useState(false);
     const [form, setForm] = useState(EMPTY_FORM);
     const [editId, setEditId] = useState(null);
@@ -50,7 +61,7 @@ export default function AdminUser() {
     const [verifyingMobileOtp, setVerifyingMobileOtp] = useState(false);
     const itemsPerPage = 25;
 
-    useEffect(() => { fetchAdmins(); fetchRoles(); }, []);
+    useEffect(() => { fetchAdmins(); fetchRoles(); fetchDepartments(); fetchDesignations(); }, []);
 
     const fetchAdmins = async () => {
         setLoading(true);
@@ -67,6 +78,32 @@ export default function AdminUser() {
             if (res.data.success) setRoles(res.data.data);
         } catch { }
     };
+
+    const fetchDepartments = async () => {
+        try {
+            const res = await api.get('/api/departments');
+            if (res.data.success) setDepartments(res.data.data);
+        } catch (error) {
+            console.error('Error fetching departments:', error);
+        }
+    };
+
+    const fetchDesignations = async () => {
+        try {
+            const res = await api.get('/api/designations');
+            if (res.data.success) setDesignations(res.data.data);
+        } catch (error) {
+            console.error('Error fetching designations:', error);
+        }
+    };
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+            setCurrentPage(1);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [search]);
 
     useEffect(() => {
         const email = form.email.trim();
@@ -88,6 +125,62 @@ export default function AdminUser() {
 
     const inp = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
+    const handleDepartmentChange = (e) => {
+        const depName = e.target.value;
+        inp('department', depName);
+
+        const dep = departments.find(d => d.name === depName);
+        if (dep && dep.hodName) {
+            inp('hodName', dep.hodName);
+            const hodUser = admins.find(a => (a.fullName || a.username) === dep.hodName);
+            if (hodUser) {
+                inp('hodMobile', hodUser.mobile || '');
+                inp('hodEmail', hodUser.email || '');
+                inp('hodDesignation', hodUser.designation || '');
+                inp('hodImage', hodUser.profileImage || hodUser.hodImage || '');
+            } else {
+                inp('hodMobile', '');
+                inp('hodEmail', '');
+                inp('hodDesignation', '');
+                inp('hodImage', '');
+            }
+        } else {
+            inp('hodName', '');
+            inp('hodMobile', '');
+            inp('hodEmail', '');
+            inp('hodDesignation', '');
+            inp('hodImage', '');
+        }
+    };
+
+    const handleDesignationChange = (e) => {
+        const desName = e.target.value;
+        inp('designation', desName);
+
+        const des = designations.find(d => d.name === desName);
+        if (des && des.reportTo) {
+            inp('reportingToName', des.reportTo);
+            const reportUser = admins.find(a => (a.fullName || a.username) === des.reportTo);
+            if (reportUser) {
+                inp('reportingToMobile', reportUser.mobile || '');
+                inp('reportingToEmail', reportUser.email || '');
+                inp('reportingToDesignation', reportUser.designation || '');
+                inp('reportingToImage', reportUser.profileImage || reportUser.hodImage || '');
+            } else {
+                inp('reportingToMobile', '');
+                inp('reportingToEmail', '');
+                inp('reportingToDesignation', '');
+                inp('reportingToImage', '');
+            }
+        } else {
+            inp('reportingToName', '');
+            inp('reportingToMobile', '');
+            inp('reportingToEmail', '');
+            inp('reportingToDesignation', '');
+            inp('reportingToImage', '');
+        }
+    };
+
     const isFile = (value) => value instanceof File;
 
     const buildPayload = () => {
@@ -102,16 +195,22 @@ export default function AdminUser() {
 
         if (!cleaned.password) delete cleaned.password;
 
-        if (!isFile(cleaned.hodImage)) {
-            if (!editId || typeof cleaned.hodImage !== 'string') delete cleaned.hodImage;
+        const hasFiles = isFile(cleaned.profileImage); // Only user photo can be uploaded here now
+
+        if (!hasFiles) {
+            if (!editId || typeof cleaned.profileImage !== 'string') delete cleaned.profileImage;
             return cleaned;
         }
 
         const fd = new FormData();
         Object.entries(cleaned).forEach(([key, value]) => {
             if (value === undefined || value === null) return;
-            if (key === 'hodImage') {
-                fd.append('hodImage', value);
+            if (key === 'profileImage') {
+                if (isFile(value)) {
+                    fd.append(key, value);
+                } else if (typeof value === 'string' && value) {
+                    fd.append(key, value);
+                }
                 return;
             }
             fd.append(key, value);
@@ -239,8 +338,19 @@ export default function AdminUser() {
     };
 
     const handleSave = async () => {
+        if (!form.title) return Swal.fire('Error', 'Title is required', 'error');
+        if (!form.fullName.trim()) return Swal.fire('Error', 'Full name is required', 'error');
         if (!form.username.trim()) return Swal.fire('Error', 'Username is required', 'error');
         if (!editId && !form.password) return Swal.fire('Error', 'Password is required', 'error');
+        if (!form.profileImage) return Swal.fire('Error', 'User Photo is required', 'error');
+        if (!form.department) return Swal.fire('Error', 'Department is required', 'error');
+        if (!form.designation) return Swal.fire('Error', 'Designation is required', 'error');
+        if (!form.email.trim()) return Swal.fire('Error', 'Official Email is required', 'error');
+        if (!form.mobile.trim()) return Swal.fire('Error', 'Official Mobile No is required', 'error');
+        if (!form.role) return Swal.fire('Error', 'Role is required', 'error');
+        if (!form.hodName) return Swal.fire('Error', 'HOD Details missing for this Department', 'error');
+        if (!form.reportingToName) return Swal.fire('Error', 'Reporting To missing for this Designation', 'error');
+
         if (form.email.trim() && (!emailVerified || verifiedEmailValue !== form.email.trim())) {
             return Swal.fire('Error', 'Please verify Official Email via OTP', 'error');
         }
@@ -277,32 +387,55 @@ export default function AdminUser() {
         }
     };
 
-    const filtered = admins.filter(a =>
-        !search ||
-        a.username?.toLowerCase().includes(search.toLowerCase()) ||
-        a.fullName?.toLowerCase().includes(search.toLowerCase()) ||
-        a.email?.toLowerCase().includes(search.toLowerCase()) ||
-        a.mobile?.includes(search)
-    );
+    const filtered = admins.filter(a => {
+        const matchesSearch = !debouncedSearch ||
+            a.username?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+            a.fullName?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+            a.email?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+            a.mobile?.includes(debouncedSearch);
+
+        const matchesStatus = statusFilter === 'All' || a.status === statusFilter;
+        return matchesSearch && matchesStatus;
+    });
     const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     return (
         <div className="bg-white shadow-md mt-6 p-6">
             <div className="mb-5 flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-black text-[#23471d] uppercase tracking-tight">Manage Users</h1>
-                    <p className="text-[11px] text-gray-400 mt-0.5">Admin users, roles & contact details</p>
+                    <h1 className="text-3xl font-md text-[#23471d] uppercase tracking-tight">Users Id Management</h1>
+                    <p className="text-[11px] text-gray-400 mt-0.5">Users, roles & contact details</p>
                 </div>
-                {/* Search */}
-                <div className="relative mb-4 max-w-sm">
-                    <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, username, email..."
-                        className="w-full pl-9 pr-4 h-9 border border-gray-300 rounded-[2px] text-xs outline-none focus:border-[#23471d]" />
+                <div className="flex items-center gap-3">
+                    {/* Filter Dropdown */}
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                            <Filter className="h-3 w-3 text-gray-400" />
+                        </div>
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+                            className="pl-7 pr-6 py-1.5 h-9 bg-white text-[#23471d] text-xs font-bold uppercase tracking-wider rounded-[2px] border border-gray-300 outline-none cursor-pointer hover:bg-gray-50 shadow-sm"
+                        >
+                            <option value="Active">Active Only</option>
+                            <option value="Inactive">Inactive Only</option>
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                            <svg className="w-3 h-3 text-[#23471d]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+
+                    {/* Search */}
+                    <div className="relative w-64">
+                        <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, username, email..."
+                            className="w-full pl-9 pr-4 h-9 border border-gray-300 rounded-[2px] text-xs outline-none focus:border-[#23471d]" />
+                    </div>
+                    <button onClick={openCreate}
+                        className="flex items-center gap-2 px-4 py-0 h-9 bg-[#d26019] text-white text-[11px] font-black uppercase tracking-wider hover:bg-[#b8521a]">
+                        <UserPlus size={13} /> Add User
+                    </button>
                 </div>
-                <button onClick={openCreate}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#d26019] text-white text-[11px] font-black uppercase tracking-wider hover:bg-[#b8521a]">
-                    <UserPlus size={13} /> Add User
-                </button>
             </div>
 
 
@@ -317,7 +450,7 @@ export default function AdminUser() {
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="bg-[#23471d]">
-                                    {['#', 'Username', 'Full Name', 'Designation', 'Email', 'Mobile', 'Alt Mobile', 'Role', 'Status', 'Last Login', 'Update By', ''].map(h => (
+                                    {['#', 'Username', 'Full Name', 'Department', 'Designation', 'Email', 'Mobile', 'Role', 'Status', 'Last Login', 'Updated At', ''].map(h => (
                                         <th key={h} className="py-2.5 px-3 text-[10px] font-black text-white uppercase text-left whitespace-nowrap">{h}</th>
                                     ))}
                                 </tr>
@@ -328,13 +461,13 @@ export default function AdminUser() {
                                         <td className="py-2 px-3 text-[11px] text-gray-400 font-bold">{(currentPage - 1) * itemsPerPage + i + 1}</td>
                                         <td className="py-2 px-3 text-[11px] font-bold text-[#d26019]">{admin.username}</td>
                                         <td className="py-2 px-3 text-[11px] font-bold text-gray-800">{admin.fullName || '—'}</td>
+                                        <td className="py-2 px-3 text-[11px] text-gray-600">{admin.department || '—'}</td>
                                         <td className="py-2 px-3 text-[11px] text-gray-600">{admin.designation || '—'}</td>
                                         <td className="py-2 px-3 text-[11px] text-gray-600">{admin.email || '—'}</td>
                                         <td className="py-2 px-3 text-[11px] text-gray-600">{admin.mobile || '—'}</td>
-                                        <td className="py-2 px-3 text-[11px] text-gray-600">{admin.altMobile || '—'}</td>
                                         <td className="py-2 px-3">
                                             <span className="px-2 py-0.5 bg-slate-100 text-slate-700 text-[9px] font-black uppercase rounded-full">
-                                                {admin.role?.replace(/-/g, ' ') || 'N/A'}
+                                                {admin.role || 'N/A'}
                                             </span>
                                         </td>
                                         <td className="py-2 px-3">
@@ -346,7 +479,9 @@ export default function AdminUser() {
                                         <td className="py-2 px-3 text-[10px] text-gray-500">
                                             {admin.lastLogin ? new Date(admin.lastLogin).toLocaleDateString('en-IN') : 'Never'}
                                         </td>
-                                        <td className="py-2 px-3 text-[11px] text-gray-600">{".." || '—'}</td>
+                                        <td className="py-2 px-3 text-[10px] text-gray-500">
+                                            {admin.updatedAt ? new Date(admin.updatedAt).toLocaleDateString('en-IN') : '—'}
+                                        </td>
                                         <td className="py-2 px-3">
                                             <div className="flex gap-1.5">
                                                 <button onClick={() => openEdit(admin)} className="p-1.5 bg-slate-100 hover:bg-[#23471d] hover:text-white text-slate-600 rounded-[2px] transition-colors">
@@ -374,11 +509,11 @@ export default function AdminUser() {
 
             {/* Create / Edit Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-xl border border-gray-200 shadow-xl">
+                <div className="fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4">
+                    <div className="bg-white w-full max-w-3xl max-h-[96vh] overflow-y-auto rounded-xl border border-gray-200 shadow-xl">
 
                         {/* ── Header ── */}
-                        <div className="bg-[#1e4018] px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+                        <div className="bg-[#1e4018] px-5 py-3 flex items-center justify-between sticky top-0 z-10">
                             <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
                                     <UserPlus size={16} className="text-white" />
@@ -400,10 +535,10 @@ export default function AdminUser() {
                             </button>
                         </div>
 
-                        <div className="px-6 pb-6">
+                        <div className="px-5 pb-5">
 
                             {/* ── Section: User Details ── */}
-                            <div className="mt-5 mb-4 flex items-center gap-2.5">
+                            <div className="mt-4 mb-3 flex items-center gap-2.5">
                                 <div className="w-6 h-6 rounded-md bg-[#eef5ec] flex items-center justify-center">
                                     <BadgeCheck size={13} className="text-[#1e4018]" />
                                 </div>
@@ -411,9 +546,9 @@ export default function AdminUser() {
                                 <div className="flex-1 h-px bg-gray-200" />
                             </div>
 
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-3 gap-3">
                                 <div>
-                                    <label className={lCls}>Title {!editId && <span className="text-red-500">*</span>}</label>
+                                    <label className={lCls}>Title <span className="text-red-500">*</span></label>
                                     <select value={form.title} onChange={e => inp('title', e.target.value)} className={iCls}>
                                         <option value="">Select</option>
                                         <option>Mr.</option>
@@ -422,11 +557,11 @@ export default function AdminUser() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className={lCls}>Full name</label>
+                                    <label className={lCls}>Full name <span className="text-red-500">*</span></label>
                                     <input value={form.fullName} onChange={e => inp('fullName', e.target.value)} className={iCls} placeholder="e.g. John Doe" />
                                 </div>
                                 <div>
-                                    <label className={lCls}>Username {!editId && <span className="text-red-500">*</span>}</label>
+                                    <label className={lCls}>Username <span className="text-red-500">*</span></label>
                                     <input value={form.username} onChange={e => inp('username', e.target.value)} className={iCls} placeholder="e.g. john_doe" />
                                 </div>
                                 <div>
@@ -449,15 +584,48 @@ export default function AdminUser() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className={lCls}>Department</label>
-                                    <input value={form.department} onChange={e => inp('department', e.target.value)} className={iCls} placeholder="e.g. Marketing" />
+                                    <label className={lCls}>User Photo <span className="text-red-500">*</span></label>
+                                    <label className="w-full flex items-center gap-2 px-2.5 py-1 border border-dashed border-gray-300 rounded-[2px] h-8 bg-gray-50 text-gray-400 text-[10px] cursor-pointer hover:border-[#1e4018] hover:text-[#1e4018] transition-colors">
+                                        <Upload size={12} />
+                                        {isFile(form.profileImage) ? form.profileImage.name : 'Upload user photo'}
+                                        <input type="file" accept="image/*" className="hidden" onChange={e => inp('profileImage', e.target.files?.[0] || '')} />
+                                    </label>
+                                    {typeof form.profileImage === 'string' && form.profileImage && (
+                                        <a href={form.profileImage} target="_blank" rel="noreferrer" className="mt-1 inline-flex text-[10px] font-semibold text-[#1e4018] hover:underline">
+                                            View current photo
+                                        </a>
+                                    )}
                                 </div>
                                 <div>
-                                    <label className={lCls}>Designation</label>
-                                    <input value={form.designation} onChange={e => inp('designation', e.target.value)} className={iCls} placeholder="e.g. Sales Manager" />
+                                    <label className={lCls}>Department <span className="text-red-500">*</span></label>
+                                    <SearchableDropdown
+                                        options={departments.map(dep => ({
+                                            label: dep.name,
+                                            value: dep.name
+                                        }))}
+                                        value={form.department}
+                                        onChange={handleDepartmentChange}
+                                        name="department"
+                                        placeholder="Search Department..."
+                                    />
                                 </div>
                                 <div>
-                                    <label className={lCls}>Official Email</label>
+                                    <label className={lCls}>Designation <span className="text-red-500">*</span></label>
+                                    <SearchableDropdown
+                                        options={designations
+                                            .filter(des => !form.department || des.department?.name === form.department || des.department === form.department)
+                                            .map(des => ({
+                                                label: des.name,
+                                                value: des.name
+                                            }))}
+                                        value={form.designation}
+                                        onChange={handleDesignationChange}
+                                        name="designation"
+                                        placeholder="Search Designation..."
+                                    />
+                                </div>
+                                <div>
+                                    <label className={lCls}>Official Email <span className="text-red-500">*</span></label>
                                     <div className="flex gap-2">
                                         <input type="email" value={form.email} onChange={e => inp('email', e.target.value)} className={iCls} placeholder="email@example.com" />
                                         <button
@@ -489,7 +657,7 @@ export default function AdminUser() {
                                     )}
                                 </div>
                                 <div>
-                                    <label className={lCls}>Official Mobile No</label>
+                                    <label className={lCls}>Official Mobile No <span className="text-red-500">*</span></label>
                                     <div className="flex gap-2">
                                         <input value={form.mobile} onChange={e => inp('mobile', e.target.value.replace(/\D/g, '').slice(0, 15))} className={iCls} placeholder="10-digit mobile" />
                                         <button
@@ -523,46 +691,87 @@ export default function AdminUser() {
                             </div>
 
                             {/* ── Section: HOD Details ── */}
-                            <div className="mt-6 mb-4 flex items-center gap-2.5">
+                            <div className="mt-4 mb-3 flex items-center gap-2.5">
                                 <div className="w-6 h-6 rounded-md bg-[#eef5ec] flex items-center justify-center">
                                     <Users size={13} className="text-[#1e4018]" />
                                 </div>
-                                <p className="text-[11px] font-semibold text-[#1e4018] uppercase tracking-widest">HOD details</p>
+                                <p className="text-[11px] font-semibold text-[#1e4018] uppercase tracking-widest">HOD Details</p>
                                 <div className="flex-1 h-px bg-gray-200" />
                             </div>
 
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-3 gap-3">
                                 <div>
-                                    <label className={lCls}>HOD name</label>
-                                    <input value={form.hodName} onChange={e => inp('hodName', e.target.value)} className={iCls} placeholder="HOD full name" />
+                                    <label className={lCls}>HOD name <span className="text-red-500">*</span></label>
+                                    <input value={form.hodName} readOnly className={`${iCls} h-8 bg-gray-50 cursor-not-allowed`} placeholder="HOD full name" />
                                 </div>
                                 <div>
-                                    <label className={lCls}>HOD mobile no</label>
-                                    <input value={form.hodMobile} onChange={e => inp('hodMobile', e.target.value)} className={iCls} placeholder="HOD mobile no" />
+                                    <label className={lCls}>HOD mobile no <span className="text-red-500">*</span></label>
+                                    <input value={form.hodMobile} readOnly className={`${iCls} bg-gray-50 cursor-not-allowed`} placeholder="HOD mobile no" />
                                 </div>
                                 <div>
-                                    <label className={lCls}>HOD official email</label>
-                                    <input value={form.hodEmail} onChange={e => inp('hodEmail', e.target.value)} className={iCls} placeholder="hod@example.com" />
+                                    <label className={lCls}>HOD official email <span className="text-red-500">*</span></label>
+                                    <input value={form.hodEmail} readOnly className={`${iCls} bg-gray-50 cursor-not-allowed`} placeholder="hod@example.com" />
                                 </div>
                                 <div>
-                                    <label className={lCls}>HOD designation</label>
-                                    <input value={form.hodDesignation} onChange={e => inp('hodDesignation', e.target.value)} className={iCls} placeholder="HOD designation" />
+                                    <label className={lCls}>HOD designation <span className="text-red-500">*</span></label>
+                                    <input value={form.hodDesignation} readOnly className={`${iCls} bg-gray-50 cursor-not-allowed`} placeholder="HOD designation" />
                                 </div>
                                 <div>
-                                    <label className={lCls}>Passport size photo</label>
-                                    <label className="w-full flex items-center gap-2 px-3 py-1.5 border border-dashed border-gray-300 rounded-lg bg-gray-50 text-gray-400 text-[12px] cursor-pointer hover:border-[#1e4018] hover:text-[#1e4018] transition-colors">
-                                        <Upload size={13} />
-                                        {isFile(form.hodImage) ? form.hodImage.name : 'Click to upload photo'}
-                                        <input type="file" accept="image/*" className="hidden" onChange={e => inp('hodImage', e.target.files?.[0] || '')} />
-                                    </label>
-                                    {typeof form.hodImage === 'string' && form.hodImage && (
-                                        <a href={form.hodImage} target="_blank" rel="noreferrer" className="mt-1 inline-flex text-[10px] font-semibold text-[#1e4018] hover:underline">
-                                            View current photo
-                                        </a>
-                                    )}
+                                    <label className={lCls}>HOD Photo <span className="text-red-500">*</span></label>
+                                    <div className="flex items-center gap-3 h-8">
+                                        {form.hodImage ? (
+                                            <div className="w-8 h-8 rounded-full border overflow-hidden shadow-sm">
+                                                <img src={form.hodImage} alt="HOD" className="w-full h-full object-cover" />
+                                            </div>
+                                        ) : (
+                                            <div className="w-8 h-8 rounded-full border bg-gray-100 flex items-center justify-center text-gray-400 text-xs shadow-sm">N/A</div>
+                                        )}
+                                        <span className="text-[10px] text-gray-400 font-medium">Auto-fetched from HOD's profile</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* ── Section: Reporting To Details ── */}
+                            <div className="mt-4 mb-3 flex items-center gap-2.5">
+                                <div className="w-6 h-6 rounded-md bg-[#eef5ec] flex items-center justify-center">
+                                    <Users size={13} className="text-[#1e4018]" />
+                                </div>
+                                <p className="text-[11px] font-semibold text-[#1e4018] uppercase tracking-widest">Reporting To</p>
+                                <div className="flex-1 h-px bg-gray-200" />
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label className={lCls}>Reporting Name <span className="text-red-500">*</span></label>
+                                    <input value={form.reportingToName} readOnly className={`${iCls} bg-gray-50 cursor-not-allowed`} placeholder="Reporting to name" />
                                 </div>
                                 <div>
-                                    <label className={lCls}>Role</label>
+                                    <label className={lCls}>Reporting Mobile <span className="text-red-500">*</span></label>
+                                    <input value={form.reportingToMobile} readOnly className={`${iCls} bg-gray-50 cursor-not-allowed`} placeholder="Reporting mobile no" />
+                                </div>
+                                <div>
+                                    <label className={lCls}>Reporting Email <span className="text-red-500">*</span></label>
+                                    <input value={form.reportingToEmail} readOnly className={`${iCls} bg-gray-50 cursor-not-allowed`} placeholder="reporting@example.com" />
+                                </div>
+                                <div>
+                                    <label className={lCls}>Reporting Designation <span className="text-red-500">*</span></label>
+                                    <input value={form.reportingToDesignation} readOnly className={`${iCls} bg-gray-50 cursor-not-allowed`} placeholder="Reporting designation" />
+                                </div>
+                                <div>
+                                    <label className={lCls}>Reporting Photo <span className="text-red-500">*</span></label>
+                                    <div className="flex items-center gap-3 h-8">
+                                        {form.reportingToImage ? (
+                                            <div className="w-8 h-8 rounded-full border overflow-hidden shadow-sm">
+                                                <img src={form.reportingToImage} alt="Reporting To" className="w-full h-full object-cover" />
+                                            </div>
+                                        ) : (
+                                            <div className="w-8 h-8 rounded-full border bg-gray-100 flex items-center justify-center text-gray-400 text-xs shadow-sm">N/A</div>
+                                        )}
+                                        <span className="text-[10px] text-gray-400 font-medium">Auto-fetched from profile</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className={lCls}>Role <span className="text-red-500">*</span></label>
                                     <select value={form.role} onChange={e => inp('role', e.target.value)} className={iCls}>
                                         <option value="">Select role</option>
                                         {roles.map(r => <option key={r._id} value={r.name}>{r.name}</option>)}
@@ -589,7 +798,7 @@ export default function AdminUser() {
                             </div>
 
                             {/* ── Footer ── */}
-                            <div className="mt-6 pt-4 border-t border-gray-200 flex items-center justify-between">
+                            <div className="mt-5 pt-3 border-t border-gray-200 flex items-center justify-between">
                                 <p className="text-[11px] text-gray-400">
                                     <span className="text-red-500">*</span> Required fields
                                 </p>

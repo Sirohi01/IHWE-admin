@@ -12,6 +12,7 @@ import api, { SERVER_URL } from "../lib/api";
 import { logout } from "../utils/auth";
 import { fetchCompanies } from "../features/company/companySlice";
 import { useSelector, useDispatch } from "react-redux";
+import ChangePasswordModal from "../components/ChangePasswordModal";
 
 const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
   if (Array.isArray(sliceState)) return sliceState;
@@ -29,6 +30,7 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
   const [chatUnread, setChatUnread] = useState(0);
   const [fullProfile, setFullProfile] = useState(null);
   const [adminData, setAdminData] = useState({ username: "Admin", role: "Authorized Access" });
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   const companiesState = useSelector((state) => state.companies);
   const companiesArray = getArrayFromSlice(companiesState, "companies");
@@ -194,8 +196,8 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
             id="user-profile-trigger"
           >
             <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#06d6a0] bg-slate-800 flex items-center justify-center shadow-sm flex-shrink-0">
-              {fullProfile?.hodImage ? (
-                <img src={fullProfile.hodImage} alt="" className="w-full h-full object-cover" />
+              {fullProfile?.profileImage ? (
+                <img src={fullProfile.profileImage} alt="" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-[12px] font-black uppercase">
                   {adminData.username ? adminData.username[0] : 'A'}
@@ -237,7 +239,7 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
                       Manage Admin Users
                     </button>
                     <button
-                      onClick={() => { navigate("/change-password"); setProfileOpen(false); }}
+                      onClick={() => { setIsChangePasswordOpen(true); setProfileOpen(false); }}
                       className="w-full flex items-center gap-3 px-3 py-2.5 text-[11px] font-bold text-slate-600 hover:text-[#23471d] hover:bg-emerald-50 rounded-sm transition-all"
                     >
                       <Key size={14} className="text-slate-500" />
@@ -259,6 +261,11 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
         </div>
 
       </div>
+
+      <ChangePasswordModal 
+        isOpen={isChangePasswordOpen} 
+        onClose={() => setIsChangePasswordOpen(false)} 
+      />
     </div>
   );
 }

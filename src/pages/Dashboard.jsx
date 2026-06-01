@@ -131,7 +131,7 @@ export default function Dashboard() {
         (c.forwardTo?.toLowerCase() === u.toLowerCase() || c.added_by?.toLowerCase() === u.toLowerCase()) &&
         ["adc. recd", "inv. req.", "under pymt followups"].includes(c.companyStatus?.toLowerCase())
       ).length;
-      return { name: admin.fullName || u, username: u, revenue: count * 1.50, hodImage: admin.hodImage || null };
+      return { name: admin.fullName || u, username: u, revenue: count * 1.50, profileImage: admin.profileImage || null };
     })
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 5),
@@ -183,7 +183,7 @@ export default function Dashboard() {
     { name: "Converted",  value: statsMetrics.categories?.converted|| 0, color: "#845ef7" },
   ];
 
-  const isAccountRole = currentUser?.role?.toLowerCase() === "account user" || currentUser?.role?.toLowerCase() === "account admin";
+  const isAccountRole = currentUser?.role?.toLowerCase() === "ihwe-account manager" || currentUser?.role?.toLowerCase() === "ihwe-accounts executive";
   if (isAccountRole) {
     return <AccountDashboard currentUser={currentUser} loading={loading} />;
   }

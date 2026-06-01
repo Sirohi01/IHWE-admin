@@ -6,6 +6,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import { logout } from "../utils/auth";
 import api, { SERVER_URL } from "../lib/api";
+import namogangelogo from "../assets/namogangelogo.webp";
 
 // ─── Default theme — must match the hardcoded static values exactly ──────────
 const DEFAULT_THEME = {
@@ -68,7 +69,7 @@ export default function Sidebar({
 
   useEffect(() => {
     if (currentUser?.username) {
-      // Full profile with hodImage — needs /api/admin/all
+      // Full profile with profileImage — needs /api/admin/all
       api.get("/api/admin/all")
         .then(res => {
           if (res.data.success) {
@@ -456,10 +457,15 @@ export default function Sidebar({
         </div>
 
         <div className="sb-header relative z-10 flex py-2 items-center justify-center px-4 border-b border-white/10">
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-16 bg-white/90 rounded-full blur-md" />
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+            <div className="w-56 h-20 bg-white rounded-full blur-[35px]" />
           </div>
-          <img src="/logo.png" alt="IHWE 2026" className="relative h-[70px] w-full object-contain drop-shadow-[0_0_40px_rgba(255,255,255,1)]" />
+          <img 
+            src={namogangelogo} 
+            alt="IHWE 2026" 
+            className="relative h-[70px] w-full object-contain z-10" 
+            style={{ filter: "drop-shadow(0 0 3px #ffffff) drop-shadow(0 0 15px #ffffff) drop-shadow(0 0 30px rgba(255,255,255,0.8))" }}
+          />
           {/* {sidebarOpen && (
             <button
               onClick={() => {
@@ -523,8 +529,8 @@ export default function Sidebar({
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#06d6a0] bg-slate-800 flex items-center justify-center shadow-lg">
-                    {fullProfile?.hodImage ? (
-                      <img src={fullProfile.hodImage} alt="" className="w-full h-full object-cover" />
+                    {fullProfile?.profileImage ? (
+                      <img src={fullProfile.profileImage} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <span className="text-white text-lg font-bold uppercase">
                         {currentUser.username ? currentUser.username[0] : 'A'}
