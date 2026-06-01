@@ -407,7 +407,7 @@ const ClientOverview1 = () => {
 
       {/* MAIN LAYOUT */}
 
-      <div className="grid grid-cols-1 min-[1300px]:grid-cols-[1fr_360px] gap-3 items-stretch">
+      <div className="grid grid-cols-1 min-[1300px]:grid-cols-[1fr_360px] gap-1 items-stretch">
 
         {/* LEFT SECTION */}
 
