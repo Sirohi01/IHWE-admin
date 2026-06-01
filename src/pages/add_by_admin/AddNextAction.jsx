@@ -170,14 +170,13 @@ const AddNextAction = () => {
                 <th className="p-4 font-bold border-b">No.</th>
                 <th className="p-4 font-bold border-b">Name</th>
                 <th className="p-4 font-bold border-b text-center">Status</th>
-                <th className="p-4 font-bold border-b text-center">Created At</th>
                 <th className="p-4 font-bold border-b text-center">Updated By</th>
                 <th className="p-4 font-bold border-b text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {isLoading ? (
-                <tr><td colSpan="6" className="p-8 text-center text-gray-500"><div className="flex flex-col items-center gap-2"><div className="w-8 h-8 border-4 border-[#23471d]/20 border-t-[#23471d] rounded-full animate-spin" /><span className="text-sm font-medium">Loading...</span></div></td></tr>
+                <tr><td colSpan="5" className="p-8 text-center text-gray-500"><div className="flex flex-col items-center gap-2"><div className="w-8 h-8 border-4 border-[#23471d]/20 border-t-[#23471d] rounded-full animate-spin" /><span className="text-sm font-medium">Loading...</span></div></td></tr>
               ) : paginated.length > 0 ? (
                 paginated.map((item, index) => (
                   <tr key={item._id} className="hover:bg-gray-50 transition-colors">
@@ -186,8 +185,19 @@ const AddNextAction = () => {
                     <td className="p-4 text-center">
                       <span className={`inline-flex px-2 py-1 text-[10px] font-bold rounded-full ${item.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{item.status}</span>
                     </td>
-                    <td className="p-4 text-sm text-center text-gray-500 whitespace-nowrap">{new Date(item.createdAt).toLocaleDateString()}</td>
-                    <td className="p-4 text-sm text-center text-gray-500">{item.updated_by || <span className="text-gray-400 text-xs italic">N/A</span>}</td>
+                    <td className="p-4 text-center">
+                      {item.updated_by ? (
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className="bg-gray-100 px-2 py-0.5 rounded text-xs font-semibold">{item.updated_by}</span>
+                          <span className="text-[10px] text-gray-400">{new Date(item.updatedAt).toLocaleString()}</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className="text-[10px] text-green-600 font-bold uppercase">Created</span>
+                          <span className="text-[10px] text-gray-400">{new Date(item.createdAt).toLocaleString()}</span>
+                        </div>
+                      )}
+                    </td>
                     <td className="p-4">
                       <div className="flex items-center justify-center gap-2">
                         <button onClick={() => startEdit(item._id)} className="p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded transition-colors" title="Edit"><Edit className="w-4 h-4" /></button>
@@ -197,7 +207,7 @@ const AddNextAction = () => {
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan="6" className="p-8 text-center text-gray-500"><div className="flex flex-col items-center gap-2"><Info className="w-8 h-8 text-gray-400" /><p className="text-sm">No records found</p></div></td></tr>
+                <tr><td colSpan="5" className="p-8 text-center text-gray-500"><div className="flex flex-col items-center gap-2"><Info className="w-8 h-8 text-gray-400" /><p className="text-sm">No records found</p></div></td></tr>
               )}
             </tbody>
           </table>
