@@ -20,6 +20,7 @@ const BaseLeadPage = ({
   title,
   subtitle,
   badgeCount,
+  cardsInRow = 4,
   headerActions,
   statCards,
   filterBar,
@@ -32,7 +33,7 @@ const BaseLeadPage = ({
   onSelectAll
 }) => {
   return (
-    <div className="w-full bg-[#f8fafc] min-h-[calc(100vh-110px)] xl:h-[calc(100vh-110px)] flex flex-col font-sans text-slate-800 p-4 md:px-6 lg:px-8 xl:overflow-hidden">
+    <div className="w-full bg-[#f8fafc] min-h-[calc(100vh-110px)] xl:h-[calc(100vh-110px)] overflow-y-auto flex flex-col font-sans text-slate-800 p-4 md:px-6 lg:px-8">
 
       {/* TOP HEADER */}
       {/* <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-4">
@@ -71,7 +72,7 @@ const BaseLeadPage = ({
           </div>
           {/* STATS CARDS */}
           {statCards && (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+            <div className={`grid grid-cols-2 md:grid-cols-3 xl:grid-cols-${cardsInRow} gap-3`}>
               {statCards}
             </div>
           )}
@@ -131,7 +132,7 @@ const BaseLeadPage = ({
         </div>
 
         {/* RIGHT COLUMN: SIDEBAR */}
-        <div className="w-full xl:w-[20%] flex flex-col gap-4 shrink-0 xl:h-full">
+        <div className="w-full xl:w-[20%] flex flex-col justify-between shrink-0 xl:h-full">
           {rightSidebar}
         </div>
 

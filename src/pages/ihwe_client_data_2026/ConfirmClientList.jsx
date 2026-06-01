@@ -21,16 +21,7 @@ const toTitleCase = (str) => {
   return str.replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
-const dummyConvertedRows = [
-  { id: 1, name: "GreenLife Ayurveda", industry: "Healthcare", source: "Website", convertedDate: "27 May 2026", stage: "Deal Won", revenue: "₹ 3,50,000", subName: "Ayurveda & Herbs" },
-  { id: 2, name: "Nature's Harmony Pvt. Ltd.", industry: "Healthcare", source: "Referral", convertedDate: "26 May 2026", stage: "Deal Won", revenue: "₹ 4,20,000", subName: "Health & Wellness" },
-  { id: 3, name: "Wellness World", industry: "Retail", source: "Trade Show", convertedDate: "25 May 2026", stage: "Deal Won", revenue: "₹ 2,75,000", subName: "Wellness Products" },
-  { id: 4, name: "Herbal King Exports", industry: "Manufacturing", source: "Social Media", convertedDate: "24 May 2026", stage: "Deal Won", revenue: "₹ 5,80,000", subName: "Herbal Products" },
-  { id: 5, name: "Arogya Organics", industry: "FMCG", source: "Google Ads", convertedDate: "23 May 2026", stage: "Deal Won", revenue: "₹ 3,10,000", subName: "Organic Food" },
-  { id: 6, name: "Pureveda Solutions", industry: "Healthcare", source: "Email Campaign", convertedDate: "22 May 2026", stage: "Deal Won", revenue: "₹ 2,45,000", subName: "Healthcare" },
-  { id: 7, name: "Shakti Bio Products", industry: "Biotechnology", source: "Referral", convertedDate: "21 May 2026", stage: "Deal Won", revenue: "₹ 1,95,000", subName: "Biotechnology" },
-  { id: 8, name: "Holistic Nutrition Co.", industry: "FMCG", source: "Website", convertedDate: "20 May 2026", stage: "Deal Won", revenue: "₹ 2,55,000", subName: "Nutrition" },
-];
+// Removed dummy rows
 
 const ConfirmClientList = () => {
   const dispatch = useDispatch();
@@ -54,27 +45,28 @@ const ConfirmClientList = () => {
   const allCompanies = Array.isArray(companiesState?.companies) ? companiesState.companies : [];
   const isLoading = companiesState?.loading ?? false;
 
+  const pagination = companiesState?.pagination;
+
   useEffect(() => {
-    dispatch(fetchCompanies({ status: 'Converted' }));
-  }, [dispatch]);
+    const delayDebounceFn = setTimeout(() => {
+      dispatch(fetchCompanies({
+        page,
+        limit,
+        search: searchTerm,
+        status: filterStage || 'Converted',
+        source: filterSource,
+        industry: filterIndustry,
+      }));
+    }, 400);
 
-  // Filtering
-  const filteredDummyRows = dummyConvertedRows.filter(r => {
-    const s = searchTerm.toLowerCase();
-    const matchSearch = s === '' || (r.name.toLowerCase().includes(s) || r.industry.toLowerCase().includes(s));
-    const matchSource = filterSource === '' || r.source === filterSource;
-    const matchIndustry = filterIndustry === '' || r.industry === filterIndustry;
-    const matchStage = filterStage === '' || r.stage === filterStage;
-    return matchSearch && matchSource && matchIndustry && matchStage;
-  });
+    return () => clearTimeout(delayDebounceFn);
+  }, [dispatch, page, limit, searchTerm, filterSource, filterStage, filterIndustry]);
 
-  const totalPages = Math.ceil(filteredDummyRows.length / limit) || 1;
-  const paginatedRows = filteredDummyRows.slice((page - 1) * limit, page * limit);
-  const totalLeads = filteredDummyRows.length;
+  const totalLeads = pagination?.total || allCompanies.length;
 
-  const isAllSelected = paginatedRows.length > 0 && selectedIds.length === paginatedRows.length;
+  const isAllSelected = allCompanies.length > 0 && selectedIds.length === allCompanies.length;
   const onSelectAll = (e) => {
-    if (e.target.checked) setSelectedIds(paginatedRows.map(r => r.id));
+    if (e.target.checked) setSelectedIds(allCompanies.map(r => r._id));
     else setSelectedIds([]);
   };
 
@@ -82,9 +74,9 @@ const ConfirmClientList = () => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const uniqueSources = [...new Set(dummyConvertedRows.map(r => r.source).filter(Boolean))];
-  const uniqueIndustries = [...new Set(dummyConvertedRows.map(r => r.industry).filter(Boolean))];
-  const uniqueStages = [...new Set(dummyConvertedRows.map(r => r.stage).filter(Boolean))];
+  const uniqueSources = [...new Set(allCompanies.map(r => r.dataSource).filter(Boolean))];
+  const uniqueIndustries = [...new Set(allCompanies.map(r => r.businessNature).filter(Boolean))];
+  const uniqueStages = [...new Set(allCompanies.map(r => r.companyStatus).filter(Boolean))];
 
   const getSourceStyle = (source) => {
     const s = (source || "").toLowerCase();
@@ -277,51 +269,56 @@ const ConfirmClientList = () => {
 
   const tableBody = (
     <>
-      {paginatedRows.length === 0 ? (
+      {isLoading ? (
+        <tr><td colSpan="8" className="text-center py-8 text-slate-500">Loading leads...</td></tr>
+      ) : allCompanies.length === 0 ? (
         <tr>
           <td colSpan="8" className="px-2 py-4 text-center text-slate-500 font-medium">No results found</td>
         </tr>
-      ) : paginatedRows.map((row) => {
-        const isSelected = selectedIds.includes(row.id);
+      ) : allCompanies.map((row, i) => {
+        const isSelected = selectedIds.includes(row._id);
+        const source = row.dataSource || "Website";
         return (
-          <tr key={row.id} className={`hover:bg-slate-50 transition-colors ${isSelected ? 'bg-emerald-50/30' : ''}`}>
+          <tr key={row._id || i} className={`hover:bg-slate-50 transition-colors ${isSelected ? 'bg-emerald-50/30' : ''}`}>
             <td className="px-2 py-2 text-center">
               <input
                 type="checkbox"
                 className="w-3 h-3 accent-emerald-500 cursor-pointer rounded-sm"
                 checked={isSelected}
-                onChange={() => onSelectRow(row.id)}
+                onChange={() => onSelectRow(row._id)}
               />
             </td>
             <td className="px-2 py-2">
               <div className="font-semibold text-slate-800 text-[11px] cursor-pointer hover:text-emerald-600">
-                <Link to={`/client-overview/${row.id}`}>{row.name}</Link>
+                <Link to={`/client-overview/${row._id}`}>{toTitleCase(row.companyName)}</Link>
               </div>
-              <div className="text-[9px] text-slate-500">{row.subName}</div>
+              <div className="text-[9px] text-slate-500">{toTitleCase(row.businessNature) || "-"}</div>
             </td>
             <td className="px-2 py-2">
-              <span className={`px-1.5 py-0.5 rounded font-semibold text-[9px] ${getIndustryStyle(row.industry)}`}>
-                {row.industry}
+              <span className={`px-1.5 py-0.5 rounded font-semibold text-[9px] ${getIndustryStyle(row.businessNature)}`}>
+                {toTitleCase(row.businessNature) || "-"}
               </span>
             </td>
             <td className="px-2 py-2 text-center">
-              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-semibold text-[9px] ${getSourceStyle(row.source)}`}>
-                @{row.source}
+              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-semibold text-[9px] ${getSourceStyle(source)}`}>
+                @{toTitleCase(source)}
               </span>
             </td>
             <td className="px-2 py-2 text-center">
               <div className="flex items-center justify-center gap-1.5">
                 <CalendarDays className="text-slate-400" size={10} />
-                <span className="text-[9px] font-medium text-slate-800">{row.convertedDate}</span>
+                <span className="text-[9px] font-medium text-slate-800">
+                  {row.updatedAt ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt)) : "-"}
+                </span>
               </div>
             </td>
             <td className="px-2 py-2 text-center">
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold text-emerald-600 bg-emerald-50">
-                {row.stage}
+                {toTitleCase(row.companyStatus || "Converted")}
               </span>
             </td>
             <td className="px-2 py-2 text-right">
-              <span className="font-semibold text-slate-800 text-[10px]">{row.revenue}</span>
+              <span className="font-semibold text-slate-800 text-[10px]">{row.revenue || "-"}</span>
             </td>
             <td className="px-2 py-2 text-center">
               <button className="p-1 hover:bg-slate-100 rounded text-slate-400 transition-colors">
@@ -456,32 +453,25 @@ const ConfirmClientList = () => {
     </>
   );
 
-  const pagination = (
+  const paginationBar = (
     <>
       <div className="text-slate-500">
-        Showing {paginatedRows.length > 0 ? (page - 1) * limit + 1 : 0} to {Math.min(page * limit, totalLeads)} of {totalLeads} clients
+        Showing {totalLeads === 0 ? 0 : (page - 1) * limit + 1} to {Math.min(page * limit, totalLeads)} of {totalLeads} clients
       </div>
       <div className="flex items-center gap-1">
         <button onClick={() => setPage(1)} disabled={page === 1} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">«</button>
         <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">‹</button>
 
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-          <button
-            key={p}
-            onClick={() => setPage(p)}
-            className={`w-6 h-6 rounded font-bold flex items-center justify-center ${page === p ? 'bg-[#00a65a] text-white' : 'hover:bg-slate-100'}`}
-          >
-            {p}
-          </button>
-        ))}
+        <button className={`w-6 h-6 rounded font-bold flex items-center justify-center bg-[#00a65a] text-white`}>
+          {page}
+        </button>
 
-        <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">›</button>
-        <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">»</button>
+        <button onClick={() => setPage(p => Math.min(pagination?.totalPages || 1, p + 1))} disabled={page >= (pagination?.totalPages || 1)} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">›</button>
+        <button onClick={() => setPage(pagination?.totalPages || 1)} disabled={page >= (pagination?.totalPages || 1)} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">»</button>
       </div>
       <div className="flex items-center gap-2 text-slate-500">
         <span>Rows per page:</span>
         <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }} className="border border-slate-200 rounded py-0.5 px-1 bg-white outline-none cursor-pointer text-slate-700">
-          <option value={8}>8</option>
           <option value={10}>10</option>
           <option value={20}>20</option>
           <option value={50}>50</option>
@@ -505,7 +495,7 @@ const ConfirmClientList = () => {
       tableHeaders={tableHeaders}
       tableBody={tableBody}
       rightSidebar={rightSidebar}
-      pagination={pagination}
+      pagination={paginationBar}
       isAllSelected={isAllSelected}
       onSelectAll={onSelectAll}
       onReset={() => {
