@@ -26,12 +26,11 @@ import {
 import { FaWhatsapp } from "react-icons/fa";
 
 import {
-  fetchCompanies,
   updateCompany,
 } from "../../features/company/companySlice";
 
 import {
-  fetchReviews,
+  fetchReviewById,
   deleteReview,
   createReview,
 } from "../../features/crm-exhibator-reviews/crmExhibatorReviewSlice";
@@ -58,7 +57,6 @@ const ClientOverview1 = () => {
   const [events, setEvents] = useState([]);
   const [Flip, setFlip] = useState(false);
 
-  const { companies } = useSelector((state) => state.companies);
 
   const { reviews } = useSelector((state) => state.reviews);
 
@@ -91,9 +89,16 @@ const ClientOverview1 = () => {
 
   if (!currentUserName) currentUserName = 'Admin';
 
-  const company = useMemo(() => {
-    return companies?.find((c) => c._id === id);
-  }, [companies, id]);
+  const [company, setCompany] = useState(null);
+
+  const fetchCompanyDetails = async () => {
+    try {
+      const res = await api.get(`/api/companies/${id}`);
+      setCompany(res.data);
+    } catch (err) {
+      console.log("Error fetching company details:", err);
+    }
+  };
 
   const filteredReviews = useMemo(() => {
     return Array.isArray(reviews)
@@ -114,14 +119,16 @@ const ClientOverview1 = () => {
   });
 
   useEffect(() => {
-    dispatch(fetchCompanies());
-    dispatch(fetchReviews());
+    if (id) {
+      fetchCompanyDetails();
+    }
+    dispatch(fetchReviewById(id));
     dispatch(fetchStatusOptions());
     dispatch(fetchNextActions());
     dispatch(fetchAdmins());
 
     fetchEvents();
-  }, []);
+  }, [id]);
 
   useEffect(() => {
     if (company?._id) {
@@ -209,8 +216,8 @@ const ClientOverview1 = () => {
         showConfirmButton: false,
       });
 
-      dispatch(fetchReviews());
-      dispatch(fetchCompanies());
+      dispatch(fetchReviewById(id));
+      fetchCompanyDetails();
 
       setReviewData({
         cmpny_id: company._id,
@@ -228,9 +235,9 @@ const ClientOverview1 = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    await dispatch(deleteReview(id));
-    dispatch(fetchReviews());
+  const handleDelete = async (reviewId) => {
+    await dispatch(deleteReview(reviewId));
+    dispatch(fetchReviewById(id));
   };
 
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
@@ -312,7 +319,7 @@ const ClientOverview1 = () => {
 
       Swal.fire({ icon: "success", title: "Profile Updated", timer: 1500, showConfirmButton: false });
       setIsEditProfileOpen(false);
-      dispatch(fetchCompanies());
+      fetchCompanyDetails();
 
       // Determine what changed for the log
       const changes = [];
@@ -329,7 +336,7 @@ const ClientOverview1 = () => {
 
       // Log to communication panel
       dispatch(createReview({ cmpny_id: company._id, type: "log", re_msg: logMessage }));
-      dispatch(fetchReviews());
+      dispatch(fetchReviewById(id));
     } catch (err) {
       console.log(err);
       Swal.fire({ icon: "error", title: "Update Failed", text: err?.message || "Failed to update profile" });
@@ -354,10 +361,10 @@ const ClientOverview1 = () => {
         type: "log",
         re_msg: logMessage,
       })).unwrap();
-      dispatch(fetchReviews());
+      dispatch(fetchReviewById(id));
       Swal.fire({ icon: "success", title: "Exhibitor Category Updated", timer: 1500, showConfirmButton: false });
       setIsMsmeEditOpen(false);
-      dispatch(fetchCompanies());
+      fetchCompanyDetails();
     } catch (err) {
       Swal.fire({ icon: "error", title: "Update Failed", text: err?.message || "Failed to update" });
     } finally {
@@ -408,7 +415,7 @@ const ClientOverview1 = () => {
       await dispatch(updateCompany({ id: company._id, data: { contacts: updatedContacts } })).unwrap();
       Swal.fire({ icon: "success", title: editingContactIdx !== null ? "Contact Updated" : "Contact Added", timer: 1500, showConfirmButton: false });
       setIsContactModalOpen(false);
-      dispatch(fetchCompanies());
+      fetchCompanyDetails();
 
       // Log to communication panel
       const contactName = [contactForm.firstName, contactForm.surname].filter(Boolean).join(" ") || "Unknown Contact";
@@ -446,7 +453,7 @@ const ClientOverview1 = () => {
       }
 
       dispatch(createReview({ cmpny_id: company._id, type: "log", re_msg: logMessage }));
-      dispatch(fetchReviews());
+      dispatch(fetchReviewById(id));
     } catch (err) {
       Swal.fire({ icon: "error", title: "Failed", text: err?.message || "Could not save contact" });
     } finally {
@@ -462,7 +469,7 @@ const ClientOverview1 = () => {
           ...data
         })).unwrap();
       }
-      dispatch(fetchReviews());
+      dispatch(fetchReviewById(id));
     } catch (err) {
       console.log(err);
     }

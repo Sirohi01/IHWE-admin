@@ -371,7 +371,7 @@ const crmExhibatorReviewSlice = createSlice({
       })
       .addCase(fetchReviewById.fulfilled, (state, action) => {
         state.loading = false;
-        state.review = action.payload;
+        state.reviews = action.payload;
       })
       .addCase(fetchReviewById.rejected, (state, action) => {
         state.loading = false;
