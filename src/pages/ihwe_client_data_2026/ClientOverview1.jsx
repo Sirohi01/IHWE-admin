@@ -710,7 +710,7 @@ const ClientOverview1 = () => {
 
           {/* ACTION CARDS */}
 
-          <div className="bg-white rounded-2xl border border-gray-300 p-3">
+          <div className="bg-white rounded-sm border border-gray-300 p-2">
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-1">
 
