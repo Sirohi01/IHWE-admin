@@ -651,6 +651,7 @@ export const menuItems = [
       { label: "Primary Product Interest", path: "/primary-product-interest" },
       { label: "Secondary Product Categories", path: "/secondary-product-categories" },
       { label: "Meeting Priority Level", path: "/meeting-priority-level" },
+      { label: "Document Configuration", path: "/document-configuration" },
       { label: "Add Unit", path: "/add-unit" },
     ],
   },

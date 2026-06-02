@@ -31,6 +31,8 @@ import meetingPriorityReducer from "../features/add_by_admin/meeting-priority/Me
 import unitReducer from "../features/add_by_admin/unit/UnitSlice";
 import nextActionReducer from "../features/add_by_admin/nextAction/nextActionSlice";
 
+import documentRequirementReducer from "../features/add_by_admin/document-requirements/DocumentRequirementSlice";
+
 export const store = configureStore({
   reducer: {
     users: userReducer,
@@ -64,6 +66,7 @@ export const store = configureStore({
     meetingPriority: meetingPriorityReducer,
     unit: unitReducer,
     nextActions: nextActionReducer,
+    documentRequirements: documentRequirementReducer,
   },
 });
 

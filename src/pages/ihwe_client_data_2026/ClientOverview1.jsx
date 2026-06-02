@@ -733,8 +733,8 @@ const ClientOverview1 = () => {
                   icon: Folder,
                   title: "Documentation",
                   color: "blue-600",
-                  onClick: null,
-                  disabled: true,
+                  onClick: () => navigate(`/client-documents/${id}`),
+                  disabled: false,
                 },
                 {
                   icon: Wallet,
