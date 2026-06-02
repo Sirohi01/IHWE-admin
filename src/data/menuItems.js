@@ -652,6 +652,7 @@ export const menuItems = [
       { label: "Secondary Product Categories", path: "/secondary-product-categories" },
       { label: "Meeting Priority Level", path: "/meeting-priority-level" },
       { label: "Add Unit", path: "/add-unit" },
+      { label: "Marketing Materials", path: "/admin/marketing-management" },
     ],
   },
   {

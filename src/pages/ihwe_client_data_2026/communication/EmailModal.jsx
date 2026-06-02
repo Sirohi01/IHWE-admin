@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { Mail, X, Paperclip, Send } from "lucide-react";
 import api from "../../../lib/api";
 
-const EmailModal = ({ company, onClose, onSend }) => {
-  const [form, setForm] = useState({ subject: "", content: "" });
+const EmailModal = ({ company, onClose, onSend, initialSubject = "", initialContent = "", initialAttachments = [] }) => {
+  const [form, setForm] = useState({ subject: initialSubject, content: initialContent });
   const [attachments, setAttachments] = useState([]);
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null);
@@ -34,6 +34,9 @@ const EmailModal = ({ company, onClose, onSend }) => {
       formData.append("companyName", company?.companyName || "");
       formData.append("sentBy", userName);
       formData.append("cmpny_id", company?._id || "");
+      if (initialAttachments.length > 0) {
+        formData.append("existingAttachments", JSON.stringify(initialAttachments));
+      }
       attachments.forEach((file) => formData.append("attachments", file));
 
       const res = await api.post("/api/crm-email/send", formData, {
