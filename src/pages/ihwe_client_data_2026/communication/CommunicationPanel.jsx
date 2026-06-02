@@ -113,21 +113,20 @@ const CommunicationPanel = ({ company, reviews, onSendEntry, onWhatsApp, onEmail
                         <span className={`text-[10px] font-bold uppercase ${cfg.color} flex-shrink-0`}>{label}</span>
                         <span className="text-[10px] text-gray-400 flex-shrink-0">{formatDateTime(item.createdAt)}</span>
                       </div>
-                      {item.status_short && (
-                        <span className="inline-block px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 text-[10px] font-semibold truncate max-w-full">
-                          {item.status_short}
-                        </span>
-                      )}
-                      {item.email_subject && (
-                        <p className="text-[11px] font-semibold text-gray-700 truncate">📧 {item.email_subject}</p>
-                      )}
-                      {text && (
-                        <p className="text-[11px] text-gray-700 truncate">
-                          {text.replace(/\n/g, ' - ').split(/(' to ')/g).map((part, i) => 
+                      {(item.status_short || item.email_subject || text) && (
+                        <p className="text-[11px] text-gray-700 truncate mt-0.5 leading-relaxed">
+                          {item.status_short && (
+                            <span className="inline-block px-1.5 py-[1px] rounded bg-orange-100 text-orange-600 text-[9px] font-bold uppercase tracking-wider mr-1.5 align-middle">
+                              {item.status_short}
+                            </span>
+                          )}
+                          {item.email_subject && <span className="font-semibold mr-1 text-gray-800 align-middle">📧 {item.email_subject}</span>}
+                          {item.email_subject && text && <span className="text-gray-400 mx-1 align-middle">|</span>}
+                          {text && <span className="align-middle">{text.replace(/\n/g, ' - ').split(/(' to ')/g).map((part, i) => 
                             part === "' to '" 
                               ? <span key={i}>' <span className="font-extrabold text-blue-600 mx-0.5">TO</span> '</span> 
                               : part
-                          )}
+                          )}</span>}
                         </p>
                       )}                    </div>
                   </div>
