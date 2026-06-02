@@ -33,6 +33,7 @@ const EmailModal = ({ company, onClose, onSend }) => {
       formData.append("content", form.content);
       formData.append("companyName", company?.companyName || "");
       formData.append("sentBy", userName);
+      formData.append("cmpny_id", company?._id || "");
       attachments.forEach((file) => formData.append("attachments", file));
 
       const res = await api.post("/api/crm-email/send", formData, {
@@ -41,12 +42,7 @@ const EmailModal = ({ company, onClose, onSend }) => {
 
       if (res.data?.success) {
         setResult({ success: true, message: "Email sent successfully!" });
-        await onSend({
-          type: "email",
-          re_msg: form.content,
-          email_subject: form.subject,
-          email_content: form.content,
-        });
+        await onSend(null);
         setTimeout(() => onClose(), 1500);
       } else {
         setResult({ success: false, message: res.data?.message || "Failed to send" });

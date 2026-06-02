@@ -3,11 +3,12 @@ import { X, Phone, Mail, MessageSquare, Activity, FolderOpen } from "lucide-reac
 import { FaWhatsapp } from "react-icons/fa";
 
 const TYPE_CONFIG = {
-  whatsapp: { icon: FaWhatsapp, color: "text-green-600", bg: "bg-green-50", label: "WhatsApp" },
-  call:     { icon: Phone,      color: "text-teal-600",  bg: "bg-teal-50",  label: "Call" },
-  email:    { icon: Mail,       color: "text-blue-600",  bg: "bg-blue-50",  label: "Email" },
-  status:   { icon: Activity,   color: "text-orange-500",bg: "bg-orange-50",label: "Status Update" },
-  log:      { icon: FolderOpen, color: "text-purple-600",bg: "bg-purple-50",label: "Log" },
+  whatsapp:    { icon: FaWhatsapp, color: "text-green-600",  bg: "bg-green-50",  label: "WhatsApp" },
+  call:        { icon: Phone,      color: "text-teal-600",   bg: "bg-teal-50",   label: "Call" },
+  email:       { icon: Mail,       color: "text-blue-600",   bg: "bg-blue-50",   label: "Email Sent" },
+  email_reply: { icon: Mail,       color: "text-indigo-600", bg: "bg-indigo-50", label: "Email Reply" },
+  status:      { icon: Activity,   color: "text-orange-500", bg: "bg-orange-50", label: "Status Update" },
+  log:         { icon: FolderOpen, color: "text-purple-600", bg: "bg-purple-50", label: "Log" },
 };
 
 const formatDateTime = (dt) => {
@@ -24,12 +25,17 @@ const FullHistoryModal = ({ reviews, companyName, onClose }) => {
 
   const tabTypeMap = {
     All: null, WhatsApp: "whatsapp", Calls: "call",
-    Emails: "email", Status: "status", Logs: "log",
+    Emails: ["email", "email_reply"], Status: "status", Logs: "log",
   };
 
   const filtered = activeTab === "All"
     ? reviews
-    : reviews.filter((r) => r.type === tabTypeMap[activeTab]);
+    : reviews.filter((r) => {
+        const f = tabTypeMap[activeTab];
+        if (!f) return true;
+        if (Array.isArray(f)) return f.includes(r.type);
+        return r.type === f;
+      });
 
   const sorted = [...(filtered || [])].sort(
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
@@ -72,6 +78,17 @@ const FullHistoryModal = ({ reviews, companyName, onClose }) => {
             sorted.map((item, idx) => {
               const cfg = TYPE_CONFIG[item.type] || TYPE_CONFIG.log;
               const Icon = cfg.icon;
+
+              let label = cfg.label;
+              let text = item.re_msg;
+              if ((item.type === 'log' || item.type === 'status') && text && text.startsWith('[')) {
+                const endIdx = text.indexOf(']');
+                if (endIdx > 0) {
+                  label = text.substring(1, endIdx);
+                  text = text.substring(endIdx + 1).trim();
+                }
+              }
+
               return (
                 <div key={idx} className="flex gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
                   <div className={`w-9 h-9 rounded-xl ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
@@ -79,7 +96,7 @@ const FullHistoryModal = ({ reviews, companyName, onClose }) => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <span className={`text-[11px] font-bold uppercase tracking-wide ${cfg.color}`}>{cfg.label}</span>
+                      <span className={`text-[11px] font-bold uppercase tracking-wide ${cfg.color}`}>{label}</span>
                       <span className="text-[10px] text-gray-400">{formatDateTime(item.createdAt)}</span>
                     </div>
                     {item.status_short && (
@@ -90,19 +107,28 @@ const FullHistoryModal = ({ reviews, companyName, onClose }) => {
                     {item.email_subject && (
                       <p className="text-[11px] font-semibold text-gray-700 mt-1">Subject: {item.email_subject}</p>
                     )}
-                    {item.re_msg && (
-                      <p className="text-[12px] text-gray-700 mt-1 leading-5">{item.re_msg}</p>
+                    {text && (
+                      <p className="text-[12px] text-gray-700 mt-1 leading-5 whitespace-pre-wrap">
+                        {text.split(/(' to ')/g).map((part, i) => 
+                          part === "' to '" 
+                            ? <span key={i}>' <span className="font-extrabold text-blue-600 mx-0.5">TO</span> '</span> 
+                            : part
+                        )}
+                      </p>
                     )}
                     {item.call_duration && (
                       <p className="text-[10px] text-gray-400 mt-1">Duration: {item.call_duration}</p>
                     )}
-                    {item.forward_to && (
+                    {item.type === "email_reply" && item.updated_by && (
+                      <p className="text-[10px] text-indigo-500 font-semibold mt-1">↩ From: {item.updated_by}</p>
+                    )}
+                    {item.type !== "email_reply" && item.forward_to && (
                       <p className="text-[10px] text-gray-400 mt-1">Next Action: {item.forward_to}</p>
                     )}
                     {item.reminder_dt && (
                       <p className="text-[10px] text-gray-400 mt-0.5">Reminder: {formatDateTime(item.reminder_dt)}</p>
                     )}
-                    {item.updated_by && (
+                    {item.type !== "email_reply" && item.updated_by && (
                       <p className="text-[10px] text-gray-400 mt-0.5">By: {item.updated_by}</p>
                     )}
                   </div>

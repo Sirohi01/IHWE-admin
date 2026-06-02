@@ -68,6 +68,28 @@ const ClientOverview1 = () => {
 
   const { nextActions } = useSelector((state) => state.nextActions);
   const { users } = useSelector((state) => state.users);
+  const { user: authUser } = useSelector((state) => state.auth || {});
+
+  let currentUserName = localStorage.getItem('user_name') || sessionStorage.getItem('user_name') || '';
+  try {
+    const userObjStr = localStorage.getItem('user') || sessionStorage.getItem('user') || localStorage.getItem('adminInfo') || sessionStorage.getItem('adminInfo') || localStorage.getItem('admin') || sessionStorage.getItem('admin');
+    if (userObjStr) {
+      const userObj = JSON.parse(userObjStr);
+      if (userObj.name) currentUserName = userObj.name;
+      else if (userObj.fullName) currentUserName = userObj.fullName;
+      else if (userObj.username) currentUserName = userObj.username;
+      else if (userObj.user_name) currentUserName = userObj.user_name;
+    }
+  } catch (e) {
+    console.error('Error parsing user data:', e);
+  }
+
+  // Fallback to authUser
+  if (!currentUserName && authUser) {
+    currentUserName = authUser.fullName || authUser.name || authUser.username || '';
+  }
+
+  if (!currentUserName) currentUserName = 'Admin';
 
   const company = useMemo(() => {
     return companies?.find((c) => c._id === id);
@@ -149,23 +171,33 @@ const ClientOverview1 = () => {
       const newAssignee = reviewData.assigned_to || "";
       const assigneeChanged = newAssignee && newAssignee !== previousAssignee;
 
+      const logMessagePrefix = `[Status Update] Changes by ${currentUserName}\n`;
+      let finalRemark = reviewData.re_msg || "";
+
+      const changesList = [];
+      if (reviewData.status_short && reviewData.status_short !== company.companyStatus) {
+        changesList.push(`Status changed from '${company.companyStatus || "-"}' to '${reviewData.status_short}'`);
+      }
+      if (assigneeChanged) {
+        changesList.push(`Lead forwarded from '${previousAssignee || "Unassigned"}' to '${newAssignee}'`);
+      }
+      if (finalRemark) {
+        changesList.push(`Remark: ${finalRemark}`);
+      }
+
+      const changesText = changesList.length > 0 ? changesList.join('\n• ') : "No specific details changed";
+      const finalReMsg = `${logMessagePrefix}• ${changesText}`;
+
       // Create the review entry
       await dispatch(createReview({
         ...reviewData,
-        forward_to: newAssignee || previousAssignee,
+        re_msg: finalReMsg,
       })).unwrap();
       const companyUpdates = {
         companyStatus: reviewData.status_short || company.companyStatus,
       };
       if (assigneeChanged) {
         companyUpdates.forwardTo = newAssignee;
-        dispatch(createReview({
-          cmpny_id: company._id,
-          type: "log",
-          re_msg: `Lead forwarded from "${previousAssignee || "Unassigned"}" to "${newAssignee}"`,
-          evnt_id: company.eventName || "",
-          event_name: company.eventName || "",
-        }));
       }
 
       await dispatch(updateCompany({ id: company._id, data: companyUpdates })).unwrap();
@@ -281,8 +313,22 @@ const ClientOverview1 = () => {
       Swal.fire({ icon: "success", title: "Profile Updated", timer: 1500, showConfirmButton: false });
       setIsEditProfileOpen(false);
       dispatch(fetchCompanies());
+
+      // Determine what changed for the log
+      const changes = [];
+      if (company.companyName !== editProfileData.companyName) changes.push(`Name changed from '${company.companyName}' to '${editProfileData.companyName}'`);
+      if (company.email !== editProfileData.email) changes.push(`Email changed from '${company.email}' to '${editProfileData.email}'`);
+      const oldMobile = company.contacts?.[0]?.mobile || "";
+      if (oldMobile !== editProfileData.mobile) changes.push(`Mobile changed from '${oldMobile}' to '${editProfileData.mobile}'`);
+      if (company.website !== editProfileData.website) changes.push(`Website changed from '${company.website || "-"}' to '${editProfileData.website || "-"}'`);
+      if (company.companyDescription !== editProfileData.companyDescription) changes.push(`Description changed from '${company.companyDescription || "-"}' to '${editProfileData.companyDescription || "-"}'`);
+      if (logoFile) changes.push(`Company Logo updated`);
+
+      const changesText = changes.length > 0 ? changes.join('\n• ') : "No details modified";
+      const logMessage = `[Profile Update] Changes by ${currentUserName}\n• ${changesText}`;
+
       // Log to communication panel
-      dispatch(createReview({ cmpny_id: company._id, type: "log", re_msg: `Company profile updated: ${editProfileData.companyName}` }));
+      dispatch(createReview({ cmpny_id: company._id, type: "log", re_msg: logMessage }));
       dispatch(fetchReviews());
     } catch (err) {
       console.log(err);
@@ -297,11 +343,16 @@ const ClientOverview1 = () => {
     setIsSavingMsme(true);
     try {
       await dispatch(updateCompany({ id: company._id, data: msmeData })).unwrap();
+
+      const oldCategory = company.exhibitorCategory || "None";
+      const newCategory = msmeData.exhibitorCategory || "None";
+      const logMessage = `[Exhibitor Category Update] Changes by ${currentUserName}\n• Category changed from '${oldCategory}' to '${newCategory}'`;
+
       // Log to communication panel
       await dispatch(createReview({
         cmpny_id: company._id,
         type: "log",
-        re_msg: `Exhibitor Category updated to: ${msmeData.exhibitorCategory || "-"}`,
+        re_msg: logMessage,
       })).unwrap();
       dispatch(fetchReviews());
       Swal.fire({ icon: "success", title: "Exhibitor Category Updated", timer: 1500, showConfirmButton: false });
@@ -358,9 +409,43 @@ const ClientOverview1 = () => {
       Swal.fire({ icon: "success", title: editingContactIdx !== null ? "Contact Updated" : "Contact Added", timer: 1500, showConfirmButton: false });
       setIsContactModalOpen(false);
       dispatch(fetchCompanies());
+
       // Log to communication panel
-      const contactName = [contactForm.firstName, contactForm.surname].filter(Boolean).join(" ");
-      dispatch(createReview({ cmpny_id: company._id, type: "log", re_msg: `Contact ${editingContactIdx !== null ? "updated" : "added"}: ${contactName}` }));
+      const contactName = [contactForm.firstName, contactForm.surname].filter(Boolean).join(" ") || "Unknown Contact";
+      let logMessage = "";
+      if (editingContactIdx !== null) {
+        const oldC = company.contacts[editingContactIdx];
+        const changes = [];
+
+        const fieldsToCheck = [
+          { key: 'title', label: 'Title' },
+          { key: 'firstName', label: 'First Name' },
+          { key: 'surname', label: 'Surname' },
+          { key: 'designation', label: 'Designation' },
+          { key: 'email', label: 'Email' },
+          { key: 'mobile', label: 'Mobile' },
+          { key: 'alternate', label: 'Alternate Mobile' },
+          { key: 'whatsapp', label: 'WhatsApp' },
+          { key: 'linkedin', label: 'LinkedIn' }
+        ];
+
+        fieldsToCheck.forEach(f => {
+          const oldVal = String(oldC[f.key] || "").trim();
+          const newVal = String(contactForm[f.key] || "").trim();
+          if (oldVal !== newVal) {
+            changes.push(`${f.label} changed from '${oldVal || "-"}' to '${newVal || "-"}'`);
+          }
+        });
+
+        if (contactPhotoFile) changes.push(`Contact Photo updated`);
+
+        const changesText = changes.length > 0 ? changes.join('\n• ') : "Updated without modifying text fields";
+        logMessage = `[Contact Update] Changes by ${currentUserName}\nUpdated Contact: ${contactName}\n• ${changesText}`;
+      } else {
+        logMessage = `[Contact Added] Changes by ${currentUserName}\nAdded New Contact: ${contactName}\n• Designation: ${contactForm.designation || "-"}\n• Mobile: ${contactForm.mobile}\n• Email: ${contactForm.email}`;
+      }
+
+      dispatch(createReview({ cmpny_id: company._id, type: "log", re_msg: logMessage }));
       dispatch(fetchReviews());
     } catch (err) {
       Swal.fire({ icon: "error", title: "Failed", text: err?.message || "Could not save contact" });
@@ -369,12 +454,14 @@ const ClientOverview1 = () => {
     }
   };
 
-  const handleSendEntry = async (entryData) => {
+  const handleSendEntry = async (data) => {
     try {
-      await dispatch(createReview({
-        cmpny_id: company._id,
-        ...entryData,
-      })).unwrap();
+      if (data) {
+        await dispatch(createReview({
+          cmpny_id: company._id,
+          ...data
+        })).unwrap();
+      }
       dispatch(fetchReviews());
     } catch (err) {
       console.log(err);
@@ -450,7 +537,7 @@ const ClientOverview1 = () => {
                   <div className="text-center">
                     <Building2 className="text-gray-300 mx-auto" size={36} />
                     <p className="text-[10px] font-bold text-gray-500 mt-1">Company Logo</p>
-                    <p className="text-[11px] text-red-500 mt-1 leading-tight">Add your logo to enhance<br/>brand visibility</p>
+                    <p className="text-[11px] text-red-500 mt-1 leading-tight">Add your logo to enhance<br />brand visibility</p>
                   </div>
                 )}
               </div>
@@ -459,8 +546,8 @@ const ClientOverview1 = () => {
 
               <div className="flex-1 min-w-[200px]">
 
-                <div className="flex items-center gap-3 w-full">
-                  <h2 className="text-2xl font-semibold text-[#0f172a] whitespace-nowrap">
+                <div className="flex items-center gap-1 w-full">
+                  <h2 className="text-[14px] font-semibold text-[#0f172a] whitespace-nowrap">
                     {company.companyName}
                   </h2>
                   <button onClick={handleOpenEditProfile} className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors flex-shrink-0" title="Edit Profile">
@@ -514,11 +601,11 @@ const ClientOverview1 = () => {
               </div>
 
               {/* DESCRIPTION */}
-              <div className="border-l-[3px] border-gray-600 pl-4 text-gray-700 leading-5 text-[10px] w-[260px] flex-shrink-0">
+              <div className="border-l-[3px] border-gray-600 pl-2 text-gray-700 leading-5 text-[10px] w-[260px] flex-shrink-0">
                 <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">About Company</p>
                 <p className="break-words whitespace-normal">
-                {company?.companyDescription ||
-                  <span className="text-red-600 text-[12px] leading-5">Tell buyers, visitors, and business partners about your company, products, services, and expertise. A well-written company profile helps increase visibility and generate more business opportunities.</span>}
+                  {company?.companyDescription ||
+                    <span className="text-red-600 text-[12px] leading-5">Tell buyers, visitors, and business partners about your company, products, services, and expertise. A well-written company profile helps increase visibility and generate more business opportunities.</span>}
                 </p>
               </div>
             </div>
@@ -556,13 +643,13 @@ const ClientOverview1 = () => {
                 <h3 className="font-semibold text-[10px] mt-0.5 truncate">
                   {company.createdAt
                     ? new Date(company.createdAt).toLocaleString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    })
                     : "N/A"}
                 </h3>
               </div>
@@ -681,11 +768,10 @@ const ClientOverview1 = () => {
                 <div
                   key={index}
                   onClick={!item.disabled ? item.onClick || undefined : undefined}
-                  className={`h-[40px] rounded-2xl border px-3 flex items-center justify-between transition-all ${
-                    item.disabled
-                      ? "border-gray-200 bg-gray-50 cursor-not-allowed opacity-80"
-                      : "border-gray-300 cursor-pointer hover:shadow-md hover:bg-orange-50 hover:border-orange-300 group"
-                  }`}
+                  className={`h-[40px] rounded-2xl border px-3 flex items-center justify-between transition-all ${item.disabled
+                    ? "border-gray-200 bg-gray-50 cursor-not-allowed opacity-80"
+                    : "border-gray-300 cursor-pointer hover:shadow-md hover:bg-orange-50 hover:border-orange-300 group"
+                    }`}
                 >
                   <div className="flex items-center gap-4">
 
@@ -737,7 +823,7 @@ const ClientOverview1 = () => {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold mb-1 block">Forward On</label>
+                  <label className="text-xs font-semibold mb-1 block">Forward To</label>
                   <SearchableDropdown
                     options={users?.map((u) => ({ label: u.fullName || u.username, value: u.username })) || []}
                     value={reviewData.assigned_to}
@@ -790,14 +876,14 @@ const ClientOverview1 = () => {
             </div>
 
             {company.contacts && company.contacts.length > 0 ? (
-              <div className="flex flex-wrap gap-1">
+              <div className="grid grid-cols-1 sm:grid-cols-3 min-[1100px]:grid-cols-3 gap-1">
                 {company.contacts.map((contact, idx) => (
-                  <div key={idx} className="flex flex-col items-center gap-2 p-3 rounded-xl border border-gray-200 bg-gray-50 w-[180px] min-[1400px]:w-[220px] relative">
+                  <div key={idx} className="flex flex-row items-center gap-2 p-2.5 rounded-xl border border-gray-200 bg-gray-50 w-full relative pr-6">
                     <button onClick={() => handleOpenEditContact(idx)} className="absolute top-2 right-2 p-1 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
                       <Pencil size={12} />
                     </button>
                     {/* Avatar */}
-                    <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 text-indigo-600 font-bold text-lg overflow-hidden">
+                    <div className="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 text-indigo-600 font-bold text-lg overflow-hidden">
                       {contact.photo ? (
                         <img src={contact.photo.startsWith('http') ? contact.photo : `${SERVER_URL}${contact.photo}`} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -805,15 +891,14 @@ const ClientOverview1 = () => {
                       )}
                     </div>
                     {/* Info */}
-                    <div className="min-w-0 w-full text-center">
+                    <div className="min-w-0 flex-1 text-left">
                       <p className="text-[12px] font-bold text-gray-800 truncate">
-                        {[contact.title, contact.firstName, contact.surname].filter(Boolean).join(" ") || "-"}
+                        {[contact.title, contact.firstName, contact.surname].filter(Boolean).join(" ") || "-"} / {contact.designation || "-"}
                       </p>
-                      <p className="text-[10px] text-gray-400 mb-1.5">{contact.designation || "-"}</p>
-                      <a href={`tel:${contact.mobile}`} className="flex items-center justify-center gap-1 text-[11px] text-blue-600 hover:underline">
-                        <Phone size={10} /> {contact.mobile || "-"}{contact.alternate ? ` / ${contact.alternate}` : ""}
+                      <a href={`tel:${contact.mobile}`} className="flex items-center justify-start gap-1 text-[11px] text-blue-600 hover:underline">
+                        <Phone size={10} className="flex-shrink-0" /> <span className="truncate">{contact.mobile || "-"}{contact.alternate ? ` / ${contact.alternate}` : ""}</span>
                       </a>
-                      <a href={`mailto:${contact.email}`} className="flex items-center justify-center gap-1 text-[11px] text-blue-600 hover:underline mt-0.5">
+                      <a href={`mailto:${contact.email}`} className="flex items-center justify-start gap-1 text-[11px] text-blue-600 hover:underline mt-0.5">
                         <Mail size={10} className="flex-shrink-0" />
                         <span className="truncate">{contact.email || "-"}</span>
                       </a>

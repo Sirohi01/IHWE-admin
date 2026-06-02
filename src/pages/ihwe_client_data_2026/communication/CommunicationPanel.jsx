@@ -7,11 +7,12 @@ import CallLogModal from "./CallLogModal";
 import FullHistoryModal from "./FullHistoryModal";
 
 const TYPE_CONFIG = {
-  whatsapp: { icon: FaWhatsapp, color: "text-green-600",  bg: "bg-green-50",  label: "WhatsApp" },
-  call:     { icon: Phone,      color: "text-teal-600",   bg: "bg-teal-50",   label: "Call" },
-  email:    { icon: Mail,       color: "text-blue-600",   bg: "bg-blue-50",   label: "Email" },
-  status:   { icon: Activity,   color: "text-orange-500", bg: "bg-orange-50", label: "Status" },
-  log:      { icon: FolderOpen, color: "text-purple-600", bg: "bg-purple-50", label: "Log" },
+  whatsapp:    { icon: FaWhatsapp, color: "text-green-600",  bg: "bg-green-50",  label: "WhatsApp" },
+  call:        { icon: Phone,      color: "text-teal-600",   bg: "bg-teal-50",   label: "Call" },
+  email:       { icon: Mail,       color: "text-blue-600",   bg: "bg-blue-50",   label: "Email Sent" },
+  email_reply: { icon: Mail,       color: "text-indigo-600", bg: "bg-indigo-50", label: "Email Reply" },
+  status:      { icon: Activity,   color: "text-orange-500", bg: "bg-orange-50", label: "Status" },
+  log:         { icon: FolderOpen, color: "text-purple-600", bg: "bg-purple-50", label: "Log" },
 };
 
 const formatDateTime = (dt) => {
@@ -25,7 +26,7 @@ const formatDateTime = (dt) => {
 const TABS = ["All", "WhatsApp", "Calls", "Emails", "Logs/Status"];
 const TAB_TYPE_MAP = {
   All: null, WhatsApp: "whatsapp", Calls: "call",
-  Emails: "email", "Logs/Status": ["status", "log"],
+  Emails: ["email", "email_reply"], "Logs/Status": ["status", "log"],
 };
 
 const CommunicationPanel = ({ company, reviews, onSendEntry, onWhatsApp, onEmail, onCall }) => {
@@ -50,7 +51,7 @@ const CommunicationPanel = ({ company, reviews, onSendEntry, onWhatsApp, onEmail
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
   );
 
-  const displayed = sorted.slice(0, 9);
+  const displayed = sorted.slice(0, 8);
 
   return (
     <>
@@ -90,6 +91,17 @@ const CommunicationPanel = ({ company, reviews, onSendEntry, onWhatsApp, onEmail
             displayed.map((item, idx) => {
               const cfg = TYPE_CONFIG[item.type] || TYPE_CONFIG.log;
               const Icon = cfg.icon;
+
+              let label = cfg.label;
+              let text = item.re_msg;
+              if ((item.type === 'log' || item.type === 'status') && text && text.startsWith('[')) {
+                const endIdx = text.indexOf(']');
+                if (endIdx > 0) {
+                  label = text.substring(1, endIdx);
+                  text = text.substring(endIdx + 1).trim();
+                }
+              }
+
               return (
                 <div key={idx} className="flex gap-2">
                   <div className={`w-7 h-7 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
@@ -98,7 +110,7 @@ const CommunicationPanel = ({ company, reviews, onSendEntry, onWhatsApp, onEmail
                   <div className="flex-1 min-w-0">
                     <div className={`rounded-xl px-2.5 py-2 ${cfg.bg}`}>
                       <div className="flex items-center justify-between gap-2 mb-0.5">
-                        <span className={`text-[10px] font-bold uppercase ${cfg.color} flex-shrink-0`}>{cfg.label}</span>
+                        <span className={`text-[10px] font-bold uppercase ${cfg.color} flex-shrink-0`}>{label}</span>
                         <span className="text-[10px] text-gray-400 flex-shrink-0">{formatDateTime(item.createdAt)}</span>
                       </div>
                       {item.status_short && (
@@ -109,10 +121,15 @@ const CommunicationPanel = ({ company, reviews, onSendEntry, onWhatsApp, onEmail
                       {item.email_subject && (
                         <p className="text-[11px] font-semibold text-gray-700 truncate">📧 {item.email_subject}</p>
                       )}
-                      {item.re_msg && (
-                        <p className="text-[11px] text-gray-700 truncate">{item.re_msg}</p>
-                      )}
-                    </div>
+                      {text && (
+                        <p className="text-[11px] text-gray-700 truncate">
+                          {text.replace(/\n/g, ' - ').split(/(' to ')/g).map((part, i) => 
+                            part === "' to '" 
+                              ? <span key={i}>' <span className="font-extrabold text-blue-600 mx-0.5">TO</span> '</span> 
+                              : part
+                          )}
+                        </p>
+                      )}                    </div>
                   </div>
                 </div>
               );
