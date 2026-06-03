@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchCompanies } from "../../features/company/companySlice";
+import api from "../../lib/api";
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import {
   Search, Download, Plus, Upload, MessageCircle, Phone, Mail, MoreVertical,
@@ -40,29 +40,42 @@ const ConfirmClientList = () => {
   const { user } = useSelector(state => state.auth);
   const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, '') === 'superadmin';
 
-  // Redux data
-  const companiesState = useSelector((state) => state.companies);
-  const allCompanies = Array.isArray(companiesState?.companies) ? companiesState.companies : [];
-  const isLoading = companiesState?.loading ?? false;
-
-  const pagination = companiesState?.pagination;
+  const [registrations, setRegistrations] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      dispatch(fetchCompanies({
-        page,
-        limit,
-        search: searchTerm,
-        status: filterStage || 'Converted',
-        source: filterSource,
-        industry: filterIndustry,
-      }));
-    }, 400);
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const response = await api.get('/api/exhibitor-registration');
+        if (response.data.success) {
+          setRegistrations(Array.isArray(response.data.data) ? response.data.data : []);
+        }
+      } catch (error) {
+        console.error("Error fetching registrations:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, page, limit, searchTerm, filterSource, filterStage, filterIndustry]);
+  // Frontend filtering and pagination
+  const filteredRegs = registrations.filter(r => {
+    if (filterStage && filterStage !== 'Converted' && (r.status || 'Converted') !== filterStage) return false;
+    if (filterSource && (r.referredBy || 'Direct') !== filterSource) return false;
+    if (filterIndustry && r.natureOfBusiness !== filterIndustry) return false;
+    if (searchTerm) {
+      const searchStr = `${r.exhibitorName} ${r.contact1?.email} ${r.contact1?.mobile}`.toLowerCase();
+      if (!searchStr.includes(searchTerm.toLowerCase())) return false;
+    }
+    return true;
+  });
 
-  const totalLeads = pagination?.total || allCompanies.length;
+  const totalLeads = filteredRegs.length;
+  const totalPages = Math.ceil(totalLeads / limit);
+  const allCompanies = filteredRegs.slice((page - 1) * limit, page * limit);
+  const pagination = { totalPages };
 
   const isAllSelected = allCompanies.length > 0 && selectedIds.length === allCompanies.length;
   const onSelectAll = (e) => {
@@ -74,9 +87,9 @@ const ConfirmClientList = () => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const uniqueSources = [...new Set(allCompanies.map(r => r.dataSource).filter(Boolean))];
-  const uniqueIndustries = [...new Set(allCompanies.map(r => r.businessNature).filter(Boolean))];
-  const uniqueStages = [...new Set(allCompanies.map(r => r.companyStatus).filter(Boolean))];
+  const uniqueSources = [...new Set(registrations.map(r => r.referredBy).filter(Boolean))];
+  const uniqueIndustries = [...new Set(registrations.map(r => r.natureOfBusiness).filter(Boolean))];
+  const uniqueStages = [...new Set(registrations.map(r => r.status).filter(Boolean))];
 
   const getSourceStyle = (source) => {
     const s = (source || "").toLowerCase();
@@ -277,7 +290,7 @@ const ConfirmClientList = () => {
         </tr>
       ) : allCompanies.map((row, i) => {
         const isSelected = selectedIds.includes(row._id);
-        const source = row.dataSource || "Website";
+        const source = row.referredBy || "Direct";
         return (
           <tr key={row._id || i} className={`hover:bg-slate-50 transition-colors ${isSelected ? 'bg-emerald-50/30' : ''}`}>
             <td className="px-2 py-2 text-center">
@@ -290,13 +303,13 @@ const ConfirmClientList = () => {
             </td>
             <td className="px-2 py-2">
               <div className="font-semibold text-slate-800 text-[11px] cursor-pointer hover:text-emerald-600">
-                <Link to={`/client-overview/${row._id}`}>{toTitleCase(row.companyName)}</Link>
+                <Link to={`/client-overview/${row._id}?source=exhibitor`}>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
               </div>
-              <div className="text-[9px] text-slate-500">{toTitleCase(row.businessNature) || "-"}</div>
+              <div className="text-[9px] text-slate-500">{toTitleCase(row.natureOfBusiness) || "-"}</div>
             </td>
             <td className="px-2 py-2">
-              <span className={`px-1.5 py-0.5 rounded font-semibold text-[9px] ${getIndustryStyle(row.businessNature)}`}>
-                {toTitleCase(row.businessNature) || "-"}
+              <span className={`px-1.5 py-0.5 rounded font-semibold text-[9px] ${getIndustryStyle(row.natureOfBusiness)}`}>
+                {toTitleCase(row.natureOfBusiness) || "-"}
               </span>
             </td>
             <td className="px-2 py-2 text-center">
@@ -314,11 +327,11 @@ const ConfirmClientList = () => {
             </td>
             <td className="px-2 py-2 text-center">
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold text-emerald-600 bg-emerald-50">
-                {toTitleCase(row.companyStatus || "Converted")}
+                {toTitleCase(row.status || "Converted")}
               </span>
             </td>
             <td className="px-2 py-2 text-right">
-              <span className="font-semibold text-slate-800 text-[10px]">{row.revenue || "-"}</span>
+              <span className="font-semibold text-slate-800 text-[10px]">{row.participation?.currency === 'USD' ? '$' : '₹'} {row.participation?.total?.toLocaleString() || "-"}</span>
             </td>
             <td className="px-2 py-2 text-center">
               <button className="p-1 hover:bg-slate-100 rounded text-slate-400 transition-colors">
