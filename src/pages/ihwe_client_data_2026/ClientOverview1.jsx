@@ -101,7 +101,7 @@ const ClientOverview1 = () => {
         const normalizedContacts = [];
         if (data.contact1) normalizedContacts.push(data.contact1);
         if (data.contact2) normalizedContacts.push(data.contact2);
-        
+
         setCompany({
           ...data,
           contacts: normalizedContacts
@@ -216,7 +216,7 @@ const ClientOverview1 = () => {
         ...reviewData,
         re_msg: finalReMsg,
       })).unwrap();
-      
+
       if (isExhibitor) {
         const companyUpdates = {
           status: reviewData.status_short || company.status,
@@ -365,7 +365,7 @@ const ClientOverview1 = () => {
       const changes = [];
       const currentName = isExhibitor ? company.exhibitorName : company.companyName;
       if (currentName !== editProfileData.companyName) changes.push(`Name changed from '${currentName}' to '${editProfileData.companyName}'`);
-      
+
       const currentEmail = isExhibitor ? (company.contacts?.[0]?.email || "") : (company.email || "");
       if (currentEmail !== editProfileData.email) changes.push(`Email changed from '${currentEmail}' to '${editProfileData.email}'`);
       const oldMobile = company.contacts?.[0]?.mobile || "";
@@ -456,7 +456,7 @@ const ClientOverview1 = () => {
       }
 
       const updatedContacts = [...(company.contacts || [])];
-      
+
       let contactData;
       if (isExhibitor) {
         contactData = {
@@ -478,7 +478,7 @@ const ClientOverview1 = () => {
       } else {
         updatedContacts.push(contactData);
       }
-      
+
       if (isExhibitor) {
         const payload = {};
         if (updatedContacts[0]) payload.contact1 = updatedContacts[0];
@@ -887,7 +887,7 @@ const ClientOverview1 = () => {
                     id="status_short"
                     options={statusOptions?.map((item) => ({ label: item.name, value: item.name })) || []}
                     value={reviewData.status_short || (isExhibitor ? company.status : company.companyStatus) || ""}
-                    onChange={(val) => setReviewData(prev => ({ ...prev, status_short: val }))}
+                    onChange={(e) => setReviewData(prev => ({ ...prev, status_short: e.target ? e.target.value : e }))}
                     placeholder={(isExhibitor ? company?.status : company?.companyStatus) ? `Current: ${isExhibitor ? company.status : company.companyStatus}` : "Select Status"}
                   />
                 </div>
@@ -897,7 +897,7 @@ const ClientOverview1 = () => {
                   <SearchableDropdown
                     options={nextActions?.filter(n => n.status === 'active').map((n) => ({ label: n.name, value: n.name })) || []}
                     value={reviewData.forward_to}
-                    onChange={(e) => setReviewData(prev => ({ ...prev, forward_to: e.target.value }))}
+                    onChange={(e) => setReviewData(prev => ({ ...prev, forward_to: e.target ? e.target.value : e }))}
                     placeholder="Select Next Action"
                     name="ForwardTo"
                   />
@@ -909,8 +909,10 @@ const ClientOverview1 = () => {
                     id="forward_to"
                     options={users?.map((u) => ({ label: u.fullName || u.username, value: u.username })) || []}
                     value={reviewData.assigned_to || (isExhibitor ? company.spokenWith : company.forwardTo) || ""}
-                    onChange={(val) => setReviewData(prev => ({ ...prev, assigned_to: val }))}
+                    onChange={(e) => setReviewData(prev => ({ ...prev, assigned_to: e.target ? e.target.value : e }))}
                     placeholder={(isExhibitor ? company?.spokenWith : company?.forwardTo) ? `Current: ${isExhibitor ? company.spokenWith : company.forwardTo}` : "Select Assigned To"}
+                    disabled={typeof reviewData.status_short === 'string' && reviewData.status_short.toLowerCase() === "not interested"}
+                    name="AssignedTo"
                   />
                 </div>
 
@@ -920,7 +922,8 @@ const ClientOverview1 = () => {
                     type="datetime-local"
                     value={reviewData.follow_up_date}
                     onChange={(e) => setReviewData(prev => ({ ...prev, follow_up_date: e.target.value }))}
-                    className="w-full h-10 border border-[#dbe1ea] px-3 outline-none text-sm"
+                    className={`w-full h-10 border border-[#dbe1ea] px-3 outline-none text-sm ${typeof reviewData.status_short === 'string' && reviewData.status_short.toLowerCase() === "not interested" ? 'bg-gray-100 cursor-not-allowed opacity-70' : ''}`}
+                    disabled={typeof reviewData.status_short === 'string' && reviewData.status_short.toLowerCase() === "not interested"}
                   />
                 </div>
 

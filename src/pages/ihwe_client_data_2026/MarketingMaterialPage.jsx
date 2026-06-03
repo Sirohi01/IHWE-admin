@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../lib/api";
-import pragatiMaidan from "../../assets/pragatiMaidan.png";
-import sideImage from "../../assets/sideImage2.png";
+import pragatiMaidan from "../../assets/pragatiMaidan.jpeg";
+import sideImage from "../../assets/sideImage.jpeg";
 import { toast } from "react-toastify";
 import {
   FaWhatsapp, FaEnvelope, FaLink, FaDownload, FaTimes, FaFilePdf, FaImage, FaVideo,
@@ -105,6 +105,7 @@ const MarketingMaterialPage = () => {
   const [initialEmailContent, setInitialEmailContent] = useState("");
   const [initialEmailAttachments, setInitialEmailAttachments] = useState([]);
   const [currentEmailMaterialIds, setCurrentEmailMaterialIds] = useState([]);
+  const [viewMode, setViewMode] = useState("grid");
 
   useEffect(() => {
     fetchCompanyDetails();
@@ -144,21 +145,21 @@ const MarketingMaterialPage = () => {
     }
   };
 
-  const handleCategoryClick = (category) => {
+  const handleCategoryClick = (category, openModal = false) => {
     const items = materialsByCat[category] || [];
     if (items.length === 0) {
       toast.info(`No materials found for ${category}`);
       return;
     }
 
-    if (items.length === 1) {
-      setSelectedMaterial(items[0]);
-    } else {
+    if (openModal) {
       setModalCategory(category);
       setModalItems(items);
       setSelectedItemsForSend([items[0]._id]);
       setSelectedMaterial(items[0]);
       setIsModalOpen(true);
+    } else {
+      setSelectedMaterial(items[0]);
     }
   };
 
@@ -171,11 +172,31 @@ const MarketingMaterialPage = () => {
       return;
     }
 
-    if (via === "Email") {
-      let allMaterials = [];
-      Object.values(materialsByCat).forEach(arr => allMaterials.push(...arr));
-      const selectedDocs = allMaterials.filter(m => idsToSend.includes(m._id));
+    let allMaterials = [];
+    Object.values(materialsByCat).forEach(arr => allMaterials.push(...arr));
+    const selectedDocs = allMaterials.filter(m => idsToSend.includes(m._id));
 
+    // --- FRONTEND VALIDATION ---
+    let counts = { Video: 0, Image: 0, PDF: 0, Word: 0, PPT: 0 };
+    selectedDocs.forEach(m => {
+      if (counts[m.fileType] !== undefined) counts[m.fileType]++;
+    });
+
+    if (via === "WhatsApp") {
+      if (counts.Video > 1) return toast.error("You can only send 1 Video at a time on WhatsApp.");
+      if (counts.Image > 1) return toast.error("You can only send 1 Image at a time on WhatsApp.");
+      if (counts.PDF > 1) return toast.error("You can only send 1 PDF at a time on WhatsApp.");
+      if (counts.Word > 1) return toast.error("You can only send 1 Word document at a time on WhatsApp.");
+      if (counts.PPT > 1) return toast.error("You can only send 1 PPT at a time on WhatsApp.");
+    } else if (via === "Email") {
+      if (counts.Video > 1) return toast.error("You can only send 1 Video at a time via Email.");
+      if (counts.Image > 3) return toast.error("You can only send up to 3 Images at a time via Email.");
+      if (counts.PDF > 2) return toast.error("You can only send up to 2 PDFs at a time via Email.");
+      if (counts.Word > 2) return toast.error("You can only send up to 2 Word documents at a time via Email.");
+      if (counts.PPT > 2) return toast.error("You can only send up to 2 PPTs at a time via Email.");
+    }
+
+    if (via === "Email") {
       let content = `Dear ${company.companyName || "Sir/Ma'am"},\n\nPlease find the requested marketing materials below:\n\n`;
 
       const attachments = [];
@@ -274,7 +295,15 @@ const MarketingMaterialPage = () => {
 
   return (
     <div className="flex flex-col w-full h-full bg-[#f3f4f6]">
-      <div className="p-2 max-w-[1600px] mx-auto w-full flex flex-col gap-2">
+      <style>
+        {`
+          @media (min-width: 1300px) and (max-width: 1400px) {
+            .custom-library-height { height: 380px !important; }
+            .custom-preview-height { height: 320px !important; }
+          }
+        `}
+      </style>
+      <div className="p-1 max-w-[1600px] mx-auto w-full flex flex-col gap-2">
 
         {/* TOP BANNER */}
         <div className="w-full relative rounded-2xl overflow-hidden shadow-sm">
@@ -284,11 +313,11 @@ const MarketingMaterialPage = () => {
           >
             <FaChevronLeft />
           </button>
-          <img src={pragatiMaidan} alt="Banner" className="w-full h-auto object-cover" />
+          <img src={pragatiMaidan} alt="Banner" className="w-full h-auto" />
         </div>
 
         {/* MAIN ROW: Library and Preview */}
-        <div className="flex flex-col xl:flex-row gap-2">
+        <div className="flex flex-col xl:flex-row gap-1">
 
           {/* LEFT: MARKETING MATERIAL LIBRARY */}
           <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 p-3">
@@ -298,7 +327,7 @@ const MarketingMaterialPage = () => {
                   <FaFolderOpen className="text-lg" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-gray-800">Marketing Material Library</h2>
+                  <h2 className="text-[12px] font-md text-gray-800">Marketing Material Library</h2>
                   <p className="text-xs text-gray-500 font-medium">Select any material to preview and share</p>
                 </div>
               </div>
@@ -315,41 +344,77 @@ const MarketingMaterialPage = () => {
                   />
                 </div>
                 <div className="flex bg-gray-100 rounded-lg p-1">
-                  <button className="p-1.5 bg-blue-600 text-white rounded-md shadow-sm"><FaThLarge /></button>
-                  <button className="p-1.5 text-gray-500 hover:text-gray-700 rounded-md"><FaList /></button>
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`p-1.5 rounded-md shadow-sm transition-colors ${viewMode === "grid" ? "bg-blue-600 text-white" : "text-gray-500 hover:text-gray-700 hover:bg-gray-200"}`}>
+                    <FaThLarge />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={`p-1.5 rounded-md shadow-sm transition-colors ${viewMode === "list" ? "bg-blue-600 text-white" : "text-gray-500 hover:text-gray-700 hover:bg-gray-200"}`}>
+                    <FaList />
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            <div className={`overflow-y-auto thin-scrollbar pr-1 h-[250px] xl:h-[280px] custom-library-height 2xl:h-[310px] ${viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5" : "flex flex-col gap-1.5"}`}>
               {filteredCategories.map((cat, idx) => (
-                <div key={idx} className="border border-gray-100 rounded-xl p-3 flex flex-col items-center justify-between text-center hover:shadow-md transition-shadow bg-white relative cursor-pointer" onClick={() => handleCategoryClick(cat.name)}>
-                  <div className={`w-10 h-10 ${cat.bg} ${cat.color} rounded-lg flex items-center justify-center text-xl mb-2`}>
-                    <cat.icon />
-                  </div>
-                  <h3 className="font-bold text-xs text-[#1e234c] leading-tight mb-0.5">{cat.name}</h3>
-                  <p className="text-[10px] text-gray-500 mb-3">{cat.sub}</p>
+                <div
+                  key={idx}
+                  className={`border border-gray-100 rounded-xl hover:shadow-md transition-shadow bg-white relative cursor-pointer ${viewMode === "grid" ? "p-2 flex flex-col items-center justify-between text-center" : "p-2 px-3 flex flex-row items-center justify-between"}`}
+                  onClick={() => handleCategoryClick(cat.name)}
+                >
+                  {viewMode === "grid" ? (
+                    <>
+                      <div className={`w-10 h-10 ${cat.bg} ${cat.color} rounded-xl flex items-center justify-center text-xl mb-1 shadow-sm`}>
+                        <cat.icon />
+                      </div>
+                      <h3 className="font-semibold text-[12px] text-[#1e234c] leading-tight mb-0.5">{cat.name}</h3>
+                      <p className="text-[10px] text-gray-500 mb-1 leading-tight">{cat.sub}</p>
 
-                  <div className="flex items-center justify-center gap-4 text-xs font-bold w-full border-t border-gray-50 pt-2.5 mt-auto">
-                    <button className="text-blue-700 flex items-center gap-1 hover:text-blue-800" onClick={(e) => { e.stopPropagation(); handleCategoryClick(cat.name); }}>
-                      <FaEye /> Preview
-                    </button>
-                    <button className="text-[#1da935] flex items-center gap-1 hover:text-[#158828]" onClick={(e) => { e.stopPropagation(); handleCategoryClick(cat.name); }}>
-                      <FaPaperPlane /> Send
-                    </button>
-                  </div>
+                      <div className="flex items-center justify-center gap-4 text-[10px] font-bold w-full border-t border-gray-50 pt-1.5 mt-auto">
+                        <button className="text-blue-700 flex items-center gap-1 hover:text-blue-800" onClick={(e) => { e.stopPropagation(); handleCategoryClick(cat.name, true); }}>
+                          <FaEye /> Preview
+                        </button>
+                        <button className="text-[#1da935] flex items-center gap-1 hover:text-[#158828]" onClick={(e) => { e.stopPropagation(); handleCategoryClick(cat.name, true); }}>
+                          <FaPaperPlane /> Send
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-3 flex-1 overflow-hidden">
+                        <div className={`w-10 h-10 ${cat.bg} ${cat.color} rounded-lg flex items-center justify-center text-xl flex-shrink-0`}>
+                          <cat.icon />
+                        </div>
+                        <div className="flex flex-col text-left overflow-hidden">
+                          <h3 className="font-semibold text-[12px] text-[#1e234c] leading-tight mb-0.5 truncate">{cat.name}</h3>
+                          <p className="text-[13px] text-gray-500 truncate">{cat.sub}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs font-bold border-l border-gray-100 pl-4 ml-2 flex-shrink-0">
+                        <button className="text-blue-700 flex items-center gap-1 hover:text-blue-800" onClick={(e) => { e.stopPropagation(); handleCategoryClick(cat.name, true); }}>
+                          <FaEye /> Preview
+                        </button>
+                        <button className="text-[#1da935] flex items-center gap-1 hover:text-[#158828]" onClick={(e) => { e.stopPropagation(); handleCategoryClick(cat.name, true); }}>
+                          <FaPaperPlane /> Send
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
           </div>
 
           {/* RIGHT: PREVIEW PANEL */}
-          <div className="w-full xl:w-[400px] 2xl:w-[480px] bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex flex-col justify-between">
+          <div className="w-full xl:w-[400px] 2xl:w-[480px] bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex flex-col justify-start">
             {selectedMaterial ? (
               <>
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2 overflow-hidden flex-1 pr-2">
-                    <h3 className="text-md font-bold text-gray-800 truncate">Preview: {selectedMaterial.title}</h3>
+                    <h3 className="text-[12px] font-md text-gray-800 truncate">Preview: {selectedMaterial.title}</h3>
                     {currentCategoryItems.length > 1 && (
                       <div className="flex items-center gap-1 bg-gray-100 rounded-full px-2 py-0.5 flex-shrink-0 border border-gray-200">
                         <button
@@ -377,7 +442,7 @@ const MarketingMaterialPage = () => {
                   </span>
                 </div>
 
-                <div className="w-full h-[230px] 2xl:h-[270px] bg-gray-50 rounded-lg mb-4 flex items-center justify-center overflow-hidden border border-gray-100 relative group p-2">
+                <div className="w-full h-[210px] 2xl:h-[240px] custom-preview-height bg-white rounded-lg mb-1 flex items-center justify-center overflow-hidden border border-gray-100 relative group mt-2">
                   {selectedMaterial.fileType === "Image" ? (
                     <img src={selectedMaterial.fileUrl} alt={selectedMaterial.title} className="max-w-full max-h-full object-contain mx-auto shadow-sm" />
                   ) : selectedMaterial.fileType === "Video" ? (
@@ -401,12 +466,11 @@ const MarketingMaterialPage = () => {
                         loading="lazy"
                       />
                     ) : (
-                      <iframe
-                        title={selectedMaterial.title}
-                        className="w-full h-full rounded shadow-sm border-none"
-                        src={selectedMaterial.fileUrl}
-                        loading="lazy"
-                      />
+                      <div className="text-center text-gray-500 flex flex-col items-center justify-center">
+                        <FaGlobe className="text-4xl mx-auto mb-2 text-blue-500" />
+                        <p className="font-bold text-gray-700 text-sm">{selectedMaterial.title}</p>
+                        <p className="text-[10px] text-gray-400 mt-1">Click External Link to open</p>
+                      </div>
                     )
                   ) : selectedMaterial.fileType === "PDF" ? (
                     <iframe
@@ -418,14 +482,14 @@ const MarketingMaterialPage = () => {
                   ) : (
                     <div className="text-center text-gray-500 flex flex-col items-center justify-center">
                       {selectedMaterial.fileType === "PPT" ? (
-                        <FaFilePowerpoint className="text-6xl mx-auto mb-3 text-orange-500" />
+                        <FaFilePowerpoint className="text-4xl mx-auto mb-2 text-orange-500" />
                       ) : selectedMaterial.fileType === "Word" ? (
-                        <FaFileAlt className="text-6xl mx-auto mb-3 text-blue-600" />
+                        <FaFileAlt className="text-4xl mx-auto mb-2 text-blue-600" />
                       ) : (
-                        <FaFilePdf className="text-6xl mx-auto mb-3 text-red-500" />
+                        <FaFilePdf className="text-4xl mx-auto mb-2 text-red-500" />
                       )}
-                      <p className="font-bold text-gray-700">{selectedMaterial.title}</p>
-                      <p className="text-xs text-gray-400 mt-1">Click External Link to open</p>
+                      <p className="font-bold text-gray-700 text-sm">{selectedMaterial.title}</p>
+                      <p className="text-[10px] text-gray-400 mt-1">Click External Link to open</p>
                     </div>
                   )}
                   {/* Real Toolbar overlay */}
@@ -440,7 +504,7 @@ const MarketingMaterialPage = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-50">
+                <div className="flex justify-between items-center mb-1 pb-1 border-b border-gray-50 mt-2">
                   <div>
                     <p className="text-[10px] text-gray-400 mb-0.5">File Type</p>
                     <p className="font-bold text-xs text-gray-700 uppercase">{selectedMaterial.fileType}</p>
@@ -457,39 +521,39 @@ const MarketingMaterialPage = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-4 gap-1.5 mt-2">
+                <div className="grid grid-cols-4 gap-1.5 mt-1">
                   <button
                     onClick={() => handleSend("WhatsApp")}
                     disabled={sending}
-                    className="col-span-1 bg-[#25D366] text-white py-2 rounded-lg font-bold flex flex-col items-center justify-center gap-1 hover:bg-[#1ebd5a] transition text-[9px] xl:text-[10px] disabled:opacity-50 text-center leading-tight shadow-sm"
+                    className="col-span-1 bg-[#25D366] text-white py-1.5 rounded-lg font-bold flex flex-col items-center justify-center gap-1 hover:bg-[#1ebd5a] transition text-[9px] xl:text-[10px] disabled:opacity-50 text-center leading-tight shadow-sm"
                   >
                     <FaWhatsapp className="text-sm" /> WhatsApp
                   </button>
                   <button
                     onClick={() => handleSend("Email")}
                     disabled={sending}
-                    className="col-span-1 bg-blue-600 text-white py-2 rounded-lg font-bold flex flex-col items-center justify-center gap-1 hover:bg-blue-700 transition text-[9px] xl:text-[10px] disabled:opacity-50 text-center leading-tight shadow-sm"
+                    className="col-span-1 bg-blue-600 text-white py-1.5 rounded-lg font-bold flex flex-col items-center justify-center gap-1 hover:bg-blue-700 transition text-[9px] xl:text-[10px] disabled:opacity-50 text-center leading-tight shadow-sm"
                   >
                     <FaEnvelope className="text-sm" /> Email
                   </button>
                   <button
                     onClick={() => copyLink(selectedMaterial.fileUrl)}
-                    className="col-span-1 border border-gray-200 bg-gray-50 text-blue-600 py-2 rounded-lg font-bold flex flex-col items-center justify-center gap-1 hover:bg-gray-100 transition text-[9px] xl:text-[10px] text-center leading-tight shadow-sm"
+                    className="col-span-1 border border-gray-200 bg-gray-50 text-blue-600 py-1.5 rounded-lg font-bold flex flex-col items-center justify-center gap-1 hover:bg-gray-100 transition text-[9px] xl:text-[10px] text-center leading-tight shadow-sm"
                   >
                     <FaLink className="text-sm" /> Copy Link
                   </button>
                   <a
                     href={selectedMaterial.fileUrl}
                     target="_blank"
-                    rel="noreferrer"
-                    className="col-span-1 border border-gray-200 bg-gray-50 text-[#d26019] py-2 rounded-lg font-bold flex flex-col items-center justify-center gap-1 hover:bg-gray-100 transition text-[9px] xl:text-[10px] text-center leading-tight shadow-sm"
+                    rel="noopener noreferrer"
+                    className="col-span-1 border border-gray-200 bg-gray-50 text-orange-600 py-1 rounded-lg font-bold flex flex-col items-center justify-center gap-0.5 hover:bg-gray-100 transition text-[9px] xl:text-[10px] text-center leading-tight shadow-sm"
                   >
                     <FaDownload className="text-sm" /> Download
                   </a>
                 </div>
               </>
             ) : (
-              <div className="w-full min-h-[350px] rounded-lg overflow-hidden relative flex-1">
+              <div className="w-full min-h-[200px] rounded-lg overflow-hidden relative flex-1">
                 <img src={sideImage} alt="Select Material" className="absolute inset-0 w-full h-full object-cover" />
               </div>
             )}
@@ -500,98 +564,98 @@ const MarketingMaterialPage = () => {
         <div className="flex flex-col xl:flex-row gap-2 mb-1">
 
           {/* QUICK SHARE KIT */}
-          <div className="w-full xl:w-[55%] bg-gradient-to-br from-white to-blue-50/30 rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col relative overflow-hidden">
+          <div className="w-full xl:w-[55%] bg-gradient-to-br from-white to-blue-50/30 rounded-lg shadow-sm border border-gray-200 p-2 flex flex-col relative overflow-hidden">
             {/* Decorative background circle */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-10 -mt-10 opacity-50 pointer-events-none"></div>
 
-            <h3 className="text-md font-bold text-[#1e234c] mb-1 relative z-10">Quick Share Kit</h3>
-            <p className="text-xs text-gray-500 mb-6 relative z-10">Send all essential materials in one click</p>
+            <h3 className="text-[12px] font-bold text-[#1e234c] mb-0.5 relative z-10">Quick Share Kit</h3>
+            <p className="text-[10px] text-gray-500 mb-1 relative z-10">Send all essential materials in one click</p>
 
-            <div className="flex items-center justify-between w-full overflow-x-auto pb-1 mt-auto relative z-10 gap-2">
+            <div className="flex items-center justify-between w-full overflow-x-auto pb-1 mt-0.5 relative z-10 gap-2">
 
               <div className="flex flex-col items-center gap-2 flex-shrink-0">
-                <div className="w-14 h-14 bg-blue-50 border border-blue-100 rounded-xl shadow-sm flex items-center justify-center text-blue-600 text-3xl hover:-translate-y-1 transition-transform">
+                <div className="w-10 h-10 bg-blue-50 border border-blue-100 rounded-xl shadow-sm flex items-center justify-center text-blue-600 text-xl hover:-translate-y-1 transition-transform">
                   <FaBookOpen />
                 </div>
                 <span className="text-[11px] font-bold text-[#1e234c]">Brochure</span>
               </div>
 
-              <span className="text-gray-300 font-bold text-xl mb-6 flex-shrink-0">+</span>
+              <span className="text-gray-300 font-bold text-sm mb-4 flex-shrink-0">+</span>
 
               <div className="flex flex-col items-center gap-2 flex-shrink-0">
-                <div className="w-14 h-14 bg-orange-50 border border-orange-100 rounded-xl shadow-sm flex items-center justify-center text-orange-500 text-3xl hover:-translate-y-1 transition-transform">
+                <div className="w-10 h-10 bg-orange-50 border border-orange-100 rounded-xl shadow-sm flex items-center justify-center text-orange-500 text-xl hover:-translate-y-1 transition-transform">
                   <FaFilePowerpoint />
                 </div>
                 <span className="text-[11px] font-bold text-[#1e234c]">PPT</span>
               </div>
 
-              <span className="text-gray-300 font-bold text-xl mb-6 flex-shrink-0">+</span>
+              <span className="text-gray-300 font-bold text-sm mb-4 flex-shrink-0">+</span>
 
               <div className="flex flex-col items-center gap-2 flex-shrink-0">
-                <div className="w-14 h-14 bg-green-50 border border-green-100 rounded-xl shadow-sm flex items-center justify-center text-green-600 text-3xl font-bold hover:-translate-y-1 transition-transform">
+                <div className="w-10 h-10 bg-green-50 border border-green-100 rounded-xl shadow-sm flex items-center justify-center text-green-600 text-xl font-bold hover:-translate-y-1 transition-transform">
                   ₹
                 </div>
-                <span className="text-[11px] font-bold text-[#1e234c]">Rate Card</span>
+                <span className="text-[11px] font-bold text-[#1e234c]">Broucher </span>
               </div>
 
-              <span className="text-gray-300 font-bold text-xl mb-6 flex-shrink-0">+</span>
+              <span className="text-gray-300 font-bold text-sm mb-4 flex-shrink-0">+</span>
 
               <div className="flex flex-col items-center gap-2 flex-shrink-0">
-                <div className="w-14 h-14 bg-pink-50 border border-pink-100 rounded-xl shadow-sm flex items-center justify-center text-pink-500 text-3xl hover:-translate-y-1 transition-transform">
+                <div className="w-10 h-10 bg-pink-50 border border-pink-100 rounded-xl shadow-sm flex items-center justify-center text-pink-500 text-xl hover:-translate-y-1 transition-transform">
                   <FaClipboardList />
                 </div>
                 <span className="text-[11px] font-bold text-[#1e234c]">Booking Form</span>
               </div>
 
-              <span className="text-gray-300 font-bold text-xl mb-6 flex-shrink-0">+</span>
+              <span className="text-gray-300 font-bold text-sm mb-4 flex-shrink-0">+</span>
 
               <div className="flex flex-col items-center gap-2 flex-shrink-0">
-                <div className="w-14 h-14 bg-blue-50 border border-blue-100 rounded-xl shadow-sm flex items-center justify-center text-blue-500 text-3xl hover:-translate-y-1 transition-transform">
+                <div className="w-10 h-10 bg-blue-50 border border-blue-100 rounded-xl shadow-sm flex items-center justify-center text-blue-500 text-xl hover:-translate-y-1 transition-transform">
                   <FaGlobe />
                 </div>
                 <span className="text-[11px] font-bold text-[#1e234c]">Website Link</span>
               </div>
 
-              <div className="flex flex-col items-center min-w-[170px] pl-4 flex-shrink-0">
+              <div className="flex flex-col items-center min-w-[150px] pl-2 flex-shrink-0">
                 <button
                   onClick={handleSendKit}
                   disabled={sending}
-                  className="w-full bg-[#1da935] text-white py-3.5 px-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#158828] hover:shadow-lg transition-all disabled:opacity-50 text-xs shadow-md"
+                  className="w-full bg-[#1da935] text-white py-2 px-3 rounded-xl font-bold flex items-center justify-center gap-1.5 hover:bg-[#158828] hover:shadow-lg transition-all disabled:opacity-50 text-[11px] shadow-sm"
                 >
-                  <FaPaperPlane className="text-xl -mt-1" />
+                  <FaPaperPlane className="text-sm -mt-0.5" />
                   <span className="text-left leading-tight">Send Complete<br />Marketing Kit</span>
                 </button>
-                <span className="text-[10px] text-[#2c3167] font-semibold mt-2 text-center leading-tight">One click – All essential<br />materials to client</span>
+                <span className="text-[9px] text-[#2c3167] font-semibold mt-1 text-center leading-tight">One click – All essential<br />materials</span>
               </div>
             </div>
           </div>
 
           {/* RECENT SHARED HISTORY */}
-          <div className="w-full xl:w-[45%] bg-white rounded-lg shadow-sm border border-gray-200 p-3">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-md font-bold text-gray-800">Recent Shared History</h3>
+          <div className="w-full xl:w-[45%] bg-white rounded-lg shadow-sm border border-gray-200 p-2">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-[12px] font-md text-gray-800">Recent Shared History</h3>
               <button className="text-blue-600 text-xs font-semibold hover:underline">View All</button>
             </div>
             <div className="overflow-x-auto overflow-y-auto max-h-[100px] thin-scrollbar pr-1">
               <table className="w-full text-left border-collapse">
                 <thead className="bg-gray-50 border-y border-gray-100">
                   <tr>
-                    <th className="py-2 px-3 font-bold text-[10px] text-gray-500 uppercase tracking-wider">Client Name</th>
-                    <th className="py-2 px-3 font-bold text-[10px] text-gray-500 uppercase tracking-wider">Material Sent</th>
-                    <th className="py-2 px-3 font-bold text-[10px] text-gray-500 uppercase tracking-wider">Date</th>
-                    <th className="py-2 px-3 font-bold text-[10px] text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="py-1 px-2 font-bold text-[10px] text-gray-500 uppercase tracking-wider">Client Name</th>
+                    <th className="py-1 px-2 font-bold text-[10px] text-gray-500 uppercase tracking-wider">Material Sent</th>
+                    <th className="py-1 px-2 font-bold text-[10px] text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="py-1 px-2 font-bold text-[10px] text-gray-500 uppercase tracking-wider">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {shareHistory.map((log) => (
                     <tr key={log._id} className="hover:bg-gray-50 transition-colors">
-                      <td className="py-2 px-3 text-xs font-medium text-gray-700">{company?.companyName}</td>
-                      <td className="py-2 px-3 text-xs text-gray-500 truncate max-w-[100px]">
+                      <td className="py-1 px-2 text-[11px] font-medium text-gray-700">{company?.companyName}</td>
+                      <td className="py-1 px-2 text-[11px] text-gray-500 truncate max-w-[100px]">
                         {log.materials.map(m => m.title).join(", ")}
                       </td>
-                      <td className="py-2 px-3 text-xs text-gray-500">{new Date(log.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</td>
-                      <td className="py-2 px-3">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold bg-green-50 text-green-600 border border-green-100 uppercase tracking-wide">
+                      <td className="py-1 px-2 text-[11px] text-gray-500">{new Date(log.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</td>
+                      <td className="py-1 px-2">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-green-50 text-green-600 border border-green-100 uppercase tracking-wide">
                           <FaCheckCircle className="text-[9px]" /> Sent
                         </span>
                       </td>
