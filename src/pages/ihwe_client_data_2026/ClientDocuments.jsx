@@ -16,11 +16,13 @@ import {
     FolderOpen,
     LayoutGrid,
     List as ListIcon,
-    X
+    X,
+    Trash2
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchDocumentRequirements } from "../../features/add_by_admin/document-requirements/DocumentRequirementSlice";
+import { fetchClientDocuments, uploadClientDocument, updateDocumentStatus, addDocumentComment, deleteClientDocument } from "../../features/client-documents/ClientDocumentSlice";
 import docBanner from "../../assets/docBanner.webp";
 
 const mockDocuments = [
@@ -28,7 +30,7 @@ const mockDocuments = [
     { id: 2, type: "MSME Related Documents", name: "Udyam Certificate", fullName: "Udyam Certificate", category: "MSME Related", isUploaded: false },
     { id: 3, type: "MSME Related Documents", name: "GST Certificate", fullName: "GST Certificate", fileType: "PDF", size: "1.3 MB", date: "30 May 2026", status: "Approved", category: "MSME Related", uploader: "Wellness India Pvt. Ltd.", time: "11:20 AM", isUploaded: true },
     { id: 4, type: "MSME Related Documents", name: "Bank Details Proof", fullName: "Bank Details Proof", category: "MSME Related", isUploaded: false },
-    { id: 5, type: "MSME Related Documents", name: "Subsidy Eligibility", fullName: "MSME Subsidy Eligibility", fileType: "PDF", size: "1.4 MB", date: "28 May 2026", status: "Approved", category: "MSME Related", uploader: "Wellness India Pvt. Ltd.", time: "11:20 AM", isUploaded: false },
+    { id: 5, type: "MSME Related Documents", name: "Subsidy Eligibility", fullName: "MSME Subsidy Eligibility", fileType: "PDF", size: "1.4 MB", date: "28 May 2026", status: "Approved", category: "MSME Related", uploader: "Wellness India Pvt. Ltd.", isUploaded: false },
 
     { id: 6, type: "General Documents", name: "Company Profile", fullName: "Company Profile", fileType: "PDF", size: "2.4 MB", date: "02 Jun 2026", status: "Approved", category: "General Documents", uploader: "Wellness India Pvt. Ltd.", time: "11:20 AM", isUploaded: true },
     { id: 7, type: "General Documents", name: "Product Catalogue", fullName: "Product Catalogue", category: "General Documents", isUploaded: false },
@@ -40,30 +42,68 @@ const mockDocuments = [
 const ClientDocuments = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const { id: clientId } = useParams();
+    const { documents: clientDocs = [], loading } = useSelector((state) => state.clientDocuments || {});
     const { documentRequirements = [] } = useSelector((state) => state.documentRequirements || {});
 
     useEffect(() => {
         dispatch(fetchDocumentRequirements());
-    }, [dispatch]);
+        if (clientId) {
+            dispatch(fetchClientDocuments(clientId));
+        }
+    }, [dispatch, clientId]);
 
-    const [documents, setDocuments] = useState(mockDocuments.filter(d => d.isUploaded));
+    const formattedDocs = useMemo(() => {
+        return clientDocs.map(d => ({
+            id: d._id,
+            type: d.category,
+            name: d.document_name,
+            fullName: d.document_name,
+            fileType: d.file_type || "FILE",
+            size: d.size || "Unknown",
+            date: new Date(d.added).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+            status: d.status,
+            category: d.category === "MSME Related Documents" ? "MSME Related" : "General Documents",
+            uploader: d.uploaded_by || "Admin Upload",
+            time: new Date(d.added).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            isUploaded: true,
+            previewUrl: d.file_url ? (d.file_url.startsWith('http') ? d.file_url : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}${d.file_url}`.replace('/api/uploads', '/uploads')) : "",
+            isImage: d.file_type && ['JPG', 'JPEG', 'PNG', 'GIF'].includes(d.file_type.toUpperCase())
+        }));
+    }, [clientDocs]);
+
     const [activeTab, setActiveTab] = useState("All Documents");
     const [filterStatus, setFilterStatus] = useState("All");
-    const [selectedDocument, setSelectedDocument] = useState(documents[0] || mockDocuments[0]);
+    const [selectedDocument, setSelectedDocument] = useState(null);
     const [viewAllCategory, setViewAllCategory] = useState(null);
+    const [uploadingDocId, setUploadingDocId] = useState(null);
+    const [commentText, setCommentText] = useState("");
 
     const combinedDocuments = useMemo(() => {
-        let combined = [...documents];
-        
-        const activeRequirements = documentRequirements.filter(req => req.status === "Active");
-        
+        let combined = [...formattedDocs];
+        const defaultRequirements = [
+            { document_name: "MSME Registration Certificate", category: "MSME Related Documents", status: "Active", order: 1 },
+            { document_name: "Udyam Certificate", category: "MSME Related Documents", status: "Active", order: 2 },
+            { document_name: "GST Certificate", category: "MSME Related Documents", status: "Active", order: 3 },
+            { document_name: "Bank Details Proof", category: "MSME Related Documents", status: "Active", order: 4 },
+            { document_name: "Subsidy Eligibility", category: "MSME Related Documents", status: "Active", order: 5 },
+            { document_name: "Company Profile", category: "General Documents", status: "Active", order: 6 },
+            { document_name: "Product Catalogue", category: "General Documents", status: "Active", order: 7 },
+            { document_name: "Participation Form", category: "General Documents", status: "Active", order: 8 },
+            { document_name: "Price List", category: "General Documents", status: "Active", order: 9 },
+            { document_name: "Other Document", category: "General Documents", status: "Active", order: 10 },
+        ];
+
+        const reqsToUse = documentRequirements.length > 0 ? documentRequirements : defaultRequirements;
+        const activeRequirements = reqsToUse.filter(req => req.status === "Active");
+
         activeRequirements.forEach((req, index) => {
-            const reqName = req.document_name?.trim().toLowerCase() || "";
-            const alreadyExists = combined.some(d => 
-                (d.fullName?.trim().toLowerCase() === reqName) || 
-                (d.name?.trim().toLowerCase() === reqName)
+            const reqName = req.document_name?.trim()?.toLowerCase() || "";
+            const alreadyExists = combined.some(d =>
+                (d.fullName?.trim()?.toLowerCase() === reqName) ||
+                (d.name?.trim()?.toLowerCase() === reqName)
             );
-            
+
             if (!alreadyExists) {
                 combined.push({
                     id: `req-${req._id || index}`,
@@ -76,13 +116,13 @@ const ClientDocuments = () => {
                 });
             }
         });
-        
+
         // Assign order to existing documents from backend config
         combined.forEach(d => {
             if (d.order === undefined) {
                 const docName1 = d.fullName?.trim().toLowerCase() || "";
                 const docName2 = d.name?.trim().toLowerCase() || "";
-                const req = documentRequirements.find(r => {
+                const req = reqsToUse.find(r => {
                     const rName = r.document_name?.trim().toLowerCase() || "";
                     return rName === docName1 || rName === docName2;
                 });
@@ -92,24 +132,72 @@ const ClientDocuments = () => {
 
         // Sort by order ascending
         combined.sort((a, b) => a.order - b.order);
-        
+
         return combined;
-    }, [documents, documentRequirements]);
+    }, [formattedDocs, documentRequirements]);
+
+    useEffect(() => {
+        if (!selectedDocument && combinedDocuments.length > 0) {
+            setSelectedDocument(combinedDocuments[0]);
+        } else if (selectedDocument) {
+            const updatedDoc = combinedDocuments.find(d =>
+                d.id === selectedDocument.id ||
+                (d.fullName === selectedDocument.fullName && d.isUploaded)
+            );
+            if (updatedDoc && (
+                updatedDoc.id !== selectedDocument.id ||
+                updatedDoc.status !== selectedDocument.status ||
+                updatedDoc.previewUrl !== selectedDocument.previewUrl
+            )) {
+                setSelectedDocument(updatedDoc);
+            }
+        }
+    }, [combinedDocuments, selectedDocument]);
 
     const msmeDocs = combinedDocuments.filter(d => d.type === "MSME Related Documents" && (filterStatus === "All" || d.status === filterStatus));
     const generalDocs = combinedDocuments.filter(d => d.type === "General Documents" && (filterStatus === "All" || d.status === filterStatus));
 
     const stats = {
-        total: documents.filter(d => d.isUploaded).length,
-        approved: documents.filter(d => d.isUploaded && d.status === "Approved").length,
-        pending: documents.filter(d => d.isUploaded && d.status === "Pending").length,
-        rejected: documents.filter(d => d.isUploaded && d.status === "Rejected").length
+        total: formattedDocs.length,
+        approved: formattedDocs.filter(d => d.status === "Approved").length,
+        pending: formattedDocs.filter(d => d.status === "Pending").length,
+        rejected: formattedDocs.filter(d => d.status === "Rejected").length
     };
 
-    const handleStatusChange = (newStatus) => {
-        if (!selectedDocument) return;
-        setDocuments(prev => prev.map(d => d.id === selectedDocument.id ? { ...d, status: newStatus } : d));
-        setSelectedDocument(prev => ({ ...prev, status: newStatus }));
+    const handleStatusChange = async (newStatus) => {
+        if (!selectedDocument || !selectedDocument.id || selectedDocument.id.toString().startsWith('req-')) return;
+
+        let adminData = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
+        let adminName = "Admin";
+        if (adminData) {
+            try { adminName = JSON.parse(adminData).name || "Admin"; } catch (e) { }
+        }
+
+        try {
+            await dispatch(updateDocumentStatus({ id: selectedDocument.id, status: newStatus, author: adminName })).unwrap();
+            setSelectedDocument(prev => ({ ...prev, status: newStatus }));
+            dispatch(fetchClientDocuments(clientId));
+        } catch (err) {
+            alert("Failed to update status");
+        }
+    };
+
+    const handleAddComment = async () => {
+        if (!commentText.trim() || !selectedDocument || !selectedDocument.id || selectedDocument.id.toString().startsWith('req-')) return;
+
+        let adminData = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
+        let adminName = "Admin";
+        if (adminData) {
+            try { adminName = JSON.parse(adminData).name || "Admin"; } catch (e) { }
+        }
+
+        try {
+            await dispatch(addDocumentComment({ id: selectedDocument.id, text: commentText, author: adminName })).unwrap();
+            setCommentText("");
+            dispatch(fetchClientDocuments(clientId));
+        } catch (error) {
+            alert("Failed to add comment");
+        }
     };
 
     const StatusBadge = ({ status }) => {
@@ -140,35 +228,64 @@ const ClientDocuments = () => {
     const DocumentCard = ({ doc }) => {
         const isSelected = selectedDocument?.id === doc.id;
 
-        const handleCardUpload = (e) => {
+        const handleCardUpload = async (e) => {
             const file = e.target.files[0];
-            if (!file) return;
-            const fileUrl = URL.createObjectURL(file);
-            const updatedDoc = {
-                ...doc,
-                isUploaded: true,
-                fileType: file.name.split('.').pop().toUpperCase() || 'FILE',
-                size: (file.size / (1024 * 1024)).toFixed(1) + " MB",
-                date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-                status: "Pending",
-                uploader: "Admin Upload",
-                time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-                previewUrl: fileUrl,
-                isImage: file.type.startsWith('image/')
-            };
-            setDocuments(prev => prev.map(d => d.id === doc.id ? updatedDoc : d));
-            setSelectedDocument(updatedDoc);
+            if (!file || !clientId) return;
+
+            setUploadingDocId(doc.id);
+            const formData = new FormData();
+            formData.append("client_id", clientId);
+            formData.append("document_name", doc.fullName);
+            formData.append("category", doc.type);
+            formData.append("file", file);
+
+            let adminData = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
+            let adminName = "Admin Upload";
+            if (adminData) {
+                try { adminName = JSON.parse(adminData).name || "Admin Upload"; } catch (e) { }
+            }
+            formData.append("uploaded_by", adminName);
+
+            try {
+                await dispatch(uploadClientDocument(formData)).unwrap();
+                await dispatch(fetchClientDocuments(clientId));
+            } catch (error) {
+                alert("Failed to upload document");
+            } finally {
+                setUploadingDocId(null);
+            }
+        };
+
+        const handleDelete = async (e) => {
+            e.stopPropagation();
+            if (window.confirm(`Are you sure you want to delete ${doc.fullName}?`)) {
+                try {
+                    await dispatch(deleteClientDocument(doc.id)).unwrap();
+                    if (selectedDocument?.id === doc.id) {
+                        setSelectedDocument(null);
+                    }
+                    dispatch(fetchClientDocuments(clientId));
+                } catch (error) {
+                    alert("Failed to delete document");
+                }
+            }
         };
 
         if (!doc.isUploaded) {
+            const isUploading = uploadingDocId === doc.id;
             return (
                 <div className="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-3 flex flex-col items-center justify-center text-center hover:bg-gray-100 transition-colors h-full min-h-[220px] relative">
-                    <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleCardUpload} accept="image/*,.pdf,.doc,.docx" />
-                    <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
-                        <Download size={20} className="rotate-180" />
-                    </div>
+                    {!isUploading && <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleCardUpload} accept="image/*,.pdf,.doc,.docx" />}
+
+                    {isUploading ? (
+                        <div className="w-10 h-10 rounded-full border-[3px] border-blue-200 border-t-blue-600 animate-spin flex items-center justify-center mb-3"></div>
+                    ) : (
+                        <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
+                            <Download size={20} className="rotate-180" />
+                        </div>
+                    )}
                     <h4 className="font-semibold text-[13px] text-gray-800 mb-1">{doc.name}</h4>
-                    <span className="text-[11px] text-gray-500 px-2">Click to upload document</span>
+                    <span className="text-[11px] text-gray-500 px-2">{isUploading ? "Uploading..." : "Click to upload document"}</span>
                 </div>
             );
         }
@@ -192,7 +309,7 @@ const ClientDocuments = () => {
                             <img src={doc.previewUrl} alt="Preview" className="w-full h-full object-cover" />
                         ) : doc.fileType === 'PDF' ? (
                             <div className="w-full h-full relative pointer-events-none overflow-hidden bg-white">
-                                <iframe src={`${doc.previewUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`} className="absolute top-0 left-0 w-full h-[150%] -mt-4 border-none pointer-events-none" scrolling="no" />
+                                <iframe src={`https://docs.google.com/gview?url=${encodeURIComponent(doc.previewUrl)}&embedded=true`} className="absolute top-0 left-0 w-full h-[150%] -mt-4 border-none pointer-events-none" scrolling="no" />
                             </div>
                         ) : (
                             <div className="text-center p-2 text-gray-400 text-[10px] font-semibold px-4 w-full h-full flex items-center justify-center bg-gradient-to-br from-white to-gray-50">
@@ -204,8 +321,8 @@ const ClientDocuments = () => {
                             <span className="truncate whitespace-normal line-clamp-3 text-center opacity-60 uppercase tracking-widest leading-relaxed">{doc.fullName}</span>
                         </div>
                     )}
-                    <button className="absolute top-2 right-2 p-1 text-gray-700 bg-white/90 shadow-sm rounded-md opacity-100 transition-opacity hover:bg-gray-100">
-                        <MoreVertical size={16} strokeWidth={2.5} />
+                    <button onClick={handleDelete} className="absolute top-2 right-2 p-1 text-red-500 hover:text-red-700 bg-white/90 shadow-sm rounded-md opacity-100 transition-colors hover:bg-red-50" title="Delete Document">
+                        <Trash2 size={16} strokeWidth={2.5} />
                     </button>
                 </div>
 
@@ -301,7 +418,7 @@ const ClientDocuments = () => {
                         {selectedDocument ? (
                             <>
                                 <div className="p-4 flex justify-between items-center bg-white">
-                                    <div className="font-bold text-[14px] text-[#0f172a] truncate pr-2">Preview: {selectedDocument.fullName}.{selectedDocument.fileType.toLowerCase()}</div>
+                                    <div className="font-bold text-[14px] text-[#0f172a] truncate pr-2">Preview: {selectedDocument.fullName}.{selectedDocument.fileType?.toLowerCase()}</div>
                                     <div className="flex items-center gap-3 shrink-0">
                                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-[4px] border ${selectedDocument.fileType === 'PDF' ? 'border-[#ef4444] text-[#ef4444]' : 'border-[#2563eb] text-[#2563eb]'}`}>{selectedDocument.fileType}</span>
                                         <button onClick={() => setSelectedDocument(null)} className="text-gray-900 hover:text-gray-700"><X size={18} strokeWidth={2.5} /></button>
@@ -332,8 +449,8 @@ const ClientDocuments = () => {
                                         {selectedDocument.previewUrl ? (
                                             selectedDocument.isImage ? (
                                                 <img src={selectedDocument.previewUrl} alt="Preview" className="max-w-full shadow-lg object-contain bg-white" />
-                                            ) : selectedDocument.fileType === 'PDF' ? (
-                                                <iframe src={`${selectedDocument.previewUrl}#toolbar=0`} className="w-full h-full border-none bg-white" />
+                                            ) : selectedDocument.fileType === 'PDF' || selectedDocument.fileType === 'DOC' || selectedDocument.fileType === 'DOCX' ? (
+                                                <iframe src={`https://docs.google.com/gview?url=${encodeURIComponent(selectedDocument.previewUrl)}&embedded=true`} className="w-full h-full border-none bg-white" />
                                             ) : (
                                                 <div className="text-white flex flex-col items-center mt-10">
                                                     <FileText size={48} className="mb-2 text-gray-400" />
@@ -439,10 +556,13 @@ const ClientDocuments = () => {
                                         <div className="flex gap-2">
                                             <input
                                                 type="text"
+                                                value={commentText}
+                                                onChange={e => setCommentText(e.target.value)}
+                                                onKeyDown={e => e.key === 'Enter' && handleAddComment()}
                                                 placeholder="Write your comment..."
                                                 className="flex-1 border border-gray-200 rounded-[6px] px-3 py-2 text-[12px] outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb] bg-white shadow-sm"
                                             />
-                                            <button className="bg-[#2563eb] hover:bg-blue-700 text-white px-5 py-2 rounded-[6px] text-[12px] font-semibold transition-colors shadow-sm">
+                                            <button onClick={handleAddComment} className="bg-[#2563eb] hover:bg-blue-700 text-white px-5 py-2 rounded-[6px] text-[12px] font-semibold transition-colors shadow-sm disabled:bg-blue-300" disabled={!commentText.trim() || !selectedDocument.isUploaded}>
                                                 Submit
                                             </button>
                                         </div>

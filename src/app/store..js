@@ -32,6 +32,7 @@ import unitReducer from "../features/add_by_admin/unit/UnitSlice";
 import nextActionReducer from "../features/add_by_admin/nextAction/nextActionSlice";
 
 import documentRequirementReducer from "../features/add_by_admin/document-requirements/DocumentRequirementSlice";
+import clientDocumentReducer from "../features/client-documents/ClientDocumentSlice";
 
 export const store = configureStore({
   reducer: {
@@ -67,6 +68,7 @@ export const store = configureStore({
     unit: unitReducer,
     nextActions: nextActionReducer,
     documentRequirements: documentRequirementReducer,
+    clientDocuments: clientDocumentReducer,
   },
 });
 
