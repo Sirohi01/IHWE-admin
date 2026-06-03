@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
+import useDashboardStats from "../../hooks/useDashboardStats";
 import {
   Search, MoreVertical, Download, Filter, Calendar, MessageCircle, Phone, Mail, Users, Clock, CalendarDays, CalendarCheck, Target, ArrowRight, Plus, Upload, RefreshCw
 } from "lucide-react";
@@ -99,11 +100,11 @@ const hasFullNewLeadAccess = [
     return <Phone size={12} className="text-slate-400" />;
   };
 
-  const totalLeads = pagination?.total || newLeadCompanies.length;
-  // Dummy stats for the UI to match the image
-  const todaysLeads = Math.min(7, totalLeads);
-  const thisWeekLeads = Math.min(18, totalLeads);
-  const thisMonthLeads = Math.max(72, totalLeads);
+  const {
+    totalLeads, todaysLeads, thisWeekLeads, thisMonthLeads,
+    pendingFollowUpsCount, followUps, sourceChartData,
+    statusChartData, recentActivities, topExecutives
+  } = useDashboardStats('New Lead');
 
   return (
     <div className="w-full bg-[#f8fafc] min-h-[calc(100vh-110px)] xl:h-[calc(100vh-110px)] flex flex-col font-sans text-slate-800 p-4 md:px-6 lg:px-8 xl:overflow-hidden">
@@ -199,8 +200,8 @@ const hasFullNewLeadAccess = [
               </div>
               <div className="flex flex-col">
                 <div className="text-[10px] text-slate-500 font-semibold mb-0.5">Pending Follow-Ups</div>
-                <div className="text-xl font-bold text-slate-800 leading-none mb-1">16</div>
-                <div className="text-[9px] text-blue-600 font-medium cursor-pointer">View All</div>
+                <div className="text-xl font-bold text-slate-800 leading-none mb-1">{pendingFollowUpsCount}</div>
+                <div className="text-[9px] text-blue-600 font-medium cursor-pointer" onClick={() => navigate("/ihweClientData2026/warmClientsList")}>View All</div>
               </div>
             </div>
           </div>
@@ -361,7 +362,7 @@ const hasFullNewLeadAccess = [
             </div>
 
             <div className="p-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500 bg-slate-50/50">
-              <div>Showing {totalLeads === 0 ? 0 : (page - 1) * limit + 1} to {Math.min(page * limit, totalLeads)} of {totalLeads} new leads</div>
+              <div>Showing {pagination?.total === 0 ? 0 : (page - 1) * limit + 1} to {Math.min(page * limit, pagination?.total || 0)} of {pagination?.total || 0} new leads</div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1">
                   <button onClick={() => setPage(1)} disabled={page === 1} className="w-6 h-6 rounded flex items-center justify-center hover:bg-slate-200 disabled:opacity-50">«</button>
@@ -395,16 +396,10 @@ const hasFullNewLeadAccess = [
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
               <h3 className="text-[11px] font-bold text-slate-800 mb-1">Follow-Ups Due <span className="text-[8px] text-slate-400 font-normal ml-1">(Next 7 Days)</span></h3>
               <div className="flex flex-col gap-1">
-                {[
-                  { name: "GreenLife Ayurveda", date: "27 May, 11:00 AM", type: "WhatsApp", icon: <MessageCircle size={12} className="text-emerald-500" />, tagBg: "bg-emerald-50 text-emerald-600", iconBg: "bg-emerald-50" },
-                  { name: "Nature's Harmony", date: "28 May, 03:00 PM", type: "Call", icon: <Phone size={12} className="text-emerald-500" />, tagBg: "bg-emerald-50 text-emerald-600", iconBg: "bg-emerald-50" },
-                  { name: "Herbal King", date: "28 May, 05:00 PM", type: "Email", icon: <Mail size={12} className="text-blue-500" />, tagBg: "bg-blue-50 text-blue-600", iconBg: "bg-blue-50" },
-                  { name: "Wellness Center", date: "29 May, 10:00 AM", type: "Call", icon: <Phone size={12} className="text-emerald-500" />, tagBg: "bg-emerald-50 text-emerald-600", iconBg: "bg-emerald-50" },
-                  { name: "Ayush Pharma", date: "29 May, 01:30 PM", type: "WhatsApp", icon: <MessageCircle size={12} className="text-emerald-500" />, tagBg: "bg-emerald-50 text-emerald-600", iconBg: "bg-emerald-50" },
-                ].map((fu, idx) => (
+                {followUps.length === 0 ? <p className="text-xs text-slate-400">No follow-ups due.</p> : followUps.map((fu, idx) => (
                   <div key={idx} className="flex items-start gap-2">
                     <div className={`w-7 h-7 rounded-full ${fu.iconBg} flex items-center justify-center shrink-0`}>
-                      {fu.icon}
+                      <Phone size={12} className="text-blue-500" />
                     </div>
                     <div className="flex-grow">
                       <div className="text-[10px] font-bold text-slate-800 leading-tight">{fu.name}</div>
@@ -433,13 +428,7 @@ const hasFullNewLeadAccess = [
                 </div>
               </div>
               <div className="flex-grow flex flex-col gap-0.5">
-                {[
-                  { label: "Website", count: Math.ceil(totalLeads * 0.33), pct: "33%", color: "bg-sky-500" },
-                  { label: "Referral", count: Math.ceil(totalLeads * 0.25), pct: "25%", color: "bg-purple-500" },
-                  { label: "WhatsApp", count: Math.ceil(totalLeads * 0.21), pct: "21%", color: "bg-emerald-500" },
-                  { label: "Trade Show", count: Math.ceil(totalLeads * 0.13), pct: "13%", color: "bg-amber-500" },
-                  { label: "Other", count: Math.ceil(totalLeads * 0.08), pct: "8%", color: "bg-slate-400" }
-                ].map((s, i) => (
+                {sourceChartData.length === 0 ? <p className="text-xs text-slate-400">No data</p> : sourceChartData.map((s, i) => (
                   <div key={i} className="flex items-center justify-between text-[8px]">
                     <div className="flex items-center gap-1">
                       <div className={`w-1.5 h-1.5 rounded-full ${s.color}`}></div>
@@ -459,13 +448,7 @@ const hasFullNewLeadAccess = [
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
               <h3 className="text-[11px] font-bold text-slate-800 mb-1.5">Lead Status Overview</h3>
               <div className="flex flex-col gap-1.5">
-                {[
-                  { label: "New", count: Math.ceil(totalLeads * 0.38), pct: "38%", color: "bg-emerald-500" },
-                  { label: "Contacted", count: Math.ceil(totalLeads * 0.28), pct: "28%", color: "bg-blue-500" },
-                  { label: "Interested", count: Math.ceil(totalLeads * 0.19), pct: "19%", color: "bg-purple-500" },
-                  { label: "Not Contacted", count: Math.ceil(totalLeads * 0.09), pct: "9%", color: "bg-orange-500" },
-                  { label: "Converted", count: Math.ceil(totalLeads * 0.06), pct: "6%", color: "bg-teal-500" },
-                ].map((s, i) => (
+                {statusChartData.length === 0 ? <p className="text-xs text-slate-400">No data</p> : statusChartData.map((s, i) => (
                   <div key={i} className="flex items-center justify-between text-[8px]">
                     <span className="text-slate-700 w-16">{s.label}</span>
                     <div className="flex-grow mx-2 h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -486,14 +469,10 @@ const hasFullNewLeadAccess = [
               <h3 className="text-[11px] font-bold text-slate-800 mb-1">Recent Activities</h3>
               <div className="flex flex-col gap-1.5 relative">
                 <div className="absolute left-[9px] top-2 bottom-2 w-px bg-slate-100"></div>
-                {[
-                  { icon: <Phone size={8} className="text-emerald-600" />, bg: "bg-emerald-50 border-emerald-100", text: "Spoke with Nature's Harmony", date: "28 May, 03:00 PM" },
-                  { icon: <Mail size={8} className="text-blue-600" />, bg: "bg-blue-50 border-blue-100", text: "Sent email to Herbal King", date: "27 May, 05:00 PM" },
-                  { icon: <FaWhatsapp size={8} className="text-emerald-600" />, bg: "bg-emerald-50 border-emerald-100", text: "WhatsApp chat with GreenLife", date: "27 May, 11:00 AM" }
-                ].map((act, i) => (
+                {recentActivities.length === 0 ? <p className="text-xs text-slate-400 mt-2 ml-4">No recent activity.</p> : recentActivities.map((act, i) => (
                   <div key={i} className="flex items-start gap-2 relative z-10">
                     <div className={`w-5 h-5 rounded-full border ${act.bg} flex items-center justify-center bg-white shrink-0 mt-0.5`}>
-                      {act.icon}
+                      <Mail size={8} className="text-emerald-600" />
                     </div>
                     <div>
                       <div className="text-[9px] font-medium text-slate-700 leading-tight">{act.text}</div>
@@ -524,7 +503,7 @@ const hasFullNewLeadAccess = [
                 <FaWhatsapp size={12} />
                 <span className="text-[9px] font-bold">WhatsApp</span>
               </button>
-              <button className="flex items-center gap-1.5 p-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded transition-colors border border-purple-100">
+              <button onClick={() => navigate("#")} className="flex items-center gap-1.5 p-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded transition-colors border border-purple-100">
                 <Users size={12} />
                 <span className="text-[9px] font-bold">Assign Leads</span>
               </button>
@@ -536,11 +515,7 @@ const hasFullNewLeadAccess = [
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
               <h3 className="text-[11px] font-bold text-slate-800 mb-1.5">Top Assigned Executives</h3>
               <div className="flex flex-col gap-1.5">
-                {[
-                  { name: "Vijay Sharma", init: "VS", count: 12, color: "bg-emerald-500" },
-                  { name: "Rahul Verma", init: "RV", count: 7, color: "bg-blue-500" },
-                  { name: "Neha Patil", init: "NP", count: 5, color: "bg-purple-500" }
-                ].map((exec, i) => (
+                {topExecutives.length === 0 ? <p className="text-xs text-slate-400">No assignments</p> : topExecutives.map((exec, i) => (
                   <div key={i} className="flex items-center justify-between text-[9px]">
                     <div className="flex items-center gap-1.5">
                       <div className={`w-5 h-5 rounded-full ${exec.color} text-white flex items-center justify-center font-bold text-[8px]`}>

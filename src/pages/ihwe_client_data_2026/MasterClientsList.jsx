@@ -5,6 +5,7 @@ import { useReactToPrint } from "react-to-print";
 import * as XLSX from "xlsx";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
+import useDashboardStats from "../../hooks/useDashboardStats";
 import {
   FaSearch, FaPlus, FaUpload, FaWhatsapp, FaDownload,
   FaFilter, FaRedo, FaChevronLeft, FaChevronRight, FaRegStar, FaStar
@@ -41,34 +42,39 @@ const MasterClientsList = () => {
   const error = companiesState?.error ?? null;
 
   // --- STATS CALCULATION ---
+  const { totalLeads: hookTotal, statusStats } = useDashboardStats();
+
   const stats = useMemo(() => {
-    let total = companiesArray.length;
     let newLeads = 0;
     let contacted = 0;
     let interested = 0;
     let notContacted = 0;
     let converted = 0;
 
-    companiesArray.forEach((c) => {
-      const status = (c.companyStatus || "").toLowerCase();
-      if (status.includes("new")) newLeads++;
-      else if (status.includes("contacted") && !status.includes("not")) contacted++;
-      else if (status.includes("interested")) interested++;
-      else if (status.includes("not contacted") || status.includes("pending")) notContacted++;
-      else if (status.includes("convert") || status.includes("win")) converted++;
-    });
+    if (statusStats) {
+      Object.keys(statusStats).forEach((statusKey) => {
+        const count = statusStats[statusKey];
+        const status = statusKey.toLowerCase();
+        
+        if (status.includes("new")) newLeads += count;
+        else if (status.includes("contacted") && !status.includes("not")) contacted += count;
+        else if (status.includes("interested") || status.includes("proposal")) interested += count;
+        else if (status.includes("not contacted") || status.includes("pending") || status.includes("hold") || status.includes("lost")) notContacted += count;
+        else if (status.includes("convert") || status.includes("win") || status.includes("success")) converted += count;
+      });
+    }
 
-    const getPct = (val) => (total > 0 ? Math.round((val / total) * 100) : 0);
+    const getPct = (val) => (hookTotal > 0 ? Math.round((val / hookTotal) * 100) : 0);
 
     return {
-      total,
+      total: hookTotal || 0,
       newLeads: { count: newLeads, pct: getPct(newLeads) },
       contacted: { count: contacted, pct: getPct(contacted) },
       interested: { count: interested, pct: getPct(interested) },
       notContacted: { count: notContacted, pct: getPct(notContacted) },
       converted: { count: converted, pct: getPct(converted) },
     };
-  }, [companiesArray]);
+  }, [statusStats, hookTotal]);
 
   // --- FILTER & PAGINATION STATE ---
   const [globalSearch, setGlobalSearch] = useState("");

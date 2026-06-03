@@ -96,19 +96,44 @@ const ClientOverview1 = () => {
   const fetchCompanyDetails = async () => {
     try {
       if (isExhibitor) {
-        const res = await api.get(`/api/exhibitor-registration/${id}`);
-        const data = res.data.data || res.data;
-        const normalizedContacts = [];
-        if (data.contact1) normalizedContacts.push(data.contact1);
-        if (data.contact2) normalizedContacts.push(data.contact2);
+        try {
+          const res = await api.get(`/api/exhibitor-registration/${id}`);
+          const data = res.data.data || res.data;
+          const normalizedContacts = [];
+          if (data.contact1) normalizedContacts.push(data.contact1);
+          if (data.contact2) normalizedContacts.push(data.contact2);
 
-        setCompany({
-          ...data,
-          contacts: normalizedContacts
-        });
-      } else {
+          setCompany({
+            ...data,
+            contacts: normalizedContacts
+          });
+          return;
+        } catch (err) {
+            console.log("Error fetching exhibitor, falling back to companies...", err);
+        }
+      } 
+      
+      // Default to companies, or fallback from exhibitor
+      try {
         const res = await api.get(`/api/companies/${id}`);
         setCompany(res.data);
+      } catch (err) {
+        // If 404 from companies, try exhibitor-registration
+        if (err.response?.status === 404 || err.response?.status === 400) {
+            console.log("Not found in companies, trying exhibitor-registration...");
+            const res = await api.get(`/api/exhibitor-registration/${id}`);
+            const data = res.data.data || res.data;
+            const normalizedContacts = [];
+            if (data.contact1) normalizedContacts.push(data.contact1);
+            if (data.contact2) normalizedContacts.push(data.contact2);
+
+            setCompany({
+              ...data,
+              contacts: normalizedContacts
+            });
+        } else {
+            throw err;
+        }
       }
     } catch (err) {
       console.log("Error fetching client details:", err);

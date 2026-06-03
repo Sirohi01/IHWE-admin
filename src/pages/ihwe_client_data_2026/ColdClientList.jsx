@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
+import useDashboardStats from "../../hooks/useDashboardStats";
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import {
   Download, Search, Plus, Filter, AlertCircle, FileText, Upload, RefreshCw, MoreVertical,
@@ -21,6 +22,8 @@ const toTitleCase = (str) => {
 };
 
 // Removed dummy rows
+
+const FILTER_STATUS = ['Hold', 'Lost'];
 
 const ColdClientList = () => {
   const dispatch = useDispatch();
@@ -52,7 +55,7 @@ const ColdClientList = () => {
         page,
         limit,
         search: searchTerm,
-        status: filterStatus || 'On Hold', // default to something representing cold leads if needed, or leave it to show both hold/lost
+        status: filterStatus || 'Hold,Lost,Not Interested',
         source: filterSource,
         industry: filterIndustry,
       }));
@@ -60,6 +63,19 @@ const ColdClientList = () => {
 
     return () => clearTimeout(delayDebounceFn);
   }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, filterIndustry]);
+
+  const { totalLeads: hookTotal, statusStats } = useDashboardStats(FILTER_STATUS);
+
+  const getStatusCount = (statusMatch) => {
+    if (!statusStats) return 0;
+    return Object.keys(statusStats).reduce((acc, key) => {
+      if (key.toLowerCase().includes(statusMatch)) acc += statusStats[key];
+      return acc;
+    }, 0);
+  };
+
+  const holdCount = getStatusCount('hold');
+  const lostCount = getStatusCount('lost');
 
   const totalLeads = pagination?.total || allCompanies.length;
 
@@ -127,8 +143,8 @@ const ColdClientList = () => {
         <div>
           <div className="text-slate-800 text-[10px] font-bold">Total Hold Leads</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">14</div>
-            <div className="text-[9px] text-orange-500 font-medium">52% of total</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{holdCount}</div>
+            <div className="text-[9px] text-orange-500 font-medium">{hookTotal > 0 ? Math.round((holdCount / hookTotal) * 100) : 0}% of total</div>
           </div>
         </div>
       </div>
@@ -139,8 +155,8 @@ const ColdClientList = () => {
         <div>
           <div className="text-slate-800 text-[10px] font-bold">Total Lost Leads</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">13</div>
-            <div className="text-[9px] text-rose-500 font-medium">48% of total</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{lostCount}</div>
+            <div className="text-[9px] text-rose-500 font-medium">{hookTotal > 0 ? Math.round((lostCount / hookTotal) * 100) : 0}% of total</div>
           </div>
         </div>
       </div>
@@ -151,7 +167,7 @@ const ColdClientList = () => {
         <div>
           <div className="text-slate-800 text-[10px] font-bold">Avg. Hold Duration</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">18 Days</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">0 Days</div>
             <div className="text-[9px] text-slate-500 font-medium">For hold leads</div>
           </div>
         </div>
@@ -163,7 +179,7 @@ const ColdClientList = () => {
         <div>
           <div className="text-slate-800 text-[10px] font-bold">Potential Revenue Lost</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">₹ 8,75,000</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">₹ 0</div>
             <div className="text-[9px] text-slate-500 font-medium">Estimated value</div>
           </div>
         </div>
@@ -291,8 +307,8 @@ const ColdClientList = () => {
               <PieChart>
                 <Pie
                   data={[
-                    { name: "On Hold", value: 14, color: "#f97316" },
-                    { name: "Lost", value: 13, color: "#ef4444" }
+                    { name: "On Hold", value: holdCount, color: "#f97316" },
+                    { name: "Lost", value: lostCount, color: "#ef4444" }
                   ]}
                   cx="50%"
                   cy="50%"
@@ -311,14 +327,14 @@ const ColdClientList = () => {
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <h3 className="text-[14px] font-bold text-[#0F172A] leading-none">27</h3>
+              <h3 className="text-[14px] font-bold text-[#0F172A] leading-none">{holdCount + lostCount}</h3>
               <p className="text-[9px] text-gray-500">Total</p>
             </div>
           </div>
           <div className="flex flex-col gap-1.5 flex-grow">
             {[
-              { name: "On Hold", value: 14, pct: "52%", color: "#f97316" },
-              { name: "Lost", value: 13, pct: "48%", color: "#ef4444" }
+              { name: "On Hold", value: holdCount, pct: hookTotal > 0 ? Math.round((holdCount / hookTotal) * 100) + "%" : "0%", color: "#f97316" },
+              { name: "Lost", value: lostCount, pct: hookTotal > 0 ? Math.round((lostCount / hookTotal) * 100) + "%" : "0%", color: "#ef4444" }
             ].map((item) => (
               <div key={item.name} className="flex items-center justify-between text-[11px]">
                 <div className="flex items-center gap-1.5">
@@ -390,7 +406,7 @@ const ColdClientList = () => {
             <FaWhatsapp size={12} className="text-green-600 shrink-0" />
             <span className="text-[9px] font-bold text-green-700 leading-tight">Send Bulk WhatsApp</span>
           </button>
-          <button className="h-[34px] rounded-lg bg-[#FFF3E0] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
+          <button onClick={() => navigate("/ihweClientData2026/warmClientsList")} className="h-[34px] rounded-lg bg-[#FFF3E0] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
             <CalendarDays size={12} className="text-orange-600 shrink-0" />
             <span className="text-[9px] font-bold text-orange-700 leading-tight">Schedule Follow-Up</span>
           </button>
@@ -438,7 +454,7 @@ const ColdClientList = () => {
     <BaseLeadPage
       title="Hold & Lost Leads"
       subtitle="Track leads that need re-engagement or reasons for drop-offs"
-      badgeCount={<><AlertCircle size={12} className="inline mr-1 text-slate-500" />27</>}
+      badgeCount={<><AlertCircle size={12} className="inline mr-1 text-slate-500" />{totalLeads || 0}</>}
       headerActions={headerActions}
       statCards={statCards}
       filterBar={filterBar}
