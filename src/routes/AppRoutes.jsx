@@ -169,6 +169,7 @@ const AddStatus = lazy(() => import("../pages/add_by_admin/AddStatus"));
 const AddTarget = lazy(() => import("../pages/add_by_admin/AddTarget"));
 const VisitorReviewLogs = lazy(() => import("../pages/web_visitor_data/VisitorReviewLogs"));
 const ClientOverview1 = lazy(() => import("../pages/ihwe_client_data_2026/ClientOverview1"));
+const ClientDocuments = lazy(() => import("../pages/ihwe_client_data_2026/ClientDocuments"));
 const EmailLogs = lazy(() => import("../pages/EmailLogs"));
 const WhatsAppLogs = lazy(() => import("../pages/WhatsAppLogs"));
 const ResponseTemplates = lazy(() => import("../pages/ResponseTemplates"));
@@ -177,6 +178,7 @@ const AnnualTurnover = lazy(() => import("../pages/admin_management/AnnualTurnov
 const PrimaryProductInterest = lazy(() => import("../pages/admin_management/PrimaryProductInterest"));
 const SecondaryProductCategories = lazy(() => import("../pages/admin_management/SecondaryProductCategories"));
 const MeetingPriorityLevel = lazy(() => import("../pages/admin_management/MeetingPriorityLevel"));
+const DocumentConfiguration = lazy(() => import("../pages/admin_management/DocumentConfiguration"));
 const AddDomesticVisitor = lazy(() => import("../pages/web_visitor_data/add_new_visitor/AddDomesticVisitor"));
 const BuyerRegistration = lazy(() => import("../pages/buyer/BuyerRegistration"));
 const BuyerList = lazy(() => import("../pages/buyer/BuyerList"));
@@ -614,6 +616,7 @@ export default function AppRoutes() {
 
         // ############################# -- Account Section
             <Route path="/client-overview/:id" element={<ClientOverview1 />} />
+            <Route path="/client-documents/:id" element={<ClientDocuments />} />
             <Route path="/client-data/:id/marketing-materials" element={<MarketingMaterialPage />} />
             <Route path="/admin/marketing-management" element={<MarketingManagement />} />
             <Route path="/business-type" element={<BusinessType />} />
@@ -621,6 +624,7 @@ export default function AppRoutes() {
             <Route path="/primary-product-interest" element={<PrimaryProductInterest />} />
             <Route path="/secondary-product-categories" element={<SecondaryProductCategories />} />
             <Route path="/meeting-priority-level" element={<MeetingPriorityLevel />} />
+            <Route path="/document-configuration" element={<DocumentConfiguration />} />
             <Route path="manage-registrations" element={<ManageRegistrations />} />
             <Route path="bsm-management" element={<AdminBSM />} />
             <Route path="/buyer-list" element={<BuyerList />} />

@@ -98,6 +98,36 @@ const HotClientList = () => {
     return "bg-slate-50 text-slate-700 border-slate-200 dot-slate-500";
   };
 
+  // Dynamic stats computation
+  const inDiscussionCount = allCompanies.filter(c => c.companyStatus?.toLowerCase().includes('in discussion')).length;
+  const proposalSentCount = allCompanies.filter(c => c.companyStatus?.toLowerCase().includes('proposal sent')).length;
+  const readyCount = allCompanies.filter(c => c.companyStatus?.toLowerCase().includes('ready')).length;
+
+  const validTotal = inDiscussionCount + proposalSentCount + readyCount || 1;
+  const pct = (val) => Math.round((val / validTotal) * 100) + '%';
+
+  const overviewData = [
+    { name: "In Discussion", value: inDiscussionCount, pct: pct(inDiscussionCount), color: "#f97316" },
+    { name: "Proposal Sent", value: proposalSentCount, pct: pct(proposalSentCount), color: "#eab308" },
+    { name: "Ready to Convert", value: readyCount, pct: pct(readyCount), color: "#10b981" }
+  ];
+
+  const scoreDist = [
+    { label: "90 - 100", count: allCompanies.filter(c => (c.leadScore || 85) >= 90).length, color: "bg-rose-500" },
+    { label: "80 - 89", count: allCompanies.filter(c => (c.leadScore || 85) >= 80 && (c.leadScore || 85) < 90).length, color: "bg-orange-500" },
+    { label: "70 - 79", count: allCompanies.filter(c => (c.leadScore || 85) >= 70 && (c.leadScore || 85) < 80).length, color: "bg-yellow-500" },
+    { label: "Below 70", count: allCompanies.filter(c => (c.leadScore || 85) < 70).length, color: "bg-emerald-500" },
+  ].map(s => ({ ...s, pct: Math.round((s.count / Math.max(allCompanies.length, 1)) * 100) + '%' }));
+
+  const topHotLeads = [...allCompanies]
+    .sort((a, b) => (b.leadScore || 85) - (a.leadScore || 85))
+    .slice(0, 3)
+    .map(c => ({
+      name: c.companyName || "Unknown",
+      score: c.leadScore || 85,
+      icon: <FaWhatsapp size={10} className="text-emerald-500" />
+    }));
+
   // Header Actions
   const headerActions = (
     <>
@@ -143,7 +173,7 @@ const HotClientList = () => {
         <div>
           <div className="text-slate-800 text-[10px] font-bold">In Discussion</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">11</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{inDiscussionCount}</div>
             <div className="text-[9px] text-orange-600 font-medium">Actively engaged</div>
           </div>
         </div>
@@ -155,7 +185,7 @@ const HotClientList = () => {
         <div>
           <div className="text-slate-800 text-[10px] font-bold">Proposal Sent</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">5</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{proposalSentCount}</div>
             <div className="text-[9px] text-blue-600 font-medium">Awaiting response</div>
           </div>
         </div>
@@ -167,8 +197,8 @@ const HotClientList = () => {
         <div>
           <div className="text-slate-800 text-[10px] font-bold">Ready to Convert</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">2</div>
-            <div className="text-[9px] text-emerald-600 font-medium">Final stage</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{readyCount}</div>
+            <div className="text-[9px] text-emerald-600 font-medium">Hot prospects</div>
           </div>
         </div>
       </div>
@@ -260,7 +290,10 @@ const HotClientList = () => {
               <div className="flex flex-col gap-0.5">
                 <span className="font-bold text-rose-500 text-[10px]">{row.leadScore || 85}/100</span>
                 <div className="flex text-[8px] text-rose-500">
-                  <FaStar /><FaStar /><FaStar /><FaStar /><FaStar />
+                  {Array.from({ length: 5 }).map((_, starIdx) => {
+                    const starsToFill = Math.round((row.leadScore || 85) / 20);
+                    return starIdx < starsToFill ? <FaStar key={starIdx} /> : <FaRegStar key={starIdx} />;
+                  })}
                 </div>
               </div>
             </td>
@@ -304,11 +337,7 @@ const HotClientList = () => {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={[
-                    { name: "In Discussion", value: 11, color: "#f97316" },
-                    { name: "Proposal Sent", value: 5, color: "#eab308" },
-                    { name: "Ready to Convert", value: 2, color: "#10b981" }
-                  ]}
+                  data={overviewData}
                   cx="50%"
                   cy="50%"
                   innerRadius={22}
@@ -316,11 +345,7 @@ const HotClientList = () => {
                   dataKey="value"
                   stroke="none"
                 >
-                  {[
-                    { color: "#f97316" },
-                    { color: "#eab308" },
-                    { color: "#10b981" }
-                  ].map((entry, index) => (
+                  {overviewData.map((entry, index) => (
                     <Cell key={index} fill={entry.color} />
                   ))}
                 </Pie>
@@ -332,11 +357,7 @@ const HotClientList = () => {
             </div>
           </div>
           <div className="flex flex-col gap-1.5 flex-grow">
-            {[
-              { name: "In Discussion", value: 11, pct: "61%", color: "#f97316" },
-              { name: "Proposal Sent", value: 5, pct: "28%", color: "#eab308" },
-              { name: "Ready to Convert", value: 2, pct: "11%", color: "#10b981" }
-            ].map((item) => (
+            {overviewData.map((item) => (
               <div key={item.name} className="flex items-center justify-between text-[11px]">
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full shrink-0" style={{ background: item.color }} />
@@ -353,12 +374,7 @@ const HotClientList = () => {
       <div className="bg-white rounded-xl border border-gray-100 p-3">
         <h3 className="text-[14px] font-semibold text-[#0F172A] mb-2">Lead Score Distribution</h3>
         <div className="flex flex-col gap-1.5">
-          {[
-            { label: "90 - 100", count: 6, pct: "33%", color: "bg-rose-500" },
-            { label: "80 - 89", count: 7, pct: "29%", color: "bg-orange-500" },
-            { label: "70 - 79", count: 3, pct: "17%", color: "bg-yellow-500" },
-            { label: "Below 70", count: 2, pct: "11%", color: "bg-emerald-500" },
-          ].map((s, i) => (
+          {scoreDist.map((s, i) => (
             <div key={i} className="flex items-center justify-between text-[11px]">
               <span className="text-slate-700 w-12 font-medium">{s.label}</span>
               <div className="flex-grow mx-2 h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -379,11 +395,7 @@ const HotClientList = () => {
           <h3 className="text-[14px] font-semibold text-[#0F172A]">Top Hot Leads by Score</h3>
         </div>
         <div className="flex flex-col gap-2">
-          {[
-            { name: "GreenLife Ayurveda", score: 95, icon: <FaWhatsapp size={10} className="text-emerald-500" /> },
-            { name: "Nature's Harmony Pvt. Ltd.", score: 92, icon: <FaWhatsapp size={10} className="text-emerald-500" /> },
-            { name: "Wellness World", score: 90, icon: <FaWhatsapp size={10} className="text-emerald-500" /> },
-          ].map((l, i) => (
+          {topHotLeads.map((l, i) => (
             <div key={i} className={`flex items-center justify-between ${i !== 2 ? 'pb-2 border-b border-gray-50' : ''}`}>
               <div className="flex items-center gap-2 overflow-hidden">
                 <div className="w-5 h-5 rounded-full bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
