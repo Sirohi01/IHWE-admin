@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../lib/api";
-import pragatiMaidan from "../../assets/pragatiMaidan.png";
-import sideImage from "../../assets/sideImage2.png";
+import pragatiMaidan from "../../assets/pragatiMaidan.jpeg";
+import sideImage from "../../assets/sideImage.jpeg";
 import { toast } from "react-toastify";
 import {
   FaWhatsapp, FaEnvelope, FaLink, FaDownload, FaTimes, FaFilePdf, FaImage, FaVideo,
