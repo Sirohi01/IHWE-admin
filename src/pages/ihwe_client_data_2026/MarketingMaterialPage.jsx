@@ -201,13 +201,16 @@ const MarketingMaterialPage = () => {
 
       const attachments = [];
       selectedDocs.forEach(m => {
-        if (m.fileType === "Link" || m.fileType === "Location" || m.fileType === "Video") {
+        const isYouTube = m.fileUrl && (m.fileUrl.includes("youtube.com") || m.fileUrl.includes("youtu.be"));
+        
+        if (m.fileType === "Link" || m.fileType === "Location" || (m.fileType === "Video" && isYouTube)) {
           content += `- ${m.title}: ${m.fileUrl}\n`;
         } else {
           let ext = ".pdf";
           if (m.fileType === "PPT") ext = ".pptx";
           else if (m.fileType === "Word") ext = ".docx";
           else if (m.fileType === "Image") ext = ".jpg";
+          else if (m.fileType === "Video") ext = ".mp4";
 
           attachments.push({
             filename: (m.title || "Document").replace(/[^a-zA-Z0-9 ]/g, "_") + ext,
@@ -524,8 +527,8 @@ const MarketingMaterialPage = () => {
                 <div className="grid grid-cols-4 gap-1.5 mt-1">
                   <button
                     onClick={() => handleSend("WhatsApp")}
-                    disabled={sending}
-                    className="col-span-1 bg-[#25D366] text-white py-1.5 rounded-lg font-bold flex flex-col items-center justify-center gap-1 hover:bg-[#1ebd5a] transition text-[9px] xl:text-[10px] disabled:opacity-50 text-center leading-tight shadow-sm"
+                    disabled={sending || ['PDF', 'Word', 'PPT'].includes(selectedMaterial.fileType)}
+                    className="col-span-1 bg-[#25D366] text-white py-1.5 rounded-lg font-bold flex flex-col items-center justify-center gap-1 hover:bg-[#1ebd5a] transition text-[9px] xl:text-[10px] disabled:opacity-50 disabled:cursor-not-allowed text-center leading-tight shadow-sm"
                   >
                     <FaWhatsapp className="text-sm" /> WhatsApp
                   </button>
@@ -763,7 +766,7 @@ const MarketingMaterialPage = () => {
                     <iframe
                       title={selectedMaterial.title}
                       className="w-full h-full rounded shadow-sm border-none bg-white"
-                      src={selectedMaterial.fileUrl}
+                      src={selectedMaterial.fileUrl.includes("localhost") || selectedMaterial.fileUrl.startsWith("/") ? selectedMaterial.fileUrl : `https://docs.google.com/viewer?url=${encodeURIComponent(selectedMaterial.fileUrl)}&embedded=true`}
                       loading="lazy"
                     />
                   ) : (
@@ -792,8 +795,8 @@ const MarketingMaterialPage = () => {
                 <div className="flex gap-3">
                   <button
                     onClick={() => handleSend("WhatsApp", selectedItemsForSend)}
-                    disabled={sending || selectedItemsForSend.length === 0}
-                    className="flex-1 bg-[#25D366] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#1ebd5a] transition disabled:opacity-50 text-sm"
+                    disabled={sending || selectedItemsForSend.length === 0 || modalItems.some(item => selectedItemsForSend.includes(item._id) && ['PDF', 'Word', 'PPT'].includes(item.fileType))}
+                    className="flex-1 bg-[#25D366] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#1ebd5a] transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   >
                     <FaWhatsapp className="text-lg" /> Send via WhatsApp
                   </button>

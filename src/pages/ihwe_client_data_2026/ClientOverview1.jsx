@@ -378,7 +378,7 @@ const ClientOverview1 = () => {
       const logMessage = `[Profile Update] Changes by ${currentUserName}\n• ${changesText}`;
 
       // Log to communication panel
-      dispatch(createReview({ cmpny_id: company._id, type: "log", re_msg: logMessage }));
+      await dispatch(createReview({ cmpny_id: company._id, type: "log", re_msg: logMessage })).unwrap();
       dispatch(fetchReviewById(id));
     } catch (err) {
       console.log(err);
@@ -526,7 +526,7 @@ const ClientOverview1 = () => {
         logMessage = `[Contact Added] Changes by ${currentUserName}\nAdded New Contact: ${contactName}\n• Designation: ${contactForm.designation || "-"}\n• Mobile: ${contactForm.mobile}\n• Email: ${contactForm.email}`;
       }
 
-      dispatch(createReview({ cmpny_id: company._id, type: "log", re_msg: logMessage }));
+      await dispatch(createReview({ cmpny_id: company._id, type: "log", re_msg: logMessage })).unwrap();
       dispatch(fetchReviewById(id));
     } catch (err) {
       Swal.fire({ icon: "error", title: "Failed", text: err?.message || "Could not save contact" });
