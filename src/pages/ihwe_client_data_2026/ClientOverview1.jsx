@@ -837,6 +837,7 @@ const ClientOverview1 = () => {
                     onChange={(e) => setReviewData(prev => ({ ...prev, assigned_to: e.target.value }))}
                     placeholder={company?.forwardTo ? `Current: ${company.forwardTo}` : "Select Assigned To"}
                     name="AssignedTo"
+                    disabled={reviewData.status_short?.toLowerCase() === "not interested"}
                   />
                 </div>
 
@@ -846,7 +847,8 @@ const ClientOverview1 = () => {
                     type="datetime-local"
                     value={reviewData.follow_up_date}
                     onChange={(e) => setReviewData(prev => ({ ...prev, follow_up_date: e.target.value }))}
-                    className="w-full h-10 border border-[#dbe1ea] px-3 outline-none text-sm"
+                    className={`w-full h-10 border border-[#dbe1ea] px-3 outline-none text-sm ${reviewData.status_short?.toLowerCase() === "not interested" ? 'bg-gray-100 cursor-not-allowed opacity-70' : ''}`}
+                    disabled={reviewData.status_short?.toLowerCase() === "not interested"}
                   />
                 </div>
 
