@@ -257,6 +257,10 @@ const Communication = lazy(() => import("../pages/communication/Communication"))
 const ExhibitorHeroSlider = lazy(() => import("../pages/ExhibitorHeroSlider"));
 const UpcomingEvent = lazy(() => import("../pages/UpcomingEvent"));
 
+// Marketing Materials
+const MarketingMaterialPage = lazy(() => import("../pages/ihwe_client_data_2026/MarketingMaterialPage"));
+const MarketingManagement = lazy(() => import("../pages/admin_management/MarketingManagement"));
+
 export default function AppRoutes() {
   return (
     <Suspense fallback={<div className="h-screen w-full flex items-center justify-center"><div className="w-12 h-12 border-4 border-[#23471d] border-t-transparent rounded-full animate-spin"></div></div>}>
@@ -613,6 +617,8 @@ export default function AppRoutes() {
         // ############################# -- Account Section
             <Route path="/client-overview/:id" element={<ClientOverview1 />} />
             <Route path="/client-documents/:id" element={<ClientDocuments />} />
+            <Route path="/client-data/:id/marketing-materials" element={<MarketingMaterialPage />} />
+            <Route path="/admin/marketing-management" element={<MarketingManagement />} />
             <Route path="/business-type" element={<BusinessType />} />
             <Route path="/annual-turnover" element={<AnnualTurnover />} />
             <Route path="/primary-product-interest" element={<PrimaryProductInterest />} />

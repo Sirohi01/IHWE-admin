@@ -653,6 +653,7 @@ export const menuItems = [
       { label: "Meeting Priority Level", path: "/meeting-priority-level" },
       { label: "Document Configuration", path: "/document-configuration" },
       { label: "Add Unit", path: "/add-unit" },
+      { label: "Marketing Materials", path: "/admin/marketing-management" },
     ],
   },
   {

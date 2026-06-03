@@ -719,8 +719,8 @@ const ClientOverview1 = () => {
                   icon: FileText,
                   title: "Proposals / Broucher",
                   color: "purple-600",
-                  onClick: null,
-                  disabled: true,
+                  onClick: () => navigate(`/client-data/${id}/marketing-materials`),
+                  disabled: false,
                 },
                 {
                   icon: Receipt,
