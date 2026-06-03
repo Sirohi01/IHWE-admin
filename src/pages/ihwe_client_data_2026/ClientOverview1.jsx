@@ -40,7 +40,7 @@ import { fetchNextActions } from "../../features/add_by_admin/nextAction/nextAct
 import { fetchAdmins } from "../../features/auth/userSlice";
 
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import api, { SERVER_URL } from "../../lib/api";
 import CommunicationPanel from "./communication/CommunicationPanel";
@@ -53,6 +53,8 @@ const ClientOverview1 = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const isExhibitor = searchParams.get('source') === 'exhibitor';
 
   const [events, setEvents] = useState([]);
   const [Flip, setFlip] = useState(false);
@@ -93,10 +95,23 @@ const ClientOverview1 = () => {
 
   const fetchCompanyDetails = async () => {
     try {
-      const res = await api.get(`/api/companies/${id}`);
-      setCompany(res.data);
+      if (isExhibitor) {
+        const res = await api.get(`/api/exhibitor-registration/${id}`);
+        const data = res.data.data || res.data;
+        const normalizedContacts = [];
+        if (data.contact1) normalizedContacts.push(data.contact1);
+        if (data.contact2) normalizedContacts.push(data.contact2);
+        
+        setCompany({
+          ...data,
+          contacts: normalizedContacts
+        });
+      } else {
+        const res = await api.get(`/api/companies/${id}`);
+        setCompany(res.data);
+      }
     } catch (err) {
-      console.log("Error fetching company details:", err);
+      console.log("Error fetching client details:", err);
     }
   };
 
@@ -135,12 +150,12 @@ const ClientOverview1 = () => {
       setReviewData((prev) => ({
         ...prev,
         cmpny_id: company._id,
-        evnt_id: company.eventName || "",
-        event_name: company.eventName || "",
-        assigned_to: company.forwardTo || "",
+        evnt_id: isExhibitor ? (company.eventId?._id || "") : (company.eventName || ""),
+        event_name: isExhibitor ? (company.eventId?.name || "") : (company.eventName || ""),
+        assigned_to: isExhibitor ? (company.spokenWith || "") : (company.forwardTo || ""),
       }));
     }
-  }, [company]);
+  }, [company, isExhibitor]);
 
   const fetchEvents = async () => {
     try {
@@ -174,7 +189,7 @@ const ClientOverview1 = () => {
     e.preventDefault();
 
     try {
-      const previousAssignee = company.forwardTo || "";
+      const previousAssignee = isExhibitor ? (company.spokenWith || "") : (company.forwardTo || "");
       const newAssignee = reviewData.assigned_to || "";
       const assigneeChanged = newAssignee && newAssignee !== previousAssignee;
 
@@ -182,8 +197,9 @@ const ClientOverview1 = () => {
       let finalRemark = reviewData.re_msg || "";
 
       const changesList = [];
-      if (reviewData.status_short && reviewData.status_short !== company.companyStatus) {
-        changesList.push(`Status changed from '${company.companyStatus || "-"}' to '${reviewData.status_short}'`);
+      const currentStatus = isExhibitor ? company.status : company.companyStatus;
+      if (reviewData.status_short && reviewData.status_short !== currentStatus) {
+        changesList.push(`Status changed from '${currentStatus || "-"}' to '${reviewData.status_short}'`);
       }
       if (assigneeChanged) {
         changesList.push(`Lead forwarded from '${previousAssignee || "Unassigned"}' to '${newAssignee}'`);
@@ -200,14 +216,24 @@ const ClientOverview1 = () => {
         ...reviewData,
         re_msg: finalReMsg,
       })).unwrap();
-      const companyUpdates = {
-        companyStatus: reviewData.status_short || company.companyStatus,
-      };
-      if (assigneeChanged) {
-        companyUpdates.forwardTo = newAssignee;
+      
+      if (isExhibitor) {
+        const companyUpdates = {
+          status: reviewData.status_short || company.status,
+        };
+        if (assigneeChanged) {
+          companyUpdates.spokenWith = newAssignee;
+        }
+        await api.put(`/api/exhibitor-registration/${company._id}`, companyUpdates);
+      } else {
+        const companyUpdates = {
+          companyStatus: reviewData.status_short || company.companyStatus,
+        };
+        if (assigneeChanged) {
+          companyUpdates.forwardTo = newAssignee;
+        }
+        await dispatch(updateCompany({ id: company._id, data: companyUpdates })).unwrap();
       }
-
-      await dispatch(updateCompany({ id: company._id, data: companyUpdates })).unwrap();
 
       Swal.fire({
         icon: "success",
@@ -221,8 +247,8 @@ const ClientOverview1 = () => {
 
       setReviewData({
         cmpny_id: company._id,
-        evnt_id: company.eventName || "",
-        event_name: company.eventName || "",
+        evnt_id: isExhibitor ? (company.eventId?._id || "") : (company.eventName || ""),
+        event_name: isExhibitor ? (company.eventId?.name || "") : (company.eventName || ""),
         status_short: "",
         reminder_dt: "",
         forward_to: "",
@@ -268,11 +294,11 @@ const ClientOverview1 = () => {
 
   const handleOpenEditProfile = () => {
     setEditProfileData({
-      companyName: company?.companyName || "",
-      email: company?.email || "",
-      mobile: company?.contacts?.[0]?.mobile || "",
-      website: company?.website || "",
-      companyDescription: company?.companyDescription || "",
+      companyName: isExhibitor ? (company.exhibitorName || "") : (company.companyName || ""),
+      mobile: company.contacts?.[0]?.mobile || "",
+      email: isExhibitor ? (company.contacts?.[0]?.email || "") : (company.email || ""),
+      website: company.website || "",
+      companyDescription: company.companyDescription || "",
     });
     setLogoFile(null);
     setLogoPreview(company?.companyLogo || "");
@@ -295,27 +321,41 @@ const ClientOverview1 = () => {
     e.preventDefault();
     setIsSavingProfile(true);
     try {
-      const dataToUpdate = { ...editProfileData };
-      if (company.contacts?.length > 0) {
-        dataToUpdate.contacts = [...company.contacts];
-        dataToUpdate.contacts[0] = { ...dataToUpdate.contacts[0], mobile: editProfileData.mobile };
-      }
+      if (isExhibitor) {
+        const dataToUpdate = {
+          exhibitorName: editProfileData.companyName,
+          website: editProfileData.website,
+          companyDescription: editProfileData.companyDescription,
+        };
+        if (company.contacts?.length > 0) {
+          dataToUpdate.contact1 = { ...company.contacts[0], mobile: editProfileData.mobile, email: editProfileData.email };
+        }
 
-      // 1) If logo file selected, upload it first
-      if (logoFile) {
-        const formData = new FormData();
-        formData.append("companyLogo", logoFile);
-        const logoRes = await api.post(`/api/companies/${company._id}/logo`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        // logoUrl set in DB by backend; we don't need to pass it in dataToUpdate
-      }
+        if (logoFile) {
+          Swal.fire('Notice', 'Logo upload is not yet supported for exhibitor registrations from this page.', 'info');
+        }
 
-      // 2) Update other fields
-      await dispatch(updateCompany({
-        id: company._id,
-        data: dataToUpdate
-      })).unwrap();
+        await api.put(`/api/exhibitor-registration/${company._id}`, dataToUpdate);
+      } else {
+        const dataToUpdate = { ...editProfileData };
+        if (company.contacts?.length > 0) {
+          dataToUpdate.contacts = [...company.contacts];
+          dataToUpdate.contacts[0] = { ...dataToUpdate.contacts[0], mobile: editProfileData.mobile };
+        }
+
+        if (logoFile) {
+          const formData = new FormData();
+          formData.append("companyLogo", logoFile);
+          const logoRes = await api.post(`/api/companies/${company._id}/logo`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+        }
+
+        await dispatch(updateCompany({
+          id: company._id,
+          data: dataToUpdate
+        })).unwrap();
+      }
 
       Swal.fire({ icon: "success", title: "Profile Updated", timer: 1500, showConfirmButton: false });
       setIsEditProfileOpen(false);
@@ -323,8 +363,11 @@ const ClientOverview1 = () => {
 
       // Determine what changed for the log
       const changes = [];
-      if (company.companyName !== editProfileData.companyName) changes.push(`Name changed from '${company.companyName}' to '${editProfileData.companyName}'`);
-      if (company.email !== editProfileData.email) changes.push(`Email changed from '${company.email}' to '${editProfileData.email}'`);
+      const currentName = isExhibitor ? company.exhibitorName : company.companyName;
+      if (currentName !== editProfileData.companyName) changes.push(`Name changed from '${currentName}' to '${editProfileData.companyName}'`);
+      
+      const currentEmail = isExhibitor ? (company.contacts?.[0]?.email || "") : (company.email || "");
+      if (currentEmail !== editProfileData.email) changes.push(`Email changed from '${currentEmail}' to '${editProfileData.email}'`);
       const oldMobile = company.contacts?.[0]?.mobile || "";
       if (oldMobile !== editProfileData.mobile) changes.push(`Mobile changed from '${oldMobile}' to '${editProfileData.mobile}'`);
       if (company.website !== editProfileData.website) changes.push(`Website changed from '${company.website || "-"}' to '${editProfileData.website || "-"}'`);
@@ -349,7 +392,11 @@ const ClientOverview1 = () => {
     e.preventDefault();
     setIsSavingMsme(true);
     try {
-      await dispatch(updateCompany({ id: company._id, data: msmeData })).unwrap();
+      if (isExhibitor) {
+        await api.put(`/api/exhibitor-registration/${company._id}`, msmeData);
+      } else {
+        await dispatch(updateCompany({ id: company._id, data: msmeData })).unwrap();
+      }
 
       const oldCategory = company.exhibitorCategory || "None";
       const newCategory = msmeData.exhibitorCategory || "None";
@@ -383,7 +430,7 @@ const ClientOverview1 = () => {
   const handleOpenEditContact = (idx) => {
     const c = company.contacts[idx];
     setEditingContactIdx(idx);
-    setContactForm({ title: c.title || "", firstName: c.firstName || "", surname: c.surname || "", designation: c.designation || "", email: c.email || "", mobile: c.mobile || "", alternate: c.alternate || "" });
+    setContactForm({ title: c.title || "", firstName: c.firstName || "", surname: isExhibitor ? (c.lastName || "") : (c.surname || ""), designation: c.designation || "", email: c.email || "", mobile: c.mobile || "", alternate: isExhibitor ? (c.alternateNo || "") : (c.alternate || "") });
     setContactPhotoFile(null);
     setContactPhotoPreview(c.photo || "");
     setIsContactModalOpen(true);
@@ -395,24 +442,51 @@ const ClientOverview1 = () => {
     try {
       let photoUrl = contactPhotoPreview && !contactPhotoPreview.startsWith("blob:") ? contactPhotoPreview : (company.contacts?.[editingContactIdx]?.photo || "");
 
-      // Upload photo if new file selected
       if (contactPhotoFile) {
-        const formData = new FormData();
-        formData.append("contactPhoto", contactPhotoFile);
-        const res = await api.post(`/api/companies/${company._id}/contact-photo`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        if (res.data?.photoUrl) photoUrl = res.data.photoUrl;
+        if (isExhibitor) {
+          Swal.fire('Notice', 'Contact photo upload is not yet supported for exhibitor registrations from this page.', 'info');
+        } else {
+          const formData = new FormData();
+          formData.append("contactPhoto", contactPhotoFile);
+          const res = await api.post(`/api/companies/${company._id}/contact-photo`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          if (res.data?.photoUrl) photoUrl = res.data.photoUrl;
+        }
       }
 
       const updatedContacts = [...(company.contacts || [])];
-      const contactData = { ...contactForm, photo: photoUrl };
+      
+      let contactData;
+      if (isExhibitor) {
+        contactData = {
+          title: contactForm.title,
+          firstName: contactForm.firstName,
+          lastName: contactForm.surname,
+          email: contactForm.email,
+          designation: contactForm.designation,
+          mobile: contactForm.mobile,
+          alternateNo: contactForm.alternate,
+          photo: photoUrl
+        };
+      } else {
+        contactData = { ...contactForm, photo: photoUrl };
+      }
+
       if (editingContactIdx !== null) {
         updatedContacts[editingContactIdx] = { ...updatedContacts[editingContactIdx], ...contactData };
       } else {
         updatedContacts.push(contactData);
       }
-      await dispatch(updateCompany({ id: company._id, data: { contacts: updatedContacts } })).unwrap();
+      
+      if (isExhibitor) {
+        const payload = {};
+        if (updatedContacts[0]) payload.contact1 = updatedContacts[0];
+        if (updatedContacts[1]) payload.contact2 = updatedContacts[1];
+        await api.put(`/api/exhibitor-registration/${company._id}`, payload);
+      } else {
+        await dispatch(updateCompany({ id: company._id, data: { contacts: updatedContacts } })).unwrap();
+      }
       Swal.fire({ icon: "success", title: editingContactIdx !== null ? "Contact Updated" : "Contact Added", timer: 1500, showConfirmButton: false });
       setIsContactModalOpen(false);
       fetchCompanyDetails();
@@ -534,9 +608,9 @@ const ClientOverview1 = () => {
               {/* LOGO */}
 
               <div className="border border-gray-300 rounded-2xl p-3 flex items-center justify-center h-[130px] w-[160px] flex-shrink-0">
-                {company.companyLogo ? (
+                {(isExhibitor ? company.companyLogoUrl : company.companyLogo) ? (
                   <img
-                    src={company.companyLogo.startsWith('http') ? company.companyLogo : `${SERVER_URL}${company.companyLogo}`}
+                    src={(isExhibitor ? company.companyLogoUrl : company.companyLogo).startsWith('http') ? (isExhibitor ? company.companyLogoUrl : company.companyLogo) : `${SERVER_URL}${isExhibitor ? company.companyLogoUrl : company.companyLogo}`}
                     alt="Logo"
                     className="w-full h-full object-contain"
                   />
@@ -555,7 +629,7 @@ const ClientOverview1 = () => {
 
                 <div className="flex items-center gap-1 w-full">
                   <h2 className="text-[14px] font-semibold text-[#0f172a] whitespace-nowrap">
-                    {company.companyName}
+                    {isExhibitor ? company.exhibitorName : company.companyName}
                   </h2>
                   <button onClick={handleOpenEditProfile} className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors flex-shrink-0" title="Edit Profile">
                     <Pencil size={16} />
@@ -563,8 +637,8 @@ const ClientOverview1 = () => {
                 </div>
 
                 <div className="mt-1 text-gray-600 text-[10px] font-medium">
-                  <span>{company.eventName || "No Event"}</span>
-                  <span className="whitespace-nowrap"> | {company.clientType || "New Client"}</span>
+                  <span>{isExhibitor ? (company.eventId?.name || "No Event") : (company.eventName || "No Event")}</span>
+                  <span className="whitespace-nowrap"> | {company.clientType || (isExhibitor ? "Confirmed Exhibitor" : "New Client")}</span>
                 </div>
 
                 <div className="mt-2 space-y-2">
@@ -573,8 +647,8 @@ const ClientOverview1 = () => {
                     <UserCircle className="text-[#4338ca] flex-shrink-0" size={16} />
                     <span className="font-medium text-gray-700">
                       {company.contacts?.[0]?.firstName
-                        ? `${company?.contacts[0]?.firstName} ${company?.contacts[0]?.surname || ""}`.trim()
-                        : company?.companyName}
+                        ? `${company?.contacts[0]?.firstName} ${isExhibitor ? (company?.contacts[0]?.lastName || "") : (company?.contacts[0]?.surname || "")}`.trim()
+                        : (isExhibitor ? company?.exhibitorName : company?.companyName)}
                     </span>
                     <span className="text-gray-400">/</span>
                     <span className="font-medium text-gray-700">
@@ -588,8 +662,8 @@ const ClientOverview1 = () => {
 
                   <div className="flex items-center gap-2 text-[13px]">
                     <Mail className="text-[#4338ca] flex-shrink-0" size={16} />
-                    <a href={`mailto:${company.email}`} className="text-[#4338ca] hover:underline">
-                      {company.email}
+                    <a href={`mailto:${isExhibitor ? company.contacts?.[0]?.email : company.email}`} className="text-[#4338ca] hover:underline">
+                      {isExhibitor ? company.contacts?.[0]?.email : company.email}
                     </a>
                   </div>
 
@@ -810,11 +884,11 @@ const ClientOverview1 = () => {
                 <div>
                   <label className="text-xs font-semibold mb-1 block">Status Update</label>
                   <SearchableDropdown
+                    id="status_short"
                     options={statusOptions?.map((item) => ({ label: item.name, value: item.name })) || []}
-                    value={reviewData.status_short}
-                    onChange={(e) => setReviewData(prev => ({ ...prev, status_short: e.target.value }))}
-                    placeholder="Select Status"
-                    name="ClientStatus"
+                    value={reviewData.status_short || (isExhibitor ? company.status : company.companyStatus) || ""}
+                    onChange={(val) => setReviewData(prev => ({ ...prev, status_short: val }))}
+                    placeholder={(isExhibitor ? company?.status : company?.companyStatus) ? `Current: ${isExhibitor ? company.status : company.companyStatus}` : "Select Status"}
                   />
                 </div>
 
@@ -832,11 +906,11 @@ const ClientOverview1 = () => {
                 <div>
                   <label className="text-xs font-semibold mb-1 block">Forward To</label>
                   <SearchableDropdown
+                    id="forward_to"
                     options={users?.map((u) => ({ label: u.fullName || u.username, value: u.username })) || []}
-                    value={reviewData.assigned_to}
-                    onChange={(e) => setReviewData(prev => ({ ...prev, assigned_to: e.target.value }))}
-                    placeholder={company?.forwardTo ? `Current: ${company.forwardTo}` : "Select Assigned To"}
-                    name="AssignedTo"
+                    value={reviewData.assigned_to || (isExhibitor ? company.spokenWith : company.forwardTo) || ""}
+                    onChange={(val) => setReviewData(prev => ({ ...prev, assigned_to: val }))}
+                    placeholder={(isExhibitor ? company?.spokenWith : company?.forwardTo) ? `Current: ${isExhibitor ? company.spokenWith : company.forwardTo}` : "Select Assigned To"}
                   />
                 </div>
 
@@ -900,10 +974,10 @@ const ClientOverview1 = () => {
                     {/* Info */}
                     <div className="min-w-0 flex-1 text-left">
                       <p className="text-[12px] font-bold text-gray-800 truncate">
-                        {[contact.title, contact.firstName, contact.surname].filter(Boolean).join(" ") || "-"} / {contact.designation || "-"}
+                        {[contact.title, contact.firstName, isExhibitor ? contact.lastName : contact.surname].filter(Boolean).join(" ") || "-"} / {contact.designation || "-"}
                       </p>
                       <a href={`tel:${contact.mobile}`} className="flex items-center justify-start gap-1 text-[11px] text-blue-600 hover:underline">
-                        <Phone size={10} className="flex-shrink-0" /> <span className="truncate">{contact.mobile || "-"}{contact.alternate ? ` / ${contact.alternate}` : ""}</span>
+                        <Phone size={10} className="flex-shrink-0" /> <span className="truncate">{contact.mobile || "-"}{(isExhibitor ? contact.alternateNo : contact.alternate) ? ` / ${isExhibitor ? contact.alternateNo : contact.alternate}` : ""}</span>
                       </a>
                       <a href={`mailto:${contact.email}`} className="flex items-center justify-start gap-1 text-[11px] text-blue-600 hover:underline mt-0.5">
                         <Mail size={10} className="flex-shrink-0" />
