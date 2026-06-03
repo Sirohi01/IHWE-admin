@@ -383,7 +383,42 @@ export const deleteCompany = createAsyncThunk(
     }
   },
 );
+// ==================== UPLOAD EXCEL ====================
 
+export const uploadCompaniesThunk =
+  createAsyncThunk(
+    "company/uploadCompanies",
+    async (file, { rejectWithValue }) => {
+      try {
+        const formData =
+          new FormData();
+
+        formData.append(
+          "file",
+          file
+        );
+
+        const res = await api.post(
+          "/api/companies/upload-companies",
+          formData,
+          {
+            headers: {
+              "Content-Type":
+                "multipart/form-data",
+            },
+          }
+        );
+
+        return res.data;
+      } catch (error) {
+        return rejectWithValue(
+          error.response?.data
+            ?.message ||
+            error.message
+        );
+      }
+    }
+  );
 // ==================== SLICE ====================
 const initialState = {
   companies: [],

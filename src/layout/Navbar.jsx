@@ -61,7 +61,7 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
     const s = io(SERVER_URL, { transports: ["websocket", "polling"] });
     s.on("connect", () => s.emit("join_admin", { adminId, adminName: adminName2 }));
     s.on("room_updated", (data) => {
-      if (adminRole2 !== "super-admin" && data.spokenWith && data.spokenWith.toLowerCase() !== adminName2.toLowerCase()) return;
+      if (adminRole2 !== "IHWE–Super Administrator" && data.spokenWith && data.spokenWith.toLowerCase() !== adminName2.toLowerCase()) return;
       if (data.lastSenderType === "exhibitor" && !window.location.pathname.includes("exhibitor-chat")) {
         setChatUnread(prev => prev + 1);
       }

@@ -34,7 +34,7 @@ export default function CallingDialerModal({ onClose, onCallLogged }) {
   const adminId = adminInfo._id || adminInfo.id || "admin";
   const adminName = adminInfo.fullName || adminInfo.username || "Admin";
   const adminRole = adminInfo.role || "";
-  const isSuperAdmin = adminRole === "super-admin";
+  const isSuperAdmin = adminRole === "IHWE–Super Administrator";
 
   // 1. Fetch initial companies on mount
   useEffect(() => {

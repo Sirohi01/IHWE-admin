@@ -46,7 +46,7 @@ export default function NextActionPanel() {
     });
 
     s.on("room_updated", (data) => {
-      if (adminRole !== "super-admin" && data.spokenWith && data.spokenWith.toLowerCase() !== adminName.toLowerCase()) return;
+      if (adminRole !== "IHWE–Super Administrator" && data.spokenWith && data.spokenWith.toLowerCase() !== adminName.toLowerCase()) return;
       setRooms(prev => {
         const exists = prev.find(r => r._id === data.roomId);
         if (exists) return prev.map(r => r._id === data.roomId ? { ...r, ...data, unreadAdmin: (r.unreadAdmin || 0) + (data.unreadIncrement || 0) } : r)

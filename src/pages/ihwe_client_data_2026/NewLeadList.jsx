@@ -34,7 +34,20 @@ const NewLeadList = () => {
   const newLeadCompanies = Array.isArray(companiesState?.companies) ? companiesState.companies : [];
   const pagination = companiesState?.pagination;
   const isLoading = companiesState?.loading ?? false;
+ const userRole = user?.role?.trim();
+console.log("usersed..",user);
 
+const hasFullNewLeadAccess = [
+  "IHWE–Super Administrator",
+  "IHWE–Sales Manager",
+  "IHWE–Platform Administrator",
+].includes(userRole);
+
+{hasFullNewLeadAccess ? (
+  "All newly generated leads from different sources"
+) : (
+  "Leads assigned to you that are newly generated"
+)}
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       dispatch(fetchCompanies({

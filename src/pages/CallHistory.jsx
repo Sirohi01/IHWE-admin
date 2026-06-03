@@ -121,7 +121,7 @@ export default function CallHistory() {
   const adminInfo = JSON.parse(localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo") || "{}");
   const adminUsername = adminInfo.fullName || adminInfo.username || "Admin";
   const adminRole = adminInfo.role || "";
-  const isSuperAdmin = adminRole === "super-admin";
+  const isSuperAdmin = adminRole === "IHWE–Super Administrator";
 
   const fetchHistory = () => {
     setLoading(true);
