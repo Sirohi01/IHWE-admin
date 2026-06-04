@@ -105,16 +105,6 @@ export const menuItems = [
     label: "Exhibitor Management",
     icon: FileText,
     children: [
-      // {
-      //   type: "item",
-      //   label: "Book A Stand",
-      //   icon: Ticket,
-      //   path: "/book-a-stand",
-      // },
-      // {
-      //   label: "Exhibitor Bookings List",
-      //   path: "/exhibitor-bookings",
-      // },
       { label: "Exhibitor Chat", path: "/exhibitor-chat" },
       {
         label: "Stall Inventory",
@@ -175,9 +165,10 @@ export const menuItems = [
     label: "Buyer Management",
     icon: Users,
     children: [
-      { label: "Add Domestic Buyer ", path: "/buyer-registration" },
+      { label: "Buyer Registration", path: "/buyer-registration-form" },
+      // { label: "Add Domestic Buyer ", path: "/buyer-registration" },
       { label: "Domestic Buyer List", path: "/buyer-list" },
-      { label: "Add International Buyer", path: "/international-buyer-registration" },
+      // { label: "Add International Buyer", path: "/international-buyer-registration" },
       { label: "International Buyer List", path: "/international-buyer-list" },
       { label: "Buyer Registration Config", path: "/buyer-registration-config" },
       { label: "International Registration Config", path: "/international-buyer-registration-config" },

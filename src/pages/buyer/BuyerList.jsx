@@ -98,109 +98,158 @@ const BuyerList = () => {
     };
 
     return (
-        <div className="bg-white mt-6">
+        <div className="bg-white">
             <div className="w-full">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-800 uppercase">Buyer Registrations</h1>
-                    <p className="text-gray-500 mt-2 text-lg">Manage all registrations from the Buyer Registration page</p>
+                <div className=" flex justify-between items-center border-b border-gray-300 px-4">
+                    <div className="">
+                        <h1 className="text-2xl font-semibold text-[#23471d] uppercase tracking-tight">Domestic Buyer Registration List</h1>
+                        <p className="text-gray-500 text-lg"> Showing {filteredRegistrations.length} total registrations</p>
+                    </div>
+                    <div>
+                        <button
+                            onClick={() => navigate("/buyer-registration")}
+                            className="bg-[#23471d] text-white px-4 py-2 rounded-sm">Add New Registration</button>
+                    </div>
                 </div>
 
-                <div className="border border-gray-300 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-300 bg-white">
-                        <div>
-                            <h2 className="text-lg font-semibold text-gray-800 uppercase">Registration List</h2>
-                            <p className="text-sm text-gray-500 mt-0.5">
-                                Showing {filteredRegistrations.length} total registrations
-                            </p>
-                        </div>
-                    </div>
+
+                <div className="border border-gray-300 rounded-xl m-4 overflow-hidden">
 
                     {/* Table */}
                     <div className="overflow-x-auto">
                         {isLoading ? (
-                            <div className="flex items-center justify-center py-20">
-                                <div className="w-12 h-12 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                            <div className="flex flex-col items-center justify-center py-24 gap-3">
+                                <div className="w-8 h-8 border-[3px] border-gray-200 border-t-[#23471d] rounded-full animate-spin" />
+                                <span className="text-sm text-gray-400">Loading...</span>
                             </div>
                         ) : (
                             <table className="w-full border-collapse">
                                 <thead>
-                                    <tr className="bg-white border-b border-gray-300">
-                                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">S.NO</th>
-                                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">COMPANY</th>
-                                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">CRM TAG</th>
-                                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">CONTACT PERSON</th>
-                                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">CONTACT INFO</th>
-                                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">PAYMENT</th>
-                                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">DATE</th>
-                                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">ACTIONS</th>
+                                    <tr className="bg-gray-50 border-b border-gray-300">
+                                        <th className="px-4 py-1.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-r border-gray-300">S.No</th>
+                                        <th className="px-4 py-1.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-r border-gray-300">Company</th>
+                                        <th className="px-4 py-1.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-r border-gray-300">CRM Tag</th>
+                                        <th className="px-4 py-1.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-r border-gray-300">Contact Person</th>
+                                        <th className="px-4 py-1.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-r border-gray-300">Contact Info</th>
+                                        <th className="px-4 py-1.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-r border-gray-300">Payment</th>
+                                        <th className="px-4 py-1.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-r border-gray-300">Date</th>
+                                        <th className="px-4 py-1.5 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {paginatedRegistrations.length === 0 ? (
                                         <tr>
-                                            <td colSpan="8" className="text-center py-12 text-gray-500 border-b border-gray-300">
-                                                {searchTerm ? 'No matching registrations found' : 'No registrations found'}
+                                            <td colSpan={8} className="text-center py-1 text-sm text-gray-400 border-t border-gray-200">
+                                                {searchTerm ? `No results for "${searchTerm}"` : "No registrations found"}
                                             </td>
                                         </tr>
                                     ) : (
                                         paginatedRegistrations.map((row, index) => (
-                                            <tr key={row._id} className="border-b border-gray-200 hover:bg-gray-50">
-                                                <td className="px-4 py-3 text-sm text-gray-700 border-r border-gray-200">
+                                            <tr
+                                                key={row._id}
+                                                className="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-100"
+                                            >
+                                                {/* S.No */}
+                                                <td className="px-4 py-1 text-sm text-gray-500 border-r border-gray-200 w-12">
                                                     {startIndex + index + 1}
                                                 </td>
-                                                <td className="px-4 py-3 border-r border-gray-200">
-                                                    <div>
-                                                        <Link
-                                                            to={`/buyer-registration/${row._id}`}
-                                                            className="font-medium text-blue-600 hover:text-blue-800 hover:underline text-sm"
-                                                        >
-                                                            {row.companyName || 'N/A'}
-                                                        </Link>
-                                                        <div className="text-xs text-gray-400">{row.country || ''}</div>
+
+                                                {/* Company */}
+                                                <td className="px-4 py-1 border-r border-gray-200 min-w-[150px]">
+                                                    <Link
+                                                        to={`/buyer-registration/${row._id}`}
+                                                        className="text-sm font-semibold text-gray-800 hover:text-[#23471d] hover:underline transition-colors"
+                                                    >
+                                                        {row.companyName || "N/A"}
+                                                    </Link>
+                                                    {row.country && (
+                                                        <div className="text-xs text-gray-400 mt-0.5">{row.country}</div>
+                                                    )}
+                                                </td>
+
+                                                {/* CRM Tag */}
+                                                <td className="px-4 py-1 border-r border-gray-200">
+                                                    {(() => {
+                                                        const tag = row.buyerTag || "Cold";
+                                                        const s = {
+                                                            Hot: "bg-red-50 text-red-600 border-red-300",
+                                                            Warm: "bg-orange-50 text-orange-600 border-orange-300",
+                                                            Cold: "bg-blue-50 text-blue-600 border-blue-300",
+                                                        };
+                                                        return (
+                                                            <span className={`inline-block px-2 py-0.5 text-[10px] font-medium rounded border ${s[tag] || s.Cold}`}>
+                                                                {tag}
+                                                            </span>
+                                                        );
+                                                    })()}
+                                                </td>
+
+                                                {/* Contact Person */}
+                                                <td className="px-4 py-1 border-r border-gray-200 min-w-[130px]">
+                                                    <div className="text-sm text-gray-800 font-medium">
+                                                        {row.fullName || row.contactPerson || "N/A"}
                                                     </div>
+                                                    {row.designation && (
+                                                        <div className="text-xs text-gray-400 mt-0.5">{row.designation}</div>
+                                                    )}
                                                 </td>
-                                                <td className="px-4 py-3 border-r border-gray-200">
-                                                    <span className={`text-[10px] font-medium px-2 py-0.5 border ${(row.buyerTag || 'Cold') === 'Hot' ? 'border-red-300 text-red-600' : (row.buyerTag || 'Cold') === 'Warm' ? 'border-orange-300 text-orange-600' : 'border-blue-300 text-blue-600'}`}>
-                                                        {row.buyerTag || 'Cold'}
-                                                    </span>
+
+                                                {/* Contact Info */}
+                                                <td className="px-4 py-1 border-r border-gray-200 min-w-[160px]">
+                                                    <div className="text-xs text-gray-700">{row.emailAddress || row.email || "N/A"}</div>
+                                                    <div className="text-xs text-gray-400 mt-0.5">{row.mobileNumber || row.whatsapp || "N/A"}</div>
                                                 </td>
-                                                <td className="px-4 py-3 border-r border-gray-200">
-                                                    <div className="text-sm text-gray-800">{row.fullName || row.contactPerson || 'N/A'}</div>
-                                                    <div className="text-xs text-gray-400">{row.designation || ''}</div>
+
+                                                {/* Payment */}
+                                                <td className="px-4 py-1 border-r border-gray-200">
+                                                    {(() => {
+                                                        const status = row.paymentStatus || "Pending";
+                                                        const s = {
+                                                            Paid: "bg-green-50 text-green-700 border-green-300",
+                                                            Pending: "bg-amber-50 text-amber-700 border-amber-300",
+                                                            Failed: "bg-red-50 text-red-600 border-red-300",
+                                                        };
+                                                        return (
+                                                            <div>
+                                                                <span className={`inline-block px-2 text-[10px] font-medium rounded border ${s[status] || s.Pending}`}>
+                                                                    {status}
+                                                                </span>
+                                                                {row.registrationCategory && (
+                                                                    <div className="text-[10px] text-gray-400">{row.registrationCategory}</div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })()}
                                                 </td>
-                                                <td className="px-4 py-3 border-r border-gray-200">
-                                                    <div className="text-xs text-gray-600">{row.emailAddress || row.email || 'N/A'}</div>
-                                                    <div className="text-xs text-gray-500">{row.mobileNumber || row.whatsapp || 'N/A'}</div>
-                                                </td>
-                                                <td className="px-4 py-3 border-r border-gray-200">
-                                                    <div className="text-xs text-gray-600">{row.paymentStatus || 'Pending'}</div>
-                                                    <div className="text-[10px] text-gray-400">{row.registrationCategory || 'N/A'}</div>
-                                                </td>
-                                                <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-200 whitespace-nowrap">
+
+                                                {/* Date */}
+                                                <td className="px-4 py-1 text-sm text-gray-600 border-r border-gray-200 whitespace-nowrap">
                                                     {formatDate(row.createdAt)}
                                                 </td>
-                                                <td className="px-4 py-3">
-                                                    <div className="flex items-center gap-2">
+
+                                                {/* Actions */}
+                                                <td className="px-4 py-1">
+                                                    <div className="flex items-center gap-1.5">
                                                         <button
                                                             onClick={() => navigate(`/buyer-registration/${row._id}`)}
-                                                            className="p-1 text-gray-500 hover:text-blue-600 transition-colors"
-                                                            title="View Details"
+                                                            className="p-1.5 rounded border border-gray-200 text-gray-500 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                                                            title="View"
                                                         >
-                                                            <Eye className="w-4 h-4" />
+                                                            <Eye className="w-3.5 h-3.5" />
                                                         </button>
                                                         <button
                                                             onClick={() => navigate(`/buyer-registration/edit/${row._id}`)}
-                                                            className="p-1 text-gray-500 hover:text-amber-600 transition-colors"
+                                                            className="p-1.5 rounded border border-gray-200 text-gray-500 hover:text-amber-600 hover:border-amber-300 hover:bg-amber-50 transition-colors"
                                                             title="Edit"
                                                         >
-                                                            <Edit className="w-4 h-4" />
+                                                            <Edit className="w-3.5 h-3.5" />
                                                         </button>
                                                         <button
                                                             onClick={() => handleDelete(row)}
-                                                            className="p-1 text-gray-500 hover:text-red-600 transition-colors"
+                                                            className="p-1.5 rounded border border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-300 hover:bg-red-50 transition-colors"
                                                             title="Delete"
                                                         >
-                                                            <Trash2 className="w-4 h-4" />
+                                                            <Trash2 className="w-3.5 h-3.5" />
                                                         </button>
                                                     </div>
                                                 </td>
@@ -212,47 +261,36 @@ const BuyerList = () => {
                         )}
                     </div>
 
-
-                    <div className="px-4 py-4 bg-white border-t border-gray-300">
+                    {/* Search */}
+                    <div className="px-4 py-2 border-t border-gray-300 bg-white">
                         <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Search className="h-4 w-4 text-gray-400" />
-                            </div>
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
                             <input
                                 type="text"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder="Search by company, name, email, phone, country, payment status..."
-                                className="block w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200 ease-in-out"
-                                style={{
-                                    transition: 'all 0.2s ease-in-out'
-                                }}
-                                onFocus={(e) => {
-                                    e.target.style.borderColor = '#3B82F6';
-                                    e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                                }}
-                                onBlur={(e) => {
-                                    e.target.style.borderColor = '#D1D5DB';
-                                    e.target.style.boxShadow = 'none';
-                                }}
+                                placeholder="Search by company, name, email, phone, country..."
+                                className="w-full pl-9 pr-8 py-2 text-sm border border-gray-300 rounded-lg bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#23471d]/20 focus:border-[#23471d] transition-all"
                             />
                             {searchTerm && (
                                 <button
-                                    onClick={() => setSearchTerm('')}
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                    onClick={() => setSearchTerm("")}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
                                 >
-                                    <span className="text-sm">✕</span>
+                                    ✕
                                 </button>
                             )}
                         </div>
                         {searchTerm && (
-                            <div className="mt-2 text-xs text-gray-500">
-                                Found {filteredRegistrations.length} result(s) for "{searchTerm}"
-                            </div>
+                            <p className="mt-1.5 text-xs text-gray-400">
+                                {filteredRegistrations.length} result(s) for{" "}
+                                <span className="font-medium text-gray-600">"{searchTerm}"</span>
+                            </p>
                         )}
                     </div>
 
-                    <div className="mt-4 px-4 pb-4 bg-white border-t border-gray-300 pt-4">
+                    {/* Pagination */}
+                    <div className="px-4 py-2 border-t border-gray-300 bg-white">
                         <Pagination
                             currentPage={currentPage}
                             totalItems={filteredRegistrations.length}
@@ -261,6 +299,7 @@ const BuyerList = () => {
                             label="registrations"
                         />
                     </div>
+
                 </div>
             </div>
         </div>

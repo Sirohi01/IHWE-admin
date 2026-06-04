@@ -210,6 +210,7 @@ const AwardsGalleryManage = lazy(() => import("../pages/AwardsGalleryManage"));
 const AccountSection1 = lazy(() => import("../pages/ihwe_client_data_2026/AccountSection1"));
 const CreateEstimate1 = lazy(() => import("../pages/ihwe_client_data_2026/CreateEstimate1"));
 import EstimateDetails from "../pages/ihwe_client_data_2026/invoice/EstimateDetails"
+import BuyerRegistrationForm from '../pages/buyer/BuyerRegistrationForm';
 const EditEstimate = lazy(() => import("../pages/ihwe_client_data_2026/invoice/EditEstimate"));
 const PerformaInvoiceDetails = lazy(() => import("../pages/ihwe_client_data_2026/invoice/PerformaInvoiceDetails"));
 const CreateInvoice = lazy(() => import("../pages/ihwe_client_data_2026/invoice/CreateInvoice"));
@@ -362,7 +363,7 @@ export default function AppRoutes() {
               element={<EPromotionRegisters />}
             />
             <Route path="contact-enquiries" element={<ContactEnquiries />} />
-            {/* <Route path="buyer-registrations" element={<BuyerRegistrations />} /> */}
+            <Route path="buyer-registration-form" element={<BuyerRegistrationForm />} />
             <Route path="buyer-registration" element={<BuyerRegistration />} />
             <Route
               path="buyer-registration/:id"
