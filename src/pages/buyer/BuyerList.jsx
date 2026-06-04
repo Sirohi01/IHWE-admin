@@ -102,11 +102,13 @@ const BuyerList = () => {
             <div className="w-full">
                 <div className=" flex justify-between items-center border-b border-gray-300 px-4">
                     <div className="">
-                        <h1 className="text-2xl font-semibold text-[#23471d] uppercase tracking-tight">Registration List</h1>
+                        <h1 className="text-2xl font-semibold text-[#23471d] uppercase tracking-tight">Domestic Buyer Registration List</h1>
                         <p className="text-gray-500 text-lg"> Showing {filteredRegistrations.length} total registrations</p>
                     </div>
                     <div>
-                        <button className="bg-[#23471d] text-white px-4 py-2 rounded-sm">Add New Registration</button>
+                        <button
+                            onClick={() => navigate("/buyer-registration")}
+                            className="bg-[#23471d] text-white px-4 py-2 rounded-sm">Add New Registration</button>
                     </div>
                 </div>
 

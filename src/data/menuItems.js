@@ -164,9 +164,9 @@ export const menuItems = [
     icon: Users,
     children: [
       { label: "Buyer Registration", path: "/buyer-registration-form" },
-      { label: "Add Domestic Buyer ", path: "/buyer-registration" },
+      // { label: "Add Domestic Buyer ", path: "/buyer-registration" },
       { label: "Domestic Buyer List", path: "/buyer-list" },
-      { label: "Add International Buyer", path: "/international-buyer-registration" },
+      // { label: "Add International Buyer", path: "/international-buyer-registration" },
       { label: "International Buyer List", path: "/international-buyer-list" },
       { label: "Buyer Registration Config", path: "/buyer-registration-config" },
       { label: "International Registration Config", path: "/international-buyer-registration-config" },

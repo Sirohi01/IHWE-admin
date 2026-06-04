@@ -823,10 +823,10 @@ const BuyerRegistration = () => {
     }
 
     return (
-        <div className="space-y-0 pb-10">
-            <PageHeader title="Buyer Registration" description="Create a buyer registration by completing the form and selecting a package.">
+        <div className="space-y-0 pb-6 p-4 bg-[#f8fafc] min-h-[calc(100vh-60px)]">
+            {/* <PageHeader title="Buyer Registration" description="Create a buyer registration by completing the form and selecting a package.">
                 <Link to="/buyer-list" className="rounded-sm border border-slate-300 bg-white px-5 py-2 text-sm font-bold uppercase tracking-[0.16em] text-slate-700 transition hover:border-[#23471d] hover:text-[#23471d]">View Registrations</Link>
-            </PageHeader>
+            </PageHeader> */}
 
             <div className="overflow-hidden border border-slate-200 bg-white ">
                 <div className="relative">
@@ -1305,14 +1305,14 @@ const BuyerRegistration = () => {
                     </section>
 
                     {/* Submit Buttons */}
-                    <div className="flex flex-col gap-4 border-t border-slate-200 pt-6 md:flex-row md:items-center md:justify-between">
-                        <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                    <div className="flex flex-col gap-4 border-t border-slate-200 py-4 md:flex-row md:items-center md:justify-between">
+                        <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-600">
                             <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#23471d]" />
                             <p className="leading-6">Review your details and selected package before submitting the registration.</p>
                         </div>
                         <div className="flex flex-wrap gap-3">
-                            <button type="button" onClick={() => handleReset(true)} className="rounded-[2px] border border-red-200 bg-red-50 px-5 py-3 text-sm font-bold uppercase tracking-[0.16em] text-red-700 transition hover:bg-red-100">Reset Form</button>
-                            <button type="submit" disabled={isSubmitting || normalizedPackages.length === 0 || !selectedPackage || selectedPaymentMethods.length === 0} className="inline-flex items-center gap-2 rounded-[2px] bg-[#23471d] px-6 py-3 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-[#1a3516] disabled:cursor-not-allowed disabled:opacity-60">
+                            <button type="button" onClick={() => handleReset(true)} className="rounded-[2px] border border-red-200 bg-red-50 px-5 py-2 text-sm font-bold uppercase tracking-[0.16em] text-red-700 transition hover:bg-red-100">Reset Form</button>
+                            <button type="submit" disabled={isSubmitting || normalizedPackages.length === 0 || !selectedPackage || selectedPaymentMethods.length === 0} className="inline-flex items-center gap-2 rounded-[2px] bg-[#23471d] px-6 py-2 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-[#1a3516] disabled:cursor-not-allowed disabled:opacity-60">
                                 {isSubmitting ? (<><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>) : (<><CheckCircle2 className="h-4 w-4" /> Submit Registration</>)}
                             </button>
                         </div>

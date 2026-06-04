@@ -551,10 +551,10 @@ const InternationalBuyerRegistration = () => {
     const heroImage = heroData?.backgroundImage ? (heroData.backgroundImage.startsWith("http") ? heroData.backgroundImage : `${SERVER_URL}${heroData.backgroundImage}`) : "";
 
     return (
-        <div className="space-y-0 pb-10">
-            <PageHeader title="International Buyer Registration" description="Register a new international buyer with a premium workflow.">
+        <div className="space-y-0 pb-6 p-4 bg-[#f8fafc] min-h-[calc(100vh-60px)]">
+            {/* <PageHeader title="International Buyer Registration" description="Register a new international buyer with a premium workflow.">
                 <Link to="/international-buyer-list" className="rounded-[2px] border border-slate-300 bg-white px-5 py-2 text-sm font-bold uppercase tracking-[0.16em] text-slate-700 transition hover:border-[#23471d] hover:text-[#23471d]">View List</Link>
-            </PageHeader>
+            </PageHeader> */}
 
             <div className="overflow-hidden border border-slate-200 bg-white shadow-sm">
                 <div className="relative">
@@ -581,7 +581,7 @@ const InternationalBuyerRegistration = () => {
                     </div>
                 </motion.div>
             ) : (
-                <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+                <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border border-slate-200 bg-white px-6">
                     <section>
                         <SectionTitle icon={UserRound} title="Section 1 – Personal & Contact Information" />
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
