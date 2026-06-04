@@ -289,7 +289,7 @@ const inputClass = "w-full h-9 px-3 py-0 rounded-[2px] border border-slate-400 b
 const textareaClass = "w-full px-3 py-2 rounded-[2px] border border-slate-400 bg-white text-left text-[12px] font-medium text-slate-900 outline-none shadow-none transition-all ring-offset-background focus:border-[#23471d] focus:ring-[#23471d]/10 placeholder:text-slate-400 font-sans resize-y";
 const selectClass = "w-full h-9 px-3 py-0 rounded-[2px] border border-slate-400 bg-white text-left text-[12px] font-medium text-slate-900 outline-none shadow-none transition-all ring-offset-background focus:border-[#23471d] focus:ring-[#23471d]/10 placeholder:text-slate-400 font-sans appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364758b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-8";
 
-const labelClass = "text-[12px] font-semibold text-slate-900 mb-1 block text-left font-sans";
+const labelClass = "text-[12px] font-medium text-slate-800 mb-1 block text-left";
 const sectionTitleClass = "text-[13px] font-black text-[#23471d] pb-1 border-b border-emerald-500/20 flex items-center gap-1.5 mb-3 uppercase tracking-tight font-sans";
 
 const formatCurrency = (value) =>
@@ -310,8 +310,8 @@ const ErrorText = ({ message }) =>
 
 const SectionTitle = ({ icon: Icon, title }) => (
     <h3 className={sectionTitleClass}>
-        <Icon className="h-4 w-4 text-[#d26019]" />
-        {title}
+        <Icon className="h-4 w-4 text-[#d26019] " />
+        <span className="text-[12px] font-semibold uppercase">{title}</span>
     </h3>
 );
 
@@ -322,7 +322,7 @@ const Field = ({ label, name, error, required, children, hint, className = "" })
             {required ? <span className="text-red-500"> *</span> : null}
         </label>
         {children}
-        {hint ? <p className="mt-1 text-xs text-slate-400">{hint}</p> : null}
+        {hint ? <p className="mt-1 text-xs font-medium text-slate-400">{hint}</p> : null}
         <ErrorText message={error} />
     </div>
 );
@@ -823,14 +823,14 @@ const BuyerRegistration = () => {
     }
 
     return (
-        <div className="mt-6 space-y-6 pb-10">
+        <div className="space-y-0 pb-10">
             <PageHeader title="Buyer Registration" description="Create a buyer registration by completing the form and selecting a package.">
-                <Link to="/buyer-list" className="rounded-[2px] border border-slate-300 bg-white px-5 py-3 text-sm font-bold uppercase tracking-[0.16em] text-slate-700 transition hover:border-[#23471d] hover:text-[#23471d]">View Registrations</Link>
+                <Link to="/buyer-list" className="rounded-sm border border-slate-300 bg-white px-5 py-2 text-sm font-bold uppercase tracking-[0.16em] text-slate-700 transition hover:border-[#23471d] hover:text-[#23471d]">View Registrations</Link>
             </PageHeader>
 
-            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden border border-slate-200 bg-white ">
                 <div className="relative">
-                    {heroImage ? <img src={heroImage} alt={heroData?.imageAltText || "Buyer registration"} className="h-[280px] w-full object-cover" /> : <div className="h-[280px] w-full bg-[radial-gradient(circle_at_top_left,_#f0fdf4,_#dcfce7_35%,_#ffffff_78%)]" />}
+                    {heroImage ? <img src={heroImage} alt={heroData?.imageAltText || "Buyer registration"} className="h-[180px] w-full object-cover" /> : <div className="h-[280px] w-full bg-[radial-gradient(circle_at_top_left,_#f0fdf4,_#dcfce7_35%,_#ffffff_78%)]" />}
                     <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/55 to-[#23471d]/35" />
                     <div className="absolute inset-0 flex items-end">
                         <div className="max-w-4xl p-8 text-white md:p-10">
@@ -868,31 +868,31 @@ const BuyerRegistration = () => {
                     </div>
                 </motion.div>
             ) : (
-                <form onSubmit={(e) => { e.preventDefault(); handleSubmitRegistration(); }} className="space-y-8 rounded-lg border border-slate-200 bg-white p-6 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] md:p-8">
+                <form onSubmit={(e) => { e.preventDefault(); handleSubmitRegistration(); }} className="space-y-3 rounded-lg border border-slate-200 bg-white px-6">
 
                     {/* SECTION 1: Personal & Company Information - 5 FIELDS */}
                     <section>
                         <SectionTitle icon={UserRound} title="Personal & Company Information" />
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
-                            <Field label="Full Name *" name="fullName" required error={errors.fullName}>
+                            <Field label="Full Name" name="fullName" required error={errors.fullName}>
                                 <input id="fullName" name="fullName" value={formData.fullName} onChange={handleInputChange} placeholder="As per ID Proof" className={inputClass} />
                             </Field>
-                            <Field label="Designation *" name="designation" required error={errors.designation}>
+                            <Field label="Designation " name="designation" required error={errors.designation}>
                                 <input id="designation" name="designation" value={formData.designation} onChange={handleInputChange} placeholder="Current Position" className={inputClass} />
                             </Field>
-                            <Field label="Company Name *" name="companyName" required error={errors.companyName}>
+                            <Field label="Company Name " name="companyName" required error={errors.companyName}>
                                 <input id="companyName" name="companyName" value={formData.companyName} onChange={handleInputChange} placeholder="Full Registered Name" className={inputClass} />
                             </Field>
-                            <Field label={<span>Mobile Number * <div className="inline-flex w-32 overflow-hidden align-middle ml-2 items-center h-4 relative"><motion.span initial={{ x: "100%" }} animate={{ x: "-100%" }} transition={{ repeat: Infinity, duration: 4, ease: "linear" }} className="text-red-500 text-[10px] uppercase font-semibold tracking-wide whitespace-nowrap absolute">Our team will contact you</motion.span></div></span>} name="mobileNumber" required error={errors.mobileNumber}>
+                            <Field label={<span>Mobile Number  <div className="inline-flex w-32 overflow-hidden align-middle ml-2 items-center h-4 relative"><motion.span initial={{ x: "100%" }} animate={{ x: "-100%" }} transition={{ repeat: Infinity, duration: 4, ease: "linear" }} className="text-red-500 text-[10px] uppercase font-semibold tracking-wide whitespace-nowrap absolute">Our team will contact you</motion.span></div></span>} name="mobileNumber" required error={errors.mobileNumber}>
                                 <input id="mobileNumber" name="mobileNumber" value={formData.mobileNumber} onChange={handleInputChange} placeholder="10-digit mobile" className={inputClass} maxLength={10} />
                             </Field>
-                            <Field label="Alternate Number *" name="alternateNumber" required error={errors.alternateNumber}>
+                            <Field label="Alternate Number " name="alternateNumber" required error={errors.alternateNumber}>
                                 <input id="alternateNumber" name="alternateNumber" value={formData.alternateNumber} onChange={handleInputChange} placeholder="10-digit alternate" className={inputClass} maxLength={10} />
                             </Field>
-                            <Field label="Email Address *" name="emailAddress" required error={errors.emailAddress}>
+                            <Field label="Email Address " name="emailAddress" required error={errors.emailAddress}>
                                 <input id="emailAddress" name="emailAddress" type="email" value={formData.emailAddress} onChange={handleInputChange} placeholder="Work Email" className={inputClass} />
                             </Field>
-                            <Field label="Business Role *" name="businessType" required error={errors.businessType}>
+                            <Field label="Business Role " name="businessType" required error={errors.businessType}>
                                 {!formData.businessType.toString().toLowerCase().includes('other') ? (
                                     <div className="relative" ref={roleDropdownRef}>
                                         <button type="button" onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)} className={`${inputClass} flex items-center justify-between text-left`}>
@@ -935,30 +935,30 @@ const BuyerRegistration = () => {
                     {/* SECTION 2: Registered Address - 5 FIELDS */}
                     <section>
                         <SectionTitle icon={MapPin} title="Registered Address" />
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
-                            <Field label="Country *" name="country" required error={errors.country}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-x-2 ">
+                            <Field label="Country " name="country" required error={errors.country}>
                                 <select id="country" name="country" value={formData.country} onChange={(e) => handleSelectChange("country", e.target.value)} className={selectClass}>
                                     <option value="">Select country</option>
                                     {countries.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}
                                 </select>
                             </Field>
-                            <Field label="State/Province *" name="stateProvince" required error={errors.stateProvince}>
+                            <Field label="State/Province " name="stateProvince" required error={errors.stateProvince}>
                                 <select id="stateProvince" name="stateProvince" value={formData.stateProvince} onChange={(e) => handleSelectChange("stateProvince", e.target.value)} className={selectClass} disabled={loadingLocations.states}>
                                     <option value="">{loadingLocations.states ? "Loading..." : "Select State"}</option>
                                     {states.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}
                                 </select>
                             </Field>
-                            <Field label="City *" name="city" required error={errors.city}>
+                            <Field label="City " name="city" required error={errors.city}>
                                 <select id="city" name="city" value={formData.city} onChange={(e) => handleSelectChange("city", e.target.value)} className={selectClass} disabled={!formData.stateProvince || loadingLocations.cities}>
                                     <option value="">{loadingLocations.cities ? "Loading..." : "Select City"}</option>
                                     {cities.map((item) => (<option key={item._id || item.name} value={item.name}>{item.name}</option>))}
                                 </select>
                             </Field>
-                            <Field label="Pin Code *" name="pinCode" required error={errors.pinCode}>
+                            <Field label="Pin Code " name="pinCode" required error={errors.pinCode}>
                                 <input id="pinCode" name="pinCode" value={formData.pinCode} onChange={handleInputChange} placeholder="Postal Code" className={inputClass} maxLength={6} />
                             </Field>
-                            <Field label="Registered Address *" name="registeredAddress" required error={errors.registeredAddress} className="xl:col-span-5">
-                                <textarea id="registeredAddress" name="registeredAddress" value={formData.registeredAddress} onChange={handleInputChange} placeholder="Full Corporate Address" className={`${textareaClass} min-h-[36px] h-9 resize-none`} rows={1} />
+                            <Field label="Registered Address " name="registeredAddress" required error={errors.registeredAddress} className="lg:col-span-2">
+                                <textarea id="registeredAddress" name="registeredAddress" value={formData.registeredAddress} onChange={handleInputChange} placeholder="Full Corporate Address" className={`${textareaClass} h-9 resize-none`} rows={1} />
                             </Field>
                         </div>
                     </section>
@@ -967,19 +967,19 @@ const BuyerRegistration = () => {
                     <section>
                         <SectionTitle icon={Building2} title="Company Business Profile" />
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
-                            <Field label="Company/Firm Name *" name="companyFirmName" required error={errors.companyFirmName}>
+                            <Field label="Company/Firm Name " name="companyFirmName" required error={errors.companyFirmName}>
                                 <input id="companyFirmName" name="companyFirmName" value={formData.companyFirmName} onChange={handleInputChange} placeholder="Company / Firm Name" className={inputClass} />
                             </Field>
                             <Field label="Brand Name" name="brandName">
                                 <input id="brandName" name="brandName" value={formData.brandName} onChange={handleInputChange} placeholder="Brand Name" className={inputClass} />
                             </Field>
-                            <Field label="Business Type *" name="basicBusinessType" required error={errors.basicBusinessType}>
+                            <Field label="Business Type " name="basicBusinessType" required error={errors.basicBusinessType}>
                                 <select id="basicBusinessType" name="basicBusinessType" value={formData.basicBusinessType} onChange={(e) => handleSelectChange("basicBusinessType", e.target.value)} className={selectClass}>
                                     <option value="">Select Type</option>
                                     {['Proprietorship', 'Partnership', 'Pvt Ltd', 'LLP', 'Others'].map((t) => (<option key={t} value={t}>{t}</option>))}
                                 </select>
                             </Field>
-                            <Field label="Year of Est.*" name="yearOfEstablishment" required error={errors.yearOfEstablishment}>
+                            <Field label="Year of Est." name="yearOfEstablishment" required error={errors.yearOfEstablishment}>
                                 <input id="yearOfEstablishment" name="yearOfEstablishment" value={formData.yearOfEstablishment} onChange={handleInputChange} placeholder="e.g. 2010" className={inputClass} />
                             </Field>
                             <Field label="GST Number" name="gstNumber">
@@ -988,7 +988,7 @@ const BuyerRegistration = () => {
                             <Field label="PAN Number" name="panNumber">
                                 <input id="panNumber" name="panNumber" value={formData.panNumber} onChange={handleInputChange} placeholder="PAN Number" className={inputClass} />
                             </Field>
-                            <Field label="Buyer Industry *" name="buyerIndustry" required error={errors.buyerIndustry}>
+                            <Field label="Buyer Industry " name="buyerIndustry" required error={errors.buyerIndustry}>
                                 <select id="buyerIndustry" name="buyerIndustry" value={formData.buyerIndustry} onChange={(e) => handleSelectChange("buyerIndustry", e.target.value)} className={selectClass}>
                                     <option value="">Choose Industry</option>
                                     {normalizedConfig.primaryProductInterests.map((i) => (<option key={i} value={i}>{i}</option>))}
@@ -1001,16 +1001,16 @@ const BuyerRegistration = () => {
                     <section>
                         <SectionTitle icon={FileText} title="Business Profile Details" />
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
-                            <Field label="Nature of Business *" name="natureOfBusiness" required error={errors.natureOfBusiness}>
+                            <Field label="Nature of Business " name="natureOfBusiness" required error={errors.natureOfBusiness}>
                                 <input id="natureOfBusiness" name="natureOfBusiness" value={formData.natureOfBusiness} onChange={handleInputChange} placeholder="Short description" className={inputClass} />
                             </Field>
-                            <Field label="Years in Business *" name="yearsInBusiness" required error={errors.yearsInBusiness}>
+                            <Field label="Years in Business " name="yearsInBusiness" required error={errors.yearsInBusiness}>
                                 <input id="yearsInBusiness" name="yearsInBusiness" type="number" min="0" value={formData.yearsInBusiness} onChange={handleInputChange} placeholder="e.g. 10" className={inputClass} />
                             </Field>
-                            <Field label="No. of Outlets *" name="numberOfOutlets" required error={errors.numberOfOutlets}>
+                            <Field label="No. of Outlets " name="numberOfOutlets" required error={errors.numberOfOutlets}>
                                 <input id="numberOfOutlets" name="numberOfOutlets" type="number" min="1" value={formData.numberOfOutlets} onChange={handleInputChange} placeholder="e.g. 5" className={inputClass} />
                             </Field>
-                            <Field label="Annual Turnover *" name="annualTurnover" required error={errors.annualTurnover}>
+                            <Field label="Annual Turnover " name="annualTurnover" required error={errors.annualTurnover}>
                                 <select id="annualTurnover" name="annualTurnover" value={formData.annualTurnover} onChange={(e) => handleSelectChange("annualTurnover", e.target.value)} className={selectClass}>
                                     <option value="">Select Range</option>
                                     {(normalizedConfig.annualTurnoverRanges || ['Below 50 Lakhs', '50L – 2 Cr', '2 – 10 Cr', '10 Cr+']).map((r) => (<option key={r} value={r}>{r}</option>))}
@@ -1023,7 +1023,7 @@ const BuyerRegistration = () => {
                     <section>
                         <SectionTitle icon={Globe2} title="Sourcing & Purchase Intent" />
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
-                            <Field label="Primary Product Interest *" name="primaryProductInterest" required error={errors.primaryProductInterest}>
+                            <Field label="Primary Product Interest " name="primaryProductInterest" required error={errors.primaryProductInterest}>
                                 <select id="primaryProductInterest" name="primaryProductInterest" value={formData.primaryProductInterest} onChange={(e) => handleSelectChange("primaryProductInterest", e.target.value)} className={selectClass}>
                                     <option value="">Choose Interest</option>
                                     {normalizedConfig.primaryProductInterests.map((item) => (<option key={item} value={item}>{item}</option>))}
@@ -1057,31 +1057,31 @@ const BuyerRegistration = () => {
                                     {normalizedConfig.budgetRanges.map((item) => (<option key={item} value={item}>{item}</option>))}
                                 </select>
                             </Field>
-                            <Field label="Buying Frequency *" name="buyingFrequency" required error={errors.buyingFrequency}>
+                            <Field label="Buying Frequency " name="buyingFrequency" required error={errors.buyingFrequency}>
                                 <select id="buyingFrequency" name="buyingFrequency" value={formData.buyingFrequency} onChange={(e) => handleSelectChange("buyingFrequency", e.target.value)} className={selectClass}>
                                     <option value="">Select</option>
                                     {(normalizedConfig.buyingFrequencies || ['One-time', 'Monthly', 'Quarterly', 'Long-term']).map(f => <option key={f} value={f}>{f}</option>)}
                                 </select>
                             </Field>
-                            <Field label="Est. Annual Purchase *" name="estimatedAnnualPurchaseValue" required error={errors.estimatedAnnualPurchaseValue}>
+                            <Field label="Est. Annual Purchase " name="estimatedAnnualPurchaseValue" required error={errors.estimatedAnnualPurchaseValue}>
                                 <select id="estimatedAnnualPurchaseValue" name="estimatedAnnualPurchaseValue" value={formData.estimatedAnnualPurchaseValue} onChange={(e) => handleSelectChange("estimatedAnnualPurchaseValue", e.target.value)} className={selectClass}>
                                     <option value="">Select</option>
                                     {(normalizedConfig.annualPurchaseValueRanges || ['Below 10 Lakhs', '10-50 Lakhs', '50 Lakhs - 1 Crore', '1-5 Crore', '5+ Crore']).map(v => <option key={v} value={v}>{v}</option>)}
                                 </select>
                             </Field>
-                            <Field label="Purchase Timeline *" name="purchaseTimeline" required error={errors.purchaseTimeline}>
+                            <Field label="Purchase Timeline " name="purchaseTimeline" required error={errors.purchaseTimeline}>
                                 <select id="purchaseTimeline" name="purchaseTimeline" value={formData.purchaseTimeline} onChange={(e) => handleSelectChange("purchaseTimeline", e.target.value)} className={selectClass}>
                                     <option value="">Select</option>
                                     {(normalizedConfig.purchaseTimelines || ['Immediate', '1–3 Months', '3–6 Months', 'Exploring']).map(t => <option key={t} value={t}>{t}</option>)}
                                 </select>
                             </Field>
-                            <Field label="Matchmaking Interest *" name="matchmakingInterest" required error={errors.matchmakingInterest}>
+                            <Field label="Matchmaking Interest " name="matchmakingInterest" required error={errors.matchmakingInterest}>
                                 <select id="matchmakingInterest" name="matchmakingInterest" value={formData.matchmakingInterest} onChange={(e) => handleSelectChange("matchmakingInterest", e.target.value)} className={selectClass}>
                                     <option value="Yes">Yes</option>
                                     <option value="No">No</option>
                                 </select>
                             </Field>
-                            <Field label="Role in Purchase *" name="roleInPurchaseDecision" required error={errors.roleInPurchaseDecision}>
+                            <Field label="Role in Purchase " name="roleInPurchaseDecision" required error={errors.roleInPurchaseDecision}>
                                 <select id="roleInPurchaseDecision" name="roleInPurchaseDecision" value={formData.roleInPurchaseDecision} onChange={(e) => handleSelectChange("roleInPurchaseDecision", e.target.value)} className={selectClass}>
                                     <option value="">Select Role</option>
                                     {(normalizedConfig.roles || ['Final Decision Maker', 'Influencer', 'Research Only']).map(r => <option key={r} value={r}>{r}</option>)}
@@ -1098,12 +1098,12 @@ const BuyerRegistration = () => {
                         <SectionTitle icon={Briefcase} title="Supplier Preference" />
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
                             <div>
-                                <label className={labelClass}>Preferred Region *</label>
+                                <label className={labelClass}>Preferred Region <span className="text-red-500">*</span></label>
                                 <MultiSelectDropdown options={normalizedConfig.regions || ['North India', 'South India', 'East India', 'West India', 'Pan India', 'Global']} selected={formData.preferredSupplierRegion} onChange={(val) => { setFormData(prev => ({ ...prev, preferredSupplierRegion: val })); setErrors(prev => ({ ...prev, preferredSupplierRegion: '' })); }} placeholder="Select regions..." error={!!errors.preferredSupplierRegion} accentColor="emerald" />
                                 <ErrorText message={errors.preferredSupplierRegion} />
                             </div>
                             <div>
-                                <label className={labelClass}>Preferred Supplier Type *</label>
+                                <label className={labelClass}>Preferred Supplier Type <span className="text-red-500">*</span></label>
                                 <MultiSelectDropdown options={normalizedConfig.supplierTypes || ['Manufacturer', 'Exporter', 'MSME', 'Startup', 'Wholesaler']} selected={formData.preferredSupplierType} onChange={(val) => { setFormData(prev => ({ ...prev, preferredSupplierType: val })); setErrors(prev => ({ ...prev, preferredSupplierType: '' })); }} placeholder="Select types..." error={!!errors.preferredSupplierType} accentColor="emerald" />
                                 <ErrorText message={errors.preferredSupplierType} />
                             </div>
@@ -1173,7 +1173,7 @@ const BuyerRegistration = () => {
                             {formData.requirePreScheduledB2B === 'Yes' && (
                                 <>
                                     <div>
-                                        <label className={labelClass}>Meeting Categories *</label>
+                                        <label className={labelClass}>Meeting Categories <span className="text-red-500">*</span></label>
                                         <MultiSelectDropdown options={normalizedConfig.meetingCategoryOptions} selected={formData.preferredMeetingCategories} onChange={(val) => { setFormData(prev => ({ ...prev, preferredMeetingCategories: val })); setErrors(prev => ({ ...prev, preferredMeetingCategories: '' })); }} placeholder="Select..." error={!!errors.preferredMeetingCategories} accentColor="emerald" />
                                         <ErrorText message={errors.preferredMeetingCategories} />
                                     </div>
@@ -1182,22 +1182,22 @@ const BuyerRegistration = () => {
                                         <MultiSelectDropdown options={normalizedConfig.exhibitorTypeOptions} selected={formData.preferredExhibitorTypes} onChange={(val) => setFormData(prev => ({ ...prev, preferredExhibitorTypes: val }))} placeholder="Select..." accentColor="emerald" />
                                     </div>
                                     <div>
-                                        <label className={labelClass}>Meeting Objectives *</label>
+                                        <label className={labelClass}>Meeting Objectives <span className="text-red-500">*</span></label>
                                         <MultiSelectDropdown options={normalizedConfig.meetingObjectiveOptions} selected={formData.meetingObjectives} onChange={(val) => { setFormData(prev => ({ ...prev, meetingObjectives: val })); setErrors(prev => ({ ...prev, meetingObjectives: '' })); }} placeholder="Select..." error={!!errors.meetingObjectives} accentColor="amber" />
                                         <ErrorText message={errors.meetingObjectives} />
                                     </div>
                                     <div>
-                                        <label className={labelClass}>Business Type *</label>
+                                        <label className={labelClass}>Business Type <span className="text-red-500">*</span></label>
                                         <MultiSelectDropdown options={normalizedConfig.preferredBusinessTypeOptions} selected={formData.preferredBusinessTypes} onChange={(val) => { setFormData(prev => ({ ...prev, preferredBusinessTypes: val })); setErrors(prev => ({ ...prev, preferredBusinessTypes: '' })); }} placeholder="Select..." error={!!errors.preferredBusinessTypes} accentColor="blue" />
                                         <ErrorText message={errors.preferredBusinessTypes} />
                                     </div>
-                                    <Field label="Preferred Day *" name="preferredMeetingDay" required error={errors.preferredMeetingDay}>
+                                    <Field label="Preferred Day " name="preferredMeetingDay" required error={errors.preferredMeetingDay}>
                                         <select id="preferredMeetingDay" name="preferredMeetingDay" value={formData.preferredMeetingDay} onChange={(e) => handleSelectChange("preferredMeetingDay", e.target.value)} className={selectClass}>
                                             <option value="">Select Day</option>
                                             {normalizedConfig.meetingDayOptions.map(day => <option key={day} value={day}>{day}</option>)}
                                         </select>
                                     </Field>
-                                    <Field label="Time Slot *" name="preferredTimeSlot" required error={errors.preferredTimeSlot}>
+                                    <Field label="Time Slot " name="preferredTimeSlot" required error={errors.preferredTimeSlot}>
                                         <select id="preferredTimeSlot" name="preferredTimeSlot" value={formData.preferredTimeSlot} onChange={(e) => handleSelectChange("preferredTimeSlot", e.target.value)} className={selectClass}>
                                             <option value="">Select Slot</option>
                                             {['Morning (10AM-1PM)', 'Afternoon (2PM-4PM)', 'Evening (4PM-6PM)'].map(slot => <option key={slot} value={slot}>{slot}</option>)}

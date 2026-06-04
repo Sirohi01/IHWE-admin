@@ -44,7 +44,7 @@ const InternationalBuyerList = () => {
             return;
         }
 
-        const filtered = registrations.filter(reg => 
+        const filtered = registrations.filter(reg =>
             reg.brandName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             reg.registrationId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             reg.primaryContact?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -93,15 +93,15 @@ const InternationalBuyerList = () => {
     };
 
     return (
-        <div className="bg-white mt-6 px-4 sm:px-6 lg:px-8">
+        <div className="bg-white px-4 pb-10 ">
             <div className="w-full">
-                <div className="mb-6 flex justify-between items-center">
+                <div className="py-2 flex justify-between items-center">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800 uppercase flex items-center gap-3">
+                        <h1 className="text-2xl font-bold text-gray-800 uppercase flex items-center gap-3">
                             <Globe className="w-8 h-8 text-blue-600" />
-                            International Buyer Registrations
+                            International List
                         </h1>
-                        <p className="text-gray-500 mt-2 text-lg">Manage registrations from the International Buyer Registration page</p>
+                        <p className="text-gray-500 mt-1 pl-10 text-lg"> Showing {filteredRegistrations.length} total international registrations</p>
                     </div>
                     <button
                         onClick={() => navigate('/international-buyer-registration')}
@@ -113,14 +113,14 @@ const InternationalBuyerList = () => {
                 </div>
 
                 <div className="border border-gray-300 overflow-hidden rounded-lg shadow-sm">
-                    <div className="px-6 py-4 border-b border-gray-300 bg-gray-50">
+                    {/* <div className="px-6 py-4 border-b border-gray-300 bg-gray-50">
                         <div>
                             <h2 className="text-lg font-semibold text-gray-800 uppercase">International List</h2>
                             <p className="text-sm text-gray-500 mt-0.5">
                                 Showing {filteredRegistrations.length} total international registrations
                             </p>
                         </div>
-                    </div>
+                    </div> */}
 
                     <div className="overflow-x-auto">
                         {isLoading ? (
@@ -175,13 +175,12 @@ const InternationalBuyerList = () => {
                                                     <div className="text-xs text-gray-500">{row.primaryContact?.mobileNumber || 'N/A'}</div>
                                                 </td>
                                                 <td className="px-4 py-3 border-r border-gray-200">
-                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                                                        (row.verification?.adminApprovalStatus || 'Pending') === 'Approved' 
-                                                        ? 'border-green-200 bg-green-50 text-green-700' 
-                                                        : (row.verification?.adminApprovalStatus || 'Pending') === 'Rejected' 
-                                                        ? 'border-red-200 bg-red-50 text-red-700' 
-                                                        : 'border-amber-200 bg-amber-50 text-amber-700'
-                                                    }`}>
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${(row.verification?.adminApprovalStatus || 'Pending') === 'Approved'
+                                                        ? 'border-green-200 bg-green-50 text-green-700'
+                                                        : (row.verification?.adminApprovalStatus || 'Pending') === 'Rejected'
+                                                            ? 'border-red-200 bg-red-50 text-red-700'
+                                                            : 'border-amber-200 bg-amber-50 text-amber-700'
+                                                        }`}>
                                                         {row.verification?.adminApprovalStatus || 'Pending'}
                                                     </span>
                                                     <div className="text-[10px] text-gray-400 mt-1">{row.paymentStatus || 'Pending Payment'}</div>
@@ -212,12 +211,12 @@ const InternationalBuyerList = () => {
                                                             </a>
                                                         ))}
                                                         {![
-                                                            'companyRegistrationCertificate', 'taxRegistrationCertificate', 'passportCopy', 
-                                                            'productCatalogue', 'companyBrochure', 'logo', 'visitingCard', 
+                                                            'companyRegistrationCertificate', 'taxRegistrationCertificate', 'passportCopy',
+                                                            'productCatalogue', 'companyBrochure', 'logo', 'visitingCard',
                                                             'productCertifications', 'previousParticipationProof'
                                                         ].some(key => row.documents?.[key]) && (
-                                                            <span className="text-[10px] text-gray-400 italic">No Docs</span>
-                                                        )}
+                                                                <span className="text-[10px] text-gray-400 italic">No Docs</span>
+                                                            )}
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-200 whitespace-nowrap">
@@ -256,7 +255,7 @@ const InternationalBuyerList = () => {
                         )}
                     </div>
 
-                    <div className="px-4 py-4 bg-white border-t border-gray-300">
+                    <div className="px-4 py-2 bg-white border-t border-gray-300">
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <Search className="h-4 w-4 text-gray-400" />
@@ -271,7 +270,7 @@ const InternationalBuyerList = () => {
                         </div>
                     </div>
 
-                    <div className="mt-4 px-4 pb-4 bg-white border-t border-gray-300 pt-4">
+                    <div className=" px-4 pb-4 bg-white border-t border-gray-300 pt-4">
                         <Pagination
                             currentPage={currentPage}
                             totalItems={filteredRegistrations.length}
