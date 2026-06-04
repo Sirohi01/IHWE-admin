@@ -152,7 +152,7 @@ const MarketingMaterialPage = () => {
       return;
     }
 
-    if (openModal) {
+    if (items.length > 1) {
       setModalCategory(category);
       setModalItems(items);
       setSelectedItemsForSend([items[0]._id]);
@@ -475,13 +475,6 @@ const MarketingMaterialPage = () => {
                         <p className="text-[10px] text-gray-400 mt-1">Click External Link to open</p>
                       </div>
                     )
-                  ) : selectedMaterial.fileType === "PDF" ? (
-                    <iframe
-                      title={selectedMaterial.title}
-                      className="w-full h-full rounded shadow-sm border-none bg-white"
-                      src={selectedMaterial.fileUrl}
-                      loading="lazy"
-                    />
                   ) : (
                     <div className="text-center text-gray-500 flex flex-col items-center justify-center">
                       {selectedMaterial.fileType === "PPT" ? (
@@ -762,13 +755,6 @@ const MarketingMaterialPage = () => {
                         loading="lazy"
                       />
                     )
-                  ) : selectedMaterial.fileType === "PDF" ? (
-                    <iframe
-                      title={selectedMaterial.title}
-                      className="w-full h-full rounded shadow-sm border-none bg-white"
-                      src={selectedMaterial.fileUrl.includes("localhost") || selectedMaterial.fileUrl.startsWith("/") ? selectedMaterial.fileUrl : `https://docs.google.com/viewer?url=${encodeURIComponent(selectedMaterial.fileUrl)}&embedded=true`}
-                      loading="lazy"
-                    />
                   ) : (
                     <div className="text-center text-gray-500 flex flex-col items-center justify-center">
                       {selectedMaterial.fileType === "PPT" ? (
