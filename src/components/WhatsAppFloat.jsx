@@ -27,7 +27,7 @@ const WhatsAppFloat = () => {
     )}`;
 
     return (
-        <div className="fixed left-6 bottom-8 z-[1000] flex flex-col items-center gap-4">
+        <div className="fixed right-6 bottom-8 z-[1000] flex flex-col items-center gap-4">
             {/* Call Button */}
             <CallFloat />
 

@@ -33,7 +33,7 @@ export default function Sidebar({
   const [openSections, setOpenSections] = useState({});
   const [theme, setTheme] = useState(DEFAULT_THEME);
   const [currentUser, setCurrentUser] = useState(null);
-
+  const showFooterProfile = false;
   useEffect(() => {
     const info = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
     if (info) {
@@ -257,10 +257,10 @@ export default function Sidebar({
           <button
             onClick={() => toggleDropdown(item.label)}
             className={`sb-dropdown-btn w-full flex items-center justify-between px-3 py-1.5 rounded-md transition-all duration-200 ${!sidebarOpen && "justify-center"} ${hasActiveChild
-                ? "active-dropdown"
-                : isOpen
-                  ? "bg-white/8 text-white"
-                  : "text-white/80 hover:bg-white/5 hover:text-white"
+              ? "active-dropdown"
+              : isOpen
+                ? "bg-white/8 text-white"
+                : "text-white/80 hover:bg-white/5 hover:text-white"
               }`}
           >
             <div className="flex items-center gap-3">
@@ -460,10 +460,10 @@ export default function Sidebar({
           <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
             <div className="w-56 h-20 bg-white rounded-full blur-[35px]" />
           </div>
-          <img 
-            src={namogangelogo} 
-            alt="IHWE 2026" 
-            className="relative h-[70px] w-full object-contain z-10" 
+          <img
+            src={namogangelogo}
+            alt="IHWE 2026"
+            className="relative h-[70px] w-full object-contain z-10"
             style={{ filter: "drop-shadow(0 0 3px #ffffff) drop-shadow(0 0 15px #ffffff) drop-shadow(0 0 30px rgba(255,255,255,0.8))" }}
           />
           {/* {sidebarOpen && (
@@ -522,7 +522,8 @@ export default function Sidebar({
           })}
         </div>
 
-        <div className="sb-footer p-3 border-t border-white/10 bg-inherit mt-auto relative z-10 space-y-4">
+        {/* Sidebar Bottom Avatar & Info */}
+        {showFooterProfile && (<div className="sb-footer p-3 border-t border-white/10 bg-inherit mt-auto relative z-10 space-y-4">
           {sidebarOpen && currentUser && (
             <div className="space-y-4 font-inter mb-2">
               {/* Top Section: Avatar & Info */}
@@ -589,7 +590,7 @@ export default function Sidebar({
                   <p className="text-[10px] text-white/70 leading-snug mt-0.5">
                     Every task brings you closer to your goal.
                   </p>
-                  
+
                   {/* 4 Stars */}
                   <div className="flex items-center gap-0.5 mt-2">
                     <span className="text-[10px] text-yellow-400">★</span>
@@ -622,7 +623,7 @@ export default function Sidebar({
               <span className="text-[10px] text-white/40">v1.0.0 • IHWE</span>
             </div>
           )}
-        </div>
+        </div>)}
       </aside>
     </>
   );
