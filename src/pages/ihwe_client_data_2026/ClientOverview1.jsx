@@ -839,8 +839,8 @@ const ClientOverview1 = () => {
                   icon: Receipt,
                   title: "Proforma Invoice",
                   color: "orange-600",
-                  onClick: null,
-                  disabled: true,
+                  onClick: () => navigate(`/performa-invoice/${id}`),
+                  disabled: false,
                 },
                 {
                   icon: Folder,

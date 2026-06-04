@@ -315,7 +315,7 @@ export default function AppRoutes() {
               path="exhibitor-profile-manage"
               element={<ExhibitorProfileManage />}
             />
-            <Route path="performa-invoice" element={<PerformaInvoices />} />
+            <Route path="performa-invoice/:id" element={<PerformaInvoices />} />
             <Route path="create-debit-note" element={<CreateDebitNote />} />
             <Route path="page-create-invoice" element={<CreateInvoicePage />} />
             <Route path="e-promotion-manage" element={<EPromotionManage />} />

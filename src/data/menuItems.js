@@ -726,7 +726,6 @@ export const menuItems = [
     children: [
       { label: "Sales Report", path: "/accounts/salesreport" },
       { label: "Create Debit Note", path: "/create-debit-note" },
-      { label: "Create Estimate", path: "/performa-invoice" },
       { label: "Create Invoice", path: "/page-create-invoice" },
       // { label: "Debit Note Reports", path: "/accounts/" },
       //  { label: "PI Reports", path: "/accounts/" },
