@@ -260,7 +260,7 @@ const HotClientList = () => {
       <th className="px-2 py-2 font-medium">Lead Score</th>
       <th className="px-2 py-2 font-medium">Status</th>
       <th className="px-2 py-2 font-medium">Last Conversation</th>
-      <th className="px-2 py-2 w-10">Action</th>
+      <th className="px-2 py-2 w-28 text-right">Action</th>
     </>
   );
 
@@ -329,9 +329,24 @@ const HotClientList = () => {
               </div>
             </td>
             <td className="px-2 py-2 text-right">
-              <button className="text-slate-400 hover:text-slate-700">
+              {row.exhibitorRegistrationId ? (
+                <button
+                  disabled
+                  className="text-[10px] bg-slate-300 text-slate-600 px-2 py-1 rounded shadow-sm mr-2 cursor-not-allowed"
+                >
+                  Stand Booked
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate(`/book-a-stand/${row._id}`)}
+                  className="text-[10px] bg-[#00a65a] hover:bg-[#008d4c] text-white px-2 py-1 rounded shadow-sm mr-2"
+                >
+                  Book Stand
+                </button>
+              )}
+              {/* <button className="text-slate-400 hover:text-slate-700">
                 <MoreVertical size={14} />
-              </button>
+              </button> */}
             </td>
           </tr>
         );

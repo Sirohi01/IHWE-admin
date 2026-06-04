@@ -1,16 +1,21 @@
-export default function TargetGaugeCard({ targetMetrics }) {
+export default function TargetGaugeCard({ targetMetrics, revenuePeriod, setRevenuePeriod }) {
   // Arc length of the semicircle path (π × radius = π × 82 ≈ 257.6)
   const arcLength = 257.6;
   const achieved = Math.min(Number(targetMetrics.pct) || 0, 100);
-  const currentMonth = new Date().toLocaleString("en-IN", { month: "long", year: "numeric" });
 
   return (
     <div className="bg-white rounded-lg border border-slate-200 p-2.5 shadow-sm lg:col-span-3 col-span-1 flex flex-col justify-between">
       <div className="flex justify-between items-center mb-1">
         <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Target vs Achievement</h3>
-        <span className="text-[10px] bg-slate-50 border border-slate-200 px-2 py-0.5 font-bold uppercase rounded-md text-slate-600">
-          {currentMonth}
-        </span>
+        <select 
+          value={revenuePeriod} 
+          onChange={(e) => setRevenuePeriod(e.target.value)}
+          className="text-[10px] bg-slate-50 border border-slate-200 px-2 py-0.5 font-bold uppercase rounded-md text-slate-600 outline-none cursor-pointer"
+        >
+          <option value="current_month">This Month</option>
+          <option value="previous_month">Previous Month</option>
+          <option value="all_time">All Time</option>
+        </select>
       </div>
 
       {/* Pure SVG half-donut gauge */}

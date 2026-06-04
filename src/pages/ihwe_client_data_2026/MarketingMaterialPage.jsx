@@ -118,8 +118,19 @@ const MarketingMaterialPage = () => {
       const res = await api.get(`/api/companies/${id}`);
       setCompany(res.data);
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch company details");
+      try {
+        const res = await api.get(`/api/exhibitor-registration/${id}`);
+        const data = res.data.data || res.data;
+        setCompany({
+          ...data,
+          companyName: data.exhibitorName || data.companyName,
+          companyStatus: data.status,
+          contacts: [data.contact1, data.contact2].filter(c => c && c.firstName)
+        });
+      } catch (fallbackErr) {
+        console.error(fallbackErr);
+        toast.error("Failed to fetch company details");
+      }
     }
   };
 
@@ -202,7 +213,7 @@ const MarketingMaterialPage = () => {
       const attachments = [];
       selectedDocs.forEach(m => {
         const isYouTube = m.fileUrl && (m.fileUrl.includes("youtube.com") || m.fileUrl.includes("youtu.be"));
-        
+
         if (m.fileType === "Link" || m.fileType === "Location" || (m.fileType === "Video" && isYouTube)) {
           content += `- ${m.title}: ${m.fileUrl}\n`;
         } else {

@@ -356,6 +356,7 @@ export default function AppRoutes() {
             <Route path="blog-subscribers" element={<NewsletterSubscribers />} />
             <Route path="contact-list" element={<ContactList />} />
             <Route path="book-a-stand" element={<BookAStand />} />
+            <Route path="book-a-stand/:id" element={<BookAStand />} />
             <Route
               path="e-promotion-registers"
               element={<EPromotionRegisters />}

@@ -33,7 +33,7 @@ export default function SalesLeaderboard({ leaderboard, currentUser }) {
                 </div>
                 <span className="text-[11px] font-bold truncate max-w-[90px]">{item.name}</span>
               </div>
-              <span className="text-[11px] font-black">₹ {item.revenue.toFixed(2)} L</span>
+              <span className="text-[11px] font-black">₹ {(item.revenue / 100000).toFixed(2)} L</span>
             </div>
           );
         })}

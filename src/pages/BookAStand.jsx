@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useParams } from "react-router-dom";
 import headerBg from "../assets/exhi.jpg";
 import arenaImg from "../assets/hall.jpg";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,6 +27,7 @@ import { useDispatch } from "react-redux";
 import { createActivityLogThunk } from "../features/activityLog/activityLogSlice";
 
 const BookAStand = () => {
+    const { id } = useParams();
     const dispatch = useDispatch();
     const [isLoading, setIsLoading] = useState(false);
     const [events, setEvents] = useState([]);
@@ -42,10 +44,15 @@ const BookAStand = () => {
 
     useEffect(() => {
         const info = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
-        if (info) setCurrentUser(JSON.parse(info));
+        if (info) {
+            const parsedUser = JSON.parse(info);
+            setCurrentUser(parsedUser);
+            setFormData(prev => ({ ...prev, spokenWith: parsedUser.fullName || parsedUser.username }));
+        }
     }, []);
 
     const [formData, setFormData] = useState({
+        clientId: '',
         exhibitorName: '',
         typeOfBusiness: '',
         industrySector: '',
@@ -71,7 +78,7 @@ const BookAStand = () => {
             stallFor: '',
             stallSize: 0,
             stallType: 'Shell Space',
-            stallCategory: 'General Stall',
+            stallCategory: '',
             currency: 'INR',
             rate: 0,
             amount: 0,
@@ -144,6 +151,83 @@ const BookAStand = () => {
         };
         fetchInitialData();
     }, []);
+
+    useEffect(() => {
+        if (id) {
+            api.get(`/api/companies/${id}`).then(res => {
+                if (res.data) {
+                    const comp = res.data;
+                    const cCountry = (comp.country || "India").toLowerCase();
+                    const isDom = cCountry === "india";
+                    setExhibitorType(isDom ? 'domestic' : 'international');
+
+                    setFormData(prev => {
+                        const newF = { ...prev };
+                        newF.clientId = comp._id || '';
+                        newF.exhibitorName = comp.companyName || '';
+                        newF.website = comp.website || '';
+                        newF.address = comp.address || '';
+                        newF.country = comp.country || (isDom ? 'India' : '');
+                        newF.state = comp.state || '';
+                        newF.city = comp.city || '';
+                        newF.pincode = comp.pincode || '';
+                        newF.landlineNo = comp.landline || '';
+                        newF.gstNo = comp.gstNumber || '';
+                        newF.aboutCompany = comp.companyDescription || '';
+
+                        if (comp.contacts && comp.contacts.length > 0) {
+                            newF.contact1 = {
+                                title: comp.contacts[0].title || 'Mr.',
+                                firstName: comp.contacts[0].firstName || '',
+                                lastName: comp.contacts[0].surname || '',
+                                email: comp.contacts[0].email || '',
+                                designation: comp.contacts[0].designation || '',
+                                mobile: comp.contacts[0].mobile || '',
+                                alternateNo: comp.contacts[0].alternate || ''
+                            };
+                        }
+                        if (comp.contacts && comp.contacts.length > 1) {
+                            newF.contact2 = {
+                                title: comp.contacts[1].title || 'Mr.',
+                                firstName: comp.contacts[1].firstName || '',
+                                lastName: comp.contacts[1].surname || '',
+                                email: comp.contacts[1].email || '',
+                                designation: comp.contacts[1].designation || '',
+                                mobile: comp.contacts[1].mobile || '',
+                                alternateNo: comp.contacts[1].alternate || ''
+                            };
+                        }
+                        // Default to INR for domestic, USD for international
+                        newF.participation = {
+                            ...newF.participation,
+                            currency: isDom ? 'INR' : 'USD',
+                            stallCategory: comp.exhibitorCategory || prev.participation.stallCategory
+                        };
+                        // CRM Attribution: Use forwardTo, else assigned to (added_by), else fallback
+                        const targetUser = comp.forwardTo || comp.added_by;
+                        let mappedName = targetUser;
+                        if (targetUser && Array.isArray(marketingStaff)) {
+                            const staff = marketingStaff.find(s => s.username === targetUser || s.fullName === targetUser);
+                            if (staff && staff.fullName) mappedName = staff.fullName;
+                        }
+                        newF.spokenWith = mappedName || prev.spokenWith;
+
+                        return newF;
+                    });
+                }
+            }).catch(err => console.error("Error fetching client data:", err));
+        }
+    }, [id]);
+
+    // Ensure spokenWith is mapped to fullName once marketingStaff is loaded
+    useEffect(() => {
+        if (marketingStaff.length > 0 && formData.spokenWith) {
+            const staff = marketingStaff.find(s => s.username === formData.spokenWith);
+            if (staff && staff.fullName && staff.fullName !== formData.spokenWith) {
+                setFormData(prev => ({ ...prev, spokenWith: staff.fullName }));
+            }
+        }
+    }, [marketingStaff, formData.spokenWith]);
 
     useEffect(() => {
         if (selectedEventId) {
@@ -324,6 +408,7 @@ const BookAStand = () => {
                 }).then(() => {
                     setExhibitorType(null);
                     setFormData({
+                        clientId: '',
                         exhibitorName: '',
                         typeOfBusiness: '',
                         industrySector: '',
@@ -461,7 +546,7 @@ const BookAStand = () => {
         }));
     };
 
-    const inputClasses = "rounded border border-slate-400 h-7 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-500 font-normal shadow-none outline-none px-3 w-full text-left";
+    const inputClasses = "rounded border border-slate-400 h-7 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-800 font-medium shadow-none outline-none px-3 w-full text-left";
     const labelClasses = "block text-[10px] font-semibold capitalize tracking-wide text-slate-700 mb-1";
     const sectionHeaderClasses = "text-[13px] font-semibold text-[#1a4d1a] capitalize tracking-wide pb-1.5 mb-2.5 flex items-center gap-2";
     const cardClasses = "bg-white border border-slate-200 rounded-xl p-3.5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)]";
@@ -597,9 +682,9 @@ const BookAStand = () => {
                             <div>
                                 <h2 className="text-[#1a4d1a] text-[15px] font-semibold leading-snug mb-2">
                                     <span className="text-[#0D530E] text-[17px] font-medium">9th Edition of International Health & Wellness Expo 2026</span> <br />
-                               
 
-                                      <span className="text-gray-900 text-[12px] font-medium">(IHWE Global Edition)</span> 
+
+                                    <span className="text-gray-900 text-[12px] font-medium">(IHWE Global Edition)</span>
                                 </h2>
                                 <div className="w-8 h-[3px] bg-[#4a8f2f] rounded mb-3" />
                                 <p className="text-gray-600 text-[13px] leading-relaxed">
@@ -678,7 +763,7 @@ const BookAStand = () => {
                 <form onSubmit={handleSubmit} className="space-y-3">
 
                     {/* SUB-HEADER */}
-                    <div 
+                    <div
                         className="relative px-4 py-3 sm:py-3.5 rounded-xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 overflow-hidden"
                         style={{
                             backgroundImage: `linear-gradient(to right, rgba(13, 83, 14, 0.95), rgba(13, 83, 14, 0.8)), url(${headerBg})`,
@@ -700,7 +785,7 @@ const BookAStand = () => {
                         </div>
                     </div>
 
-                               {/* SECTION: COMPANY INFORMATION */}
+                    {/* SECTION: COMPANY INFORMATION */}
                     <div className={cardClasses}>
                         <h3 className={sectionHeaderClasses}>Exhibitor Details</h3>
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-x-4 gap-y-3 -mt-3">
@@ -792,11 +877,11 @@ const BookAStand = () => {
                             {/* About the Company */}
                             <div className="md:col-span-2 flex flex-col h-full">
                                 <label className={labelClasses}>About the Company</label>
-                                <textarea 
-                                    value={formData.aboutCompany} 
-                                    onChange={(e) => handleSelectChange('aboutCompany', e.target.value)} 
-                                    className={`${inputClasses} flex-1 !h-full py-1.5 resize-y leading-tight`} 
-                                    placeholder="Write a brief description about the company..." 
+                                <textarea
+                                    value={formData.aboutCompany}
+                                    onChange={(e) => handleSelectChange('aboutCompany', e.target.value)}
+                                    className={`${inputClasses} flex-1 !h-full py-1.5 resize-y leading-tight`}
+                                    placeholder="Write a brief description about the company..."
                                 />
                             </div>
 
@@ -814,7 +899,7 @@ const BookAStand = () => {
                                             className="accent-[#23471d] w-3 h-3"
                                         />
                                         <span className="text-[9px] font-bold text-slate-800 group-hover:text-[#23471d] transition-colors leading-none flex items-center gap-1">
-                                            Registered 
+                                            Registered
                                             <span className="text-[7.5px] font-semibold text-[#23471d] bg-green-50 border border-green-200 px-1 py-px rounded uppercase tracking-wider">GST</span>
                                         </span>
                                     </label>
@@ -828,7 +913,7 @@ const BookAStand = () => {
                                             className="accent-[#d26019] w-3 h-3"
                                         />
                                         <span className="text-[9px] font-bold text-slate-800 group-hover:text-[#d26019] transition-colors leading-none flex items-center gap-1">
-                                            Unregistered 
+                                            Unregistered
                                             <span className="text-[7.5px] font-semibold text-[#d26019] bg-orange-50 border border-orange-200 px-1 py-px rounded uppercase tracking-wider">PAN+Aadhar</span>
                                         </span>
                                     </label>
@@ -902,7 +987,7 @@ const BookAStand = () => {
                     {/* SECTION: STALL SELECTION */}
                     <div className={cardClasses}>
                         <h3 className={sectionHeaderClasses}>Exhibition Space Selection</h3>
-                        
+
                         <div className="flex flex-col lg:flex-row gap-5 lg:items-stretch -mt-3">
                             {/* Left Side: Inputs */}
                             <div className="w-full lg:w-[40%] flex flex-col gap-3">
@@ -945,8 +1030,9 @@ const BookAStand = () => {
                                     <div>
                                         <label className={labelClasses}>Stall Category</label>
                                         <select value={formData.participation.stallCategory} onChange={(e) => handleSelectChange('participation.stallCategory', e.target.value)} className={inputClasses}>
-                                            <option value="General Stall">General Stall</option>
-                                            <option value="MSME Stall">MSME Stall</option>
+                                            <option value="">Select Category</option>
+                                            <option value="Under MSME PSM Scheme">Under MSME PSM Scheme</option>
+                                            <option value="Under General Category">Under General Category</option>
                                         </select>
                                     </div>
                                 </div>
@@ -1004,7 +1090,7 @@ const BookAStand = () => {
                             </div>
                         </div>
 
-                 
+
 
                         {/* PAYMENT PLAN & TDS CONTROL */}
                         <div className="p-4 bg-[#f8fafc] border border-slate-200 rounded-xl mt-3 space-y-3">
@@ -1121,7 +1207,7 @@ const BookAStand = () => {
                         </div>
                     </div>
 
-                  
+
                     {/* SECTION: CRM ATTRIBUTION */}
                     <div className={cardClasses}>
                         <h3 className={sectionHeaderClasses}>CRM Attribution</h3>
@@ -1141,7 +1227,7 @@ const BookAStand = () => {
                                 <label className={labelClasses}>Spoken With <span className="text-red-500">*</span></label>
                                 <select required value={formData.spokenWith} onChange={(e) => handleSelectChange('spokenWith', e.target.value)} className={inputClasses}>
                                     <option value="">Select Staff Member</option>
-                                    {marketingStaff.map(s => <option key={s._id} value={s.username}>{s.username}</option>)}
+                                    {marketingStaff.map(s => <option key={s._id} value={s.fullName || s.username}>{s.fullName || s.username}</option>)}
                                 </select>
                             </div>
                         </div>
