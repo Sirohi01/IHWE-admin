@@ -41,6 +41,7 @@ import {
   Award,
   File,
   FileType,
+  LibraryBig,
 } from "lucide-react";
 
 
@@ -61,8 +62,8 @@ export const menuItems = [
       { label: "Follow-Ups", path: "/ihweClientData2026/warmClientList" },
       { label: "Hot Leads", path: "/ihweClientData2026/hotClientList" },
       { label: "Hold / Lost Leads", path: "/ihweClientData2026/coldClientList" },
-      { label: "Master Data", path: "/ihweClientData2026/masterData" },
-      { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
+      // { label: "Master Data", path: "/ihweClientData2026/masterData" },
+      // { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
       { label: "Converted Clients", path: "/ihweClientData2026/confirmClientList" },
       { label: "Exhibitor Registration", path: "/book-a-stand" },
     ],
@@ -83,6 +84,7 @@ export const menuItems = [
       { label: "Book A Stand", path: "/organicExpo/book-a-stand" },
     ],
   },
+  { type: "item", label: "Master Data", icon: LibraryBig, path: "/ihweClientData2026/masterData" },
 
   {
     type: "item",
