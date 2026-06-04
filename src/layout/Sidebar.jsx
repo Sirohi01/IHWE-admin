@@ -67,6 +67,8 @@ export default function Sidebar({
   const [allAdmins, setAllAdmins] = useState([]);
   const [companies, setCompanies] = useState([]);
 
+  const [actualLeaderboard, setActualLeaderboard] = useState([]);
+
   useEffect(() => {
     if (currentUser?.username) {
       // Full profile with profileImage — needs /api/admin/all
@@ -79,37 +81,21 @@ export default function Sidebar({
         })
         .catch(err => console.error("Error fetching full admin profile:", err));
 
-      // Same API as Sales Leaderboard — for rank calculation only
-      api.get("/api/admin/public-list")
+      // Fetch actual real revenue leaderboard for rank
+      api.get("/api/companies/leaderboard")
         .then(res => {
-          if (res.data.success) setAllAdmins(res.data.data || []);
+          if (res.data.success) setActualLeaderboard(res.data.leaderboard || []);
         })
-        .catch(err => console.error("Error fetching admin public list:", err));
-
-      api.get("/api/companies")
-        .then(res => {
-          if (res.data) setCompanies(res.data);
-        })
-        .catch(err => console.error("Error fetching companies for rank:", err));
+        .catch(err => console.error("Error fetching admin leaderboard:", err));
     }
   }, [currentUser]);
 
-  // ─── Real rank — same logic as Sales Leaderboard in Dashboard ────────────
+  // ─── Real rank — calculated from backend's actual Sales Leaderboard ────────────
   const myRank = useMemo(() => {
-    if (!currentUser || allAdmins.length === 0) return null;
-    const CONVERTED = ["adc. recd", "inv. req.", "under pymt followups"];
-    const scores = allAdmins.map(admin => {
-      const u = admin.username.toLowerCase();
-      const count = companies.filter(c =>
-        (c.forwardTo?.toLowerCase() === u || c.added_by?.toLowerCase() === u) &&
-        CONVERTED.includes(c.companyStatus?.toLowerCase())
-      ).length;
-      return { username: u, revenue: count * 1.50 };
-    }).sort((a, b) => b.revenue - a.revenue);
-
-    const idx = scores.findIndex(s => s.username === currentUser.username.toLowerCase());
+    if (!currentUser || actualLeaderboard.length === 0) return null;
+    const idx = actualLeaderboard.findIndex(s => s.username === currentUser.username.toLowerCase());
     return idx >= 0 ? idx + 1 : null;
-  }, [currentUser, allAdmins, companies]);
+  }, [currentUser, actualLeaderboard]);
 
   const [roleData, setRoleData] = useState(null);
 

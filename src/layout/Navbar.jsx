@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { LogOut, Menu, X, Key } from "lucide-react";
@@ -56,7 +56,7 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
       .then(r => r.json())
       .then(res => {
         if (res.success) setChatUnread(res.data.reduce((s, r) => s + (r.unreadAdmin || 0), 0));
-      }).catch(() => {});
+      }).catch(() => { });
 
     const s = io(SERVER_URL, { transports: ["websocket", "polling"] });
     s.on("connect", () => s.emit("join_admin", { adminId, adminName: adminName2 }));
@@ -80,6 +80,24 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
         }).catch(err => console.error("Error fetching full admin profile in Navbar:", err));
     }
   }, [adminData]);
+
+  const [actualLeaderboard, setActualLeaderboard] = useState([]);
+
+  useEffect(() => {
+    if (adminData?.username && adminData.username !== "Admin") {
+      api.get("/api/companies/leaderboard")
+        .then(res => {
+          if (res.data.success) setActualLeaderboard(res.data.leaderboard || []);
+        })
+        .catch(err => console.error("Error fetching admin leaderboard in Navbar:", err));
+    }
+  }, [adminData]);
+
+  const myRank = useMemo(() => {
+    if (!adminData || actualLeaderboard.length === 0) return null;
+    const idx = actualLeaderboard.findIndex(s => s.username === adminData.username.toLowerCase());
+    return idx >= 0 ? idx + 1 : null;
+  }, [adminData, actualLeaderboard]);
 
   const handleLogout = async () => {
     const result = await Swal.fire({
@@ -109,6 +127,17 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
 
       {/* Right */}
       <div className="flex items-center gap-3">
+
+        {/* Rank Badge */}
+        {myRank !== null && (
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300 shadow-sm cursor-help group relative">
+            <span className="text-[11px] font-black uppercase tracking-wider">Rank</span>
+            <span className="text-sm font-black leading-none text-[#06d6a0]">#{myRank}</span>
+            {/* <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] font-bold px-2 py-1 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50 shadow-md">
+              Sales Leaderboard Position
+            </span> */}
+          </div>
+        )}
 
         {/* Live Chat */}
         <div className="relative group">
@@ -205,7 +234,7 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
               )}
             </div>
             <span className="text-[11px] font-extrabold text-slate-200 uppercase tracking-widest hidden md:block max-w-[120px] truncate">
-              My Profile
+              {fullProfile?.fullName || adminData?.username || "My Profile"}
             </span>
             <div className="p-0.5">
               <Menu size={15} className="text-slate-300" />
@@ -262,9 +291,9 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
 
       </div>
 
-      <ChangePasswordModal 
-        isOpen={isChangePasswordOpen} 
-        onClose={() => setIsChangePasswordOpen(false)} 
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
       />
     </div>
   );
