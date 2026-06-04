@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
+import useDashboardStats from "../../hooks/useDashboardStats";
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import {
   Search, Download, Plus, Upload, MessageCircle, Phone, Mail, MoreVertical,
@@ -62,6 +63,9 @@ const HotClientList = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, filterIndustry]);
 
+  // Hook for accurate stats
+  const { totalLeads: hookTotal, statusStats } = useDashboardStats();
+
   const totalLeads = pagination?.total || allCompanies.length;
 
   const isAllSelected = allCompanies.length > 0 && selectedIds.length === allCompanies.length;
@@ -99,9 +103,17 @@ const HotClientList = () => {
   };
 
   // Dynamic stats computation
-  const inDiscussionCount = allCompanies.filter(c => c.companyStatus?.toLowerCase().includes('in discussion')).length;
-  const proposalSentCount = allCompanies.filter(c => c.companyStatus?.toLowerCase().includes('proposal sent')).length;
-  const readyCount = allCompanies.filter(c => c.companyStatus?.toLowerCase().includes('ready')).length;
+  const getStatusCount = (statusMatch) => {
+    if (!statusStats) return 0;
+    return Object.keys(statusStats).reduce((acc, key) => {
+      if (key.toLowerCase().includes(statusMatch)) acc += statusStats[key];
+      return acc;
+    }, 0);
+  };
+
+  const inDiscussionCount = getStatusCount('discussion');
+  const proposalSentCount = getStatusCount('proposal');
+  const readyCount = getStatusCount('ready');
 
   const validTotal = inDiscussionCount + proposalSentCount + readyCount || 1;
   const pct = (val) => Math.round((val / validTotal) * 100) + '%';
@@ -425,7 +437,7 @@ const HotClientList = () => {
             <FaWhatsapp size={12} className="text-green-600 shrink-0" />
             <span className="text-[9px] font-bold text-green-700 leading-tight">Send Bulk WhatsApp</span>
           </button>
-          <button className="h-[34px] rounded-lg bg-[#FFF3E0] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
+          <button onClick={() => navigate("/ihweClientData2026/warmClientsList")} className="h-[34px] rounded-lg bg-[#FFF3E0] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
             <CalendarDays size={12} className="text-orange-600 shrink-0" />
             <span className="text-[9px] font-bold text-orange-700 leading-tight">Schedule Follow-Up</span>
           </button>
@@ -473,7 +485,7 @@ const HotClientList = () => {
     <BaseLeadPage
       title="My Hot Leads"
       subtitle="High potential leads that are most likely to convert"
-      badgeCount={<><Flame size={12} className="inline mr-1 fill-rose-500 text-rose-500" />18</>}
+      badgeCount={<><Flame size={12} className="inline mr-1 fill-rose-500 text-rose-500" />{totalLeads || 0}</>}
       headerActions={headerActions}
       statCards={statCards}
       filterBar={filterBar}

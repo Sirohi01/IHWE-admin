@@ -71,8 +71,8 @@ export default function ExhibitorChat() {
         });
 
         s.on("room_updated", (data) => {
-            // Safety: Only filter if NOT a super-admin
-            if (adminRole !== "super-admin" && data.spokenWith && data.spokenWith.toLowerCase() !== adminName.toLowerCase()) return;
+            // Safety: Only filter if NOT a IHWE–Super Administrator
+            if (adminRole !== "IHWE–Super Administrator" && data.spokenWith && data.spokenWith.toLowerCase() !== adminName.toLowerCase()) return;
 
             setRooms(prev => {
                 const exists = prev.find(r => r._id === data.roomId);
@@ -216,7 +216,7 @@ export default function ExhibitorChat() {
                                             <p className="text-[9px] text-[#23471d] font-bold">{room.registrationId}{room.stallNo ? ` · ${room.stallNo}` : ""}</p>
                                         )}
                                     </div>
-                                    {room.spokenWith && adminRole === 'super-admin' && (
+                                    {room.spokenWith && adminRole === 'IHWE–Super Administrator' && (
                                         <p className="text-[9px] text-slate-400">RM: {room.spokenWith}</p>
                                     )}
                                     <div className="flex items-center justify-between mt-0.5">

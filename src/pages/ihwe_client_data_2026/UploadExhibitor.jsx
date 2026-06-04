@@ -1,51 +1,145 @@
 import React, { useState } from "react";
-import { FaFileExcel, FaUpload, FaListAlt, FaCheckCircle, FaArrowLeft } from "react-icons/fa";
+import {
+  FaFileExcel,
+  FaUpload,
+  FaListAlt,
+  FaCheckCircle,
+  FaArrowLeft,
+  FaCloudUploadAlt,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { createActivityLogThunk } from "../../features/activityLog/activityLogSlice";
 import Swal from "sweetalert2";
-
+import { createActivityLogThunk } from "../../features/activityLog/activityLogSlice";
+import { uploadCompaniesThunk } from "../../features/company/companySlice";
 const UploadExhibitor = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
   const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const getUserInfo = () => {
     const admin = JSON.parse(sessionStorage.getItem("admin"));
-    return { userId: admin?.admin_id, userName: admin?.admin_name };
+
+    return {
+      userId: admin?.admin_id,
+      userName: admin?.admin_name,
+    };
   };
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
+    const selectedFile = e.target.files[0];
 
-  const handleImport = () => {
-    if (!file) {
+    if (!selectedFile) return;
+
+    const allowedExtensions = ["csv", "xls", "xlsx"];
+
+    const extension = selectedFile.name
+      .split(".")
+      .pop()
+      .toLowerCase();
+
+    if (!allowedExtensions.includes(extension)) {
       Swal.fire({
-        title: "No File Selected",
-        text: "Please choose a CSV file first!",
-        icon: "warning",
-        confirmButtonColor: "#23471d"
+        icon: "error",
+        title: "Invalid File",
+        text: "Only CSV, XLS and XLSX files are allowed.",
+        confirmButtonColor: "#23471d",
       });
+
       return;
     }
+
+    setFile(selectedFile);
+  };
+
+const handleImport = async () => {
+  if (!file) {
+    Swal.fire({
+      title: "No File Selected",
+      text: "Please select a file first.",
+      icon: "warning",
+      confirmButtonColor: "#23471d",
+    });
+    return;
+  }
+
+  try {
+    setUploading(true);
+
     const { userId } = getUserInfo();
-    console.log("Importing:", file.name);
-    
-    dispatch(createActivityLogThunk({
-      user_id: userId,
-      message: `Client Data: Started CSV import for exhibitors (File: ${file.name})`,
-      section: "Client Data",
-      data: { action: "import", fileName: file.name }
-    }));
+
+    // Activity Log
+    dispatch(
+      createActivityLogThunk({
+        user_id: userId,
+        message: `Company Import Started (${file.name})`,
+        section: "Company Import",
+        data: {
+          action: "import",
+          fileName: file.name,
+        },
+      })
+    );
+
+    // Upload Excel
+    const result = await dispatch(
+      uploadCompaniesThunk(file)
+    ).unwrap();
+
+    // Success Log
+    dispatch(
+      createActivityLogThunk({
+        user_id: userId,
+        message: `Company Import Completed (${file.name})`,
+        section: "Company Import",
+        data: result,
+      })
+    );
 
     Swal.fire({
-      title: "Import Started",
-      text: `Processing file: ${file.name}`,
       icon: "success",
-      confirmButtonColor: "#23471d"
+      title: "Import Completed",
+      html: `
+        <div style="text-align:left">
+          <p><b>Total Processed:</b> ${
+            result.totalProcessed || 0
+          }</p>
+          <p><b>Inserted:</b> ${
+            result.inserted || 0
+          }</p>
+          <p><b>Updated:</b> ${
+            result.updated || 0
+          }</p>
+        </div>
+      `,
+      confirmButtonColor: "#23471d",
     });
-  };
+
+    setFile(null);
+
+    // File input reset
+    const fileInput =
+      document.getElementById("upload-file");
+    if (fileInput) {
+      fileInput.value = "";
+    }
+  } catch (error) {
+    console.error("Upload Error:", error);
+
+    Swal.fire({
+      icon: "error",
+      title: "Upload Failed",
+      text:
+        error ||
+        "Something went wrong while importing data.",
+      confirmButtonColor: "#23471d",
+    });
+  } finally {
+    setUploading(false);
+  }
+};
 
   const handleMasterList = () => {
     navigate("/ihweClientData2026/masterData");
@@ -56,93 +150,206 @@ const UploadExhibitor = () => {
   };
 
   const handleDownloadCSV = () => {
-    const sampleCSV = `Company Name,Category,Nature Of Business,Address,Country,State,City,Pin Code,Website,Landline No,Email Id,Data Source,Event Name,Reminder Date & Time,Forward To,Title,First Name,Sur Name,Designation,Email Id,Mobile No,Alternate No`;
-    const blob = new Blob([sampleCSV], { type: "text/csv" });
+    const sampleCSV = `companyName,category,businessNature,address,country,state,city,clientType,pincode,website,landline,email,dataSource,eventName,companyStatus,added_by,udyamNumber,gstNumber,contactTitle,contactFirstName,contactSurname,contactDesignation,contactEmail,contactMobile,contactAlternate`;
+
+    const blob = new Blob([sampleCSV], {
+      type: "text/csv",
+    });
+
     const link = document.createElement("a");
+
     link.href = URL.createObjectURL(blob);
-    link.download = "sample_exhibitor_format.csv";
+    link.download = "company_import_template.csv";
     link.click();
   };
 
   return (
-    <div className="w-full min-h-screen bg-white shadow-md mt-6 p-6 font-inter animate-fadeIn">
-      {/* ── HEADER AREA ── */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between pb-3 border-b border-gray-100">
-        <h1 className="text-xl font-bold text-gray-500 uppercase tracking-tight">
-          COMPANY DETAILS
-        </h1>
-        <div className="flex flex-wrap gap-2 mt-2 lg:mt-0">
-          <button
-            onClick={() => navigate("/ihweClientData2026/addNewClients")}
-            className="px-4 py-1.5 text-[11px] font-bold uppercase bg-[#d26019] hover:bg-orange-700 text-white transition-colors flex items-center gap-2 rounded-[2px]"
-          >
-            <FaArrowLeft size={10} /> Back
-          </button>
-          <button
-            onClick={handleMasterList}
-            className="px-4 py-1.5 text-[11px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center gap-2 rounded-[2px]"
-          >
-            <FaListAlt size={12} /> Master List
-          </button>
-          <button
-            onClick={handleConformList}
-            className="px-4 py-1.5 text-[11px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center gap-2 rounded-[2px]"
-          >
-            <FaCheckCircle size={12} /> Exhibitor List
-          </button>
-        </div>
-      </div>
+    <div className="w-full min-h-screen bg-[#f8fafc] p-6">
+      {/* Header */}
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm px-6 py-4">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold text-slate-800 uppercase">
+              Company Data Import
+            </h1>
 
-      {/* ── MAIN UPLOAD CARD ── */}
-      <div className="mt-8 border border-slate-200 p-8 rounded-[2px] bg-white shadow-lg">
-        <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2 uppercase tracking-wide">
-          <FaFileExcel className="text-[#23471d]" />
-          Upload Exhibitor Excel
-        </h2>
-
-        <div className="flex flex-col md:flex-row justify-between items-stretch border border-slate-200 rounded-[2px] p-8 bg-[#f8fafc] gap-6">
-          {/* FILE SELECTION AREA */}
-          <div className="flex flex-col gap-3 w-full md:w-3/4">
-            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-              Upload CSV File *
-            </label>
-            <div className="flex items-stretch w-full max-w-2xl h-10 shadow-sm">
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handleFileChange}
-                className="flex-1 border border-slate-300 bg-white px-4 flex items-center text-sm text-slate-600 focus:outline-none rounded-l-[2px] cursor-pointer"
-              />
-              <button
-                onClick={handleImport}
-                className="px-8 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-r-[2px] flex items-center gap-2 whitespace-nowrap"
-              >
-                <FaUpload /> Import Now
-              </button>
-            </div>
-            <p className="text-[10px] text-slate-400 font-medium italic mt-1">
-              Select only .csv files formatted according to our template.
+            <p className="text-sm text-slate-500 mt-1">
+              Upload Excel or CSV files to import company and
+              exhibitor records.
             </p>
           </div>
 
-          {/* TEMPLATE DOWNLOAD BOX */}
-          <button
-            onClick={handleDownloadCSV}
-            className="flex flex-col items-center justify-center gap-3 bg-[#a58d6f] hover:bg-[#8b745d] text-white px-8 py-4 transition-all rounded-[2px] flex-shrink-0 group shadow-md"
-          >
-            <FaFileExcel size={30} className="group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-bold uppercase tracking-widest">CSV Format</span>
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() =>
+                navigate("/ihweClientData2026/addNewClients")
+              }
+              className="px-4 py-2 bg-[#d26019] hover:bg-orange-700 text-white rounded-md text-sm font-medium flex items-center gap-2"
+            >
+              <FaArrowLeft />
+              Back
+            </button>
+
+            <button
+              onClick={handleMasterList}
+              className="px-4 py-2 bg-[#3598dc] hover:bg-[#286090] text-white rounded-md text-sm font-medium flex items-center gap-2"
+            >
+              <FaListAlt />
+              Master List
+            </button>
+
+            <button
+              onClick={handleConformList}
+              className="px-4 py-2 bg-[#3598dc] hover:bg-[#286090] text-white rounded-md text-sm font-medium flex items-center gap-2"
+            >
+              <FaCheckCircle />
+              Exhibitor List
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* SECURE FOOTER INDICATOR */}
-      <div className="mt-12 flex items-center justify-center gap-2 opacity-40">
-        <div className="h-[1px] w-12 bg-slate-200"></div>
-        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-700">
-          Admin Data Processing Portal
-        </p>
-        <div className="h-[1px] w-12 bg-slate-200"></div>
+      {/* Upload Section */}
+      <div className="mt-6 bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+        <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-800">
+            <FaFileExcel className="text-green-600" />
+            Import Company Records
+          </h2>
+
+          <p className="text-sm text-slate-500 mt-1">
+            Upload CSV, XLS or XLSX files. Duplicate companies
+            and contacts will be automatically merged.
+          </p>
+        </div>
+
+        <div className="p-6">
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Upload Area */}
+            <div className="lg:col-span-2">
+              <label
+                htmlFor="upload-file"
+                className="group cursor-pointer flex flex-col items-center justify-center h-[280px] border-2 border-dashed border-slate-300 rounded-lg bg-slate-50 hover:bg-green-50 hover:border-[#23471d] transition-all"
+              >
+                <FaCloudUploadAlt
+                  size={55}
+                  className="text-slate-400 group-hover:text-[#23471d] transition-all"
+                />
+
+                <h3 className="mt-4 text-lg font-semibold text-slate-700">
+                  Upload Excel / CSV File
+                </h3>
+
+                <p className="mt-2 text-sm text-slate-500">
+                  Drag & Drop or Click to Browse
+                </p>
+
+                <p className="text-xs text-slate-400 mt-2">
+                  Supported formats: CSV, XLS, XLSX
+                </p>
+
+                <input
+                  id="upload-file"
+                  type="file"
+                  accept=".csv,.xls,.xlsx"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </label>
+
+              {file && (
+                <div className="mt-4 border border-green-200 bg-green-50 rounded-lg p-4 flex items-center justify-between">
+                  <div>
+                    <h4 className="font-semibold text-green-800">
+                      {file.name}
+                    </h4>
+
+                    <p className="text-xs text-green-600">
+                      {(file.size / 1024).toFixed(2)} KB
+                    </p>
+                  </div>
+
+                  <FaCheckCircle
+                    size={24}
+                    className="text-green-600"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Side Panel */}
+            <div className="space-y-4">
+              <div className="border border-slate-200 rounded-lg p-5 bg-slate-50">
+                <h3 className="font-semibold text-slate-800">
+                  Download Template
+                </h3>
+
+                <p className="text-sm text-slate-500 mt-2">
+                  Use the official format to ensure successful
+                  imports.
+                </p>
+
+                <button
+                  onClick={handleDownloadCSV}
+                  className="mt-4 w-full bg-[#a58d6f] hover:bg-[#8b745d] text-white py-3 rounded-md font-medium flex items-center justify-center gap-2 transition-all"
+                >
+                  <FaFileExcel />
+                  Download Template
+                </button>
+              </div>
+
+              <div className="border border-slate-200 rounded-lg p-5">
+                <h3 className="font-semibold text-slate-800">
+                  Import Data
+                </h3>
+
+                <p className="text-sm text-slate-500 mt-2">
+                  Start importing company and contact records.
+                </p>
+
+                <button
+                  onClick={handleImport}
+                  disabled={!file || uploading}
+                  className={`mt-4 w-full py-3 rounded-md font-semibold flex items-center justify-center gap-2 transition-all ${
+                    file && !uploading
+                      ? "bg-[#23471d] hover:bg-[#1a3516] text-white"
+                      : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  }`}
+                >
+                  <FaUpload />
+
+                  {uploading
+                    ? "Uploading..."
+                    : "Import Records"}
+                </button>
+              </div>
+
+              <div className="border border-blue-100 bg-blue-50 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-blue-900">
+                  Import Notes
+                </h4>
+
+                <ul className="text-xs text-blue-700 mt-2 space-y-1 list-disc pl-4">
+                  <li>Only CSV, XLS and XLSX files allowed.</li>
+                  <li>Company Name is mandatory.</li>
+                  <li>Duplicate companies are merged.</li>
+                  <li>Duplicate contacts are ignored.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="mt-10 flex items-center justify-center gap-3 opacity-50">
+        <div className="h-px w-16 bg-slate-300"></div>
+
+        <span className="text-[10px] font-semibold tracking-[0.25em] uppercase text-slate-600">
+          IHWE Admin Import Portal
+        </span>
+
+        <div className="h-px w-16 bg-slate-300"></div>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
+import useDashboardStats from "../../hooks/useDashboardStats";
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import {
   Search, Plus, Upload, MessageCircle, CalendarDays, Clock3, Filter, ChevronDown, MoreVertical, ArrowRight, Bell, Phone, Mail
@@ -19,17 +20,7 @@ const toTitleCase = (str) => {
   return str.replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
-const overviewData = [
-  { name: "Due Today", value: 5, percentage: "42%", color: "#FF7A1A" },
-  { name: "Due Tomorrow", value: 2, percentage: "17%", color: "#FACC15" },
-  { name: "Due This Week", value: 5, percentage: "41%", color: "#3B82F6" },
-  { name: "Overdue", value: 2, percentage: "17%", color: "#EF4444" },
-];
 
-const overdueLeads = [
-  { company: "ABC Organics", date: "25 May 2026", days: "4 days overdue" },
-  { company: "Green Foods", date: "27 May 2026", days: "2 days overdue" },
-];
 
 const WarmClientList = () => {
   const dispatch = useDispatch();
@@ -64,6 +55,11 @@ const WarmClientList = () => {
     }, 400);
     return () => clearTimeout(delayDebounceFn);
   }, [dispatch, page, limit, searchTerm, filterSource, filterStatus]);
+
+  const {
+    totalLeads: hookTotal, pendingFollowUpsCount, thisWeekLeads, thisMonthLeads,
+    overviewData, overdueLeads
+  } = useDashboardStats('Follow');
 
   const totalLeads = pagination?.total || allCompanies.length;
   const isAllSelected = allCompanies.length > 0 && selectedIds.length === allCompanies.length;
@@ -115,12 +111,14 @@ const WarmClientList = () => {
   );
 
   // Stat Cards
+  const dueTodayCount = overviewData?.[0]?.value || 0;
+  const overdueCount = overviewData?.[3]?.value || 0;
   const stats = [
-    { title: "Total Follow-Ups", value: "12", subtitle: "Pending", icon: CalendarDays, bg: "bg-[#F3F7FF]", iconBg: "bg-[#E7F0FF]", iconColor: "text-[#2563EB]" },
-    { title: "Due Today", value: "05", subtitle: "Follow-ups", icon: CalendarDays, bg: "bg-[#FFF8EE]", iconBg: "bg-[#FFE8C7]", iconColor: "text-[#F97316]" },
-    { title: "Overdue", value: "02", subtitle: "Follow-ups", icon: Clock3, bg: "bg-[#FFF2F4]", iconBg: "bg-[#FFDDE3]", iconColor: "text-[#EF4444]" },
-    { title: "Due This Week", value: "07", subtitle: "Follow-ups", icon: CalendarDays, bg: "bg-[#F1FBF5]", iconBg: "bg-[#DDF7E6]", iconColor: "text-[#16A34A]" },
-    { title: "Due This Month", value: "10", subtitle: "Follow-ups", icon: CalendarDays, bg: "bg-[#F8F3FF]", iconBg: "bg-[#EBDDFF]", iconColor: "text-[#7C3AED]" },
+    { title: "Total Follow-Ups", value: pendingFollowUpsCount.toString(), subtitle: "Pending", icon: CalendarDays, bg: "bg-[#F3F7FF]", iconBg: "bg-[#E7F0FF]", iconColor: "text-[#2563EB]" },
+    { title: "Due Today", value: dueTodayCount.toString().padStart(2, '0'), subtitle: "Follow-ups", icon: CalendarDays, bg: "bg-[#FFF8EE]", iconBg: "bg-[#FFE8C7]", iconColor: "text-[#F97316]" },
+    { title: "Overdue", value: overdueCount.toString().padStart(2, '0'), subtitle: "Follow-ups", icon: Clock3, bg: "bg-[#FFF2F4]", iconBg: "bg-[#FFDDE3]", iconColor: "text-[#EF4444]" },
+    { title: "Due This Week", value: thisWeekLeads.toString().padStart(2, '0'), subtitle: "Follow-ups", icon: CalendarDays, bg: "bg-[#F1FBF5]", iconBg: "bg-[#DDF7E6]", iconColor: "text-[#16A34A]" },
+    { title: "Due This Month", value: thisMonthLeads.toString().padStart(2, '0'), subtitle: "Follow-ups", icon: CalendarDays, bg: "bg-[#F8F3FF]", iconBg: "bg-[#EBDDFF]", iconColor: "text-[#7C3AED]" },
   ];
 
   const statCards = (
@@ -277,19 +275,19 @@ const WarmClientList = () => {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie data={overviewData} cx="50%" cy="50%" innerRadius={28} outerRadius={40} dataKey="value" stroke="none">
-                  {overviewData.map((entry, index) => (
+                  {overviewData?.map((entry, index) => (
                     <Cell key={index} fill={entry.color} />
                   ))}
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <h3 className="text-[16px] font-bold text-[#0F172A] leading-none">12</h3>
+              <h3 className="text-[16px] font-bold text-[#0F172A] leading-none">{overviewData?.reduce((acc, curr) => acc + curr.value, 0)}</h3>
               <p className="text-[9px] text-gray-500">Total</p>
             </div>
           </div>
           <div className="flex-1 space-y-2">
-            {overviewData.map((item) => (
+            {overviewData?.map((item) => (
               <div key={item.name} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full" style={{ background: item.color }} />
@@ -310,7 +308,7 @@ const WarmClientList = () => {
           <button className="text-[10px] text-[#2563EB] font-medium hover:underline">View All</button>
         </div>
         <div className="space-y-3">
-          {overdueLeads.map((lead, index) => (
+          {overdueLeads?.length === 0 ? <p className="text-xs text-slate-400">No overdue follow-ups.</p> : overdueLeads?.map((lead, index) => (
             <div key={index} className={`flex items-center justify-between pb-3 ${index !== overdueLeads.length - 1 ? "border-b border-gray-100" : ""}`}>
               <div>
                 <h4 className="text-[11px] font-semibold text-[#0F172A] leading-tight">{lead.company}</h4>
@@ -321,10 +319,12 @@ const WarmClientList = () => {
               </span>
             </div>
           ))}
-          <button className="w-full flex items-center justify-between text-[10px] font-medium text-[#2563EB] hover:text-[#1D4ED8] transition-all pt-1">
-            <span>View All Overdue ({overdueLeads.length})</span>
-            <ArrowRight size={12} />
-          </button>
+          {overdueLeads?.length > 0 && (
+            <button className="w-full flex items-center justify-between text-[10px] font-medium text-[#2563EB] hover:text-[#1D4ED8] transition-all pt-1">
+              <span>View All Overdue ({overdueLeads.length})</span>
+              <ArrowRight size={12} />
+            </button>
+          )}
         </div>
       </div>
 

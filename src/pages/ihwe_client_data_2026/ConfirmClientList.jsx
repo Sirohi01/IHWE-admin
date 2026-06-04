@@ -138,6 +138,14 @@ const ConfirmClientList = () => {
     </>
   );
 
+  const totalConverted = filteredRegs.length;
+  const totalRevenue = filteredRegs.reduce((acc, curr) => acc + (curr.financeBreakdown?.netPayable || curr.participation?.total || 0), 0);
+
+  // Calculate repeat clients by finding duplicate emails
+  const emails = filteredRegs.map(r => r.contact1?.email).filter(Boolean);
+  const uniqueEmails = new Set(emails);
+  const repeatClients = emails.length - uniqueEmails.size;
+
   // Stat Cards
   const statCards = (
     <>
@@ -148,9 +156,9 @@ const ConfirmClientList = () => {
         <div>
           <div className="text-slate-800 text-[10px] font-bold">Total Converted</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">32</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{totalConverted}</div>
           </div>
-          <div className="text-[9px] text-emerald-600 font-medium">+18% from last month</div>
+          <div className="text-[9px] text-emerald-600 font-medium">All Time</div>
         </div>
       </div>
 
@@ -161,9 +169,9 @@ const ConfirmClientList = () => {
         <div>
           <div className="text-slate-800 text-[10px] font-bold">Total Revenue</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">₹ 24,75,000</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">₹ {totalRevenue.toLocaleString('en-IN')}</div>
           </div>
-          <div className="text-[9px] text-emerald-600 font-medium">+22% from last month</div>
+          <div className="text-[9px] text-emerald-600 font-medium">All Time</div>
         </div>
       </div>
 
@@ -174,9 +182,9 @@ const ConfirmClientList = () => {
         <div>
           <div className="text-slate-800 text-[10px] font-bold">Avg. Conversion Time</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">14 Days</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">N/A</div>
           </div>
-          <div className="text-[9px] text-emerald-600 font-medium">-3 Days from last month</div>
+          <div className="text-[9px] text-emerald-600 font-medium">Data unavailable</div>
         </div>
       </div>
 
@@ -187,9 +195,9 @@ const ConfirmClientList = () => {
         <div>
           <div className="text-slate-800 text-[10px] font-bold">Repeat Clients</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">8</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{repeatClients}</div>
           </div>
-          <div className="text-[9px] text-orange-500 font-medium">25% of total clients</div>
+          <div className="text-[9px] text-orange-500 font-medium">{totalConverted ? Math.round((repeatClients / totalConverted) * 100) : 0}% of total clients</div>
         </div>
       </div>
     </>

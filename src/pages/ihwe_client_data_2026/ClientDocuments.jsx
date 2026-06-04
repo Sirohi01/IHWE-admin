@@ -73,8 +73,17 @@ const ClientDocuments = () => {
             uploader: d.uploaded_by || "Admin Upload",
             time: new Date(d.added).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
             isUploaded: true,
-            previewUrl: d.file_url ? (d.file_url.startsWith('http') ? d.file_url.replace(/\.pdf$/i, '.jpg') : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}${d.file_url}`.replace('/api/uploads', '/uploads')) : "",
-            originalPdfUrl: d.file_url,
+            previewUrl: d.file_url ? (d.file_url.startsWith('http') ? d.file_url.replace(/\.pdf$/i, '.jpg') : `${import.meta.env.VITE_API_URL || "http://localhost:5000"}${d.file_url}`.replace('/api/uploads', '/uploads')) : "",
+            originalPdfUrl: d.file_url ? (
+                (d.file_type?.toUpperCase() === 'PDF' && d.file_url.includes('cloudinary.com'))
+                    ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/client-documents/proxy/download?url=${encodeURIComponent(d.file_url)}`
+                    : d.file_url
+            ) : "",
+            proxyDownloadUrl: d.file_url ? (
+                (d.file_type?.toUpperCase() === 'PDF' && d.file_url.includes('cloudinary.com'))
+                    ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/client-documents/proxy/download?url=${encodeURIComponent(d.file_url)}&download=true`
+                    : d.file_url
+            ) : "",
             isImage: d.file_type && ['JPG', 'JPEG', 'PNG', 'GIF'].includes(d.file_type.toUpperCase())
         }));
     }, [clientDocs]);
@@ -523,7 +532,7 @@ const ClientDocuments = () => {
                                                 <div className="text-white flex flex-col items-center mt-4">
                                                     <FileText size={24} className="mb-2 text-gray-400" />
                                                     <p className="text-[10px] mb-2 text-gray-500">No preview for {selectedDocument.fileType}</p>
-                                                    <a href={selectedDocument.previewUrl} download className="px-3 py-1 bg-[#2563eb] text-white rounded text-[9px] hover:bg-blue-700 transition-colors">Download</a>
+                                                    <a href={selectedDocument.proxyDownloadUrl || selectedDocument.originalPdfUrl} target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-[#2563eb] text-white rounded text-[9px] hover:bg-blue-700 transition-colors">Download</a>
                                                 </div>
                                             )
                                         ) : (
@@ -587,7 +596,7 @@ const ClientDocuments = () => {
                                             <a 
                                                 href={selectedDocument.originalPdfUrl ? (() => {
                                                     let url = selectedDocument.originalPdfUrl;
-                                                    if (!url.startsWith('http')) url = `${(process.env.REACT_APP_API_URL || "http://localhost:5000").replace('/api', '')}${url}`;
+                                                    if (!url.startsWith('http')) url = `${(import.meta.env.VITE_API_URL || "http://localhost:5000").replace('/api', '')}${url}`;
                                                     if (url.includes('cloudinary.com') && url.startsWith('http://')) url = url.replace('http://', 'https://');
                                                     return url;
                                                 })() : '#'}
@@ -598,16 +607,15 @@ const ClientDocuments = () => {
                                                 <ZoomIn size={12} /> View
                                             </a>
                                             <a 
-                                                href={selectedDocument.originalPdfUrl ? (() => {
-                                                    let url = selectedDocument.originalPdfUrl;
-                                                    if (!url.startsWith('http')) url = `${(process.env.REACT_APP_API_URL || "http://localhost:5000").replace('/api', '')}${url}`;
+                                                href={selectedDocument.proxyDownloadUrl ? (() => {
+                                                    let url = selectedDocument.proxyDownloadUrl;
+                                                    if (!url.startsWith('http')) url = `${(import.meta.env.VITE_API_URL || "http://localhost:5000").replace('/api', '')}${url}`;
                                                     if (url.includes('cloudinary.com') && url.startsWith('http://')) url = url.replace('http://', 'https://');
                                                     return url;
                                                 })() : '#'}
-                                                download={selectedDocument.originalPdfUrl ? selectedDocument.originalPdfUrl.split('/').pop() : 'document'}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className={`bg-white border border-gray-200 hover:bg-gray-50 text-[#0f172a] rounded-lg py-1.5 px-1 flex items-center justify-center gap-1 transition-colors font-semibold shadow-sm text-[10px] ${!selectedDocument.originalPdfUrl || !selectedDocument.isUploaded ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
+                                                className={`bg-white border border-gray-200 hover:bg-gray-50 text-[#0f172a] rounded-lg py-1.5 px-1 flex items-center justify-center gap-1 transition-colors font-semibold shadow-sm text-[10px] ${!selectedDocument.proxyDownloadUrl || !selectedDocument.isUploaded ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
                                             >
                                                 <Download size={12} /> Download
                                             </a>

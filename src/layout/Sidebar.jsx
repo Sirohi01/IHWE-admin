@@ -146,7 +146,7 @@ export default function Sidebar({
 
         if (isSuperAdmin) {
           isVisible = true;
-          visibleChildren = item.children; // Show all children for super-admin
+          visibleChildren = item.children; // Show all children for IHWE–Super Administrator
         } else {
           if (item.type === "item") {
             isVisible = perms[item.label] === true || (item.label === "Exhibitor Registration" && perms["Book A Stand"] === true);
