@@ -585,16 +585,16 @@ const InternationalBuyerRegistration = () => {
                     <section>
                         <SectionTitle icon={UserRound} title="Section 1 – Personal & Contact Information" />
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
-                            <Field label="Full Name *" name="primaryContact.fullName" required>
+                            <Field label="Full Name" name="primaryContact.fullName" required>
                                 <input name="primaryContact.fullName" value={formData.primaryContact.fullName} onChange={handleInputChange} placeholder="Full Name" className={inputClass} />
                             </Field>
                             <Field label="Designation" name="primaryContact.designation">
                                 <input name="primaryContact.designation" value={formData.primaryContact.designation} onChange={handleInputChange} placeholder="Designation" className={inputClass} />
                             </Field>
-                            <Field label="Email Address *" name="primaryContact.emailId" required>
+                            <Field label="Email Address" name="primaryContact.emailId" required>
                                 <input name="primaryContact.emailId" type="email" value={formData.primaryContact.emailId} onChange={handleInputChange} placeholder="Email" className={inputClass} />
                             </Field>
-                            <Field label={<span>Mobile Number * <div className="inline-flex w-32 overflow-hidden align-middle ml-2 items-center h-4 relative"><motion.span initial={{ x: "100%" }} animate={{ x: "-100%" }} transition={{ repeat: Infinity, duration: 4, ease: "linear" }} className="text-red-500 text-[10px] uppercase font-semibold tracking-wide whitespace-nowrap absolute">Our team will contact you</motion.span></div></span>} name="primaryContact.mobileNumber" required>
+                            <Field label={<span>Mobile Number <div className="inline-flex w-32 overflow-hidden align-middle ml-2 items-center h-4 relative"><motion.span initial={{ x: "100%" }} animate={{ x: "-100%" }} transition={{ repeat: Infinity, duration: 4, ease: "linear" }} className="text-red-500 text-[10px] uppercase font-semibold tracking-wide whitespace-nowrap absolute">Our team will contact you</motion.span></div></span>} name="primaryContact.mobileNumber" required>
                                 <input name="primaryContact.mobileNumber" value={formData.primaryContact.mobileNumber} onChange={handleInputChange} placeholder="Mobile" className={inputClass} />
                             </Field>
                             <Field label="WhatsApp Number" name="primaryContact.whatsappNumber">
@@ -606,7 +606,7 @@ const InternationalBuyerRegistration = () => {
                     <section>
                         <SectionTitle icon={MapPin} title="Section 2 – Registered Office Details" />
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4">
-                            <Field label="Country *" name="country" required>
+                            <Field label="Country" name="country" required>
                                 <select name="country" value={formData.country} onChange={(e) => handleSelectChange("country", e.target.value)} className={selectClass}>
                                     <option value="">Select Country</option>
                                     {countries.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
@@ -618,7 +618,7 @@ const InternationalBuyerRegistration = () => {
                                     {states.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
                                 </select>
                             </Field>
-                            <Field label="City *" name="city" required>
+                            <Field label="City" name="city" required>
                                 <select name="city" value={formData.city} onChange={(e) => handleSelectChange("city", e.target.value)} className={selectClass} disabled={!formData.stateProvince || loadingLocations.cities}>
                                     <option value="">{loadingLocations.cities ? "Loading..." : "Select City"}</option>
                                     {cities.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
@@ -627,7 +627,7 @@ const InternationalBuyerRegistration = () => {
                             <Field label="Postal Code" name="postalCode">
                                 <input name="postalCode" value={formData.postalCode} onChange={handleInputChange} placeholder="Postal Code" className={inputClass} />
                             </Field>
-                            <Field label="Full Address *" name="address" required>
+                            <Field label="Full Address" name="address" required>
                                 <textarea name="address" value={formData.address} onChange={handleInputChange} placeholder="Full Registered Address" className={textareaClass} rows={1} />
                             </Field>
                             <Field label="Website" name="website">
@@ -669,7 +669,7 @@ const InternationalBuyerRegistration = () => {
                     <section>
                         <SectionTitle icon={Building2} title="Section 3 – Company Information" />
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
-                            <Field label="Brand / Company Name *" name="brandName" required>
+                            <Field label="Brand / Company Name" name="brandName" required>
                                 <input name="brandName" value={formData.brandName} onChange={handleInputChange} placeholder="Company Name" className={inputClass} />
                             </Field>
                             <Field label="Legal Entity Type" name="legalEntityType">
@@ -681,7 +681,7 @@ const InternationalBuyerRegistration = () => {
                             <Field label="Year of Establishment" name="yearOfEstablishment">
                                 <input name="yearOfEstablishment" value={formData.yearOfEstablishment} onChange={handleInputChange} placeholder="e.g. 2010" className={inputClass} />
                             </Field>
-                            <Field label="Country of Reg. *" name="countryOfRegistration" required>
+                            <Field label="Country of Reg." name="countryOfRegistration" required>
                                 <input name="countryOfRegistration" value={formData.countryOfRegistration} onChange={handleInputChange} placeholder="Country of Registration" className={inputClass} />
                             </Field>
                             <Field label="Company Reg. Number" name="registrationNumber">
