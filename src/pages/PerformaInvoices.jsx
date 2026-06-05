@@ -79,10 +79,15 @@ const Select = ({ options, ...props }) => (
 );
 
 // ── Quick Action row ─────────────────────────────────────────────────────────
-const QuickAction = ({ icon: Icon, color, label, sub }) => (
-    <button className="flex items-center justify-between w-full p-2.5 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50/40 transition group">
+const QuickAction = ({ icon: Icon, color, label, sub, onClick, disabled }) => (
+    <button
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        className={`flex items-center justify-between w-full p-2.5 rounded-lg border border-gray-100 transition group ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:border-blue-200 hover:bg-blue-50/40'}`}
+    >
         <div className="flex items-center gap-2.5">
-            <div className={`w-7 h-7 rounded ${color} flex items-center justify-center`}>
+            <div className={`w-7 h-7 rounded ${color} flex items-center justify-center ${disabled ? 'grayscale' : ''}`}>
                 <Icon className="w-5 h-5 " />
             </div>
             <div className="text-left">
@@ -90,7 +95,7 @@ const QuickAction = ({ icon: Icon, color, label, sub }) => (
                 <p className="text-[10px] text-gray-400">{sub}</p>
             </div>
         </div>
-        <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-400" />
+        <ChevronRight className={`w-3.5 h-3.5 ${disabled ? 'text-gray-200' : 'text-gray-300 group-hover:text-blue-400'}`} />
     </button>
 );
 
@@ -105,6 +110,22 @@ export const PerformaInvoices = () => {
     const { countries: reduxCountries } = useSelector((state) => state.countries || { countries: [] });
     const { states: reduxStates } = useSelector((state) => state.states || { states: [] });
     const { cities: reduxCities } = useSelector((state) => state.cities || { cities: [] });
+
+
+    let currentUserName = localStorage.getItem('user_name') || sessionStorage.getItem('user_name') || '';
+    try {
+        const userObjStr = localStorage.getItem('user') || sessionStorage.getItem('user') || localStorage.getItem('adminInfo') || sessionStorage.getItem('adminInfo') || localStorage.getItem('admin') || sessionStorage.getItem('admin');
+        if (userObjStr) {
+            const userObj = JSON.parse(userObjStr);
+            if (userObj.name) currentUserName = userObj.name;
+            else if (userObj.fullName) currentUserName = userObj.fullName;
+            else if (userObj.username) currentUserName = userObj.username;
+            else if (userObj.user_name) currentUserName = userObj.user_name;
+        }
+    } catch (e) {
+        console.error('Error parsing user data:', e);
+    }
+    if (!currentUserName) currentUserName = 'Admin';
 
     useEffect(() => {
         if (!reduxCountries || reduxCountries.length === 0) dispatch(fetchCountries());
@@ -128,13 +149,16 @@ export const PerformaInvoices = () => {
     });
 
     const [items, setItems] = useState([
-        { id: 1, description: 'Exhibition Stall Space (9 Sqm)', subDesc: 'Health & Wellness Expo 2026', hsn: '997331', qty: 1, size: 9, unit: 'Nos', rate: 90000, amount: 90000, disc: 0, taxable: 90000 }
+        { id: 1, description: 'Exhibition Stall Space (9 Sqm)', subDesc: '', hsn: '997331', qty: 1, size: 9, unit: 'Nos', rate: 90000, amount: 90000, disc: 0, taxable: 90000 }
     ]);
 
     const [gstOption, setGstOption] = useState('18% IGST');
     const [remarks, setRemarks] = useState('');
     const [notes, setNotes] = useState('');
     const [discount, setDiscount] = useState(0);
+
+    const [isWhatsAppLoading, setIsWhatsAppLoading] = useState(false);
+    const [isEmailLoading, setIsEmailLoading] = useState(false);
 
     // ── data fetching ────────────────────────────────────────────────────────────
     useEffect(() => {
@@ -153,22 +177,31 @@ export const PerformaInvoices = () => {
                         throw err;
                     }
                 }
-
-                // Determine the actual company ID (Exhibitor Registration uses clientId)
                 const actualCompanyId = companyInfo?.clientId || companyInfo?._id || id;
 
                 // Fetch existing estimates
                 let existingEstimate = null;
                 try {
-                    const estRes = await api.get(`/api/estimates/grouped/${actualCompanyId}`);
+                    let estRes = await api.get(`/api/estimates/grouped/${actualCompanyId}`);
                     if (estRes.data?.success && estRes.data?.count > 0) {
                         existingEstimate = estRes.data.data[0]; // Get the latest one
+                    } else if (companyInfo && actualCompanyId !== companyInfo._id) {
+                        estRes = await api.get(`/api/estimates/grouped/${companyInfo._id}`);
+                        if (estRes.data?.success && estRes.data?.count > 0) {
+                            existingEstimate = estRes.data.data[0]; // Get the latest one
+                        }
+                    } else if (companyInfo && actualCompanyId !== id) {
+                        estRes = await api.get(`/api/estimates/grouped/${id}`);
+                        if (estRes.data?.success && estRes.data?.count > 0) {
+                            existingEstimate = estRes.data.data[0]; // Get the latest one
+                        }
                     }
                 } catch (e) {
                     console.error("Error fetching existing estimates:", e);
                 }
 
                 if (existingEstimate) {
+                    setCompanyData(companyInfo);
                     setExistingEstimateId(existingEstimate._id);
 
                     const formattedItems = (existingEstimate.items || []).map((item, index) => {
@@ -306,6 +339,68 @@ export const PerformaInvoices = () => {
 
     const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
+    const handleSendWhatsApp = async () => {
+        const estId = existingEstimateId;
+        if (!estId) {
+            Swal.fire('Error', 'Please generate the estimate first before sending.', 'error');
+            return;
+        }
+
+        let phone = '';
+        if (companyData) {
+            phone = companyData.contact1?.mobile || companyData.mobile || companyData.landlineNo || '';
+        }
+
+        if (!phone) {
+            Swal.fire('Error', 'No mobile number found for this client.', 'error');
+            return;
+        }
+
+        try {
+            setIsWhatsAppLoading(true);
+            const res = await api.post(`/api/estimates/${estId}/send-whatsapp`, { phone });
+            if (res.status === 200) {
+                Swal.fire('Success', 'WhatsApp message sent successfully', 'success');
+            }
+        } catch (error) {
+            console.error("Error sending WhatsApp:", error);
+            Swal.fire('Error', error.response?.data?.message || 'Failed to send WhatsApp message', 'error');
+        } finally {
+            setIsWhatsAppLoading(false);
+        }
+    };
+
+    const handleSendEmail = async () => {
+        const estId = existingEstimateId;
+        if (!estId) {
+            Swal.fire('Error', 'Please generate the estimate first before sending.', 'error');
+            return;
+        }
+
+        let email = '';
+        if (companyData) {
+            email = companyData.contact1?.email || companyData.email || '';
+        }
+
+        if (!email) {
+            Swal.fire('Error', 'No email address found for this client.', 'error');
+            return;
+        }
+
+        try {
+            setIsEmailLoading(true);
+            const res = await api.post(`/api/estimates/${estId}/send-email`, { email });
+            if (res.status === 200) {
+                Swal.fire('Success', 'Email sent successfully', 'success');
+            }
+        } catch (error) {
+            console.error("Error sending Email:", error);
+            Swal.fire('Error', error.response?.data?.message || 'Failed to send Email', 'error');
+        } finally {
+            setIsEmailLoading(false);
+        }
+    };
+
     const handleGenerateEstimate = async () => {
         const actualCompanyId = companyData?.clientId || companyData?._id || id;
         if (!actualCompanyId) {
@@ -342,7 +437,7 @@ export const PerformaInvoices = () => {
                 remarks: remarks
             })),
             finalAmount: grandTotal,
-            added_by: JSON.parse(localStorage.getItem('adminInfo') || sessionStorage.getItem('adminInfo') || '{}')?.username || 'Admin',
+            added_by: currentUserName,
             status: 'active'
         };
 
@@ -357,7 +452,7 @@ export const PerformaInvoices = () => {
                         timer: 2000,
                         showConfirmButton: false
                     });
-                    navigate('/ihweClientData2026/masterData');
+                    navigate('/performa-invoice-list/all');
                 }
             } else {
                 const res = await api.post('/api/estimates', payload);
@@ -369,7 +464,7 @@ export const PerformaInvoices = () => {
                         timer: 2000,
                         showConfirmButton: false
                     });
-                    navigate('/ihweClientData2026/masterData');
+                    navigate('/performa-invoice-list/all');
                 }
             }
         } catch (error) {
@@ -415,7 +510,7 @@ export const PerformaInvoices = () => {
                         All Performa Invoices
                     </button>
                     <button
-                        onClick={() => navigate(-1)}
+                        onClick={() => navigate('/ihweClientData2026/masterData')}
                         className="flex items-center gap-1.5 border border-gray-300 rounded px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition"
                     >
                         <List className="w-3.5 h-3.5" />
@@ -702,11 +797,11 @@ export const PerformaInvoices = () => {
                     <div className="bg-white rounded-lg border border-gray-200 p-4">
                         <h3 className="text-xs font-extrabold text-gray-800 mb-3 uppercase tracking-wider">Quick Actions</h3>
                         <div className="space-y-2">
-                            <QuickAction icon={Bookmark} color="bg-blue-100 text-blue-500" label="Save Draft" sub="Save as draft for later" />
-                            <QuickAction icon={FileSpreadsheet} color="bg-green-100 text-green-600" label={existingEstimateId ? "Update Estimate" : "Generate Estimate"} sub="Create or update Proforma Invoice" />
-                            <QuickAction icon={File} color="bg-red-100 text-red-500" label="Download PDF" sub="Download estimate as PDF" />
-                            <QuickAction icon={MessageCircleMore} color="bg-green-100 text-green-600" label="Send via WhatsApp" sub="Share estimate on WhatsApp" />
-                            <QuickAction icon={Mail} color="bg-blue-100 text-blue-500" label="Send via Email" sub="Email estimate to client" />
+                            <QuickAction icon={Bookmark} color="bg-blue-100 text-blue-500" label="Save Draft" sub="Save as draft for later" disabled={true} />
+                            <QuickAction icon={FileSpreadsheet} color="bg-green-100 text-green-600" label={existingEstimateId ? "Update Estimate" : "Generate Estimate"} sub="Create or update Proforma Invoice" onClick={handleGenerateEstimate} disabled={true} />
+                            <QuickAction icon={File} color="bg-red-100 text-red-500" label="Download PDF" sub="Download estimate as PDF" onClick={() => window.open(`/payments/estimateDetails/${existingEstimateId}`, '_blank')} disabled={!existingEstimateId} />
+                            <QuickAction icon={MessageCircleMore} color="bg-green-100 text-green-600" label={isWhatsAppLoading ? "Sending..." : "Send via WhatsApp"} sub="Share estimate on WhatsApp" onClick={handleSendWhatsApp} disabled={!existingEstimateId || isWhatsAppLoading} />
+                            <QuickAction icon={Mail} color="bg-blue-100 text-blue-500" label={isEmailLoading ? "Sending..." : "Send via Email"} sub="Email estimate to client" onClick={handleSendEmail} disabled={!existingEstimateId || isEmailLoading} />
                         </div>
                     </div>
                 </div>

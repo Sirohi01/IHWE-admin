@@ -9,6 +9,7 @@ import { fetchCompanies } from "../../../features/company/companySlice";
 import { fetchEstimates } from "../../../features/estimates/estimateSlice";
 import { useNavigate } from "react-router-dom";
 import { LayoutGrid, UserCheck, Upload, ChevronDown, ChevronLeft, X } from "lucide-react";
+import api from "../../../lib/api";
 
 
 const PerformaInvoiceDetails = () => {
@@ -64,16 +65,6 @@ const PerformaInvoiceDetails = () => {
   }, [matchedPerIvo?.companyId, dispatch]);
 
   useEffect(() => {
-    if (matchedPerIvo && companies.length > 0) {
-      // Match company using the companyId from the matched estimate
-      const matchedCompany = companies.find(
-        (c) => c._id === matchedPerIvo.companyId
-      );
-      setCompany(matchedCompany || null);
-    }
-  }, [matchedPerIvo, companies]);
-
-  useEffect(() => {
     if (estimates && estimates.length > 0 && matchedPerIvo) {
       const match = estimates.find((e) => e.est_no === matchedPerIvo?.est_no);
       setMatchedEstimate(match || null);
@@ -81,14 +72,41 @@ const PerformaInvoiceDetails = () => {
   }, [matchedPerIvo, estimates]);
 
   useEffect(() => {
-    if (matchedEstimate && companies.length > 0) {
-      // Match company using the companyId from the matched estimate
-      const matchedCompany = companies.find(
-        (c) => c._id === matchedEstimate.companyId
-      );
-      setCompany(matchedCompany || null);
-    }
-  }, [matchedEstimate, companies]);
+    const fetchCompanyData = async () => {
+      const companyId = matchedEstimate?.companyId || matchedPerIvo?.companyId;
+      if (!companyId) return;
+
+      if (companies && companies.length > 0) {
+        const matchedCompany = companies.find((c) => c._id === companyId);
+        if (matchedCompany) {
+          setCompany(matchedCompany);
+          return;
+        }
+      }
+
+      try {
+        const response = await api.get(`/api/exhibitor-registration/${companyId}`);
+        const exhibitorData = response.data?.data;
+        if (exhibitorData) {
+           setCompany({
+              ...exhibitorData,
+              companyName: exhibitorData.exhibitorName,
+              contacts: [{
+                  title: exhibitorData.contact1?.title || "",
+                  firstName: exhibitorData.contact1?.firstName || "",
+                  surname: exhibitorData.contact1?.lastName || "",
+                  designation: exhibitorData.contact1?.designation || "",
+                  email: exhibitorData.contact1?.email || exhibitorData.email || "",
+                  mobile: exhibitorData.contact1?.mobile || exhibitorData.mobile || exhibitorData.landlineNo || ""
+              }]
+           });
+        }
+      } catch (err) {
+        console.error("Failed to fetch company details", err);
+      }
+    };
+    fetchCompanyData();
+  }, [matchedEstimate, matchedPerIvo, companies]);
 
   const handleprint = useReactToPrint({
     contentRef: sameRef, // Changed from contentRef to content

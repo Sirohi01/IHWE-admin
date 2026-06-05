@@ -7,6 +7,9 @@ import {
   fetchPerformaInvoices,
 } from "../../features/performaInvoice/performaInvoiceSlice";
 import { fetchInvoices } from "../../features/invoice/invoiceSlice";
+import api from "../../lib/api";
+import Swal from "sweetalert2";
+import { MessageCircleMore, Mail } from "lucide-react";
 
 const stylebutton =
   "w-fit text-[#3598dc] cursor-pointer border border-[#3598dc] hover:bg-[#3598dc] hover:text-white font-medium flex  items-center gap-1 px-1";
@@ -87,6 +90,38 @@ const EstimateTable = ({ clientId }) => {
     },
     [dispatch]
   );
+
+  const [actionLoaders, setActionLoaders] = useState({});
+
+  const handleSendWhatsApp = async (estimateId) => {
+    try {
+      setActionLoaders(prev => ({ ...prev, [`${estimateId}_wa`]: true }));
+      const res = await api.post(`/api/estimates/${estimateId}/send-whatsapp`, {});
+      if (res.status === 200) {
+        Swal.fire('Success', 'WhatsApp message sent successfully', 'success');
+      }
+    } catch (error) {
+      console.error("Error sending WhatsApp:", error);
+      Swal.fire('Error', error.response?.data?.message || 'Failed to send WhatsApp message', 'error');
+    } finally {
+      setActionLoaders(prev => ({ ...prev, [`${estimateId}_wa`]: false }));
+    }
+  };
+
+  const handleSendEmail = async (estimateId) => {
+    try {
+      setActionLoaders(prev => ({ ...prev, [`${estimateId}_email`]: true }));
+      const res = await api.post(`/api/estimates/${estimateId}/send-email`, {});
+      if (res.status === 200) {
+        Swal.fire('Success', 'Email sent successfully', 'success');
+      }
+    } catch (error) {
+      console.error("Error sending Email:", error);
+      Swal.fire('Error', error.response?.data?.message || 'Failed to send Email', 'error');
+    } finally {
+      setActionLoaders(prev => ({ ...prev, [`${estimateId}_email`]: false }));
+    }
+  };
 
   // New function to handle navigation for Print/Copy buttons
   const handlePrintCopyNavigation = (copyType, invId) => {
