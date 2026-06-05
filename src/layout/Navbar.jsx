@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { LogOut, Menu, X, Key } from "lucide-react";
 import { FaUserAstronaut } from "react-icons/fa";
 import { BiSupport } from "react-icons/bi";
@@ -13,6 +13,8 @@ import { logout } from "../utils/auth";
 import { fetchCompanies } from "../features/company/companySlice";
 import { useSelector, useDispatch } from "react-redux";
 import ChangePasswordModal from "../components/ChangePasswordModal";
+import { menuItems } from "../data/menuItems";
+
 
 const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
   if (Array.isArray(sliceState)) return sliceState;
@@ -25,6 +27,38 @@ const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
 export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const getPageNameFromMenu = (pathname) => {
+    let foundLabel = null;
+    let bestMatchLength = 0;
+
+    const searchMenu = (items) => {
+      for (const item of items) {
+        if (item.path) {
+          if (pathname === item.path || pathname.startsWith(item.path + '/')) {
+            if (item.path.length > bestMatchLength) {
+              bestMatchLength = item.path.length;
+              foundLabel = item.label;
+            }
+          }
+        }
+        if (item.children) {
+          searchMenu(item.children);
+        }
+      }
+    };
+    
+    searchMenu(menuItems);
+    
+    if (foundLabel) return foundLabel;
+    
+    const pathSegments = pathname.split('/').filter(Boolean);
+    const pageNameRaw = pathSegments.length > 0 ? pathSegments[0] : 'Dashboard';
+    return pageNameRaw.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  const pageName = getPageNameFromMenu(location.pathname);
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [chatUnread, setChatUnread] = useState(0);
@@ -122,7 +156,9 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
         >
           {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
-        <h2 className="text-white text-2xl uppercase font-semibold tracking-tight">User Interface</h2>
+        <h2 className="text-white text-2xl uppercase font-semibold tracking-tight">
+          User Interface <span className="text-[#a8d060] text-xl font-medium tracking-normal capitalize ml-1">/ {pageName}</span>
+        </h2>
       </div>
 
       {/* Right */}
