@@ -157,7 +157,7 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
           {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
         <h2 className="text-white text-2xl uppercase font-semibold tracking-tight">
-          User Interface <span className="text-[#a8d060] text-xl font-medium tracking-normal capitalize ml-1">/ {pageName}</span>
+          User Interface <span className="text-[#a8d060] text-md font-medium tracking-normal capitalize ml-1">| {pageName}</span>
         </h2>
       </div>
 
