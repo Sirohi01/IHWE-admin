@@ -249,6 +249,7 @@ const PerformaInvoices = lazy(() => import("../pages/PerformaInvoices"));
 const SalesReport = lazy(() => import("../pages/accounts/SalesReport"));
 const CreateDebitNote = lazy(() => import("../pages/CreateDebitNote"));
 const CreateInvoicePage = lazy(() => import("../pages/CreateInvoice"));
+const BankDetailsManage = lazy(() => import("../pages/accounts/BankDetailsManage"));
 // Sales Tools
 const SalesTools = lazy(() => import("../pages/sales_tools/SalesTools"));
 // Communication
@@ -615,6 +616,7 @@ export default function AppRoutes() {
             <Route path="ihweClientData2026/AddNextAction" element={<AddNextAction />} />
          // ############################# -- Account Section
             <Route path="accounts/salesreport" element={<SalesReport />} />
+            <Route path="accounts/bank-details" element={<BankDetailsManage />} />
 
         // ############################# -- Account Section
             <Route path="/client-overview/:id" element={<ClientOverview1 />} />

@@ -15,7 +15,7 @@ export default function DocumentConfiguration() {
     const { documentRequirements = [], loading = false } = useSelector(
         (state) => state.documentRequirements || {}
     );
-    const [form, setForm] = useState({ document_name: "", category: "", order: 0, status: "Active", showOnDashboard: false });
+    const [form, setForm] = useState({ document_name: "", category: "", order: 0, status: "Active" });
     const [editingId, setEditingId] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -80,8 +80,8 @@ export default function DocumentConfiguration() {
             document_name: item.document_name,
             category: item.category,
             order: item.order || 0,
+            order: item.order || 0,
             status: item.status,
-            showOnDashboard: item.showOnDashboard || false,
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -108,7 +108,7 @@ export default function DocumentConfiguration() {
 
     const resetForm = () => {
         setEditingId(null);
-        setForm({ document_name: "", category: "", order: 0, status: "Active", showOnDashboard: false });
+        setForm({ document_name: "", category: "", order: 0, status: "Active" });
     };
 
     return (
@@ -187,20 +187,6 @@ export default function DocumentConfiguration() {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2 mt-4 bg-gray-50 p-3 border-2 border-gray-200">
-                                <input
-                                    type="checkbox"
-                                    id="showOnDashboard"
-                                    name="showOnDashboard"
-                                    checked={form.showOnDashboard}
-                                    onChange={handleChange}
-                                    className="w-4 h-4 text-[#23471d] border-gray-300 rounded focus:ring-[#23471d]"
-                                />
-                                <label htmlFor="showOnDashboard" className="text-sm font-bold text-gray-700 cursor-pointer flex items-center gap-1">
-                                    <LayoutDashboard size={16} className="text-[#23471d]"/> Show as Dashboard
-                                </label>
-                            </div>
-
                             <div className="flex gap-2 pt-2">
                                 <button
                                     onClick={handleSubmit}
@@ -237,7 +223,7 @@ export default function DocumentConfiguration() {
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase w-10">NO.</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">DOCUMENT NAME</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">CATEGORY</th>
-                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase text-center">DASHBOARD</th>
+
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase text-center">STATUS</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">ACTIONS</th>
                                     </tr>
@@ -260,13 +246,7 @@ export default function DocumentConfiguration() {
                                             <td className="py-3 px-4 text-gray-500 font-bold">{i + 1}</td>
                                             <td className="py-3 px-4 font-bold text-gray-800">{d.document_name}</td>
                                             <td className="py-3 px-4 text-gray-600 text-xs">{d.category}</td>
-                                            <td className="py-3 px-4 text-center">
-                                                {d.showOnDashboard ? (
-                                                    <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">Yes</span>
-                                                ) : (
-                                                    <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-[10px] font-bold uppercase">No</span>
-                                                )}
-                                            </td>
+
                                             <td className="py-3 px-4 text-center">
                                                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${d.status === "Active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                                                     {d.status}

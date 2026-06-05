@@ -708,8 +708,12 @@ export const menuItems = [
     type: "heading",
     label: "Account Section",
   },
-
-
+  {
+    type: "item",
+    label: "Bank Details",
+    icon: Building2,
+    path: "/accounts/bank-details",
+  },
   {
     type: "dropdown",
     label: "Reports",

@@ -9,6 +9,8 @@ import PageHeader from '../components/PageHeader';
 const EMPTY_CARD = {
     image: '',
     imageAlt: '',
+    order: 0,
+    path: '',
 };
 
 const ExhibitorHeroSlider = () => {
@@ -17,6 +19,7 @@ const ExhibitorHeroSlider = () => {
     const [cardForm, setCardForm] = useState({ ...EMPTY_CARD });
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState('');
+    const [editingId, setEditingId] = useState(null);
     const fileInputRef = useRef(null);
 
     useEffect(() => { fetchData(); }, []);
@@ -78,10 +81,15 @@ const ExhibitorHeroSlider = () => {
             }
             const payload = { ...cardForm, image: imageUrl };
             
-            const response = await api.post('/api/exhibitor-hero-slider', payload);
+            let response;
+            if (editingId) {
+                response = await api.put(`/api/exhibitor-hero-slider/${editingId}`, payload);
+            } else {
+                response = await api.post('/api/exhibitor-hero-slider', payload);
+            }
             
             if (response.data.success) {
-                Swal.fire({ icon: 'success', title: 'Image Added!', timer: 1500, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: editingId ? 'Image Updated!' : 'Image Added!', timer: 1500, showConfirmButton: false });
                 resetForm();
                 fetchData();
             }
@@ -114,10 +122,24 @@ const ExhibitorHeroSlider = () => {
         }
     };
 
+    const handleEditCard = (image) => {
+        setCardForm({
+            image: image.image || '',
+            imageAlt: image.imageAlt || '',
+            order: image.order || 0,
+            path: image.path || ''
+        });
+        setImagePreview(image.image ? `${SERVER_URL}${image.image}` : '');
+        setImageFile(null);
+        setEditingId(image._id);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const resetForm = () => {
         setCardForm({ ...EMPTY_CARD });
         setImageFile(null);
         setImagePreview('');
+        setEditingId(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
@@ -133,8 +155,8 @@ const ExhibitorHeroSlider = () => {
                     {/* Form */}
                     <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
                         <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[#d26019]">
-                            <Plus className="w-5 h-5" />
-                            Add New Slider Image
+                            {editingId ? <Edit className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                            {editingId ? 'Edit Slider Image' : 'Add New Slider Image'}
                         </h2>
                         <div className="space-y-4">
                             <div>
@@ -168,13 +190,36 @@ const ExhibitorHeroSlider = () => {
                                         </div>
                                     )}
 
-                                    <input
-                                        type="text"
-                                        value={cardForm.imageAlt}
-                                        onChange={(e) => setCardForm({ ...cardForm, imageAlt: e.target.value })}
-                                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none text-xs shadow-sm bg-white"
-                                        placeholder="Image Alt Text..."
-                                    />
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-700 mb-1 uppercase tracking-wider">Image Alt Text</label>
+                                        <input
+                                            type="text"
+                                            value={cardForm.imageAlt}
+                                            onChange={(e) => setCardForm({ ...cardForm, imageAlt: e.target.value })}
+                                            className="w-full px-3 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none text-xs shadow-sm bg-white"
+                                            placeholder="Image Alt Text..."
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-700 mb-1 uppercase tracking-wider">Display Order</label>
+                                        <input
+                                            type="number"
+                                            value={cardForm.order}
+                                            onChange={(e) => setCardForm({ ...cardForm, order: e.target.value })}
+                                            className="w-full px-3 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none text-xs shadow-sm bg-white"
+                                            placeholder="Order (e.g. 1)"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-700 mb-1 uppercase tracking-wider">Target Link / Path</label>
+                                        <input
+                                            type="text"
+                                            value={cardForm.path}
+                                            onChange={(e) => setCardForm({ ...cardForm, path: e.target.value })}
+                                            className="w-full px-3 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none text-xs shadow-sm bg-white"
+                                            placeholder="e.g. https://example.com/page"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -185,7 +230,7 @@ const ExhibitorHeroSlider = () => {
                                     className="flex-1 py-2.5 bg-[#d26019] text-white font-bold hover:bg-orange-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                                 >
                                     {isLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        : <><Plus className="w-4 h-4" /> Add Image</>}
+                                        : <>{editingId ? <Save className="w-4 h-4" /> : <Plus className="w-4 h-4" />} {editingId ? 'Update Image' : 'Add Image'}</>}
                                 </button>
                                 {imagePreview && (
                                     <button onClick={resetForm} className="px-4 py-2.5 border-2 border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-colors text-sm">
@@ -213,6 +258,8 @@ const ExhibitorHeroSlider = () => {
                                     <tr className="border-b-2 border-gray-200 bg-gray-50">
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase w-10">NO.</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">IMAGE</th>
+                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">ORDER</th>
+                                        <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">LINK / PATH</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">ALT TEXT</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase text-center">UPDATED BY</th>
                                         <th className="text-left py-3 px-4 text-xs font-bold text-gray-500 uppercase">ACTIONS</th>
@@ -238,6 +285,12 @@ const ExhibitorHeroSlider = () => {
                                                 )}
                                             </td>
                                             <td className="py-3 px-4">
+                                                <p className="font-bold text-gray-800 text-sm">{image.order || 0}</p>
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <a href={image.path || '#'} target="_blank" rel="noreferrer" className="font-bold text-blue-600 text-[10px] truncate max-w-[150px] inline-block hover:underline">{image.path || 'N/A'}</a>
+                                            </td>
+                                            <td className="py-3 px-4">
                                                 <p className="font-bold text-gray-800 text-sm">{image.imageAlt || 'N/A'}</p>
                                             </td>
                                             <td className="py-3 px-4 text-center">
@@ -245,7 +298,10 @@ const ExhibitorHeroSlider = () => {
                                             </td>
                                             <td className="py-3 px-4">
                                                 <div className="flex items-center gap-2">
-                                                    <button onClick={() => handleDeleteCard(image._id)} className="text-red-500 hover:text-red-700 p-1 transition-colors">
+                                                    <button onClick={() => handleEditCard(image)} className="text-blue-500 hover:text-blue-700 p-1 transition-colors" title="Edit">
+                                                        <Edit size={16} />
+                                                    </button>
+                                                    <button onClick={() => handleDeleteCard(image._id)} className="text-red-500 hover:text-red-700 p-1 transition-colors" title="Delete">
                                                         <Trash2 size={16} />
                                                     </button>
                                                 </div>
