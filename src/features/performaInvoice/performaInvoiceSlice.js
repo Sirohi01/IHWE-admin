@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-// 🟢 CREATE (Add new Performa Invoice)
+// 🟢 CREATE (Add new PROFORMA Invoice)
 export const createPerformaInvoice = createAsyncThunk(
   "perinvoice/create",
   async (invoiceData, thunkAPI) => {

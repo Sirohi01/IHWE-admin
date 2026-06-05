@@ -507,7 +507,7 @@ export const PerformaInvoices = () => {
                         className="flex items-center gap-1.5 border border-blue-300 bg-blue-50 rounded px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
                     >
                         <List className="w-3.5 h-3.5" />
-                        All Performa Invoices
+                        All Proforma Invoices
                     </button>
                     <button
                         onClick={() => navigate('/ihweClientData2026/masterData')}

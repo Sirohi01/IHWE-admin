@@ -176,7 +176,7 @@ const EstimateTable = ({ clientId }) => {
               scope="col"
               className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
             >
-              {(clientId === 'all' || id === 'all') ? "Performa Invoice Details" : "Estimate Details"}
+              {(clientId === 'all' || id === 'all') ? "PROFORMA Invoice Details" : "Estimate Details"}
             </th>
             {(clientId === 'all' || id === 'all') && (
               <th
@@ -306,7 +306,7 @@ const EstimateTable = ({ clientId }) => {
                   </td>
                 )}
 
-                {/* 🚀 PERFORMA INVOICE CELL LOGIC 🚀 */}
+                {/* 🚀 PROFORMA Invoice CELL LOGIC 🚀 */}
                 {(clientId !== 'all' && id !== 'all') && (
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
                     {/* Display PI Data if it exists or is being created */}

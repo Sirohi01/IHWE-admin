@@ -58,7 +58,7 @@ const PerformaInvoiceDetails = () => {
   }, [id, perInvoices]);
 
   useEffect(() => {
-    // Fetch estimates only when we have the companyId from the Performa Invoice
+    // Fetch estimates only when we have the companyId from the PROFORMA Invoice
     if (matchedPerIvo?.companyId) {
       dispatch(fetchEstimates(matchedPerIvo.companyId));
     }
@@ -88,18 +88,18 @@ const PerformaInvoiceDetails = () => {
         const response = await api.get(`/api/exhibitor-registration/${companyId}`);
         const exhibitorData = response.data?.data;
         if (exhibitorData) {
-           setCompany({
-              ...exhibitorData,
-              companyName: exhibitorData.exhibitorName,
-              contacts: [{
-                  title: exhibitorData.contact1?.title || "",
-                  firstName: exhibitorData.contact1?.firstName || "",
-                  surname: exhibitorData.contact1?.lastName || "",
-                  designation: exhibitorData.contact1?.designation || "",
-                  email: exhibitorData.contact1?.email || exhibitorData.email || "",
-                  mobile: exhibitorData.contact1?.mobile || exhibitorData.mobile || exhibitorData.landlineNo || ""
-              }]
-           });
+          setCompany({
+            ...exhibitorData,
+            companyName: exhibitorData.exhibitorName,
+            contacts: [{
+              title: exhibitorData.contact1?.title || "",
+              firstName: exhibitorData.contact1?.firstName || "",
+              surname: exhibitorData.contact1?.lastName || "",
+              designation: exhibitorData.contact1?.designation || "",
+              email: exhibitorData.contact1?.email || exhibitorData.email || "",
+              mobile: exhibitorData.contact1?.mobile || exhibitorData.mobile || exhibitorData.landlineNo || ""
+            }]
+          });
         }
       } catch (err) {
         console.error("Failed to fetch company details", err);
@@ -118,7 +118,7 @@ const PerformaInvoiceDetails = () => {
       <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-inter animate-fadeIn">
         {/* <div className="w-full h-auto flex justify-between bg-white px-5 py-0.5 ">
           <h1 className="text-xl font-norma text-gray-600">
-            ACCOUNT SECTION | PERFORMA INVOICE
+            ACCOUNT SECTION | PROFORMA Invoice
           </h1>
           <button
             onClick={handleprint}
@@ -131,7 +131,7 @@ const PerformaInvoiceDetails = () => {
         <div className="flex flex-col lg:flex-row justify-between items-center pb-4 border-b border-gray-300 gap-4">
           <div className="flex flex-col items-center lg:items-start gap-1">
             <h1 className="text-xl font-semibold text-slate-600 uppercase tracking-tight leading-none text-center lg:text-left">
-              ACCOUNT SECTION - PERFORMA INVOICE | Sales Management Section
+              ACCOUNT SECTION - PROFORMA Invoice | Sales Management Section
             </h1>
           </div>
           <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
