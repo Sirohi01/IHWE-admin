@@ -1005,9 +1005,9 @@ const InternationalBuyerRegistration = () => {
                         </section>
                     )}
 
-                    <div className="flex justify-end gap-3 border-t pt-6">
-                        <button type="button" onClick={() => window.location.reload()} className="rounded-[2px] border border-red-200 bg-red-50 px-5 py-3 text-sm font-bold uppercase tracking-[0.16em] text-red-700 hover:bg-red-100">Reset</button>
-                        <button type="submit" disabled={isSubmitting || !selectedPackage} className="inline-flex items-center gap-2 rounded-[2px] bg-[#23471d] px-8 py-3 text-sm font-black uppercase tracking-[0.16em] text-white hover:bg-[#1a3516] disabled:opacity-50">
+                    <div className="flex justify-end gap-3 border-t border-gray-300 py-4">
+                        <button type="button" onClick={() => window.location.reload()} className="rounded border border-red-200 bg-red-50 px-5 py-2 text-sm font-bold uppercase tracking-[0.16em] text-red-700 hover:bg-red-100">Reset</button>
+                        <button type="submit" disabled={isSubmitting || !selectedPackage} className="inline-flex items-center gap-2 rounded bg-[#23471d] px-8 py-2s text-sm font-black uppercase tracking-[0.16em] text-white hover:bg-[#1a3516] disabled:opacity-50">
                             {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                             {isSubmitting ? "Submitting..." : "Submit Registration"}
                         </button>
