@@ -115,8 +115,24 @@ const MarketingMaterialPage = () => {
 
   const fetchCompanyDetails = async () => {
     try {
-      const res = await api.get(`/api/companies/${id}`);
-      setCompany(res.data);
+      const searchParams = new URLSearchParams(window.location.search);
+      const sourceParam = searchParams.get('source');
+
+      if (sourceParam === 'exhibitor') {
+        const res = await api.get(`/api/exhibitor-registration/${id}`);
+        setCompany(res.data.data || res.data);
+      } else if (sourceParam === 'company') {
+        const res = await api.get(`/api/companies/${id}`);
+        setCompany(res.data.data || res.data);
+      } else {
+        try {
+          const res = await api.get(`/api/companies/${id}`);
+          if (res.data) setCompany(res.data.data || res.data);
+        } catch (err) {
+          const exRes = await api.get(`/api/exhibitor-registration/${id}`);
+          setCompany(exRes.data.data || exRes.data);
+        }
+      }
     } catch (err) {
       try {
         const res = await api.get(`/api/exhibitor-registration/${id}`);
