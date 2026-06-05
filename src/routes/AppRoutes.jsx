@@ -210,6 +210,7 @@ const AwardsGalleryManage = lazy(() => import("../pages/AwardsGalleryManage"));
 const AccountSection1 = lazy(() => import("../pages/ihwe_client_data_2026/AccountSection1"));
 const CreateEstimate1 = lazy(() => import("../pages/ihwe_client_data_2026/CreateEstimate1"));
 import EstimateDetails from "../pages/ihwe_client_data_2026/invoice/EstimateDetails"
+import BuyerRegistrationForm from '../pages/buyer/BuyerRegistrationForm';
 const EditEstimate = lazy(() => import("../pages/ihwe_client_data_2026/invoice/EditEstimate"));
 const PerformaInvoiceDetails = lazy(() => import("../pages/ihwe_client_data_2026/invoice/PerformaInvoiceDetails"));
 const CreateInvoice = lazy(() => import("../pages/ihwe_client_data_2026/invoice/CreateInvoice"));
@@ -316,7 +317,7 @@ export default function AppRoutes() {
               path="exhibitor-profile-manage"
               element={<ExhibitorProfileManage />}
             />
-            <Route path="performa-invoice" element={<PerformaInvoices />} />
+            <Route path="performa-invoice/:id" element={<PerformaInvoices />} />
             <Route path="create-debit-note" element={<CreateDebitNote />} />
             <Route path="page-create-invoice" element={<CreateInvoicePage />} />
             <Route path="e-promotion-manage" element={<EPromotionManage />} />
@@ -357,12 +358,13 @@ export default function AppRoutes() {
             <Route path="blog-subscribers" element={<NewsletterSubscribers />} />
             <Route path="contact-list" element={<ContactList />} />
             <Route path="book-a-stand" element={<BookAStand />} />
+            <Route path="book-a-stand/:id" element={<BookAStand />} />
             <Route
               path="e-promotion-registers"
               element={<EPromotionRegisters />}
             />
             <Route path="contact-enquiries" element={<ContactEnquiries />} />
-            {/* <Route path="buyer-registrations" element={<BuyerRegistrations />} /> */}
+            <Route path="buyer-registration-form" element={<BuyerRegistrationForm />} />
             <Route path="buyer-registration" element={<BuyerRegistration />} />
             <Route
               path="buyer-registration/:id"

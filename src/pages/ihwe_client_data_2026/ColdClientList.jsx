@@ -64,7 +64,7 @@ const ColdClientList = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, filterIndustry]);
 
-  const { totalLeads: hookTotal, statusStats } = useDashboardStats(FILTER_STATUS);
+  const { totalLeads: hookTotal, statusStats, holdReasonsData, lostReasonsData } = useDashboardStats(FILTER_STATUS);
 
   const getStatusCount = (statusMatch) => {
     if (!statusStats) return 0;
@@ -143,8 +143,8 @@ const ColdClientList = () => {
         <div>
           <div className="text-slate-800 text-[10px] font-bold">Total Hold Leads</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{holdCount}</div>
-            <div className="text-[9px] text-orange-500 font-medium">{hookTotal > 0 ? Math.round((holdCount / hookTotal) * 100) : 0}% of total</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{totalLeads || 0}</div>
+            <div className="text-[9px] text-orange-500 font-medium">{hookTotal > 0 ? Math.round((totalLeads / hookTotal) * 100) : 0}% of total</div>
           </div>
         </div>
       </div>
@@ -353,12 +353,13 @@ const ColdClientList = () => {
         <h3 className="text-[14px] font-semibold text-[#0F172A] mb-2">Hold Leads by Reason</h3>
         <div className="flex flex-col gap-2">
           {[
-            { label: "Budget Approval Pending", count: 4, pct: "29%", color: "bg-orange-500" },
-            { label: "Decision in Next Quarter", count: 3, pct: "21%", color: "bg-orange-400" },
-            { label: "Requirement on Hold", count: 3, pct: "21%", color: "bg-orange-400" },
-            { label: "Comparing Vendors", count: 2, pct: "14%", color: "bg-orange-300" },
-            { label: "Internal Discussion", count: 2, pct: "14%", color: "bg-orange-300" },
+            { label: "Budget Approval Pending", count: 0, pct: "29%", color: "bg-orange-500" },
+            { label: "Decision in Next Quarter", count: 0, pct: "21%", color: "bg-orange-400" },
+            { label: "Requirement on Hold", count: 0, pct: "21%", color: "bg-orange-400" },
+            { label: "Comparing Vendors", count: 0, pct: "14%", color: "bg-orange-300" },
+            { label: "Internal Discussion", count: 0, pct: "14%", color: "bg-orange-300" },
           ].map((s, i) => (
+            // {holdReasonsData && holdReasonsData.length > 0 ? holdReasonsData.map((s, i) => (
             <div key={i} className="flex items-center justify-between text-[11px]">
               <span className="text-slate-700 w-[145px] font-medium pr-2 shrink-0">{s.label}</span>
               <div className="flex-grow mx-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -370,6 +371,7 @@ const ColdClientList = () => {
               </div>
             </div>
           ))}
+          {/* )) : <div className="text-xs text-slate-400 text-center py-2">No reasons recorded</div>} */}
         </div>
       </div>
 
@@ -378,12 +380,13 @@ const ColdClientList = () => {
         <h3 className="text-[14px] font-semibold text-[#0F172A] mb-2">Lost Leads by Reason</h3>
         <div className="flex flex-col gap-2">
           {[
-            { label: "Chose Competitor", count: 5, pct: "39%", color: "bg-red-600" },
-            { label: "Not a Good Fit", count: 3, pct: "23%", color: "bg-red-500" },
-            { label: "Pricing Issues", count: 3, pct: "23%", color: "bg-red-500" },
-            { label: "No Response", count: 1, pct: "8%", color: "bg-red-400" },
-            { label: "Not Interested", count: 1, pct: "8%", color: "bg-red-400" },
+            { label: "Chose Competitor", count: 0, pct: "39%", color: "bg-red-600" },
+            { label: "Not a Good Fit", count: 0, pct: "23%", color: "bg-red-500" },
+            { label: "Pricing Issues", count: 0, pct: "23%", color: "bg-red-500" },
+            { label: "No Response", count: 0, pct: "8%", color: "bg-red-400" },
+            { label: "Not Interested", count: 0, pct: "8%", color: "bg-red-400" },
           ].map((s, i) => (
+            // {/* {lostReasonsData && lostReasonsData.length > 0 ? lostReasonsData.map((s, i) => ( */}
             <div key={i} className="flex items-center justify-between text-[11px]">
               <span className="text-slate-700 w-32 font-medium truncate pr-2">{s.label}</span>
               <div className="flex-grow mx-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -394,6 +397,7 @@ const ColdClientList = () => {
                 <span className="text-slate-400 text-[9px]">({s.pct})</span>
               </div>
             </div>
+            //  )) : <div className="text-xs text-slate-400 text-center py-2">No reasons recorded</div>}
           ))}
         </div>
       </div>

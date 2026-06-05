@@ -257,13 +257,13 @@ const INITIAL_FORM_STATE = {
 const inputClass = "w-full h-9 px-3 py-0 rounded-[2px] border border-slate-400 bg-white text-left text-[12px] font-medium text-slate-900 outline-none shadow-none transition-all ring-offset-background focus:border-[#23471d] focus:ring-[#23471d]/10 placeholder:text-slate-400 font-sans";
 const textareaClass = "w-full px-3 py-2 rounded-[2px] border border-slate-400 bg-white text-left text-[12px] font-medium text-slate-900 outline-none shadow-none transition-all ring-offset-background focus:border-[#23471d] focus:ring-[#23471d]/10 placeholder:text-slate-400 font-sans resize-y";
 const selectClass = "w-full h-9 px-3 py-0 rounded-[2px] border border-slate-400 bg-white text-left text-[12px] font-medium text-slate-900 outline-none shadow-none transition-all ring-offset-background focus:border-[#23471d] focus:ring-[#23471d]/10 placeholder:text-slate-400 font-sans appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364758b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-8";
-const labelClass = "text-[12px] font-semibold text-slate-900 mb-1 block text-left font-sans";
+const labelClass = "text-[12px] font-medium text-slate-800 mb-1 block text-left";
 const sectionTitleClass = "text-[13px] font-black text-[#23471d] pb-1 border-b border-emerald-500/20 flex items-center gap-1.5 mb-3 uppercase tracking-tight font-sans";
 
 const SectionTitle = ({ icon: Icon, title }) => (
     <h3 className={sectionTitleClass}>
         <Icon className="h-4 w-4 text-[#d26019]" />
-        {title}
+        <span className="text-[12px] font-semibold uppercase">{title}</span>
     </h3>
 );
 
@@ -551,14 +551,14 @@ const InternationalBuyerRegistration = () => {
     const heroImage = heroData?.backgroundImage ? (heroData.backgroundImage.startsWith("http") ? heroData.backgroundImage : `${SERVER_URL}${heroData.backgroundImage}`) : "";
 
     return (
-        <div className="mt-6 space-y-6 pb-10">
-            <PageHeader title="International Buyer Registration" description="Register a new international buyer with a premium workflow.">
-                <Link to="/international-buyer-list" className="rounded-[2px] border border-slate-300 bg-white px-5 py-3 text-sm font-bold uppercase tracking-[0.16em] text-slate-700 transition hover:border-[#23471d] hover:text-[#23471d]">View List</Link>
-            </PageHeader>
+        <div className="space-y-0 pb-6 p-4 bg-[#f8fafc] min-h-[calc(100vh-60px)]">
+            {/* <PageHeader title="International Buyer Registration" description="Register a new international buyer with a premium workflow.">
+                <Link to="/international-buyer-list" className="rounded-[2px] border border-slate-300 bg-white px-5 py-2 text-sm font-bold uppercase tracking-[0.16em] text-slate-700 transition hover:border-[#23471d] hover:text-[#23471d]">View List</Link>
+            </PageHeader> */}
 
-            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden border border-slate-200 bg-white shadow-sm">
                 <div className="relative">
-                    {heroImage ? <img src={heroImage} alt="Hero" className="h-[280px] w-full object-cover" /> : <div className="h-[280px] w-full bg-[radial-gradient(circle_at_top_left,_#f0fdf4,_#dcfce7_35%,_#ffffff_78%)]" />}
+                    {heroImage ? <img src={heroImage} alt="Hero" className="h-[180px] w-full object-cover" /> : <div className="h-[180px] w-full bg-[radial-gradient(circle_at_top_left,_#f0fdf4,_#dcfce7_35%,_#ffffff_78%)]" />}
                     <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/55 to-[#23471d]/35" />
                     <div className="absolute inset-0 flex items-end">
                         <div className="max-w-4xl p-8 text-white md:p-10">
@@ -581,20 +581,20 @@ const InternationalBuyerRegistration = () => {
                     </div>
                 </motion.div>
             ) : (
-                <form onSubmit={handleSubmit} className="space-y-8 rounded-lg border border-slate-200 bg-white p-6 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] md:p-8">
+                <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border border-slate-200 bg-white px-6">
                     <section>
                         <SectionTitle icon={UserRound} title="Section 1 – Personal & Contact Information" />
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
-                            <Field label="Full Name *" name="primaryContact.fullName" required>
+                            <Field label="Full Name" name="primaryContact.fullName" required>
                                 <input name="primaryContact.fullName" value={formData.primaryContact.fullName} onChange={handleInputChange} placeholder="Full Name" className={inputClass} />
                             </Field>
                             <Field label="Designation" name="primaryContact.designation">
                                 <input name="primaryContact.designation" value={formData.primaryContact.designation} onChange={handleInputChange} placeholder="Designation" className={inputClass} />
                             </Field>
-                            <Field label="Email Address *" name="primaryContact.emailId" required>
+                            <Field label="Email Address" name="primaryContact.emailId" required>
                                 <input name="primaryContact.emailId" type="email" value={formData.primaryContact.emailId} onChange={handleInputChange} placeholder="Email" className={inputClass} />
                             </Field>
-                            <Field label={<span>Mobile Number * <div className="inline-flex w-32 overflow-hidden align-middle ml-2 items-center h-4 relative"><motion.span initial={{ x: "100%" }} animate={{ x: "-100%" }} transition={{ repeat: Infinity, duration: 4, ease: "linear" }} className="text-red-500 text-[10px] uppercase font-semibold tracking-wide whitespace-nowrap absolute">Our team will contact you</motion.span></div></span>} name="primaryContact.mobileNumber" required>
+                            <Field label={<span>Mobile Number <div className="inline-flex w-32 overflow-hidden align-middle ml-2 items-center h-4 relative"><motion.span initial={{ x: "100%" }} animate={{ x: "-100%" }} transition={{ repeat: Infinity, duration: 4, ease: "linear" }} className="text-red-500 text-[10px] uppercase font-semibold tracking-wide whitespace-nowrap absolute">Our team will contact you</motion.span></div></span>} name="primaryContact.mobileNumber" required>
                                 <input name="primaryContact.mobileNumber" value={formData.primaryContact.mobileNumber} onChange={handleInputChange} placeholder="Mobile" className={inputClass} />
                             </Field>
                             <Field label="WhatsApp Number" name="primaryContact.whatsappNumber">
@@ -605,8 +605,8 @@ const InternationalBuyerRegistration = () => {
 
                     <section>
                         <SectionTitle icon={MapPin} title="Section 2 – Registered Office Details" />
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
-                            <Field label="Country *" name="country" required>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4">
+                            <Field label="Country" name="country" required>
                                 <select name="country" value={formData.country} onChange={(e) => handleSelectChange("country", e.target.value)} className={selectClass}>
                                     <option value="">Select Country</option>
                                     {countries.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
@@ -618,7 +618,7 @@ const InternationalBuyerRegistration = () => {
                                     {states.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
                                 </select>
                             </Field>
-                            <Field label="City *" name="city" required>
+                            <Field label="City" name="city" required>
                                 <select name="city" value={formData.city} onChange={(e) => handleSelectChange("city", e.target.value)} className={selectClass} disabled={!formData.stateProvince || loadingLocations.cities}>
                                     <option value="">{loadingLocations.cities ? "Loading..." : "Select City"}</option>
                                     {cities.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
@@ -627,7 +627,7 @@ const InternationalBuyerRegistration = () => {
                             <Field label="Postal Code" name="postalCode">
                                 <input name="postalCode" value={formData.postalCode} onChange={handleInputChange} placeholder="Postal Code" className={inputClass} />
                             </Field>
-                            <Field label="Full Address *" name="address" required>
+                            <Field label="Full Address" name="address" required>
                                 <textarea name="address" value={formData.address} onChange={handleInputChange} placeholder="Full Registered Address" className={textareaClass} rows={1} />
                             </Field>
                             <Field label="Website" name="website">
@@ -669,7 +669,7 @@ const InternationalBuyerRegistration = () => {
                     <section>
                         <SectionTitle icon={Building2} title="Section 3 – Company Information" />
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-x-4 gap-y-3">
-                            <Field label="Brand / Company Name *" name="brandName" required>
+                            <Field label="Brand / Company Name" name="brandName" required>
                                 <input name="brandName" value={formData.brandName} onChange={handleInputChange} placeholder="Company Name" className={inputClass} />
                             </Field>
                             <Field label="Legal Entity Type" name="legalEntityType">
@@ -681,7 +681,7 @@ const InternationalBuyerRegistration = () => {
                             <Field label="Year of Establishment" name="yearOfEstablishment">
                                 <input name="yearOfEstablishment" value={formData.yearOfEstablishment} onChange={handleInputChange} placeholder="e.g. 2010" className={inputClass} />
                             </Field>
-                            <Field label="Country of Reg. *" name="countryOfRegistration" required>
+                            <Field label="Country of Reg." name="countryOfRegistration" required>
                                 <input name="countryOfRegistration" value={formData.countryOfRegistration} onChange={handleInputChange} placeholder="Country of Registration" className={inputClass} />
                             </Field>
                             <Field label="Company Reg. Number" name="registrationNumber">

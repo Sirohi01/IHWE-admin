@@ -28,7 +28,7 @@ const newItem = () => ({
 });
 
 const GST_OPTIONS = ['0% GST', '5% CGST+SGST', '12% CGST+SGST', '18% CGST+SGST', '28% CGST+SGST', '18% IGST', '12% IGST', '5% IGST'];
-const ESTIMATE_TYPES = ['Proforma Invoice', 'Quotation', 'Tax Invoice'];
+const ESTIMATE_TYPES = ['Intrastate', 'Interstate Sale', 'Foreign Sale'];
 const UNITS = ['Nos', 'Sqm', 'Sqft', 'Mtrs', 'Kgs', 'Ltrs', 'Pcs'];
 
 const LOCATION_DATA = {
@@ -168,7 +168,7 @@ export const PerformaInvoices = () => {
 
     // ── render ────────────────────────────────────────────────────────────────────
     return (
-        <div className="min-h-screen bg-gray-50 mt-4">
+        <div className="min-h-screen bg-gray-50">
             <style>
                 {`
                 /* Hide number input spinners on this page */

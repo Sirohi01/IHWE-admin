@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { Eye } from 'lucide-react';
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import { createActivityLogThunk } from '../../features/activityLog/activityLogSlice';
 import api from "../../lib/api";
+import { handleStatusUpdate } from '../../utils/statusUpdateHelper';
+
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import {
   Search, Download, Plus, Upload, MessageCircle, Phone, Mail, MoreVertical,
@@ -41,22 +45,41 @@ const ConfirmClientList = () => {
   const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, '') === 'superadmin';
 
   const [registrations, setRegistrations] = useState([]);
+  const [masterCompanies, setMasterCompanies] = useState([]);
+  const [allReviews, setAllReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const response = await api.get('/api/exhibitor-registration');
-        if (response.data.success) {
-          setRegistrations(Array.isArray(response.data.data) ? response.data.data : []);
-        }
-      } catch (error) {
-        console.error("Error fetching registrations:", error);
-      } finally {
-        setIsLoading(false);
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const [regRes, compRes, reviewRes] = await Promise.all([
+        api.get('/api/exhibitor-registration'),
+        api.get('/api/companies?dashboard=true').catch(() => ({ data: [] })),
+        api.get('/api/crm-exhibator-reviews').catch(() => ({ data: [] }))
+      ]);
+
+      if (regRes.data?.success) {
+        setRegistrations(Array.isArray(regRes.data.data) ? regRes.data.data : []);
       }
-    };
+
+      if (compRes.data && Array.isArray(compRes.data)) {
+        setMasterCompanies(compRes.data);
+      } else if (compRes.data?.data && Array.isArray(compRes.data.data)) {
+        setMasterCompanies(compRes.data.data);
+      }
+
+      if (reviewRes.data && Array.isArray(reviewRes.data)) {
+        setAllReviews(reviewRes.data);
+      } else if (reviewRes.data?.data && Array.isArray(reviewRes.data.data)) {
+        setAllReviews(reviewRes.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -64,7 +87,7 @@ const ConfirmClientList = () => {
   const filteredRegs = registrations.filter(r => {
     if (filterStage && filterStage !== 'Converted' && (r.status || 'Converted') !== filterStage) return false;
     if (filterSource && (r.referredBy || 'Direct') !== filterSource) return false;
-    if (filterIndustry && r.natureOfBusiness !== filterIndustry) return false;
+    if (filterIndustry && (r.natureOfBusiness || r.industrySector || r.typeOfBusiness) !== filterIndustry) return false;
     if (searchTerm) {
       const searchStr = `${r.exhibitorName} ${r.contact1?.email} ${r.contact1?.mobile}`.toLowerCase();
       if (!searchStr.includes(searchTerm.toLowerCase())) return false;
@@ -88,7 +111,7 @@ const ConfirmClientList = () => {
   };
 
   const uniqueSources = [...new Set(registrations.map(r => r.referredBy).filter(Boolean))];
-  const uniqueIndustries = [...new Set(registrations.map(r => r.natureOfBusiness).filter(Boolean))];
+  const uniqueIndustries = [...new Set(registrations.map(r => r.natureOfBusiness || r.industrySector || r.typeOfBusiness).filter(Boolean))];
   const uniqueStages = [...new Set(registrations.map(r => r.status).filter(Boolean))];
 
   const getSourceStyle = (source) => {
@@ -105,11 +128,11 @@ const ConfirmClientList = () => {
 
   const getIndustryStyle = (ind) => {
     const s = (ind || "").toLowerCase();
-    if (s.includes('health')) return "text-emerald-600 bg-emerald-50";
-    if (s.includes('fmcg')) return "text-blue-600 bg-blue-50";
-    if (s.includes('retail')) return "text-orange-600 bg-orange-50";
-    if (s.includes('biotech')) return "text-purple-600 bg-purple-50";
-    if (s.includes('manufacturing')) return "text-sky-600 bg-sky-50";
+    if (s.includes('health') || s.includes('ayurveda') || s.includes('pharma')) return "text-emerald-600 bg-emerald-50";
+    if (s.includes('fmcg') || s.includes('cosmetics')) return "text-blue-600 bg-blue-50";
+    if (s.includes('retail') || s.includes('franchise')) return "text-orange-600 bg-orange-50";
+    if (s.includes('biotech') || s.includes('organic')) return "text-purple-600 bg-purple-50";
+    if (s.includes('manufacturing') || s.includes('machinery') || s.includes('packaging')) return "text-sky-600 bg-sky-50";
     return "text-slate-600 bg-slate-50";
   };
 
@@ -141,10 +164,73 @@ const ConfirmClientList = () => {
   const totalConverted = filteredRegs.length;
   const totalRevenue = filteredRegs.reduce((acc, curr) => acc + (curr.financeBreakdown?.netPayable || curr.participation?.total || 0), 0);
 
-  // Calculate repeat clients by finding duplicate emails
-  const emails = filteredRegs.map(r => r.contact1?.email).filter(Boolean);
-  const uniqueEmails = new Set(emails);
-  const repeatClients = emails.length - uniqueEmails.size;
+  // Calculate existing clients by checking company name, email, or mobile against masterCompanies
+  const existingClientsCount = filteredRegs.filter(reg => {
+    const rName = (reg.companyName || reg.exhibitorName || "").toLowerCase().trim();
+    const rEmail1 = (reg.contact1?.email || "").toLowerCase().trim();
+    const rEmail2 = (reg.contact2?.email || "").toLowerCase().trim();
+    const rMobile1 = (reg.contact1?.mobile || "").trim();
+    const rMobile2 = (reg.contact2?.mobile || "").trim();
+
+    return masterCompanies.some(comp => {
+      // Don't match against itself if it somehow ended up in masterCompanies with same ID
+      if (comp._id === reg._id) return false;
+
+      const cName = (comp.companyName || comp.exhibitorName || "").toLowerCase().trim();
+      const cEmail = (comp.email || "").toLowerCase().trim();
+      const cMobile = (comp.mobile || "").trim();
+
+      if (rName && cName && rName === cName) return true;
+      if (cEmail && (rEmail1 === cEmail || rEmail2 === cEmail)) return true;
+      if (cMobile && (rMobile1 === cMobile || rMobile2 === cMobile)) return true;
+
+      // Also check contacts array if it exists
+      if (comp.contacts && Array.isArray(comp.contacts)) {
+        return comp.contacts.some(contact => {
+          const cntEmail = (contact.email || "").toLowerCase().trim();
+          const cntMobile = (contact.mobile || "").trim();
+          if (cntEmail && (rEmail1 === cntEmail || rEmail2 === cntEmail)) return true;
+          if (cntMobile && (rMobile1 === cntMobile || rMobile2 === cntMobile)) return true;
+          return false;
+        });
+      }
+
+      return false;
+    });
+  }).length;
+
+  // Calculate Avg Conversion Time (New Lead to Est./PI Sent)
+  let totalConversionDays = 0;
+  let companiesWithConversion = 0;
+
+  filteredRegs.forEach(reg => {
+    // Find all reviews for this company
+    const companyReviews = allReviews.filter(r => r.cmpny_id === reg._id);
+    if (companyReviews.length > 0) {
+      // Sort reviews by date ascending
+      companyReviews.sort((a, b) => new Date(a.createdAt || a.re_added) - new Date(b.createdAt || b.re_added));
+
+      // Find New Lead date (or earliest review if not explicitly 'new lead')
+      const newLeadReview = companyReviews.find(r => (r.status_short || "").toLowerCase().includes("follow-up call")) || companyReviews[0];
+      const newLeadDate = new Date(newLeadReview.createdAt || newLeadReview.re_added);
+
+      // Find Est./PI Sent date
+      const piSentReview = companyReviews.find(r => {
+        const date = new Date(r.createdAt || r.re_added);
+        return (r.status_short || "").toLowerCase().includes("est./pi sent") && date >= newLeadDate;
+      });
+
+      if (piSentReview) {
+        const piSentDate = new Date(piSentReview.createdAt || piSentReview.re_added);
+        const diffTime = Math.abs(piSentDate - newLeadDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        totalConversionDays += diffDays;
+        companiesWithConversion++;
+      }
+    }
+  });
+
+  const avgConversionTime = companiesWithConversion > 0 ? Math.round(totalConversionDays / companiesWithConversion) : 0;
 
   // Stat Cards
   const statCards = (
@@ -156,9 +242,9 @@ const ConfirmClientList = () => {
         <div>
           <div className="text-slate-800 text-[10px] font-bold">Total Converted</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{totalConverted}</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{totalConverted || 0}</div>
           </div>
-          <div className="text-[9px] text-emerald-600 font-medium">All Time</div>
+          <div className="text-[9px] text-emerald-600 font-medium">Till Date</div>
         </div>
       </div>
 
@@ -169,7 +255,7 @@ const ConfirmClientList = () => {
         <div>
           <div className="text-slate-800 text-[10px] font-bold">Total Revenue</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">₹ {totalRevenue.toLocaleString('en-IN')}</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">₹ {totalRevenue ? totalRevenue.toLocaleString('en-IN') : 0}</div>
           </div>
           <div className="text-[9px] text-emerald-600 font-medium">All Time</div>
         </div>
@@ -182,9 +268,9 @@ const ConfirmClientList = () => {
         <div>
           <div className="text-slate-800 text-[10px] font-bold">Avg. Conversion Time</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">N/A</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{avgConversionTime || 0} Days</div>
           </div>
-          <div className="text-[9px] text-emerald-600 font-medium">Data unavailable</div>
+          <div className="text-[9px] text-emerald-600 font-medium">Average time</div>
         </div>
       </div>
 
@@ -193,11 +279,11 @@ const ConfirmClientList = () => {
           <Star size={20} className="fill-orange-500" />
         </div>
         <div>
-          <div className="text-slate-800 text-[10px] font-bold">Repeat Clients</div>
+          <div className="text-slate-800 text-[10px] font-bold">Existing Clients</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{repeatClients}</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{existingClientsCount || 0}</div>
           </div>
-          <div className="text-[9px] text-orange-500 font-medium">{totalConverted ? Math.round((repeatClients / totalConverted) * 100) : 0}% of total clients</div>
+          <div className="text-[9px] text-orange-500 font-medium">{totalConverted ? Math.round((existingClientsCount / totalConverted) * 100) : 0}% of total clients</div>
         </div>
       </div>
     </>
@@ -313,11 +399,11 @@ const ConfirmClientList = () => {
               <div className="font-semibold text-slate-800 text-[11px] cursor-pointer hover:text-emerald-600">
                 <Link to={`/client-overview/${row._id}?source=exhibitor`}>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
               </div>
-              <div className="text-[9px] text-slate-500">{toTitleCase(row.natureOfBusiness) || "-"}</div>
+              <div className="text-[9px] text-slate-500">{toTitleCase(row.natureOfBusiness || row.industrySector || row.typeOfBusiness) || "-"}</div>
             </td>
             <td className="px-2 py-2">
-              <span className={`px-1.5 py-0.5 rounded font-semibold text-[9px] ${getIndustryStyle(row.natureOfBusiness)}`}>
-                {toTitleCase(row.natureOfBusiness) || "-"}
+              <span className={`px-1.5 py-0.5 rounded font-semibold text-[9px] ${getIndustryStyle(row.natureOfBusiness || row.industrySector || row.typeOfBusiness)}`}>
+                {toTitleCase(row.natureOfBusiness || row.industrySector || row.typeOfBusiness) || "-"}
               </span>
             </td>
             <td className="px-2 py-2 text-center">
@@ -342,9 +428,41 @@ const ConfirmClientList = () => {
               <span className="font-semibold text-slate-800 text-[10px]">{row.participation?.currency === 'USD' ? '$' : '₹'} {row.participation?.total?.toLocaleString() || "-"}</span>
             </td>
             <td className="px-2 py-2 text-center">
-              <button className="p-1 hover:bg-slate-100 rounded text-slate-400 transition-colors">
-                <MoreVertical size={14} />
-              </button>
+              <div className="flex items-center gap-2 flex-wrap justify-center">
+                {/* <button
+                    onClick={() => navigate(`/exhibitor-booking/${row._id}`)}
+                    className="p-2 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-[2px] transition-all border border-gray-200"
+                    title="View Details"
+                >
+                    <Eye size={16} />
+                </button> */}
+                {row.status === 'advance-paid' ? (
+                  <button
+                    onClick={() => handleStatusUpdate(row._id, 'advance-paid', row, api, dispatch, createActivityLogThunk, fetchData)}
+                    title="Record Next Installment"
+                    className="px-2 py-1 bg-[#337ab7] text-white text-[9px] font-black uppercase rounded-[2px] border border-[#286090] hover:bg-[#286090] transition-all whitespace-nowrap"
+                  >
+                    + Installment
+                  </button>
+                ) : (
+                  <select
+                    onChange={(e) => handleStatusUpdate(row._id, e.target.value, row, api, dispatch, createActivityLogThunk, fetchData)}
+                    className="text-[10px] font-bold border-2 border-gray-200 rounded-[2px] px-2 py-1 outline-none bg-white focus:border-[#337ab7]"
+                    value={row.status || 'pending'}
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    {(row.paymentPlanType === 'full' || !row.paymentPlanType) ? (
+                      <option value="paid">Paid (Full)</option>
+                    ) : (
+                      <option value="advance-paid">Installment Paid</option>
+                    )}
+                    <option value="confirmed">Confirmed</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="payment-failed">Payment Failed</option>
+                  </select>
+                )}
+              </div>
             </td>
           </tr>
         );

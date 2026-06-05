@@ -115,10 +115,10 @@ const WarmClientList = () => {
   const overdueCount = overviewData?.[3]?.value || 0;
   const stats = [
     { title: "Total Follow-Ups", value: pendingFollowUpsCount.toString(), subtitle: "Pending", icon: CalendarDays, bg: "bg-[#F3F7FF]", iconBg: "bg-[#E7F0FF]", iconColor: "text-[#2563EB]" },
-    { title: "Due Today", value: dueTodayCount.toString().padStart(2, '0'), subtitle: "Follow-ups", icon: CalendarDays, bg: "bg-[#FFF8EE]", iconBg: "bg-[#FFE8C7]", iconColor: "text-[#F97316]" },
-    { title: "Overdue", value: overdueCount.toString().padStart(2, '0'), subtitle: "Follow-ups", icon: Clock3, bg: "bg-[#FFF2F4]", iconBg: "bg-[#FFDDE3]", iconColor: "text-[#EF4444]" },
-    { title: "Due This Week", value: thisWeekLeads.toString().padStart(2, '0'), subtitle: "Follow-ups", icon: CalendarDays, bg: "bg-[#F1FBF5]", iconBg: "bg-[#DDF7E6]", iconColor: "text-[#16A34A]" },
-    { title: "Due This Month", value: thisMonthLeads.toString().padStart(2, '0'), subtitle: "Follow-ups", icon: CalendarDays, bg: "bg-[#F8F3FF]", iconBg: "bg-[#EBDDFF]", iconColor: "text-[#7C3AED]" },
+    { title: "Due Today", value: dueTodayCount.toString().padStart(2), subtitle: "Follow-ups", icon: CalendarDays, bg: "bg-[#FFF8EE]", iconBg: "bg-[#FFE8C7]", iconColor: "text-[#F97316]" },
+    { title: "Overdue", value: overdueCount.toString().padStart(2), subtitle: "Follow-ups", icon: Clock3, bg: "bg-[#FFF2F4]", iconBg: "bg-[#FFDDE3]", iconColor: "text-[#EF4444]" },
+    { title: "Due This Week", value: thisWeekLeads.toString().padStart(2), subtitle: "Follow-ups", icon: CalendarDays, bg: "bg-[#F1FBF5]", iconBg: "bg-[#DDF7E6]", iconColor: "text-[#16A34A]" },
+    { title: "Due This Month", value: thisMonthLeads.toString().padStart(2), subtitle: "Follow-ups", icon: CalendarDays, bg: "bg-[#F8F3FF]", iconBg: "bg-[#EBDDFF]", iconColor: "text-[#7C3AED]" },
   ];
 
   const statCards = (

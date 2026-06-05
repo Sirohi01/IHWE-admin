@@ -7,7 +7,7 @@ export default function SalesLeaderboard({ leaderboard, currentUser }) {
       </div>
 
       <div className="space-y-2 flex-1 overflow-y-auto pr-1" style={{ maxHeight: '125px', scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}>
-        {leaderboard.map((item, i) => {
+        {leaderboard.slice(0, 5).map((item, i) => {
           const isActiveUser = item.username.toLowerCase() === (currentUser?.username?.toLowerCase() || "");
           return (
             <div
@@ -33,7 +33,7 @@ export default function SalesLeaderboard({ leaderboard, currentUser }) {
                 </div>
                 <span className="text-[11px] font-bold truncate max-w-[90px]">{item.name}</span>
               </div>
-              <span className="text-[11px] font-black">₹ {item.revenue.toFixed(2)} L</span>
+              <span className="text-[11px] font-black">₹ {(item.revenue / 100000).toFixed(2)} L</span>
             </div>
           );
         })}

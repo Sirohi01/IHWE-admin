@@ -98,10 +98,36 @@ const ClientOverview1 = () => {
       if (isExhibitor) {
         try {
           const res = await api.get(`/api/exhibitor-registration/${id}`);
-          const data = res.data.data || res.data;
+          let data = res.data.data || res.data;
+
+          if (data.clientId) {
+            try {
+              const crmRes = await api.get(`/api/companies/${data.clientId}`);
+              const crmData = crmRes.data;
+              data = {
+                ...crmData,
+                ...data,
+                companyLogoUrl: data.companyLogoUrl || crmData.companyLogo,
+                _id: data._id
+              };
+
+              if (data.contact1 && crmData.contacts && crmData.contacts[0]) {
+                data.contact1.photo = data.contact1.photo || crmData.contacts[0].photo;
+              }
+              if (data.contact2 && crmData.contacts && crmData.contacts[1]) {
+                data.contact2.photo = data.contact2.photo || crmData.contacts[1].photo;
+              }
+            } catch (crmErr) {
+              console.log("Failed to fetch CRM company for exhibitor", crmErr);
+            }
+          }
+          data.companyDescription = data.companyDescription || data.aboutCompany;
+          data.category = data.category || data.industrySector || data.typeOfBusiness;
+          data.exhibitorCategory = data.exhibitorCategory || data.participation?.stallCategory;
+
           const normalizedContacts = [];
-          if (data.contact1) normalizedContacts.push(data.contact1);
-          if (data.contact2) normalizedContacts.push(data.contact2);
+          if (data.contact1 && data.contact1.firstName) normalizedContacts.push(data.contact1);
+          if (data.contact2 && data.contact2.firstName) normalizedContacts.push(data.contact2);
 
           setCompany({
             ...data,
@@ -109,10 +135,10 @@ const ClientOverview1 = () => {
           });
           return;
         } catch (err) {
-            console.log("Error fetching exhibitor, falling back to companies...", err);
+          console.log("Error fetching exhibitor, falling back to companies...", err);
         }
-      } 
-      
+      }
+
       // Default to companies, or fallback from exhibitor
       try {
         const res = await api.get(`/api/companies/${id}`);
@@ -120,19 +146,19 @@ const ClientOverview1 = () => {
       } catch (err) {
         // If 404 from companies, try exhibitor-registration
         if (err.response?.status === 404 || err.response?.status === 400) {
-            console.log("Not found in companies, trying exhibitor-registration...");
-            const res = await api.get(`/api/exhibitor-registration/${id}`);
-            const data = res.data.data || res.data;
-            const normalizedContacts = [];
-            if (data.contact1) normalizedContacts.push(data.contact1);
-            if (data.contact2) normalizedContacts.push(data.contact2);
+          console.log("Not found in companies, trying exhibitor-registration...");
+          const res = await api.get(`/api/exhibitor-registration/${id}`);
+          const data = res.data.data || res.data;
+          const normalizedContacts = [];
+          if (data.contact1 && data.contact1.firstName) normalizedContacts.push(data.contact1);
+          if (data.contact2 && data.contact2.firstName) normalizedContacts.push(data.contact2);
 
-            setCompany({
-              ...data,
-              contacts: normalizedContacts
-            });
+          setCompany({
+            ...data,
+            contacts: normalizedContacts
+          });
         } else {
-            throw err;
+          throw err;
         }
       }
     } catch (err) {
@@ -141,8 +167,9 @@ const ClientOverview1 = () => {
   };
 
   const filteredReviews = useMemo(() => {
+    const targetId = company?.clientId || company?._id;
     return Array.isArray(reviews)
-      ? reviews.filter((rev) => rev?.cmpny_id === company?._id)
+      ? reviews.filter((rev) => rev?.cmpny_id === targetId)
       : [];
   }, [reviews, company]);
 
@@ -162,7 +189,6 @@ const ClientOverview1 = () => {
     if (id) {
       fetchCompanyDetails();
     }
-    dispatch(fetchReviewById(id));
     dispatch(fetchStatusOptions());
     dispatch(fetchNextActions());
     dispatch(fetchAdmins());
@@ -172,9 +198,12 @@ const ClientOverview1 = () => {
 
   useEffect(() => {
     if (company?._id) {
+      const targetId = company.clientId || company._id;
+      dispatch(fetchReviewById(targetId));
+
       setReviewData((prev) => ({
         ...prev,
-        cmpny_id: company._id,
+        cmpny_id: targetId,
         evnt_id: isExhibitor ? (company.eventId?._id || "") : (company.eventName || ""),
         event_name: isExhibitor ? (company.eventId?.name || "") : (company.eventName || ""),
         assigned_to: isExhibitor ? (company.spokenWith || "") : (company.forwardTo || ""),
@@ -222,7 +251,7 @@ const ClientOverview1 = () => {
       let finalRemark = reviewData.re_msg || "";
 
       const changesList = [];
-      const currentStatus = isExhibitor ? company.status : company.companyStatus;
+      const currentStatus = company.companyStatus;
       if (reviewData.status_short && reviewData.status_short !== currentStatus) {
         changesList.push(`Status changed from '${currentStatus || "-"}' to '${reviewData.status_short}'`);
       }
@@ -242,22 +271,18 @@ const ClientOverview1 = () => {
         re_msg: finalReMsg,
       })).unwrap();
 
-      if (isExhibitor) {
-        const companyUpdates = {
-          status: reviewData.status_short || company.status,
-        };
-        if (assigneeChanged) {
-          companyUpdates.spokenWith = newAssignee;
-        }
-        await api.put(`/api/exhibitor-registration/${company._id}`, companyUpdates);
-      } else {
-        const companyUpdates = {
-          companyStatus: reviewData.status_short || company.companyStatus,
-        };
-        if (assigneeChanged) {
-          companyUpdates.forwardTo = newAssignee;
-        }
-        await dispatch(updateCompany({ id: company._id, data: companyUpdates })).unwrap();
+      const companyUpdates = {
+        companyStatus: reviewData.status_short || company.companyStatus,
+      };
+      if (assigneeChanged) {
+        companyUpdates.forwardTo = newAssignee;
+      }
+
+      const targetCrmId = company.clientId || company._id;
+      await dispatch(updateCompany({ id: targetCrmId, data: companyUpdates })).unwrap();
+
+      if (isExhibitor && assigneeChanged) {
+        await api.put(`/api/exhibitor-registration/${company._id}`, { spokenWith: newAssignee });
       }
 
       Swal.fire({
@@ -271,7 +296,7 @@ const ClientOverview1 = () => {
       fetchCompanyDetails();
 
       setReviewData({
-        cmpny_id: company._id,
+        cmpny_id: company?.clientId || company?._id,
         evnt_id: isExhibitor ? (company.eventId?._id || "") : (company.eventName || ""),
         event_name: isExhibitor ? (company.eventId?.name || "") : (company.eventName || ""),
         status_short: "",
@@ -346,40 +371,63 @@ const ClientOverview1 = () => {
     e.preventDefault();
     setIsSavingProfile(true);
     try {
-      if (isExhibitor) {
-        const dataToUpdate = {
-          exhibitorName: editProfileData.companyName,
-          website: editProfileData.website,
-          companyDescription: editProfileData.companyDescription,
-        };
-        if (company.contacts?.length > 0) {
-          dataToUpdate.contact1 = { ...company.contacts[0], mobile: editProfileData.mobile, email: editProfileData.email };
-        }
+      const targetId = company?.clientId || company?._id;
+      let photoUrl = company?.companyLogoUrl || company?.companyLogo || "";
 
-        if (logoFile) {
-          Swal.fire('Notice', 'Logo upload is not yet supported for exhibitor registrations from this page.', 'info');
-        }
-
-        await api.put(`/api/exhibitor-registration/${company._id}`, dataToUpdate);
-      } else {
-        const dataToUpdate = { ...editProfileData };
-        if (company.contacts?.length > 0) {
-          dataToUpdate.contacts = [...company.contacts];
-          dataToUpdate.contacts[0] = { ...dataToUpdate.contacts[0], mobile: editProfileData.mobile };
-        }
-
-        if (logoFile) {
-          const formData = new FormData();
-          formData.append("companyLogo", logoFile);
-          const logoRes = await api.post(`/api/companies/${company._id}/logo`, formData, {
+      // 1. Upload logo if any (always upload to CRM company)
+      if (logoFile) {
+        const formData = new FormData();
+        formData.append("companyLogo", logoFile);
+        try {
+          const logoRes = await api.post(`/api/companies/${targetId}/logo`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
+          photoUrl = logoRes.data.data.companyLogo;
+        } catch (logoErr) {
+          console.log("Error uploading logo", logoErr);
         }
+      }
 
-        await dispatch(updateCompany({
-          id: company._id,
-          data: dataToUpdate
-        })).unwrap();
+      // 2. Prepare CRM company payload
+      const crmDataToUpdate = { ...editProfileData, companyLogo: photoUrl };
+      if (company.contacts?.length > 0) {
+        const c = company.contacts[0];
+        crmDataToUpdate.contacts = [...company.contacts];
+        crmDataToUpdate.contacts[0] = {
+          ...c,
+          surname: isExhibitor ? (c.lastName || c.surname) : c.surname,
+          alternate: isExhibitor ? (c.alternateNo || c.alternate) : c.alternate,
+          mobile: editProfileData.mobile,
+          email: editProfileData.email
+        };
+      }
+
+      // 3. Update CRM company
+      await dispatch(updateCompany({
+        id: targetId,
+        data: crmDataToUpdate
+      })).unwrap();
+
+      // 4. Update ExhibitorRegistration if applicable
+      if (isExhibitor) {
+        const exhibitorDataToUpdate = {
+          exhibitorName: editProfileData.companyName,
+          website: editProfileData.website,
+          aboutCompany: editProfileData.companyDescription,
+          companyLogoUrl: photoUrl
+        };
+        if (company.contacts?.length > 0) {
+          const c = company.contacts[0];
+          exhibitorDataToUpdate.contact1 = {
+            ...c,
+            lastName: c.lastName || c.surname,
+            alternateNo: c.alternateNo || c.alternate,
+            mobile: editProfileData.mobile,
+            email: editProfileData.email,
+            photo: c.photo
+          };
+        }
+        await api.put(`/api/exhibitor-registration/${company._id}`, exhibitorDataToUpdate);
       }
 
       Swal.fire({ icon: "success", title: "Profile Updated", timer: 1500, showConfirmButton: false });
@@ -388,26 +436,24 @@ const ClientOverview1 = () => {
 
       // Determine what changed for the log
       const changes = [];
-      const currentName = isExhibitor ? company.exhibitorName : company.companyName;
+      const currentName = isExhibitor ? (company.exhibitorName || company.companyName) : company.companyName;
       if (currentName !== editProfileData.companyName) changes.push(`Name changed from '${currentName}' to '${editProfileData.companyName}'`);
-
-      const currentEmail = isExhibitor ? (company.contacts?.[0]?.email || "") : (company.email || "");
-      if (currentEmail !== editProfileData.email) changes.push(`Email changed from '${currentEmail}' to '${editProfileData.email}'`);
-      const oldMobile = company.contacts?.[0]?.mobile || "";
-      if (oldMobile !== editProfileData.mobile) changes.push(`Mobile changed from '${oldMobile}' to '${editProfileData.mobile}'`);
-      if (company.website !== editProfileData.website) changes.push(`Website changed from '${company.website || "-"}' to '${editProfileData.website || "-"}'`);
-      if (company.companyDescription !== editProfileData.companyDescription) changes.push(`Description changed from '${company.companyDescription || "-"}' to '${editProfileData.companyDescription || "-"}'`);
+      if (company.contacts?.[0]?.mobile !== editProfileData.mobile) changes.push(`Mobile updated`);
+      if (company.contacts?.[0]?.email !== editProfileData.email) changes.push(`Email updated`);
       if (logoFile) changes.push(`Company Logo updated`);
 
-      const changesText = changes.length > 0 ? changes.join('\n• ') : "No details modified";
-      const logMessage = `[Profile Update] Changes by ${currentUserName}\n• ${changesText}`;
+      if (changes.length > 0) {
+        const currentUserName = JSON.parse(localStorage.getItem('user'))?.name || 'User';
+        const changesText = changes.join('\n• ');
+        const logMessage = `[Profile Update] Changes by ${currentUserName}\n• ${changesText}`;
 
-      // Log to communication panel
-      await dispatch(createReview({ cmpny_id: company._id, type: "log", re_msg: logMessage })).unwrap();
-      dispatch(fetchReviewById(id));
+        // Log to communication panel
+        await dispatch(createReview({ cmpny_id: targetId, type: "log", re_msg: logMessage })).unwrap();
+        dispatch(fetchReviewById(id));
+      }
     } catch (err) {
       console.log(err);
-      Swal.fire({ icon: "error", title: "Update Failed", text: err?.message || "Failed to update profile" });
+      Swal.fire({ icon: "error", title: "Update Failed", text: err?.message || "Could not save profile" });
     } finally {
       setIsSavingProfile(false);
     }
@@ -419,9 +465,9 @@ const ClientOverview1 = () => {
     try {
       if (isExhibitor) {
         await api.put(`/api/exhibitor-registration/${company._id}`, msmeData);
-      } else {
-        await dispatch(updateCompany({ id: company._id, data: msmeData })).unwrap();
       }
+      const targetId = company?.clientId || company?._id;
+      await dispatch(updateCompany({ id: targetId, data: msmeData })).unwrap();
 
       const oldCategory = company.exhibitorCategory || "None";
       const newCategory = msmeData.exhibitorCategory || "None";
@@ -429,7 +475,7 @@ const ClientOverview1 = () => {
 
       // Log to communication panel
       await dispatch(createReview({
-        cmpny_id: company._id,
+        cmpny_id: targetId,
         type: "log",
         re_msg: logMessage,
       })).unwrap();
@@ -465,94 +511,62 @@ const ClientOverview1 = () => {
     e.preventDefault();
     setIsSavingContact(true);
     try {
+      const targetId = company?.clientId || company?._id;
       let photoUrl = contactPhotoPreview && !contactPhotoPreview.startsWith("blob:") ? contactPhotoPreview : (company.contacts?.[editingContactIdx]?.photo || "");
 
       if (contactPhotoFile) {
-        if (isExhibitor) {
-          Swal.fire('Notice', 'Contact photo upload is not yet supported for exhibitor registrations from this page.', 'info');
-        } else {
-          const formData = new FormData();
-          formData.append("contactPhoto", contactPhotoFile);
-          const res = await api.post(`/api/companies/${company._id}/contact-photo`, formData, {
+        const formData = new FormData();
+        formData.append("contactPhoto", contactPhotoFile);
+        try {
+          const res = await api.post(`/api/companies/${targetId}/contact-photo`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           if (res.data?.photoUrl) photoUrl = res.data.photoUrl;
+        } catch (err) {
+          console.log(err);
         }
       }
 
       const updatedContacts = [...(company.contacts || [])];
-
-      let contactData;
-      if (isExhibitor) {
-        contactData = {
-          title: contactForm.title,
-          firstName: contactForm.firstName,
-          lastName: contactForm.surname,
-          email: contactForm.email,
-          designation: contactForm.designation,
-          mobile: contactForm.mobile,
-          alternateNo: contactForm.alternate,
-          photo: photoUrl
-        };
-      } else {
-        contactData = { ...contactForm, photo: photoUrl };
-      }
+      let logMessage = "";
+      const currentUserName = JSON.parse(localStorage.getItem('user'))?.name || 'User';
 
       if (editingContactIdx !== null) {
-        updatedContacts[editingContactIdx] = { ...updatedContacts[editingContactIdx], ...contactData };
+        updatedContacts[editingContactIdx] = { ...contactForm, photo: photoUrl };
+        logMessage = `[Contact Update] Changes by ${currentUserName}\nUpdated Contact: ${contactForm.firstName} ${contactForm.surname}`;
       } else {
-        updatedContacts.push(contactData);
+        updatedContacts.push({ ...contactForm, photo: photoUrl });
+        const contactName = `${contactForm.title} ${contactForm.firstName} ${contactForm.surname}`.trim();
+        logMessage = `[Contact Added] Changes by ${currentUserName}\nAdded New Contact: ${contactName}\n• Designation: ${contactForm.designation || "-"}\n• Mobile: ${contactForm.mobile}\n• Email: ${contactForm.email}`;
       }
 
+      await dispatch(updateCompany({ id: targetId, data: { contacts: updatedContacts } })).unwrap();
+
       if (isExhibitor) {
-        const payload = {};
-        if (updatedContacts[0]) payload.contact1 = updatedContacts[0];
-        if (updatedContacts[1]) payload.contact2 = updatedContacts[1];
+        const mapContact = (c) => c ? {
+          title: c.title,
+          firstName: c.firstName,
+          lastName: c.surname,
+          email: c.email,
+          designation: c.designation,
+          mobile: c.mobile,
+          alternateNo: c.alternate,
+          photo: c.photo
+        } : null;
+
+        const payload = { contact1: null, contact2: null };
+        if (updatedContacts[0]) payload.contact1 = mapContact(updatedContacts[0]);
+        if (updatedContacts[1]) payload.contact2 = mapContact(updatedContacts[1]);
         await api.put(`/api/exhibitor-registration/${company._id}`, payload);
-      } else {
-        await dispatch(updateCompany({ id: company._id, data: { contacts: updatedContacts } })).unwrap();
       }
+
+      await dispatch(createReview({ cmpny_id: targetId, type: "log", re_msg: logMessage })).unwrap();
+      dispatch(fetchReviewById(id));
+
       Swal.fire({ icon: "success", title: editingContactIdx !== null ? "Contact Updated" : "Contact Added", timer: 1500, showConfirmButton: false });
       setIsContactModalOpen(false);
       fetchCompanyDetails();
 
-      // Log to communication panel
-      const contactName = [contactForm.firstName, contactForm.surname].filter(Boolean).join(" ") || "Unknown Contact";
-      let logMessage = "";
-      if (editingContactIdx !== null) {
-        const oldC = company.contacts[editingContactIdx];
-        const changes = [];
-
-        const fieldsToCheck = [
-          { key: 'title', label: 'Title' },
-          { key: 'firstName', label: 'First Name' },
-          { key: 'surname', label: 'Surname' },
-          { key: 'designation', label: 'Designation' },
-          { key: 'email', label: 'Email' },
-          { key: 'mobile', label: 'Mobile' },
-          { key: 'alternate', label: 'Alternate Mobile' },
-          { key: 'whatsapp', label: 'WhatsApp' },
-          { key: 'linkedin', label: 'LinkedIn' }
-        ];
-
-        fieldsToCheck.forEach(f => {
-          const oldVal = String(oldC[f.key] || "").trim();
-          const newVal = String(contactForm[f.key] || "").trim();
-          if (oldVal !== newVal) {
-            changes.push(`${f.label} changed from '${oldVal || "-"}' to '${newVal || "-"}'`);
-          }
-        });
-
-        if (contactPhotoFile) changes.push(`Contact Photo updated`);
-
-        const changesText = changes.length > 0 ? changes.join('\n• ') : "Updated without modifying text fields";
-        logMessage = `[Contact Update] Changes by ${currentUserName}\nUpdated Contact: ${contactName}\n• ${changesText}`;
-      } else {
-        logMessage = `[Contact Added] Changes by ${currentUserName}\nAdded New Contact: ${contactName}\n• Designation: ${contactForm.designation || "-"}\n• Mobile: ${contactForm.mobile}\n• Email: ${contactForm.email}`;
-      }
-
-      await dispatch(createReview({ cmpny_id: company._id, type: "log", re_msg: logMessage })).unwrap();
-      dispatch(fetchReviewById(id));
     } catch (err) {
       Swal.fire({ icon: "error", title: "Failed", text: err?.message || "Could not save contact" });
     } finally {
@@ -564,7 +578,7 @@ const ClientOverview1 = () => {
     try {
       if (data) {
         await dispatch(createReview({
-          cmpny_id: company._id,
+          cmpny_id: company?.clientId || company?._id,
           ...data
         })).unwrap();
       }
@@ -710,7 +724,7 @@ const ClientOverview1 = () => {
               <div className="border-l-[3px] border-gray-600 pl-2 text-gray-700 leading-5 text-[10px] w-[260px] flex-shrink-0">
                 <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">About Company</p>
                 <p className="break-words whitespace-normal">
-                  {company?.companyDescription ||
+                  {company?.companyDescription || company?.aboutCompany ||
                     <span className="text-red-600 text-[12px] leading-5">Tell buyers, visitors, and business partners about your company, products, services, and expertise. A well-written company profile helps increase visibility and generate more business opportunities.</span>}
                 </p>
               </div>
@@ -818,21 +832,21 @@ const ClientOverview1 = () => {
                   icon: FileText,
                   title: "Proposals / Broucher",
                   color: "purple-600",
-                  onClick: () => navigate(`/client-data/${id}/marketing-materials`),
+                  onClick: () => navigate(`/client-data/${company?.clientId || company?._id || id}/marketing-materials`),
                   disabled: false,
                 },
                 {
                   icon: Receipt,
                   title: "Proforma Invoice",
                   color: "orange-600",
-                  onClick: null,
-                  disabled: true,
+                  onClick: () => navigate(`/performa-invoice/${id}`),
+                  disabled: false,
                 },
                 {
                   icon: Folder,
                   title: "Documentation",
                   color: "blue-600",
-                  onClick: () => navigate(`/client-documents/${id}`),
+                  onClick: () => navigate(`/client-documents/${company?.clientId || company?._id || id}`),
                   disabled: false,
                 },
                 {
@@ -911,9 +925,9 @@ const ClientOverview1 = () => {
                   <SearchableDropdown
                     id="status_short"
                     options={statusOptions?.map((item) => ({ label: item.name, value: item.name })) || []}
-                    value={reviewData.status_short || (isExhibitor ? company.status : company.companyStatus) || ""}
+                    value={reviewData.status_short || company.companyStatus || ""}
                     onChange={(e) => setReviewData(prev => ({ ...prev, status_short: e.target ? e.target.value : e }))}
-                    placeholder={(isExhibitor ? company?.status : company?.companyStatus) ? `Current: ${isExhibitor ? company.status : company.companyStatus}` : "Select Status"}
+                    placeholder={company?.companyStatus ? `Current: ${company.companyStatus}` : "Select Status"}
                   />
                 </div>
 
@@ -1031,7 +1045,7 @@ const ClientOverview1 = () => {
 
       {/* EDIT PROFILE MODAL */}
       {isEditProfileOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[1050] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-fadeIn">
             <div className="flex items-center justify-between p-5 border-b border-gray-200">
               <h2 className="text-xl font-bold text-gray-800">Edit Company Profile</h2>
@@ -1091,7 +1105,7 @@ const ClientOverview1 = () => {
 
       {/* MSME EDIT MODAL */}
       {isMsmeEditOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[1050] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
             <div className="flex items-center justify-between p-5 border-b border-gray-200">
               <h2 className="text-lg font-bold text-gray-800">Edit Exhibitor Category</h2>
@@ -1126,7 +1140,7 @@ const ClientOverview1 = () => {
       )}
       {/* CONTACT MODAL */}
       {isContactModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[1050] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
             <div className="flex items-center justify-between p-5 border-b border-gray-200">
               <h2 className="text-lg font-bold text-gray-800">{editingContactIdx !== null ? "Edit Contact" : "Add Contact"}</h2>

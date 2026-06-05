@@ -41,6 +41,7 @@ import {
   Award,
   File,
   FileType,
+  LibraryBig,
 } from "lucide-react";
 
 
@@ -61,8 +62,8 @@ export const menuItems = [
       { label: "Follow-Ups", path: "/ihweClientData2026/warmClientList" },
       { label: "Hot Leads", path: "/ihweClientData2026/hotClientList" },
       { label: "Hold / Lost Leads", path: "/ihweClientData2026/coldClientList" },
-      { label: "Master Data", path: "/ihweClientData2026/masterData" },
-      { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
+      // { label: "Master Data", path: "/ihweClientData2026/masterData" },
+      // { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
       { label: "Converted Clients", path: "/ihweClientData2026/confirmClientList" },
       { label: "Exhibitor Registration", path: "/book-a-stand" },
     ],
@@ -83,6 +84,7 @@ export const menuItems = [
       { label: "Book A Stand", path: "/organicExpo/book-a-stand" },
     ],
   },
+  { type: "item", label: "Master Data", icon: LibraryBig, path: "/ihweClientData2026/masterData" },
 
   {
     type: "item",
@@ -103,16 +105,6 @@ export const menuItems = [
     label: "Exhibitor Management",
     icon: FileText,
     children: [
-      // {
-      //   type: "item",
-      //   label: "Book A Stand",
-      //   icon: Ticket,
-      //   path: "/book-a-stand",
-      // },
-      // {
-      //   label: "Exhibitor Bookings List",
-      //   path: "/exhibitor-bookings",
-      // },
       { label: "Exhibitor Chat", path: "/exhibitor-chat" },
       {
         label: "Stall Inventory",
@@ -173,9 +165,10 @@ export const menuItems = [
     label: "Buyer Management",
     icon: Users,
     children: [
-      { label: "Add Domestic Buyer ", path: "/buyer-registration" },
+      { label: "Buyer Registration", path: "/buyer-registration-form" },
+      // { label: "Add Domestic Buyer ", path: "/buyer-registration" },
       { label: "Domestic Buyer List", path: "/buyer-list" },
-      { label: "Add International Buyer", path: "/international-buyer-registration" },
+      // { label: "Add International Buyer", path: "/international-buyer-registration" },
       { label: "International Buyer List", path: "/international-buyer-list" },
       { label: "Buyer Registration Config", path: "/buyer-registration-config" },
       { label: "International Registration Config", path: "/international-buyer-registration-config" },
@@ -728,7 +721,6 @@ export const menuItems = [
     children: [
       { label: "Sales Report", path: "/accounts/salesreport" },
       { label: "Create Debit Note", path: "/create-debit-note" },
-      { label: "Create Estimate", path: "/performa-invoice" },
       { label: "Create Invoice", path: "/page-create-invoice" },
       // { label: "Debit Note Reports", path: "/accounts/" },
       //  { label: "PI Reports", path: "/accounts/" },

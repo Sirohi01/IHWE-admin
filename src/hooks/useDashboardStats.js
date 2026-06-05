@@ -47,6 +47,8 @@ const useDashboardStats = (filterStatus, customData = null) => {
       const sourceStats = {};
       const statusStats = {};
       const execStats = {};
+      const holdReasonStats = {};
+      const lostReasonStats = {};
 
       const followUpsRaw = [];
       const recentActivitiesRaw = [];
@@ -82,6 +84,14 @@ const useDashboardStats = (filterStatus, customData = null) => {
         const forwardTo = c.forwardTo || 'Unassigned';
         if (forwardTo !== 'Unassigned') {
             execStats[forwardTo] = (execStats[forwardTo] || 0) + 1;
+        }
+
+        if (status.toLowerCase().includes('hold') && c.reason) {
+            holdReasonStats[c.reason] = (holdReasonStats[c.reason] || 0) + 1;
+        }
+        
+        if (status.toLowerCase().includes('lost') && c.reason) {
+            lostReasonStats[c.reason] = (lostReasonStats[c.reason] || 0) + 1;
         }
 
         if (c.updatedAt) {
@@ -167,6 +177,28 @@ const useDashboardStats = (filterStatus, customData = null) => {
 
       const followUps = followUpsRaw.sort((a, b) => a.rawDate - b.rawDate).slice(0, 5);
       
+      const holdTotal = Object.values(holdReasonStats).reduce((a,b) => a+b, 0);
+      const holdReasonsData = Object.keys(holdReasonStats)
+        .map((label, idx) => ({
+          label,
+          count: holdReasonStats[label],
+          pct: holdTotal > 0 ? Math.round((holdReasonStats[label] / holdTotal) * 100) + '%' : '0%',
+          color: ['bg-orange-500', 'bg-orange-400', 'bg-orange-300', 'bg-orange-200', 'bg-orange-600'][idx % 5]
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
+      const lostTotal = Object.values(lostReasonStats).reduce((a,b) => a+b, 0);
+      const lostReasonsData = Object.keys(lostReasonStats)
+        .map((label, idx) => ({
+          label,
+          count: lostReasonStats[label],
+          pct: lostTotal > 0 ? Math.round((lostReasonStats[label] / lostTotal) * 100) + '%' : '0%',
+          color: ['bg-red-600', 'bg-red-500', 'bg-red-400', 'bg-red-300', 'bg-red-700'][idx % 5]
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
       const recentActivities = recentActivitiesRaw
         .sort((a, b) => b.updatedAt - a.updatedAt)
         .slice(0, 3)
@@ -191,6 +223,8 @@ const useDashboardStats = (filterStatus, customData = null) => {
             statusStats,
             recentActivities,
             topExecutives,
+            holdReasonsData,
+            lostReasonsData,
             isLoadingStats: false
           });
       }
