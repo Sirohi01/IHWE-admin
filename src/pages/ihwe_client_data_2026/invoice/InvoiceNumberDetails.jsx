@@ -1,17 +1,20 @@
 import React, { useRef, useState, useEffect } from "react";
 import mainpic from "../../../assets/header.png";
 import { useReactToPrint } from "react-to-print";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import { fetchInvoices } from "../../../features/invoice/invoiceSlice";
 import { fetchEstimates } from "../../../features/estimates/estimateSlice";
 import { fetchCompanies } from "../../../features/company/companySlice";
 import { useSelector, useDispatch } from "react-redux";
+import { FaPrint } from "react-icons/fa";
+import { ArrowLeft } from "lucide-react";
 
 const InvoiceNumberDetails = () => {
   const { id } = useParams();
   const sameRef = useRef();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const location = useLocation();
   const heading = location.state?.heading || "";
   const [matchedInvoice, setMatchedInvoice] = useState(null);
@@ -36,24 +39,23 @@ const InvoiceNumberDetails = () => {
   }, [dispatch]);
 
   const totalAmount =
-    matchedEstimate?.items?.reduce(
-      (sum, item) => sum + (parseFloat(item.tax) || 0),
+    matchedInvoice?.items?.reduce(
+      (sum, item) => sum + (parseFloat(item.taxableValue || item.tax || 0)),
       0
     ) || 0;
 
   // Calculate the grand total from all items
   const grandTotal =
-    matchedEstimate?.items?.reduce((sum, item) => {
-      const taxableValue = parseFloat(item?.tax) || 0;
-      const totalGstRate = parseFloat(item?.gstRate) || 0;
+    matchedInvoice?.items?.reduce((sum, item) => {
+      const taxableValue = parseFloat(item?.taxableValue || item?.tax) || 0;
+      const totalGstRate = parseFloat(item?.gstPct || item?.gstRate) || 0;
       const itemTotalTax = (taxableValue * totalGstRate) / 100;
       return sum + itemTotalTax;
     }, 0) || 0;
 
-  const invoiceValue = grandTotal + totalAmount;
+  const invoiceValue = matchedInvoice?.finalAmount || (grandTotal + totalAmount);
 
   useEffect(() => {
-    // Match estimate using est_no (since your route uses est_no like "NGW/25-26/EST/009")
     if (invoices && invoices.length > 0) {
       const match = invoices.find((e) => e?._id === id);
       setMatchedInvoice(match || null);
@@ -61,38 +63,47 @@ const InvoiceNumberDetails = () => {
   }, [id, invoices]);
 
   useEffect(() => {
-    if (matchedInvoice?.companyId) {
-      dispatch(fetchEstimates(matchedInvoice.companyId));
-    }
-  }, [matchedInvoice?.companyId, dispatch]);
-
-  useEffect(() => {
-    if (estimates && estimates.length > 0 && matchedInvoice) {
-      const match = estimates.find(
-        (e) => e.est_no === matchedInvoice?.estimate_no
-      );
-      setMatchedEstimate(match || null);
-    }
-  }, [matchedInvoice, estimates]);
-
-  useEffect(() => {
-    if (matchedEstimate && companies.length > 0) {
-      // Match company using the companyId from the matched estimate
+    if (matchedInvoice?.companyId && companies.length > 0) {
       const matchedCompany = companies.find(
-        (c) => c._id === matchedEstimate?.companyId
+        (c) => c._id === matchedInvoice?.companyId || c.clientId === matchedInvoice?.companyId
       );
       setCompany(matchedCompany || null);
     }
-  }, [matchedEstimate, companies]);
+  }, [matchedInvoice, companies]);
 
   const handleprint = useReactToPrint({
-    contentRef: sameRef, // Changed from contentRef to content
+    contentRef: sameRef,
     documentTitle: "invoice",
+    pageStyle: `
+      @page { size: auto; margin: 0mm 5mm 0mm  5mm; }
+      @media print { body { -webkit-print-color-adjust: exact; } }
+    `
   });
+
+  if (!matchedInvoice) {
+    return <div className="text-center p-10">Loading invoice details...</div>;
+  }
 
   return (
     <div className="bg-gray-100 p-6 min-h-screen ">
+      <div className="max-w-[1000px] mx-auto flex justify-end mb-2">
+        <button
+          onClick={() => navigate('/invoice-list')}
+          className="bg-white rounded p-2 text-gray-500 hover:text-blue-500 shadow-sm border transition flex items-center justify-center"
+          title="Back"
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <button
+          onClick={handleprint}
+          className="bg-white rounded p-2 text-gray-500 hover:text-blue-500 shadow-sm border transition flex items-center justify-center"
+          title="Print Invoice"
+        >
+          <FaPrint size={18} />
+        </button>
+      </div>
       <div ref={sameRef} className="max-w-6xl mx-auto bg-white  px-6 py-0.5">
+        {/* <div ref={sameRef} className="max-w-[1000px] mx-auto bg-white border border-slate-300 p-4 font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif' }}> */}
         <img className=" my-2" src={mainpic} alt="" />
         <div className="flex justify-between sm:text-[11px] md:text-sm my-2 pl-110 pr-8">
           <h1 className="font-semibold text-center">Tax Invoice</h1>
@@ -168,10 +179,10 @@ const InvoiceNumberDetails = () => {
               <td className="px-1 py-0.5 text-[11px]">
                 {matchedInvoice?.supply_date
                   ? new Date(matchedInvoice.added).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })
                   : ""}
               </td>
             </tr>
@@ -235,13 +246,13 @@ const InvoiceNumberDetails = () => {
                 {" "}
                 {matchedInvoice?.supply_date
                   ? new Date(matchedInvoice.supply_date).toLocaleDateString(
-                      "en-GB",
-                      {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      }
-                    )
+                    "en-GB",
+                    {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    }
+                  )
                   : ""}
               </td>
             </tr>
@@ -294,14 +305,14 @@ const InvoiceNumberDetails = () => {
             </tr>
           </thead>
           <tbody>
-            {matchedEstimate &&
-              matchedEstimate?.items.map((item, index) => (
+            {matchedInvoice &&
+              matchedInvoice?.items.map((item, index) => (
                 <tr key={index}>
                   <td className="border  px-2 py-0.5 text-[11px] text-center">
                     {index + 1}
                   </td>
                   <td className="border  px-2 py-0.5 text-[11px]">
-                    {matchedEstimate?.consignee_name}
+                    {matchedInvoice?.consignee_name}
                     <br />
                     {item?.remarks}
                   </td>
@@ -312,7 +323,7 @@ const InvoiceNumberDetails = () => {
                     {item?.qty}
                   </td>
                   <td className="border  px-2 py-0.5 text-[11px] text-center">
-                    {item?.size} {item?.unit}
+                    {item?.size || ''} {item?.unit}
                   </td>
                   <td className="border  px-2 py-0.5 text-[11px] text-center">
                     {item?.rate}
@@ -321,10 +332,10 @@ const InvoiceNumberDetails = () => {
                     {item?.amount}
                   </td>
                   <td className="border  px-2 py-0.5 text-[11px] text-center">
-                    {item?.disc}
+                    {item?.disc || item?.discountPct || 0}
                   </td>
                   <td className="border  px-2 py-0.5 text-[11px] text-center">
-                    {item?.tax}
+                    {item?.taxableValue || item?.tax}
                   </td>
                 </tr>
               ))}
@@ -419,12 +430,12 @@ const InvoiceNumberDetails = () => {
             </tr>
           </thead>
           <tbody>
-            {matchedEstimate &&
-              matchedEstimate?.items.map((item, index) => {
+            {matchedInvoice &&
+              matchedInvoice?.items.map((item, index) => {
                 const isInterstate =
-                  matchedInvoice?.type_of_invoice === "Interstate Sale";
-                const taxableValue = parseFloat(item?.tax) || 0;
-                const totalGstRate = parseFloat(item?.gstRate) || 0;
+                  matchedInvoice?.type_of_invoice === "Interstate Sale" || matchedInvoice?.type_of_invoice === "IGST";
+                const taxableValue = parseFloat(item?.taxableValue || item?.tax) || 0;
+                const totalGstRate = parseFloat(item?.gstPct || item?.gstRate) || 0;
                 const totalGstAmount = (taxableValue * totalGstRate) / 100;
                 const totalTax = totalGstAmount;
 
@@ -437,7 +448,7 @@ const InvoiceNumberDetails = () => {
                       {item?.hsn}
                     </td>
                     <td className="border px-2 py-0.5 text-[11px] text-center">
-                      {item?.tax}
+                      {item?.taxableValue || item?.tax}
                     </td>
                     <td className="border px-2 py-0.5 text-[11px] text-center">
                       {item?.qty}
@@ -603,7 +614,7 @@ const InvoiceNumberDetails = () => {
           Market, South Delhi-110019, Delhi, India
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
