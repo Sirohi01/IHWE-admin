@@ -14,7 +14,7 @@ const PerformaInvoiceList = () => {
     }, [dispatch]);
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4">
+        <div className="min-h-screen bg-gray-50 pl-4 pr-4">
             {/* ── Header ── */}
             <div className="bg-white border border-gray-200 rounded-lg p-4 mb-1 shadow-sm flex items-center justify-between">
                 <div>
