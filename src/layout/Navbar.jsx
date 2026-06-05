@@ -233,9 +233,14 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
                 </div>
               )}
             </div>
-            <span className="text-[11px] font-extrabold text-slate-200 uppercase tracking-widest hidden md:block max-w-[120px] truncate">
-              {fullProfile?.fullName || adminData?.username || "My Profile"}
-            </span>
+            <div className="hidden md:flex flex-col items-start justify-center max-w-[120px]">
+              <span className="text-[8px] font-medium text-slate-400 uppercase tracking-widest mb-0.5 leading-none">
+                Welcome back,
+              </span>
+              <span className="text-[10px] font-md text-slate-200 uppercase tracking-widest truncate w-full text-left leading-none">
+                {fullProfile?.fullName || adminData?.username || "My Profile"}
+              </span>
+            </div>
             <div className="p-0.5">
               <Menu size={15} className="text-slate-300" />
             </div>
