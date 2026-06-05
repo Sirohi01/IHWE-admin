@@ -45,22 +45,40 @@ const ConfirmClientList = () => {
   const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, '') === 'superadmin';
 
   const [registrations, setRegistrations] = useState([]);
+  const [masterCompanies, setMasterCompanies] = useState([]);
+  const [allReviews, setAllReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get('/api/exhibitor-registration');
-      if (response.data.success) {
-        setRegistrations(Array.isArray(response.data.data) ? response.data.data : []);
+      const [regRes, compRes, reviewRes] = await Promise.all([
+        api.get('/api/exhibitor-registration'),
+        api.get('/api/companies?dashboard=true').catch(() => ({ data: [] })),
+        api.get('/api/crm-exhibator-reviews').catch(() => ({ data: [] }))
+      ]);
+
+      if (regRes.data?.success) {
+        setRegistrations(Array.isArray(regRes.data.data) ? regRes.data.data : []);
+      }
+
+      if (compRes.data && Array.isArray(compRes.data)) {
+        setMasterCompanies(compRes.data);
+      } else if (compRes.data?.data && Array.isArray(compRes.data.data)) {
+        setMasterCompanies(compRes.data.data);
+      }
+
+      if (reviewRes.data && Array.isArray(reviewRes.data)) {
+        setAllReviews(reviewRes.data);
+      } else if (reviewRes.data?.data && Array.isArray(reviewRes.data.data)) {
+        setAllReviews(reviewRes.data.data);
       }
     } catch (error) {
-      console.error("Error fetching registrations:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setIsLoading(false);
     }
   };
-
   useEffect(() => {
     fetchData();
   }, []);
@@ -146,10 +164,73 @@ const ConfirmClientList = () => {
   const totalConverted = filteredRegs.length;
   const totalRevenue = filteredRegs.reduce((acc, curr) => acc + (curr.financeBreakdown?.netPayable || curr.participation?.total || 0), 0);
 
-  // Calculate repeat clients by finding duplicate emails
-  const emails = filteredRegs.map(r => r.contact1?.email).filter(Boolean);
-  const uniqueEmails = new Set(emails);
-  const repeatClients = emails.length - uniqueEmails.size;
+  // Calculate existing clients by checking company name, email, or mobile against masterCompanies
+  const existingClientsCount = filteredRegs.filter(reg => {
+    const rName = (reg.companyName || reg.exhibitorName || "").toLowerCase().trim();
+    const rEmail1 = (reg.contact1?.email || "").toLowerCase().trim();
+    const rEmail2 = (reg.contact2?.email || "").toLowerCase().trim();
+    const rMobile1 = (reg.contact1?.mobile || "").trim();
+    const rMobile2 = (reg.contact2?.mobile || "").trim();
+
+    return masterCompanies.some(comp => {
+      // Don't match against itself if it somehow ended up in masterCompanies with same ID
+      if (comp._id === reg._id) return false;
+
+      const cName = (comp.companyName || comp.exhibitorName || "").toLowerCase().trim();
+      const cEmail = (comp.email || "").toLowerCase().trim();
+      const cMobile = (comp.mobile || "").trim();
+
+      if (rName && cName && rName === cName) return true;
+      if (cEmail && (rEmail1 === cEmail || rEmail2 === cEmail)) return true;
+      if (cMobile && (rMobile1 === cMobile || rMobile2 === cMobile)) return true;
+
+      // Also check contacts array if it exists
+      if (comp.contacts && Array.isArray(comp.contacts)) {
+        return comp.contacts.some(contact => {
+          const cntEmail = (contact.email || "").toLowerCase().trim();
+          const cntMobile = (contact.mobile || "").trim();
+          if (cntEmail && (rEmail1 === cntEmail || rEmail2 === cntEmail)) return true;
+          if (cntMobile && (rMobile1 === cntMobile || rMobile2 === cntMobile)) return true;
+          return false;
+        });
+      }
+
+      return false;
+    });
+  }).length;
+
+  // Calculate Avg Conversion Time (New Lead to Est./PI Sent)
+  let totalConversionDays = 0;
+  let companiesWithConversion = 0;
+
+  filteredRegs.forEach(reg => {
+    // Find all reviews for this company
+    const companyReviews = allReviews.filter(r => r.cmpny_id === reg._id);
+    if (companyReviews.length > 0) {
+      // Sort reviews by date ascending
+      companyReviews.sort((a, b) => new Date(a.createdAt || a.re_added) - new Date(b.createdAt || b.re_added));
+
+      // Find New Lead date (or earliest review if not explicitly 'new lead')
+      const newLeadReview = companyReviews.find(r => (r.status_short || "").toLowerCase().includes("follow-up call")) || companyReviews[0];
+      const newLeadDate = new Date(newLeadReview.createdAt || newLeadReview.re_added);
+
+      // Find Est./PI Sent date
+      const piSentReview = companyReviews.find(r => {
+        const date = new Date(r.createdAt || r.re_added);
+        return (r.status_short || "").toLowerCase().includes("est./pi sent") && date >= newLeadDate;
+      });
+
+      if (piSentReview) {
+        const piSentDate = new Date(piSentReview.createdAt || piSentReview.re_added);
+        const diffTime = Math.abs(piSentDate - newLeadDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        totalConversionDays += diffDays;
+        companiesWithConversion++;
+      }
+    }
+  });
+
+  const avgConversionTime = companiesWithConversion > 0 ? Math.round(totalConversionDays / companiesWithConversion) : 0;
 
   // Stat Cards
   const statCards = (
@@ -161,9 +242,9 @@ const ConfirmClientList = () => {
         <div>
           <div className="text-slate-800 text-[10px] font-bold">Total Converted</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{totalConverted}</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{totalConverted || 0}</div>
           </div>
-          <div className="text-[9px] text-emerald-600 font-medium">All Time</div>
+          <div className="text-[9px] text-emerald-600 font-medium">Till Date</div>
         </div>
       </div>
 
@@ -174,7 +255,7 @@ const ConfirmClientList = () => {
         <div>
           <div className="text-slate-800 text-[10px] font-bold">Total Revenue</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">₹ {totalRevenue.toLocaleString('en-IN')}</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">₹ {totalRevenue ? totalRevenue.toLocaleString('en-IN') : 0}</div>
           </div>
           <div className="text-[9px] text-emerald-600 font-medium">All Time</div>
         </div>
@@ -187,9 +268,9 @@ const ConfirmClientList = () => {
         <div>
           <div className="text-slate-800 text-[10px] font-bold">Avg. Conversion Time</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">N/A</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{avgConversionTime || 0} Days</div>
           </div>
-          <div className="text-[9px] text-emerald-600 font-medium">Data unavailable</div>
+          <div className="text-[9px] text-emerald-600 font-medium">Average time</div>
         </div>
       </div>
 
@@ -198,11 +279,11 @@ const ConfirmClientList = () => {
           <Star size={20} className="fill-orange-500" />
         </div>
         <div>
-          <div className="text-slate-800 text-[10px] font-bold">Repeat Clients</div>
+          <div className="text-slate-800 text-[10px] font-bold">Existing Clients</div>
           <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{repeatClients}</div>
+            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{existingClientsCount || 0}</div>
           </div>
-          <div className="text-[9px] text-orange-500 font-medium">{totalConverted ? Math.round((repeatClients / totalConverted) * 100) : 0}% of total clients</div>
+          <div className="text-[9px] text-orange-500 font-medium">{totalConverted ? Math.round((existingClientsCount / totalConverted) * 100) : 0}% of total clients</div>
         </div>
       </div>
     </>

@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
 import EstimateTable from "./EstimateTable";
 import { Upload, UserCheck, LayoutGrid } from "lucide-react";
+import api from "../../lib/api";
 
 const AccountSection1 = () => {
   const navigate = useNavigate();
@@ -11,26 +12,43 @@ const AccountSection1 = () => {
   const { id } = useParams();
   const location = useLocation();
 
-  // Redux state for companies (assuming this is how you manage client data)
-  const { companies, loading } = useSelector((state) => state.companies);
   const [company, setCompany] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // 1. Fetch company data if not already present in Redux
   useEffect(() => {
-    if (companies.length === 0) {
-      dispatch(fetchCompanies());
-    }
-  }, [dispatch, companies.length]);
+    const fetchCompanyDetails = async () => {
+      setLoading(true);
+      try {
+        const searchParams = new URLSearchParams(window.location.search);
+        const sourceParam = searchParams.get('source');
+        
+        if (sourceParam === 'exhibitor') {
+          const res = await api.get(`/api/exhibitor-registration/${id}`);
+          setCompany(res.data.data || res.data);
+        } else if (sourceParam === 'company') {
+          const res = await api.get(`/api/company/${id}`);
+          setCompany(res.data.data || res.data);
+        } else {
+          try {
+            const res = await api.get(`/api/company/${id}`);
+            if (res.data) setCompany(res.data.data || res.data);
+          } catch (err) {
+            const exRes = await api.get(`/api/exhibitor-registration/${id}`);
+            setCompany(exRes.data.data || exRes.data);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to get company details:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // 2. Find the specific company based on the ID from the URL
-  useEffect(() => {
-    if (companies.length > 0 && id) {
-      const matchedCompany = companies.find((c) => c._id === id);
-      setCompany(matchedCompany);
+    if (id) {
+      fetchCompanyDetails();
     }
-  }, [companies, id]);
+  }, [id]);
 
-  // Use companyName from state (if passed) or from fetched company data
   let companyName = "Loading Company...";
 
   // Get company name from state if possible (passed from ClientOverview1)
