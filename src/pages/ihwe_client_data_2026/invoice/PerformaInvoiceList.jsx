@@ -18,11 +18,11 @@ const PerformaInvoiceList = () => {
             {/* ── Header ── */}
             <div className="bg-white border border-gray-200 rounded-lg p-4 mb-1 shadow-sm flex items-center justify-between">
                 <div>
-                    <h1 className="text-xl font-bold text-gray-900">PROFORMA Invoices</h1>
+                    <h1 className="text-xl font-bold text-gray-900">PROFORMA INVOICE</h1>
                     <div className="flex items-center gap-1 mt-1 text-sm text-gray-500">
                         <span className="hover:text-blue-600 cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span>
                         <ChevronRight className="w-4 h-4" />
-                        <span className="text-gray-700 font-medium">All PROFORMA Invoices List</span>
+                        <span className="text-gray-700 font-medium">All Proforma Invoices List</span>
                     </div>
                 </div>
                 <button

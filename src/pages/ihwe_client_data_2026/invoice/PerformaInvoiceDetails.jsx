@@ -118,7 +118,7 @@ const PerformaInvoiceDetails = () => {
       <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-inter animate-fadeIn">
         {/* <div className="w-full h-auto flex justify-between bg-white px-5 py-0.5 ">
           <h1 className="text-xl font-norma text-gray-600">
-            ACCOUNT SECTION | PROFORMA Invoice
+            ACCOUNT SECTION | Proforma Invoice
           </h1>
           <button
             onClick={handleprint}
@@ -131,7 +131,7 @@ const PerformaInvoiceDetails = () => {
         <div className="flex flex-col lg:flex-row justify-between items-center pb-4 border-b border-gray-300 gap-4">
           <div className="flex flex-col items-center lg:items-start gap-1">
             <h1 className="text-xl font-semibold text-slate-600 uppercase tracking-tight leading-none text-center lg:text-left">
-              ACCOUNT SECTION - PROFORMA Invoice | Sales Management Section
+              ACCOUNT SECTION - Proforma Invoice | Sales Management Section
             </h1>
           </div>
           <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">

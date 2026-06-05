@@ -176,7 +176,7 @@ const EstimateTable = ({ clientId }) => {
               scope="col"
               className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
             >
-              {(clientId === 'all' || id === 'all') ? "PROFORMA Invoice Details" : "Estimate Details"}
+              {(clientId === 'all' || id === 'all') ? "Proforma Invoice Details" : "Estimate Details"}
             </th>
             {(clientId === 'all' || id === 'all') && (
               <th
