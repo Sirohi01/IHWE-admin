@@ -48,11 +48,11 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
         }
       }
     };
-    
+
     searchMenu(menuItems);
-    
+
     if (foundLabel) return foundLabel;
-    
+
     const pathSegments = pathname.split('/').filter(Boolean);
     const pageNameRaw = pathSegments.length > 0 ? pathSegments[0] : 'Dashboard';
     return pageNameRaw.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -169,9 +169,9 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
           <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300 shadow-sm cursor-help group relative">
             <span className="text-[11px] font-black uppercase tracking-wider">Rank</span>
             <span className="text-sm font-black leading-none text-[#06d6a0]">#{myRank}</span>
-            {/* <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] font-bold px-2 py-1 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50 shadow-md">
+            <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] font-bold px-2 py-1 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50 shadow-md">
               Sales Leaderboard Position
-            </span> */}
+            </span>
           </div>
         )}
 
