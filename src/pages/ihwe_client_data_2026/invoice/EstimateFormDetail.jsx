@@ -111,7 +111,7 @@ const EstimateFormDetail = () => {
     })() : '';
 
     const totalTaxable = matchedEstimate?.items?.reduce((sum, item) => {
-        const amt = (parseFloat(item.rate) || 0) * (parseFloat(item.qty) || 1);
+        const amt = parseFloat(item.amount) || 0;
         return sum + (amt - (parseFloat(item.disc) || 0));
     }, 0) || 0;
     const grandTotal = matchedEstimate?.finalAmount || matchedEstimate?.items?.reduce((sum, item) => sum + (parseFloat(item.finalAmount) || 0), 0) || 0;
@@ -214,7 +214,7 @@ const EstimateFormDetail = () => {
                 </thead>
                 <tbody>
                     {matchedEstimate?.items?.map((item, index) => {
-                        const amt = (parseFloat(item.rate) || 0) * (parseFloat(item.qty) || 1);
+                        const amt = parseFloat(item.amount) || 0;
                         return (
                             <tr key={index}>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{index + 1}</td>
@@ -269,7 +269,7 @@ const EstimateFormDetail = () => {
                         const halfGst = gstRate / 2;
                         const gstAmt = parseFloat(item?.tax) || 0;
                         const halfGstAmt = gstAmt / 2;
-                        const itemTaxable = (parseFloat(item?.rate) || 0) * (parseFloat(item?.qty) || 1) - (parseFloat(item?.disc) || 0);
+                        const itemTaxable = (parseFloat(item?.amount) || 0) - (parseFloat(item?.disc) || 0);
 
                         return (
                             <tr key={index}>

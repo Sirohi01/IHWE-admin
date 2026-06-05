@@ -228,12 +228,13 @@ const CreateEstimate1 = () => {
     const isInterstate = estimateData.est_type === "Interstate Sale";
     const isForeignSale = estimateData.est_type === "Foreign Sale";
 
-    let addedBy = localStorage.getItem("user_name") || sessionStorage.getItem("user_name") || "";
+    let addedBy = localStorage.getItem("user_fullname") || localStorage.getItem("user_name") || sessionStorage.getItem("user_name") || "";
     try {
       const userObjStr = localStorage.getItem("user") || sessionStorage.getItem("user");
       if (userObjStr) {
         const userObj = JSON.parse(userObjStr);
-        if (userObj.name) addedBy = userObj.name;
+        if (userObj.user_fullname) addedBy = userObj.user_fullname;
+        else if (userObj.name) addedBy = userObj.name;
       }
     } catch (e) {
       console.error("Error parsing user data:", e);

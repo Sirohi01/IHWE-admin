@@ -380,7 +380,7 @@ const EstimateTable = ({ clientId }) => {
                 </td> */}
 
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
-                  <span className="text-gray-500">{formattedUpdatedDate}</span> <span className="text-gray-300 mx-1">|</span> <span className="font-medium">{estimate?.added_by}</span>
+                  <span className="text-gray-500">{formattedUpdatedDate}</span> <span className="text-gray-300 mx-1">|</span> <span className="font-medium capitalize">{estimate?.added_by}</span>
                 </td>
 
                 {(clientId !== 'all' && id !== 'all') && (
