@@ -225,6 +225,7 @@ const SpeakerRegistrationDetail = lazy(() => import("../pages/SpeakerRegistratio
 const SpeakerNominationsList = lazy(() => import("../pages/SpeakerNominationsList"));
 const ApprovedSpeakersList = lazy(() => import("../pages/ApprovedSpeakersList"));
 const FloatingVideoManagement = lazy(() => import("../pages/FloatingVideoManagement"));
+const ReferralMembers = lazy(() => import("../pages/ReferralMembers"));
 const ExpoSupportEnquiries = lazy(() => import("../pages/ExpoSupportEnquiries"));
 const SponsorshipEnquiries = lazy(() => import("../pages/SponsorshipEnquiries"));
 const RejectedSpeakersList = lazy(() => import("../pages/RejectedSpeakersList"));
@@ -647,6 +648,7 @@ export default function AppRoutes() {
             <Route path="/new-leads" element={<NewLeads />} />
             <Route path="/notification" element={<Notification />} />
             <Route path="/floating-video-management" element={<FloatingVideoManagement />} />
+            <Route path="/referral-members" element={<ReferralMembers />} />
             <Route path="/expo-support-enquiries" element={<ExpoSupportEnquiries />} />
             <Route path="/sponsorship-enquiries" element={<SponsorshipEnquiries />} />
             <Route path="/media-registration-manage" element={<MediaRegistrationManage />} />

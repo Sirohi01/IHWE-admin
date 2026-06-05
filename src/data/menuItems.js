@@ -203,6 +203,13 @@ export const menuItems = [
   },
 
   {
+    type: "item",
+    label: "Referral Members",
+    icon: Users,
+    path: "/referral-members",
+  },
+
+  {
     type: "heading",
     label: "Analytics Section",
   },
