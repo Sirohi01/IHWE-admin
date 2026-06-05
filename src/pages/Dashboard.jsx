@@ -131,7 +131,7 @@ export default function Dashboard() {
       new Date(log.createdAt).toDateString() === todayStr
     ).length;
 
-    const revenue          = (converted * 1.50).toFixed(2);
+    const revenue          = (actualRevenue / 100000).toFixed(2);
     const pendingFollowups = userLeads.filter(c => c.reminder && new Date(c.reminder) > new Date()).length;
     const collection       = (converted * 0.35).toFixed(2);
 
@@ -140,7 +140,7 @@ export default function Dashboard() {
       closed: actualConvertedCount, revenue, pendingFollowups, collection,
       categories: { newLeads, hot, warm, cold, converted: actualConvertedCount },
     };
-  }, [userLeads, activityLogs, currentUser, actualConvertedCount]);
+  }, [userLeads, activityLogs, currentUser, actualConvertedCount, actualRevenue]);
 
   // ─── Target metrics ──────────────────────────────────────────────────────────
   const targetMetrics = useMemo(() => {

@@ -3,7 +3,7 @@ import { DollarSign, AlertCircle, Clock, Calendar, ShieldCheck, TrendingUp, Tren
 export default function AccountStatsRow() {
   const cards = [
     {
-      title: "Total Revenue Collected",
+      title: "Revenue Generated",
       value: "₹ 1,24,75,000",
       trend: "18.6%",
       trendLabel: "vs last month",
