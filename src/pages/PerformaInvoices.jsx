@@ -1,5 +1,7 @@
-import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import api from '../lib/api';
 import {
     ChevronRight, List, Plus, Trash2, FileText,
     Save, Download, MessageCircle, X, CheckSquare, Bookmark,
@@ -8,6 +10,12 @@ import {
     MessageCircleMore,
     Mail,
 } from 'lucide-react';
+
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchCountries } from "../features/add_by_admin/country/countrySlice";
+import { fetchStates } from "../features/state/stateSlice";
+import { fetchCities } from "../features/city/citySlice";
+import SearchableDropdown from '../components/SearchableDropdown';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 const fmt = (n) =>
@@ -31,27 +39,7 @@ const GST_OPTIONS = ['0% GST', '5% CGST+SGST', '12% CGST+SGST', '18% CGST+SGST',
 const ESTIMATE_TYPES = ['Intrastate', 'Interstate Sale', 'Foreign Sale'];
 const UNITS = ['Nos', 'Sqm', 'Sqft', 'Mtrs', 'Kgs', 'Ltrs', 'Pcs'];
 
-const LOCATION_DATA = {
-    'India': {
-        'Uttar Pradesh': ['Noida', 'Ghaziabad', 'Lucknow', 'Kanpur'],
-        'Delhi': ['New Delhi', 'North Delhi', 'South Delhi'],
-        'Maharashtra': ['Mumbai', 'Pune', 'Nagpur'],
-        'Karnataka': ['Bengaluru', 'Mysuru', 'Mangaluru']
-    },
-    'USA': {
-        'California': ['Los Angeles', 'San Francisco', 'San Diego'],
-        'New York': ['New York City', 'Buffalo', 'Albany'],
-        'Texas': ['Houston', 'Austin', 'Dallas']
-    },
-    'UK': {
-        'England': ['London', 'Manchester', 'Birmingham'],
-        'Scotland': ['Edinburgh', 'Glasgow', 'Aberdeen']
-    },
-    'UAE': {
-        'Dubai': ['Dubai City', 'Jebel Ali'],
-        'Abu Dhabi': ['Abu Dhabi City', 'Al Ain']
-    }
-};
+
 
 // ── Section heading ──────────────────────────────────────────────────────────
 const SectionHead = ({ num, label }) => (
@@ -74,7 +62,7 @@ const Label = ({ children, required }) => (
 const Input = (props) => (
     <input
         {...props}
-        className={`w-full border border-gray-300 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 bg-white ${props.className || ''}`}
+        className={`w-full border border-gray-300 rounded px-2.5 py-2.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 bg-white ${props.className || ''}`}
     />
 );
 
@@ -82,7 +70,7 @@ const Input = (props) => (
 const Select = ({ options, ...props }) => (
     <select
         {...props}
-        className={`w-full border border-gray-300 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 bg-white ${props.className || ''}`}
+        className={`w-full border border-gray-300 rounded px-2.5 py-2.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 bg-white ${props.className || ''}`}
     >
         {options.map((o) => (
             <option key={o} value={o}>{o}</option>
@@ -109,13 +97,28 @@ const QuickAction = ({ icon: Icon, color, label, sub }) => (
 // ══════════════════════════════════════════════════════════════════════════════
 export const PerformaInvoices = () => {
     const navigate = useNavigate();
+    const { id } = useParams();
+    const [companyData, setCompanyData] = useState(null);
+    const [existingEstimateId, setExistingEstimateId] = useState(null);
+
+    const dispatch = useDispatch();
+    const { countries: reduxCountries } = useSelector((state) => state.countries || { countries: [] });
+    const { states: reduxStates } = useSelector((state) => state.states || { states: [] });
+    const { cities: reduxCities } = useSelector((state) => state.cities || { cities: [] });
+
+    useEffect(() => {
+        if (!reduxCountries || reduxCountries.length === 0) dispatch(fetchCountries());
+        if (!reduxStates || reduxStates.length === 0) dispatch(fetchStates());
+        const actualCities = reduxCities?.data || reduxCities || [];
+        if (!actualCities || actualCities.length === 0) dispatch(fetchCities());
+    }, [dispatch]);
 
     // ── form state ──────────────────────────────────────────────────────────────
     const [form, setForm] = useState({
         estimateType: 'Select Here',
-        estimateNo: 'NGW/26-27/EST/027',
+        estimateNo: 'Loading...',
         gstin: '',
-        supplyDate: '2026-05-31',
+        supplyDate: new Date().toISOString().split('T')[0],
         consigneeName: '',
         consigneeAddress: '',
         country: '',
@@ -125,18 +128,130 @@ export const PerformaInvoices = () => {
     });
 
     const [items, setItems] = useState([
-        { id: 1, description: 'Exhibition Stall Space (9 Sqm)', subDesc: 'Health & Wellness Expo 2025', hsn: '997331', qty: 1, size: '9 Sqm', unit: 'Nos', rate: 90000, amount: 90000, disc: 0, taxable: 90000 },
-        { id: 2, description: 'Premium Corner Charges', subDesc: 'Additional Charges', hsn: '997331', qty: 1, size: '-', unit: 'Nos', rate: 10000, amount: 10000, disc: 0, taxable: 10000 },
+        { id: 1, description: 'Exhibition Stall Space (9 Sqm)', subDesc: 'Health & Wellness Expo 2026', hsn: '997331', qty: 1, size: 9, unit: 'Nos', rate: 90000, amount: 90000, disc: 0, taxable: 90000 }
     ]);
 
     const [gstOption, setGstOption] = useState('18% IGST');
     const [remarks, setRemarks] = useState('');
     const [notes, setNotes] = useState('');
-    const [discount, setDiscount] = useState(5000);
+    const [discount, setDiscount] = useState(0);
+
+    // ── data fetching ────────────────────────────────────────────────────────────
+    useEffect(() => {
+        const fetchCompanyDetails = async () => {
+            if (!id) return;
+            try {
+                let companyInfo = null;
+                try {
+                    const res = await api.get(`/api/companies/${id}`);
+                    companyInfo = res.data;
+                } catch (err) {
+                    if (err.response?.status === 404 || err.response?.status === 400) {
+                        const res = await api.get(`/api/exhibitor-registration/${id}`);
+                        companyInfo = res.data.data || res.data;
+                    } else {
+                        throw err;
+                    }
+                }
+
+                // Determine the actual company ID (Exhibitor Registration uses clientId)
+                const actualCompanyId = companyInfo?.clientId || companyInfo?._id || id;
+
+                // Fetch existing estimates
+                let existingEstimate = null;
+                try {
+                    const estRes = await api.get(`/api/estimates/grouped/${actualCompanyId}`);
+                    if (estRes.data?.success && estRes.data?.count > 0) {
+                        existingEstimate = estRes.data.data[0]; // Get the latest one
+                    }
+                } catch (e) {
+                    console.error("Error fetching existing estimates:", e);
+                }
+
+                if (existingEstimate) {
+                    setExistingEstimateId(existingEstimate._id);
+
+                    const formattedItems = (existingEstimate.items || []).map((item, index) => {
+                        let desc = item.description || '';
+                        let subDesc = '';
+                        if (desc.includes('\n')) {
+                            const parts = desc.split('\n');
+                            desc = parts[0];
+                            subDesc = parts.slice(1).join('\n');
+                        }
+
+                        const qty = Number(item.qty || 1);
+                        const rate = Number(item.rate || 0);
+                        const amount = Number(item.amount) || (qty * rate);
+                        const disc = Number(item.disc || 0);
+                        const taxable = amount - (amount * disc) / 100;
+
+                        return {
+                            ...item,
+                            id: item._id || index + 1,
+                            description: desc,
+                            subDesc: subDesc,
+                            hsn: item.hsn || '',
+                            qty: qty,
+                            size: item.size || '',
+                            unit: item.unit || 'Nos',
+                            rate: rate,
+                            amount: amount,
+                            disc: disc,
+                            taxable: taxable
+                        };
+                    });
+
+                    setItems(formattedItems);
+
+                    setForm(prev => ({
+                        ...prev,
+                        estimateNo: existingEstimate.est_no,
+                        supplyDate: existingEstimate.supply_date || new Date().toISOString().split('T')[0],
+                        consigneeName: existingEstimate.consignee_name || companyInfo?.companyName || companyInfo?.exhibitorName || '',
+                        consigneeAddress: existingEstimate.consignee_addr || companyInfo?.address || companyInfo?.companyAddress || '',
+                        gstin: existingEstimate.gst_no || companyInfo?.gst || companyInfo?.gstNo || '',
+                        country: existingEstimate.country || companyInfo?.country || '',
+                        state: existingEstimate.state || companyInfo?.state || '',
+                        city: existingEstimate.city || companyInfo?.city || '',
+                        pinCode: existingEstimate.pincode || companyInfo?.pinCode || companyInfo?.pincode || '',
+                    }));
+                } else if (companyInfo) {
+                    // Pre-fill with just company info
+                    setCompanyData(companyInfo);
+                    setForm(prev => ({
+                        ...prev,
+                        consigneeName: companyInfo.companyName || companyInfo.exhibitorName || '',
+                        consigneeAddress: companyInfo.address || companyInfo.companyAddress || '',
+                        gstin: companyInfo.gst || companyInfo.gstNo || '',
+                        country: companyInfo.country || '',
+                        state: companyInfo.state || '',
+                        city: companyInfo.city || '',
+                        pinCode: companyInfo.pinCode || companyInfo.pincode || '',
+                    }));
+
+                    // Since it's a new estimate, fetch next number
+                    try {
+                        const res = await api.get('/api/estimates/next-number');
+                        if (res.data?.est_no) {
+                            setForm(prev => ({ ...prev, estimateNo: res.data.est_no }));
+                        }
+                    } catch (error) {
+                        console.error("Error fetching next estimate no:", error);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching company details:", error);
+            }
+        };
+
+        fetchCompanyDetails();
+    }, [id]);
 
     // ── computed ─────────────────────────────────────────────────────────────────
-    const subTotal = items.reduce((s, i) => s + Number(i.taxable || 0), 0);
-    const taxable = subTotal - Number(discount || 0);
+    const subTotal = items.reduce((s, i) => s + Number(i.amount || 0), 0);
+    const calculatedDiscount = items.reduce((s, i) => s + (Number(i.amount || 0) * Number(i.disc || 0)) / 100, 0);
+    const taxable = subTotal - calculatedDiscount;
     const isIGST = gstOption.includes('IGST');
     const gstPct = parseFloat(gstOption) || 0;
     const cgst = isIGST ? 0 : (taxable * gstPct) / 200;
@@ -144,6 +259,31 @@ export const PerformaInvoices = () => {
     const igst = isIGST ? (taxable * gstPct) / 100 : 0;
     const totalTax = cgst + sgst + igst;
     const grandTotal = taxable + totalTax;
+
+    // ── dynamic location options ─────────────────────────────────────────────────
+    const countriesArr = ['Select Country', ...(reduxCountries || []).map(c => c.name).filter(Boolean)];
+
+    const filteredStatesArr = (() => {
+        if (!form.country || !reduxStates?.length) return ["Select State"];
+        const countryObj = reduxCountries.find(c => c.name && c.name.trim().toLowerCase() === form.country.trim().toLowerCase());
+        if (!countryObj) return ["Select State"];
+        const filtered = reduxStates.filter(s => String(s.countryCode) === String(countryObj.countryCode));
+        return ["Select State", ...filtered.map(s => s.name).filter(Boolean)];
+    })();
+
+    const filteredCitiesArr = (() => {
+        if (!form.state || !reduxCities) return ["Select City"];
+        const actualCities = reduxCities.data || reduxCities || [];
+        if (!actualCities.length) return ["Select City"];
+        const stateObj = reduxStates.find(s => s.name && s.name.trim().toLowerCase() === form.state.trim().toLowerCase());
+        if (!stateObj) return ["Select City"];
+        const filtered = actualCities.filter(c => String(c.stateCode) === String(stateObj.stateCode));
+        return ["Select City", ...filtered.map(c => c.name).filter(Boolean)];
+    })();
+
+    const countryOptions = [...Array.from(new Set([...countriesArr, form.country].filter(Boolean)))].map(c => ({ label: c, value: c }));
+    const stateOptions = [...Array.from(new Set([...filteredStatesArr, form.state].filter(Boolean)))].map(s => ({ label: s, value: s }));
+    const cityOptions = [...Array.from(new Set([...filteredCitiesArr, form.city].filter(Boolean)))].map(c => ({ label: c, value: c }));
 
     // ── item handlers ────────────────────────────────────────────────────────────
     const updateItem = useCallback((id, field, val) => {
@@ -165,6 +305,78 @@ export const PerformaInvoices = () => {
     const removeItem = (id) => setItems((p) => p.filter((i) => i.id !== id));
 
     const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+    const handleGenerateEstimate = async () => {
+        const actualCompanyId = companyData?.clientId || companyData?._id || id;
+        if (!actualCompanyId) {
+            Swal.fire('Error', 'Company ID is missing!', 'error');
+            return;
+        }
+
+        const payload = {
+            companyId: actualCompanyId,
+            est_type: form.estimateType,
+            gst_no: form.gstin,
+            supply_date: form.supplyDate,
+            consignee_name: form.consigneeName,
+            consignee_addr: form.consigneeAddress,
+            country: form.country,
+            state: form.state,
+            city: form.city,
+            pincode: form.pinCode,
+            items: items.map(i => ({
+                description: i.description + (i.subDesc ? `\n${i.subDesc}` : ''),
+                hsn: i.hsn,
+                qty: i.qty,
+                size: i.size,
+                unit: i.unit,
+                rate: i.rate,
+                amount: i.amount,
+                disc: i.disc,
+                tax: (i.taxable * gstPct) / 100,
+                gstRate: gstOption,
+                cgst: isIGST ? 0 : (i.taxable * (gstPct / 2)) / 100,
+                cgst_per: isIGST ? "0" : String(gstPct / 2),
+                igst_per: isIGST ? String(gstPct) : "0",
+                finalAmount: i.taxable + ((i.taxable * gstPct) / 100),
+                remarks: remarks
+            })),
+            finalAmount: grandTotal,
+            added_by: JSON.parse(localStorage.getItem('adminInfo') || sessionStorage.getItem('adminInfo') || '{}')?.username || 'Admin',
+            status: 'active'
+        };
+
+        try {
+            if (existingEstimateId) {
+                const res = await api.put(`/api/estimates/${existingEstimateId}`, payload);
+                if (res.data?.message) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Estimate updated successfully!',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    navigate('/ihweClientData2026/masterData');
+                }
+            } else {
+                const res = await api.post('/api/estimates', payload);
+                if (res.data?.message) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Estimate created successfully!',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    navigate('/ihweClientData2026/masterData');
+                }
+            }
+        } catch (error) {
+            console.error("Error saving estimate:", error);
+            Swal.fire('Error', error.response?.data?.message || 'Failed to save estimate', 'error');
+        }
+    };
 
     // ── render ────────────────────────────────────────────────────────────────────
     return (
@@ -194,13 +406,22 @@ export const PerformaInvoices = () => {
                         <span className="text-gray-600">Create Estimate</span>
                     </div>
                 </div>
-                <button
-                    onClick={() => navigate(-1)}
-                    className="flex items-center gap-1.5 border border-gray-300 rounded px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition"
-                >
-                    <List className="w-3.5 h-3.5" />
-                    Master List
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => navigate('/performa-invoice-list/all')}
+                        className="flex items-center gap-1.5 border border-blue-300 bg-blue-50 rounded px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
+                    >
+                        <List className="w-3.5 h-3.5" />
+                        All Performa Invoices
+                    </button>
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-1.5 border border-gray-300 rounded px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition"
+                    >
+                        <List className="w-3.5 h-3.5" />
+                        Master List
+                    </button>
+                </div>
             </div>
 
             {/* ── body ── */}
@@ -250,31 +471,34 @@ export const PerformaInvoices = () => {
                             </div>
                             <div>
                                 <Label required>Country</Label>
-                                <Select
-                                    options={['Select Country', ...Object.keys(LOCATION_DATA)]}
+                                <SearchableDropdown
+                                    options={countryOptions}
                                     value={form.country}
                                     onChange={(e) => {
                                         setForm(f => ({ ...f, country: e.target.value, state: '', city: '' }));
                                     }}
+                                    placeholder="Select Country"
                                 />
                             </div>
                             <div>
                                 <Label required>State</Label>
-                                <Select
-                                    options={['Select State', ...(form.country && LOCATION_DATA[form.country] ? Object.keys(LOCATION_DATA[form.country]) : [])]}
+                                <SearchableDropdown
+                                    options={stateOptions}
                                     value={form.state}
                                     onChange={(e) => {
                                         setForm(f => ({ ...f, state: e.target.value, city: '' }));
                                     }}
+                                    placeholder="Select State"
                                     disabled={!form.country || form.country === 'Select Country'}
                                 />
                             </div>
                             <div>
                                 <Label required>City</Label>
-                                <Select
-                                    options={['Select City', ...(form.state && form.country && LOCATION_DATA[form.country]?.[form.state] ? LOCATION_DATA[form.country][form.state] : [])]}
+                                <SearchableDropdown
+                                    options={cityOptions}
                                     value={form.city}
                                     onChange={(e) => setField('city', e.target.value)}
+                                    placeholder="Select City"
                                     disabled={!form.state || form.state === 'Select State'}
                                 />
                             </div>
@@ -415,8 +639,8 @@ export const PerformaInvoices = () => {
                         >
                             <X className="w-3.5 h-3.5" /> Cancel
                         </button>
-                        <button className="flex items-center gap-2 bg-green-800 hover:bg-green-900 text-white rounded px-6 py-2 text-xs font-bold transition">
-                            <FileText className="w-3.5 h-3.5" /> Generate Estimate
+                        <button onClick={handleGenerateEstimate} className="flex items-center gap-2 bg-green-800 hover:bg-green-900 text-white rounded px-6 py-2 text-xs font-bold transition">
+                            <FileText className="w-3.5 h-3.5" /> {existingEstimateId ? "Update Estimate" : "Generate Estimate"}
                         </button>
                     </div>
                 </div>
@@ -438,7 +662,7 @@ export const PerformaInvoices = () => {
                             <div className="flex justify-between text-gray-600">
                                 <span className="font-semibold text-gray-800">Discount</span>
                                 <div className="flex items-center gap-1">
-                                    <span className="text-green-800 font-semibold">- {fmt(discount)}</span>
+                                    <span className="text-green-800 font-semibold">- {fmt(calculatedDiscount)}</span>
                                 </div>
                             </div>
                             <div className="flex justify-between text-gray-600 border-t border-dashed border-gray-200 pt-2">
@@ -479,7 +703,7 @@ export const PerformaInvoices = () => {
                         <h3 className="text-xs font-extrabold text-gray-800 mb-3 uppercase tracking-wider">Quick Actions</h3>
                         <div className="space-y-2">
                             <QuickAction icon={Bookmark} color="bg-blue-100 text-blue-500" label="Save Draft" sub="Save as draft for later" />
-                            <QuickAction icon={FileSpreadsheet} color="bg-green-100 text-green-600" label="Generate Estimate" sub="Create Proforma Invoice" />
+                            <QuickAction icon={FileSpreadsheet} color="bg-green-100 text-green-600" label={existingEstimateId ? "Update Estimate" : "Generate Estimate"} sub="Create or update Proforma Invoice" />
                             <QuickAction icon={File} color="bg-red-100 text-red-500" label="Download PDF" sub="Download estimate as PDF" />
                             <QuickAction icon={MessageCircleMore} color="bg-green-100 text-green-600" label="Send via WhatsApp" sub="Share estimate on WhatsApp" />
                             <QuickAction icon={Mail} color="bg-blue-100 text-blue-500" label="Send via Email" sub="Email estimate to client" />

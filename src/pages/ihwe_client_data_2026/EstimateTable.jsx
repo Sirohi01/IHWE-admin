@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchEstimates } from "../../features/estimates/estimateSlice";
+import { fetchEstimates, fetchAllGlobalEstimates } from "../../features/estimates/estimateSlice";
 import {
   createPerformaInvoice,
   fetchPerformaInvoices,
@@ -37,7 +37,9 @@ const EstimateTable = ({ clientId }) => {
   }, [estimates, id]);
 
   useEffect(() => {
-    if (clientId || id) {
+    if (clientId === 'all') {
+      dispatch(fetchAllGlobalEstimates());
+    } else if (clientId || id) {
       dispatch(fetchEstimates(clientId || id));
     }
     dispatch(fetchPerformaInvoices());
@@ -114,28 +116,38 @@ const EstimateTable = ({ clientId }) => {
   // };
 
   return (
-    <div className="overflow-x-auto p-4">
-      <table className="min-w-full border-collapse border border-gray-300 ">
-        <thead className="border  border-gray-300">
+    <div className="overflow-x-auto p-1">
+      <table className="min-w-full border-collapse bg-white rounded-lg overflow-hidden shadow-sm">
+        <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
             <th
               scope="col"
-              className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
+              className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
             >
               S.No.
             </th>
             <th
               scope="col"
-              className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
+              className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
             >
-              Estimate Details
+              {(clientId === 'all' || id === 'all') ? "Performa Invoice Details" : "Estimate Details"}
             </th>
-            <th
-              scope="col"
-              className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
-            >
-              Performa Inv.
-            </th>
+            {(clientId === 'all' || id === 'all') && (
+              <th
+                scope="col"
+                className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
+              >
+                Company / Client
+              </th>
+            )}
+            {(clientId !== 'all' && id !== 'all') && (
+              <th
+                scope="col"
+                className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
+              >
+                Performa Inv.
+              </th>
+            )}
             {/* <th
               scope="col"
               className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
@@ -150,20 +162,22 @@ const EstimateTable = ({ clientId }) => {
             </th> */}
             <th
               scope="col"
-              className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
+              className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
             >
               Updated Details
             </th>
-            <th
-              scope="col"
-              className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border-t border-r border-l border-t-gray-300 border-r-gray-300 border-l-gray-300"
-            >
-              Action
-            </th>
+            {(clientId !== 'all' && id !== 'all') && (
+              <th
+                scope="col"
+                className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
+              >
+                Action
+              </th>
+            )}
           </tr>
         </thead>
 
-        <tbody className="bg-white border border-gray-300">
+        <tbody className="bg-white divide-y divide-gray-200">
           {estimates.map((estimate, index) => {
             // 💰 Calculate Amount
             const totalFinalAmount = estimate?.items?.reduce((total, item) => {
@@ -221,13 +235,13 @@ const EstimateTable = ({ clientId }) => {
             const invId = matchingInvoice ? matchingInvoice._id : null;
 
             return (
-              <tr key={estimate._id}>
-                <td className="border border-gray-300 px-4 py-2 whitespace-nowrap text-xs text-black text-center">
+              <tr key={estimate._id} className="hover:bg-gray-50 transition-colors border-b border-gray-200">
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
                   {index + 1}
                 </td>
 
-                <td className="border border-gray-300 px-4 py-2 whitespace-nowrap text-xs text-black text-center">
-                  <div className="flex items-center justify-center gap-1">
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
+                  <div className="flex items-center justify-start gap-2">
                     {/* <Link to={`/payments/estimateDetails/${estimate?.est_no}`}> */}
                     <Link to={`/payments/estimateDetails/${estimate?._id}`}>
                       <button className="text-[#3598dc] cursor-pointer hover:text-[#566e7d] font-medium px-1">
@@ -238,47 +252,57 @@ const EstimateTable = ({ clientId }) => {
                   </div>
                 </td>
 
-                {/* 🚀 PERFORMA INVOICE CELL LOGIC 🚀 */}
-                <td className="border border-gray-300 px-4 py-2 whitespace-nowrap text-xs text-black text-center ">
-                  {/* Display PI Data if it exists or is being created */}
-                  {isPiCreated && (
-                    <div className="flex items-center justify-center gap-1">
-                      <Link
-                        to={`/payments/performanceInvoiceDetails/${piDataToDisplay._id}`}
-                      >
-                        <button className="text-[#3598dc] cursor-pointer hover:text-[#566e7d] font-medium px-1">
-                          {piDataToDisplay.pi_no}
-                        </button>
-                      </Link>
-                      <span>| {formatPiDate(piDataToDisplay.updated) || "N/A"} | {piDataToDisplay.finalAmount?.toFixed(2) || "0.00"}</span>
-                    </div>
-                  )}
-
-                  {/* Display Create PI button only if no PI is created and not loading */}
-                  {!isPiCreated && !isPiCreating && (
-                    <div className="flex items-center justify-center">
-                      <button
-                        className={stylebutton}
-                        onClick={() => handleCreatePI(estimate, totalFinalAmount)}
-                        disabled={isPiCreating}
-                      >
-                        Create PI
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Display Loading state */}
-                  {isPiCreating && (
-                    <span className="text-[#3598dc] font-medium">
-                      Creating...
+                {(clientId === 'all' || id === 'all') && (
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
+                    <span className="font-semibold text-gray-800">
+                      {estimate?.consignee_name || "Unknown"}
                     </span>
-                  )}
+                  </td>
+                )}
 
-                  {/* Display Error state */}
-                  {piError && (
-                    <span className="text-red-500 font-medium">{piError}</span>
-                  )}
-                </td>
+                {/* 🚀 PERFORMA INVOICE CELL LOGIC 🚀 */}
+                {(clientId !== 'all' && id !== 'all') && (
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
+                    {/* Display PI Data if it exists or is being created */}
+                    {isPiCreated && (
+                      <div className="flex items-center justify-center gap-1">
+                        <Link
+                          to={`/payments/performanceInvoiceDetails/${piDataToDisplay._id}`}
+                        >
+                          <button className="text-[#3598dc] cursor-pointer hover:text-[#566e7d] font-medium px-1">
+                            {piDataToDisplay.pi_no}
+                          </button>
+                        </Link>
+                        <span>| {formatPiDate(piDataToDisplay.updated) || "N/A"} | {piDataToDisplay.finalAmount?.toFixed(2) || "0.00"}</span>
+                      </div>
+                    )}
+
+                    {/* Display Create PI button only if no PI is created and not loading */}
+                    {!isPiCreated && !isPiCreating && (
+                      <div className="flex items-center justify-center">
+                        <button
+                          className={stylebutton}
+                          onClick={() => handleCreatePI(estimate, totalFinalAmount)}
+                          disabled={isPiCreating}
+                        >
+                          Create PI
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Display Loading state */}
+                    {isPiCreating && (
+                      <span className="text-[#3598dc] font-medium">
+                        Creating...
+                      </span>
+                    )}
+
+                    {/* Display Error state */}
+                    {piError && (
+                      <span className="text-red-500 font-medium">{piError}</span>
+                    )}
+                  </td>
+                )}
 
                 {/* ... Invoice Details Cell ... */}
                 {/* <td className="border border-gray-300 px-4 justify-items-center whitespace-nowrap text-xs text-black text-center">
@@ -355,15 +379,17 @@ const EstimateTable = ({ clientId }) => {
                   </div>
                 </td> */}
 
-                <td className="border border-gray-300 px-4 py-2 whitespace-nowrap text-xs text-black text-center">
-                  {formattedUpdatedDate} | {estimate?.added_by}
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
+                  <span className="text-gray-500">{formattedUpdatedDate}</span> <span className="text-gray-300 mx-1">|</span> <span className="font-medium">{estimate?.added_by}</span>
                 </td>
 
-                <td className="border-t border-gray-300 px-7 py-2 whitespace-nowrap text-xs font-medium  items-center gap-2 text-center ">
-                  <button className="border border-gray-300 text-red-600 hover:text-white hover:bg-red-500 px-2 items-center  cursor-pointer">
-                    x
-                  </button>
-                </td>
+                {(clientId !== 'all' && id !== 'all') && (
+                  <td className="px-7 py-3 whitespace-nowrap text-sm font-medium items-center gap-2 text-center">
+                    <button className="border border-gray-300 text-red-600 hover:text-white hover:bg-red-500 px-2 py-1 rounded items-center cursor-pointer transition-colors">
+                      x
+                    </button>
+                  </td>
+                )}
               </tr>
             );
           })}

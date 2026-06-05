@@ -1,8 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-
-// NOTE: Since VITE_API_URL is not defined in this environment, it's assumed to be available at runtime.
-const BASE_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 // 🟢 CREATE (Add new Performa Invoice)
 export const createPerformaInvoice = createAsyncThunk(

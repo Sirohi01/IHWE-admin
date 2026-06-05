@@ -213,6 +213,7 @@ import EstimateDetails from "../pages/ihwe_client_data_2026/invoice/EstimateDeta
 import BuyerRegistrationForm from '../pages/buyer/BuyerRegistrationForm';
 const EditEstimate = lazy(() => import("../pages/ihwe_client_data_2026/invoice/EditEstimate"));
 const PerformaInvoiceDetails = lazy(() => import("../pages/ihwe_client_data_2026/invoice/PerformaInvoiceDetails"));
+const PerformaInvoiceList = lazy(() => import("../pages/ihwe_client_data_2026/invoice/PerformaInvoiceList"));
 const CreateInvoice = lazy(() => import("../pages/ihwe_client_data_2026/invoice/CreateInvoice"));
 const CreditNote = lazy(() => import("../pages/ihwe_client_data_2026/CreditNote"));
 const TaxInvoiceDetails = lazy(() => import("../pages/ihwe_client_data_2026/invoice/TaxInvoiceDetails"));
@@ -318,6 +319,7 @@ export default function AppRoutes() {
               element={<ExhibitorProfileManage />}
             />
             <Route path="performa-invoice/:id" element={<PerformaInvoices />} />
+            <Route path="performa-invoice-list/:id" element={<PerformaInvoiceList />} />
             <Route path="create-debit-note" element={<CreateDebitNote />} />
             <Route path="page-create-invoice" element={<CreateInvoicePage />} />
             <Route path="e-promotion-manage" element={<EPromotionManage />} />
