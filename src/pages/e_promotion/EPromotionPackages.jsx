@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, X, Save, Package, RotateCw, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
 import api, { SERVER_URL } from '../../lib/api';
 import Swal from 'sweetalert2';
+import PageHeader from '../../components/PageHeader';
 
 const EMPTY = {
     title: '',
@@ -19,8 +20,8 @@ const EMPTY = {
     order: 0
 };
 
-const iCls = "w-full h-9 px-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all text-xs font-medium";
-const lCls = "block text-[10px] font-black text-gray-400 uppercase mb-1.5 tracking-widest";
+const iCls = "w-full h-9 px-3 bg-gray-50 border border-gray-200 rounded-sm focus:ring-1 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all text-xs font-medium";
+const lCls = "block text-[10px] font-semibold text-gray-600 uppercase mb-1.5 tracking-widest";
 
 export default function EPromotionPackages() {
     const [packages, setPackages] = useState([]);
@@ -129,20 +130,24 @@ export default function EPromotionPackages() {
     };
 
     return (
-        <div className="p-6 min-h-screen bg-[#f8f9fa] font-inter">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8 mt-6">
-                <div>
-                    <h1 className="text-2xl font-black text-[#23471d] uppercase tracking-tight">E-Promotion Packages</h1>
-                    <p className="text-xs text-gray-400 mt-1">Configure and manage promotional tiers for the IHWE platform</p>
-                </div>
-                <button onClick={load} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 text-xs font-bold uppercase hover:border-[#23471d] hover:text-[#23471d] transition-all rounded-lg shadow-sm group">
-                    <RotateCw size={14} className={loading ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-500"} /> Refresh
-                </button>
+        <div className=" min-h-screen bg-[#f8f9fa] font-inter">
+            <div className="pt-4">
+                <PageHeader
+                    title="E-Promotion Packages"
+                    description="Configure and manage promotional tiers for the IHWE platform"
+                >
+                    <button
+                        onClick={load}
+                        className="group flex items-center gap-2 bg-white border-2 border-[#23471d]/20 text-[#23471d] px-5 py-2 rounded-[2px] hover:bg-[#23471d] hover:text-white hover:border-[#23471d] transition-all duration-300 uppercase tracking-[0.15em] text-xs font-bold shadow-sm hover:shadow-md active:scale-95"
+                    >
+                        <RotateCw size={14} className={loading ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-500"} />
+                        Refresh
+                    </button>
+                </PageHeader>
             </div>
 
             {/* FORM AT TOP */}
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mb-8">
+            <div className="m-6 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mb-4">
                 <div className={`px-6 py-4 border-b border-gray-100 flex items-center justify-between ${editId ? 'bg-orange-50' : 'bg-green-50'}`}>
                     <h2 className="text-sm font-bold flex items-center gap-2 text-gray-800 uppercase tracking-tight">
                         {editId ? <Pencil className="w-4 h-4 text-orange-600" /> : <Plus className="w-4 h-4 text-green-600" />}
@@ -159,7 +164,7 @@ export default function EPromotionPackages() {
                     <form onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Column 1: Identity */}
                         <div className="space-y-4">
-                            <p className="text-[11px] font-black text-[#23471d] uppercase tracking-widest border-l-4 border-[#23471d] pl-3">Package Identity</p>
+                            <p className="text-[11px] font-bold text-[#23471d] uppercase tracking-widest border-l-4 border-[#23471d] pl-3">Package Identity</p>
                             <div>
                                 <label className={lCls}>Package Title *</label>
                                 <input value={form.title} onChange={e => inp('title', e.target.value)} className={iCls} placeholder="e.g. STARTER VISIBILITY" />
@@ -182,7 +187,7 @@ export default function EPromotionPackages() {
 
                         {/* Column 2: Content & Styling */}
                         <div className="space-y-4">
-                            <p className="text-[11px] font-black text-[#23471d] uppercase tracking-widest border-l-4 border-[#23471d] pl-3">Features & Layout</p>
+                            <p className="text-[11px] font-bold text-[#23471d] uppercase tracking-widest border-l-4 border-[#23471d] pl-3">Features & Layout</p>
                             <div>
                                 <label className={lCls}>Features List</label>
                                 <div className="space-y-2 max-h-[160px] overflow-y-auto pr-2 custom-scrollbar border border-gray-100 p-3 bg-gray-50/50 rounded-lg">
@@ -208,7 +213,7 @@ export default function EPromotionPackages() {
 
                         {/* Column 3: Appearance & Actions */}
                         <div className="space-y-4">
-                            <p className="text-[11px] font-black text-[#23471d] uppercase tracking-widest border-l-4 border-[#23471d] pl-3">Styling & Config</p>
+                            <p className="text-[11px] font-bold text-[#23471d] uppercase tracking-widest border-l-4 border-[#23471d] pl-3">Styling & Config</p>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className={lCls}>Display Order</label>
@@ -252,7 +257,7 @@ export default function EPromotionPackages() {
             </div>
 
             {/* TABLE BELOW */}
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="m-6 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
                     <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Active Promotional Tiers ({totalItems})</h3>
                 </div>

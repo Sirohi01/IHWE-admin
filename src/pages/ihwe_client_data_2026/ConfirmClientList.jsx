@@ -162,7 +162,7 @@ const ConfirmClientList = () => {
   );
 
   const totalConverted = filteredRegs.length;
-  const totalRevenue = filteredRegs.reduce((acc, curr) => acc + (curr.financeBreakdown?.netPayable || curr.participation?.total || 0), 0);
+  const totalRevenue = filteredRegs.reduce((acc, curr) => acc + (curr.amountPaid || curr.financeBreakdown?.netPayable || curr.participation?.total || 0), 0);
 
   // Calculate existing clients by checking company name, email, or mobile against masterCompanies
   const existingClientsCount = filteredRegs.filter(reg => {
@@ -425,7 +425,7 @@ const ConfirmClientList = () => {
               </span>
             </td>
             <td className="px-2 py-2 text-right">
-              <span className="font-semibold text-slate-800 text-[10px]">{row.participation?.currency === 'USD' ? '$' : '₹'} {row.participation?.total?.toLocaleString() || "-"}</span>
+              <span className="font-semibold text-slate-800 text-[10px]">{row.participation?.currency === 'USD' ? '$' : '₹'} {(row.amountPaid || row.financeBreakdown?.netPayable || row.participation?.total || 0).toLocaleString()}</span>
             </td>
             <td className="px-2 py-2 text-center">
               <div className="flex items-center gap-2 flex-wrap justify-center">

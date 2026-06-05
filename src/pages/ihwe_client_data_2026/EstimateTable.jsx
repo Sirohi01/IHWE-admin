@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchEstimates } from "../../features/estimates/estimateSlice";
+import { fetchEstimates, fetchAllGlobalEstimates } from "../../features/estimates/estimateSlice";
 import {
   createPerformaInvoice,
   fetchPerformaInvoices,
 } from "../../features/performaInvoice/performaInvoiceSlice";
 import { fetchInvoices } from "../../features/invoice/invoiceSlice";
+import api from "../../lib/api";
+import Swal from "sweetalert2";
+import { MessageCircleMore, Mail } from "lucide-react";
 
 const stylebutton =
   "w-fit text-[#3598dc] cursor-pointer border border-[#3598dc] hover:bg-[#3598dc] hover:text-white font-medium flex  items-center gap-1 px-1";
@@ -37,7 +40,9 @@ const EstimateTable = ({ clientId }) => {
   }, [estimates, id]);
 
   useEffect(() => {
-    if (clientId || id) {
+    if (clientId === 'all') {
+      dispatch(fetchAllGlobalEstimates());
+    } else if (clientId || id) {
       dispatch(fetchEstimates(clientId || id));
     }
     dispatch(fetchPerformaInvoices());
@@ -86,6 +91,38 @@ const EstimateTable = ({ clientId }) => {
     [dispatch]
   );
 
+  const [actionLoaders, setActionLoaders] = useState({});
+
+  const handleSendWhatsApp = async (estimateId) => {
+    try {
+      setActionLoaders(prev => ({ ...prev, [`${estimateId}_wa`]: true }));
+      const res = await api.post(`/api/estimates/${estimateId}/send-whatsapp`, {});
+      if (res.status === 200) {
+        Swal.fire('Success', 'WhatsApp message sent successfully', 'success');
+      }
+    } catch (error) {
+      console.error("Error sending WhatsApp:", error);
+      Swal.fire('Error', error.response?.data?.message || 'Failed to send WhatsApp message', 'error');
+    } finally {
+      setActionLoaders(prev => ({ ...prev, [`${estimateId}_wa`]: false }));
+    }
+  };
+
+  const handleSendEmail = async (estimateId) => {
+    try {
+      setActionLoaders(prev => ({ ...prev, [`${estimateId}_email`]: true }));
+      const res = await api.post(`/api/estimates/${estimateId}/send-email`, {});
+      if (res.status === 200) {
+        Swal.fire('Success', 'Email sent successfully', 'success');
+      }
+    } catch (error) {
+      console.error("Error sending Email:", error);
+      Swal.fire('Error', error.response?.data?.message || 'Failed to send Email', 'error');
+    } finally {
+      setActionLoaders(prev => ({ ...prev, [`${estimateId}_email`]: false }));
+    }
+  };
+
   // New function to handle navigation for Print/Copy buttons
   const handlePrintCopyNavigation = (copyType, invId) => {
     if (!invId) {
@@ -113,29 +150,50 @@ const EstimateTable = ({ clientId }) => {
   //   navigate(`/payments/createInvoice/${estimates?.est_no}`);
   // };
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentEstimates = estimates.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(estimates.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   return (
-    <div className="overflow-x-auto p-4">
-      <table className="min-w-full border-collapse border border-gray-300 ">
-        <thead className="border  border-gray-300">
+    <div className="overflow-x-auto p-1">
+      <table className="min-w-full border-collapse bg-white rounded-lg overflow-hidden shadow-sm">
+        <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
             <th
               scope="col"
-              className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
+              className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
             >
               S.No.
             </th>
             <th
               scope="col"
-              className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
+              className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
             >
-              Estimate Details
+              {(clientId === 'all' || id === 'all') ? "Proforma Invoice Details" : "Estimate Details"}
             </th>
-            <th
-              scope="col"
-              className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
-            >
-              Performa Inv.
-            </th>
+            {(clientId === 'all' || id === 'all') && (
+              <th
+                scope="col"
+                className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
+              >
+                Company / Client
+              </th>
+            )}
+            {(clientId !== 'all' && id !== 'all') && (
+              <th
+                scope="col"
+                className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
+              >
+                Performa Inv.
+              </th>
+            )}
             {/* <th
               scope="col"
               className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
@@ -150,21 +208,23 @@ const EstimateTable = ({ clientId }) => {
             </th> */}
             <th
               scope="col"
-              className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
+              className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
             >
               Updated Details
             </th>
-            <th
-              scope="col"
-              className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border-t border-r border-l border-t-gray-300 border-r-gray-300 border-l-gray-300"
-            >
-              Action
-            </th>
+            {(clientId !== 'all' && id !== 'all') && (
+              <th
+                scope="col"
+                className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
+              >
+                Action
+              </th>
+            )}
           </tr>
         </thead>
 
-        <tbody className="bg-white border border-gray-300">
-          {estimates.map((estimate, index) => {
+        <tbody className="bg-white divide-y divide-gray-200">
+          {currentEstimates.map((estimate, index) => {
             // 💰 Calculate Amount
             const totalFinalAmount = estimate?.items?.reduce((total, item) => {
               return total + (parseFloat(item.finalAmount) || 0);
@@ -221,13 +281,13 @@ const EstimateTable = ({ clientId }) => {
             const invId = matchingInvoice ? matchingInvoice._id : null;
 
             return (
-              <tr key={estimate._id}>
-                <td className="border border-gray-300 px-4 py-2 whitespace-nowrap text-xs text-black text-center">
-                  {index + 1}
+              <tr key={estimate._id} className="hover:bg-gray-50 transition-colors border-b border-gray-200">
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
+                  {indexOfFirstItem + index + 1}
                 </td>
 
-                <td className="border border-gray-300 px-4 py-2 whitespace-nowrap text-xs text-black text-center">
-                  <div className="flex items-center justify-center gap-1">
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
+                  <div className="flex items-center justify-start gap-2">
                     {/* <Link to={`/payments/estimateDetails/${estimate?.est_no}`}> */}
                     <Link to={`/payments/estimateDetails/${estimate?._id}`}>
                       <button className="text-[#3598dc] cursor-pointer hover:text-[#566e7d] font-medium px-1">
@@ -238,47 +298,57 @@ const EstimateTable = ({ clientId }) => {
                   </div>
                 </td>
 
-                {/* 🚀 PERFORMA INVOICE CELL LOGIC 🚀 */}
-                <td className="border border-gray-300 px-4 py-2 whitespace-nowrap text-xs text-black text-center ">
-                  {/* Display PI Data if it exists or is being created */}
-                  {isPiCreated && (
-                    <div className="flex items-center justify-center gap-1">
-                      <Link
-                        to={`/payments/performanceInvoiceDetails/${piDataToDisplay._id}`}
-                      >
-                        <button className="text-[#3598dc] cursor-pointer hover:text-[#566e7d] font-medium px-1">
-                          {piDataToDisplay.pi_no}
-                        </button>
-                      </Link>
-                      <span>| {formatPiDate(piDataToDisplay.updated) || "N/A"} | {piDataToDisplay.finalAmount?.toFixed(2) || "0.00"}</span>
-                    </div>
-                  )}
-
-                  {/* Display Create PI button only if no PI is created and not loading */}
-                  {!isPiCreated && !isPiCreating && (
-                    <div className="flex items-center justify-center">
-                      <button
-                        className={stylebutton}
-                        onClick={() => handleCreatePI(estimate, totalFinalAmount)}
-                        disabled={isPiCreating}
-                      >
-                        Create PI
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Display Loading state */}
-                  {isPiCreating && (
-                    <span className="text-[#3598dc] font-medium">
-                      Creating...
+                {(clientId === 'all' || id === 'all') && (
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
+                    <span className="font-semibold text-gray-800">
+                      {estimate?.consignee_name || "Unknown"}
                     </span>
-                  )}
+                  </td>
+                )}
 
-                  {/* Display Error state */}
-                  {piError && (
-                    <span className="text-red-500 font-medium">{piError}</span>
-                  )}
-                </td>
+                {/* 🚀 PROFORMA Invoice CELL LOGIC 🚀 */}
+                {(clientId !== 'all' && id !== 'all') && (
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
+                    {/* Display PI Data if it exists or is being created */}
+                    {isPiCreated && (
+                      <div className="flex items-center justify-center gap-1">
+                        <Link
+                          to={`/payments/performanceInvoiceDetails/${piDataToDisplay._id}`}
+                        >
+                          <button className="text-[#3598dc] cursor-pointer hover:text-[#566e7d] font-medium px-1">
+                            {piDataToDisplay.pi_no}
+                          </button>
+                        </Link>
+                        <span>| {formatPiDate(piDataToDisplay.updated) || "N/A"} | {piDataToDisplay.finalAmount?.toFixed(2) || "0.00"}</span>
+                      </div>
+                    )}
+
+                    {/* Display Create PI button only if no PI is created and not loading */}
+                    {!isPiCreated && !isPiCreating && (
+                      <div className="flex items-center justify-center">
+                        <button
+                          className={stylebutton}
+                          onClick={() => handleCreatePI(estimate, totalFinalAmount)}
+                          disabled={isPiCreating}
+                        >
+                          Create PI
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Display Loading state */}
+                    {isPiCreating && (
+                      <span className="text-[#3598dc] font-medium">
+                        Creating...
+                      </span>
+                    )}
+
+                    {/* Display Error state */}
+                    {piError && (
+                      <span className="text-red-500 font-medium">{piError}</span>
+                    )}
+                  </td>
+                )}
 
                 {/* ... Invoice Details Cell ... */}
                 {/* <td className="border border-gray-300 px-4 justify-items-center whitespace-nowrap text-xs text-black text-center">
@@ -355,20 +425,66 @@ const EstimateTable = ({ clientId }) => {
                   </div>
                 </td> */}
 
-                <td className="border border-gray-300 px-4 py-2 whitespace-nowrap text-xs text-black text-center">
-                  {formattedUpdatedDate} | {estimate?.added_by}
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
+                  <span className="text-gray-500">{formattedUpdatedDate}</span> <span className="text-gray-300 mx-1">|</span> <span className="font-medium capitalize">{estimate?.added_by}</span>
                 </td>
 
-                <td className="border-t border-gray-300 px-7 py-2 whitespace-nowrap text-xs font-medium  items-center gap-2 text-center ">
-                  <button className="border border-gray-300 text-red-600 hover:text-white hover:bg-red-500 px-2 items-center  cursor-pointer">
-                    x
-                  </button>
-                </td>
+                {(clientId !== 'all' && id !== 'all') && (
+                  <td className="px-7 py-3 whitespace-nowrap text-sm font-medium items-center gap-2 text-center">
+                    <button className="border border-gray-300 text-red-600 hover:text-white hover:bg-red-500 px-2 py-1 rounded items-center cursor-pointer transition-colors">
+                      x
+                    </button>
+                  </td>
+                )}
               </tr>
             );
           })}
         </tbody>
       </table>
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center py-3 px-4 bg-white border-t border-gray-200">
+          <span className="text-sm text-gray-700">
+            Showing <span className="font-semibold">{indexOfFirstItem + 1}</span> to <span className="font-semibold">{Math.min(indexOfLastItem, estimates.length)}</span> of <span className="font-semibold">{estimates.length}</span> entries
+          </span>
+          <div className="flex gap-1">
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 text-sm rounded border ${currentPage === 1 ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
+            >
+              Previous
+            </button>
+            <div className="flex gap-1 overflow-x-auto max-w-[200px] md:max-w-none">
+              {[...Array(totalPages)].map((_, i) => {
+                const pageNum = i + 1;
+                if (pageNum === 1 || pageNum === totalPages || (pageNum >= currentPage - 2 && pageNum <= currentPage + 2)) {
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => paginate(pageNum)}
+                      className={`px-3 py-1 text-sm rounded border ${currentPage === pageNum ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                }
+                if (pageNum === currentPage - 3 || pageNum === currentPage + 3) {
+                  return <span key={pageNum} className="px-2 py-1">...</span>;
+                }
+                return null;
+              })}
+            </div>
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1 text-sm rounded border ${currentPage === totalPages ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -93,26 +93,26 @@ const InternationalBuyerList = () => {
     };
 
     return (
-        <div className="bg-white px-4 pb-10 ">
+        <div className="bg-white pb-10 ">
             <div className="w-full">
-                <div className="py-2 flex justify-between items-center">
+                <div className="py-2 flex justify-between border-b border-gray-300 items-center px-4">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-800 uppercase flex items-center gap-3">
-                            <Globe className="w-8 h-8 text-blue-600" />
+                            <Globe className="w-7 h-7 text-blue-600" />
                             International List
                         </h1>
-                        <p className="text-gray-500 mt-1 pl-10 text-lg"> Showing {filteredRegistrations.length} total international registrations</p>
+                        <p className="text-gray-500 pl-10 text-lg"> Showing {filteredRegistrations.length} total international registrations</p>
                     </div>
                     <button
                         onClick={() => navigate('/international-buyer-registration')}
-                        className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold uppercase tracking-widest text-sm hover:bg-blue-700 transition-all shadow-md flex items-center gap-2"
+                        className="bg-[#23471d] hover:bg-[#1a3516] text-white px-6 py-2.5 rounded-sm font-bold uppercase tracking-widest text-sm transition-all shadow-md flex items-center gap-2"
                     >
                         <Globe className="w-4 h-4" />
                         Add New International Buyer
                     </button>
                 </div>
 
-                <div className="border border-gray-300 overflow-hidden rounded-lg shadow-sm">
+                <div className="border border-gray-300 overflow-hidden rounded-lg shadow-sm m-6">
                     {/* <div className="px-6 py-4 border-b border-gray-300 bg-gray-50">
                         <div>
                             <h2 className="text-lg font-semibold text-gray-800 uppercase">International List</h2>

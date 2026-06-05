@@ -9,6 +9,7 @@ import { fetchCompanies } from "../../../features/company/companySlice";
 import { fetchEstimates } from "../../../features/estimates/estimateSlice";
 import { useNavigate } from "react-router-dom";
 import { LayoutGrid, UserCheck, Upload, ChevronDown, ChevronLeft, X } from "lucide-react";
+import api from "../../../lib/api";
 
 
 const PerformaInvoiceDetails = () => {
@@ -57,21 +58,11 @@ const PerformaInvoiceDetails = () => {
   }, [id, perInvoices]);
 
   useEffect(() => {
-    // Fetch estimates only when we have the companyId from the Performa Invoice
+    // Fetch estimates only when we have the companyId from the PROFORMA Invoice
     if (matchedPerIvo?.companyId) {
       dispatch(fetchEstimates(matchedPerIvo.companyId));
     }
   }, [matchedPerIvo?.companyId, dispatch]);
-
-  useEffect(() => {
-    if (matchedPerIvo && companies.length > 0) {
-      // Match company using the companyId from the matched estimate
-      const matchedCompany = companies.find(
-        (c) => c._id === matchedPerIvo.companyId
-      );
-      setCompany(matchedCompany || null);
-    }
-  }, [matchedPerIvo, companies]);
 
   useEffect(() => {
     if (estimates && estimates.length > 0 && matchedPerIvo) {
@@ -81,14 +72,41 @@ const PerformaInvoiceDetails = () => {
   }, [matchedPerIvo, estimates]);
 
   useEffect(() => {
-    if (matchedEstimate && companies.length > 0) {
-      // Match company using the companyId from the matched estimate
-      const matchedCompany = companies.find(
-        (c) => c._id === matchedEstimate.companyId
-      );
-      setCompany(matchedCompany || null);
-    }
-  }, [matchedEstimate, companies]);
+    const fetchCompanyData = async () => {
+      const companyId = matchedEstimate?.companyId || matchedPerIvo?.companyId;
+      if (!companyId) return;
+
+      if (companies && companies.length > 0) {
+        const matchedCompany = companies.find((c) => c._id === companyId);
+        if (matchedCompany) {
+          setCompany(matchedCompany);
+          return;
+        }
+      }
+
+      try {
+        const response = await api.get(`/api/exhibitor-registration/${companyId}`);
+        const exhibitorData = response.data?.data;
+        if (exhibitorData) {
+          setCompany({
+            ...exhibitorData,
+            companyName: exhibitorData.exhibitorName,
+            contacts: [{
+              title: exhibitorData.contact1?.title || "",
+              firstName: exhibitorData.contact1?.firstName || "",
+              surname: exhibitorData.contact1?.lastName || "",
+              designation: exhibitorData.contact1?.designation || "",
+              email: exhibitorData.contact1?.email || exhibitorData.email || "",
+              mobile: exhibitorData.contact1?.mobile || exhibitorData.mobile || exhibitorData.landlineNo || ""
+            }]
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch company details", err);
+      }
+    };
+    fetchCompanyData();
+  }, [matchedEstimate, matchedPerIvo, companies]);
 
   const handleprint = useReactToPrint({
     contentRef: sameRef, // Changed from contentRef to content
@@ -100,7 +118,7 @@ const PerformaInvoiceDetails = () => {
       <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-inter animate-fadeIn">
         {/* <div className="w-full h-auto flex justify-between bg-white px-5 py-0.5 ">
           <h1 className="text-xl font-norma text-gray-600">
-            ACCOUNT SECTION | PERFORMA INVOICE
+            ACCOUNT SECTION | Proforma Invoice
           </h1>
           <button
             onClick={handleprint}
@@ -113,7 +131,7 @@ const PerformaInvoiceDetails = () => {
         <div className="flex flex-col lg:flex-row justify-between items-center pb-4 border-b border-gray-300 gap-4">
           <div className="flex flex-col items-center lg:items-start gap-1">
             <h1 className="text-xl font-semibold text-slate-600 uppercase tracking-tight leading-none text-center lg:text-left">
-              ACCOUNT SECTION - PERFORMA INVOICE | Sales Management Section
+              ACCOUNT SECTION - Proforma Invoice | Sales Management Section
             </h1>
           </div>
           <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
