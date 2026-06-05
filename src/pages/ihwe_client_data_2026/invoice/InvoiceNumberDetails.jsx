@@ -75,7 +75,7 @@ const InvoiceNumberDetails = () => {
     contentRef: sameRef,
     documentTitle: "invoice",
     pageStyle: `
-      @page { size: auto; margin: 0mm 5mm 0mm  5mm; }
+      @page { size: auto; margin: 5mm 5mm 0mm  5mm; }
       @media print { body { -webkit-print-color-adjust: exact; } }
     `
   });
@@ -340,8 +340,8 @@ const InvoiceNumberDetails = () => {
                 </tr>
               ))}
             {/* Empty rows for spacing */}
-            {[...Array(10)].map((_, i) => (
-              <tr key={i} style={{ height: "30px" }}>
+            {Array.from({ length: Math.max(0, 5 - (matchedInvoice?.items?.length || 0)) }).map((_, i) => (
+              <tr key={i} style={{ height: "16px" }}>
                 <td className="border-t border-b border-l border-r border-t-gray-100 border-b-gray-100  border-l-black border-r-black  px-2 py-0.5 text-[11px]"></td>
                 <td className="border-t border-b border-l border-r border-t-gray-100 border-b-gray-100  border-l-black border-r-black  px-2 py-0.5 text-[11px]"></td>
                 <td className="border-t border-b border-l border-r border-t-gray-100 border-b-gray-100  border-l-black border-r-black px-2 py-0.5 text-[11px]"></td>
