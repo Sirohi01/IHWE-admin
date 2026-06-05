@@ -1098,10 +1098,35 @@ const BookAStand = () => {
                             </div>
                         </div>
 
-
+                        {/* SECTION: CRM ATTRIBUTION (Moved inside per request) */}
+                        <div className="mt-4 pt-4 border-t border-slate-100">
+                            <h4 className="text-[11px] font-bold text-slate-800 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                CRM Attribution
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+                                <div>
+                                    <label className={labelClasses}>Referral Channel <span className="text-red-500">*</span></label>
+                                    <select required value={formData.referredBy} onChange={(e) => handleSelectChange('referredBy', e.target.value)} className={inputClasses}>
+                                        <option value="">How did you hear about us?</option>
+                                        <option value="Direct Website">Direct Website</option>
+                                        <option value="Email Marketing">Email Marketing</option>
+                                        <option value="Social Media">Social Media</option>
+                                        <option value="Search Engine">Search Engine</option>
+                                        <option value="Others">Others</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className={labelClasses}>Spoken With <span className="text-red-500">*</span></label>
+                                    <select required value={formData.spokenWith} onChange={(e) => handleSelectChange('spokenWith', e.target.value)} className={inputClasses}>
+                                        <option value="">Select Staff Member</option>
+                                        {marketingStaff.map(s => <option key={s._id} value={s.fullName || s.username}>{s.fullName || s.username}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
 
                         {/* PAYMENT PLAN & TDS CONTROL */}
-                        <div className="p-4 bg-[#f8fafc] border border-slate-200 rounded-xl mt-3 space-y-3">
+                        <div className="p-4 bg-[#f8fafc] border border-slate-200 rounded-xl mt-3 flex flex-col lg:flex-row items-end justify-between gap-4">
 
                             {(() => {
                                 const currentEvent = events.find(e => e._id === selectedEventId);
@@ -1113,7 +1138,7 @@ const BookAStand = () => {
                                     .sort((a, b) => Number(a.percentage) - Number(b.percentage))[0];
                                 const isFullSelected = formData.paymentPlanType === 'full' || formData.paymentPlanType === fullPlan?.id;
                                 return (
-                                    <div>
+                                    <div className="flex-1">
                                         <label className={labelClasses}>Payment Plan <span className="text-red-500">*</span></label>
                                         <div className="flex flex-wrap gap-2 mt-1">
                                             {/* Full Payment */}
@@ -1149,8 +1174,8 @@ const BookAStand = () => {
                                                 </button>
                                             )}
                                         </div>
-                                        <p className="text-[10px] text-slate-400 mt-1.5 font-medium">
-                                            Selected: <span className="font-semibold text-slate-700">{formData.paymentPlanLabel}</span>
+                                        <p className="text-[10px] text-black mt-1.5 font-medium">
+                                            Selected: <span className="font-bold text-red-600">{formData.paymentPlanLabel}</span>
                                             {isFullSelected && settings?.fullPaymentDiscount > 0 && (
                                                 <span className="ml-2 text-[#23471d] font-semibold">— {settings.fullPaymentDiscount}% discount applied</span>
                                             )}
@@ -1158,25 +1183,26 @@ const BookAStand = () => {
                                     </div>
                                 );
                             })()}
-                            <div className="flex items-end justify-between gap-4">
+                            
+                            <div className="flex items-end justify-end gap-6 shrink-0">
                                 <div>
                                     <label className={labelClasses}>Apply TDS Deduction <span className="text-red-500">*</span></label>
-                                    <div className="w-48 relative mt-1">
+                                    <div className="w-40 relative mt-1">
                                         <select
                                             value={formData.chosenTdsPercent}
                                             onChange={(e) => setFormData(prev => ({ ...prev, chosenTdsPercent: Number(e.target.value) }))}
-                                            className="w-full h-9 rounded-[2px] border border-slate-400 px-3 text-[12px] font-semibold text-red-600 bg-white focus:border-[#23471d] outline-none appearance-none"
+                                            className="w-full h-[28px] rounded-[2px] border border-slate-400 px-3 text-[11px] font-semibold text-red-600 bg-white focus:border-[#23471d] outline-none appearance-none"
                                         >
                                             <option value={0}>0% TDS</option>
                                             <option value={1}>1% TDS</option>
                                             <option value={2}>2% TDS</option>
                                             {/* <option value={10}>10% TDS</option> */}
                                         </select>
-                                        <ChevronDown size={14} className="absolute right-3 top-3 text-red-600 pointer-events-none" />
+                                        <ChevronDown size={14} className="absolute right-2 top-1.5 text-red-600 pointer-events-none" />
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest leading-none mb-1">
+                                <div className="text-right border-l border-slate-200 pl-6">
+                                    <p className="text-[9px] font-bold text-black uppercase tracking-widest leading-none mb-1.5">
                                         Net Payable (After TDS)
                                     </p>
                                     <p className="text-xl font-semibold text-[#23471d] leading-none">
@@ -1216,30 +1242,7 @@ const BookAStand = () => {
                     </div>
 
 
-                    {/* SECTION: CRM ATTRIBUTION */}
-                    <div className={cardClasses}>
-                        <h3 className={sectionHeaderClasses}>CRM Attribution</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 -mt-3">
-                            <div>
-                                <label className={labelClasses}>Referral Channel <span className="text-red-500">*</span></label>
-                                <select required value={formData.referredBy} onChange={(e) => handleSelectChange('referredBy', e.target.value)} className={inputClasses}>
-                                    <option value="">How did you hear about us?</option>
-                                    <option value="Direct Website">Direct Website</option>
-                                    <option value="Email Marketing">Email Marketing</option>
-                                    <option value="Social Media">Social Media</option>
-                                    <option value="Search Engine">Search Engine</option>
-                                    <option value="Others">Others</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className={labelClasses}>Spoken With <span className="text-red-500">*</span></label>
-                                <select required value={formData.spokenWith} onChange={(e) => handleSelectChange('spokenWith', e.target.value)} className={inputClasses}>
-                                    <option value="">Select Staff Member</option>
-                                    {marketingStaff.map(s => <option key={s._id} value={s.fullName || s.username}>{s.fullName || s.username}</option>)}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+
                     {/* FINANCIAL SETTLEMENT BREAKDOWN */}
                     <div className="px-2">
                         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] relative overflow-hidden group">
@@ -1293,7 +1296,7 @@ const BookAStand = () => {
                                     <div className="flex gap-4">
                                         <div>
                                             <p className="text-[10px] font-semibold text-slate-900">+{formData.participation.currency} {formData.financeBreakdown.gstAmount?.toLocaleString()}</p>
-                                            <p className="text-[8px] font-bold text-slate-400 uppercase">GST 18%</p>
+                                            <p className="text-[8px] font-bold text-red-600 uppercase">GST 18%</p>
                                         </div>
                                         {formData.financeBreakdown.tdsPercent > 0 && (
                                             <div>
