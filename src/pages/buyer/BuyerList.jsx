@@ -108,7 +108,7 @@ const BuyerList = () => {
                     <div>
                         <button
                             onClick={() => navigate("/buyer-registration")}
-                            className="bg-[#23471d] text-white px-4 py-2 rounded-sm">Add New Registration</button>
+                            className="bg-[#23471d] hover:bg-[#1a3516] text-white px-4 py-2 rounded-sm">Add New Registration</button>
                     </div>
                 </div>
 

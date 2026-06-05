@@ -69,7 +69,7 @@ const BuyerRegistrationForm = () => {
 
             <div className="w-full mt-0 flex flex-col gap-1">
                 <section
-                    className="hero-background-registration relative overflow-hidden !aspect-auto md:!aspect-[4/1] !h-auto md:!h-auto py-6 md:py-0 rounded-t-xl"
+                    className="hero-background-registration relative overflow-hidden !aspect-auto md:!aspect-[4/1] !h-auto md:!h-auto py-6 md:py-0 rounded-t-lg"
                     style={{
                         backgroundImage: "url('/exhibition/bg.png')",
                         backgroundSize: 'cover',
@@ -99,7 +99,7 @@ const BuyerRegistrationForm = () => {
                     </div>
                 </section>
 
-                <section className="bg-white border border-gray-100 rounded-b-xl shadow-sm px-4 md:px-5 pb-2 md:pb-2 pt-2 md:pt-3 flex flex-col lg:flex-row gap-6 lg:gap-8 -mt-1">
+                <section className="bg-white border border-gray-100 rounded-b-lg shadow-sm px-4 md:px-5 pb-2 md:pb-2 pt-2 md:pt-3 flex flex-col lg:flex-row gap-6 lg:gap-8 -mt-1">
 
                     <div className="flex-1 flex flex-col justify-between">
                         <div>
@@ -125,7 +125,7 @@ const BuyerRegistrationForm = () => {
                             {/* Domestic Buyer */}
                             <div
                                 onClick={() => setBuyerType('domestic')}
-                                className={`cursor-pointer transition-all duration-300 rounded-xl px-5 pt-2 pb-4 flex flex-col items-center text-center gap-2 border-2 ${buyerType === 'domestic' ? 'bg-[#f0f7e6] border-[#4a8f2f] shadow-lg scale-[1.02]' : 'bg-[#f0f7e6]/50 border-transparent hover:border-[#c8e6a0] hover:bg-[#f0f7e6]'}`}
+                                className={`cursor-pointer transition-all duration-300 rounded-xl px-5 pt-2 pb-4 flex flex-col items-center text-center gap-2 border-2  ${buyerType === 'domestic' ? 'bg-[#f0f7e6] border-[#4a8f2f] shadow-lg scale-[1.02]' : 'bg-[#f0f7e6]/50 border-[#4a8f2f]/5 hover:border-[#c8e6a0] hover:bg-[#f0f7e6]'}`}
                             >
                                 <div className="flex items-center justify-center">
                                     <img src="/exhibition/dom.png" alt="Domestic" className="w-18 h-16 object-contain" />
@@ -150,7 +150,7 @@ const BuyerRegistrationForm = () => {
                             {/* International Buyer */}
                             <div
                                 onClick={() => setBuyerType('international')}
-                                className={`cursor-pointer transition-all duration-300 rounded-xl px-5 pt-2 pb-4 flex flex-col items-center text-center gap-2 border-2 ${buyerType === 'international' ? 'bg-[#fff7f0] border-[#d26019] shadow-lg scale-[1.02]' : 'bg-[#fff7f0]/50 border-transparent hover:border-[#f5d5b0] hover:bg-[#fff7f0]'}`}
+                                className={`cursor-pointer transition-all duration-300 rounded-xl px-5 pt-2 pb-4 flex flex-col items-center text-center gap-2 border-2 ${buyerType === 'international' ? 'bg-[#fff7f0] border-[#d26019] shadow-lg scale-[1.02]' : 'bg-[#fff7f0]/50 border-[#d26019]/5 hover:border-[#f5d5b0] hover:bg-[#fff7f0]'}`}
                             >
                                 <div className="flex items-center justify-center">
                                     <img src="/exhibition/int.png" alt="International" className="w-18 h-16 object-contain" />
