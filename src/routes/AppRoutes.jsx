@@ -218,6 +218,7 @@ const CreateInvoice = lazy(() => import("../pages/ihwe_client_data_2026/invoice/
 const CreditNote = lazy(() => import("../pages/ihwe_client_data_2026/CreditNote"));
 const TaxInvoiceDetails = lazy(() => import("../pages/ihwe_client_data_2026/invoice/TaxInvoiceDetails"));
 const InvoiceNumberDetails = lazy(() => import("../pages/ihwe_client_data_2026/invoice/InvoiceNumberDetails"));
+const InvoiceList = lazy(() => import("../pages/ihwe_client_data_2026/invoice/InvoiceList"));
 const Payments = lazy(() => import("../pages/ihwe_client_data_2026/payments/Payment"));
 const AddPayment = lazy(() => import("../pages/dashboard/account/AddPayment"));
 const AgendaManagement = lazy(() => import("../pages/AgendaManagement"));
@@ -409,7 +410,14 @@ export default function AppRoutes() {
               path="/invoiceNumberDetails/:id"
               element={<InvoiceNumberDetails />}
             />
-
+            <Route
+              path="/invoice-list"
+              element={<InvoiceList />}
+            />
+            <Route
+              path="/payments/invoiceDetails/:id"
+              element={<InvoiceNumberDetails />}
+            />
             <Route path="exhibitor-products-profile" element={<ExhibitorProductsProfile />} />
             <Route path="stalls" element={<ManageStalls />} />
             <Route path="exhibitor-bookings" element={<ManageRegistrations />} />
