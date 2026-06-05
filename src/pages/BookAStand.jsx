@@ -118,35 +118,43 @@ const BookAStand = () => {
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
-                const [eRes, staffRes, ratesRes, countryRes, stateRes, cityRes, settingsRes] = await Promise.all([
-                    api.get('/api/events'),
+                api.get('/api/events').then(eRes => {
+                    if (eRes.data.success && eRes.data.data.length > 0) {
+                        setEvents(eRes.data.data);
+                        setSelectedEventId(eRes.data.data[0]._id);
+                        setFormData(prev => {
+                            const selEv = eRes.data.data[0];
+                            const plans = selEv?.paymentPlans || [];
+                            const firstPlanId = plans.length > 0 ? plans[0].id : 'full';
+                            const firstPlanLabel = plans.length > 0 ? plans[0].label : 'Full Payment';
+                            return { ...prev, eventId: selEv._id, paymentPlanType: firstPlanId, paymentPlanLabel: firstPlanLabel };
+                        });
+                    }
+                }).catch(err => console.error("Error fetching events:", err));
+
+                // Fetch stall rates independently
+                api.get('/api/stall-rates').then(ratesRes => {
+                    if (ratesRes.data.success) setAllRates(ratesRes.data.data);
+                }).catch(err => console.error("Error fetching rates:", err));
+
+                // Fetch other data in parallel
+                Promise.all([
                     api.get('/api/public/employees'),
-                    api.get('/api/stall-rates'),
                     api.get('/api/crm-countries'),
                     api.get('/api/crm-states'),
                     api.get('/api/crm-cities'),
                     api.get('/api/settings')
-                ]);
-
-                if (eRes.data.success && eRes.data.data.length > 0) {
-                    setEvents(eRes.data.data);
-                    setSelectedEventId(eRes.data.data[0]._id);
-                    setFormData(prev => {
-                        const selEv = eRes.data.data[0];
-                        const plans = selEv?.paymentPlans || [];
-                        const firstPlanId = plans.length > 0 ? plans[0].id : 'full';
-                        const firstPlanLabel = plans.length > 0 ? plans[0].label : 'Full Payment';
-                        return { ...prev, eventId: selEv._id, paymentPlanType: firstPlanId, paymentPlanLabel: firstPlanLabel };
-                    });
-                }
-                if (staffRes.data.success) setMarketingStaff(staffRes.data.data);
-                if (ratesRes.data.success) setAllRates(ratesRes.data.data);
-                if (countryRes.data.data) setCountries(countryRes.data.data);
-                if (stateRes.data.data) setStates(stateRes.data.data);
-                if (cityRes.data.data) setCities(cityRes.data.data);
-                if (settingsRes.data.success) setSettings(settingsRes.data.data);
+                ]).then(([staffRes, countryRes, stateRes, cityRes, settingsRes]) => {
+                    if (staffRes.data.success) setMarketingStaff(staffRes.data.data);
+                    if (countryRes.data.data) setCountries(countryRes.data.data);
+                    if (stateRes.data.data) setStates(stateRes.data.data);
+                    if (cityRes.data.data) setCities(cityRes.data.data);
+                    if (settingsRes.data.success) setSettings(settingsRes.data.data);
+                }).catch(error => {
+                    console.error("Error fetching background data:", error);
+                });
             } catch (error) {
-                console.error("Error fetching initial data:", error);
+                console.error("Error in fetchInitialData:", error);
             }
         };
         fetchInitialData();
