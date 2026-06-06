@@ -9,7 +9,11 @@ import { fetchCompanies } from "../../../features/company/companySlice";
 import { fetchEstimates } from "../../../features/estimates/estimateSlice";
 import { useNavigate } from "react-router-dom";
 import { LayoutGrid, UserCheck, Upload, ChevronDown, ChevronLeft, X } from "lucide-react";
+import api from "../../../lib/api";
 
+const PROFORMA_EVENT_NAME = "9th Edition of International Health & Wellness Expo (IHWE Global Edition)";
+const PROFORMA_PLACE_OF_SUPPLY = "Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, Bharat";
+const PROFORMA_EVENT_GST_NO = "08AAFCN9238F1Z6";
 
 const PerformaInvoiceDetails = () => {
   const navigate = useNavigate();
@@ -48,6 +52,21 @@ const PerformaInvoiceDetails = () => {
       0
     ) || 0;
 
+  const c1 = company?.contacts?.[0] || {};
+  const clientCompanyName = matchedEstimate?.company_name || company?.companyName || "";
+  const clientCompanyAddress = matchedEstimate?.company_addr || [
+    company?.landline,
+    company?.address,
+    company?.city,
+    company?.state,
+    company?.country,
+    company?.pincode,
+  ].filter(Boolean).join(", ");
+  const clientGstNo = matchedEstimate?.company_gst_no || matchedEstimate?.gst_no || "";
+  const eventName = matchedEstimate?.event_name || matchedEstimate?.consignee_name || PROFORMA_EVENT_NAME;
+  const eventPlaceOfSupply = matchedEstimate?.event_place_of_supply || matchedEstimate?.consignee_addr || PROFORMA_PLACE_OF_SUPPLY;
+  const eventGstNo = matchedEstimate?.event_gst_no || PROFORMA_EVENT_GST_NO;
+
   useEffect(() => {
     // Match estimate using est_no (since your route uses est_no like "NGW/25-26/EST/009")
     if (perInvoices && perInvoices.length > 0) {
@@ -57,21 +76,11 @@ const PerformaInvoiceDetails = () => {
   }, [id, perInvoices]);
 
   useEffect(() => {
-    // Fetch estimates only when we have the companyId from the Performa Invoice
+    // Fetch estimates only when we have the companyId from the PROFORMA Invoice
     if (matchedPerIvo?.companyId) {
       dispatch(fetchEstimates(matchedPerIvo.companyId));
     }
   }, [matchedPerIvo?.companyId, dispatch]);
-
-  useEffect(() => {
-    if (matchedPerIvo && companies.length > 0) {
-      // Match company using the companyId from the matched estimate
-      const matchedCompany = companies.find(
-        (c) => c._id === matchedPerIvo.companyId
-      );
-      setCompany(matchedCompany || null);
-    }
-  }, [matchedPerIvo, companies]);
 
   useEffect(() => {
     if (estimates && estimates.length > 0 && matchedPerIvo) {
@@ -81,14 +90,41 @@ const PerformaInvoiceDetails = () => {
   }, [matchedPerIvo, estimates]);
 
   useEffect(() => {
-    if (matchedEstimate && companies.length > 0) {
-      // Match company using the companyId from the matched estimate
-      const matchedCompany = companies.find(
-        (c) => c._id === matchedEstimate.companyId
-      );
-      setCompany(matchedCompany || null);
-    }
-  }, [matchedEstimate, companies]);
+    const fetchCompanyData = async () => {
+      const companyId = matchedEstimate?.companyId || matchedPerIvo?.companyId;
+      if (!companyId) return;
+
+      if (companies && companies.length > 0) {
+        const matchedCompany = companies.find((c) => c._id === companyId);
+        if (matchedCompany) {
+          setCompany(matchedCompany);
+          return;
+        }
+      }
+
+      try {
+        const response = await api.get(`/api/exhibitor-registration/${companyId}`);
+        const exhibitorData = response.data?.data;
+        if (exhibitorData) {
+          setCompany({
+            ...exhibitorData,
+            companyName: exhibitorData.exhibitorName,
+            contacts: [{
+              title: exhibitorData.contact1?.title || "",
+              firstName: exhibitorData.contact1?.firstName || "",
+              surname: exhibitorData.contact1?.lastName || "",
+              designation: exhibitorData.contact1?.designation || "",
+              email: exhibitorData.contact1?.email || exhibitorData.email || "",
+              mobile: exhibitorData.contact1?.mobile || exhibitorData.mobile || exhibitorData.landlineNo || ""
+            }]
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch company details", err);
+      }
+    };
+    fetchCompanyData();
+  }, [matchedEstimate, matchedPerIvo, companies]);
 
   const handleprint = useReactToPrint({
     contentRef: sameRef, // Changed from contentRef to content
@@ -100,7 +136,7 @@ const PerformaInvoiceDetails = () => {
       <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-inter animate-fadeIn">
         {/* <div className="w-full h-auto flex justify-between bg-white px-5 py-0.5 ">
           <h1 className="text-xl font-norma text-gray-600">
-            ACCOUNT SECTION | PERFORMA INVOICE
+            ACCOUNT SECTION | Proforma Invoice
           </h1>
           <button
             onClick={handleprint}
@@ -113,7 +149,7 @@ const PerformaInvoiceDetails = () => {
         <div className="flex flex-col lg:flex-row justify-between items-center pb-4 border-b border-gray-300 gap-4">
           <div className="flex flex-col items-center lg:items-start gap-1">
             <h1 className="text-xl font-semibold text-slate-600 uppercase tracking-tight leading-none text-center lg:text-left">
-              ACCOUNT SECTION - PERFORMA INVOICE | Sales Management Section
+              ACCOUNT SECTION - Proforma Invoice | Sales Management Section
             </h1>
           </div>
           <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
@@ -155,16 +191,16 @@ const PerformaInvoiceDetails = () => {
                     Client Name
                   </td>
                   <td className="border px-1 py-0.5 text-[11px]">
-                    {company?.companyName}
+                    {clientCompanyName}
                   </td>
                   <td className="border px-1 py-0.5 text-[11px] font-semibold">
                     Contact Person
                   </td>
                   <td className="border px-1 py-0.5 text-[11px]">
                     {[
-                      company?.contacts?.[0]?.title,
-                      company?.contacts?.[0]?.firstName,
-                      company?.contacts?.[0]?.surname,
+                      c1?.title,
+                      c1?.firstName,
+                      c1?.surname,
                     ]
                       .filter(Boolean) // removes empty or undefined values
                       .join(" ")}
@@ -184,22 +220,13 @@ const PerformaInvoiceDetails = () => {
                     Client Address
                   </td>
                   <td className="border px-1 py-0.5 text-[11px]" rowSpan="2">
-                    {[
-                      company?.landline,
-                      company?.address,
-                      company?.city,
-                      company?.state,
-                      company?.country,
-                      company?.pincode,
-                    ]
-                      .filter(Boolean) // remove empty or undefined values
-                      .join(", ")}
+                    {clientCompanyAddress}
                   </td>
                   <td className="border px-1 py-0.5 text-[11px] font-semibold">
                     Designation
                   </td>
                   <td className="border px-1 py-0.5 text-[11px]">
-                    {company?.contacts?.[0]?.designation}
+                    {c1?.designation}
                   </td>
                   <td className="border px-1 py-0.5 text-[11px] font-semibold">
                     PF Invoice Date
@@ -222,13 +249,13 @@ const PerformaInvoiceDetails = () => {
                     Email Id
                   </td>
                   <td className="border px-1 py-0.5 text-[11px]">
-                    {company?.contacts?.[0]?.email}
+                    {c1?.email}
                   </td>
                   <td className="border px-1 py-0.5 text-[11px] font-semibold">
                     Place of Supply
                   </td>
                   <td className="border px-1 py-0.5 text-[11px]">
-                    {matchedEstimate?.city}
+                    {eventPlaceOfSupply}
                   </td>
                 </tr>
                 <tr>
@@ -236,19 +263,19 @@ const PerformaInvoiceDetails = () => {
                     GSTIN/PAN No.
                   </td>
                   <td className="border px-1 py-0.5 text-[11px]">
-                    {matchedEstimate?.gst_no}
+                    {clientGstNo}
                   </td>
                   <td className="border px-1 py-0.5 text-[11px] font-semibold">
                     Contact No.
                   </td>
                   <td className="border px-1 py-0.5 text-[11px]">
-                    {company?.contacts?.[0]?.mobile}
+                    {c1?.mobile}
                   </td>
                   <td className="border px-1 py-0.5 text-[11px] font-semibold">
-                    State of Supply
+                    Event GSTIN
                   </td>
                   <td className="border px-1 py-0.5 text-[11px]">
-                    {matchedEstimate?.state}
+                    {eventGstNo}
                   </td>
                 </tr>
               </tbody>
@@ -295,9 +322,15 @@ const PerformaInvoiceDetails = () => {
                         {index + 1}
                       </td>
                       <td className="border px-2 py-0.5 text-[11px]">
-                        {matchedEstimate?.consignee_name}
+                        {eventName}
                         <br />
-                        {item?.remarks}
+                        {item?.description}
+                        {item?.remarks && (
+                          <>
+                            <br />
+                            {item.remarks}
+                          </>
+                        )}
                       </td>
                       <td className="border px-2 py-0.5 text-[11px] text-center">
                         {item?.hsn}

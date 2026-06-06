@@ -8,10 +8,11 @@ const EmailModal = ({ company, onClose, onSend, initialSubject = "", initialCont
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null);
 
-  const email = company?.email;
-  const userStr = sessionStorage.getItem("user");
-  const user = userStr ? JSON.parse(userStr) : {};
-  const userName = user.name || user.username || "Admin";
+  const email = company?.contacts?.[0]?.email || company?.companyEmail || company?.email;
+  const adminStr = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
+  const adminInfo = adminStr ? JSON.parse(adminStr) : {};
+  const userName = adminInfo.fullName || adminInfo.username || "Admin";
+  const userId = adminInfo._id || null;
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
@@ -31,9 +32,11 @@ const EmailModal = ({ company, onClose, onSend, initialSubject = "", initialCont
       formData.append("to", email);
       formData.append("subject", form.subject);
       formData.append("content", form.content);
-      formData.append("companyName", company?.companyName || "");
+      formData.append("companyName", company?.exhibitorName || company?.companyName || "");
       formData.append("sentBy", userName);
-      formData.append("cmpny_id", company?._id || "");
+      formData.append("senderId", userId || "");
+      formData.append("senderName", userName);
+      formData.append("cmpny_id", company?.clientId || company?._id || "");
       if (initialAttachments.length > 0) {
         formData.append("existingAttachments", JSON.stringify(initialAttachments));
       }

@@ -356,7 +356,7 @@ const Payments = ({ client, onBack }) => {
                 className="border border-gray-300 px-2 text-xs  h-8 font-medium focus:ring-1 focus:ring-blue-500 focus:border-transparent focus:outline-none"
               >
                 <option value="">Select Here</option>
-                <option value="PerInvoice">Performa Invoice</option>
+                <option value="PerInvoice">PROFORMA Invoice</option>
                 <option value="Invoice">Invoice</option>
               </select>
             </div>
@@ -803,7 +803,7 @@ const Payments = ({ client, onBack }) => {
               </div>
             </div>
           )}
-        <hr className="w-full opacity-10 pb-1 pt-2" />
+          <hr className="w-full opacity-10 pb-1 pt-2" />
           <div className="flex justify-between">
             <div>
               <p className="text-red-500 text-xs mt-2">* Required Fields</p>

@@ -1,11 +1,15 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import api from '../lib/api';
 import {
     ChevronLeft, Settings, User, Calendar, Plus, Trash2, FileText,
     Download, Mail, MessageCircleMore, Printer, Eye, Upload, Bookmark,
     XIcon,
-    File
+    File,
+    List
 } from 'lucide-react';
+import SearchableDropdown from '../components/SearchableDropdown';
+import InvoicePreviewTemplate from './ihwe_client_data_2026/invoice/InvoicePreviewTemplate';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 const newItem = () => ({
@@ -77,8 +81,90 @@ const QuickAction = ({ icon: Icon, label, colorClass = "text-blue-600" }) => (
 // ══════════════════════════════════════════════════════════════════════════════
 const CreateInvoice = () => {
     const navigate = useNavigate();
+    const { id } = useParams();
     const fileInputRef = useRef(null);
     const [attachedFile, setAttachedFile] = useState(null);
+    const [estimates, setEstimates] = useState([]);
+    const [selectedPi, setSelectedPi] = useState('');
+
+    const fetchEstimates = async () => {
+        try {
+            const [estRes, invRes] = await Promise.all([
+                api.get('/api/estimates'),
+                api.get('/api/invoices')
+            ]);
+            
+            const fetchedEstimates = Array.isArray(estRes.data) ? estRes.data : (estRes.data?.data || []);
+            const fetchedInvoices = Array.isArray(invRes.data) ? invRes.data : (invRes.data?.data || []);
+
+            // Filter out estimates that already have an invoice generated
+            const availableEstimates = fetchedEstimates.filter(est => {
+                return !fetchedInvoices.some(inv => inv.estimate_no === est.est_no);
+            });
+
+            setEstimates(availableEstimates);
+        } catch (err) {
+            console.error("Failed to fetch estimates and invoices", err);
+        }
+    };
+    useEffect(() => {
+        fetchEstimates();
+    }, []);
+
+    useEffect(() => {
+        if (id) {
+            const fetchInvoice = async () => {
+                try {
+                    const res = await api.get(`/api/invoices/${id}`);
+                    const inv = res.data?.data || res.data;
+                    if (inv) {
+                        setSelectedPi(inv.estimate_no || '');
+                        setForm(f => ({
+                            ...f,
+                            companyId: inv.companyId || f.companyId,
+                            clientName: inv.consignee_name || f.clientName,
+                            gstin: inv.gst_no || f.gstin,
+                            invoiceType: inv.type_of_invoice || 'Standard',
+                            invoiceNo: inv.invoice_no || 'Auto-generated on save',
+                            invoiceDate: inv.invoice_date ? new Date(inv.invoice_date).toISOString().split('T')[0] : f.invoiceDate,
+                            dueDate: inv.due_date ? new Date(inv.due_date).toISOString().split('T')[0] : f.dueDate,
+                            poNo: inv.po_no || f.poNo,
+                            currency: inv.currency || f.currency,
+                            billingAddress: inv.billing_address || f.billingAddress,
+                            shippingAddress: inv.consignee_addr || f.shippingAddress,
+                            billingState: inv.billing_state || f.billingState,
+                            billingPin: inv.billing_pincode || f.billingPin,
+                            country: inv.country || f.country,
+                            state: inv.state || f.state,
+                            city: inv.city || f.city,
+                            placeOfSupply: inv.place_of_supply || f.placeOfSupply,
+                            remarks: inv.remarks || f.remarks,
+                            terms: inv.terms || f.terms
+                        }));
+                        if (inv.items && inv.items.length > 0) {
+                            setItems(inv.items.map((item, idx) => ({
+                                id: Date.now() + idx,
+                                description: item.description || '',
+                                hsn: item.hsn || '',
+                                qty: item.qty || 1,
+                                unit: item.unit || 'Nos',
+                                rate: item.rate || 0,
+                                amount: item.amount || 0,
+                                discountPct: item.discountPct || 0,
+                                taxableValue: item.taxableValue || 0,
+                                gstPct: item.gstPct || '18%',
+                                gstAmount: item.gstAmount || 0,
+                                total: item.total || 0
+                            })));
+                        }
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch invoice for edit", err);
+                }
+            };
+            fetchInvoice();
+        }
+    }, [id]);
 
     const handleFileChange = (e) => {
         if (e.target.files && e.target.files[0]) {
@@ -88,47 +174,76 @@ const CreateInvoice = () => {
 
     // ── form state ──────────────────────────────────────────────────────────────
     const [form, setForm] = useState({
+        companyId: '',
         clientName: '',
         gstin: '',
-        invoiceType: 'Select Invoice Type',
-        invoiceNo: 'INV/26-27/0001',
-        invoiceDate: '2026-05-31',
-        dueDate: '2026-06-14',
+        invoiceType: 'Standard',
+        invoiceNo: 'Auto-generated on save',
+        invoiceDate: new Date().toISOString().split('T')[0],
+        dueDate: '',
         poNo: '',
         currency: 'INR - Indian Rupee (₹)',
 
-        billingAddress: 'Hall No.-12, Ground Floor, ITPO, Pragati Maidan, New Delhi - 110001',
+        billingAddress: '',
         shippingAddress: '',
         sameAsBilling: true,
-        billingState: 'Delhi',
-        billingPin: '110001',
+        billingState: '',
+        billingPin: '',
         country: 'India',
-        state: 'Delhi',
-        city: 'New Delhi',
-        placeOfSupply: 'Delhi (07)',
+        state: '',
+        city: '',
+        placeOfSupply: '',
 
         remarks: '',
         terms: ''
     });
 
-    const [items, setItems] = useState([
-        {
-            id: 1,
-            description: 'Exhibition Stall - 24 Sqm',
-            hsn: '9985',
-            qty: 1,
-            unit: 'Nos',
-            rate: 85000.00,
-            amount: 85000.00,
-            discountPct: 0.00,
-            taxableValue: 85000.00,
-            gstPct: '18%',
-            gstAmount: 15300.00,
-            total: 100300.00
-        }
-    ]);
+    const [items, setItems] = useState([newItem()]);
+    const [showPreview, setShowPreview] = useState(false);
 
     // ── handlers ────────────────────────────────────────────────────────────────
+    const handlePiSelect = (estNo) => {
+        setSelectedPi(estNo);
+        if (!estNo) return;
+
+        const est = estimates.find(e => e.est_no === estNo);
+        if (est) {
+            setForm(f => ({
+                ...f,
+                companyId: est.companyId || f.companyId,
+                clientName: est.consignee_name || f.clientName,
+                gstin: est.gst_no || f.gstin,
+                billingAddress: est.consignee_addr || f.billingAddress,
+                shippingAddress: est.consignee_addr || f.shippingAddress,
+                country: est.country || f.country,
+                state: est.state || f.state,
+                billingState: est.state || f.billingState,
+                placeOfSupply: est.state || f.placeOfSupply,
+                city: est.city || f.city,
+                billingPin: est.pincode || f.billingPin,
+                remarks: est.remarks || f.remarks,
+                invoiceType: 'Standard'
+            }));
+
+            if (est.items && est.items.length > 0) {
+                setItems(est.items.map((item, idx) => ({
+                    id: Date.now() + idx,
+                    description: item.description || '',
+                    hsn: item.hsn || '',
+                    qty: item.qty || 1,
+                    unit: item.unit || 'Nos',
+                    rate: item.rate || 0,
+                    amount: item.amount || 0,
+                    discountPct: item.discountPct || 0,
+                    taxableValue: item.taxableValue || 0,
+                    gstPct: item.gstPct || '18%',
+                    gstAmount: item.gstAmount || 0,
+                    total: item.total || 0
+                })));
+            }
+        }
+    };
+
     const updateItem = useCallback((id, field, val) => {
         setItems((prev) =>
             prev.map((item) => {
@@ -158,10 +273,69 @@ const CreateInvoice = () => {
     const removeItem = (id) => setItems((p) => p.filter((i) => i.id !== id));
     const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Invoice submitted:', { form, items });
-        alert('Invoice generated successfully!');
+
+        let finalAmount = items.reduce((acc, item) => acc + (Number(item.total) || 0), 0);
+
+        const payload = {
+            companyId: form.companyId || 'UNKNOWN',
+            estimate_no: selectedPi || '',
+            type_of_invoice: form.invoiceType,
+            invoice_date: form.invoiceDate,
+            due_date: form.dueDate,
+            po_no: form.poNo,
+            currency: form.currency,
+            gst_no: form.gstin,
+            supply_date: form.invoiceDate,
+            consignee_name: form.clientName,
+            consignee_addr: form.shippingAddress,
+            billing_address: form.billingAddress,
+            billing_state: form.billingState,
+            billing_pincode: form.billingPin,
+            country: form.country,
+            state: form.state,
+            city: form.city,
+            pincode: form.billingPin,
+            place_of_supply: form.placeOfSupply,
+            items: items.map(i => ({
+                description: i.description,
+                hsn: i.hsn,
+                qty: Number(i.qty),
+                unit: i.unit,
+                rate: Number(i.rate),
+                amount: Number(i.amount),
+                discountPct: Number(i.discountPct),
+                taxableValue: Number(i.taxableValue),
+                gstPct: i.gstPct,
+                gstAmount: Number(i.gstAmount),
+                total: Number(i.total),
+            })),
+            finalAmount: finalAmount,
+            remarks: form.remarks,
+            terms: form.terms,
+            added_by: 'Admin'
+        };
+
+        try {
+            let res;
+            if (id) {
+                res = await api.put(`/api/invoices/${id}`, payload);
+                if (res.status === 200 || res.status === 201) {
+                    alert('Invoice updated successfully!');
+                    navigate('/invoice-list');
+                }
+            } else {
+                res = await api.post('/api/invoices', payload);
+                if (res.status === 201 || res.status === 200) {
+                    alert('Invoice generated successfully!');
+                    navigate('/invoice-list');
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            alert(`Failed to ${id ? 'update' : 'generate'} invoice: ` + (err.response?.data?.message || err.message));
+        }
     };
 
     return (
@@ -186,13 +360,20 @@ const CreateInvoice = () => {
                         <FileText className="w-5 h-5" />
                     </div>
                     <div>
-                        <h1 className="text-lg font-bold text-gray-900 leading-tight">Create Invoice</h1>
-                        <p className="text-xs text-gray-500 mt-0.5">Generate a new invoice for your client</p>
+                        <h1 className="text-lg font-bold text-gray-900 leading-tight">{id ? "Edit Invoice" : "Create Invoice"}</h1>
+                        <p className="text-xs text-gray-500 mt-0.5">{id ? "Update details for this invoice" : "Generate a new invoice for your client"}</p>
                     </div>
                 </div>
+                {/* <button
+                    onClick={() => navigate('/invoice-list')}
+                    className="flex items-center gap-1.5 border border-blue-300 bg-blue-50 rounded px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
+                >
+                    <List className="w-3.5 h-3.5" />
+                    All Invoices
+                </button> */}
                 <button
                     type="button"
-                    onClick={() => navigate(-1)}
+                    onClick={() => navigate('/invoice-list')}
                     className="flex items-center gap-1.5 border border-gray-200 rounded-md px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition shadow-sm"
                 >
                     <ChevronLeft className="w-4 h-4" />
@@ -212,12 +393,24 @@ const CreateInvoice = () => {
                         <div className="grid grid-cols-4 gap-4 mb-3">
                             <div>
                                 <Label required>Client / Company</Label>
-                                <div className="flex relative">
+                                {/* <div className="flex relative mb-2">
                                     <Input required placeholder="Select Client / Company" value={form.clientName} onChange={(e) => setField('clientName', e.target.value)} className="py-2.5 rounded-r-none border-r-0" />
                                     <button type="button" className="border border-gray-300 rounded-r-md px-2.5 bg-gray-50 text-gray-500 hover:bg-gray-100">
                                         <User className="w-4 h-4" />
                                     </button>
-                                </div>
+                                </div> */}
+                                {id ? (
+                                    <Input value={selectedPi || 'No PI / Estimate'} disabled className="py-2.5 bg-gray-50" />
+                                ) : (
+                                    <SearchableDropdown
+                                        value={selectedPi}
+                                        onChange={(e) => handlePiSelect(e.target.value)}
+                                        options={[
+                                            { label: 'Select Existing PI / Estimate', value: '' },
+                                            ...estimates.map(e => ({ label: e.est_no, value: e.est_no }))
+                                        ]}
+                                    />
+                                )}
                             </div>
                             <div>
                                 <Label>GSTIN / PAN No.</Label>
@@ -230,7 +423,7 @@ const CreateInvoice = () => {
                             <div>
                                 <Label required>Invoice No.</Label>
                                 <div className="flex">
-                                    <Input required value={form.invoiceNo} onChange={(e) => setField('invoiceNo', e.target.value)} className="rounded-r-none border-r-0 py-2.5 bg-gray-50" />
+                                    <Input required value={form.invoiceNo} onChange={(e) => setField('invoiceNo', e.target.value)} disabled className="rounded-r-none border-r-0 py-2.5 bg-gray-50" />
                                     <button type="button" className="border border-gray-300 rounded-r-md px-2.5 bg-gray-50 text-gray-500 hover:bg-gray-100">
                                         <Settings className="w-4 h-4" />
                                     </button>
@@ -491,7 +684,7 @@ const CreateInvoice = () => {
                             <button type="button" className="flex items-center gap-2 border border-gray-300 rounded-lg px-5 py-2.5 text-sm font-bold text-indigo-700 hover:bg-indigo-50 transition bg-white shadow-sm">
                                 <FileText className="w-4 h-4" /> Save as Draft
                             </button>
-                            <button type="button" className="flex items-center gap-2 border border-green-200 bg-green-50 text-green-700 rounded-lg px-5 py-2.5 text-sm font-bold hover:bg-green-100 transition shadow-sm">
+                            <button type="button" onClick={() => setShowPreview(true)} className="flex items-center gap-2 border border-green-200 bg-green-50 text-green-700 rounded-lg px-5 py-2.5 text-sm font-bold hover:bg-green-100 transition shadow-sm">
                                 <Eye className="w-4 h-4" /> Preview Invoice
                             </button>
                             <button type="submit" className="flex items-center gap-2 bg-[#00A859] hover:bg-[#00904C] text-white rounded-lg px-6 py-2.5 text-sm font-medium transition shadow-sm">
@@ -500,6 +693,20 @@ const CreateInvoice = () => {
                         </div>
                     </div>
                 </form>
+
+                {/* ── PREVIEW MODAL ── */}
+                {showPreview && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
+                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-[1050px] max-h-[90vh] overflow-y-auto mt-10 p-6 relative">
+                            <button onClick={() => setShowPreview(false)} className="absolute top-4 right-4 z-50 bg-white rounded-full p-1 text-gray-500 hover:text-red-500 shadow-sm border">
+                                <XIcon size={24} />
+                            </button>
+                            <div className="pt-8">
+                                <InvoicePreviewTemplate form={form} items={items} />
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* ── RIGHT SIDEBAR ── */}
                 <div className="w-[250px] flex-shrink-0 space-y-3">

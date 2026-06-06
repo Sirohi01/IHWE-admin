@@ -268,7 +268,7 @@ const PaymentEdit = () => {
       <div className="max-w-full mx-auto bg-white  sticky top-0 z-10">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between px-4 py-1">
           <h1 className="text-xl text-gray-500 mb-2 lg:mb-0 uppercase">
-            ACCOUNT 
+            ACCOUNT
           </h1>
           <div className="flex flex-wrap gap-2 cursor-pointer">
             <button onClick={handleAddClient} className={buttonStyle}>
@@ -283,8 +283,8 @@ const PaymentEdit = () => {
 
       <div className="bg-white shadow-md pb-4 px-5 pt-2 m-4 rounded">
         <div className="flex justify-between mb-2">
-           <h1 className="font-medium text-lg text-gray-500 mb-0.5">
-            Edit Payments 
+          <h1 className="font-medium text-lg text-gray-500 mb-0.5">
+            Edit Payments
           </h1>
           {/*<button className="px-2 py-0.5 h-fit w-auto border border-gray-300 text-gray-600 text-sm text-center font-normal bg-white hover:bg-gray-100">Add TDS</button>*/}
         </div>
@@ -303,7 +303,7 @@ const PaymentEdit = () => {
                 className="border border-gray-300 px-2 text-xs  h-8 font-normal focus:ring-1 focus:ring-blue-500 focus:border-transparent focus:outline-none"
               >
                 <option value="">Select Here</option>
-                <option value="PerInvoice">Performa Invoice</option>
+                <option value="PerInvoice">PROFORMA Invoice</option>
                 <option value="Invoice">Invoice</option>
               </select>
             </div>
@@ -514,17 +514,17 @@ const PaymentEdit = () => {
             </div>
 
             <div className="flex flex-col md:col-span-2">
-                <label className="text-[13px] text-gray-900 font-medium mb-1">
-                  Transaction Details
-                </label>
-                <input
-                  type="text"
-                  name="transactionDetailsUpi"
-                  value={formData.transactionDetailsUpi}
-                  onChange={handleInputChange}
-                  className="border border-gray-300 px-2 text-xs  h-8 focus:ring-1 focus:ring-blue-500 focus:border-transparent focus:outline-none"
-                />
-              
+              <label className="text-[13px] text-gray-900 font-medium mb-1">
+                Transaction Details
+              </label>
+              <input
+                type="text"
+                name="transactionDetailsUpi"
+                value={formData.transactionDetailsUpi}
+                onChange={handleInputChange}
+                className="border border-gray-300 px-2 text-xs  h-8 focus:ring-1 focus:ring-blue-500 focus:border-transparent focus:outline-none"
+              />
+
             </div>
           </div>
           <hr className="w-full opacity-10 pb-4 " />

@@ -112,7 +112,7 @@ export default function MeetingsTable() {
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-[#EDF0F7] shadow-sm">
+    <div className="bg-white rounded-xl border border-[#EDF0F7] shadow-sm flex flex-col flex-1 min-h-0">
       {/* Table Controls */}
       <div className="p-3 border-b border-[#EDF0F7] flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
@@ -172,9 +172,6 @@ export default function MeetingsTable() {
                 <tr key={index} className="border-b border-slate-100 hover:bg-slate-50/50">
                   <td className="py-1 px-3">
                     <div className="flex items-center gap-3">
-                      <div className={`w-7 h-7 rounded-md flex items-center justify-center font-medium text-[11px] ${row.clientColor}`}>
-                        {row.clientInitials}
-                      </div>
                       <span className="text-[13px] font-medium text-slate-900">{row.clientName}</span>
                     </div>
                   </td>

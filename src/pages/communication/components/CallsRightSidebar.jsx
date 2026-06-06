@@ -1,22 +1,49 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Phone, ChevronDown, Facebook, Instagram, Twitter } from 'lucide-react';
 
-export default function CallsRightSidebar() {
+const countryCodes = [
+  { code: '+91', flag: 'in' },
+  { code: '+1', flag: 'us' },
+  { code: '+44', flag: 'gb' },
+  { code: '+971', flag: 'ae' },
+  { code: '+966', flag: 'sa' },
+  { code: '+974', flag: 'qa' },
+  { code: '+965', flag: 'kw' },
+  { code: '+968', flag: 'om' },
+  { code: '+973', flag: 'bh' },
+  { code: '+61', flag: 'au' },
+  { code: '+65', flag: 'sg' },
+  { code: '+60', flag: 'my' },
+];
+
+export default function CallsRightSidebar({ statsData, recentLogs }) {
+  const target = statsData?.targets?.call || 0;
+  const completed = statsData?.completed?.call || 0;
+  const remaining = Math.max(target - completed, 0);
+
+  const [dialNumber, setDialNumber] = useState('');
+  const [dialCountryCode, setDialCountryCode] = useState('+91');
+
+  const handleDialpadClick = (num) => {
+    setDialNumber(prev => prev + num);
+  };
+
+  const handleQuickDial = () => {
+    if (dialNumber) {
+      window.location.href = `tel:${dialCountryCode}${dialNumber.replace(/^\+/, '')}`;
+    }
+  };
+
   const targetData = [
-    { name: 'Remaining', value: 12, color: '#F1F5F9' },
-    { name: 'Completed', value: 28, color: '#16A34A' },
+    { name: 'Remaining', value: remaining, color: '#F1F5F9' },
+    { name: 'Connected', value: completed, color: '#16A34A' },
   ];
 
   const pendingCallbacks = [
     { initials: 'NH', name: "Nature's Harmony Pvt. Ltd.", date: '29 May, 04:00 PM', color: 'bg-purple-100 text-purple-700', Icon: Facebook, iconColor: 'text-blue-500 border-blue-400' },
     { initials: 'HE', name: 'Herbal King Exports', date: '29 May, 11:30 AM', color: 'bg-orange-100 text-orange-700', Icon: Instagram, iconColor: 'text-pink-500 border-pink-400' },
     { initials: 'AO', name: 'Arogya Organics', date: '28 May, 02:00 PM', color: 'bg-green-100 text-green-700', Icon: Twitter, iconColor: 'text-slate-800 border-slate-800' },
-  ];
-
-  const recentNotes = [
-    { name: 'GreenLife Ayurveda', time: '11:20 AM', note: 'Discussed about new product range. Very interested in becoming our regional partner.' },
-    { name: 'Wellness World', time: 'Yesterday', note: 'Demo scheduled. Sent product brochure.' },
   ];
 
   const dialpadButtons = [
@@ -28,9 +55,9 @@ export default function CallsRightSidebar() {
 
   return (
     <div className="space-y-1">
-      {/* Today's Call Target */}
+      {/* This Month's Call Target */}
       <div className="bg-white rounded-xl border border-[#EDF0F7] p-3">
-        <h3 className="text-[16px] font-medium text-[#0F172A] mb-1">Today's Call Target</h3>
+        <h3 className="text-[16px] font-medium text-[#0F172A] mb-1">This Month's Call Target</h3>
         <div className="flex items-center justify-between">
           <div className="relative w-[90px] h-[90px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -54,23 +81,23 @@ export default function CallsRightSidebar() {
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[18px] font-medium text-[#0F172A] leading-tight">28</span>
-              <span className="text-[10px] font-medium text-slate-500 leading-tight">/ 40</span>
+              <span className="text-[18px] font-medium text-[#0F172A] leading-tight">{completed}</span>
+              <span className="text-[10px] font-medium text-slate-500 leading-tight">/ {target}</span>
             </div>
           </div>
 
           <div className="flex flex-col space-y-2 flex-1 ml-6">
             <div className="flex items-center justify-between">
               <span className="text-[12px] font-medium text-slate-600">Target</span>
-              <span className="text-[12px] font-medium text-slate-900">40</span>
+              <span className="text-[12px] font-medium text-slate-900">{target}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[12px] font-medium text-slate-600">Completed</span>
-              <span className="text-[12px] font-medium text-slate-900">28</span>
+              <span className="text-[12px] font-medium text-slate-600">Connected</span>
+              <span className="text-[12px] font-medium text-slate-900">{completed}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[12px] font-medium text-slate-600">Remaining</span>
-              <span className="text-[12px] font-medium text-slate-900">12</span>
+              <span className="text-[12px] font-medium text-slate-900">{remaining}</span>
             </div>
           </div>
         </div>
@@ -109,17 +136,34 @@ export default function CallsRightSidebar() {
       <div className="bg-white rounded-xl border border-[#EDF0F7] p-3">
         <h3 className="text-[16px] font-medium text-[#0F172A] mb-2">Quick Dial</h3>
         <div className="flex items-center gap-2 mb-2">
-          <div className="flex items-center gap-1 border border-slate-200 rounded-lg px-2 py-1 cursor-pointer hover:bg-slate-50">
-            <img src="https://flagcdn.com/w20/in.png" alt="India" className="w-5 h-3" />
-            <span className="text-[12px] font-medium text-slate-700 ml-1">+91</span>
-            <ChevronDown size={14} className="text-slate-400" />
+          <div className="relative flex items-center rounded-lg border border-slate-200 bg-white">
+            <img
+              src={`https://flagcdn.com/w20/${countryCodes.find((country) => country.code === dialCountryCode)?.flag || 'in'}.png`}
+              alt=""
+              className="ml-2 h-3 w-5"
+            />
+            <select
+              value={dialCountryCode}
+              onChange={(e) => setDialCountryCode(e.target.value)}
+              className="h-8 w-[62px] appearance-none bg-transparent pl-2 pr-6 text-[12px] font-medium text-slate-700 outline-none"
+              title="Country code"
+            >
+              {countryCodes.map((country) => (
+                <option key={country.code} value={country.code}>
+                  {country.code}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={14} className="pointer-events-none absolute right-2 text-slate-400" />
           </div>
           <input
             type="text"
             placeholder="Enter number"
+            value={dialNumber}
+            onChange={(e) => setDialNumber(e.target.value)}
             className="flex-1 border border-slate-200 rounded-lg px-2 py-1 text-[12px] focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-slate-50"
           />
-          <button className="w-8 h-8 bg-[#5E5E81] hover:bg-[#4B4B67] rounded-lg flex items-center justify-center text-white transition-colors">
+          <button onClick={handleQuickDial} className="w-8 h-8 bg-[#5E5E81] hover:bg-[#4B4B67] rounded-lg flex items-center justify-center text-white transition-colors">
             <Phone size={14} fill="currentColor" />
           </button>
         </div>
@@ -128,6 +172,7 @@ export default function CallsRightSidebar() {
           {dialpadButtons.map((btn, index) => (
             <button
               key={index}
+              onClick={() => handleDialpadClick(btn.main)}
               className="flex flex-col items-center justify-center h-10 border border-slate-100 rounded-lg hover:border-slate-300 hover:bg-slate-50 transition-colors"
             >
               <span className="text-[16px] font-medium text-slate-800 leading-none">{btn.main}</span>
@@ -144,23 +189,29 @@ export default function CallsRightSidebar() {
           <button className="text-[12px] font-medium text-slate-600 hover:text-slate-900">View all</button>
         </div>
         <div className="space-y-2">
-          {recentNotes.map((note, index) => (
-            <div key={index} className="flex items-start gap-3 relative">
-              <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-2 shrink-0 z-10" />
-              {index !== recentNotes.length - 1 && (
-                <div className="absolute left-[3px] top-4 bottom-[-16px] w-[1px] bg-slate-100" />
-              )}
-              <div className="flex-1 pb-1">
-                <div className="flex items-center justify-between mb-0.5">
-                  <h4 className="text-[12px] font-medium text-[#0F172A]">{note.name}</h4>
-                  <span className="text-[10px] font-medium text-slate-400">{note.time}</span>
+          {recentLogs && recentLogs.length > 0 ? (
+            recentLogs.map((note, index, arr) => (
+              <div key={index} className="flex items-start gap-3 relative">
+                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-2 shrink-0 z-10" />
+                {index !== arr.length - 1 && (
+                  <div className="absolute left-[3px] top-4 bottom-[-16px] w-[1px] bg-slate-100" />
+                )}
+                <div className="flex-1 pb-1">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <h4 className="text-[12px] font-medium text-[#0F172A]">{note.name}</h4>
+                    <span className="text-[10px] font-medium text-slate-400">
+                      {note.time && !isNaN(new Date(note.time).getTime()) ? new Date(note.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : note.time}
+                    </span>
+                  </div>
+                  <p className="text-[11px] font-medium text-slate-500 leading-relaxed">
+                    {note.note}
+                  </p>
                 </div>
-                <p className="text-[11px] font-medium text-slate-500 leading-relaxed">
-                  {note.note}
-                </p>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-[12px] text-slate-400 text-center py-2">No recent calls</p>
+          )}
         </div>
       </div>
     </div>

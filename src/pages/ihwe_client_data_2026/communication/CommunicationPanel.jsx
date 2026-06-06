@@ -29,7 +29,7 @@ const TAB_TYPE_MAP = {
   Emails: ["email", "email_reply"], "Logs/Status": ["status", "log"],
 };
 
-const CommunicationPanel = ({ company, reviews, onSendEntry, onWhatsApp, onEmail, onCall }) => {
+const CommunicationPanel = ({ company, reviews, onSendEntry, onWhatsApp, onEmail, onCall, onOpenFullHistory }) => {
   const [activeTab, setActiveTab] = useState("All");
   const [showWhatsApp, setShowWhatsApp] = useState(false);
   const [showEmail, setShowEmail] = useState(false);
@@ -139,7 +139,10 @@ const CommunicationPanel = ({ company, reviews, onSendEntry, onWhatsApp, onEmail
         {/* Footer */}
         <div className="mt-3">
           <button
-            onClick={() => setShowHistory(true)}
+            onClick={() => {
+              if (onOpenFullHistory) onOpenFullHistory();
+              setShowHistory(true);
+            }}
             className="w-full h-9 border border-green-300 text-green-600 rounded-2xl font-semibold text-sm hover:bg-green-50 transition-colors"
           >
             View Full Communication History

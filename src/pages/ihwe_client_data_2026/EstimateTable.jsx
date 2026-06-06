@@ -7,9 +7,17 @@ import {
   fetchPerformaInvoices,
 } from "../../features/performaInvoice/performaInvoiceSlice";
 import { fetchInvoices } from "../../features/invoice/invoiceSlice";
+import api from "../../lib/api";
+import Swal from "sweetalert2";
+import { MessageCircleMore, Mail } from "lucide-react";
 
 const stylebutton =
   "w-fit text-[#3598dc] cursor-pointer border border-[#3598dc] hover:bg-[#3598dc] hover:text-white font-medium flex  items-center gap-1 px-1";
+
+const looksLikeEventName = (value = "") => {
+  const text = String(value).toLowerCase();
+  return text.includes("international health") || text.includes("ihwe global") || text.includes("expo");
+};
 
 const EstimateTable = ({ clientId }) => {
   const navigate = useNavigate();
@@ -88,6 +96,38 @@ const EstimateTable = ({ clientId }) => {
     [dispatch]
   );
 
+  const [actionLoaders, setActionLoaders] = useState({});
+
+  const handleSendWhatsApp = async (estimateId) => {
+    try {
+      setActionLoaders(prev => ({ ...prev, [`${estimateId}_wa`]: true }));
+      const res = await api.post(`/api/estimates/${estimateId}/send-whatsapp`, {});
+      if (res.status === 200) {
+        Swal.fire('Success', 'WhatsApp message sent successfully', 'success');
+      }
+    } catch (error) {
+      console.error("Error sending WhatsApp:", error);
+      Swal.fire('Error', error.response?.data?.message || 'Failed to send WhatsApp message', 'error');
+    } finally {
+      setActionLoaders(prev => ({ ...prev, [`${estimateId}_wa`]: false }));
+    }
+  };
+
+  const handleSendEmail = async (estimateId) => {
+    try {
+      setActionLoaders(prev => ({ ...prev, [`${estimateId}_email`]: true }));
+      const res = await api.post(`/api/estimates/${estimateId}/send-email`, {});
+      if (res.status === 200) {
+        Swal.fire('Success', 'Email sent successfully', 'success');
+      }
+    } catch (error) {
+      console.error("Error sending Email:", error);
+      Swal.fire('Error', error.response?.data?.message || 'Failed to send Email', 'error');
+    } finally {
+      setActionLoaders(prev => ({ ...prev, [`${estimateId}_email`]: false }));
+    }
+  };
+
   // New function to handle navigation for Print/Copy buttons
   const handlePrintCopyNavigation = (copyType, invId) => {
     if (!invId) {
@@ -115,6 +155,17 @@ const EstimateTable = ({ clientId }) => {
   //   navigate(`/payments/createInvoice/${estimates?.est_no}`);
   // };
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentEstimates = estimates.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(estimates.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   return (
     <div className="overflow-x-auto p-1">
       <table className="min-w-full border-collapse bg-white rounded-lg overflow-hidden shadow-sm">
@@ -130,7 +181,7 @@ const EstimateTable = ({ clientId }) => {
               scope="col"
               className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
             >
-              {(clientId === 'all' || id === 'all') ? "Performa Invoice Details" : "Estimate Details"}
+              {(clientId === 'all' || id === 'all') ? "Proforma Invoice Details" : "Estimate Details"}
             </th>
             {(clientId === 'all' || id === 'all') && (
               <th
@@ -178,7 +229,7 @@ const EstimateTable = ({ clientId }) => {
         </thead>
 
         <tbody className="bg-white divide-y divide-gray-200">
-          {estimates.map((estimate, index) => {
+          {currentEstimates.map((estimate, index) => {
             // 💰 Calculate Amount
             const totalFinalAmount = estimate?.items?.reduce((total, item) => {
               return total + (parseFloat(item.finalAmount) || 0);
@@ -233,11 +284,15 @@ const EstimateTable = ({ clientId }) => {
               (inv) => inv.estimate_no === estimate.est_no
             );
             const invId = matchingInvoice ? matchingInvoice._id : null;
+            const companyClientName =
+              estimate?.company_name ||
+              (!looksLikeEventName(estimate?.consignee_name) ? estimate?.consignee_name : "") ||
+              "Unknown";
 
             return (
               <tr key={estimate._id} className="hover:bg-gray-50 transition-colors border-b border-gray-200">
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
-                  {index + 1}
+                  {indexOfFirstItem + index + 1}
                 </td>
 
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
@@ -255,12 +310,12 @@ const EstimateTable = ({ clientId }) => {
                 {(clientId === 'all' || id === 'all') && (
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
                     <span className="font-semibold text-gray-800">
-                      {estimate?.consignee_name || "Unknown"}
+                      {companyClientName}
                     </span>
                   </td>
                 )}
 
-                {/* 🚀 PERFORMA INVOICE CELL LOGIC 🚀 */}
+                {/* 🚀 PROFORMA Invoice CELL LOGIC 🚀 */}
                 {(clientId !== 'all' && id !== 'all') && (
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
                     {/* Display PI Data if it exists or is being created */}
@@ -395,6 +450,50 @@ const EstimateTable = ({ clientId }) => {
           })}
         </tbody>
       </table>
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center py-3 px-4 bg-white border-t border-gray-200">
+          <span className="text-sm text-gray-700">
+            Showing <span className="font-semibold">{indexOfFirstItem + 1}</span> to <span className="font-semibold">{Math.min(indexOfLastItem, estimates.length)}</span> of <span className="font-semibold">{estimates.length}</span> entries
+          </span>
+          <div className="flex gap-1">
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 text-sm rounded border ${currentPage === 1 ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
+            >
+              Previous
+            </button>
+            <div className="flex gap-1 overflow-x-auto max-w-[200px] md:max-w-none">
+              {[...Array(totalPages)].map((_, i) => {
+                const pageNum = i + 1;
+                if (pageNum === 1 || pageNum === totalPages || (pageNum >= currentPage - 2 && pageNum <= currentPage + 2)) {
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => paginate(pageNum)}
+                      className={`px-3 py-1 text-sm rounded border ${currentPage === pageNum ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                }
+                if (pageNum === currentPage - 3 || pageNum === currentPage + 3) {
+                  return <span key={pageNum} className="px-2 py-1">...</span>;
+                }
+                return null;
+              })}
+            </div>
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1 text-sm rounded border ${currentPage === totalPages ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

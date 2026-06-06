@@ -107,6 +107,11 @@ const MarketingMaterialPage = () => {
   const [currentEmailMaterialIds, setCurrentEmailMaterialIds] = useState([]);
   const [viewMode, setViewMode] = useState("grid");
 
+  const adminStr = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
+  const adminInfo = adminStr ? JSON.parse(adminStr) : {};
+  const userName = adminInfo.fullName || adminInfo.username || "Admin";
+  const userId = adminInfo._id || null;
+
   useEffect(() => {
     fetchCompanyDetails();
     fetchMaterials();
@@ -261,7 +266,9 @@ const MarketingMaterialPage = () => {
         cmpny_id: company._id,
         material_ids: idsToSend,
         sentVia: via,
-        sentBy: "Admin",
+        sentBy: userName,
+        senderId: userId,
+        senderName: userName,
         clientEmail: company.companyEmail || company.email,
         clientMobile: company.companyMobile || company.mobile,
         clientName: company.companyName,
@@ -842,7 +849,9 @@ const MarketingMaterialPage = () => {
                   cmpny_id: company._id,
                   material_ids: currentEmailMaterialIds,
                   sentVia: "Email",
-                  sentBy: "Admin",
+                  sentBy: userName,
+                  senderId: userId,
+                  senderName: userName,
                   clientEmail: company.companyEmail || company.email,
                   clientMobile: company.companyMobile || company.mobile,
                   clientName: company.companyName,

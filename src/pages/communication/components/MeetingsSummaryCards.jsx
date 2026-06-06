@@ -1,12 +1,13 @@
 import React from 'react';
 import { PhoneCall, PhoneMissed, PhoneForwarded, Clock } from 'lucide-react';
 
-export default function MeetingsSummaryCards() {
+export default function MeetingsSummaryCards({ statsData }) {
+  const completed = statsData?.completed?.meeting || 0;
   const stats = [
     {
       title: "Total Meetings",
-      value: "28",
-      growth: "↑ 18% vs yesterday",
+      value: completed.toString().padStart(2, '0'),
+      growth: "",
       icon: PhoneCall,
       cardBg: "bg-[#F2FCF5]",
       iconBg: "bg-[#E3F8EB]",

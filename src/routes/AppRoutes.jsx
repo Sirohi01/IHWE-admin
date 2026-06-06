@@ -219,6 +219,7 @@ const CreateInvoice = lazy(() => import("../pages/ihwe_client_data_2026/invoice/
 const CreditNote = lazy(() => import("../pages/ihwe_client_data_2026/CreditNote"));
 const TaxInvoiceDetails = lazy(() => import("../pages/ihwe_client_data_2026/invoice/TaxInvoiceDetails"));
 const InvoiceNumberDetails = lazy(() => import("../pages/ihwe_client_data_2026/invoice/InvoiceNumberDetails"));
+const InvoiceList = lazy(() => import("../pages/ihwe_client_data_2026/invoice/InvoiceList"));
 const Payments = lazy(() => import("../pages/ihwe_client_data_2026/payments/Payment"));
 const AddPayment = lazy(() => import("../pages/dashboard/account/AddPayment"));
 const AgendaManagement = lazy(() => import("../pages/AgendaManagement"));
@@ -227,6 +228,7 @@ const SpeakerRegistrationDetail = lazy(() => import("../pages/SpeakerRegistratio
 const SpeakerNominationsList = lazy(() => import("../pages/SpeakerNominationsList"));
 const ApprovedSpeakersList = lazy(() => import("../pages/ApprovedSpeakersList"));
 const FloatingVideoManagement = lazy(() => import("../pages/FloatingVideoManagement"));
+const ReferralMembers = lazy(() => import("../pages/ReferralMembers"));
 const ExpoSupportEnquiries = lazy(() => import("../pages/ExpoSupportEnquiries"));
 const SponsorshipEnquiries = lazy(() => import("../pages/SponsorshipEnquiries"));
 const RejectedSpeakersList = lazy(() => import("../pages/RejectedSpeakersList"));
@@ -323,6 +325,7 @@ export default function AppRoutes() {
             <Route path="performa-invoice-list/:id" element={<PerformaInvoiceList />} />
             <Route path="create-debit-note" element={<CreateDebitNote />} />
             <Route path="page-create-invoice" element={<CreateInvoicePage />} />
+            <Route path="page-create-invoice/:id" element={<CreateInvoicePage />} />
             <Route path="e-promotion-manage" element={<EPromotionManage />} />
             <Route path="why-visit-manage" element={<WhyVisitManagement />} />
             <Route path="marquee-text" element={<MarqueeManage />} />
@@ -410,7 +413,14 @@ export default function AppRoutes() {
               path="/invoiceNumberDetails/:id"
               element={<InvoiceNumberDetails />}
             />
-
+            <Route
+              path="/invoice-list"
+              element={<InvoiceList />}
+            />
+            <Route
+              path="/payments/invoiceDetails/:id"
+              element={<InvoiceNumberDetails />}
+            />
             <Route path="exhibitor-products-profile" element={<ExhibitorProductsProfile />} />
             <Route path="stalls" element={<ManageStalls />} />
             <Route path="exhibitor-bookings" element={<ManageRegistrations />} />
@@ -654,6 +664,7 @@ export default function AppRoutes() {
             <Route path="/new-leads" element={<NewLeads />} />
             <Route path="/notification" element={<Notification />} />
             <Route path="/floating-video-management" element={<FloatingVideoManagement />} />
+            <Route path="/referral-members" element={<ReferralMembers />} />
             <Route path="/expo-support-enquiries" element={<ExpoSupportEnquiries />} />
             <Route path="/sponsorship-enquiries" element={<SponsorshipEnquiries />} />
             <Route path="/media-registration-manage" element={<MediaRegistrationManage />} />
@@ -689,10 +700,7 @@ export default function AppRoutes() {
             <Route path="sales-tools/lead-assignment" element={<SalesTools activeTab="lead-assignment" />} />
 
             {/* Communication */}
-            <Route path="communication/calls" element={<Communication activeTab="calls" />} />
-            <Route path="communication/whatsapp" element={<Communication activeTab="whatsapp" />} />
-            <Route path="communication/emails" element={<Communication activeTab="emails" />} />
-            <Route path="communication/meetings" element={<Communication activeTab="meetings" />} />
+            <Route path="communication" element={<Communication />} />
 
           </Route>
           <Route path="*" element={<NotFound />} />

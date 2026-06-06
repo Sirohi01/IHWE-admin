@@ -8,23 +8,27 @@ const WhatsAppModal = ({ company, onClose, onSend }) => {
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null); // { success, message }
 
-  const mobile = company?.contacts?.[0]?.mobile?.replace(/\D/g, "");
-  const userStr = sessionStorage.getItem("user");
-  const user = userStr ? JSON.parse(userStr) : {};
-  const userName = user.name || user.username || "Admin";
+  const adminStr = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
+  const adminInfo = adminStr ? JSON.parse(adminStr) : {};
+  const phone = (company?.contacts?.[0]?.mobile || company?.mobile || "").replace(/\D/g, "");
+  const userName = adminInfo.fullName || adminInfo.username || "Admin";
+  const userId = adminInfo._id || null;
+  const companyName = company?.exhibitorName || company?.companyName || "Client";
 
   const handleSend = async () => {
     if (!message.trim()) return;
     setSending(true);
     setResult(null);
     try {
-      // Send via Opus API through backend
       const res = await api.post("/api/whatsapp", {
-        compny_id: company._id,
-        phone_no: mobile,
+        compny_id: company?.clientId || company?._id,
+        phone_no: phone,
         whtsapp_title: `CRM - ${company.companyName}`,
         whtsapp_desc: message,
         user: userName,
+        senderId: userId,
+        senderName: userName,
+        companyName: companyName,
       });
 
       if (res.data?.success) {
@@ -36,7 +40,9 @@ const WhatsAppModal = ({ company, onClose, onSend }) => {
         setResult({ success: false, message: res.data?.message || "Failed to send" });
       }
     } catch (err) {
-      setResult({ success: false, message: err?.response?.data?.message || "Failed to send message" });
+      console.error("WhatsAppModal API Error:", err);
+      const errMsg = err?.response?.data?.message || err?.message || JSON.stringify(err);
+      setResult({ success: false, message: `Failed: ${errMsg}` });
     } finally {
       setSending(false);
     }
@@ -50,7 +56,7 @@ const WhatsAppModal = ({ company, onClose, onSend }) => {
             <FaWhatsapp className="text-green-600" size={22} />
             <div>
               <h2 className="text-base font-bold text-gray-800">Send WhatsApp</h2>
-              <p className="text-xs text-gray-500">{company?.companyName} • +91 {mobile}</p>
+              <p className="text-xs text-gray-500">{company?.companyName} • +91 {phone}</p>
             </div>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 text-gray-500 hover:text-red-500">

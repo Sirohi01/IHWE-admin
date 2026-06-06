@@ -1,13 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import mainpic from '../../../assets/header.png';
-import { fetchCompanies } from '../../../features/company/companySlice';
-import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { fetchCompanies } from '../../../features/company/companySlice';
+import mainpic from '../../../assets/header.png';
 import api from '../../../lib/api';
-
-const PROFORMA_EVENT_NAME = '9th Edition of International Health & Wellness Expo (IHWE Global Edition)';
-const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, Bharat';
-const PROFORMA_EVENT_GST_NO = '08AAFCN9238F1Z6';
 
 function toWords(n) {
     const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
@@ -26,16 +21,12 @@ function toWords(n) {
     return convert(intPart) + ' Rupees Only.';
 }
 
-const EstimateFormDetail = () => {
-    const { id } = useParams();
+const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
     const dispatch = useDispatch();
-    const [matchedEstimate, setMatchedEstimate] = useState(null);
+    const { companies } = useSelector((state) => state.companies);
     const [company, setCompany] = useState(null);
-    const [fetchingEstimate, setFetchingEstimate] = useState(true);
     const [bankDetails, setBankDetails] = useState(null);
     const [settings, setSettings] = useState(null);
-
-    const { companies, loading: companiesLoading } = useSelector((state) => state.companies);
 
     useEffect(() => {
         const fetchBankDetails = async () => {
@@ -63,74 +54,46 @@ const EstimateFormDetail = () => {
     }, [dispatch]);
 
     useEffect(() => {
-        const fetchEstimateData = async () => {
-            if (!id) return;
-            setFetchingEstimate(true);
-            try {
-                let foundEstimate = null;
-                try {
-                    const response = await api.get(`/api/estimates/${id}`);
-                    foundEstimate = response.data?.data || response.data;
-                } catch (err) {
-                    const resAll = await api.get(`/api/estimates`);
-                    const allData = resAll.data?.data || resAll.data || [];
-                    if (Array.isArray(allData)) {
-                        foundEstimate = allData.find(e => e._id === id);
-                    }
-                }
-                setMatchedEstimate(foundEstimate || null);
-            } catch (error) {
-                setMatchedEstimate(null);
-            } finally {
-                setFetchingEstimate(false);
-            }
-        };
-        fetchEstimateData();
-    }, [id, dispatch]);
-
-    useEffect(() => {
-        if (matchedEstimate && companies.length > 0) {
-            const matchedCompany = companies.find((c) => c._id === matchedEstimate.companyId);
+        const targetCompanyId = matchedInvoice ? matchedInvoice.companyId : form?.companyId;
+        if (companies && companies.length > 0 && targetCompanyId) {
+            const cId = typeof targetCompanyId === 'object' ? targetCompanyId._id : targetCompanyId;
+            const matchedCompany = companies.find((c) => String(c._id) === String(cId));
             setCompany(matchedCompany || null);
         }
-    }, [matchedEstimate, companies]);
-
-    if (fetchingEstimate || companiesLoading) {
-        return <div className="text-center p-10">Loading estimate details...</div>;
-    }
-
-    if (!matchedEstimate) {
-        return <div className="text-center p-10">Estimate not found.</div>;
-    }
+    }, [companies, form?.companyId, matchedInvoice]);
 
     const cur = '₹';
     const fmtNum = (n) => Math.round(Number(n || 0)).toLocaleString('en-IN');
 
-    const invoiceNo = matchedEstimate?.est_no || '';
-    const invoiceDate = matchedEstimate?.supply_date ? new Date(matchedEstimate.supply_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+    const activeItems = matchedInvoice ? matchedInvoice.items : items;
+    const invoiceNo = matchedInvoice ? matchedInvoice.invoice_no : (form?.invoiceNo || '');
+    const dateVal = matchedInvoice ? (matchedInvoice.invoice_date || matchedInvoice.supply_date) : form?.invoiceDate;
+    const invoiceDate = dateVal ? new Date(dateVal).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+    const addedVal = matchedInvoice ? matchedInvoice.added : null;
+    const createdDateTime = addedVal
+        ? new Date(addedVal).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) + ", " + new Date(addedVal).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+        : new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) + ", " + new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-    const createdDateTime = matchedEstimate?.added ? (() => {
-        const d = new Date(matchedEstimate.added);
-        return `${d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}, ${d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
-    })() : '';
-
-    const totalTaxable = matchedEstimate?.items?.reduce((sum, item) => {
-        const amt = parseFloat(item.amount) || 0;
-        return sum + (amt - (parseFloat(item.disc) || 0));
-    }, 0) || 0;
-    const totalGstAmount = matchedEstimate?.items?.reduce((sum, item) => sum + (parseFloat(item.tax) || 0), 0) || 0;
-    const grandTotal = totalTaxable + totalGstAmount;
+    const totalTaxable = activeItems?.reduce((sum, item) => sum + (parseFloat(item.taxableValue) || 0), 0) || 0;
+    const totalGstAmount = activeItems?.reduce((sum, item) => sum + (parseFloat(item.gstAmount) || 0), 0) || 0;
+    const grandTotal = matchedInvoice ? (matchedInvoice.finalAmount || 0) : (activeItems?.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0) || 0);
 
     const c1 = company?.contacts?.[0] || {};
     const companyName = "Namo Gange Wellness Pvt. Ltd.";
-    const clientCompanyName = matchedEstimate?.company_name || company?.companyName || '—';
-    const clientCompanyAddress = matchedEstimate?.company_addr || [company?.address, company?.city, company?.pincode ? `- ${company.pincode}` : '', company?.state, company?.country].filter(Boolean).join(', ');
-    const clientGstNo = matchedEstimate?.company_gst_no || matchedEstimate?.gst_no;
-    const eventName = matchedEstimate?.event_name || matchedEstimate?.consignee_name || PROFORMA_EVENT_NAME;
-    const eventPlaceOfSupply = matchedEstimate?.event_place_of_supply || matchedEstimate?.consignee_addr || PROFORMA_PLACE_OF_SUPPLY;
-    const eventGstNo = matchedEstimate?.event_gst_no || PROFORMA_EVENT_GST_NO;
 
-    const isIgst = matchedEstimate?.state && matchedEstimate.state.toLowerCase() !== 'delhi';
+    const clientName = matchedInvoice ? matchedInvoice.consignee_name : form?.clientName;
+    const billingAddress = matchedInvoice
+        ? [matchedInvoice.billing_address || matchedInvoice.address, matchedInvoice.city, matchedInvoice.pincode ? `- ${matchedInvoice.pincode}` : '', matchedInvoice.state, matchedInvoice.country].filter(Boolean).join(', ')
+        : (form?.billingAddress || [company?.address, company?.city, company?.pincode ? `- ${company.pincode}` : '', company?.state, company?.country].filter(Boolean).join(', '));
+    const shippingAddress = matchedInvoice
+        ? [matchedInvoice.consignee_addr || matchedInvoice.address, matchedInvoice.city, matchedInvoice.pincode ? `- ${matchedInvoice.pincode}` : '', matchedInvoice.state, matchedInvoice.country].filter(Boolean).join(', ')
+        : (form?.shippingAddress || form?.billingAddress);
+    const gstin = matchedInvoice ? matchedInvoice.gst_no : form?.gstin;
+    const termsCondition = matchedInvoice ? matchedInvoice.terms : form?.terms;
+
+    const isIgst = matchedInvoice
+        ? (matchedInvoice.state && matchedInvoice.state.toLowerCase() !== 'delhi')
+        : (form?.invoiceType === "Interstate Sale" || form?.invoiceType === "IGST");
 
     const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
     const sigUrl = settings?.authorizedSignature ? (settings.authorizedSignature.startsWith('http') ? settings.authorizedSignature : `${BASE_URL}${settings.authorizedSignature}`) : null;
@@ -144,7 +107,7 @@ const EstimateFormDetail = () => {
             </div>
 
             <div className="invoice-title-bar" style={{ textAlign: 'center', marginBottom: 4, paddingTop: 2, paddingBottom: 2 }}>
-                <div style={{ fontWeight: 400, fontSize: 18, color: '#0d1f3c', marginBottom: 0 }}>PROFORMA INVOICE</div>
+                <div style={{ fontWeight: 400, fontSize: 18, color: '#0d1f3c', marginBottom: 0, textTransform: 'uppercase' }}>{heading || 'TAX INVOICE'}</div>
             </div>
 
             <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
@@ -152,36 +115,34 @@ const EstimateFormDetail = () => {
                     <tr>
                         <th style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '33%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Client Name &amp; Address</th>
                         <th style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '34%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Shipment Details</th>
-                        <th style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '33%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}> Proforma Invoice Details</th>
+                        <th style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '33%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}> Invoice Details</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
-                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{clientCompanyName}</div>
-                            <div style={{ marginTop: 2, textTransform: 'capitalize' }}>
-                                {clientCompanyAddress || '—'}
-                            </div>
+                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{clientName || company?.companyName || '—'}</div>
+                            <div style={{ marginTop: 2, textTransform: 'capitalize', whiteSpace: 'pre-wrap' }}>{billingAddress}</div>
                             <div style={{ marginTop: 4 }}>Contact Person: {[c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ') || '—'}</div>
-                            <div style={{ marginTop: 2 }}>Email: {c1.email || '—'}</div>
+                            <div style={{ marginTop: 2 }}>Email: {c1.email || company?.email || '—'}</div>
                             <div style={{ marginTop: 2 }}>Contact No.: {c1.mobile || company?.landline || '—'}</div>
-                            {clientGstNo && <div style={{ marginTop: 4 }}>GSTIN.: {clientGstNo}</div>}
+                            {(gstin || company?.gstNumber) && <div style={{ marginTop: 4 }}>GSTIN.: {gstin || company?.gstNumber}</div>}
                         </td>
                         <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
-                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{eventName}</div>
-                            <div style={{ marginTop: 2 }}>Place of Supply: {eventPlaceOfSupply}</div>
-                            <div style={{ marginTop: 4 }}>GSTIN.: {eventGstNo}</div>
+                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>9th Edition of International Health &amp; Wellness Expo (IHWE Global Edition)</div>
+                            <div style={{ marginTop: 2 }}>Place of Supply: Hall Nos. 8, 9 &amp; 10, Pragati Maidan, New Delhi – 110001, Bharat</div>
+                            <div style={{ marginTop: 4 }}>GSTIN.: 08AAFCN9238F1Z6</div>
                         </td>
                         <td style={{ border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 11 }}>
                             <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%' }}>
                                 <tbody>
                                     <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Proforma Invoice No.</td>
+                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Invoice No.</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{invoiceNo}</td>
                                     </tr>
                                     <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Proforma Invoice Date</td>
+                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Invoice Date</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{invoiceDate}</td>
                                     </tr>
@@ -194,7 +155,7 @@ const EstimateFormDetail = () => {
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created By</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', textTransform: 'capitalize' }}>
-                                            {matchedEstimate?.added_by || 'Admin'}
+                                            Admin
                                         </td>
                                     </tr>
                                 </tbody>
@@ -223,8 +184,9 @@ const EstimateFormDetail = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {matchedEstimate?.items?.map((item, index) => {
+                    {activeItems?.map((item, index) => {
                         const amt = parseFloat(item.amount) || 0;
+                        const disc = parseFloat(item.taxableValue) ? amt - parseFloat(item.taxableValue) : 0;
                         return (
                             <tr key={index}>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{index + 1}</td>
@@ -237,15 +199,15 @@ const EstimateFormDetail = () => {
                                 </td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.hsn}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.qty}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.size} {item?.unit}</td>
+                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.unit}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(item?.rate)}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(amt)}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(item?.disc)}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right', fontWeight: 700 }}>{fmtNum(amt - (parseFloat(item?.disc) || 0))}</td>
+                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(disc)}</td>
+                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right', fontWeight: 700 }}>{fmtNum(item.taxableValue)}</td>
                             </tr>
                         );
                     })}
-                    {Array.from({ length: Math.max(0, 7 - (matchedEstimate?.items?.length || 0)) }).map((_, i) => (
+                    {Array.from({ length: Math.max(0, 7 - (activeItems?.length || 0)) }).map((_, i) => (
                         <tr key={`empty-${i}`} style={{ height: 24 }}>
                             {Array(9).fill(0).map((_, j) => <td key={j} style={{ border: '1px solid #ccc' }}></td>)}
                         </tr>
@@ -274,32 +236,32 @@ const EstimateFormDetail = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {matchedEstimate?.items?.map((item, index) => {
-                        const gstRate = parseFloat(item?.gstRate) || 0;
+                    {activeItems?.map((item, index) => {
+                        const gstRate = parseFloat(item?.gstPct) || 0;
                         const halfGst = gstRate / 2;
-                        const gstAmt = parseFloat(item?.tax) || 0;
+                        const gstAmt = parseFloat(item?.gstAmount) || 0;
                         const halfGstAmt = gstAmt / 2;
-                        const itemTaxable = (parseFloat(item?.amount) || 0) - (parseFloat(item?.disc) || 0);
+                        const itemTaxable = parseFloat(item?.taxableValue) || 0;
 
                         return (
                             <tr key={index}>
                                 <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{index + 1}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{item?.hsn}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{fmtNum(itemTaxable)}</td>
+                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'right' }}>{fmtNum(itemTaxable)}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{item?.qty}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{!isIgst ? halfGst + '%' : '-'}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{!isIgst ? fmtNum(halfGstAmt) : '-'}</td>
+                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'right' }}>{!isIgst ? fmtNum(halfGstAmt) : '-'}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{!isIgst ? halfGst + '%' : '-'}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{!isIgst ? fmtNum(halfGstAmt) : '-'}</td>
+                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'right' }}>{!isIgst ? fmtNum(halfGstAmt) : '-'}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{isIgst ? gstRate + '%' : '-'}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{isIgst ? fmtNum(gstAmt) : '-'}</td>
+                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'right' }}>{isIgst ? fmtNum(gstAmt) : '-'}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'right', fontWeight: 700 }}>{fmtNum(gstAmt)}</td>
                             </tr>
                         );
                     })}
                     <tr style={{ background: '#f8fafc', textTransform: 'uppercase' }}>
                         <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700 }}>GST Amount in Words</td>
-                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px' }}>{toWords(Math.round(totalGstAmount))}</td>
+                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize' }}>{toWords(Math.round(totalGstAmount)).toUpperCase()}</td>
                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700 }}>Total GST Amount</td>
                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right' }}>{fmtNum(totalGstAmount)}</td>
                     </tr>
@@ -308,9 +270,9 @@ const EstimateFormDetail = () => {
                     </tr>
                     <tr style={{ background: '#f8fafc', textTransform: 'uppercase' }}>
                         <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700 }}>Amount in Words</td>
-                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px' }}>{toWords(Math.round(grandTotal))}</td>
+                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize' }}>{toWords(Math.round(grandTotal)).toUpperCase()}</td>
                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700 }}>Grand Total</td>
-                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right' }}>{fmtNum(grandTotal)}</td>
+                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right', fontSize: 13, color: '#000' }}>{fmtNum(grandTotal)}</td>
                     </tr>
                 </tbody>
             </table>
@@ -392,4 +354,4 @@ const EstimateFormDetail = () => {
     );
 };
 
-export default EstimateFormDetail;
+export default InvoicePreviewTemplate;
