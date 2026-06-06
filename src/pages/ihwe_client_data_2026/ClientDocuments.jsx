@@ -74,16 +74,9 @@ const ClientDocuments = () => {
             time: new Date(d.added).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
             isUploaded: true,
             previewUrl: d.file_url ? (d.file_url.startsWith('http') ? d.file_url.replace(/\.pdf$/i, '.jpg') : `${import.meta.env.VITE_API_URL || "http://localhost:5000"}${d.file_url}`.replace('/api/uploads', '/uploads')) : "",
-            originalPdfUrl: d.file_url ? (
-                (d.file_type?.toUpperCase() === 'PDF' && d.file_url.includes('cloudinary.com'))
-                    ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/client-documents/proxy/download?url=${encodeURIComponent(d.file_url)}`
-                    : d.file_url
-            ) : "",
-            proxyDownloadUrl: d.file_url ? (
-                (d.file_type?.toUpperCase() === 'PDF' && d.file_url.includes('cloudinary.com'))
-                    ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/client-documents/proxy/download?url=${encodeURIComponent(d.file_url)}&download=true`
-                    : d.file_url
-            ) : "",
+            originalPdfUrl: d.file_url || "",
+            proxyDownloadUrl: d.file_url ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/client-documents/proxy/download?url=${encodeURIComponent(d.file_url)}&download=true` : "",
+            proxyViewUrl: d.file_url ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/client-documents/proxy/download?url=${encodeURIComponent(d.file_url)}&download=false` : "",
             isImage: d.file_type && ['JPG', 'JPEG', 'PNG', 'GIF'].includes(d.file_type.toUpperCase())
         }));
     }, [clientDocs]);
@@ -518,7 +511,7 @@ const ClientDocuments = () => {
                                                     <img src={selectedDocument.previewUrl} alt="Preview" className="max-w-full h-full object-contain bg-white" />
                                                     {selectedDocument.fileType === 'PDF' && (
                                                         <div className="absolute top-2 right-2 flex gap-2">
-                                                            <a href={selectedDocument.originalPdfUrl} target="_blank" rel="noopener noreferrer" className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] px-2 py-1 rounded shadow-sm font-semibold flex items-center gap-1 z-10">
+                                                            <a href={selectedDocument.proxyViewUrl || selectedDocument.originalPdfUrl} target="_blank" rel="noopener noreferrer" className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] px-2 py-1 rounded shadow-sm font-semibold flex items-center gap-1 z-10">
                                                                 <ExternalLink size={12} /> Open PDF
                                                             </a>
                                                         </div>
@@ -597,7 +590,7 @@ const ClientDocuments = () => {
                                                 href={selectedDocument.originalPdfUrl ? (() => {
                                                     let url = selectedDocument.originalPdfUrl;
                                                     if (!url.startsWith('http')) url = `${(import.meta.env.VITE_API_URL || "http://localhost:5000").replace('/api', '')}${url}`;
-                                                    if (url.includes('cloudinary.com') && url.startsWith('http://')) url = url.replace('http://', 'https://');
+                                                    if (url.startsWith('http://res.cloudinary.com')) url = url.replace('http://', 'https://');
                                                     return url;
                                                 })() : '#'}
                                                 target="_blank"
@@ -606,19 +599,44 @@ const ClientDocuments = () => {
                                             >
                                                 <ZoomIn size={12} /> View
                                             </a>
-                                            <a 
-                                                href={selectedDocument.proxyDownloadUrl ? (() => {
-                                                    let url = selectedDocument.proxyDownloadUrl;
-                                                    if (!url.startsWith('http')) url = `${(import.meta.env.VITE_API_URL || "http://localhost:5000").replace('/api', '')}${url}`;
-                                                    if (url.includes('cloudinary.com') && url.startsWith('http://')) url = url.replace('http://', 'https://');
-                                                    return url;
-                                                })() : '#'}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    if (!selectedDocument || !selectedDocument.isUploaded) return;
+
+                                                    let url = selectedDocument.proxyDownloadUrl || selectedDocument.originalPdfUrl;
+                                                    if (!url) return;
+
+                                                    if (!url.startsWith('http')) {
+                                                        url = `${(import.meta.env.VITE_API_URL || "http://localhost:5000").replace('/api', '')}${url}`;
+                                                    }
+                                                    
+                                                    toast.info(`Downloading ${selectedDocument.fullName}...`, { autoClose: 1500 });
+                                                    
+                                                    fetch(url)
+                                                        .then(response => {
+                                                            if (!response.ok) throw new Error('Network response failed');
+                                                            return response.blob();
+                                                        })
+                                                        .then(blob => {
+                                                            const blobUrl = window.URL.createObjectURL(blob);
+                                                            const link = document.createElement('a');
+                                                            link.href = blobUrl;
+                                                            link.download = `${selectedDocument.fullName}.${selectedDocument.fileType?.toLowerCase() || 'pdf'}`;
+                                                            document.body.appendChild(link);
+                                                            link.click();
+                                                            document.body.removeChild(link);
+                                                            window.URL.revokeObjectURL(blobUrl);
+                                                        })
+                                                        .catch(err => {
+                                                            console.error("Fetch download failed:", err);
+                                                            toast.error("Download failed. The file may be restricted, deleted, or you may need to re-upload it.");
+                                                        });
+                                                }}
                                                 className={`bg-white border border-gray-200 hover:bg-gray-50 text-[#0f172a] rounded-lg py-1.5 px-1 flex items-center justify-center gap-1 transition-colors font-semibold shadow-sm text-[10px] ${!selectedDocument.proxyDownloadUrl || !selectedDocument.isUploaded ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
                                             >
                                                 <Download size={12} /> Download
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
