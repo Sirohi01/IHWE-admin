@@ -146,6 +146,9 @@ export const PerformaInvoices = () => {
         supplyDate: new Date().toISOString().split('T')[0],
         consigneeName: '',
         consigneeAddress: '',
+        consigneeEventName: PROFORMA_EVENT_NAME,
+        consigneeEventAddress: PROFORMA_PLACE_OF_SUPPLY,
+        consigneeGstin: PROFORMA_EVENT_GST_NO,
         country: '',
         state: '',
         city: '',
@@ -247,6 +250,9 @@ export const PerformaInvoices = () => {
                         supplyDate: existingEstimate.supply_date || new Date().toISOString().split('T')[0],
                         consigneeName: existingEstimate.company_name || (existingEstimate.consignee_name !== PROFORMA_EVENT_NAME ? existingEstimate.consignee_name : '') || companyInfo?.companyName || companyInfo?.exhibitorName || '',
                         consigneeAddress: existingEstimate.company_addr || (existingEstimate.consignee_addr !== PROFORMA_PLACE_OF_SUPPLY ? existingEstimate.consignee_addr : '') || companyInfo?.address || companyInfo?.companyAddress || '',
+                        consigneeEventName: existingEstimate.event_name || existingEstimate.consignee_name || PROFORMA_EVENT_NAME,
+                        consigneeEventAddress: existingEstimate.event_place_of_supply || existingEstimate.consignee_addr || PROFORMA_PLACE_OF_SUPPLY,
+                        consigneeGstin: existingEstimate.event_gst_no || PROFORMA_EVENT_GST_NO,
                         gstin: existingEstimate.company_gst_no || existingEstimate.gst_no || companyInfo?.gst || companyInfo?.gstNo || '',
                         country: existingEstimate.country || companyInfo?.country || '',
                         state: existingEstimate.state || companyInfo?.state || '',
@@ -260,6 +266,9 @@ export const PerformaInvoices = () => {
                         ...prev,
                         consigneeName: companyInfo.companyName || companyInfo.exhibitorName || '',
                         consigneeAddress: companyInfo.address || companyInfo.companyAddress || '',
+                        consigneeEventName: PROFORMA_EVENT_NAME,
+                        consigneeEventAddress: PROFORMA_PLACE_OF_SUPPLY,
+                        consigneeGstin: PROFORMA_EVENT_GST_NO,
                         gstin: companyInfo.gst || companyInfo.gstNo || '',
                         country: companyInfo.country || '',
                         state: companyInfo.state || '',
@@ -420,11 +429,11 @@ export const PerformaInvoices = () => {
             company_name: form.consigneeName,
             company_addr: form.consigneeAddress,
             company_gst_no: form.gstNo || form.gst_no || form.gstin || "",
-            event_name: PROFORMA_EVENT_NAME,
-            event_place_of_supply: PROFORMA_PLACE_OF_SUPPLY,
-            event_gst_no: PROFORMA_EVENT_GST_NO,
-            consignee_name: PROFORMA_EVENT_NAME,
-            consignee_addr: PROFORMA_PLACE_OF_SUPPLY,
+            event_name: form.consigneeEventName,
+            event_place_of_supply: form.consigneeEventAddress,
+            event_gst_no: form.consigneeGstin,
+            consignee_name: form.consigneeEventName,
+            consignee_addr: form.consigneeEventAddress,
             country: form.country,
             state: form.state,
             city: form.city,
@@ -615,15 +624,15 @@ export const PerformaInvoices = () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
                             <div>
                                 <Label>Consignee Name</Label>
-                                <Input readOnly value={PROFORMA_EVENT_NAME} className="bg-gray-50 font-semibold" />
+                                <Input value={form.consigneeEventName} onChange={(e) => setField('consigneeEventName', e.target.value)} />
                             </div>
                             <div>
                                 <Label>Consignee Address</Label>
-                                <Input readOnly value={PROFORMA_PLACE_OF_SUPPLY} className="bg-gray-50 font-semibold" />
+                                <Input value={form.consigneeEventAddress} onChange={(e) => setField('consigneeEventAddress', e.target.value)} />
                             </div>
                             <div>
                                 <Label>Consignee GSTIN</Label>
-                                <Input readOnly value={PROFORMA_EVENT_GST_NO} className="bg-gray-50 font-semibold" />
+                                <Input value={form.consigneeGstin} onChange={(e) => setField('consigneeGstin', e.target.value.toUpperCase())} />
                             </div>
                         </div>
                         {/* <div className="grid grid-cols-5 gap-3 mt-3">
