@@ -16,6 +16,15 @@ import RemindersCard        from "./dashboard/RemindersCard";
 import NextActionPanel      from "./dashboard/NextActionPanel";
 import AccountDashboard     from "./dashboard/AccountDashboard";
 
+const getTargetMonthForPeriod = (period) => {
+  const now = new Date();
+  const formatMonth = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  if (period === "previous_month") {
+    return formatMonth(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+  }
+  return formatMonth(new Date(now.getFullYear(), now.getMonth(), 1));
+};
+
 export default function Dashboard() {
   // ─── State ──────────────────────────────────────────────────────────────────
   const [currentUser, setCurrentUser] = useState(null);
@@ -154,12 +163,16 @@ export default function Dashboard() {
   const targetMetrics = useMemo(() => {
     if (!currentUser) return { target: "0.00", achieved: "0.00", remaining: "0.00", pct: 0 };
     const u         = currentUser.username.toLowerCase();
-    const match     = targets.find(t => t.username?.toLowerCase() === u || t.user?.toLowerCase() === u);
+    const userTargets = targets.filter(t => t.username?.toLowerCase() === u || t.user?.toLowerCase() === u);
+    const selectedMonth = getTargetMonthForPeriod(revenuePeriod);
+    const match = revenuePeriod === "all_time"
+      ? null
+      : userTargets.find(t => (t.targetMonth || getTargetMonthForPeriod("current_month")) === selectedMonth);
     
     // Target is input in Lakhs (e.g. 15 for 15.00 L)
-    const targetVal = match && match.revenueTarget !== undefined && match.revenueTarget !== null 
-      ? match.revenueTarget 
-      : 0;
+    const targetVal = revenuePeriod === "all_time"
+      ? userTargets.reduce((sum, target) => sum + (Number(target.revenueTarget) || 0), 0)
+      : (match && match.revenueTarget !== undefined && match.revenueTarget !== null ? Number(match.revenueTarget) : 0);
     
     // Scale down the achieved revenue to Lakhs for display
     const achievedLakhs = actualRevenue / 100000;
@@ -172,7 +185,7 @@ export default function Dashboard() {
       remaining: remaining.toFixed(2),
       pct:       targetVal > 0 ? Math.min(100, Math.round((achieved / targetVal) * 100)) : (achieved > 0 ? 100 : 0),
     };
-  }, [currentUser, targets, actualRevenue]);
+  }, [currentUser, targets, actualRevenue, revenuePeriod]);
 
   // ─── Follow-ups list ─────────────────────────────────────────────────────────
   const followupsList = useMemo(() =>

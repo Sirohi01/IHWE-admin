@@ -68,9 +68,9 @@ export default function EmailsRightSidebar({ statsData, recentLogs, onLogAdded }
 
   return (
     <div className="space-y-1">
-      {/* Today's Call Target */}
+      {/* This Month's Emails Target */}
       <div className="bg-white rounded-xl border border-[#EDF0F7] p-3">
-        <h3 className="text-[16px] font-medium text-[#0F172A] mb-1">Today's Emails Target</h3>
+        <h3 className="text-[16px] font-medium text-[#0F172A] mb-1">This Month's Emails Target</h3>
         <div className="flex items-center justify-between">
           <div className="relative w-[90px] h-[90px]">
             <ResponsiveContainer width="100%" height="100%">

@@ -6,6 +6,11 @@ import Swal from "sweetalert2";
 import api from "../../lib/api";
 
 
+const getCurrentTargetMonth = () => {
+  const date = new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+};
+
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   const pages = [];
   const start = Math.max(1, currentPage - 2);
@@ -43,7 +48,7 @@ const AddTarget = () => {
 
   const [editingTarget, setEditingTarget] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({ user: "", callTarget: "", whatsappTarget: "", emailTarget: "", meetingTarget: "", revenueTarget: "", status: "Active" });
+  const [formData, setFormData] = useState({ user: "", targetMonth: getCurrentTargetMonth(), callTarget: "", whatsappTarget: "", emailTarget: "", meetingTarget: "", revenueTarget: "", status: "Active" });
   const [targets, setTargets] = useState([]);
 
   useEffect(() => {
@@ -63,6 +68,7 @@ const AddTarget = () => {
             meetingTarget: t.meetingTarget,
             revenueTarget: t.revenueTarget,
             status: t.status,
+            targetMonth: t.targetMonth || getCurrentTargetMonth(),
             createdByFullName: t.createdByFullName || t.createdBy?.user_fullname || "Admin",
             updatedByFullName: t.updatedByFullName || t.updatedBy?.user_fullname || t.createdByFullName || "Admin",
             createdAt: t.createdAt,
@@ -88,7 +94,7 @@ const AddTarget = () => {
   // Removed useEffect for localStorage
 
   const handleChange = (e) => setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  const resetForm = () => { setFormData({ user: "", callTarget: "", whatsappTarget: "", emailTarget: "", meetingTarget: "", revenueTarget: "", status: "Active" }); setEditingTarget(null); };
+  const resetForm = () => { setFormData({ user: "", targetMonth: getCurrentTargetMonth(), callTarget: "", whatsappTarget: "", emailTarget: "", meetingTarget: "", revenueTarget: "", status: "Active" }); setEditingTarget(null); };
   const openAddModal = () => {
     resetForm();
     setIsModalOpen(true);
@@ -110,6 +116,7 @@ const AddTarget = () => {
     try {
       const res = await api.post("/api/user-targets", {
         username: formData.user,
+        targetMonth: formData.targetMonth || getCurrentTargetMonth(),
         callTarget: Number(formData.callTarget) || 0,
         whatsappTarget: Number(formData.whatsappTarget) || 0,
         emailTarget: Number(formData.emailTarget) || 0,
@@ -142,7 +149,7 @@ const AddTarget = () => {
   const handleEdit = (itemId) => {
     const item = targets.find((i) => i.id === itemId);
     if (item) {
-      setFormData({ user: item.user, callTarget: item.callTarget, whatsappTarget: item.whatsappTarget, emailTarget: item.emailTarget, meetingTarget: item.meetingTarget, revenueTarget: item.revenueTarget, status: item.status });
+      setFormData({ user: item.user, targetMonth: item.targetMonth || getCurrentTargetMonth(), callTarget: item.callTarget, whatsappTarget: item.whatsappTarget, emailTarget: item.emailTarget, meetingTarget: item.meetingTarget, revenueTarget: item.revenueTarget, status: item.status });
       setEditingTarget(item);
       setIsModalOpen(true);
     }
@@ -185,7 +192,7 @@ const AddTarget = () => {
 
   const filteredAndSorted = useMemo(() => {
     let list = [...targets];
-    if (searchText?.trim()) list = list.filter((c) => c.user.toLowerCase().includes(searchText.trim().toLowerCase()) || String(c.callTarget).includes(searchText.trim()));
+    if (searchText?.trim()) list = list.filter((c) => c.user.toLowerCase().includes(searchText.trim().toLowerCase()) || String(c.targetMonth || "").includes(searchText.trim()) || String(c.callTarget).includes(searchText.trim()));
     if (statusFilter === "Active" || statusFilter === "Inactive") list = list.filter((c) => c.status === statusFilter);
     const { key, dir } = sortBy;
     list.sort((a, b) => {
@@ -223,6 +230,13 @@ const AddTarget = () => {
       return username === compareName || fullName === compareName;
     });
     return admin?.fullName || admin?.user_fullname || cleanedName || "Admin";
+  };
+  const formatTargetMonth = (month) => {
+    if (!month) return "-";
+    const [year, monthNumber] = String(month).split("-");
+    const date = new Date(Number(year), Number(monthNumber) - 1, 1);
+    if (Number.isNaN(date.getTime())) return month;
+    return date.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
   };
   const inputCls = "h-10 rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-[#23471d] focus:ring-2 focus:ring-[#23471d]/10 w-full";
   const labelCls = "text-xs font-bold text-slate-700 mb-1 block";
@@ -275,6 +289,10 @@ const AddTarget = () => {
                           </option>
                         ))}
                       </select>
+                    </div>
+                    <div>
+                      <label className={labelCls}>Target Month <span className="text-red-500">*</span></label>
+                      <input type="month" name="targetMonth" value={formData.targetMonth} onChange={handleChange} className={inputCls} disabled={!!editingTarget} required />
                     </div>
                     <div>
                       <label className={labelCls}>Call Target</label>
@@ -348,7 +366,7 @@ const AddTarget = () => {
           </div>
 
           <div className="overflow-x-auto font-inter bg-white">
-            <table className="w-full min-w-[1200px] border-collapse">
+            <table className="w-full min-w-[1280px] border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
                   <th className="px-6 py-3 text-xs font-extrabold text-slate-600 uppercase text-center w-20">
@@ -356,6 +374,9 @@ const AddTarget = () => {
                   </th>
                   <th className="px-6 py-3 text-xs font-extrabold text-slate-600 uppercase text-left">
                     <button onClick={() => toggleSort("user")} className="uppercase hover:text-slate-900">User</button>
+                  </th>
+                  <th className="px-6 py-3 text-xs font-extrabold text-slate-600 uppercase text-left">
+                    <button onClick={() => toggleSort("targetMonth")} className="uppercase hover:text-slate-900">Month</button>
                   </th>
                   <th className="px-6 py-3 text-xs font-extrabold text-slate-600 uppercase text-left">
                     <button onClick={() => toggleSort("callTarget")} className="uppercase hover:text-slate-900">Call Target</button>
@@ -383,7 +404,7 @@ const AddTarget = () => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredAndSorted.length === 0 ? (
-                  <tr><td colSpan={10} className="py-10 text-center text-slate-400 text-sm italic">No targets found</td></tr>
+                  <tr><td colSpan={11} className="py-10 text-center text-slate-400 text-sm italic">No targets found</td></tr>
                 ) : currentPageData.map((item, index) => (
                   <tr key={item.id} className="border-b border-slate-100 transition-colors hover:bg-[#23471d]/5">
                     <td className="px-6 py-3 text-sm text-gray-900 text-center font-bold">{(currentPage - 1) * rowsPerPage + index + 1}</td>
@@ -393,6 +414,7 @@ const AddTarget = () => {
                     >
                       {resolveAdminFullName(item.user)}
                     </td>
+                    <td className="px-6 py-3 text-md text-slate-700 font-md">{formatTargetMonth(item.targetMonth)}</td>
                     <td className="px-6 py-3 text-md text-slate-700 font-md">{item.callTarget}</td>
                     <td className="px-6 py-3 text-md text-slate-700 font-md">{item.whatsappTarget}</td>
                     <td className="px-6 py-3 text-md text-slate-700 font-md">{item.emailTarget}</td>
