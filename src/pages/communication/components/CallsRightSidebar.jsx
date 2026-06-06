@@ -2,12 +2,28 @@ import React, { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Phone, ChevronDown, Facebook, Instagram, Twitter } from 'lucide-react';
 
+const countryCodes = [
+  { code: '+91', flag: 'in' },
+  { code: '+1', flag: 'us' },
+  { code: '+44', flag: 'gb' },
+  { code: '+971', flag: 'ae' },
+  { code: '+966', flag: 'sa' },
+  { code: '+974', flag: 'qa' },
+  { code: '+965', flag: 'kw' },
+  { code: '+968', flag: 'om' },
+  { code: '+973', flag: 'bh' },
+  { code: '+61', flag: 'au' },
+  { code: '+65', flag: 'sg' },
+  { code: '+60', flag: 'my' },
+];
+
 export default function CallsRightSidebar({ statsData, recentLogs }) {
   const target = statsData?.targets?.call || 0;
   const completed = statsData?.completed?.call || 0;
   const remaining = Math.max(target - completed, 0);
 
   const [dialNumber, setDialNumber] = useState('');
+  const [dialCountryCode, setDialCountryCode] = useState('+91');
 
   const handleDialpadClick = (num) => {
     setDialNumber(prev => prev + num);
@@ -15,7 +31,7 @@ export default function CallsRightSidebar({ statsData, recentLogs }) {
 
   const handleQuickDial = () => {
     if (dialNumber) {
-      window.location.href = `tel:+91${dialNumber}`;
+      window.location.href = `tel:${dialCountryCode}${dialNumber.replace(/^\+/, '')}`;
     }
   };
 
@@ -120,10 +136,25 @@ export default function CallsRightSidebar({ statsData, recentLogs }) {
       <div className="bg-white rounded-xl border border-[#EDF0F7] p-3">
         <h3 className="text-[16px] font-medium text-[#0F172A] mb-2">Quick Dial</h3>
         <div className="flex items-center gap-2 mb-2">
-          <div className="flex items-center gap-1 border border-slate-200 rounded-lg px-2 py-1 cursor-pointer hover:bg-slate-50">
-            <img src="https://flagcdn.com/w20/in.png" alt="India" className="w-5 h-3" />
-            <span className="text-[12px] font-medium text-slate-700 ml-1">+91</span>
-            <ChevronDown size={14} className="text-slate-400" />
+          <div className="relative flex items-center rounded-lg border border-slate-200 bg-white">
+            <img
+              src={`https://flagcdn.com/w20/${countryCodes.find((country) => country.code === dialCountryCode)?.flag || 'in'}.png`}
+              alt=""
+              className="ml-2 h-3 w-5"
+            />
+            <select
+              value={dialCountryCode}
+              onChange={(e) => setDialCountryCode(e.target.value)}
+              className="h-8 w-[62px] appearance-none bg-transparent pl-2 pr-6 text-[12px] font-medium text-slate-700 outline-none"
+              title="Country code"
+            >
+              {countryCodes.map((country) => (
+                <option key={country.code} value={country.code}>
+                  {country.code}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={14} className="pointer-events-none absolute right-2 text-slate-400" />
           </div>
           <input
             type="text"

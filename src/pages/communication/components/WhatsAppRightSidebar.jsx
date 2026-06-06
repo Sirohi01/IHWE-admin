@@ -4,12 +4,28 @@ import Swal from 'sweetalert2';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { MessageCircle, ChevronDown, Facebook, Instagram, Twitter } from 'lucide-react';
 
+const countryCodes = [
+  { code: '+91', label: 'India', flag: 'in' },
+  { code: '+1', label: 'USA / Canada', flag: 'us' },
+  { code: '+44', label: 'United Kingdom', flag: 'gb' },
+  { code: '+971', label: 'UAE', flag: 'ae' },
+  { code: '+966', label: 'Saudi Arabia', flag: 'sa' },
+  { code: '+974', label: 'Qatar', flag: 'qa' },
+  { code: '+965', label: 'Kuwait', flag: 'kw' },
+  { code: '+968', label: 'Oman', flag: 'om' },
+  { code: '+973', label: 'Bahrain', flag: 'bh' },
+  { code: '+61', label: 'Australia', flag: 'au' },
+  { code: '+65', label: 'Singapore', flag: 'sg' },
+  { code: '+60', label: 'Malaysia', flag: 'my' },
+];
+
 export default function WhatsAppRightSidebar({ statsData, recentLogs, onLogAdded }) {
   const target = statsData?.targets?.whatsapp || 0;
   const completed = statsData?.completed?.whatsapp || 0;
   const remaining = Math.max(target - completed, 0);
 
   const [waContactName, setWaContactName] = useState('');
+  const [waCountryCode, setWaCountryCode] = useState('+91');
   const [waPhone, setWaPhone] = useState('');
   const [waMessage, setWaMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -23,14 +39,16 @@ export default function WhatsAppRightSidebar({ statsData, recentLogs, onLogAdded
         const userName = adminInfo.fullName || adminInfo.username || "Admin";
         const userId = adminInfo._id || null;
 
+        const fullPhoneNumber = `${waCountryCode}${waPhone.replace(/^\+/, '')}`;
+
         await api.post("/api/whatsapp", {
-          phone_no: waPhone,
+          phone_no: fullPhoneNumber,
           whtsapp_title: `CRM - Quick Message`,
           whtsapp_desc: waMessage,
           user: userName,
           senderId: userId,
           senderName: userName,
-          companyName: waContactName || waPhone,
+          companyName: waContactName || fullPhoneNumber,
           compny_id: "quick_message",
         });
         
@@ -157,10 +175,25 @@ export default function WhatsAppRightSidebar({ statsData, recentLogs, onLogAdded
             className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-[12px] focus:outline-none focus:border-indigo-500 bg-slate-50"
           />
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 border border-slate-200 rounded-lg px-2 py-1.5 cursor-pointer hover:bg-slate-50 bg-white">
-              <img src="https://flagcdn.com/w20/in.png" alt="India" className="w-5 h-3" />
-              <span className="text-[12px] font-medium text-slate-700 ml-1">+91</span>
-              <ChevronDown size={14} className="text-slate-400" />
+            <div className="relative flex items-center rounded-lg border border-slate-200 bg-white">
+              <img
+                src={`https://flagcdn.com/w20/${countryCodes.find((country) => country.code === waCountryCode)?.flag || 'in'}.png`}
+                alt=""
+                className="ml-2 h-3 w-5"
+              />
+              <select
+                value={waCountryCode}
+                onChange={(e) => setWaCountryCode(e.target.value)}
+                className="h-8 w-[62px] appearance-none bg-transparent pl-2 pr-6 text-[12px] font-medium text-slate-700 outline-none"
+                title="Country code"
+              >
+                {countryCodes.map((country) => (
+                  <option key={country.code} value={country.code}>
+                    {country.code}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={14} className="pointer-events-none absolute right-2 text-slate-400" />
             </div>
             <input
               type="text"
