@@ -71,94 +71,83 @@ const VisitorRegistration = ({ onNavigateToList, initialType = "corporate", hide
   }, [dispatch]);
 
   return (
-    <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-inter animate-fadeIn">
-      {/* ── HEADER AREA ── */}
-      <div className="flex flex-col sm:flex-row justify-between items-center pb-4 border-b border-gray-100 bg-white px-2 py-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-bold text-slate-500 uppercase tracking-tight leading-none">
-            VISITOR DETAILS
-          </h1>
-          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
-            Visitor Registration Portal
-          </p>
-        </div>
-        {/* Removed Master List and Visitor List buttons as requested */}
-      </div>
+    <div className="bg-white shadow-md min-h-screen font-inter animate-fadeIn">
 
-      <div className="max-w-[1400px] mx-auto p-6 space-y-8">
+      <div className="max-w-[1400px] mx-auto space-y-8">
         <div className="bg-white shadow-md border border-gray-200 rounded-[2px] overflow-hidden">
           {/* ── SUB-HEADER ── */}
-          <div className="bg-slate-50/50 border-b border-slate-200 px-6 py-3">
-            <h2 className="text-[16px] font-bold text-slate-800 uppercase tracking-tight">
-              Add New Visitor
-            </h2>
-            <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-0.5 font-bold">
-              International Health & Wellness Expo 2026
-            </p>
-          </div>
-
-          <div className="p-6 lg:p-10">
-            {!hideTabs && (
-              <div className="mb-8 flex gap-8 border-b border-gray-100 pb-4">
-                {[
-                  { value: "corporate", label: "Corporate Visitor" },
-                  { value: "general", label: "General Visitor" },
-                  { value: "freeHealth", label: "Free Health Camp" },
-                ].map(({ value, label }) => (
-                  <label
-                    key={value}
-                    className="flex items-center gap-3 cursor-pointer group"
-                  >
-                    <input
-                      type="radio"
-                      name="visitorType"
-                      value={value}
-                      checked={visitorType === value}
-                      onChange={(e) => setVisitorType(e.target.value)}
-                      className="h-5 w-5 text-[#23471d] border-gray-300 focus:ring-[#23471d]"
-                    />
-                    <span className={`text-sm font-bold uppercase tracking-tight transition-colors ${
-                      visitorType === value ? "text-[#23471d]" : "text-gray-500 group-hover:text-gray-700"
-                    }`}>
-                      {label}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            )}
-
-            <div className="mt-6">
-              {visitorType === "corporate" && (
-                <CorporateVisitorForm
-                  registrationOptions={registrationOptions}
-                  industrySectors={industrySectors}
-                  countries={countryNames}
-                  states={stateNames}
-                  cities={cityNames}
-                />
-              )}
-              {visitorType === "general" && (
-                <GeneralVisitorForm
-                  registrationOptions={registrationOptions}
-                  industrySectors={industrySectors}
-                  countries={countryNames}
-                  states={stateNames}
-                  cities={cityNames}
-                  genders={genders}
-                />
-              )}
-              {visitorType === "freeHealth" && (
-                <FreeHealthCampForm
-                  registrationOptions={registrationOptions}
-                  countries={countryNames}
-                  states={stateNames}
-                  cities={cityNames}
-                  genders={genders}
-                  timeSlots={timeSlots}
-                />
+          <div className="flex items-center justify-between bg-slate-50/50 border-b border-slate-200 px-6 py-2">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-800 uppercase tracking-tight">
+                Add New Visitor
+              </h2>
+              <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-0.5 font-bold">
+                International Health & Wellness Expo 2026
+              </p>
+            </div>
+            <div className="">
+              {!hideTabs && (
+                <div className="flex gap-4">
+                  {[
+                    { value: "corporate", label: "Corporate Visitor" },
+                    { value: "general", label: "General Visitor" },
+                    { value: "freeHealth", label: "Free Health Camp" },
+                  ].map(({ value, label }) => (
+                    <label
+                      key={value}
+                      className="flex items-center gap-3 cursor-pointer group"
+                    >
+                      <input
+                        type="radio"
+                        name="visitorType"
+                        value={value}
+                        checked={visitorType === value}
+                        onChange={(e) => setVisitorType(e.target.value)}
+                        className="h-5 w-5 text-[#23471d] border-gray-300 focus:ring-[#23471d]"
+                      />
+                      <span className={`text-[13px] font-semibold tracking-tight transition-colors ${visitorType === value ? "text-[#23471d]" : "text-gray-500 group-hover:text-gray-700"
+                        }`}>
+                        {label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
               )}
             </div>
           </div>
+
+          <div className="mt-1 px-6">
+            {visitorType === "corporate" && (
+              <CorporateVisitorForm
+                registrationOptions={registrationOptions}
+                industrySectors={industrySectors}
+                countries={countryNames}
+                states={stateNames}
+                cities={cityNames}
+              />
+            )}
+            {visitorType === "general" && (
+              <GeneralVisitorForm
+                registrationOptions={registrationOptions}
+                industrySectors={industrySectors}
+                countries={countryNames}
+                states={stateNames}
+                cities={cityNames}
+                genders={genders}
+              />
+            )}
+            {visitorType === "freeHealth" && (
+              <FreeHealthCampForm
+                registrationOptions={registrationOptions}
+                countries={countryNames}
+                states={stateNames}
+                cities={cityNames}
+                genders={genders}
+                timeSlots={timeSlots}
+              />
+            )}
+          </div>
+
         </div>
       </div>
     </div>

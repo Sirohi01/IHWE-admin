@@ -147,6 +147,7 @@ const CorporateVisitorForm = lazy(() => import("../pages/web_visitor_data/add_ne
 const FreeHealthCampForm = lazy(() => import("../pages/web_visitor_data/add_new_visitor/FreeHealthCampForm"));
 const GeneralVisitorForm = lazy(() => import("../pages/web_visitor_data/add_new_visitor/GeneralVisitorForm"));
 const VisitorRegistration = lazy(() => import("../pages/web_visitor_data/add_new_visitor/VisitorRegistration"));
+const VisitorRegistrationForm = lazy(() => import("../pages/web_visitor_data/add_new_visitor/VisitorRegistrationForm"));
 
 const CorporateVisitorsList = lazy(() => import("../pages/web_visitor_data/CorporateVisitorsList"));
 const GeneralVisitorsList = lazy(() => import("../pages/web_visitor_data/GeneralVisitorsList"));
@@ -528,6 +529,10 @@ export default function AppRoutes() {
             path="ihweClientData2026/AddNewVisitor"
             element={<VisitorRegistration />}
           /> */}
+            <Route
+              path="ihweClientData2026/VisitorRegistrationForm"
+              element={<VisitorRegistrationForm />}
+            />
             <Route
               path="ihweClientData2026/AddNewVisitor"
               element={<AddDomesticVisitor />}

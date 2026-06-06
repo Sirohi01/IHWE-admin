@@ -79,8 +79,8 @@ const GeneralVisitorForm = ({
     if (!reduxNatures || reduxNatures.length === 0) dispatch(fetchNatures());
   }, [dispatch]);
 
-  const registrationOptions = propRegistrationOptions.length > 1 
-    ? propRegistrationOptions 
+  const registrationOptions = propRegistrationOptions.length > 1
+    ? propRegistrationOptions
     : ["Select Event", ...(reduxEvents || []).filter(e => e.event_status === "active").map(e => e.event_fullName).filter(Boolean)];
 
   const industrySectors = propIndustrySectors.length > 1
@@ -172,7 +172,7 @@ const GeneralVisitorForm = ({
     if (!validate()) return;
     try {
       await dispatch(createGeneralVisitor(generalData)).unwrap();
-      
+
       // Log the activity
       const userId = sessionStorage.getItem("user_id");
       if (userId) {
@@ -202,11 +202,11 @@ const GeneralVisitorForm = ({
   };
 
   const inputClass = "rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-900 font-medium shadow-none outline-none px-3 w-full text-left";
-  const labelClass = "text-[11px] font-bold text-slate-800 mb-1 block capitalize font-inter";
-  const sectionHeaderClass = "text-[16px] font-bold text-[#23471d] pb-1 border-b border-slate-100 mb-6 font-inter flex items-center gap-2";
+  const labelClass = "text-[11px] font-semibold text-slate-700 mb-1 block capitalize font-inter";
+  const sectionHeaderClass = "text-[13px] font-semibold text-[#23471d] pb-1 border-b border-slate-200 mb-2 font-inter flex items-center gap-2";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-10 animate-fadeIn">
+    <form onSubmit={handleSubmit} className="space-y-3 animate-fadeIn">
       {/* SECTION 1: PERSONAL DETAILS */}
       <section>
         <h3 className={sectionHeaderClass}>
@@ -435,23 +435,23 @@ const GeneralVisitorForm = ({
       </section>
 
       {/* FOOTER ACTIONS ── STICKY VIBE */}
-      <div className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center mt-12 bg-white pb-6">
+      <div className="py-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center bg-white">
         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center gap-2 mb-4 sm:mb-0">
           <Heart size={14} className="text-[#23471d]" />
           SECURE VISITOR PORTAL
         </p>
         <div className="flex gap-4">
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={resetForm}
-            className="px-10 py-2.5 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all rounded-[2px] shadow-sm"
+            className="px-10 py-1.5 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all rounded-[2px] shadow-sm"
           >
             Reset Form
           </button>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
-            className="px-12 py-2.5 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-lg flex items-center gap-3 group"
+            className="px-12 py-1.5 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-lg flex items-center gap-3 group"
           >
             {loading ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

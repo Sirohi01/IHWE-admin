@@ -71,8 +71,8 @@ const CorporateVisitorForm = ({
     if (!reduxNatures || reduxNatures.length === 0) dispatch(fetchNatures());
   }, [dispatch]);
 
-  const registrationOptions = propRegistrationOptions.length > 1 
-    ? propRegistrationOptions 
+  const registrationOptions = propRegistrationOptions.length > 1
+    ? propRegistrationOptions
     : ["Select Event", ...(reduxEvents || []).filter(e => e.event_status === "active").map(e => e.event_fullName).filter(Boolean)];
 
   const industrySectors = propIndustrySectors.length > 1
@@ -165,7 +165,7 @@ const CorporateVisitorForm = ({
     if (!validate()) return;
     try {
       await dispatch(createCorporateVisitor(corporateData)).unwrap();
-      
+
       // Log the activity
       const userId = sessionStorage.getItem("user_id");
       if (userId) {
@@ -195,17 +195,17 @@ const CorporateVisitorForm = ({
   };
 
   const inputClass = "rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-900 font-medium shadow-none outline-none px-3 w-full text-left";
-  const labelClass = "text-[11px] font-bold text-slate-800 mb-1 block capitalize font-inter";
-  const sectionHeaderClass = "text-[16px] font-bold text-[#23471d] pb-1 border-b border-slate-100 mb-6 font-inter flex items-center gap-2";
+  const labelClass = "text-[11px] font-semibold text-slate-700 mb-1 block capitalize font-inter";
+  const sectionHeaderClass = "text-[13px] font-semibold text-[#23471d] pb-1 border-b border-slate-200 mb-2 font-inter flex items-center gap-2";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-10 animate-fadeIn">
+    <form onSubmit={handleSubmit} className="space-y-3 animate-fadeIn">
       {/* SECTION 1: EVENT & PERSONAL */}
       <section>
         <h3 className={sectionHeaderClass}>
           <User className="w-5 h-5 text-[#d26019]" /> Basic Information
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-3">
           <div>
             <label className={labelClass}>Event Name <span className="text-red-500">*</span></label>
             <select
@@ -409,18 +409,19 @@ const CorporateVisitorForm = ({
       </div>
 
       {/* SECTION 4: OPTIONS */}
-      <section className="bg-[#f9f9f9] p-6 border-l-4 border-[#23471d] space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
+      <section className="bg-[#f9f9f9] py-3 px-5 border-l-4 border-[#23471d] space-y-6">
+        <div className="flex flex-row w-full gap-8">
+          <div className="w-[75%]">
             <label className={labelClass}>Specific Requirements</label>
             <textarea
-              className="w-full h-20 p-2 border border-slate-400 focus:border-[#23471d] outline-none text-[12.5px] rounded-[2px] bg-white resize-none"
+              className="w-full h-9 px-2 border border-slate-400 focus:border-[#23471d] outline-none text-[12px] rounded-[2px] bg-white resize-none"
               placeholder="Write your requirements here..."
               value={corporateData.specificRequirement}
+             
               onChange={(e) => setCorporateData({ ...corporateData, specificRequirement: e.target.value })}
             />
           </div>
-          <div className="space-y-4">
+          <div className="w-[25%] flex flex-row gap-8">
             <div>
               <label className={labelClass}>B2B Meetings?</label>
               <div className="flex gap-6 mt-1">
@@ -458,23 +459,23 @@ const CorporateVisitorForm = ({
       </section>
 
       {/* FOOTER ACTIONS ── STICKY VIBE */}
-      <div className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center mt-12 bg-white pb-6">
+      <div className=" border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center py-4 bg-white ">
         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center gap-2 mb-4 sm:mb-0">
           <CheckSquare size={14} className="text-[#23471d]" />
           SECURE VISITOR PORTAL
         </p>
         <div className="flex gap-4">
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={resetForm}
-            className="px-10 py-2.5 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all rounded-[2px] shadow-sm"
+            className="px-10 py-1.5 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all rounded-[2px] shadow-sm"
           >
             Reset Form
           </button>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
-            className="px-12 py-2.5 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-lg flex items-center gap-3 group"
+            className="px-12 py-1.5 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-lg flex items-center gap-3 group"
           >
             {loading ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
