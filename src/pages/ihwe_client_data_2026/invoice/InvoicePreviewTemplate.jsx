@@ -18,7 +18,7 @@ function toWords(n) {
         return convert(Math.floor(num / 10000000)) + ' Crore' + (num % 10000000 ? ' ' + convert(num % 10000000) : '');
     };
     const intPart = Math.floor(n);
-    return convert(intPart) + ' Rupees Only.';
+    return 'RUPEES ' + convert(intPart) + ' Only.';
 }
 
 const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
@@ -71,8 +71,11 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
     const invoiceDate = dateVal ? new Date(dateVal).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
     const addedVal = matchedInvoice ? matchedInvoice.added : null;
     const createdDateTime = addedVal
-        ? new Date(addedVal).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) + ", " + new Date(addedVal).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
-        : new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) + ", " + new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+        ? new Date(addedVal).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+        : new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const supplyDateTime = matchedInvoice?.supply_date || form?.supply_date
+        ? new Date(matchedInvoice?.supply_date || form?.supply_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '';
 
     const totalTaxable = activeItems?.reduce((sum, item) => sum + (parseFloat(item.taxableValue) || 0), 0) || 0;
     const totalGstAmount = activeItems?.reduce((sum, item) => sum + (parseFloat(item.gstAmount) || 0), 0) || 0;
@@ -81,19 +84,41 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
     const c1 = company?.contacts?.[0] || {};
     const companyName = "Namo Gange Wellness Pvt. Ltd.";
 
-    const clientName = matchedInvoice ? matchedInvoice.consignee_name : form?.clientName;
-    const billingAddress = matchedInvoice
-        ? [matchedInvoice.billing_address || matchedInvoice.address, matchedInvoice.city, matchedInvoice.pincode ? `- ${matchedInvoice.pincode}` : '', matchedInvoice.state, matchedInvoice.country].filter(Boolean).join(', ')
-        : (form?.billingAddress || [company?.address, company?.city, company?.pincode ? `- ${company.pincode}` : '', company?.state, company?.country].filter(Boolean).join(', '));
-    const shippingAddress = matchedInvoice
-        ? [matchedInvoice.consignee_addr || matchedInvoice.address, matchedInvoice.city, matchedInvoice.pincode ? `- ${matchedInvoice.pincode}` : '', matchedInvoice.state, matchedInvoice.country].filter(Boolean).join(', ')
-        : (form?.shippingAddress || form?.billingAddress);
-    const gstin = matchedInvoice ? matchedInvoice.gst_no : form?.gstin;
+    const PROFORMA_EVENT_NAME = '9th Edition of International Health & Wellness Expo (IHWE Global Edition)';
+    const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, Bharat';
+    const PROFORMA_EVENT_GST_NO = '08AAFCN9238F1Z6';
+
+    const clientCompanyName = matchedInvoice?.company_name || form?.company_name || company?.companyName || '—';
+    const clientCompanyAddress = matchedInvoice?.company_addr || form?.company_addr || [company?.address, company?.city, company?.pincode ? `- ${company.pincode}` : '', company?.state, company?.country].filter(Boolean).join(', ');
+    const clientGstNo = matchedInvoice?.company_gst_no || form?.company_gst_no || matchedInvoice?.gst_no || form?.gstin;
+
+    const eventName = matchedInvoice?.event_name || form?.event_name || matchedInvoice?.consignee_name || form?.consignee_name || PROFORMA_EVENT_NAME;
+    const eventPlaceOfSupply = matchedInvoice?.event_place_of_supply || matchedInvoice?.consignee_addr || form?.consignee_addr || PROFORMA_PLACE_OF_SUPPLY;
+    const eventGstNo = matchedInvoice?.event_gst_no || form?.event_gst_no || PROFORMA_EVENT_GST_NO;
+
     const termsCondition = matchedInvoice ? matchedInvoice.terms : form?.terms;
 
-    const isIgst = matchedInvoice
-        ? (matchedInvoice.state && matchedInvoice.state.toLowerCase() !== 'delhi')
-        : (form?.invoiceType === "Interstate Sale" || form?.invoiceType === "IGST");
+    const currentInvoiceType = form?.invoiceType || matchedInvoice?.type_of_invoice || matchedInvoice?.est_type;
+    const isIgst = currentInvoiceType
+        ? (currentInvoiceType === "Interstate Sale" || currentInvoiceType === "IGST" || currentInvoiceType === "Foreign Sale")
+        : (form?.placeOfSupply ? form.placeOfSupply.toLowerCase() !== 'delhi' : (matchedInvoice?.state && matchedInvoice.state.toLowerCase() !== 'delhi'));
+
+    const currencyStr = matchedInvoice?.currency || form?.currency || 'INR - Indian Rupee (₹)';
+    let currAbbr = 'INR';
+    let currName = 'RUPEES';
+    if (currencyStr.includes('-')) {
+        const parts = currencyStr.split('-');
+        currAbbr = parts[0].trim();
+        if (currAbbr === 'INR') {
+            currName = 'RUPEES';
+        } else {
+            const namePart = parts[1].split('(')[0].trim();
+            currName = namePart.endsWith('s') ? namePart : namePart + 's';
+        }
+    } else {
+        currAbbr = currencyStr.split(' ')[0] || 'INR';
+        currName = currAbbr === 'USD' ? 'US Dollars' : currAbbr === 'EUR' ? 'Euros' : 'RUPEES';
+    }
 
     const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
     const sigUrl = settings?.authorizedSignature ? (settings.authorizedSignature.startsWith('http') ? settings.authorizedSignature : `${BASE_URL}${settings.authorizedSignature}`) : null;
@@ -121,17 +146,22 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
                 <tbody>
                     <tr>
                         <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
-                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{clientName || company?.companyName || '—'}</div>
-                            <div style={{ marginTop: 2, textTransform: 'capitalize', whiteSpace: 'pre-wrap' }}>{billingAddress}</div>
+                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{clientCompanyName}</div>
+                            <div style={{ marginTop: 2, textTransform: 'capitalize' }}>
+                                {clientCompanyAddress || '—'}
+                            </div>
                             <div style={{ marginTop: 4 }}>Contact Person: {[c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ') || '—'}</div>
                             <div style={{ marginTop: 2 }}>Email: {c1.email || company?.email || '—'}</div>
                             <div style={{ marginTop: 2 }}>Contact No.: {c1.mobile || company?.landline || '—'}</div>
-                            {(gstin || company?.gstNumber) && <div style={{ marginTop: 4 }}>GSTIN.: {gstin || company?.gstNumber}</div>}
+                            {clientGstNo && <div style={{ marginTop: 4 }}>GSTIN.: {clientGstNo}</div>}
                         </td>
                         <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
-                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>9th Edition of International Health &amp; Wellness Expo (IHWE Global Edition)</div>
-                            <div style={{ marginTop: 2 }}>Place of Supply: Hall Nos. 8, 9 &amp; 10, Pragati Maidan, New Delhi – 110001, Bharat</div>
-                            <div style={{ marginTop: 4 }}>GSTIN.: 08AAFCN9238F1Z6</div>
+                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{eventName}</div>
+                            <div style={{ marginTop: 2 }}>{eventPlaceOfSupply}</div>
+                            <div style={{ marginTop: 2 }}>Place of Supply &amp; Code: {form?.placeOfSupply || matchedInvoice?.place_of_supply || matchedInvoice?.state || form?.state || '—'}</div>
+                            <div style={{ marginTop: 4 }}>Contact Person: {[c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ') || '—'}</div>
+                            <div style={{ marginTop: 2 }}>Contact No.: {c1.mobile || company?.landline || '—'}</div>
+                            <div style={{ marginTop: 4 }}>GSTIN.: {eventGstNo}</div>
                         </td>
                         <td style={{ border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 11 }}>
                             <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%' }}>
@@ -147,7 +177,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{invoiceDate}</td>
                                     </tr>
                                     <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created Time</td>
+                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created Date</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{createdDateTime}</td>
                                     </tr>
@@ -155,8 +185,18 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created By</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', textTransform: 'capitalize' }}>
-                                            Admin
+                                            {matchedInvoice?.added_by || 'Admin'}
                                         </td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>PO No.</td>
+                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{matchedInvoice?.po_no || form?.poNo || '—'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Supply Date</td>
+                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{supplyDateTime || '—'}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -170,14 +210,14 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
                     <tr style={{ background: '#0d1f3c', color: '#fff', textTransform: 'uppercase' }}>
                         {[
                             { label: 'S.No.', width: '3%' },
-                            { label: 'Item Description', width: '52%' },
+                            { label: 'Item Description', width: '48%' },
                             { label: 'HSN Code', width: '7%' },
-                            { label: 'Qty.', width: '3%' },
-                            { label: 'Size', width: '6%' },
-                            { label: 'Rate', width: '6%' },
-                            { label: 'Amount', width: '6%' },
-                            { label: 'Discount', width: '6%' },
-                            { label: 'Total', width: '7%' },
+                            { label: 'Qty.', width: '4%' },
+                            { label: 'Size', width: '7%' },
+                            { label: 'Unit', width: '6%' },
+                            { label: 'Rate', width: '7%' },
+                            { label: 'Discount', width: '8%' },
+                            { label: 'Total', width: '10%' },
                         ].map(h => (
                             <th key={h.label} style={{ border: '1px solid #0d1f3c', padding: '3px 2px', textAlign: 'center', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold', width: h.width }}>{h.label}</th>
                         ))}
@@ -199,10 +239,10 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
                                 </td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.hsn}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.qty}</td>
+                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.size || '—'}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.unit}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(item?.rate)}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(amt)}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(disc)}</td>
+                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(disc)}%</td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right', fontWeight: 700 }}>{fmtNum(item.taxableValue)}</td>
                             </tr>
                         );
@@ -260,8 +300,8 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
                         );
                     })}
                     <tr style={{ background: '#f8fafc', textTransform: 'uppercase' }}>
-                        <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700 }}>GST Amount in Words</td>
-                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize' }}>{toWords(Math.round(totalGstAmount)).toUpperCase()}</td>
+                        <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700 }}>GST Amount in Words ({currAbbr})</td>
+                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize' }}>{`${toWords(Math.round(totalGstAmount))}`.toUpperCase()}</td>
                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700 }}>Total GST Amount</td>
                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right' }}>{fmtNum(totalGstAmount)}</td>
                     </tr>
@@ -269,8 +309,8 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
                         {Array(11).fill(0).map((_, j) => <td key={j} style={{ border: 'none', padding: 0 }}></td>)}
                     </tr>
                     <tr style={{ background: '#f8fafc', textTransform: 'uppercase' }}>
-                        <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700 }}>Amount in Words</td>
-                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize' }}>{toWords(Math.round(grandTotal)).toUpperCase()}</td>
+                        <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700 }}>Amount in Words ({currAbbr})</td>
+                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize' }}>{`${toWords(Math.round(grandTotal))}`.toUpperCase()}</td>
                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700 }}>Grand Total</td>
                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right', fontSize: 13, color: '#000' }}>{fmtNum(grandTotal)}</td>
                     </tr>
@@ -278,7 +318,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
             </table>
 
             <div style={{ fontSize: 10, marginBottom: 8, padding: '6px 8px', border: '1px solid #ccc', background: '#fafafa', paddingBottom: 2 }}>
-                <div style={{ fontWeight: 700, marginBottom: 4 }}>Terms and Conditions:</div>
+                <div style={{ fontWeight: 700, marginBottom: 0 }}>Terms and Conditions:</div>
                 <div>1. Payment must be made in favor of Namo Gange Wellness Pvt. Ltd. via Cheque / DD / RTGS / NEFT / UPI only.</div>
                 <div>2. Full payment is due within the stipulated invoice period.</div>
                 <div>3. Delay in payment shall attract interest @24% per annum.</div>

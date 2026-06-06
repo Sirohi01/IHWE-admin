@@ -93,7 +93,7 @@ const CreateInvoice = () => {
                 api.get('/api/estimates'),
                 api.get('/api/invoices')
             ]);
-            
+
             const fetchedEstimates = Array.isArray(estRes.data) ? estRes.data : (estRes.data?.data || []);
             const fetchedInvoices = Array.isArray(invRes.data) ? invRes.data : (invRes.data?.data || []);
 
@@ -132,12 +132,17 @@ const CreateInvoice = () => {
                             currency: inv.currency || f.currency,
                             billingAddress: inv.billing_address || f.billingAddress,
                             shippingAddress: inv.consignee_addr || f.shippingAddress,
+                            company_name: inv.company_name || inv.consignee_name || f.company_name,
+                            company_addr: inv.company_addr || inv.billing_address || f.company_addr,
+                            event_name: inv.event_name || inv.consignee_name || f.event_name,
+                            consignee_name: inv.consignee_name || f.consignee_name,
+                            consignee_addr: inv.consignee_addr || f.consignee_addr,
                             billingState: inv.billing_state || f.billingState,
                             billingPin: inv.billing_pincode || f.billingPin,
                             country: inv.country || f.country,
                             state: inv.state || f.state,
                             city: inv.city || f.city,
-                            placeOfSupply: inv.place_of_supply || f.placeOfSupply,
+                            placeOfSupply: inv.place_of_supply ? (inv.place_of_supply.toLowerCase().includes('delhi') ? 'Delhi (07)' : inv.place_of_supply.toLowerCase().includes('maharashtra') ? 'Maharashtra (27)' : inv.place_of_supply.toLowerCase().includes('uttar') ? 'Uttar Pradesh (09)' : inv.place_of_supply.toLowerCase().includes('haryana') ? 'Haryana (06)' : inv.place_of_supply) : f.placeOfSupply,
                             remarks: inv.remarks || f.remarks,
                             terms: inv.terms || f.terms
                         }));
@@ -183,10 +188,13 @@ const CreateInvoice = () => {
         dueDate: '',
         poNo: '',
         currency: 'INR - Indian Rupee (₹)',
-
-        billingAddress: '',
+        company_name: '',
+        company_addr: '',
+        event_name: '',
+        consignee_name: '',
+        consignee_addr: '', // Shipping address
         shippingAddress: '',
-        sameAsBilling: true,
+        sameAsBilling: false,
         billingState: '',
         billingPin: '',
         country: 'India',
@@ -218,11 +226,16 @@ const CreateInvoice = () => {
                 country: est.country || f.country,
                 state: est.state || f.state,
                 billingState: est.state || f.billingState,
-                placeOfSupply: est.state || f.placeOfSupply,
+                placeOfSupply: est.state ? (est.state.toLowerCase().includes('delhi') ? 'Delhi (07)' : est.state.toLowerCase().includes('maharashtra') ? 'Maharashtra (27)' : est.state.toLowerCase().includes('uttar') ? 'Uttar Pradesh (09)' : est.state.toLowerCase().includes('haryana') ? 'Haryana (06)' : est.state) : f.placeOfSupply,
                 city: est.city || f.city,
                 billingPin: est.pincode || f.billingPin,
                 remarks: est.remarks || f.remarks,
-                invoiceType: 'Standard'
+                invoiceType: 'Standard',
+                company_name: est.company_name || f.company_name,
+                company_addr: est.company_addr || f.company_addr,
+                event_name: est.event_name || f.event_name,
+                consignee_name: est.consignee_name || f.consignee_name,
+                consignee_addr: est.consignee_addr || f.consignee_addr,
             }));
 
             if (est.items && est.items.length > 0) {
@@ -392,7 +405,7 @@ const CreateInvoice = () => {
 
                         <div className="grid grid-cols-4 gap-4 mb-3">
                             <div>
-                                <Label required>Client / Company</Label>
+                                <Label required>Existing PI / Estimate</Label>
                                 {/* <div className="flex relative mb-2">
                                     <Input required placeholder="Select Client / Company" value={form.clientName} onChange={(e) => setField('clientName', e.target.value)} className="py-2.5 rounded-r-none border-r-0" />
                                     <button type="button" className="border border-gray-300 rounded-r-md px-2.5 bg-gray-50 text-gray-500 hover:bg-gray-100">
@@ -418,7 +431,7 @@ const CreateInvoice = () => {
                             </div>
                             <div>
                                 <Label required>Invoice Type</Label>
-                                <Select required options={['Select Invoice Type', 'Standard', 'Proforma']} value={form.invoiceType} onChange={(e) => setField('invoiceType', e.target.value)} className="py-2.5" />
+                                <Select required options={['Select Invoice Type', 'Intrastate', 'Interstate Sale', 'Foreign Sale']} value={form.invoiceType} onChange={(e) => setField('invoiceType', e.target.value)} className="py-2.5" />
                             </div>
                             <div>
                                 <Label required>Invoice No.</Label>
@@ -464,8 +477,8 @@ const CreateInvoice = () => {
                                 <Label required>Billing Address</Label>
                                 <textarea
                                     required
-                                    value={form.billingAddress}
-                                    onChange={(e) => setField('billingAddress', e.target.value)}
+                                    value={form.company_addr}
+                                    onChange={(e) => setField('company_addr', e.target.value)}
                                     className="w-full h-[50px] border border-gray-300 rounded-md px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-100 bg-white resize-y"
                                 />
                             </div>
@@ -474,8 +487,8 @@ const CreateInvoice = () => {
                                 <textarea
                                     disabled={form.sameAsBilling}
                                     placeholder={form.sameAsBilling ? "Same as billing address" : "Enter shipping address"}
-                                    value={form.sameAsBilling ? form.billingAddress : form.shippingAddress}
-                                    onChange={(e) => setField('shippingAddress', e.target.value)}
+                                    value={form.sameAsBilling ? form.company_addr : form.consignee_addr}
+                                    onChange={(e) => setField('consignee_addr', e.target.value)}
                                     className="w-full h-[30px] border border-gray-300 rounded-md px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-100 disabled:bg-gray-50 resize-y"
                                 />
                                 <div className="flex items-center gap-1.5 mt-1">
@@ -514,7 +527,7 @@ const CreateInvoice = () => {
                             </div>
                             <div>
                                 <Label required>Place of Supply</Label>
-                                <Select required options={['Delhi (07)', 'Maharashtra (27)']} value={form.placeOfSupply} onChange={(e) => setField('placeOfSupply', e.target.value)} className="py-2.5" />
+                                <Select required options={['Select Place of Supply', 'Delhi (07)', 'Maharashtra (27)', 'Uttar Pradesh (09)', 'Haryana (06)']} value={form.placeOfSupply} onChange={(e) => setField('placeOfSupply', e.target.value)} className="py-2.5" />
                             </div>
                         </div>
                     </div>
@@ -688,7 +701,7 @@ const CreateInvoice = () => {
                                 <Eye className="w-4 h-4" /> Preview Invoice
                             </button>
                             <button type="submit" className="flex items-center gap-2 bg-[#00A859] hover:bg-[#00904C] text-white rounded-lg px-6 py-2.5 text-sm font-medium transition shadow-sm">
-                                <FileText className="w-4 h-4" /> Generate Invoice
+                                <FileText className="w-4 h-4" /> {id ? "Update Invoice" : "Generate Invoice"}
                             </button>
                         </div>
                     </div>
