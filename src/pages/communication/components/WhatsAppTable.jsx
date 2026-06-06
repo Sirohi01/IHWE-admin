@@ -116,9 +116,6 @@ export default function WhatsAppTable() {
                 <tr key={index} className="border-b border-slate-100 hover:bg-slate-50/50">
                   <td className="py-1 px-3">
                     <div className="flex items-center gap-3">
-                      <div className={`w-7 h-7 rounded-md flex items-center justify-center font-medium text-[11px] ${row.clientColor}`}>
-                        {row.clientInitials}
-                      </div>
                       <span className="text-[13px] font-medium text-slate-900">{row.clientName}</span>
                     </div>
                   </td>
