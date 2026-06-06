@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../lib/api';
 import {
     ChevronLeft, Settings, User, Calendar, Plus, Trash2, FileText,
@@ -81,6 +81,7 @@ const QuickAction = ({ icon: Icon, label, colorClass = "text-blue-600" }) => (
 // ══════════════════════════════════════════════════════════════════════════════
 const CreateInvoice = () => {
     const navigate = useNavigate();
+    const { id } = useParams();
     const fileInputRef = useRef(null);
     const [attachedFile, setAttachedFile] = useState(null);
     const [estimates, setEstimates] = useState([]);
@@ -88,17 +89,82 @@ const CreateInvoice = () => {
 
     const fetchEstimates = async () => {
         try {
-            const res = await api.get('/api/estimates');
-            if (res.data) {
-                setEstimates(Array.isArray(res.data) ? res.data : (res.data.data || []));
-            }
+            const [estRes, invRes] = await Promise.all([
+                api.get('/api/estimates'),
+                api.get('/api/invoices')
+            ]);
+            
+            const fetchedEstimates = Array.isArray(estRes.data) ? estRes.data : (estRes.data?.data || []);
+            const fetchedInvoices = Array.isArray(invRes.data) ? invRes.data : (invRes.data?.data || []);
+
+            // Filter out estimates that already have an invoice generated
+            const availableEstimates = fetchedEstimates.filter(est => {
+                return !fetchedInvoices.some(inv => inv.estimate_no === est.est_no);
+            });
+
+            setEstimates(availableEstimates);
         } catch (err) {
-            console.error("Failed to fetch estimates", err);
+            console.error("Failed to fetch estimates and invoices", err);
         }
     };
     useEffect(() => {
         fetchEstimates();
     }, []);
+
+    useEffect(() => {
+        if (id) {
+            const fetchInvoice = async () => {
+                try {
+                    const res = await api.get(`/api/invoices/${id}`);
+                    const inv = res.data?.data || res.data;
+                    if (inv) {
+                        setSelectedPi(inv.estimate_no || '');
+                        setForm(f => ({
+                            ...f,
+                            companyId: inv.companyId || f.companyId,
+                            clientName: inv.consignee_name || f.clientName,
+                            gstin: inv.gst_no || f.gstin,
+                            invoiceType: inv.type_of_invoice || 'Standard',
+                            invoiceNo: inv.invoice_no || 'Auto-generated on save',
+                            invoiceDate: inv.invoice_date ? new Date(inv.invoice_date).toISOString().split('T')[0] : f.invoiceDate,
+                            dueDate: inv.due_date ? new Date(inv.due_date).toISOString().split('T')[0] : f.dueDate,
+                            poNo: inv.po_no || f.poNo,
+                            currency: inv.currency || f.currency,
+                            billingAddress: inv.billing_address || f.billingAddress,
+                            shippingAddress: inv.consignee_addr || f.shippingAddress,
+                            billingState: inv.billing_state || f.billingState,
+                            billingPin: inv.billing_pincode || f.billingPin,
+                            country: inv.country || f.country,
+                            state: inv.state || f.state,
+                            city: inv.city || f.city,
+                            placeOfSupply: inv.place_of_supply || f.placeOfSupply,
+                            remarks: inv.remarks || f.remarks,
+                            terms: inv.terms || f.terms
+                        }));
+                        if (inv.items && inv.items.length > 0) {
+                            setItems(inv.items.map((item, idx) => ({
+                                id: Date.now() + idx,
+                                description: item.description || '',
+                                hsn: item.hsn || '',
+                                qty: item.qty || 1,
+                                unit: item.unit || 'Nos',
+                                rate: item.rate || 0,
+                                amount: item.amount || 0,
+                                discountPct: item.discountPct || 0,
+                                taxableValue: item.taxableValue || 0,
+                                gstPct: item.gstPct || '18%',
+                                gstAmount: item.gstAmount || 0,
+                                total: item.total || 0
+                            })));
+                        }
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch invoice for edit", err);
+                }
+            };
+            fetchInvoice();
+        }
+    }, [id]);
 
     const handleFileChange = (e) => {
         if (e.target.files && e.target.files[0]) {
@@ -252,14 +318,23 @@ const CreateInvoice = () => {
         };
 
         try {
-            const res = await api.post('/api/invoices', payload);
-            if (res.status === 201) {
-                alert('Invoice generated successfully!');
-                navigate('/invoice-list');
+            let res;
+            if (id) {
+                res = await api.put(`/api/invoices/${id}`, payload);
+                if (res.status === 200 || res.status === 201) {
+                    alert('Invoice updated successfully!');
+                    navigate('/invoice-list');
+                }
+            } else {
+                res = await api.post('/api/invoices', payload);
+                if (res.status === 201 || res.status === 200) {
+                    alert('Invoice generated successfully!');
+                    navigate('/invoice-list');
+                }
             }
         } catch (err) {
             console.error(err);
-            alert('Failed to generate invoice: ' + (err.response?.data?.message || err.message));
+            alert(`Failed to ${id ? 'update' : 'generate'} invoice: ` + (err.response?.data?.message || err.message));
         }
     };
 
@@ -285,8 +360,8 @@ const CreateInvoice = () => {
                         <FileText className="w-5 h-5" />
                     </div>
                     <div>
-                        <h1 className="text-lg font-bold text-gray-900 leading-tight">Create Invoice</h1>
-                        <p className="text-xs text-gray-500 mt-0.5">Generate a new invoice for your client</p>
+                        <h1 className="text-lg font-bold text-gray-900 leading-tight">{id ? "Edit Invoice" : "Create Invoice"}</h1>
+                        <p className="text-xs text-gray-500 mt-0.5">{id ? "Update details for this invoice" : "Generate a new invoice for your client"}</p>
                     </div>
                 </div>
                 {/* <button
@@ -324,14 +399,18 @@ const CreateInvoice = () => {
                                         <User className="w-4 h-4" />
                                     </button>
                                 </div> */}
-                                <SearchableDropdown
-                                    value={selectedPi}
-                                    onChange={(e) => handlePiSelect(e.target.value)}
-                                    options={[
-                                        { label: 'Select Existing PI / Estimate', value: '' },
-                                        ...estimates.map(e => ({ label: e.est_no, value: e.est_no }))
-                                    ]}
-                                />
+                                {id ? (
+                                    <Input value={selectedPi || 'No PI / Estimate'} disabled className="py-2.5 bg-gray-50" />
+                                ) : (
+                                    <SearchableDropdown
+                                        value={selectedPi}
+                                        onChange={(e) => handlePiSelect(e.target.value)}
+                                        options={[
+                                            { label: 'Select Existing PI / Estimate', value: '' },
+                                            ...estimates.map(e => ({ label: e.est_no, value: e.est_no }))
+                                        ]}
+                                    />
+                                )}
                             </div>
                             <div>
                                 <Label>GSTIN / PAN No.</Label>
