@@ -1,11 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Calendar, ChevronDown, Facebook, Instagram, Twitter } from 'lucide-react';
 
-export default function MeetingsRightSidebar() {
+export default function MeetingsRightSidebar({ statsData, recentLogs }) {
+  const target = statsData?.targets?.meeting || 0;
+  const completed = statsData?.completed?.meeting || 0;
+  const remaining = Math.max(target - completed, 0);
+
+  const [meetingName, setMeetingName] = useState('');
+  const [meetingDate, setMeetingDate] = useState('');
+  const [meetingLocation, setMeetingLocation] = useState('');
+
+  const handleQuickInvite = () => {
+    if (meetingName) {
+      const subject = `Meeting Invite: ${meetingName}`;
+      const body = `Hi,\n\nI would like to invite you to a meeting.\nDate: ${meetingDate}\nLocation/Link: ${meetingLocation}\n\nPlease confirm your availability.\n\nBest,`;
+      const url = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.open(url, '_blank');
+    }
+  };
+
   const targetData = [
-    { name: 'Remaining', value: 12, color: '#F1F5F9' },
-    { name: 'Completed', value: 28, color: '#16A34A' },
+    { name: 'Remaining', value: remaining, color: '#F1F5F9' },
+    { name: 'Connected', value: completed, color: '#16A34A' },
   ];
 
   const pendingCallbacks = [
@@ -54,23 +71,23 @@ export default function MeetingsRightSidebar() {
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[18px] font-medium text-[#0F172A] leading-tight">28</span>
-              <span className="text-[10px] font-medium text-slate-500 leading-tight">/ 40</span>
+              <span className="text-[18px] font-medium text-[#0F172A] leading-tight">{completed}</span>
+              <span className="text-[10px] font-medium text-slate-500 leading-tight">/ {target}</span>
             </div>
           </div>
 
           <div className="flex flex-col space-y-2 flex-1 ml-6">
             <div className="flex items-center justify-between">
               <span className="text-[12px] font-medium text-slate-600">Target</span>
-              <span className="text-[12px] font-medium text-slate-900">40</span>
+              <span className="text-[12px] font-medium text-slate-900">{target}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[12px] font-medium text-slate-600">Completed</span>
-              <span className="text-[12px] font-medium text-slate-900">28</span>
+              <span className="text-[12px] font-medium text-slate-600">Connected</span>
+              <span className="text-[12px] font-medium text-slate-900">{completed}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[12px] font-medium text-slate-600">Remaining</span>
-              <span className="text-[12px] font-medium text-slate-900">12</span>
+              <span className="text-[12px] font-medium text-slate-900">{remaining}</span>
             </div>
           </div>
         </div>
@@ -112,18 +129,24 @@ export default function MeetingsRightSidebar() {
           <input
             type="text"
             placeholder="Attendee Name or Email"
+            value={meetingName}
+            onChange={(e) => setMeetingName(e.target.value)}
             className="w-full border border-slate-200 rounded-lg px-3 py-3 text-[12px] focus:outline-none focus:border-indigo-500 bg-slate-50"
           />
           <input
             type="datetime-local"
+            value={meetingDate}
+            onChange={(e) => setMeetingDate(e.target.value)}
             className="w-full border border-slate-200 rounded-lg px-3 py-3 text-[12px] focus:outline-none focus:border-indigo-500 bg-slate-50 text-slate-500"
           />
           <input
             type="text"
             placeholder="Meeting Link or Location"
+            value={meetingLocation}
+            onChange={(e) => setMeetingLocation(e.target.value)}
             className="w-full border border-slate-200 rounded-lg px-3 py-3 text-[12px] focus:outline-none focus:border-indigo-500 bg-slate-50"
           />
-          <button className="w-full h-11 bg-[#5E5E81] hover:bg-[#4B4B67] rounded-lg flex items-center justify-center text-white transition-colors gap-2 text-[13px] font-medium mt-1">
+          <button onClick={handleQuickInvite} className="w-full h-11 bg-[#5E5E81] hover:bg-[#4B4B67] rounded-lg flex items-center justify-center text-white transition-colors gap-2 text-[13px] font-medium mt-1">
             <Calendar size={14} />
             Schedule Meeting
           </button>
@@ -137,16 +160,18 @@ export default function MeetingsRightSidebar() {
           <button className="text-[12px] font-medium text-slate-600 hover:text-slate-900">View all</button>
         </div>
         <div className="space-y-2">
-          {recentNotes.map((note, index) => (
+          {(recentLogs && recentLogs.length > 0 ? recentLogs : recentNotes).map((note, index, arr) => (
             <div key={index} className="flex items-start gap-3 relative">
               <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-2 shrink-0 z-10" />
-              {index !== recentNotes.length - 1 && (
+              {index !== arr.length - 1 && (
                 <div className="absolute left-[3px] top-4 bottom-[-16px] w-[1px] bg-slate-100" />
               )}
               <div className="flex-1 pb-1">
                 <div className="flex items-center justify-between mb-0.5">
                   <h4 className="text-[12px] font-medium text-[#0F172A]">{note.name}</h4>
-                  <span className="text-[10px] font-medium text-slate-400">{note.time}</span>
+                  <span className="text-[10px] font-medium text-slate-400">
+                    {note.time && !isNaN(new Date(note.time).getTime()) ? new Date(note.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : note.time}
+                  </span>
                 </div>
                 <p className="text-[11px] font-medium text-slate-500 leading-relaxed">
                   {note.note}

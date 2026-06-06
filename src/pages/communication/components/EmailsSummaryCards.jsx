@@ -1,12 +1,13 @@
 import React from 'react';
 import { PhoneCall, PhoneMissed, PhoneForwarded, Clock } from 'lucide-react';
 
-export default function EmailsSummaryCards() {
+export default function EmailsSummaryCards({ statsData }) {
+  const completed = statsData?.completed?.email || 0;
   const stats = [
     {
       title: "Total Emails",
-      value: "28",
-      growth: "↑ 18% vs yesterday",
+      value: completed.toString().padStart(2, '0'),
+      growth: "",
       icon: PhoneCall,
       cardBg: "bg-[#F2FCF5]",
       iconBg: "bg-[#E3F8EB]",
@@ -67,9 +68,9 @@ export default function EmailsSummaryCards() {
                 <span className="text-[20px] font-medium text-[#0F172A] leading-none mb-1">
                   {item.value}
                 </span>
-                <span className={`text-[10px] font-medium ${item.growthColor} ${item.growth === 'View all' ? 'cursor-pointer hover:underline' : ''}`}>
+                {/* <span className={`text-[10px] font-medium ${item.growthColor} ${item.growth === 'View all' ? 'cursor-pointer hover:underline' : ''}`}>
                   {item.growth}
-                </span>
+                </span> */}
               </div>
             </div>
           </div>

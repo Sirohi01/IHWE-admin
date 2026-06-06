@@ -199,7 +199,7 @@ const ClientOverview1 = () => {
   useEffect(() => {
     if (company?._id) {
       const targetId = company.clientId || company._id;
-      dispatch(fetchReviewById(targetId));
+      dispatch(fetchReviewById({ id: targetId, limit: 8 }));
 
       setReviewData((prev) => ({
         ...prev,
@@ -582,13 +582,20 @@ const ClientOverview1 = () => {
           ...data
         })).unwrap();
       }
-      dispatch(fetchReviewById(id));
+      dispatch(fetchReviewById({ id: company?.clientId || company?._id, limit: 8 }));
     } catch (err) {
       console.log(err);
     }
   };
 
-  if (!company) return null;
+  if (!company) {
+    return (
+      <div className="bg-[#f5f7fb] w-full min-h-screen flex flex-col items-center justify-center">
+        <div className="w-10 h-10 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mb-4"></div>
+        <p className="text-gray-500 font-semibold animate-pulse">Loading Client Details...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#f5f7fb] px-6 py-4">
@@ -1040,6 +1047,10 @@ const ClientOverview1 = () => {
           company={company}
           reviews={filteredReviews}
           onSendEntry={handleSendEntry}
+          onOpenFullHistory={() => {
+            const targetId = company.clientId || company._id;
+            dispatch(fetchReviewById({ id: targetId }));
+          }}
         />
       </div>
 

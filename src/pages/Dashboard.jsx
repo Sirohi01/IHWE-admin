@@ -38,10 +38,18 @@ export default function Dashboard() {
       try { setCurrentUser(JSON.parse(info)); }
       catch (e) { console.error("Error parsing adminInfo", e); }
     }
-    try {
-      const raw = localStorage.getItem("app_user_targets_v1");
-      setTargets(raw ? JSON.parse(raw) : []);
-    } catch (e) { console.error("Error reading targets", e); }
+    // Fetch targets from backend
+    const fetchTargets = async () => {
+      try {
+        const res = await api.get("/api/user-targets");
+        if (res.data?.success) {
+          setTargets(res.data.data || []);
+        }
+      } catch (err) {
+        console.error("Error fetching targets", err);
+      }
+    };
+    fetchTargets();
   }, []);
 
   // ─── Fetch real revenue and leaderboard based on period ─────────────────────
@@ -144,14 +152,16 @@ export default function Dashboard() {
 
   // ─── Target metrics ──────────────────────────────────────────────────────────
   const targetMetrics = useMemo(() => {
-    if (!currentUser) return { target: "15.00", achieved: "0.00", remaining: "15.00", pct: 0 };
+    if (!currentUser) return { target: "0.00", achieved: "0.00", remaining: "0.00", pct: 0 };
     const u         = currentUser.username.toLowerCase();
-    const match     = targets.find(t => t.user.toLowerCase() === u);
-    const targetVal = match ? Number(match.target) : 15;
+    const match     = targets.find(t => t.username?.toLowerCase() === u || t.user?.toLowerCase() === u);
     
-    // Scale down the achieved revenue to Lakhs for display if target is in Lakhs, 
-    // assuming actualRevenue is in actual rupees.
-    // If target is literally "15" meaning 15 Lakhs, then actualRevenue (e.g. 150000) needs to be divided by 100000.
+    // Target is input in Lakhs (e.g. 15 for 15.00 L)
+    const targetVal = match && match.revenueTarget !== undefined && match.revenueTarget !== null 
+      ? match.revenueTarget 
+      : 0;
+    
+    // Scale down the achieved revenue to Lakhs for display
     const achievedLakhs = actualRevenue / 100000;
     const achieved  = Number(achievedLakhs);
     const remaining = Math.max(0, targetVal - achieved);
@@ -160,7 +170,7 @@ export default function Dashboard() {
       target:    targetVal.toFixed(2),
       achieved:  achieved.toFixed(2),
       remaining: remaining.toFixed(2),
-      pct:       Math.min(100, Math.round((achieved / targetVal) * 100)),
+      pct:       targetVal > 0 ? Math.min(100, Math.round((achieved / targetVal) * 100)) : (achieved > 0 ? 100 : 0),
     };
   }, [currentUser, targets, actualRevenue]);
 

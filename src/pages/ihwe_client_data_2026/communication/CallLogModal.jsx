@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Phone, X } from "lucide-react";
+import api from "../../../lib/api";
 
 const CallLogModal = ({ company, onClose, onSave }) => {
   const [form, setForm] = useState({ re_msg: "", call_duration: "" });
@@ -10,6 +11,30 @@ const CallLogModal = ({ company, onClose, onSave }) => {
   const handleSave = async () => {
     if (!form.re_msg.trim()) return;
     setSaving(true);
+    
+    try {
+      const adminStr = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
+      const adminInfo = adminStr ? JSON.parse(adminStr) : {};
+      
+      const formData = new FormData();
+      formData.append("callerId", adminInfo._id || "system");
+      formData.append("callerName", adminInfo.fullName || adminInfo.username || "Admin");
+      formData.append("companyId", company?.clientId || company?._id || "unknown");
+      formData.append("companyName", company?.exhibitorName || company?.companyName || "Client");
+      formData.append("clientName", company?.contacts?.[0]?.name || "Client");
+      formData.append("mobile", mobile || "0000000000");
+      
+      const durationNum = parseInt(form.call_duration.toString().replace(/\\D/g, "") || "0");
+      formData.append("duration", durationNum * 60);
+      formData.append("notes", form.re_msg);
+      
+      await api.post("/api/calls/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+    } catch (err) {
+      console.error("Error saving call log to dashboard API:", err);
+    }
+    
     await onSave({ type: "call", re_msg: form.re_msg, call_duration: form.call_duration });
     setSaving(false);
     onClose();

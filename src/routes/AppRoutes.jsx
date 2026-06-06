@@ -694,10 +694,7 @@ export default function AppRoutes() {
             <Route path="sales-tools/lead-assignment" element={<SalesTools activeTab="lead-assignment" />} />
 
             {/* Communication */}
-            <Route path="communication/calls" element={<Communication activeTab="calls" />} />
-            <Route path="communication/whatsapp" element={<Communication activeTab="whatsapp" />} />
-            <Route path="communication/emails" element={<Communication activeTab="emails" />} />
-            <Route path="communication/meetings" element={<Communication activeTab="meetings" />} />
+            <Route path="communication" element={<Communication />} />
 
           </Route>
           <Route path="*" element={<NotFound />} />

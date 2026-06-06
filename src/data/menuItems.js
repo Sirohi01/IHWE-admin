@@ -97,7 +97,7 @@ export const menuItems = [
     type: "item",
     label: "Communication",
     icon: MessageSquare,
-    path: "/communication/calls",
+    path: "/communication",
   },
 
   {
@@ -670,7 +670,7 @@ export const menuItems = [
       { label: "Add Next Action", path: "/ihweClientData2026/AddNextAction" },
       { label: "Add Remark Length Fixed", path: "/ihweClientData2026/AddRemarkLengthFixed" },
       { label: "Add Status", path: "/ihweClientData2026/AddStatus" },
-      { label: "Add Target", path: "/ihweClientData2026/AddTarget" },
+      { label: "USER TARGET", path: "/ihweClientData2026/AddTarget" },
       { label: "Buyer Registration Config", path: "/buyer-registration-config" },
       { label: "International Registration Config", path: "/international-buyer-registration-config" },
     ],

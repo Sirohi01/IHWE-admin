@@ -112,7 +112,7 @@ export default function MeetingsTable() {
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-[#EDF0F7] shadow-sm">
+    <div className="bg-white rounded-xl border border-[#EDF0F7] shadow-sm flex flex-col flex-1 min-h-0">
       {/* Table Controls */}
       <div className="p-3 border-b border-[#EDF0F7] flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
