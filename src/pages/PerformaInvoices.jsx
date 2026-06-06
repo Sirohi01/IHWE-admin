@@ -39,6 +39,10 @@ const GST_OPTIONS = ['0% GST', '5% CGST+SGST', '12% CGST+SGST', '18% CGST+SGST',
 const ESTIMATE_TYPES = ['Intrastate', 'Interstate Sale', 'Foreign Sale'];
 const UNITS = ['Nos', 'Sqm', 'Sqft', 'Mtrs', 'Kgs', 'Ltrs', 'Pcs'];
 
+const PROFORMA_EVENT_NAME = '9th Edition of International Health & Wellness Expo (IHWE Global Edition)';
+const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, Bharat';
+const PROFORMA_EVENT_GST_NO = '09AAFCN9238F1Z6';
+
 
 
 // ── Section heading ──────────────────────────────────────────────────────────
@@ -241,9 +245,9 @@ export const PerformaInvoices = () => {
                         ...prev,
                         estimateNo: existingEstimate.est_no,
                         supplyDate: existingEstimate.supply_date || new Date().toISOString().split('T')[0],
-                        consigneeName: existingEstimate.consignee_name || companyInfo?.companyName || companyInfo?.exhibitorName || '',
-                        consigneeAddress: existingEstimate.consignee_addr || companyInfo?.address || companyInfo?.companyAddress || '',
-                        gstin: existingEstimate.gst_no || companyInfo?.gst || companyInfo?.gstNo || '',
+                        consigneeName: existingEstimate.company_name || (existingEstimate.consignee_name !== PROFORMA_EVENT_NAME ? existingEstimate.consignee_name : '') || companyInfo?.companyName || companyInfo?.exhibitorName || '',
+                        consigneeAddress: existingEstimate.company_addr || (existingEstimate.consignee_addr !== PROFORMA_PLACE_OF_SUPPLY ? existingEstimate.consignee_addr : '') || companyInfo?.address || companyInfo?.companyAddress || '',
+                        gstin: existingEstimate.company_gst_no || existingEstimate.gst_no || companyInfo?.gst || companyInfo?.gstNo || '',
                         country: existingEstimate.country || companyInfo?.country || '',
                         state: existingEstimate.state || companyInfo?.state || '',
                         city: existingEstimate.city || companyInfo?.city || '',
@@ -413,8 +417,14 @@ export const PerformaInvoices = () => {
             est_type: form.estimateType,
             gst_no: form.gstin,
             supply_date: form.supplyDate,
-            consignee_name: form.consigneeName,
-            consignee_addr: form.consigneeAddress,
+            company_name: form.consigneeName,
+            company_addr: form.consigneeAddress,
+            company_gst_no: form.gstNo || form.gst_no || form.gstin || "",
+            event_name: PROFORMA_EVENT_NAME,
+            event_place_of_supply: PROFORMA_PLACE_OF_SUPPLY,
+            event_gst_no: PROFORMA_EVENT_GST_NO,
+            consignee_name: PROFORMA_EVENT_NAME,
+            consignee_addr: PROFORMA_PLACE_OF_SUPPLY,
             country: form.country,
             state: form.state,
             city: form.city,
@@ -549,16 +559,16 @@ export const PerformaInvoices = () => {
                                 <Input type="date" value={form.supplyDate} onChange={(e) => setField('supplyDate', e.target.value)} />
                             </div>
                             <div>
-                                <Label required>Consignee Name</Label>
-                                <Input placeholder="Consignee name" value={form.consigneeName} onChange={(e) => setField('consigneeName', e.target.value)} />
+                                <Label required>Company Name</Label>
+                                <Input placeholder="Company name" value={form.consigneeName} onChange={(e) => setField('consigneeName', e.target.value)} />
                             </div>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-3">
                             <div className="col-span-1">
-                                <Label required>Consignee Address</Label>
+                                <Label required>Company Address</Label>
                                 <textarea
                                     rows={2}
-                                    placeholder="Hall No.-12, Ground Floor, ITPO, Pragati Maidan"
+                                    placeholder="Company address"
                                     value={form.consigneeAddress}
                                     onChange={(e) => setField('consigneeAddress', e.target.value)}
                                     className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 resize-y bg-white"
@@ -600,6 +610,20 @@ export const PerformaInvoices = () => {
                             <div>
                                 <Label required>Pin Code</Label>
                                 <Input placeholder="110001" maxLength={6} value={form.pinCode} onChange={(e) => setField('pinCode', e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                            <div>
+                                <Label>Consignee Name</Label>
+                                <Input readOnly value={PROFORMA_EVENT_NAME} className="bg-gray-50 font-semibold" />
+                            </div>
+                            <div>
+                                <Label>Consignee Address</Label>
+                                <Input readOnly value={PROFORMA_PLACE_OF_SUPPLY} className="bg-gray-50 font-semibold" />
+                            </div>
+                            <div>
+                                <Label>Consignee GSTIN</Label>
+                                <Input readOnly value={PROFORMA_EVENT_GST_NO} className="bg-gray-50 font-semibold" />
                             </div>
                         </div>
                         {/* <div className="grid grid-cols-5 gap-3 mt-3">

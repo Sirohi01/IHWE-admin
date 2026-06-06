@@ -5,6 +5,10 @@ import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import api from '../../../lib/api';
 
+const PROFORMA_EVENT_NAME = '9th Edition of International Health & Wellness Expo (IHWE Global Edition)';
+const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, Bharat';
+const PROFORMA_EVENT_GST_NO = '08AAFCN9238F1Z6';
+
 function toWords(n) {
     const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
         'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
@@ -119,6 +123,12 @@ const EstimateFormDetail = () => {
 
     const c1 = company?.contacts?.[0] || {};
     const companyName = "Namo Gange Wellness Pvt. Ltd.";
+    const clientCompanyName = matchedEstimate?.company_name || company?.companyName || '—';
+    const clientCompanyAddress = matchedEstimate?.company_addr || [company?.address, company?.city, company?.pincode ? `- ${company.pincode}` : '', company?.state, company?.country].filter(Boolean).join(', ');
+    const clientGstNo = matchedEstimate?.company_gst_no || matchedEstimate?.gst_no;
+    const eventName = matchedEstimate?.event_name || matchedEstimate?.consignee_name || PROFORMA_EVENT_NAME;
+    const eventPlaceOfSupply = matchedEstimate?.event_place_of_supply || matchedEstimate?.consignee_addr || PROFORMA_PLACE_OF_SUPPLY;
+    const eventGstNo = matchedEstimate?.event_gst_no || PROFORMA_EVENT_GST_NO;
 
     const isIgst = matchedEstimate?.state && matchedEstimate.state.toLowerCase() !== 'delhi';
 
@@ -148,19 +158,19 @@ const EstimateFormDetail = () => {
                 <tbody>
                     <tr>
                         <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
-                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{company?.companyName || '—'}</div>
+                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{clientCompanyName}</div>
                             <div style={{ marginTop: 2, textTransform: 'capitalize' }}>
-                                {[company?.address, company?.city, company?.pincode ? `- ${company.pincode}` : '', company?.state, company?.country].filter(Boolean).join(', ')}
+                                {clientCompanyAddress || '—'}
                             </div>
                             <div style={{ marginTop: 4 }}>Contact Person: {[c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ') || '—'}</div>
                             <div style={{ marginTop: 2 }}>Email: {c1.email || '—'}</div>
                             <div style={{ marginTop: 2 }}>Contact No.: {c1.mobile || company?.landline || '—'}</div>
-                            {matchedEstimate?.gst_no && <div style={{ marginTop: 4 }}>GSTIN.: {matchedEstimate.gst_no}</div>}
+                            {clientGstNo && <div style={{ marginTop: 4 }}>GSTIN.: {clientGstNo}</div>}
                         </td>
                         <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
-                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>9th Edition of International Health &amp; Wellness Expo (IHWE Global Edition)</div>
-                            <div style={{ marginTop: 2 }}>Place of Supply: Hall Nos. 8, 9 &amp; 10, Pragati Maidan, New Delhi – 110001, Bharat</div>
-                            <div style={{ marginTop: 4 }}>GSTIN.: 08AAFCN9238F1Z6</div>
+                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{eventName}</div>
+                            <div style={{ marginTop: 2 }}>Place of Supply: {eventPlaceOfSupply}</div>
+                            <div style={{ marginTop: 4 }}>GSTIN.: {eventGstNo}</div>
                         </td>
                         <td style={{ border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 11 }}>
                             <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%' }}>

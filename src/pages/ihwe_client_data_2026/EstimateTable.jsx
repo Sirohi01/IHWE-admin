@@ -14,6 +14,11 @@ import { MessageCircleMore, Mail } from "lucide-react";
 const stylebutton =
   "w-fit text-[#3598dc] cursor-pointer border border-[#3598dc] hover:bg-[#3598dc] hover:text-white font-medium flex  items-center gap-1 px-1";
 
+const looksLikeEventName = (value = "") => {
+  const text = String(value).toLowerCase();
+  return text.includes("international health") || text.includes("ihwe global") || text.includes("expo");
+};
+
 const EstimateTable = ({ clientId }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -279,6 +284,10 @@ const EstimateTable = ({ clientId }) => {
               (inv) => inv.estimate_no === estimate.est_no
             );
             const invId = matchingInvoice ? matchingInvoice._id : null;
+            const companyClientName =
+              estimate?.company_name ||
+              (!looksLikeEventName(estimate?.consignee_name) ? estimate?.consignee_name : "") ||
+              "Unknown";
 
             return (
               <tr key={estimate._id} className="hover:bg-gray-50 transition-colors border-b border-gray-200">
@@ -301,7 +310,7 @@ const EstimateTable = ({ clientId }) => {
                 {(clientId === 'all' || id === 'all') && (
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
                     <span className="font-semibold text-gray-800">
-                      {estimate?.consignee_name || "Unknown"}
+                      {companyClientName}
                     </span>
                   </td>
                 )}

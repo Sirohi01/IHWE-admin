@@ -6,7 +6,6 @@ import {
   clearEstimateState,
   fetchNextEstimateNo,
 } from "../../features/estimates/estimateSlice";
-import { fetchEvents } from "../../features/crmEvent/crmEventSlice";
 import { fetchCountries } from "../../features/add_by_admin/country/countrySlice";
 import { fetchStates } from "../../features/state/stateSlice";
 import { fetchCities } from "../../features/city/citySlice";
@@ -44,6 +43,10 @@ const unitOptions = [
   "inch",
 ];
 
+const EVENT_NAME = "9th Edition of International Health & Wellness Expo (IHWE Global Edition)";
+const EVENT_PLACE_OF_SUPPLY = "Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, Bharat";
+const EVENT_GST_NO = "08AAFCN9238F1Z6";
+
 // Helper function to safely extract an array from any Redux slice
 const getArrayFromSlice = (sliceState, fallbackKey) => {
   if (Array.isArray(sliceState)) return sliceState;
@@ -58,7 +61,6 @@ const CreateEstimate1 = () => {
   const dispatch = useDispatch();
   const { id: companyIdFromParams } = useParams();
   const { loading, error, success } = useSelector((state) => state.estimates);
-  const { events } = useSelector((state) => state.crmEvents);
   const countriesState = useSelector((state) => state.countries);
   const statesState = useSelector((state) => state.states);
   const citiesState = useSelector((state) => state.cities);
@@ -77,7 +79,6 @@ const CreateEstimate1 = () => {
     .sort((a, b) => (a?.name || "").localeCompare(b?.name || ""));
 
   useEffect(() => {
-    dispatch(fetchEvents());
     dispatch(fetchCountries());
     dispatch(fetchStates());
     dispatch(fetchCities());
@@ -103,9 +104,15 @@ const CreateEstimate1 = () => {
     est_type: "",
     est_no: "",
     gst_no: "",
+    company_name: "",
+    company_addr: "",
+    company_gst_no: "",
+    event_name: EVENT_NAME,
+    event_place_of_supply: EVENT_PLACE_OF_SUPPLY,
+    event_gst_no: EVENT_GST_NO,
     supply_date: "",
-    consignee_name: "",
-    consignee_addr: "",
+    consignee_name: EVENT_NAME,
+    consignee_addr: EVENT_PLACE_OF_SUPPLY,
     country: "",
     state: "",
     city: "",
@@ -129,6 +136,23 @@ const CreateEstimate1 = () => {
       remarks: "",
     },
   ]);
+
+  useEffect(() => {
+    if (!companyIdFromParams || !companies.length) return;
+    const company = companies.find((item) => item._id === companyIdFromParams);
+    if (!company) return;
+    setEstimateData((prev) => ({
+      ...prev,
+      company_name: prev.company_name || company.companyName || company.exhibitorName || "",
+      company_addr: prev.company_addr || company.address || company.companyAddress || "",
+      company_gst_no: prev.company_gst_no || company.gstNumber || company.gstNo || company.gst_no || "",
+      gst_no: prev.gst_no || company.gstNumber || company.gstNo || company.gst_no || "",
+      country: prev.country || company.country || "",
+      state: prev.state || company.state || "",
+      city: prev.city || company.city || "",
+      pincode: prev.pincode || company.pincode || "",
+    }));
+  }, [companyIdFromParams, companies]);
 
   // 🟢 NEW: Handle API feedback (Success/Error)
   useEffect(() => {
@@ -297,10 +321,16 @@ const CreateEstimate1 = () => {
       // ... direct mapping fields
       est_type: estimateData.est_type,
       est_no: estimateData.est_no,
-      gst_no: estimateData.gst_no,
+      gst_no: estimateData.company_gst_no || estimateData.gst_no,
+      company_name: estimateData.company_name,
+      company_addr: estimateData.company_addr,
+      company_gst_no: estimateData.company_gst_no || estimateData.gst_no,
+      event_name: EVENT_NAME,
+      event_place_of_supply: EVENT_PLACE_OF_SUPPLY,
+      event_gst_no: EVENT_GST_NO,
       supply_date: estimateData.supply_date,
-      consignee_name: estimateData.consignee_name,
-      consignee_addr: estimateData.consignee_addr,
+      consignee_name: EVENT_NAME,
+      consignee_addr: EVENT_PLACE_OF_SUPPLY,
       country: estimateData.country,
       state: estimateData.state,
       city: estimateData.city,
@@ -433,16 +463,16 @@ const CreateEstimate1 = () => {
               />
             </div>
 
-            {/* GSTIN No./PAN No. */}
+            {/* Company GSTIN No./PAN No. */}
             <div>
-              <label htmlFor="gst_no" className={labelClass}>
+              <label htmlFor="company_gst_no" className={labelClass}>
                 GSTIN No./PAN No. *
               </label>
               <input
                 type="text"
-                id="gst_no"
-                name="gst_no"
-                value={estimateData.gst_no}
+                id="company_gst_no"
+                name="company_gst_no"
+                value={estimateData.company_gst_no}
                 onChange={handleEstimateChange}
                 className={`w-full ${inputClass}`}
                 placeholder="Enter GSTIN/PAN No."
@@ -466,40 +496,66 @@ const CreateEstimate1 = () => {
               />
             </div>
 
-            {/* Consignee Name */}
+            {/* Company Name */}
             <div>
-              <label htmlFor="consignee_name" className={labelClass}>
-                Consignee Name *
+              <label htmlFor="company_name" className={labelClass}>
+                Company Name *
               </label>
-              <select
-                id="consignee_name"
-                name="consignee_name"
-                value={estimateData.consignee_name}
+              <input
+                type="text"
+                id="company_name"
+                name="company_name"
+                value={estimateData.company_name}
                 onChange={handleEstimateChange}
                 className={`w-full ${inputClass}`}
                 required
-              >
-                <option value="">Select Here</option>
-                {events.map((event, i) => (
-                  <option key={i} value={event?.event_name}>
-                    {event?.event_name}
-                  </option>
-                ))}
-              </select>
+              />
+            </div>
+
+            {/* Company Address */}
+            <div>
+              <label htmlFor="company_addr" className={labelClass}>
+                Company Address *
+              </label>
+              <input
+                type="text"
+                id="company_addr"
+                name="company_addr"
+                value={estimateData.company_addr}
+                onChange={handleEstimateChange}
+                className={`w-full ${inputClass}`}
+                required
+              />
+            </div>
+
+            {/* Consignee Name */}
+            <div>
+              <label htmlFor="consignee_name" className={labelClass}>
+                Event Name *
+              </label>
+              <input
+                type="text"
+                id="consignee_name"
+                name="consignee_name"
+                value={estimateData.consignee_name}
+                className={`w-full bg-gray-100 cursor-not-allowed ${inputClass}`}
+                readOnly
+                required
+              />
             </div>
 
             {/* Consignee Address */}
             <div>
               <label htmlFor="consignee_addr" className={labelClass}>
-                Consignee Address *
+                Place of Supply *
               </label>
               <input
                 type="text"
                 id="consignee_addr"
                 name="consignee_addr"
                 value={estimateData.consignee_addr}
-                onChange={handleEstimateChange}
-                className={`w-full ${inputClass}`}
+                className={`w-full bg-gray-100 cursor-not-allowed ${inputClass}`}
+                readOnly
                 required
               />
             </div>
