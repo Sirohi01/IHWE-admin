@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ChevronRight, ArrowLeft } from 'lucide-react';
+import { ChevronRight, ArrowLeft, Edit } from 'lucide-react';
 import api from '../../../lib/api';
 
 const InvoiceList = () => {
@@ -108,16 +108,17 @@ const InvoiceList = () => {
                             <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Date</th>
                             <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Amount (₹)</th>
                             <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Added By</th>
+                            <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Action</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {loading ? (
                             <tr>
-                                <td colSpan="7" className="text-center py-4 text-gray-500">Loading invoices...</td>
+                                <td colSpan="8" className="text-center py-4 text-gray-500">Loading invoices...</td>
                             </tr>
                         ) : paginatedInvoices.length === 0 ? (
                             <tr>
-                                <td colSpan="7" className="text-center py-4 text-gray-500">No invoices found.</td>
+                                <td colSpan="8" className="text-center py-4 text-gray-500">No invoices found.</td>
                             </tr>
                         ) : (
                             paginatedInvoices.map((inv, idx) => (
@@ -144,6 +145,15 @@ const InvoiceList = () => {
                                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 capitalize">
                                         {inv.added_by || "Unknown"}
+                                    </td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
+                                        <Link
+                                            to={`/page-create-invoice/${inv._id}`}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 rounded-md font-medium text-xs transition-colors"
+                                        >
+                                            <Edit className="w-3.5 h-3.5" />
+                                            Edit
+                                        </Link>
                                     </td>
                                 </tr>
                             ))
