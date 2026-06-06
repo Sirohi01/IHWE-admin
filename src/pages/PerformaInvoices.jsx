@@ -19,7 +19,9 @@ import SearchableDropdown from '../components/SearchableDropdown';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 const fmt = (n) =>
-    '₹ ' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    '₹ ' + Math.round(Number(n || 0)).toLocaleString('en-IN');
+
+const roundAmount = (value) => Math.round(Number(value || 0));
 
 const newItem = () => ({
     id: Date.now(),
@@ -156,7 +158,7 @@ export const PerformaInvoices = () => {
     });
 
     const [items, setItems] = useState([
-        { id: 1, description: 'Exhibition Stall Space (9 Sqm)', subDesc: '', hsn: '997331', qty: 1, size: 9, unit: 'Nos', rate: 90000, amount: 90000, disc: 0, taxable: 90000 }
+        { id: 1, description: 'Exhibition Stall Space (9 Sqm)', subDesc: '', hsn: '997331', qty: 1, size: 9, unit: 'Nos', rate: 11200, amount: 100800, disc: 0, taxable: 100800 }
     ]);
 
     const [gstOption, setGstOption] = useState('18% IGST');
@@ -220,11 +222,12 @@ export const PerformaInvoices = () => {
                             subDesc = parts.slice(1).join('\n');
                         }
 
-                        const qty = Number(item.qty || 1);
                         const rate = Number(item.rate || 0);
-                        const amount = Number(item.amount) || (qty * rate);
+                        const qty = Number(item.qty || 1);
+                        const size = Number(item.size || 0);
+                        const amount = roundAmount(Number(item.amount) || (qty * rate * size));
                         const disc = Number(item.disc || 0);
-                        const taxable = amount - (amount * disc) / 100;
+                        const taxable = roundAmount(amount - (amount * disc) / 100);
 
                         return {
                             ...item,
@@ -295,16 +298,16 @@ export const PerformaInvoices = () => {
     }, [id]);
 
     // ── computed ─────────────────────────────────────────────────────────────────
-    const subTotal = items.reduce((s, i) => s + Number(i.amount || 0), 0);
-    const calculatedDiscount = items.reduce((s, i) => s + (Number(i.amount || 0) * Number(i.disc || 0)) / 100, 0);
-    const taxable = subTotal - calculatedDiscount;
+    const subTotal = roundAmount(items.reduce((s, i) => s + Number(i.amount || 0), 0));
+    const calculatedDiscount = roundAmount(items.reduce((s, i) => s + (Number(i.amount || 0) * Number(i.disc || 0)) / 100, 0));
+    const taxable = roundAmount(subTotal - calculatedDiscount);
     const isIGST = gstOption.includes('IGST');
     const gstPct = parseFloat(gstOption) || 0;
-    const cgst = isIGST ? 0 : (taxable * gstPct) / 200;
-    const sgst = isIGST ? 0 : (taxable * gstPct) / 200;
-    const igst = isIGST ? (taxable * gstPct) / 100 : 0;
-    const totalTax = cgst + sgst + igst;
-    const grandTotal = taxable + totalTax;
+    const cgst = isIGST ? 0 : roundAmount((taxable * gstPct) / 200);
+    const sgst = isIGST ? 0 : roundAmount((taxable * gstPct) / 200);
+    const igst = isIGST ? roundAmount((taxable * gstPct) / 100) : 0;
+    const totalTax = roundAmount(cgst + sgst + igst);
+    const grandTotal = roundAmount(taxable + totalTax);
 
     // ── dynamic location options ─────────────────────────────────────────────────
     const countriesArr = ['Select Country', ...(reduxCountries || []).map(c => c.name).filter(Boolean)];
@@ -339,9 +342,10 @@ export const PerformaInvoices = () => {
                 const updated = { ...item, [field]: val };
                 const rate = Number(field === 'rate' ? val : updated.rate) || 0;
                 const qty = Number(field === 'qty' ? val : updated.qty) || 0;
+                const size = Number(field === 'size' ? val : updated.size) || 0;
                 const disc = Number(field === 'disc' ? val : updated.disc) || 0;
-                updated.amount = rate * qty;
-                updated.taxable = updated.amount - (updated.amount * disc) / 100;
+                updated.amount = roundAmount(qty * rate * size);
+                updated.taxable = roundAmount(updated.amount - (updated.amount * disc) / 100);
                 return updated;
             })
         );
@@ -447,12 +451,12 @@ export const PerformaInvoices = () => {
                 rate: i.rate,
                 amount: i.amount,
                 disc: i.disc,
-                tax: (i.taxable * gstPct) / 100,
+                tax: roundAmount((i.taxable * gstPct) / 100),
                 gstRate: gstOption,
-                cgst: isIGST ? 0 : (i.taxable * (gstPct / 2)) / 100,
+                cgst: isIGST ? 0 : roundAmount((i.taxable * (gstPct / 2)) / 100),
                 cgst_per: isIGST ? "0" : String(gstPct / 2),
                 igst_per: isIGST ? String(gstPct) : "0",
-                finalAmount: i.taxable + ((i.taxable * gstPct) / 100),
+                finalAmount: roundAmount(i.taxable + ((i.taxable * gstPct) / 100)),
                 remarks: remarks
             })),
             finalAmount: grandTotal,
@@ -692,14 +696,14 @@ export const PerformaInvoices = () => {
                                                 <input type="number" className="w-full border border-gray-200 rounded px-2 py-[9px] text-xs focus:outline-none focus:border-blue-400 bg-white" value={item.rate} onChange={(e) => updateItem(item.id, 'rate', e.target.value)} />
                                             </td>
                                             <td className="px-2 py-1.5 min-w-[60px]">
-                                                <span className="px-3 py-2 text-xs text-gray-700 bg-gray-100 ">{item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                                <span className="px-3 py-2 text-xs text-gray-700 bg-gray-100 ">{roundAmount(item.amount).toLocaleString('en-IN')}</span>
                                             </td>
                                             <td className="px-2 py-1.5 w-14">
                                                 <input type="number" min={0} max={100} className="w-full border border-gray-200 rounded px-2 py-[9px] text-xs focus:outline-none focus:border-blue-400 bg-white text-center" value={item.disc} onChange={(e) => updateItem(item.id, 'disc', e.target.value)} />
                                             </td>
                                             <td className="pl-2 pr-5 py-1.5 min-w-[100px]">
                                                 <div className="block w-full px-2 py-[9px] border border-gray-200 rounded text-xs text-gray-700 bg-white">
-                                                    {item.taxable.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                                    {roundAmount(item.taxable).toLocaleString('en-IN')}
                                                 </div>
                                             </td>
                                             <td className="pl-0 pr-2 py-1.5 w-6 text-center">
@@ -731,7 +735,7 @@ export const PerformaInvoices = () => {
                             </div>
                             <div>
                                 <Label>Final Amount (₹)</Label>
-                                <Input readOnly value={grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })} className="bg-gray-50 font-semibold" />
+                                <Input readOnly value={roundAmount(grandTotal).toLocaleString('en-IN')} className="bg-gray-50 font-semibold" />
                             </div>
                             <div className="flex gap-2">
                                 <div className="flex-1">
