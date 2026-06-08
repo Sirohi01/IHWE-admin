@@ -53,8 +53,8 @@ const RejectedAwardsList = () => {
     { label: "Contact Details", accessor: "contact.details" },
     { label: "Award Category", accessor: "award.category" },
     { label: "Location", accessor: "location" },
-    { 
-      label: "Status", 
+    {
+      label: "Status",
       accessor: "status.current",
       render: (value) => (
         <span className="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
@@ -106,17 +106,17 @@ const RejectedAwardsList = () => {
   return (
     <>
       {/* Hero Banner */}
-      <div className="relative w-full h-64 overflow-hidden rounded mt-8">
+      <div className="relative w-full h-64 overflow-hidden rounded ">
         {/* Background Image */}
         <img
           src="/dashbordBan.png"
           alt="Rejected Awards Banner"
           className="absolute inset-0 w-full h-full object-cover z-0"
         />
-        
+
         {/* Dark overlay */}
         <div className="absolute inset-0 bg-black/40 z-10"></div>
-        
+
         {/* Content */}
         <div className="relative z-20 flex flex-col items-center justify-center h-full text-white px-6">
           <XCircle className="w-16 h-16 mb-4" />
@@ -138,20 +138,20 @@ const RejectedAwardsList = () => {
             </h1>
           </div>
           <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
-            <button 
-              onClick={() => navigate("/awards-nominations")} 
+            <button
+              onClick={() => navigate("/awards-nominations")}
               className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
             >
               <Award size={12} /> Award Nominations
             </button>
-            <button 
-              onClick={() => navigate("/approved-awards-list")} 
+            <button
+              onClick={() => navigate("/approved-awards-list")}
               className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
             >
               <CheckCircle size={12} /> Approved Awards
             </button>
-            <button 
-              onClick={() => navigate("/award-categories-manage")} 
+            <button
+              onClick={() => navigate("/award-categories-manage")}
               className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
             >
               <List size={12} /> Award Categories
@@ -159,33 +159,33 @@ const RejectedAwardsList = () => {
           </div>
         </div>
 
-      {/* 🔹 Main Section */}
-      <div className="bg-white m-4 p-2 rounded shadow-sm">
-        <div className="flex justify-between items-center pr-4">
-          <h1 className="text-lg font-medium text-gray-800 px-4">
-            REJECTED AWARDS
-          </h1>
-        </div>
+        {/* 🔹 Main Section */}
+        <div className="bg-white m-4 p-2 rounded shadow-sm">
+          <div className="flex justify-between items-center pr-4">
+            <h1 className="text-lg font-medium text-gray-800 px-4">
+              REJECTED AWARDS
+            </h1>
+          </div>
 
-        <hr className="opacity-10 my-2" />
+          <hr className="opacity-10 my-2" />
 
-        {/* 🔹 Data Table */}
-        <div className="text-xs">
-          {isLoading ? (
-            <div className="text-center text-gray-500 py-4">Loading...</div>
-          ) : rejectedNominations.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
-              No rejected awards found
-            </div>
-          ) : (
-            <Globallytable
-              rows={rows}
-              colomns={columns}
-              style={{ marginTop: "20px" }}
-            />
-          )}
+          {/* 🔹 Data Table */}
+          <div className="text-xs">
+            {isLoading ? (
+              <div className="text-center text-gray-500 py-4">Loading...</div>
+            ) : rejectedNominations.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                No rejected awards found
+              </div>
+            ) : (
+              <Globallytable
+                rows={rows}
+                colomns={columns}
+                style={{ marginTop: "20px" }}
+              />
+            )}
+          </div>
         </div>
-      </div>
       </div>
     </>
   );

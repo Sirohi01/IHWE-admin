@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
-import { 
-  Plus, Edit2, Trash2, Save, BadgeHelp, Type, ImageIcon, 
+import {
+  Plus, Edit2, Trash2, Save, BadgeHelp, Type, ImageIcon,
   FileText, Link as LinkIcon, Image as ImageLucide, Leaf, List
 } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
@@ -90,7 +90,7 @@ const WhyParticipateManagement = () => {
     setIsLoading(true);
     try {
       const formData = new FormData();
-      
+
       // Add all text fields
       formData.append('subtitle', data.subtitle);
       formData.append('heading', data.heading);
@@ -100,7 +100,7 @@ const WhyParticipateManagement = () => {
       formData.append('button2Text', data.button2Text);
       formData.append('imageAltText', data.imageAltText);
       formData.append('imageOverlayText', data.imageOverlayText);
-      
+
       // Add arrays as JSON strings
       formData.append('keyPoints', JSON.stringify(data.keyPoints));
       formData.append('mainPoints', JSON.stringify(data.mainPoints));
@@ -118,11 +118,11 @@ const WhyParticipateManagement = () => {
       });
 
       if (response.data.success) {
-        Swal.fire({ 
-          icon: 'success', 
-          title: 'Content Saved', 
-          timer: 1500, 
-          showConfirmButton: false 
+        Swal.fire({
+          icon: 'success',
+          title: 'Content Saved',
+          timer: 1500,
+          showConfirmButton: false
         });
         fetchData();
         setImageFile(null);
@@ -136,7 +136,7 @@ const WhyParticipateManagement = () => {
   };
 
   return (
-    <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+    <div className="bg-white shadow-md  p-6 min-h-screen">
       <PageHeader
         title="WHY PARTICIPATE MANAGEMENT"
         description="Manage the Why Participate section on the home page"
@@ -149,7 +149,7 @@ const WhyParticipateManagement = () => {
             <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d] border-b-2 border-gray-100 pb-3">
               <Type className="w-5 h-5 text-[#d26019]" /> Text Content
             </h2>
-            
+
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Subtitle (e.g. WHY PARTICIPATE)</label>
@@ -185,7 +185,7 @@ const WhyParticipateManagement = () => {
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight flex items-center justify-between">
                   Key Points List
-                  <button 
+                  <button
                     onClick={addKeyPoint}
                     className="text-[10px] bg-[#d26019] text-white px-2 py-1 rounded hover:bg-orange-700 flex items-center gap-1"
                   >
@@ -204,7 +204,7 @@ const WhyParticipateManagement = () => {
                           placeholder={`Point ${index + 1}`}
                         />
                       </div>
-                      <button 
+                      <button
                         onClick={() => removeKeyPoint(index)}
                         className="p-2 text-red-500 hover:bg-red-50 rounded"
                       >
@@ -265,9 +265,9 @@ const WhyParticipateManagement = () => {
                       accept=".pdf,.doc,.docx"
                     />
                     {data.button2File && (
-                      <a 
-                        href={`${SERVER_URL}${data.button2File}`} 
-                        target="_blank" 
+                      <a
+                        href={`${SERVER_URL}${data.button2File}`}
+                        target="_blank"
                         rel="noreferrer"
                         className="p-2 text-blue-500 hover:bg-blue-50 rounded shrink-0"
                         title="View Current Brochure"
@@ -288,11 +288,11 @@ const WhyParticipateManagement = () => {
             <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d] border-b-2 border-gray-100 pb-3">
               <ImageLucide className="w-5 h-5 text-[#d26019]" /> Image & Overlays
             </h2>
-            
+
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Main Section Image</label>
-                <div 
+                <div
                   className="relative border-2 border-dashed border-gray-300 h-64 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group overflow-hidden rounded-lg"
                   onClick={() => document.getElementById('participateImage').click()}
                 >
@@ -304,11 +304,11 @@ const WhyParticipateManagement = () => {
                       <span className="text-xs font-bold text-gray-500 uppercase">Click to Upload Image</span>
                     </>
                   )}
-                  <input 
-                    type="file" 
-                    id="participateImage" 
-                    className="hidden" 
-                    onChange={handleImageChange} 
+                  <input
+                    type="file"
+                    id="participateImage"
+                    className="hidden"
+                    onChange={handleImageChange}
                     accept="image/*"
                   />
                 </div>

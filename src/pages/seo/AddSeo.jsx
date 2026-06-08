@@ -143,25 +143,25 @@ const AddSeo = () => {
     const getPageName = (path) => {
         const found = pagesList.find(p => p.path === path);
         if (found) return found.name;
-        
+
         const foundService = dynamicPages.services.find(p => p.path === path);
         if (foundService) return foundService.name;
-        
+
         const foundCustom = dynamicPages.custom.find(p => p.path === path);
         if (foundCustom) return foundCustom.name;
-        
+
         return path;
     };
 
     const renderPageOption = (page, index, prefix) => {
         const existing = getExistingSeo(page.path);
-        const optionStyle = existing 
+        const optionStyle = existing
             ? { color: '#16a34a', backgroundColor: '#f0fdf4', fontWeight: 'bold' }
             : { color: '#dc2626', backgroundColor: '#fef2f2' };
-            
+
         return (
-            <option 
-                key={`${prefix}-${index}`} 
+            <option
+                key={`${prefix}-${index}`}
                 value={page.path}
                 style={optionStyle}
             >
@@ -486,7 +486,7 @@ const AddSeo = () => {
     );
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <div className="w-full">
                 <PageHeader
                     title={isEditMode ? 'EDIT SEO META' : 'ADD SEO META'}

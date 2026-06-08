@@ -151,7 +151,7 @@ const ManageStallRates = () => {
     };
 
     return (
-        <div className="p-6 bg-white min-h-screen font-inter uppercase mt-6">
+        <div className="p-6 bg-white min-h-screen font-inter uppercase ">
             <PageHeader title="STALL PRICING MASTER" description="Set pricing per event, currency, and stall type" />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">

@@ -244,7 +244,7 @@ const UploadPdf = () => {
     const subCategories = selectedCategoryObj?.subItems || [];
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="PDF DOCUMENT MANAGEMENT"
                 description="Manage e-brochures, newsletters and company profiles"

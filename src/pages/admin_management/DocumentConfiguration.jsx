@@ -96,7 +96,7 @@ export default function DocumentConfiguration() {
             confirmButtonText: 'Yes, delete!'
         });
         if (!result.isConfirmed) return;
-        
+
         try {
             await dispatch(deleteDocumentRequirement(id)).unwrap();
             Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
@@ -112,7 +112,7 @@ export default function DocumentConfiguration() {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="Manage Document Configuration"
                 description="Manage required documents for clients"

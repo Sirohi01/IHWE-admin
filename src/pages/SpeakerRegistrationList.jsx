@@ -116,17 +116,17 @@ const SpeakerRegistrationList = () => {
     return (
         <>
             {/* Hero Banner */}
-            <div className="relative w-full h-64 overflow-hidden rounded mt-8">
+            <div className="relative w-full h-64 overflow-hidden rounded ">
                 {/* Background Image */}
                 <img
                     src="/dashbordBan.png"
                     alt="Speaker Registrations Banner"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />
-                
+
                 {/* Dark overlay */}
                 <div className="absolute inset-0 bg-black/40 z-10"></div>
-                
+
                 {/* Content */}
                 <div className="relative z-20 flex flex-col items-center justify-center h-full text-white px-6">
                     <Mic className="w-16 h-16 mb-4" />

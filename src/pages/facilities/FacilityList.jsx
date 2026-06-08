@@ -37,11 +37,10 @@ const FacilitiesList = () => {
 
   const StatusBadge = ({ status }) => (
     <span
-      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-        status === "Active"
+      className={`px-3 py-1 rounded-full text-xs font-semibold ${status === "Active"
           ? "bg-green-100 text-green-800 border border-green-200"
           : "bg-red-100 text-red-800 border border-red-200"
-      }`}
+        }`}
     >
       {status}
     </span>
@@ -97,7 +96,7 @@ const FacilitiesList = () => {
   ];
 
   return (
-    <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+    <div className="bg-white shadow-md  p-6 min-h-screen">
       <div className="w-full">
         <PageHeader
           title="FACILITIES LIST"

@@ -195,7 +195,7 @@ const MsmePmsSchemeList = () => {
   ];
 
   return (
-    <div className="bg-white shadow-md mt-6 p-6">
+    <div className="bg-white shadow-md p-6">
       <div className="w-full">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-[#23471d]">MSME PMS SCHEME</h1>

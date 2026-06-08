@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
-import { 
-  Plus, Edit2, Trash2, Save, ImageIcon, 
-  Mic2, List, Edit, MapPin, Globe, 
+import {
+  Plus, Edit2, Trash2, Save, ImageIcon,
+  Mic2, List, Edit, MapPin, Globe,
   User, Building2, Hash, CheckCircle2,
   ChevronUp, ChevronDown
 } from "lucide-react";
@@ -124,16 +124,16 @@ const DistinguishedSpeakersManage = () => {
   };
 
   const deleteSpeaker = async (id) => {
-    const result = await Swal.fire({ 
-      title: "Are you sure?", 
+    const result = await Swal.fire({
+      title: "Are you sure?",
       text: "You won't be able to revert this!",
-      icon: "warning", 
+      icon: "warning",
       showCancelButton: true,
       confirmButtonColor: '#d33',
       cancelButtonColor: '#3085d6',
       confirmButtonText: 'Yes, delete it!'
     });
-    
+
     if (result.isConfirmed) {
       try {
         await api.delete(`/api/distinguished-speakers/${id}`);
@@ -165,11 +165,11 @@ const DistinguishedSpeakersManage = () => {
   const movePosition = async (speaker, direction) => {
     const currentIndex = speakers.findIndex(s => s._id === speaker._id);
     const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    
+
     if (targetIndex < 0 || targetIndex >= speakers.length) return;
-    
+
     const targetSpeaker = speakers[targetIndex];
-    
+
     try {
       setIsLoading(true);
       await api.put(`/api/distinguished-speakers/${speaker._id}`, { order: targetSpeaker.order });
@@ -183,7 +183,7 @@ const DistinguishedSpeakersManage = () => {
   };
 
   return (
-    <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+    <div className="bg-white shadow-md  p-6 min-h-screen">
       <PageHeader
         title="DISTINGUISHED SPEAKERS MANAGEMENT"
         description="Directly add and manage speakers shown on the homepage and conference sections"
@@ -197,7 +197,7 @@ const DistinguishedSpeakersManage = () => {
               {editId ? <Edit2 className="w-5 h-5 text-blue-500" /> : <Plus className="w-5 h-5 text-green-500" />}
               {editId ? 'Edit Speaker' : 'Add New Speaker'}
             </h3>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">Full Name*</label>
@@ -287,7 +287,7 @@ const DistinguishedSpeakersManage = () => {
 
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-2 uppercase">Speaker Photo</label>
-                <div 
+                <div
                   className="relative border-2 border-dashed border-gray-200 h-32 rounded-xl flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group overflow-hidden"
                   onClick={() => document.getElementById('speakerImage').click()}
                 >
@@ -299,8 +299,8 @@ const DistinguishedSpeakersManage = () => {
                       <span className="text-[10px] font-bold text-gray-400 uppercase">Click to upload</span>
                     </>
                   )}
-                  <input 
-                    type="file" id="speakerImage" className="hidden" 
+                  <input
+                    type="file" id="speakerImage" className="hidden"
                     onChange={handleImageChange}
                     accept="image/*"
                   />
@@ -308,16 +308,16 @@ const DistinguishedSpeakersManage = () => {
               </div>
 
               <div className="flex gap-2 pt-4">
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={isLoading}
                   className="flex-1 py-3 bg-[#0B2C66] text-white font-black uppercase tracking-widest text-[10px] rounded-lg hover:bg-blue-900 shadow-lg flex items-center justify-center gap-2"
                 >
                   <Save size={14} /> {editId ? 'Update' : 'Save'} Speaker
                 </button>
                 {editId && (
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={resetForm}
                     className="px-4 py-3 border-2 border-gray-200 text-gray-400 font-black uppercase tracking-widest text-[10px] rounded-lg hover:bg-gray-50"
                   >
@@ -340,7 +340,7 @@ const DistinguishedSpeakersManage = () => {
                 {speakers.length} Speakers
               </span>
             </div>
-            
+
             <div className="divide-y divide-gray-100 max-h-[800px] overflow-y-auto">
               {speakers.length === 0 ? (
                 <div className="p-20 text-center text-gray-300 italic font-medium">
@@ -367,7 +367,7 @@ const DistinguishedSpeakersManage = () => {
                           <User size={24} className="text-gray-200" />
                         )}
                       </div>
-                      
+
                       {/* Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">

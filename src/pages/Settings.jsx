@@ -71,7 +71,7 @@ const Settings = () => {
     const [msmeLogoPreview, setMsmeLogoPreview] = useState('');
     const [msmeLogoTitle, setMsmeLogoTitle] = useState('Supported by');
     const [isMsmeLogoActive, setIsMsmeLogoActive] = useState(true);
-    
+
     // Multiple MSME Logos state
     const [msmeLogos, setMsmeLogos] = useState([]);
     const [showBrochurePopUp, setShowBrochurePopUp] = useState(true);
@@ -119,7 +119,7 @@ const Settings = () => {
     const [newLinkHref, setNewLinkHref] = useState('');
     const [editMode, setEditMode] = useState(false);
     const [currentLinkId, setCurrentLinkId] = useState(null);
- 
+
     // Exhibition Links state
     const [exhibitionLinks, setExhibitionLinks] = useState([
         { id: 1, label: 'Why Exhibit', href: '/exhibition', isEditing: false },
@@ -132,7 +132,7 @@ const Settings = () => {
     const [newExLinkHref, setNewExLinkHref] = useState('');
     const [exEditMode, setExEditMode] = useState(false);
     const [currentExLinkId, setCurrentExLinkId] = useState(null);
- 
+
     const [isLoading, setIsLoading] = useState(false);
 
     // Fetch settings on mount
@@ -145,9 +145,9 @@ const Settings = () => {
         try {
             const res = await api.get('/api/settings');
             if (res.data.success && res.data.data) {
-                const { 
+                const {
                     logo, exhibitorBrochurePdf, domesticRegistrationFormPdf, internationalRegistrationFormPdf, sponsorshipDeckPdf,
-                    emails, phones, addresses, mapIframe: savedIframe, 
+                    emails, phones, addresses, mapIframe: savedIframe,
                     marqueeText: savedMarquee, topbarDate: savedDate, supportDeskText: savedSupportDeskText,
                     companyName: sName, companyAddress: sAddress, companyGst: sGst, companyCin: sCin,
                     fullPaymentDiscount: sDisc, availableTdsRates: sTds, authorizedSignature, companyStamp,
@@ -202,7 +202,7 @@ const Settings = () => {
                 if (sTds) setAvailableTdsRates(sTds);
                 if (authorizedSignature) setSignaturePreview(`${SERVER_URL}${authorizedSignature}`);
                 if (companyStamp) setStampPreview(`${SERVER_URL}${companyStamp}`);
-                
+
                 // MSME Settings
                 if (res.data.data.msmeLogo) {
                     setMsmeLogoPreview(`${SERVER_URL}${res.data.data.msmeLogo}`);
@@ -213,7 +213,7 @@ const Settings = () => {
                 if (res.data.data.isMsmeLogoActive !== undefined) {
                     setIsMsmeLogoActive(res.data.data.isMsmeLogoActive);
                 }
-                
+
                 // Load Multiple MSME Logos
                 if (res.data.data.msmeLogos && res.data.data.msmeLogos.length > 0) {
                     setMsmeLogos(res.data.data.msmeLogos.map((logo, index) => ({
@@ -301,12 +301,12 @@ const Settings = () => {
             formData.append('availableTdsRates', JSON.stringify(availableTdsRates));
             if (signatureFile) formData.append('authorizedSignature', signatureFile);
             if (stampFile) formData.append('companyStamp', stampFile);
-            
+
             // MSME
             if (msmeLogo) formData.append('msmeLogo', msmeLogo);
             formData.append('msmeLogoTitle', msmeLogoTitle);
             formData.append('isMsmeLogoActive', isMsmeLogoActive);
-            
+
             // Multiple MSME Logos
             const msmeLogosData = msmeLogos.map(({ id, preview, ...rest }) => rest);
             formData.append('msmeLogos', JSON.stringify(msmeLogosData));
@@ -508,13 +508,13 @@ const Settings = () => {
     };
 
     const setTopbarPhone = (id) => {
-        setPhones(phones.map(phone => 
+        setPhones(phones.map(phone =>
             phone.id === id ? { ...phone, forTopbar: !phone.forTopbar } : phone
         ));
     };
 
     const setContactPhone = (id) => {
-        setPhones(phones.map(phone => 
+        setPhones(phones.map(phone =>
             phone.id === id ? { ...phone, forContact: !phone.forContact } : phone
         ));
     };
@@ -577,14 +577,14 @@ const Settings = () => {
             setAddresses(addresses.filter(address => address.id !== id));
         }
     };
- 
+
     const startEditingLink = (link) => {
         setEditMode(true);
         setCurrentLinkId(link.id);
         setNewLinkLabel(link.label);
         setNewLinkHref(link.href);
     };
- 
+
     const handleLinkSubmit = () => {
         if (newLinkLabel && newLinkHref) {
             if (editMode) {
@@ -600,11 +600,11 @@ const Settings = () => {
             setNewLinkHref('');
         }
     };
- 
+
     const removeQuickLink = (link) => {
         setQuickLinks(quickLinks.filter(l => l.id !== link.id));
     };
- 
+
     // Exhibition Links logic
     const startEditingExLink = (link) => {
         setExEditMode(true);
@@ -612,7 +612,7 @@ const Settings = () => {
         setNewExLinkLabel(link.label);
         setNewExLinkHref(link.href);
     };
- 
+
     const handleExLinkSubmit = () => {
         if (newExLinkLabel && newExLinkHref) {
             if (exEditMode) {
@@ -628,11 +628,11 @@ const Settings = () => {
             setNewExLinkHref('');
         }
     };
- 
+
     const removeExLink = (link) => {
         setExhibitionLinks(exhibitionLinks.filter(l => l.id !== link.id));
     };
- 
+
     const linkColumns = [
         {
             key: "sno",
@@ -653,7 +653,7 @@ const Settings = () => {
     ];
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="SYSTEM CONFIGURATION"
                 description="Manage your exhibition's branding and contact information"
@@ -967,7 +967,7 @@ const Settings = () => {
                                             accept="image/png"
                                             onChange={(e) => {
                                                 const f = e.target.files[0];
-                                                if(f) { setSignatureFile(f); setSignaturePreview(URL.createObjectURL(f)); }
+                                                if (f) { setSignatureFile(f); setSignaturePreview(URL.createObjectURL(f)); }
                                             }}
                                             className="absolute inset-0 opacity-0 cursor-pointer z-10"
                                         />
@@ -991,7 +991,7 @@ const Settings = () => {
                                             accept="image/png"
                                             onChange={(e) => {
                                                 const f = e.target.files[0];
-                                                if(f) { setStampFile(f); setStampPreview(URL.createObjectURL(f)); }
+                                                if (f) { setStampFile(f); setStampPreview(URL.createObjectURL(f)); }
                                             }}
                                             className="absolute inset-0 opacity-0 cursor-pointer z-10"
                                         />
@@ -1118,9 +1118,9 @@ const Settings = () => {
                                     <p className="text-[10px] text-gray-500 mt-0.5 uppercase">Toggle the secondary brochure banner</p>
                                 </div>
                                 <label className="relative inline-flex items-center cursor-pointer">
-                                    <input 
-                                        type="checkbox" 
-                                        className="sr-only peer" 
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
                                         checked={showBrochurePopUp}
                                         onChange={(e) => setShowBrochurePopUp(e.target.checked)}
                                     />
@@ -1163,9 +1163,9 @@ const Settings = () => {
                                     <p className="text-[10px] text-gray-500 mt-0.5 uppercase">Toggle Government MSME PMS Scheme visibility</p>
                                 </div>
                                 <label className="relative inline-flex items-center cursor-pointer">
-                                    <input 
-                                        type="checkbox" 
-                                        className="sr-only peer" 
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
                                         checked={showGovtPmsScheme}
                                         onChange={(e) => setShowGovtPmsScheme(e.target.checked)}
                                     />
@@ -1344,7 +1344,7 @@ const Settings = () => {
                             ))}
                         </div>
                     </div>
- 
+
                     {/* Quick Links */}
                     <div className="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
                         <div className="px-6 py-4 border-b bg-[#23471d] flex justify-between items-center text-white">
@@ -1353,7 +1353,7 @@ const Settings = () => {
                                 <p className="text-[10px] text-blue-100 uppercase mt-0.5 font-medium">{quickLinks.length} Links Listed</p>
                             </div>
                         </div>
- 
+
                         <div className="p-6">
                             {/* Form to Add/Edit Link */}
                             <div className="bg-gray-50 border border-gray-100 p-4 rounded-lg mb-6">
@@ -1398,7 +1398,7 @@ const Settings = () => {
                                     </div>
                                 </div>
                             </div>
- 
+
                             {/* Links Table */}
                             <Table
                                 columns={linkColumns}
@@ -1408,7 +1408,7 @@ const Settings = () => {
                             />
                         </div>
                     </div>
- 
+
                     {/* Exhibition Links */}
                     <div className="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
                         <div className="px-6 py-4 border-b bg-[#23471d] flex justify-between items-center text-white">
@@ -1417,7 +1417,7 @@ const Settings = () => {
                                 <p className="text-[10px] text-blue-100 uppercase mt-0.5 font-medium">{exhibitionLinks.length} Links Listed</p>
                             </div>
                         </div>
- 
+
                         <div className="p-6">
                             {/* Form to Add/Edit Link */}
                             <div className="bg-gray-50 border border-gray-100 p-4 rounded-lg mb-6">
@@ -1462,7 +1462,7 @@ const Settings = () => {
                                     </div>
                                 </div>
                             </div>
- 
+
                             {/* Exhibition Table */}
                             <Table
                                 columns={linkColumns}

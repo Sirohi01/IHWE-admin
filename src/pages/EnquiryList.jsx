@@ -478,7 +478,7 @@ const MeetingList = () => {
   }
 
   return (
-    <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+    <div className="bg-white shadow-md  p-6 min-h-screen">
       <PageHeader
         title="MEETING REQUESTS"
         description="Manage meeting requests submitted by clients"

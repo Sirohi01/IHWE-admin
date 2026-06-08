@@ -118,7 +118,7 @@ const CreateServiceDetail = () => {
             setIsLoading(true);
 
             let heroImageUrl = formData.heroImagePreview ? formData.heroImagePreview.replace(SERVER_URL, '') : '';
-            
+
             if (formData.heroImage) {
                 const imgData = new FormData();
                 imgData.append('image', formData.heroImage);
@@ -165,7 +165,7 @@ const CreateServiceDetail = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <div className="w-full">
                 <PageHeader
                     title={isEditMode ? 'EDIT SERVICE PAGE' : 'ADD SERVICE PAGE'}
@@ -247,7 +247,7 @@ const CreateServiceDetail = () => {
                                         <div className="relative">
                                             <img src={formData.heroImagePreview} alt="Hero Preview" className="h-32 w-full object-cover rounded shadow-md border-2 border-white" />
                                             {/* Overlay Preview */}
-                                            <div 
+                                            <div
                                                 className="absolute inset-0 bg-black rounded"
                                                 style={{ opacity: formData.heroOverlayOpacity }}
                                             ></div>

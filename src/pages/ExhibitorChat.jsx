@@ -169,7 +169,7 @@ export default function ExhibitorChat() {
     const totalUnread = rooms.reduce((s, r) => s + (r.unreadAdmin || 0), 0);
 
     return (
-        <div className="flex h-[calc(100vh-80px)] bg-gray-50 overflow-hidden border border-gray-200 shadow-sm mt-6">
+        <div className="flex h-[calc(100vh-80px)] bg-gray-50 overflow-hidden border border-gray-200 shadow-sm">
             {/* Sidebar */}
             <div className={`w-full md:w-80 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col ${activeRoom ? "hidden md:flex" : "flex"}`}>
                 <div className="px-4 py-3 bg-[#23471d] flex items-center gap-2">

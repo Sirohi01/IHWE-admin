@@ -57,14 +57,14 @@ const UpcomingEvent = () => {
         setIsLoading(true);
         try {
             const payload = { ...form };
-            
+
             let response;
             if (editingId) {
                 response = await api.put(`/api/upcoming-events/${editingId}`, payload);
             } else {
                 response = await api.post('/api/upcoming-events', payload);
             }
-            
+
             if (response.data.success) {
                 Swal.fire({ icon: 'success', title: editingId ? 'Event Updated!' : 'Event Added!', timer: 1500, showConfirmButton: false });
                 resetForm();
@@ -118,7 +118,7 @@ const UpcomingEvent = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="UPCOMING EVENTS"
                 description="Manage upcoming events for Exhibitor Dashboard"
