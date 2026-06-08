@@ -296,7 +296,7 @@ const GeneralVisitorsList = () => {
   const handleBackClick = () => setSelectedClient(null);
 
   return (
-    <div className="w-full h-auto bg-[#eef1f5]" style={{ marginTop: "30px" }}>
+    <div className="w-full h-auto bg-[#eef1f5]" >
       {selectedClient ? (
         <ClientOverview client={selectedClient} onBack={handleBackClick} />
       ) : (

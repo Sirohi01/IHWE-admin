@@ -4,7 +4,7 @@ import api, { SERVER_URL } from "../lib/api";
 import {
     Type, Save, Image as ImageIcon, Plus, Trash2, Edit,
     ShieldCheck, Activity, Box, Monitor, Microscope, Leaf, Plane, Beaker,
-    Star, Heart, Globe, Zap, Award, Package, MapPin, Users, Stethoscope, 
+    Star, Heart, Globe, Zap, Award, Package, MapPin, Users, Stethoscope,
     Thermometer, Pill, Syringe, HeartPulse, Building, FlaskConical, Dna
 } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
@@ -195,7 +195,7 @@ const HealthcareSectorsManagement = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="HEALTHCARE SECTORS MANAGEMENT"
                 description="Manage sector headings and category cards"
@@ -282,46 +282,46 @@ const HealthcareSectorsManagement = () => {
                                 </div>
                             </div>
 
-                             <div>
+                            <div>
                                 <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-tight">Sector Image</label>
                                 <div className="grid grid-cols-1 gap-4">
-                                     <div className="border-2 border-dashed border-gray-300 hover:border-[#23471d] transition-colors p-3 bg-gray-50">
-                                         <input
-                                             type="file"
-                                             ref={fileInputRef}
-                                             accept="image/*"
-                                             onChange={handleImageChange}
-                                             className="w-full text-[10px] text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:border-0 file:text-[10px] file:font-bold file:bg-[#23471d] file:text-white hover:file:bg-[#d26019] file:cursor-pointer cursor-pointer uppercase"
-                                         />
-                                         <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase">Max: 200KB</p>
-                                     </div>
+                                    <div className="border-2 border-dashed border-gray-300 hover:border-[#23471d] transition-colors p-3 bg-gray-50">
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            accept="image/*"
+                                            onChange={handleImageChange}
+                                            className="w-full text-[10px] text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:border-0 file:text-[10px] file:font-bold file:bg-[#23471d] file:text-white hover:file:bg-[#d26019] file:cursor-pointer cursor-pointer uppercase"
+                                        />
+                                        <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase">Max: 200KB</p>
+                                    </div>
 
-                                     {imagePreview ? (
-                                         <div className="relative h-40 group">
-                                             <img src={imagePreview} className="w-full h-full object-cover border-2 border-gray-200 shadow-sm" alt="Preview" />
-                                             <button
-                                                 onClick={() => { setImageFile(null); setImagePreview(''); setCardForm({ ...cardForm, image: '' }); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-                                                 className="absolute bottom-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg"
-                                             >
-                                                 <Trash2 size={14} />
-                                             </button>
-                                         </div>
-                                     ) : (
-                                         <div className="w-full h-40 bg-gray-100 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400">
-                                             <ImageIcon className="w-8 h-8 mb-1 opacity-20" />
-                                             <p className="text-[10px] font-bold uppercase">No image selected</p>
-                                         </div>
-                                     )}
+                                    {imagePreview ? (
+                                        <div className="relative h-40 group">
+                                            <img src={imagePreview} className="w-full h-full object-cover border-2 border-gray-200 shadow-sm" alt="Preview" />
+                                            <button
+                                                onClick={() => { setImageFile(null); setImagePreview(''); setCardForm({ ...cardForm, image: '' }); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                                                className="absolute bottom-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="w-full h-40 bg-gray-100 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400">
+                                            <ImageIcon className="w-8 h-8 mb-1 opacity-20" />
+                                            <p className="text-[10px] font-bold uppercase">No image selected</p>
+                                        </div>
+                                    )}
 
-                                     <input
-                                         type="text"
-                                         value={cardForm.imageAlt}
-                                         onChange={(e) => setCardForm({ ...cardForm, imageAlt: e.target.value })}
-                                         className="w-full px-3 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none text-xs shadow-sm bg-white"
-                                         placeholder="Image Alt Text..."
-                                     />
+                                    <input
+                                        type="text"
+                                        value={cardForm.imageAlt}
+                                        onChange={(e) => setCardForm({ ...cardForm, imageAlt: e.target.value })}
+                                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none text-xs shadow-sm bg-white"
+                                        placeholder="Image Alt Text..."
+                                    />
                                 </div>
-                             </div>
+                            </div>
 
                             <div className="flex gap-2">
                                 <button

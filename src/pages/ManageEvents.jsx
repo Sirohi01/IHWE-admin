@@ -141,7 +141,7 @@ const ManageEvents = () => {
     };
 
     return (
-        <div className="p-6 bg-white min-h-screen font-inter mt-6">
+        <div className="p-6 bg-white min-h-screen font-inter">
             <PageHeader title="EVENT MANAGEMENT" description="Create and manage exhibition events" />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">

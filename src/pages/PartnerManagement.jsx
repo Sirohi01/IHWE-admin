@@ -10,7 +10,7 @@ import PageHeader from '../components/PageHeader';
 const PartnerManagement = () => {
     const [groups, setGroups] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    
+
     // Group Form State (for adding/editing group headings)
     const [groupForm, setGroupForm] = useState({
         subheading: 'Title Partners',
@@ -137,7 +137,7 @@ const PartnerManagement = () => {
             if (imageFile) {
                 logoUrl = await uploadLogo();
             }
-            
+
             let response;
             if (isEditingPartnerId) {
                 // For simplicity in sub-document updates, we can use a PUT on the group with the partner ID
@@ -214,7 +214,7 @@ const PartnerManagement = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="PARTNERS MANAGEMENT"
                 description="Manage partner groups, categories and logos"
@@ -268,7 +268,7 @@ const PartnerManagement = () => {
                                     <Save className="w-4 h-4" /> {isEditingGroupId ? 'Update Group' : 'Save Group'}
                                 </button>
                                 {isEditingGroupId && (
-                                    <button 
+                                    <button
                                         onClick={() => { setIsEditingGroupId(null); setGroupForm({ subheading: 'Title Partners', heading: 'Industry Leadership', highlightText: 'Leadership' }); }}
                                         className="px-4 py-2 border-2 border-gray-200 text-gray-500 font-bold hover:bg-gray-50"
                                     >
@@ -435,9 +435,9 @@ const PartnerManagement = () => {
                                                                 {partner.updatedBy || 'System'}
                                                             </span>
                                                             <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
-                                                                {partner.updatedAt ? new Date(partner.updatedAt).toLocaleString('en-GB', { 
-                                                                    day: '2-digit', month: 'short', year: 'numeric', 
-                                                                    hour: '2-digit', minute: '2-digit', hour12: true 
+                                                                {partner.updatedAt ? new Date(partner.updatedAt).toLocaleString('en-GB', {
+                                                                    day: '2-digit', month: 'short', year: 'numeric',
+                                                                    hour: '2-digit', minute: '2-digit', hour12: true
                                                                 }) : 'N/A'}
                                                             </span>
                                                         </div>
@@ -445,14 +445,14 @@ const PartnerManagement = () => {
                                                     <td className="py-3 px-4 text-right">
 
                                                         <div className="flex items-center justify-end gap-2">
-                                                            <button 
+                                                            <button
                                                                 onClick={() => startEditPartner(group, partner)}
                                                                 className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-full transition-all"
                                                                 title="Edit Partner"
                                                             >
                                                                 <Edit size={16} />
                                                             </button>
-                                                            <button 
+                                                            <button
                                                                 onClick={() => handleDeletePartner(group._id, partner._id)}
                                                                 className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-all"
                                                                 title="Delete Partner"

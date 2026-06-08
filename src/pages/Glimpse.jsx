@@ -316,7 +316,7 @@ const Glimpse = () => {
   };
 
   return (
-    <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+    <div className="bg-white shadow-md  p-6 min-h-screen">
       <PageHeader
         title="GLIMPSE EVENT MANAGEMENT"
         description="Manage the gallery section: header content, glimpse images, and statistics counters"
@@ -465,7 +465,7 @@ const Glimpse = () => {
                 disabled={isLoading || uploading}
                 className="w-full py-3 bg-[#d26019] text-white font-bold hover:bg-orange-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm uppercase"
               >
-                {isEditingImage ? <><Edit size={16}/> Update Image</> : <><Plus size={16}/> Add Glimpse Image</>}
+                {isEditingImage ? <><Edit size={16} /> Update Image</> : <><Plus size={16} /> Add Glimpse Image</>}
               </button>
               {isEditingImage && (
                 <button

@@ -20,7 +20,7 @@ const ManageGalleryImages = () => {
     const { categoryTitle, categoryId, categoryType } = location.state || {};
     const isVideo = categoryType === 'video';
     const isMedia = categoryType === 'media';
-    
+
     const [images, setImages] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [form, setForm] = useState({ ...EMPTY_FORM });
@@ -93,7 +93,7 @@ const ManageGalleryImages = () => {
             confirmButtonText: 'Yes, delete!'
         });
         if (!result.isConfirmed) return;
-        
+
         setIsLoading(true);
         try {
             await api.delete(`/api/gallery/${id}`);
@@ -112,7 +112,7 @@ const ManageGalleryImages = () => {
         setIsLoading(true);
         try {
             let imagePath = form.image;
-            
+
             // If a new file is selected, upload it first
             if (selectedFile) {
                 const formData = new FormData();
@@ -151,7 +151,7 @@ const ManageGalleryImages = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <div className="flex items-center justify-between mb-8">
                 <PageHeader
                     title={`MANAGE IMAGES: ${categoryTitle}`}
@@ -183,14 +183,14 @@ const ManageGalleryImages = () => {
                                 <div className="h-48 border-2 border-gray-200 rounded-lg overflow-hidden relative group">
                                     <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
                                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity gap-4">
-                                        <button 
+                                        <button
                                             onClick={handleReplaceClick}
                                             className="w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center text-white backdrop-blur-sm transition-all"
                                             title="Replace Image"
                                         >
                                             <RefreshCw className="w-5 h-5" />
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => handleDelete(form._id)}
                                             className="w-10 h-10 bg-red-500/80 hover:bg-red-600 rounded-full flex items-center justify-center text-white backdrop-blur-sm transition-all"
                                             title="Delete Image"
@@ -198,10 +198,10 @@ const ManageGalleryImages = () => {
                                             <Trash2 className="w-5 h-5" />
                                         </button>
                                     </div>
-                                    <input 
-                                        type="file" 
-                                        ref={fileInputRef} 
-                                        className="hidden" 
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        className="hidden"
                                         accept="image/*"
                                         onChange={handleFileChange}
                                     />
@@ -236,9 +236,9 @@ const ManageGalleryImages = () => {
                                 </div>
                             </div>
                         )}
-                        
+
                         <div className="mt-6 pt-6 border-t border-gray-100">
-                             <button
+                            <button
                                 onClick={() => navigate('/add-gallery-images', { state: { categoryId: categoryTitle, categoryTitle } })}
                                 className="w-full py-3 border-2 border-dashed border-[#d26019] text-[#d26019] font-bold hover:bg-orange-50 transition-all flex items-center justify-center gap-2 text-xs uppercase"
                             >
@@ -283,7 +283,7 @@ const ManageGalleryImages = () => {
                                                 No images found in this category.
                                             </td>
                                         </tr>
-                    ) : images.map((img, idx) => (
+                                    ) : images.map((img, idx) => (
                                         <tr key={img._id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${form._id === img._id ? 'bg-orange-50 border-l-4 border-l-[#d26019]' : ''}`}>
                                             <td className="py-4 px-4 text-gray-400 font-bold">{idx + 1}</td>
                                             <td className="py-4 px-4">

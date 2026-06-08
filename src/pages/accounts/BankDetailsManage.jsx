@@ -50,14 +50,14 @@ const BankDetailsManage = () => {
         setIsLoading(true);
         try {
             const payload = { ...formData };
-            
+
             let response;
             if (editingId) {
                 response = await api.put(`/api/banks/${editingId}`, payload);
             } else {
                 response = await api.post('/api/banks', payload);
             }
-            
+
             if (response.status === 200 || response.status === 201) {
                 Swal.fire({ icon: 'success', title: editingId ? 'Bank Detail Updated!' : 'Bank Detail Added!', timer: 1500, showConfirmButton: false });
                 resetForm();
@@ -111,7 +111,7 @@ const BankDetailsManage = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="BANK DETAILS"
                 description="Manage bank account details for Exhibitor Invoices"

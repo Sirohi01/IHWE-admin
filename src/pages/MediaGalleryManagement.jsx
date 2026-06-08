@@ -8,9 +8,9 @@ import {
 import PageHeader from '../components/PageHeader';
 
 const EMPTY_FORM = {
-    title: '', 
+    title: '',
     category: 'press',
-    galleryCategoryId: '', 
+    galleryCategoryId: '',
     mediaType: 'image',
     image: '',
     imageAlt: '',
@@ -22,11 +22,11 @@ const MediaGalleryManagement = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [form, setForm] = useState({ ...EMPTY_FORM });
     const [isEditing, setIsEditing] = useState(null);
-    
+
     // Multiple upload states
     const [images, setImages] = useState([]);
     const [altTexts, setAltTexts] = useState({});
-    
+
     const fileInputRef = useRef(null);
 
     useEffect(() => {
@@ -149,7 +149,7 @@ const MediaGalleryManagement = () => {
                     const uploadRes = await api.post("/api/gallery/upload", formData, {
                         headers: { "Content-Type": "multipart/form-data" }
                     });
-                    
+
                     return api.post('/api/gallery', {
                         title: categoryTitle,
                         category: 'press',
@@ -234,7 +234,7 @@ const MediaGalleryManagement = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="MEDIA PHOTO MANAGEMENT"
                 description="Manage photos for the press & media section of your gallery"
@@ -248,7 +248,7 @@ const MediaGalleryManagement = () => {
                             {isEditing ? <Edit className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
                             {isEditing ? 'Edit Media Photo' : 'Bulk Media Upload'}
                         </h2>
-                        
+
                         <div className="space-y-4">
                             {/* Category Selection FIRST for bulk upload */}
                             <div>
@@ -271,13 +271,13 @@ const MediaGalleryManagement = () => {
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                                     {isEditing ? 'Update Media Image' : 'Select Images to Upload'}
                                 </label>
-                                
+
                                 {isEditing && form.image && images.length === 0 ? (
                                     <div className="relative h-48 border-2 border-gray-200 overflow-hidden mb-2 bg-gray-50">
-                                        <img 
-                                            src={`${SERVER_URL}${form.image}`} 
-                                            className="w-full h-full object-contain" 
-                                            alt="Current" 
+                                        <img
+                                            src={`${SERVER_URL}${form.image}`}
+                                            className="w-full h-full object-contain"
+                                            alt="Current"
                                         />
                                         <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                                             <span className="text-white text-xs font-bold">Replace by clicking button below</span>
@@ -285,7 +285,7 @@ const MediaGalleryManagement = () => {
                                     </div>
                                 ) : null}
 
-                                <div 
+                                <div
                                     className="border-2 border-dashed border-gray-300 rounded-sm p-4 bg-gray-50 text-center hover:bg-gray-100 transition-all cursor-pointer group mb-4"
                                     onClick={() => fileInputRef.current.click()}
                                 >
@@ -298,13 +298,13 @@ const MediaGalleryManagement = () => {
                                             <p className="text-gray-500 text-[9px] uppercase font-black tracking-tighter">MAX 20 IMAGES (JPG, PNG, WEBP)</p>
                                         </div>
                                     </div>
-                                    <input 
-                                        ref={fileInputRef} 
-                                        type="file" 
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
                                         multiple={!isEditing}
-                                        className="hidden" 
-                                        onChange={handleImageChange} 
-                                        accept="image/*" 
+                                        className="hidden"
+                                        onChange={handleImageChange}
+                                        accept="image/*"
                                     />
                                 </div>
                             </div>
@@ -315,7 +315,7 @@ const MediaGalleryManagement = () => {
                                     {images.map((file, idx) => (
                                         <div key={idx} className="bg-gray-50 border-2 border-gray-200 p-3 rounded-sm relative">
                                             {!isEditing && (
-                                                <button 
+                                                <button
                                                     onClick={() => removeImage(idx)}
                                                     className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 z-10"
                                                 >
@@ -324,10 +324,10 @@ const MediaGalleryManagement = () => {
                                             )}
                                             <div className="flex gap-4">
                                                 <div className="w-20 h-20 bg-white border border-gray-200 flex-shrink-0 overflow-hidden">
-                                                    <img 
-                                                        src={URL.createObjectURL(file)} 
-                                                        className="w-full h-full object-cover" 
-                                                        alt="preview" 
+                                                    <img
+                                                        src={URL.createObjectURL(file)}
+                                                        className="w-full h-full object-cover"
+                                                        alt="preview"
                                                     />
                                                 </div>
                                                 <div className="flex-1 space-y-2">
@@ -362,8 +362,8 @@ const MediaGalleryManagement = () => {
                                     )}
                                 </button>
                                 {isEditing && (
-                                    <button 
-                                        onClick={resetForm} 
+                                    <button
+                                        onClick={resetForm}
                                         className="px-6 py-3 border-2 border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-colors text-sm"
                                     >
                                         Cancel
@@ -385,7 +385,7 @@ const MediaGalleryManagement = () => {
                                 {items.length} PHOTOS
                             </span>
                         </div>
-                        
+
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
@@ -416,10 +416,10 @@ const MediaGalleryManagement = () => {
                                             <td className="py-3 px-4 text-center font-black text-gray-300">{idx + 1}</td>
                                             <td className="py-3 px-4">
                                                 <div className="w-16 h-12 bg-gray-100 border border-gray-200 rounded overflow-hidden">
-                                                    <img 
-                                                        src={`${SERVER_URL}${item.image}`} 
-                                                        alt={item.imageAlt} 
-                                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                                                    <img
+                                                        src={`${SERVER_URL}${item.image}`}
+                                                        alt={item.imageAlt}
+                                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                                     />
                                                 </div>
                                             </td>
@@ -440,24 +440,24 @@ const MediaGalleryManagement = () => {
                                                         {item.updatedBy || 'System'}
                                                     </span>
                                                     <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
-                                                        {item.updatedAt ? new Date(item.updatedAt).toLocaleString('en-GB', { 
-                                                            day: '2-digit', month: 'short', year: 'numeric', 
-                                                            hour: '2-digit', minute: '2-digit', hour12: true 
+                                                        {item.updatedAt ? new Date(item.updatedAt).toLocaleString('en-GB', {
+                                                            day: '2-digit', month: 'short', year: 'numeric',
+                                                            hour: '2-digit', minute: '2-digit', hour12: true
                                                         }) : 'N/A'}
                                                     </span>
                                                 </div>
                                             </td>
                                             <td className="py-3 px-4">
                                                 <div className="flex items-center justify-center gap-3">
-                                                    <button 
-                                                        onClick={() => startEdit(item)} 
+                                                    <button
+                                                        onClick={() => startEdit(item)}
                                                         className="text-blue-500 hover:text-blue-700 transition-colors p-1"
                                                         title="Edit Photo"
                                                     >
                                                         <Edit size={16} />
                                                     </button>
-                                                    <button 
-                                                        onClick={() => handleDelete(item._id)} 
+                                                    <button
+                                                        onClick={() => handleDelete(item._id)}
                                                         className="text-red-400 hover:text-red-600 transition-colors p-1"
                                                         title="Delete Photo"
                                                     >
@@ -473,7 +473,8 @@ const MediaGalleryManagement = () => {
                     </div>
                 </div>
             </div>
-            <style dangerouslySetInnerHTML={{ __html: `
+            <style dangerouslySetInnerHTML={{
+                __html: `
                 .custom-scrollbar::-webkit-scrollbar {
                     width: 4px;
                 }

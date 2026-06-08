@@ -35,7 +35,7 @@ const SellerSubscriptionPlans = () => {
         try {
             const r = await api.get('/api/seller-subscription-plans/features');
             if (r.data.success) setAvailableFeatures(r.data.data);
-        } catch {}
+        } catch { }
     };
 
     const handleFeatureToggle = (featureKey) => {
@@ -134,7 +134,7 @@ const SellerSubscriptionPlans = () => {
     const fmt = (price, currency) => currency === 'INR' ? `₹ ${price.toLocaleString()}` : `${currency} ${price.toLocaleString()}`;
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader title="SELLER SUBSCRIPTION PLANS" description="Manage subscription plans for seller portal access" />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
@@ -213,7 +213,7 @@ const SellerSubscriptionPlans = () => {
                             </div>
 
                             <div className="grid grid-cols-3 gap-2">
-                                {[['maxLeads','Max Leads'],['maxExportInquiries','Max Inquiries'],['maxServiceRequests','Max Services']].map(([k,l]) => (
+                                {[['maxLeads', 'Max Leads'], ['maxExportInquiries', 'Max Inquiries'], ['maxServiceRequests', 'Max Services']].map(([k, l]) => (
                                     <div key={k}>
                                         <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">{l}</label>
                                         <input type="number" value={form[k]} onChange={e => setForm({ ...form, [k]: e.target.value })}

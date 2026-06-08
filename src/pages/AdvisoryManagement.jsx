@@ -92,8 +92,8 @@ const AdvisoryManagement = () => {
                 return;
             }
 
-            const payload = { 
-                ...memberForm, 
+            const payload = {
+                ...memberForm,
                 image: imageUrl,
                 displayOrder: memberForm.displayOrder !== '' ? Number(memberForm.displayOrder) : 0
             };
@@ -107,11 +107,11 @@ const AdvisoryManagement = () => {
             }
 
             if (response.data.success) {
-                Swal.fire({ 
-                    icon: 'success', 
-                    title: isEditingId ? 'Member Updated!' : 'Member Added!', 
-                    timer: 1500, 
-                    showConfirmButton: false 
+                Swal.fire({
+                    icon: 'success',
+                    title: isEditingId ? 'Member Updated!' : 'Member Added!',
+                    timer: 1500,
+                    showConfirmButton: false
                 });
                 resetForm();
                 fetchData();
@@ -172,14 +172,14 @@ const AdvisoryManagement = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="ADVISORY BOARD MANAGEMENT"
                 description="Create and manage your esteemed advisory board members"
             />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
-                
+
                 {/* LEFT: FORM SECTION */}
                 <div className="lg:col-span-1 space-y-6">
                     <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
@@ -187,7 +187,7 @@ const AdvisoryManagement = () => {
                             {isEditingId ? <Edit className="w-5 h-5 text-[#d26019]" /> : <Plus className="w-5 h-5 text-[#d26019]" />}
                             {isEditingId ? 'Edit Member Details' : 'Add New Member'}
                         </h2>
-                        
+
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
@@ -260,46 +260,46 @@ const AdvisoryManagement = () => {
                             <div>
                                 <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-tight">Member Portrait</label>
                                 <div className="grid grid-cols-1 gap-4">
-                                     <div className="border-2 border-dashed border-gray-300 hover:border-[#23471d] transition-colors p-3 bg-gray-50">
-                                         <input
-                                             type="file"
-                                             ref={fileInputRef}
-                                             accept="image/*"
-                                             onChange={handleImageChange}
-                                             className="w-full text-[10px] text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:border-0 file:text-[10px] file:font-bold file:bg-[#23471d] file:text-white hover:file:bg-[#d26019] file:cursor-pointer cursor-pointer uppercase"
-                                         />
-                                         <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase">Max: 500KB</p>
-                                     </div>
+                                    <div className="border-2 border-dashed border-gray-300 hover:border-[#23471d] transition-colors p-3 bg-gray-50">
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            accept="image/*"
+                                            onChange={handleImageChange}
+                                            className="w-full text-[10px] text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:border-0 file:text-[10px] file:font-bold file:bg-[#23471d] file:text-white hover:file:bg-[#d26019] file:cursor-pointer cursor-pointer uppercase"
+                                        />
+                                        <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase">Max: 500KB</p>
+                                    </div>
 
-                                     {imagePreview ? (
-                                         <div className="relative h-48 group">
-                                             <img 
-                                                src={imagePreview.startsWith('blob:') ? imagePreview : `${SERVER_URL}${imagePreview}`} 
-                                                className="w-full h-full object-cover border-2 border-gray-200 shadow-sm object-top" 
-                                                alt="Preview" 
-                                             />
-                                             <button
-                                                 type="button"
-                                                 onClick={() => { setImageFile(null); setImagePreview(''); setMemberForm({ ...memberForm, image: '' }); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-                                                 className="absolute bottom-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg"
-                                             >
-                                                 <Trash2 size={14} />
-                                             </button>
-                                         </div>
-                                     ) : (
-                                         <div className="w-full h-48 bg-gray-100 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400">
-                                             <ImageIcon className="w-8 h-8 mb-1 opacity-20" />
-                                             <p className="text-[10px] font-bold uppercase">No image selected</p>
-                                         </div>
-                                     )}
+                                    {imagePreview ? (
+                                        <div className="relative h-48 group">
+                                            <img
+                                                src={imagePreview.startsWith('blob:') ? imagePreview : `${SERVER_URL}${imagePreview}`}
+                                                className="w-full h-full object-cover border-2 border-gray-200 shadow-sm object-top"
+                                                alt="Preview"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => { setImageFile(null); setImagePreview(''); setMemberForm({ ...memberForm, image: '' }); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                                                className="absolute bottom-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="w-full h-48 bg-gray-100 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400">
+                                            <ImageIcon className="w-8 h-8 mb-1 opacity-20" />
+                                            <p className="text-[10px] font-bold uppercase">No image selected</p>
+                                        </div>
+                                    )}
 
-                                     <input
-                                         type="text"
-                                         value={memberForm.imageAlt}
-                                         onChange={(e) => setMemberForm({ ...memberForm, imageAlt: e.target.value })}
-                                         className="w-full px-3 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none text-xs shadow-sm bg-white"
-                                         placeholder="Image Alt Text..."
-                                     />
+                                    <input
+                                        type="text"
+                                        value={memberForm.imageAlt}
+                                        onChange={(e) => setMemberForm({ ...memberForm, imageAlt: e.target.value })}
+                                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none text-xs shadow-sm bg-white"
+                                        placeholder="Image Alt Text..."
+                                    />
                                 </div>
                             </div>
 
@@ -333,7 +333,7 @@ const AdvisoryManagement = () => {
                                 {members.length} MEMBERS
                             </span>
                         </div>
-                        
+
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
@@ -377,10 +377,10 @@ const AdvisoryManagement = () => {
                                                 <div className="font-bold text-gray-700">{member.role}</div>
                                                 <div className="text-gray-500">{member.organization}</div>
                                                 {member.linkedin && (
-                                                    <a 
-                                                        href={member.linkedin} 
-                                                        target="_blank" 
-                                                        rel="noreferrer" 
+                                                    <a
+                                                        href={member.linkedin}
+                                                        target="_blank"
+                                                        rel="noreferrer"
                                                         className="inline-flex items-center gap-1 text-[#0077b5] hover:underline font-semibold mt-1"
                                                     >
                                                         <Linkedin size={10} /> LinkedIn
