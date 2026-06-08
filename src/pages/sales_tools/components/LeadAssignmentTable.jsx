@@ -5,6 +5,11 @@ export default function LeadAssignmentTable({ data = [], parentLoading = false }
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Filter State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [dateSort, setDateSort] = useState('Newest');
+
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -15,7 +20,7 @@ export default function LeadAssignmentTable({ data = [], parentLoading = false }
   }, [data, parentLoading]);
 
   const getStatusBadge = (status) => {
-    switch(status) {
+    switch (status) {
       case 'Assigned':
         return <span className="px-2.5 py-1 bg-green-100 text-green-700 text-[11px] font-bold rounded-md">Assigned</span>;
       case 'Unassigned':
@@ -27,11 +32,35 @@ export default function LeadAssignmentTable({ data = [], parentLoading = false }
     }
   };
 
+  // Filtering & Sorting Logic
+  const filteredLeads = leads.filter(item => {
+    // Search
+    const searchLower = searchQuery.toLowerCase();
+    const companyMatch = item.companyName?.toLowerCase().includes(searchLower) || false;
+    const contactMatch = item.contacts?.some(c => `${c.firstName || ''} ${c.surname || ''}`.toLowerCase().includes(searchLower));
+    if (searchQuery && !companyMatch && !contactMatch) return false;
+
+    // Status
+    const isAssigned = !!item.forwardTo;
+    if (statusFilter === 'Assigned' && !isAssigned) return false;
+    if (statusFilter === 'Unassigned' && isAssigned) return false;
+
+    return true;
+  }).sort((a, b) => {
+    const dateA = new Date(a.added || a.createdAt || 0).getTime();
+    const dateB = new Date(b.added || b.createdAt || 0).getTime();
+    return dateSort === 'Newest' ? dateB - dateA : dateA - dateB;
+  });
+
   // Pagination Logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = leads.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(leads.length / itemsPerPage);
+  const currentItems = filteredLeads.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredLeads.length / itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, dateSort, itemsPerPage]);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -49,11 +78,10 @@ export default function LeadAssignmentTable({ data = [], parentLoading = false }
           <button
             key={i}
             onClick={() => handlePageChange(i)}
-            className={`w-8 h-8 flex items-center justify-center rounded font-semibold text-sm transition-colors ${
-              currentPage === i
-                ? 'bg-green-600 text-white'
-                : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
-            }`}
+            className={`w-8 h-8 flex items-center justify-center rounded font-semibold text-sm transition-colors ${currentPage === i
+              ? 'bg-green-600 text-white'
+              : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
           >
             {i}
           </button>
@@ -77,17 +105,37 @@ export default function LeadAssignmentTable({ data = [], parentLoading = false }
           <input
             type="text"
             placeholder="Search leads by company or contact..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-            Assignment Status <ChevronDown size={14} />
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-            Added Date <ChevronDown size={14} />
-          </button>
+          <div className="relative">
+            <select 
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="appearance-none flex items-center gap-2 pl-4 pr-8 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="All">All Statuses</option>
+              <option value="Assigned">Assigned</option>
+              <option value="Unassigned">Unassigned</option>
+            </select>
+            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+          </div>
+          
+          <div className="relative">
+            <select 
+              value={dateSort}
+              onChange={(e) => setDateSort(e.target.value)}
+              className="appearance-none flex items-center gap-2 pl-4 pr-8 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="Newest">Newest First</option>
+              <option value="Oldest">Oldest First</option>
+            </select>
+            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+          </div>
           <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
             <Filter size={14} /> Filters
           </button>
@@ -116,18 +164,18 @@ export default function LeadAssignmentTable({ data = [], parentLoading = false }
               currentItems.map((item, index) => (
                 <tr key={item._id || index} className="border-b border-[#EDF0F7] last:border-0 hover:bg-slate-50/50 transition-colors">
                   <td className="px-4 py-2 text-sm font-semibold text-slate-900">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 capitalize">
                       <Users size={16} className="text-slate-400" />
                       {item.companyName}
                     </div>
                   </td>
-                  <td className="px-4 py-2 text-sm text-slate-600">
-                    {item.contacts && item.contacts.length > 0 
+                  <td className="px-4 py-2 text-sm text-slate-600 capitalize">
+                    {item.contacts && item.contacts.length > 0
                       ? `${item.contacts[0].firstName || ''} ${item.contacts[0].surname || ''}`.trim() || 'N/A'
                       : 'N/A'}
                   </td>
-                  <td className="px-4 py-2 text-sm text-slate-600">{new Date(item.added || item.createdAt).toLocaleDateString('en-GB')}</td>
-                  <td className="px-4 py-2 text-sm text-slate-600">{item.forwardTo || 'Unassigned'}</td>
+                  <td className="px-4 py-2 text-sm text-slate-600 ">{new Date(item.added || item.createdAt).toLocaleDateString('en-GB')}</td>
+                  <td className="px-4 py-2 text-sm text-slate-600 capitalize">{item.forwardTo || 'Unassigned'}</td>
                   <td className="px-4 py-2">{getStatusBadge(item.forwardTo ? 'Assigned' : 'Unassigned')}</td>
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-3">
@@ -150,27 +198,27 @@ export default function LeadAssignmentTable({ data = [], parentLoading = false }
         </span>
 
         <div className="flex items-center gap-2">
-          <button 
+          <button
             onClick={() => handlePageChange(1)}
             disabled={currentPage === 1}
             className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-50 transition-colors"
           ><ChevronsLeft size={14} /></button>
-          
-          <button 
+
+          <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
             className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-50 transition-colors"
           ><ChevronLeft size={14} /></button>
-          
+
           {renderPageNumbers()}
-          
-          <button 
+
+          <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages || totalPages === 0}
             className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-50 transition-colors"
           ><ChevronRight size={14} /></button>
-          
-          <button 
+
+          <button
             onClick={() => handlePageChange(totalPages)}
             disabled={currentPage === totalPages || totalPages === 0}
             className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-50 transition-colors"
@@ -179,7 +227,7 @@ export default function LeadAssignmentTable({ data = [], parentLoading = false }
 
         <div className="flex items-center gap-2 relative group">
           <span className="text-sm text-slate-500 font-medium">Rows per page:</span>
-          <select 
+          <select
             value={itemsPerPage}
             onChange={(e) => {
               setItemsPerPage(Number(e.target.value));
