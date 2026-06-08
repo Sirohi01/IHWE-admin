@@ -249,7 +249,7 @@ const OurTeam = () => {
     ];
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="OUR TEAM MANAGEMENT"
                 description="Manage leadership team and section content"

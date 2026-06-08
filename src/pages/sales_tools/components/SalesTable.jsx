@@ -16,7 +16,7 @@ const proposals = [
 
 export default function SalesTable() {
   const getStatusBadge = (status) => {
-    switch(status) {
+    switch (status) {
       case 'Accepted':
         return <span className="px-2.5 py-1 bg-green-100 text-green-700 text-[11px] font-bold rounded-md">Accepted</span>;
       case 'Sent':
@@ -84,7 +84,7 @@ export default function SalesTable() {
                   </div>
                 </td>
                 <td className="px-4 py-2 text-sm font-semibold text-slate-900">{item.client}</td>
-                <td className="px-4 py-2 text-sm text-slate-600">{item.exec}</td>
+                <td className="px-4 py-2 text-sm text-slate-600 capitalize">{item.exec}</td>
                 <td className="px-4 py-2 text-sm text-slate-600">{item.date}</td>
                 <td className="px-4 py-2 text-sm text-slate-600">{item.valid}</td>
                 <td className="px-4 py-2 text-sm font-semibold text-slate-900">{item.amount}</td>
@@ -111,12 +111,12 @@ export default function SalesTable() {
         <div className="flex items-center gap-2">
           <button className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50 transition-colors"><ChevronsLeft size={14} /></button>
           <button className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50 transition-colors"><ChevronLeft size={14} /></button>
-          
+
           <button className="w-8 h-8 flex items-center justify-center rounded bg-green-600 text-white font-semibold text-sm">1</button>
           <button className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-sm transition-colors">2</button>
           <button className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-sm transition-colors">3</button>
           <button className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-sm transition-colors">4</button>
-          
+
           <button className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50 transition-colors"><ChevronRight size={14} /></button>
           <button className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50 transition-colors"><ChevronsRight size={14} /></button>
         </div>

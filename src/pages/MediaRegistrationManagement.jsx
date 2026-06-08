@@ -165,7 +165,7 @@ const MediaRegistrationManagement = () => {
             } else {
                 await api.post('/api/media-registration/resources', payload);
             }
-            
+
             Swal.fire({ icon: 'success', title: 'Media Kit Saved!', text: 'The "Download All" button is now linked to this file.', timer: 2000 });
             fetchData();
         } catch (error) {
@@ -307,7 +307,7 @@ const MediaRegistrationManagement = () => {
     ];
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="MEDIA REGISTRATION MANAGEMENT"
                 description="Manage all dynamic content for the Media Registration portal"
@@ -320,8 +320,8 @@ const MediaRegistrationManagement = () => {
                         key={tab.id}
                         onClick={() => { setActiveTab(tab.id); resetForm(); }}
                         className={`flex items-center gap-2 px-6 py-3 font-bold text-sm transition-all border-b-2 ${activeTab === tab.id
-                                ? "border-[#d26019] text-[#d26019] bg-orange-50"
-                                : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                            ? "border-[#d26019] text-[#d26019] bg-orange-50"
+                            : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                             }`}
                     >
                         <tab.icon size={18} />
@@ -346,16 +346,16 @@ const MediaRegistrationManagement = () => {
                                             <input type="text" value={mainDownloadFile} readOnly className="flex-1 px-3 py-2 bg-white border border-orange-200 rounded text-xs outline-none" placeholder={uploading ? "Uploading..." : "No file uploaded"} />
                                             <input type="file" id="main-kit-upload" className="hidden" disabled={uploading} onChange={e => handleFileUpload(e, 'mainDownload')} />
                                             <label htmlFor="main-kit-upload" className={`px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white cursor-pointer rounded flex items-center shadow-sm ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                                                {uploading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><Plus size={14} className="mr-1"/> UPLOAD</>}
+                                                {uploading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><Plus size={14} className="mr-1" /> UPLOAD</>}
                                             </label>
                                         </div>
                                         {mainDownloadFile && (
-                                            <button 
+                                            <button
                                                 onClick={() => saveMainDownload(mainDownloadFile)}
                                                 disabled={isLoading || uploading}
                                                 className="w-full py-2.5 bg-[#23471d] hover:bg-[#1a3516] text-white rounded font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 disabled:opacity-50"
                                             >
-                                                <Save size={14}/> UPDATE DOWNLOAD ALL LINK
+                                                <Save size={14} /> UPDATE DOWNLOAD ALL LINK
                                             </button>
                                         )}
                                     </div>

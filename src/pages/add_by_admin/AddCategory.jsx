@@ -210,7 +210,7 @@ const AddCategory = () => {
   };
 
   return (
-    <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+    <div className="bg-white shadow-md  p-6 min-h-screen">
       <PageHeader
         title="CATEGORY CONFIGURATION"
         description="System Settings | Management for International Health & Wellness Expo 2026"

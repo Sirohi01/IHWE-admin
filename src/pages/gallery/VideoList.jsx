@@ -98,7 +98,7 @@ const VideoList = () => {
     });
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="VIDEO GALLERY LISTINGS"
                 description="View, filter and manage all uploaded videos across categories"

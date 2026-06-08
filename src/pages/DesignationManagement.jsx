@@ -178,7 +178,7 @@ const DesignationManagement = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="DESIGNATION MANAGEMENT"
                 description="Create and manage job designations linked to departments"

@@ -90,7 +90,7 @@ export const menuItems = [
     type: "item",
     label: "Sales Tools",
     icon: FileText,
-    path: "/sales-tools/proposals",
+    path: "/sales-tools",
   },
 
   {

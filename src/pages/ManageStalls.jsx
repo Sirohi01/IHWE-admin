@@ -197,7 +197,7 @@ const ManageStalls = () => {
     const labelCls = "block text-[11px] font-medium text-black mb-1 uppercase tracking-tight";
 
     return (
-        <div className="bg-white shadow-md p-6 min-h-screen font-inter uppercase mt-6">
+        <div className="bg-white shadow-md p-6 min-h-screen font-inter uppercase ">
             <PageHeader
                 title="STALL INVENTORY MANAGEMENT"
                 description="Create and manage exhibition stalls, sizes, and events"

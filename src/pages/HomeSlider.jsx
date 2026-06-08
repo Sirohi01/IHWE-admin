@@ -548,7 +548,7 @@ const HeroSlider = () => {
 
   return (
     <>
-      <div className="relative w-full h-64 overflow-hidden rounded mt-8">
+      <div className="relative w-full h-64 overflow-hidden rounded ">
         {/* Background Image */}
         <img
           src="/home.png"
@@ -751,8 +751,8 @@ const HeroSlider = () => {
                   <label className="block text-[11px] font-semibold text-gray-700">
                     Hero Title 2 <span className="text-gray-400 font-normal">(optional – shown below Title 1)</span>
                   </label>
-                    <span className="text-[9px] font-bold text-gray-400 uppercase">Size controlled via Editor</span>
-                  </div>
+                  <span className="text-[9px] font-bold text-gray-400 uppercase">Size controlled via Editor</span>
+                </div>
                 <RichTextEditor
                   value={formData.title2}
                   onChange={(content) => setFormData(prev => ({ ...prev, title2: content }))}
@@ -768,8 +768,8 @@ const HeroSlider = () => {
                   <label className="block text-[11px] font-semibold text-gray-700">
                     Description *
                   </label>
-                    <span className="text-[9px] font-bold text-gray-400 uppercase">Size controlled via Editor</span>
-                  </div>
+                  <span className="text-[9px] font-bold text-gray-400 uppercase">Size controlled via Editor</span>
+                </div>
                 <RichTextEditor
                   value={formData.description}
                   onChange={(content) => setFormData(prev => ({ ...prev, description: content }))}

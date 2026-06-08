@@ -80,14 +80,14 @@ const ExhibitorHeroSlider = () => {
                 imageUrl = await uploadImage();
             }
             const payload = { ...cardForm, image: imageUrl };
-            
+
             let response;
             if (editingId) {
                 response = await api.put(`/api/exhibitor-hero-slider/${editingId}`, payload);
             } else {
                 response = await api.post('/api/exhibitor-hero-slider', payload);
             }
-            
+
             if (response.data.success) {
                 Swal.fire({ icon: 'success', title: editingId ? 'Image Updated!' : 'Image Added!', timer: 1500, showConfirmButton: false });
                 resetForm();
@@ -144,7 +144,7 @@ const ExhibitorHeroSlider = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="EXHIBITOR HERO SLIDER"
                 description="Manage hero section slider images for Exhibitor Dashboard"

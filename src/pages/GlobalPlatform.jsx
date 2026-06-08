@@ -132,7 +132,7 @@ const GlobalPlatform = () => {
 
     return (
         <>
-            <div className="relative w-full h-64 overflow-hidden rounded mt-8">
+            <div className="relative w-full h-64 overflow-hidden rounded ">
                 {/* Background Image */}
                 <img
                     src="/about.png"

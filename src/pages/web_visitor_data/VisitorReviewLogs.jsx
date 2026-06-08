@@ -121,7 +121,7 @@ const VisitorReviewLogs = () => {
   const paginatedReviews = reviews.slice(startIndex, startIndex + itemsPerPage);
 
   return (
-    <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+    <div className="bg-white shadow-md  p-6 min-h-screen">
       <PageHeader
         title="VISITOR REVIEW LOGS"
         description={`Total: ${reviews.length} logs`}

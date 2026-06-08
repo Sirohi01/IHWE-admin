@@ -99,8 +99,8 @@ const AdvisoryNominationsList = () => {
         </div>
       )
     },
-    { 
-      label: "Status", 
+    {
+      label: "Status",
       accessor: "status.current",
       render: (value, row) => (
         <div className="relative inline-block">
@@ -108,12 +108,11 @@ const AdvisoryNominationsList = () => {
             value={value}
             onChange={(e) => handleStatusChange(row.id, e.target.value)}
             disabled={updatingStatusId === row.id}
-            className={`px-3 py-1 text-[10px] font-bold rounded-full border-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed pr-8 uppercase tracking-wider ${
-              value === 'Approved' ? 'bg-green-100 text-green-800' :
-              value === 'Rejected' ? 'bg-red-100 text-red-800' :
-              value === 'Under Review' ? 'bg-blue-100 text-blue-800' :
-              'bg-yellow-100 text-yellow-800'
-            }`}
+            className={`px-3 py-1 text-[10px] font-bold rounded-full border-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed pr-8 uppercase tracking-wider ${value === 'Approved' ? 'bg-green-100 text-green-800' :
+                value === 'Rejected' ? 'bg-red-100 text-red-800' :
+                  value === 'Under Review' ? 'bg-blue-100 text-blue-800' :
+                    'bg-yellow-100 text-yellow-800'
+              }`}
           >
             <option value="Pending">Pending</option>
             <option value="Under Review">Under Review</option>
@@ -133,12 +132,12 @@ const AdvisoryNominationsList = () => {
       accessor: "actions",
       render: (value, row) => (
         <div className="flex items-center gap-2">
-           {row.cv && (
-             <a href={`${SERVER_URL}${row.cv}`} target="_blank" rel="noreferrer" className="p-1 text-green-600 hover:bg-green-50 rounded" title="Download CV">
-               <FileText className="w-4 h-4" />
-             </a>
-           )}
-           <button
+          {row.cv && (
+            <a href={`${SERVER_URL}${row.cv}`} target="_blank" rel="noreferrer" className="p-1 text-green-600 hover:bg-green-50 rounded" title="Download CV">
+              <FileText className="w-4 h-4" />
+            </a>
+          )}
+          <button
             onClick={() => navigate(`/advisory-nominations/${row.id}`)}
             className="text-blue-600 hover:text-blue-900 p-1"
             title="View Details"
@@ -181,7 +180,7 @@ const AdvisoryNominationsList = () => {
   return (
     <>
       {/* Hero Banner */}
-      <div className="relative w-full h-64 overflow-hidden rounded mt-8">
+      <div className="relative w-full h-64 overflow-hidden rounded ">
         <img
           src="/dashbordBan.png"
           alt="Advisory Nominations Banner"
@@ -207,8 +206,8 @@ const AdvisoryNominationsList = () => {
             </h1>
           </div>
           <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
-            <button 
-              onClick={() => navigate("/advisory-manage")} 
+            <button
+              onClick={() => navigate("/advisory-manage")}
               className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#23471d] hover:bg-[#1a3615] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap"
             >
               <Users size={12} /> Manage Members
@@ -222,7 +221,7 @@ const AdvisoryNominationsList = () => {
               PENDING NOMINATIONS
             </h1>
             <span className="bg-[#d26019] text-white text-[10px] font-black px-3 py-1 rounded-full uppercase">
-                {nominations.length} TOTAL
+              {nominations.length} TOTAL
             </span>
           </div>
 
@@ -235,9 +234,9 @@ const AdvisoryNominationsList = () => {
                 Loading Nominations...
               </div>
             ) : nominations.length === 0 ? (
-                <div className="text-center py-20 text-gray-400 italic bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 m-4">
-                    No nominations found in the database.
-                </div>
+              <div className="text-center py-20 text-gray-400 italic bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 m-4">
+                No nominations found in the database.
+              </div>
             ) : (
               <Globallytable
                 rows={rows}

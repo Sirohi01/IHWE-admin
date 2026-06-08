@@ -134,7 +134,7 @@ const AddVacancy = () => {
   };
 
   return (
-    <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+    <div className="bg-white shadow-md  p-6 min-h-screen">
       <div className="w-full text-center">
         {/* HEADER WITH BLUE BACKGROUND */}
         <div className="mb-6 ">

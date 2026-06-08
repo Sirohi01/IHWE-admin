@@ -168,7 +168,7 @@ const ExhibitorTestimonialsManagement = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="EXHIBITOR TESTIMONIALS MANAGEMENT"
                 description="Manage exhibitor reviews and section headings for Why Exhibit page"
@@ -212,41 +212,41 @@ const ExhibitorTestimonialsManagement = () => {
                             <div>
                                 <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-tight">Exhibitor Image</label>
                                 <div className="grid grid-cols-1 gap-4">
-                                     <div className="border-2 border-dashed border-gray-300 hover:border-[#071056] transition-colors p-3 bg-gray-50">
-                                         <input
-                                             type="file"
-                                             ref={fileInputRef}
-                                             accept="image/*"
-                                             onChange={handleImageChange}
-                                             className="w-full text-[10px] text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:border-0 file:text-[10px] file:font-bold file:bg-[#071056] file:text-white hover:file:bg-[#d26019] file:cursor-pointer cursor-pointer uppercase"
-                                         />
-                                         <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase">Max: 500KB</p>
-                                     </div>
+                                    <div className="border-2 border-dashed border-gray-300 hover:border-[#071056] transition-colors p-3 bg-gray-50">
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            accept="image/*"
+                                            onChange={handleImageChange}
+                                            className="w-full text-[10px] text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:border-0 file:text-[10px] file:font-bold file:bg-[#071056] file:text-white hover:file:bg-[#d26019] file:cursor-pointer cursor-pointer uppercase"
+                                        />
+                                        <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase">Max: 500KB</p>
+                                    </div>
 
-                                     {imagePreview ? (
-                                         <div className="relative h-40 group">
-                                             <img src={imagePreview} className="w-full h-full object-cover border-2 border-gray-200 shadow-sm rounded-lg" alt="Preview" />
-                                             <button
-                                                 onClick={() => { setImageFile(null); setImagePreview(''); setCardForm({ ...cardForm, image: '' }); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-                                                 className="absolute bottom-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg"
-                                             >
-                                                 <Trash2 size={14} />
-                                             </button>
-                                         </div>
-                                     ) : (
-                                         <div className="w-full h-40 bg-gray-100 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 rounded-lg">
-                                             <ImageIcon className="w-8 h-8 mb-1 opacity-20" />
-                                             <p className="text-[10px] font-bold uppercase">No image selected</p>
-                                         </div>
-                                     )}
+                                    {imagePreview ? (
+                                        <div className="relative h-40 group">
+                                            <img src={imagePreview} className="w-full h-full object-cover border-2 border-gray-200 shadow-sm rounded-lg" alt="Preview" />
+                                            <button
+                                                onClick={() => { setImageFile(null); setImagePreview(''); setCardForm({ ...cardForm, image: '' }); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                                                className="absolute bottom-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="w-full h-40 bg-gray-100 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 rounded-lg">
+                                            <ImageIcon className="w-8 h-8 mb-1 opacity-20" />
+                                            <p className="text-[10px] font-bold uppercase">No image selected</p>
+                                        </div>
+                                    )}
 
-                                     <input
-                                         type="text"
-                                         value={cardForm.imageAlt}
-                                         onChange={(e) => setCardForm({ ...cardForm, imageAlt: e.target.value })}
-                                         className="w-full px-3 py-2 border-2 border-gray-300 focus:border-[#071056] outline-none text-xs shadow-sm bg-white font-bold"
-                                         placeholder="Image Alt Text..."
-                                     />
+                                    <input
+                                        type="text"
+                                        value={cardForm.imageAlt}
+                                        onChange={(e) => setCardForm({ ...cardForm, imageAlt: e.target.value })}
+                                        className="w-full px-3 py-2 border-2 border-gray-300 focus:border-[#071056] outline-none text-xs shadow-sm bg-white font-bold"
+                                        placeholder="Image Alt Text..."
+                                    />
                                 </div>
                             </div>
 
@@ -349,7 +349,7 @@ const ExhibitorTestimonialsManagement = () => {
                                                 No exhibitor testimonials found.
                                             </td>
                                         </tr>
-                                    ) : [...data.cards].sort((a,b) => a.order - b.order).map((card, idx) => (
+                                    ) : [...data.cards].sort((a, b) => a.order - b.order).map((card, idx) => (
                                         <tr key={card._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors group">
                                             <td className="py-4 px-4 text-gray-400 font-black">{card.order}</td>
                                             <td className="py-4 px-4">
@@ -391,7 +391,7 @@ const ExhibitorTestimonialsManagement = () => {
                             </table>
                         </div>
                     </div>
-                    
+
                     <div className="mt-6 p-4 bg-blue-50 border-2 border-blue-100 rounded-lg flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-100 flex items-center justify-center rounded-full">
                             <ExternalLink className="w-5 h-5 text-blue-600" />
