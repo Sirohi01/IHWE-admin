@@ -41,7 +41,7 @@ const InvoiceList = () => {
         return (
             (inv.invoice_no || '').toLowerCase().includes(q) ||
             (inv.estimate_no || '').toLowerCase().includes(q) ||
-            (inv.consignee_name || '').toLowerCase().includes(q)
+            (inv.company_name || '').toLowerCase().includes(q)
         );
     });
 
@@ -135,7 +135,7 @@ const InvoiceList = () => {
                                         {inv.estimate_no || "—"}
                                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">
-                                        {inv.consignee_name}
+                                        {inv.company_name}
                                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                                         {formatDate(inv.invoice_date || inv.added)}

@@ -148,6 +148,8 @@ export const PerformaInvoices = () => {
         supplyDate: new Date().toISOString().split('T')[0],
         consigneeName: '',
         consigneeAddress: '',
+        consigneePerson: '',
+        consigneePhone: '',
         consigneeEventName: PROFORMA_EVENT_NAME,
         consigneeEventAddress: PROFORMA_PLACE_OF_SUPPLY,
         consigneeGstin: PROFORMA_EVENT_GST_NO,
@@ -168,6 +170,24 @@ export const PerformaInvoices = () => {
 
     const [isWhatsAppLoading, setIsWhatsAppLoading] = useState(false);
     const [isEmailLoading, setIsEmailLoading] = useState(false);
+
+    // Handle Estimate Type changing to update GST Option
+    useEffect(() => {
+        if (!form.estimateType || form.estimateType === 'Select Here') return;
+
+        setGstOption(prev => {
+            const match = prev.match(/(\d+)%/);
+            const pct = match ? match[1] : '18';
+            
+            if (pct === '0') return '0% GST';
+
+            if (form.estimateType === 'Intrastate') {
+                return `${pct}% CGST+SGST`;
+            } else {
+                return `${pct}% IGST`;
+            }
+        });
+    }, [form.estimateType]);
 
     // ── data fetching ────────────────────────────────────────────────────────────
     useEffect(() => {
@@ -253,6 +273,8 @@ export const PerformaInvoices = () => {
                         supplyDate: existingEstimate.supply_date || new Date().toISOString().split('T')[0],
                         consigneeName: existingEstimate.company_name || (existingEstimate.consignee_name !== PROFORMA_EVENT_NAME ? existingEstimate.consignee_name : '') || companyInfo?.companyName || companyInfo?.exhibitorName || '',
                         consigneeAddress: existingEstimate.company_addr || (existingEstimate.consignee_addr !== PROFORMA_PLACE_OF_SUPPLY ? existingEstimate.consignee_addr : '') || companyInfo?.address || companyInfo?.companyAddress || '',
+                        consigneePerson: existingEstimate.consignee_person || companyInfo?.contactPerson || (companyInfo?.contacts && companyInfo.contacts[0] ? [companyInfo.contacts[0].firstName, companyInfo.contacts[0].surname].filter(Boolean).join(' ') : '') || '',
+                        consigneePhone: existingEstimate.consignee_phone || companyInfo?.mobile || (companyInfo?.contacts && companyInfo.contacts[0] ? companyInfo.contacts[0].mobile : '') || '',
                         consigneeEventName: existingEstimate.event_name || existingEstimate.consignee_name || PROFORMA_EVENT_NAME,
                         consigneeEventAddress: existingEstimate.event_place_of_supply || existingEstimate.consignee_addr || PROFORMA_PLACE_OF_SUPPLY,
                         consigneeGstin: existingEstimate.event_gst_no || PROFORMA_EVENT_GST_NO,
@@ -269,6 +291,8 @@ export const PerformaInvoices = () => {
                         ...prev,
                         consigneeName: companyInfo.companyName || companyInfo.exhibitorName || '',
                         consigneeAddress: companyInfo.address || companyInfo.companyAddress || '',
+                        consigneePerson: companyInfo.contactPerson || (companyInfo.contacts && companyInfo.contacts[0] ? [companyInfo.contacts[0].firstName, companyInfo.contacts[0].surname].filter(Boolean).join(' ') : '') || '',
+                        consigneePhone: companyInfo.mobile || (companyInfo.contacts && companyInfo.contacts[0] ? companyInfo.contacts[0].mobile : '') || '',
                         consigneeEventName: PROFORMA_EVENT_NAME,
                         consigneeEventAddress: PROFORMA_PLACE_OF_SUPPLY,
                         consigneeGstin: PROFORMA_EVENT_GST_NO,
@@ -438,6 +462,8 @@ export const PerformaInvoices = () => {
             event_gst_no: form.consigneeGstin,
             consignee_name: form.consigneeEventName,
             consignee_addr: form.consigneeEventAddress,
+            consignee_person: form.consigneePerson,
+            consignee_phone: form.consigneePhone,
             country: form.country,
             state: form.state,
             city: form.city,
@@ -625,7 +651,7 @@ export const PerformaInvoices = () => {
                                 <Input placeholder="110001" maxLength={6} value={form.pinCode} onChange={(e) => setField('pinCode', e.target.value)} />
                             </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-3">
                             <div>
                                 <Label>Consignee Name</Label>
                                 <Input value={form.consigneeEventName} onChange={(e) => setField('consigneeEventName', e.target.value)} />
@@ -637,6 +663,14 @@ export const PerformaInvoices = () => {
                             <div>
                                 <Label>Consignee GSTIN</Label>
                                 <Input value={form.consigneeGstin} onChange={(e) => setField('consigneeGstin', e.target.value.toUpperCase())} />
+                            </div>
+                            <div>
+                                <Label>Consignee Person</Label>
+                                <Input placeholder="Contact Person" value={form.consigneePerson} onChange={(e) => setField('consigneePerson', e.target.value)} />
+                            </div>
+                            <div>
+                                <Label>Consignee Phone</Label>
+                                <Input placeholder="Contact Number" value={form.consigneePhone} onChange={(e) => setField('consigneePhone', e.target.value)} />
                             </div>
                         </div>
                         {/* <div className="grid grid-cols-5 gap-3 mt-3">
