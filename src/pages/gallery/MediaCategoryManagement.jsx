@@ -135,7 +135,7 @@ const MediaCategoryManagement = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="MEDIA GALLERY MANAGEMENT"
                 description="Upload and manage your press & media photos directly"
@@ -305,9 +305,9 @@ const MediaCategoryManagement = () => {
                                                         {item.updatedBy || 'System'}
                                                     </span>
                                                     <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
-                                                        {item.updatedAt ? new Date(item.updatedAt).toLocaleString('en-GB', { 
-                                                            day: '2-digit', month: 'short', year: 'numeric', 
-                                                            hour: '2-digit', minute: '2-digit', hour12: true 
+                                                        {item.updatedAt ? new Date(item.updatedAt).toLocaleString('en-GB', {
+                                                            day: '2-digit', month: 'short', year: 'numeric',
+                                                            hour: '2-digit', minute: '2-digit', hour12: true
                                                         }) : 'N/A'}
                                                     </span>
                                                 </div>

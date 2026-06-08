@@ -414,7 +414,7 @@ const EPromotionWebManagement = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <PageHeader
                     title="E-PROMOTION WEB PAGE MANAGEMENT"
@@ -569,11 +569,10 @@ const EPromotionWebManagement = () => {
                                                 <div
                                                     key={img.value}
                                                     onClick={() => setPackageForm({ ...packageForm, backgroundImage: img.value })}
-                                                    className={`cursor-pointer border-2 p-2 rounded transition-all bg-white flex flex-col items-center justify-between relative ${
-                                                        packageForm.backgroundImage === img.value
+                                                    className={`cursor-pointer border-2 p-2 rounded transition-all bg-white flex flex-col items-center justify-between relative ${packageForm.backgroundImage === img.value
                                                             ? 'border-[#23471d] bg-green-50 shadow-sm'
                                                             : 'border-gray-200 hover:border-gray-300'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     <img
                                                         src={`${FRONTEND_URL}${img.value}`}

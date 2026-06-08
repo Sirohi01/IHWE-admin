@@ -260,7 +260,7 @@ const VideoGalleryManagement = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="VIDEO GALLERY MANAGEMENT"
                 description="Upload video files or add YouTube links to your video gallery categories"
@@ -529,8 +529,8 @@ const VideoGalleryManagement = () => {
                                                             />
                                                         ) : item.videoUrl && (item.videoUrl.includes('instagram.com') || item.videoUrl.includes('instagr.am')) ? (
                                                             <div className="w-full h-full pointer-events-none overflow-hidden relative flex items-center justify-center bg-black">
-                                                                <iframe 
-                                                                    src={getInstagramEmbedUrl(item.videoUrl)} 
+                                                                <iframe
+                                                                    src={getInstagramEmbedUrl(item.videoUrl)}
                                                                     className="w-[125%] h-[200%] border-0 opacity-80"
                                                                     scrolling="no"
                                                                 />

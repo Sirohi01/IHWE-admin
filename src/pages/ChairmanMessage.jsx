@@ -167,7 +167,7 @@ const ChairmanMessage = () => {
 
   return (
     <>
-      <div className="relative w-full h-64 overflow-hidden rounded mt-8">
+      <div className="relative w-full h-64 overflow-hidden rounded ">
         {/* Background Image */}
         <img
           src="/home.png"
@@ -226,7 +226,7 @@ const ChairmanMessage = () => {
       <div className="bg-white shadow-md p-6 min-h-screen">
         <div className="w-full">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-            
+
             {/* Left side: Photo Upload & Preview */}
             <div className="lg:col-span-4 space-y-6">
               <SectionCard title="Chairman Portrait" icon={ImageIcon}>
@@ -302,7 +302,7 @@ const ChairmanMessage = () => {
 
             {/* Right side: Text fields */}
             <div className="lg:col-span-8 space-y-6">
-              
+
               <SectionCard title="Header Content" icon={Heading}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -411,7 +411,7 @@ const ChairmanMessage = () => {
             >
               <RefreshCw className="w-4 h-4" /> Reset Form
             </button>
-            
+
             <button
               onClick={handleSaveText}
               disabled={isLoading}

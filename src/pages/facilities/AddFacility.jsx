@@ -54,7 +54,7 @@ const AddFacilities = () => {
   };
 
   return (
-    <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+    <div className="bg-white shadow-md  p-6 min-h-screen">
       <div className="w-full text-center">
         <PageHeader
           title={editData ? "EDIT FACILITY" : "ADD FACILITIES"}
@@ -122,8 +122,8 @@ const AddFacilities = () => {
                 {loading
                   ? "Saving..."
                   : editData
-                  ? "Update Facility"
-                  : "Add Facilities"}
+                    ? "Update Facility"
+                    : "Add Facilities"}
               </button>
             </div>
           </form>

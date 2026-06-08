@@ -203,7 +203,7 @@ const MarketingToolkitManage = () => {
     };
 
     return (
-        <div className="p-6 bg-white shadow-md mt-6 min-h-screen font-inter tracking-widest text-[11px] font-bold">
+        <div className="p-6 bg-white shadow-md min-h-screen font-inter tracking-widest text-[11px] font-bold">
             <PageHeader
                 title="MARKETING TOOLKIT MANAGE"
                 description="Manage templates for exhibitor marketing posters and videos"

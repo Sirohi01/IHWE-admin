@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
-import { 
-  Plus, Edit2, Trash2, Save, BadgeHelp, Edit, List, 
-  Type, Palette, ImageIcon, 
-  Stethoscope, Landmark, Leaf, Globe, Building2, GraduationCap, 
+import {
+  Plus, Edit2, Trash2, Save, BadgeHelp, Edit, List,
+  Type, Palette, ImageIcon,
+  Stethoscope, Landmark, Leaf, Globe, Building2, GraduationCap,
   Users, Handshake, Package, Sparkles, Camera, ShieldCheck, UserCheck, Activity, Award, Briefcase
 } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
@@ -11,29 +11,29 @@ import PageHeader from '../components/PageHeader';
 import RichTextEditor from '../components/RichTextEditor';
 
 const ICONS_LIST = [
-    { name: 'Award', icon: Award },
-    { name: 'Sparkles', icon: Sparkles },
-    { name: 'Users', icon: Users },
-    { name: 'Globe', icon: Globe },
-    { name: 'Stethoscope', icon: Stethoscope },
-    { name: 'Landmark', icon: Landmark },
-    { name: 'Leaf', icon: Leaf },
-    { name: 'Building2', icon: Building2 },
-    { name: 'GraduationCap', icon: GraduationCap },
-    { name: 'Handshake', icon: Handshake },
-    { name: 'Package', icon: Package },
-    { name: 'Camera', icon: Camera },
-    { name: 'ShieldCheck', icon: ShieldCheck },
-    { name: 'UserCheck', icon: UserCheck },
-    { name: 'Activity', icon: Activity },
-    { name: 'Briefcase', icon: Briefcase },
+  { name: 'Award', icon: Award },
+  { name: 'Sparkles', icon: Sparkles },
+  { name: 'Users', icon: Users },
+  { name: 'Globe', icon: Globe },
+  { name: 'Stethoscope', icon: Stethoscope },
+  { name: 'Landmark', icon: Landmark },
+  { name: 'Leaf', icon: Leaf },
+  { name: 'Building2', icon: Building2 },
+  { name: 'GraduationCap', icon: GraduationCap },
+  { name: 'Handshake', icon: Handshake },
+  { name: 'Package', icon: Package },
+  { name: 'Camera', icon: Camera },
+  { name: 'ShieldCheck', icon: ShieldCheck },
+  { name: 'UserCheck', icon: UserCheck },
+  { name: 'Activity', icon: Activity },
+  { name: 'Briefcase', icon: Briefcase },
 ];
 
 const IconComponent = ({ name, ...props }) => {
-    const found = ICONS_LIST.find(i => i.name === name);
-    if (!found) return null;
-    const Comp = found.icon;
-    return <Comp {...props} />;
+  const found = ICONS_LIST.find(i => i.name === name);
+  if (!found) return null;
+  const Comp = found.icon;
+  return <Comp {...props} />;
 };
 
 const Introduction = () => {
@@ -71,7 +71,7 @@ const Introduction = () => {
       if (response.data.success) {
         setData(response.data.data);
         if (response.data.data.image) {
-            setPreviewUrl(`${SERVER_URL}${response.data.data.image}`);
+          setPreviewUrl(`${SERVER_URL}${response.data.data.image}`);
         }
       }
     } catch (error) {
@@ -188,7 +188,7 @@ const Introduction = () => {
   };
 
   return (
-    <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+    <div className="bg-white shadow-md  p-6 min-h-screen">
       <PageHeader
         title="INTRODUCTION MANAGEMENT"
         description="Manage the main introduction content, collage image, and statistics"
@@ -201,8 +201,9 @@ const Introduction = () => {
             <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#23471d] border-b-2 border-gray-100 pb-3 uppercase tracking-tighter">
               <Type className="w-5 h-5 text-[#d26019]" /> Content Settings
             </h2>
-            
-            <style dangerouslySetInnerHTML={{ __html: `
+
+            <style dangerouslySetInnerHTML={{
+              __html: `
               .intro-editor-container [contenteditable], 
               .intro-editor-container [contenteditable] *,
               .intro-editor-container .prose,
@@ -246,7 +247,7 @@ const Introduction = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Collage Image</label>
-                  <div 
+                  <div
                     className="relative border-2 border-dashed border-gray-300 h-48 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group overflow-hidden"
                     onClick={() => document.getElementById('introImage').click()}
                   >
@@ -258,11 +259,11 @@ const Introduction = () => {
                         <span className="text-xs font-bold text-gray-500 uppercase">Click to Upload</span>
                       </>
                     )}
-                    <input 
-                      type="file" 
-                      id="introImage" 
-                      className="hidden" 
-                      onChange={handleImageChange} 
+                    <input
+                      type="file"
+                      id="introImage"
+                      className="hidden"
+                      onChange={handleImageChange}
                       accept="image/*"
                     />
                   </div>
@@ -281,24 +282,24 @@ const Introduction = () => {
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Background Color</label>
                     <div className="flex gap-2">
-                        <input
-                            type="color"
-                            value={data.bgColor}
-                            onChange={(e) => setData({ ...data, bgColor: e.target.value })}
-                            className="h-10 w-16 border-2 border-gray-300 cursor-pointer"
-                        />
-                        <input
-                            type="text"
-                            value={data.bgColor}
-                            onChange={(e) => setData({ ...data, bgColor: e.target.value })}
-                            className="flex-1 px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm font-mono text-sm uppercase"
-                        />
+                      <input
+                        type="color"
+                        value={data.bgColor}
+                        onChange={(e) => setData({ ...data, bgColor: e.target.value })}
+                        className="h-10 w-16 border-2 border-gray-300 cursor-pointer"
+                      />
+                      <input
+                        type="text"
+                        value={data.bgColor}
+                        onChange={(e) => setData({ ...data, bgColor: e.target.value })}
+                        className="flex-1 px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm font-mono text-sm uppercase"
+                      />
                     </div>
-                    <button 
-                        onClick={() => setData({ ...data, bgColor: '#ffffff' })}
-                        className="mt-2 text-[10px] font-bold text-[#23471d] hover:underline uppercase tracking-widest"
+                    <button
+                      onClick={() => setData({ ...data, bgColor: '#ffffff' })}
+                      className="mt-2 text-[10px] font-bold text-[#23471d] hover:underline uppercase tracking-widest"
                     >
-                        Reset to Default White
+                      Reset to Default White
                     </button>
                   </div>
                 </div>
@@ -317,7 +318,7 @@ const Introduction = () => {
 
         {/* Right Column: Features Management */}
         <div className="lg:col-span-7 space-y-8">
-          
+
           {/* Add/Edit Feature Form */}
           <div className="bg-white border-2 border-gray-200 p-6 shadow-sm rounded-lg">
             <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-[#d26019] border-b-2 border-gray-100 pb-3">
@@ -328,9 +329,9 @@ const Introduction = () => {
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Select Icon</label>
                 <div className="flex gap-2">
-                  <select 
+                  <select
                     value={featureForm.icon}
-                    onChange={(e) => setFeatureForm({...featureForm, icon: e.target.value})}
+                    onChange={(e) => setFeatureForm({ ...featureForm, icon: e.target.value })}
                     className="flex-1 px-3 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm font-semibold text-sm"
                   >
                     {ICONS_LIST.map(i => <option key={i.name} value={i.name}>{i.name}</option>)}
@@ -345,7 +346,7 @@ const Introduction = () => {
                 <input
                   type="text"
                   value={featureForm.number}
-                  onChange={(e) => setFeatureForm({...featureForm, number: e.target.value})}
+                  onChange={(e) => setFeatureForm({ ...featureForm, number: e.target.value })}
                   className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm font-black"
                   placeholder="e.g. 10+"
                   required
@@ -356,7 +357,7 @@ const Introduction = () => {
                 <input
                   type="text"
                   value={featureForm.label}
-                  onChange={(e) => setFeatureForm({...featureForm, label: e.target.value})}
+                  onChange={(e) => setFeatureForm({ ...featureForm, label: e.target.value })}
                   className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm font-bold"
                   placeholder="e.g. YEARS OF LEGACY"
                   required
@@ -393,7 +394,7 @@ const Introduction = () => {
                 {data.features?.length || 0} ITEMS
               </span>
             </div>
-            
+
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -417,22 +418,22 @@ const Introduction = () => {
                       <tr key={item._id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 font-bold text-[#23471d]">{index + 1}</td>
                         <td className="px-6 py-4 text-center">
-                            <div className="w-10 h-10 mx-auto rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-                                <IconComponent name={item.icon} size={18} className="text-[#23471d]" />
-                            </div>
+                          <div className="w-10 h-10 mx-auto rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
+                            <IconComponent name={item.icon} size={18} className="text-[#23471d]" />
+                          </div>
                         </td>
                         <td className="px-6 py-4 font-black text-gray-900 text-base">{item.number}</td>
                         <td className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">{item.label}</td>
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-center gap-3">
-                            <button 
-                              onClick={() => startEditFeature(item)} 
+                            <button
+                              onClick={() => startEditFeature(item)}
                               className="text-blue-500 hover:text-blue-700 transition-colors"
                             >
                               <Edit2 size={18} />
                             </button>
-                            <button 
-                              onClick={() => deleteFeature(item._id)} 
+                            <button
+                              onClick={() => deleteFeature(item._id)}
                               className="text-red-500 hover:text-red-700 transition-colors"
                             >
                               <Trash2 size={18} />

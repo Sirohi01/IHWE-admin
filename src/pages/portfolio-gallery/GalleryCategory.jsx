@@ -33,19 +33,19 @@ const GalleryCategory = () => {
             const item = location.state.editItem;
             // If _id is the same as title, it's likely not a real category ID yet
             const actualId = (item._id && item._id !== item.title) ? item._id : null;
-            
+
             console.log('Starting edit for category:', item);
             setIsEditing(actualId);
-            setForm({ 
-                title: item.title, 
-                heading: item.heading || '', 
+            setForm({
+                title: item.title,
+                heading: item.heading || '',
                 coverImageAlt: item.coverImageAlt || '',
                 order: item.order || 0
             });
             setImagePreview(item.coverImage ? `${SERVER_URL}${item.coverImage}` : '');
             setImageFile(null);
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            
+
             // Clear state after reading to prevent re-triggering on refresh
             window.history.replaceState({}, document.title);
         }
@@ -146,9 +146,9 @@ const GalleryCategory = () => {
     const startEdit = (cat) => {
         console.log('Starting edit for category:', cat);
         setIsEditing(cat._id);
-        setForm({ 
-            title: cat.title, 
-            heading: cat.heading || '', 
+        setForm({
+            title: cat.title,
+            heading: cat.heading || '',
             coverImageAlt: cat.coverImageAlt || '',
             order: cat.order || 0
         });
@@ -166,7 +166,7 @@ const GalleryCategory = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="GALLERY CATEGORY MANAGEMENT"
                 description="Create and manage photo gallery event categories"

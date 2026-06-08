@@ -1,38 +1,38 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
-import { 
-  Plus, Edit2, Trash2, Save, BadgeHelp, Edit, List, 
-  Type, Palette, Hash, 
-  Stethoscope, Landmark, Leaf, Globe, Building2, GraduationCap, 
+import {
+  Plus, Edit2, Trash2, Save, BadgeHelp, Edit, List,
+  Type, Palette, Hash,
+  Stethoscope, Landmark, Leaf, Globe, Building2, GraduationCap,
   Users, Handshake, Package, Sparkles, Camera, ShieldCheck, UserCheck, Activity, Award, Briefcase
 } from "lucide-react";
 import api from "../lib/api";
 import PageHeader from '../components/PageHeader';
 
 const ICONS_LIST = [
-    { name: 'Stethoscope', icon: Stethoscope },
-    { name: 'Landmark', icon: Landmark },
-    { name: 'Leaf', icon: Leaf },
-    { name: 'Globe', icon: Globe },
-    { name: 'Building2', icon: Building2 },
-    { name: 'GraduationCap', icon: GraduationCap },
-    { name: 'Users', icon: Users },
-    { name: 'Handshake', icon: Handshake },
-    { name: 'Package', icon: Package },
-    { name: 'Sparkles', icon: Sparkles },
-    { name: 'Camera', icon: Camera },
-    { name: 'ShieldCheck', icon: ShieldCheck },
-    { name: 'UserCheck', icon: UserCheck },
-    { name: 'Activity', icon: Activity },
-    { name: 'Award', icon: Award },
-    { name: 'Briefcase', icon: Briefcase },
+  { name: 'Stethoscope', icon: Stethoscope },
+  { name: 'Landmark', icon: Landmark },
+  { name: 'Leaf', icon: Leaf },
+  { name: 'Globe', icon: Globe },
+  { name: 'Building2', icon: Building2 },
+  { name: 'GraduationCap', icon: GraduationCap },
+  { name: 'Users', icon: Users },
+  { name: 'Handshake', icon: Handshake },
+  { name: 'Package', icon: Package },
+  { name: 'Sparkles', icon: Sparkles },
+  { name: 'Camera', icon: Camera },
+  { name: 'ShieldCheck', icon: ShieldCheck },
+  { name: 'UserCheck', icon: UserCheck },
+  { name: 'Activity', icon: Activity },
+  { name: 'Award', icon: Award },
+  { name: 'Briefcase', icon: Briefcase },
 ];
 
 const IconComponent = ({ name, ...props }) => {
-    const found = ICONS_LIST.find(i => i.name === name);
-    if (!found) return null;
-    const Comp = found.icon;
-    return <Comp {...props} />;
+  const found = ICONS_LIST.find(i => i.name === name);
+  if (!found) return null;
+  const Comp = found.icon;
+  return <Comp {...props} />;
 };
 
 const SupportedBy = () => {
@@ -159,7 +159,7 @@ const SupportedBy = () => {
   };
 
   return (
-    <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+    <div className="bg-white shadow-md  p-6 min-h-screen">
       <PageHeader
         title="SUPPORTED BY MANAGEMENT"
         description="Manage the supported-by icons and section headings"
@@ -168,7 +168,7 @@ const SupportedBy = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
         {/* Left Column: Settings & Form */}
         <div className="lg:col-span-1 space-y-6">
-          
+
           {/* Section Settings */}
           <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
             <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[#23471d]">
@@ -200,7 +200,7 @@ const SupportedBy = () => {
                     className="flex-1 px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm font-mono text-sm"
                   />
                 </div>
-                <button 
+                <button
                   onClick={() => setSettings({ ...settings, bgColor: '#23471d' })}
                   className="mt-2 text-[10px] font-bold text-[#23471d] hover:underline uppercase tracking-widest"
                 >
@@ -227,9 +227,9 @@ const SupportedBy = () => {
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Select Icon</label>
                 <div className="flex gap-2">
-                  <select 
+                  <select
                     value={itemForm.icon}
-                    onChange={(e) => setItemForm({...itemForm, icon: e.target.value})}
+                    onChange={(e) => setItemForm({ ...itemForm, icon: e.target.value })}
                     className="flex-1 px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm font-semibold"
                   >
                     {ICONS_LIST.map(i => <option key={i.name} value={i.name}>{i.name}</option>)}
@@ -244,7 +244,7 @@ const SupportedBy = () => {
                 <input
                   type="text"
                   value={itemForm.label}
-                  onChange={(e) => setItemForm({...itemForm, label: e.target.value})}
+                  onChange={(e) => setItemForm({ ...itemForm, label: e.target.value })}
                   className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm font-bold"
                   placeholder="e.g. HEALTHCARE"
                   required
@@ -255,7 +255,7 @@ const SupportedBy = () => {
                 <input
                   type="text"
                   value={itemForm.label2}
-                  onChange={(e) => setItemForm({...itemForm, label2: e.target.value})}
+                  onChange={(e) => setItemForm({ ...itemForm, label2: e.target.value })}
                   className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm"
                   placeholder="e.g. LEADERS"
                 />
@@ -265,7 +265,7 @@ const SupportedBy = () => {
                 <input
                   type="number"
                   value={itemForm.order}
-                  onChange={(e) => setItemForm({...itemForm, order: parseInt(e.target.value)})}
+                  onChange={(e) => setItemForm({ ...itemForm, order: parseInt(e.target.value) })}
                   className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm"
                 />
               </div>
@@ -303,7 +303,7 @@ const SupportedBy = () => {
                 {settings.items?.length || 0} ITEMS
               </span>
             </div>
-            
+
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -328,23 +328,23 @@ const SupportedBy = () => {
                       <tr key={item._id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 font-bold text-[#23471d]">{index + 1}</td>
                         <td className="px-6 py-4 text-center">
-                            <div className="w-10 h-10 mx-auto rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
-                                <IconComponent name={item.icon} size={18} className="text-[#23471d]" />
-                            </div>
+                          <div className="w-10 h-10 mx-auto rounded bg-gray-50 border border-gray-200 flex items-center justify-center">
+                            <IconComponent name={item.icon} size={18} className="text-[#23471d]" />
+                          </div>
                         </td>
                         <td className="px-6 py-4 font-bold text-gray-900 text-sm">{item.label}</td>
                         <td className="px-6 py-4 text-xs font-semibold text-gray-500">{item.label2}</td>
                         <td className="px-6 py-4 text-center font-bold text-gray-600">{item.order}</td>
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-center gap-2">
-                            <button 
-                              onClick={() => startEdit(item)} 
+                            <button
+                              onClick={() => startEdit(item)}
                               className="text-blue-500 hover:text-blue-700 p-1 transition-colors"
                             >
                               <Edit2 size={16} />
                             </button>
-                            <button 
-                              onClick={() => deleteItem(item._id)} 
+                            <button
+                              onClick={() => deleteItem(item._id)}
                               className="text-red-500 hover:text-red-700 p-1 transition-colors"
                             >
                               <Trash2 size={16} />

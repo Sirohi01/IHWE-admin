@@ -227,7 +227,7 @@ const MsmePmsSchemeConfig = () => {
 
   return (
     <>
-      <div className="relative w-full h-64 overflow-hidden rounded mt-8">
+      <div className="relative w-full h-64 overflow-hidden rounded ">
         <img
           src="/home.png"
           alt="banner"
@@ -280,9 +280,8 @@ const MsmePmsSchemeConfig = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 py-3 px-6 border-b-2 transition-all font-black text-[10px] uppercase tracking-wider ${
-                activeTab === tab.id ? 'border-[#23471d] text-[#23471d]' : 'border-transparent text-gray-400 hover:text-gray-600'
-              }`}
+              className={`flex items-center gap-2 py-3 px-6 border-b-2 transition-all font-black text-[10px] uppercase tracking-wider ${activeTab === tab.id ? 'border-[#23471d] text-[#23471d]' : 'border-transparent text-gray-400 hover:text-gray-600'
+                }`}
             >
               <tab.icon className="w-4 h-4" /> {tab.label}
             </button>
