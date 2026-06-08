@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import SearchableDropdown from '../components/SearchableDropdown';
 import InvoicePreviewTemplate from './ihwe_client_data_2026/invoice/InvoicePreviewTemplate';
+import { useReactToPrint } from 'react-to-print';
+import Swal from 'sweetalert2';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 const newItem = () => ({
@@ -17,6 +19,8 @@ const newItem = () => ({
     description: '',
     hsn: '',
     qty: 1,
+    size: '',
+    area: '',
     unit: 'Nos',
     rate: 0,
     amount: 0,
@@ -68,14 +72,11 @@ const Select = ({ options, ...props }) => (
 );
 
 // ── Quick Action row ─────────────────────────────────────────────────────────
-const QuickAction = ({ icon: Icon, label, colorClass = "text-blue-600" }) => (
-    <button type="button" className="flex items-center justify-between w-full py-2.5 transition border-b border-gray-100 last:border-0 hover:bg-gray-50 px-2 rounded-md">
-        <div className="flex items-center gap-2.5">
-            <Icon className={`w-4 h-4 ${colorClass}`} />
-            <span className="text-xs font-semibold text-gray-700">{label}</span>
-        </div>
-        <ChevronLeft className="w-3.5 h-3.5 text-gray-400 rotate-180" />
-    </button>
+const QuickAction = ({ icon: Icon, label, colorClass = "text-blue-600", onClick }) => (
+    <div onClick={onClick} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition">
+        <Icon className={`w-4 h-4 ${colorClass}`} />
+        <span className="text-xs font-semibold text-gray-700">{label}</span>
+    </div>
 );
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -152,6 +153,8 @@ const CreateInvoice = () => {
                                 description: item.description || '',
                                 hsn: item.hsn || '',
                                 qty: item.qty || 1,
+                                size: item.size || '',
+                                area: item.area || '',
                                 unit: item.unit || 'Nos',
                                 rate: item.rate || 0,
                                 amount: item.amount || 0,
@@ -244,6 +247,8 @@ const CreateInvoice = () => {
                     description: item.description || '',
                     hsn: item.hsn || '',
                     qty: item.qty || 1,
+                    size: item.size || '',
+                    area: item.area || '',
                     unit: item.unit || 'Nos',
                     rate: item.rate || 0,
                     amount: item.amount || 0,
@@ -263,13 +268,22 @@ const CreateInvoice = () => {
                 if (item.id !== id) return item;
                 const updated = { ...item, [field]: val };
 
+                // Auto-calculate area if size matches "3x3", "3*3", "3X3"
+                if (field === 'size') {
+                    const match = String(val).trim().match(/^(\d+(?:\.\d+)?)\s*[xX*]\s*(\d+(?:\.\d+)?)$/);
+                    if (match) {
+                        updated.area = String(Number(match[1]) * Number(match[2]));
+                    }
+                }
+
                 const rate = Number(field === 'rate' ? val : updated.rate) || 0;
                 const qty = Number(field === 'qty' ? val : updated.qty) || 0;
+                const area = Number(field === 'area' ? val : updated.area) || 0;
                 const discountPct = Number(field === 'discountPct' ? val : updated.discountPct) || 0;
 
-                const amount = rate * qty;
+                const multiplier = area > 0 ? area : (!isNaN(Number(updated.size)) && Number(updated.size) > 0 ? Number(updated.size) : 1);
+                const amount = rate * qty * multiplier;
                 updated.amount = amount;
-
                 const discountAmount = amount * (discountPct / 100);
                 updated.taxableValue = amount - discountAmount;
 
@@ -315,6 +329,8 @@ const CreateInvoice = () => {
                 description: i.description,
                 hsn: i.hsn,
                 qty: Number(i.qty),
+                size: i.size,
+                area: i.area,
                 unit: i.unit,
                 rate: Number(i.rate),
                 amount: Number(i.amount),
@@ -351,8 +367,65 @@ const CreateInvoice = () => {
         }
     };
 
+    const printRef = useRef();
+    const handlePrint = useReactToPrint({
+        contentRef: printRef,
+        documentTitle: form.invoiceNo ? `Invoice_${form.invoiceNo}` : "Invoice",
+    });
+
+    const [isWhatsAppLoading, setIsWhatsAppLoading] = useState(false);
+    const [isEmailLoading, setIsEmailLoading] = useState(false);
+
+    const handleSendWhatsApp = async () => {
+        if (!id) {
+            Swal.fire('Error', 'Please generate the invoice first before sending.', 'error');
+            return;
+        }
+
+        try {
+            setIsWhatsAppLoading(true);
+            const res = await api.post(`/api/invoices/${id}/send-whatsapp`, {});
+            if (res.status === 200) {
+                Swal.fire('Success', 'WhatsApp message sent successfully', 'success');
+            }
+        } catch (error) {
+            console.error("Error sending WhatsApp:", error);
+            Swal.fire('Error', error.response?.data?.message || 'Failed to send WhatsApp message', 'error');
+        } finally {
+            setIsWhatsAppLoading(false);
+        }
+    };
+
+    const handleSendEmail = async () => {
+        if (!id) {
+            Swal.fire('Error', 'Please generate the invoice first before sending.', 'error');
+            return;
+        }
+
+        try {
+            setIsEmailLoading(true);
+            const res = await api.post(`/api/invoices/${id}/send-email`, {});
+            if (res.status === 200) {
+                Swal.fire('Success', 'Email sent successfully', 'success');
+            }
+        } catch (error) {
+            console.error("Error sending Email:", error);
+            Swal.fire('Error', error.response?.data?.message || 'Failed to send Email', 'error');
+        } finally {
+            setIsEmailLoading(false);
+        }
+    };
+
+    // Calculate Summary Values
+    const isIgst = form.placeOfSupply && form.placeOfSupply.toLowerCase() !== 'delhi';
+    const sumSubTotal = items.reduce((acc, i) => acc + (Number(i.amount) || 0), 0);
+    const sumTaxable = items.reduce((acc, i) => acc + (Number(i.taxableValue) || 0), 0);
+    const sumDiscount = sumSubTotal - sumTaxable;
+    const sumGst = items.reduce((acc, i) => acc + (Number(i.gstAmount) || 0), 0);
+    const sumTotal = items.reduce((acc, i) => acc + (Number(i.total) || 0), 0);
+
     return (
-        <div className="min-h-screen bg-gray-50/50 pb-4 mt-4">
+        <div className="min-h-screen bg-gray-50/50 pb-4 mt-0">
             <style>
                 {`
                 input[type="number"]::-webkit-inner-spin-button,
@@ -544,6 +617,8 @@ const CreateInvoice = () => {
                                         <th className="px-3 py-2.5 text-left font-semibold text-gray-700 min-w-[110px]">Item Description <span className="text-red-500">*</span></th>
                                         <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[30px]">HSN / SAC</th>
                                         <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[30px]">Qty <span className="text-red-500">*</span></th>
+                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[40px]">Area</th>
+                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[40px]">Size</th>
                                         <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[30px]">Unit <span className="text-red-500">*</span></th>
                                         <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[30px]">Rate (₹) <span className="text-red-500">*</span></th>
                                         <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[30px]">Amount (₹)</th>
@@ -572,6 +647,12 @@ const CreateInvoice = () => {
                                             </td>
                                             <td className="px-1.5 py-2">
                                                 <input required type="number" min={1} className="w-full border border-gray-200 rounded px-1 py-1.5 text-[10px] focus:outline-none focus:border-green-500 bg-white text-center" value={item.qty} onChange={(e) => updateItem(item.id, 'qty', e.target.value)} />
+                                            </td>
+                                            <td className="px-1.5 py-2">
+                                                <input className="w-full border border-gray-200 rounded px-1 py-1.5 text-[10px] focus:outline-none focus:border-green-500 bg-white text-center" value={item.area} onChange={(e) => updateItem(item.id, 'area', e.target.value)} placeholder="Area" />
+                                            </td>
+                                            <td className="px-1.5 py-2">
+                                                <input className="w-full border border-gray-200 rounded px-1 py-1.5 text-[10px] focus:outline-none focus:border-green-500 bg-white text-center" value={item.size} onChange={(e) => updateItem(item.id, 'size', e.target.value)} placeholder="Size" />
                                             </td>
                                             <td className="px-1.5 py-2">
                                                 <select required className="min-w-[30px] border border-gray-200 rounded px-1 py-1.5 text-[10px] focus:outline-none focus:border-green-500 bg-white" value={item.unit} onChange={(e) => updateItem(item.id, 'unit', e.target.value)}>
@@ -737,50 +818,43 @@ const CreateInvoice = () => {
                             <div className="space-y-2.5 text-xs">
                                 <div className="flex justify-between text-gray-600">
                                     <span className="font-semibold text-gray-700">Sub Total</span>
-                                    <span className="font-bold text-gray-800">₹ 85,000.00</span>
+                                    <span className="font-bold text-gray-800">₹ {sumSubTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-600">
                                     <span className="font-semibold text-gray-700">Total Discount</span>
-                                    <span className="font-bold text-red-500">- ₹ 0.00</span>
+                                    <span className="font-bold text-red-500">- ₹ {sumDiscount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-600">
                                     <span className="font-semibold text-gray-700">Taxable Amount</span>
-                                    <span className="font-bold text-gray-800">₹ 85,000.00</span>
+                                    <span className="font-bold text-gray-800">₹ {sumTaxable.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </div>
                             </div>
 
                             <hr className="border-dashed border-gray-200 my-2" />
 
                             <div className="space-y-2.5 text-xs">
-                                <div className="flex justify-between text-gray-600">
-                                    <span className="font-semibold text-gray-700">CGST (9%)</span>
-                                    <span className="font-bold text-gray-800">₹ 7,650.00</span>
-                                </div>
-                                <div className="flex justify-between text-gray-600">
-                                    <span className="font-semibold text-gray-700">SGST (9%)</span>
-                                    <span className="font-bold text-gray-800">₹ 7,650.00</span>
-                                </div>
-                                <div className="flex justify-between text-gray-600">
-                                    <span className="font-semibold text-gray-700">IGST (18%)</span>
-                                    <span className="font-bold text-gray-800">₹ 15,300.00</span>
-                                </div>
+                                {!isIgst ? (
+                                    <>
+                                        <div className="flex justify-between text-gray-600">
+                                            <span className="font-semibold text-gray-700">CGST</span>
+                                            <span className="font-bold text-gray-800">₹ {(sumGst / 2).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        </div>
+                                        <div className="flex justify-between text-gray-600">
+                                            <span className="font-semibold text-gray-700">SGST</span>
+                                            <span className="font-bold text-gray-800">₹ {(sumGst / 2).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex justify-between text-gray-600">
+                                        <span className="font-semibold text-gray-700">IGST</span>
+                                        <span className="font-bold text-gray-800">₹ {sumGst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="mt-4 bg-green-50 rounded-lg px-4 py-3 flex items-center justify-between border border-green-100">
                                 <span className="text-green-700 text-sm font-bold">Grand Total</span>
-                                <span className="text-green-700 text-base font-bold">₹ 1,00,300.00</span>
-                            </div>
-
-                            <div className="space-y-2.5 text-xs mt-3">
-                                <div className="flex justify-between text-gray-600">
-                                    <span className="font-semibold text-gray-700">Round Off</span>
-                                    <span className="font-bold text-gray-800">₹ 0.00</span>
-                                </div>
-                            </div>
-
-                            <div className="mt-3">
-                                <span className="text-[10px] font-semibold text-gray-500">Amount in Words</span>
-                                <p className="text-[11px] font-semibold text-gray-800 mt-0.5">Rupees One Lakh Three Hundred Only</p>
+                                <span className="text-green-700 text-base font-bold">₹ {sumTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                             </div>
                         </div>
                     </div>
@@ -792,11 +866,11 @@ const CreateInvoice = () => {
                             <h3 className="text-sm font-bold text-gray-800">Quick Actions</h3>
                         </div>
                         <div className="flex flex-col">
-                            <QuickAction icon={Mail} label="Send Invoice via Email" colorClass="text-blue-600" />
-                            <QuickAction icon={MessageCircleMore} label="Send Invoice via WhatsApp" colorClass="text-green-600" />
-                            <QuickAction icon={File} label="Download PDF" colorClass="text-red-600" />
-                            <QuickAction icon={Printer} label="Print Invoice" colorClass="text-indigo-600" />
-                            <QuickAction icon={Bookmark} label="Save as Template" colorClass="text-blue-500" />
+                            <QuickAction icon={Mail} label={isEmailLoading ? "Sending Email..." : "Send Invoice via Email"} colorClass="text-blue-600" onClick={handleSendEmail} disabled={isEmailLoading} />
+                            <QuickAction icon={MessageCircleMore} label={isWhatsAppLoading ? "Sending WhatsApp..." : "Send Invoice via WhatsApp"} colorClass="text-green-600" onClick={handleSendWhatsApp} disabled={isWhatsAppLoading} />
+                            <QuickAction icon={File} label="Download PDF" colorClass="text-red-600" onClick={handlePrint} />
+                            <QuickAction icon={Printer} label="Print Invoice" colorClass="text-indigo-600" onClick={handlePrint} />
+                            <QuickAction icon={Bookmark} label="Save as Template" colorClass="text-blue-500" onClick={() => alert("Save as Template functionality coming soon!")} />
                         </div>
                     </div>
 
@@ -857,6 +931,14 @@ const CreateInvoice = () => {
 
                 </div>
             </div>
+
+            {/* Hidden printable component */}
+            <div style={{ display: 'none' }}>
+                <div ref={printRef}>
+                    <InvoicePreviewTemplate form={form} items={items} />
+                </div>
+            </div>
+
         </div>
     );
 };

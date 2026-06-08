@@ -150,9 +150,9 @@ const EstimateFormDetail = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
                 <thead>
                     <tr>
-                        <th style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '33%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Client Name &amp; Address</th>
-                        <th style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '34%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Shipment Details</th>
-                        <th style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '33%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}> Proforma Invoice Details</th>
+                        <th style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Client Name &amp; Address</th>
+                        <th style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Shipment Details</th>
+                        <th style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '24%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}> Proforma Invoice Details</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -162,15 +162,60 @@ const EstimateFormDetail = () => {
                             <div style={{ marginTop: 2, textTransform: 'capitalize' }}>
                                 {clientCompanyAddress || '—'}
                             </div>
-                            <div style={{ marginTop: 4 }}>Contact Person: {[c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ') || '—'}</div>
-                            <div style={{ marginTop: 2 }}>Email: {c1.email || '—'}</div>
-                            <div style={{ marginTop: 2 }}>Contact No.: {c1.mobile || company?.landline || '—'}</div>
-                            {clientGstNo && <div style={{ marginTop: 4 }}>GSTIN.: {clientGstNo}</div>}
+                            <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%', marginTop: 4 }}>
+                                <tbody>
+                                    <tr>
+                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact Person</td>
+                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                        <td style={{ border: 'none', padding: '1px 0' }}>{matchedEstimate?.consignee_person || [c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ') || '—'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact No.</td>
+                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                        <td style={{ border: 'none', padding: '1px 0' }}>{matchedEstimate?.consignee_phone || c1.mobile || company?.landline || '—'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Email</td>
+                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                        <td style={{ border: 'none', padding: '1px 0' }}>{c1.email || '—'}</td>
+                                    </tr>
+                                    {clientGstNo && (
+                                        <tr>
+                                            <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>GSTIN.</td>
+                                            <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                            <td style={{ border: 'none', padding: '1px 0' }}>{clientGstNo}</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </td>
                         <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
                             <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{eventName}</div>
-                            <div style={{ marginTop: 2 }}>Place of Supply: {eventPlaceOfSupply}</div>
-                            <div style={{ marginTop: 4 }}>GSTIN.: {eventGstNo}</div>
+                            <div style={{ marginTop: 2 }}>{eventPlaceOfSupply}</div>
+                            <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%', marginTop: 4 }}>
+                                <tbody>
+                                    <tr>
+                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Place of Supply &amp; Code</td>
+                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                        <td style={{ border: 'none', padding: '1px 0' }}>{matchedEstimate?.place_of_supply || matchedEstimate?.state || '—'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact Person</td>
+                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                        <td style={{ border: 'none', padding: '1px 0' }}>{matchedEstimate?.consignee_person || [c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ') || '—'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact No.</td>
+                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                        <td style={{ border: 'none', padding: '1px 0' }}>{matchedEstimate?.consignee_phone || c1.mobile || company?.landline || '—'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>GSTIN.</td>
+                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                        <td style={{ border: 'none', padding: '1px 0' }}>{eventGstNo}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </td>
                         <td style={{ border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 11 }}>
                             <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%' }}>
@@ -211,8 +256,9 @@ const EstimateFormDetail = () => {
                             { label: 'S.No.', width: '3%' },
                             { label: 'Item Description', width: '52%' },
                             { label: 'HSN Code', width: '7%' },
-                            { label: 'Qty.', width: '3%' },
+                            { label: 'Qty.', width: '4%' },
                             { label: 'Size', width: '6%' },
+                            { label: 'Area', width: '6%' },
                             { label: 'Rate', width: '6%' },
                             { label: 'Amount', width: '6%' },
                             { label: 'Discount', width: '6%' },
@@ -237,7 +283,8 @@ const EstimateFormDetail = () => {
                                 </td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.hsn}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.qty}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.size} {item?.unit}</td>
+                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.size || '—'} {item?.unit}</td>
+                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.area || '—'}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(item?.rate)}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(amt)}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(item?.disc)}</td>
@@ -247,11 +294,11 @@ const EstimateFormDetail = () => {
                     })}
                     {Array.from({ length: Math.max(0, 7 - (matchedEstimate?.items?.length || 0)) }).map((_, i) => (
                         <tr key={`empty-${i}`} style={{ height: 24 }}>
-                            {Array(9).fill(0).map((_, j) => <td key={j} style={{ border: '1px solid #ccc' }}></td>)}
+                            {Array(10).fill(0).map((_, j) => <td key={j} style={{ border: '1px solid #ccc' }}></td>)}
                         </tr>
                     ))}
                     <tr style={{ textTransform: 'uppercase' }}>
-                        <td colSpan={8} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right', background: '#f8fafc' }}>Taxable Value</td>
+                        <td colSpan={9} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right', background: '#f8fafc' }}>Taxable Value</td>
                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right' }}>{fmtNum(totalTaxable)}</td>
                     </tr>
                 </tbody>
@@ -315,15 +362,25 @@ const EstimateFormDetail = () => {
                 </tbody>
             </table>
 
-            <div style={{ fontSize: 10, marginBottom: 8, padding: '6px 8px', border: '1px solid #ccc', background: '#fafafa', paddingBottom: 2 }}>
-                <div style={{ fontWeight: 700, marginBottom: 4 }}>Terms and Conditions:</div>
-                <div>1. Payment must be made in favor of Namo Gange Wellness Pvt. Ltd. via Cheque / DD / RTGS / NEFT / UPI only.</div>
-                <div>2. Full payment is due within the stipulated invoice period.</div>
-                <div>3. Delay in payment shall attract interest @24% per annum.</div>
-                <div>4. Booking / services shall be confirmed only after receipt of payment.</div>
-                <div>5. Cancellation or amendments shall be subject to company policy and management approval.</div>
-                <div>6. All disputes are subject to Delhi Jurisdiction only.</div>
-            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
+                <tbody>
+                    <tr>
+                        <td style={{ width: '60%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
+                            <div style={{ fontWeight: 700, marginBottom: 2 }}>Terms and Conditions:</div>
+                            <div>1. Payment must be made in favor of Namo Gange Wellness Pvt. Ltd. via Cheque / DD / RTGS / NEFT / UPI only.</div>
+                            <div>2. Full payment is due within the stipulated invoice period.</div>
+                            <div>3. Delay in payment shall attract interest @24% per annum.</div>
+                            <div>4. Booking / services shall be confirmed only after receipt of payment.</div>
+                            <div>5. Cancellation or amendments shall be subject to company policy and management approval.</div>
+                            <div>6. All disputes are subject to Delhi Jurisdiction only.</div>
+                        </td>
+                        <td style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
+                            <div style={{ fontWeight: 700, marginBottom: 2 }}>Payment Conditions:</div>
+                            <div>1. 100% Advance Payment.</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
 
             <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
                 <thead>
