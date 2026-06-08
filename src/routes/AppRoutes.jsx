@@ -695,9 +695,7 @@ export default function AppRoutes() {
             <Route path="chairman-message" element={<ChairmanMessage />} />
 
             {/* Sales Tools */}
-            <Route path="sales-tools/proposals" element={<SalesTools activeTab="proposals" />} />
-            <Route path="sales-tools/quotations" element={<SalesTools activeTab="quotations" />} />
-            <Route path="sales-tools/lead-assignment" element={<SalesTools activeTab="lead-assignment" />} />
+            <Route path="sales-tools" element={<SalesTools />} />
 
             {/* Communication */}
             <Route path="communication" element={<Communication />} />

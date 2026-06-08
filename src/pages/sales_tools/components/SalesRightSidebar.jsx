@@ -2,21 +2,50 @@ import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { FileText, PlusCircle, Settings, Download, Headphones, ChevronRight } from 'lucide-react';
 
-const data = [
-  { name: 'Accepted', value: 4, color: '#16A34A' },
-  { name: 'Sent', value: 22, color: '#2563EB' },
-  { name: 'Pending', value: 10, color: '#F59E0B' },
-  { name: 'Rejected', value: 2, color: '#EF4444' },
-];
+export default function SalesRightSidebar({ data = [], loading = false }) {
+  const total = data.length;
+  let acceptedCount = 0;
+  let sentCount = 0;
+  let pendingCount = 0;
+  let rejectedCount = 0;
 
-const recentProposals = [
-  { id: 'PROP-2026-036', client: 'GreenLife Ayurveda', date: '28 May 2026', status: 'Accepted', color: 'bg-green-100 text-green-700' },
-  { id: 'PROP-2026-035', client: "Nature's Harmony Pvt. Ltd.", date: '27 May 2026', status: 'Sent', color: 'bg-blue-100 text-blue-700' },
-  { id: 'PROP-2026-034', client: 'Wellness World', date: '26 May 2026', status: 'Pending', color: 'bg-orange-100 text-orange-700' },
-  { id: 'PROP-2026-033', client: 'Herbal King Exports', date: '24 May 2026', status: 'Sent', color: 'bg-blue-100 text-blue-700' },
-];
+  data.forEach(item => {
+    if (item.invoice && item.invoice.length > 0) {
+      acceptedCount++;
+    } else if (item.performaInvoice && item.performaInvoice.length > 0) {
+      sentCount++;
+    } else {
+      pendingCount++;
+    }
+  });
 
-export default function SalesRightSidebar() {
+  const chartData = [
+    { name: 'Accepted', value: acceptedCount, color: '#16A34A' },
+    { name: 'Sent', value: sentCount, color: '#2563EB' },
+    { name: 'Pending', value: pendingCount, color: '#F59E0B' },
+    { name: 'Rejected', value: rejectedCount, color: '#EF4444' },
+  ];
+
+  const recentProposals = data.slice(0, 4).map(item => {
+    let status = 'Pending';
+    let color = 'bg-orange-100 text-orange-700';
+    if (item.invoice && item.invoice.length > 0) {
+      status = 'Accepted';
+      color = 'bg-green-100 text-green-700';
+    } else if (item.performaInvoice && item.performaInvoice.length > 0) {
+      status = 'Sent';
+      color = 'bg-blue-100 text-blue-700';
+    }
+
+    return {
+      id: item.est_no,
+      client: item.companyName || item.company_name || item.consignee_name,
+      date: new Date(item.added).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      status,
+      color
+    };
+  });
+
   return (
     <div className="space-y-1">
       {/* Proposal Overview */}
@@ -27,7 +56,7 @@ export default function SalesRightSidebar() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={data}
+                  data={chartData}
                   cx="50%"
                   cy="50%"
                   innerRadius={30}
@@ -36,28 +65,30 @@ export default function SalesRightSidebar() {
                   dataKey="value"
                   stroke="none"
                 >
-                  {data.map((entry, index) => (
+                  {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-xl font-bold text-[#0F172A]">36</span>
+              <span className="text-xl font-bold text-[#0F172A]">{loading ? '...' : total}</span>
               <span className="text-[9px] font-medium text-slate-500 uppercase leading-none">Total</span>
             </div>
           </div>
 
           <div className="flex flex-col space-y-2 flex-1 ml-6">
-            {data.map((item, index) => (
+            {chartData.map((item, index) => (
               <div key={index} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
                   <span className="text-[13px] text-slate-600">{item.name}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[13px] font-bold text-slate-900">{item.value}</span>
-                  <span className="text-[11px] text-slate-400">({Math.round((item.value / 36) * 100)}%)</span>
+                  <span className="text-[13px] font-bold text-slate-900">{loading ? '-' : item.value}</span>
+                  <span className="text-[11px] text-slate-400">
+                    ({loading || total === 0 ? 0 : Math.round((item.value / total) * 100)}%)
+                  </span>
                 </div>
               </div>
             ))}
