@@ -38,7 +38,9 @@ export default function Dashboard() {
   const [actualRevenue, setActualRevenue] = useState(0);
   const [actualConvertedCount, setActualConvertedCount] = useState(0);
   const [actualLeaderboard, setActualLeaderboard] = useState([]);
-  const [revenuePeriod, setRevenuePeriod] = useState("current_month");
+  const [revenuePeriod, setRevenuePeriod] = useState("this_month");
+  const [leaderboardPeriod, setLeaderboardPeriod] = useState("this_month");
+  const [callsPeriod, setCallsPeriod] = useState("today");
 
   // ─── Init: user context + targets ───────────────────────────────────────────
   useEffect(() => {
@@ -78,7 +80,7 @@ export default function Dashboard() {
     
     const fetchLeaderboard = async () => {
       try {
-        const res = await api.get(`/api/companies/leaderboard?period=${revenuePeriod}`);
+        const res = await api.get(`/api/companies/leaderboard?period=${leaderboardPeriod}`);
         if (res.data?.success) {
           setActualLeaderboard(res.data.leaderboard || []);
         }
@@ -87,9 +89,44 @@ export default function Dashboard() {
       }
     };
     
-    fetchRevenue();
     fetchLeaderboard();
+  }, [currentUser, leaderboardPeriod]);
+
+  // ─── Fetch real revenue based on period ─────────────────────
+  useEffect(() => {
+    if (!currentUser) return;
+    const fetchRevenue = async () => {
+      try {
+        const res = await api.get(`/api/companies/achievement-revenue?username=${encodeURIComponent(currentUser.username)}&period=${revenuePeriod}`);
+        if (res.data?.success) {
+          setActualRevenue(res.data.revenue || 0);
+          setActualConvertedCount(res.data.convertedCount || 0);
+        }
+      } catch (err) {
+        console.error("Error fetching achievement revenue", err);
+      }
+    };
+    fetchRevenue();
   }, [currentUser, revenuePeriod]);
+
+  // ─── Fetch actual calls made from CallLogs ───────────────────────────────────
+  const [actualCallsMade, setActualCallsMade] = useState(0);
+  useEffect(() => {
+    if (!currentUser) return;
+    const fetchCalls = async () => {
+      try {
+        // Find user ID (from fullProfile if available, else fallback to currentUser._id)
+        const userId = fullProfile?._id || fullProfile?.id || currentUser?._id || currentUser?.id || "";
+        const res = await api.get(`/api/user-targets/stats/dashboard?username=${encodeURIComponent(currentUser.username)}&userId=${encodeURIComponent(userId)}&period=${callsPeriod}`);
+        if (res.data?.success) {
+          setActualCallsMade(res.data.completed.call || 0);
+        }
+      } catch (err) {
+        console.error("Error fetching calls made", err);
+      }
+    };
+    fetchCalls();
+  }, [currentUser, fullProfile, callsPeriod]);
 
   // ─── Fetch dashboard data ────────────────────────────────────────────────────
   useEffect(() => {
@@ -142,37 +179,35 @@ export default function Dashboard() {
     const cold      = userLeads.filter(c => c.companyStatus?.toLowerCase() === "not interested").length;
     const newLeads  = userLeads.filter(c => c.companyStatus?.toLowerCase() === "new lead").length;
 
-    const todayStr  = new Date().toDateString();
-    const callsMadeToday = activityLogs.filter(log =>
-      log.user?.toLowerCase() === currentUser?.username?.toLowerCase() &&
-      new Date(log.createdAt).toDateString() === todayStr
-    ).length;
+    const callsMade = actualCallsMade;
 
     const revenue          = (actualRevenue / 100000).toFixed(2);
     const pendingFollowups = userLeads.filter(c => c.reminder && new Date(c.reminder) > new Date()).length;
     const collection       = (converted * 0.35).toFixed(2);
 
     return {
-      total, callsMadeToday, interested: warm, meetings: hot,
+      total, callsMade, interested: warm, meetings: hot,
       closed: actualConvertedCount, revenue, pendingFollowups, collection,
       categories: { newLeads, hot, warm, cold, converted: actualConvertedCount },
     };
-  }, [userLeads, activityLogs, currentUser, actualConvertedCount, actualRevenue]);
+  }, [userLeads, activityLogs, currentUser, actualConvertedCount, actualRevenue, callsPeriod]);
 
   // ─── Target metrics ──────────────────────────────────────────────────────────
   const targetMetrics = useMemo(() => {
     if (!currentUser) return { target: "0.00", achieved: "0.00", remaining: "0.00", pct: 0 };
     const u         = currentUser.username.toLowerCase();
     const userTargets = targets.filter(t => t.username?.toLowerCase() === u || t.user?.toLowerCase() === u);
-    const selectedMonth = getTargetMonthForPeriod(revenuePeriod);
-    const match = revenuePeriod === "all_time"
-      ? null
-      : userTargets.find(t => (t.targetMonth || getTargetMonthForPeriod("current_month")) === selectedMonth);
     
-    // Target is input in Lakhs (e.g. 15 for 15.00 L)
-    const targetVal = revenuePeriod === "all_time"
-      ? userTargets.reduce((sum, target) => sum + (Number(target.revenueTarget) || 0), 0)
-      : (match && match.revenueTarget !== undefined && match.revenueTarget !== null ? Number(match.revenueTarget) : 0);
+    // Find the active target for the user
+    const match = userTargets.find(t => t.status === "Active") || userTargets[0];
+    
+    let targetVal = 0;
+    if (match) {
+      if (revenuePeriod === "today") targetVal = Number(match.daily?.revenueTarget) || 0;
+      else if (revenuePeriod === "this_week") targetVal = Number(match.weekly?.revenueTarget) || 0;
+      else if (revenuePeriod === "this_month") targetVal = Number(match.monthly?.revenueTarget) || 0;
+      else if (revenuePeriod === "this_year") targetVal = Number(match.yearly?.revenueTarget) || 0;
+    }
     
     // Scale down the achieved revenue to Lakhs for display
     const achievedLakhs = actualRevenue / 100000;
@@ -244,7 +279,7 @@ export default function Dashboard() {
       <DashboardHeader fullProfile={fullProfile} currentUser={currentUser} loading={loading} />
 
       {/* Row 1 — 8 Stat Cards */}
-      <DashboardStatsGrid statsMetrics={statsMetrics} />
+      <DashboardStatsGrid statsMetrics={statsMetrics} callsPeriod={callsPeriod} setCallsPeriod={setCallsPeriod} />
 
       {/* Row 2 — Lead Summary | Follow-ups | Target Gauge */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-2 mb-1.5">
@@ -263,7 +298,7 @@ export default function Dashboard() {
       {/* Row 4 — Top Leads | Leaderboard | Reminders | Next Action */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 items-stretch">
         <TopLeadsCard     userLeads={userLeads} />
-        <SalesLeaderboard leaderboard={actualLeaderboard} currentUser={currentUser} />
+        <SalesLeaderboard leaderboard={actualLeaderboard} currentUser={currentUser} leaderboardPeriod={leaderboardPeriod} setLeaderboardPeriod={setLeaderboardPeriod} />
         <RemindersCard    userLeads={userLeads} />
         <NextActionPanel />
       </div>

@@ -19,6 +19,7 @@ import MeetingsRightSidebar from './components/MeetingsRightSidebar';
 
 export default function Communication() {
   const [activeTab, setActiveTab] = useState('calls');
+  const [selectedPeriod, setSelectedPeriod] = useState('this_month');
   const now = new Date();
   const currentTargetMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
@@ -47,7 +48,7 @@ export default function Communication() {
       console.log("Fetching stats for:", { username, userId });
 
       if (username) {
-        const res = await api.get(`/api/user-targets/stats/dashboard?username=${username}&userId=${userId || ''}&month=${currentTargetMonth}`);
+        const res = await api.get(`/api/user-targets/stats/dashboard?username=${encodeURIComponent(username)}&userId=${encodeURIComponent(userId || '')}&period=${encodeURIComponent(selectedPeriod)}`);
         console.log("Stats API Response:", res.data);
         if (res.data.success) {
           setStatsData(res.data);
@@ -62,7 +63,7 @@ export default function Communication() {
 
   useEffect(() => {
     fetchStats();
-  }, []);
+  }, [selectedPeriod]);
 
   const [recentLogs, setRecentLogs] = useState([]);
 
@@ -105,8 +106,18 @@ export default function Communication() {
         {/* Main Content Area */}
         <div className="xl:col-span-8 2xl:col-span-9 flex min-h-0 flex-col h-full">
           {/* Header */}
-          <div className="mb-1 shrink-0">
+          <div className="mb-1 shrink-0 flex items-center justify-between">
             <h1 className="text-[24px] font-medium text-[#0F172A] mb-1">Communication</h1>
+            <select
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              className="border border-[#E5E7EB] rounded-md px-3 py-1 text-sm font-medium text-[#475569] outline-none focus:border-[#16A34A] focus:ring-1 focus:ring-[#16A34A]"
+            >
+              <option value="today">Today</option>
+              <option value="this_week">This Week</option>
+              <option value="this_month">This Month</option>
+              <option value="this_year">This Year</option>
+            </select>
           </div>
 
           {/* Tabs */}

@@ -12,9 +12,10 @@ export default function TargetGaugeCard({ targetMetrics, revenuePeriod, setReven
           onChange={(e) => setRevenuePeriod(e.target.value)}
           className="text-[10px] bg-slate-50 border border-slate-200 px-2 py-0.5 font-bold uppercase rounded-md text-slate-600 outline-none cursor-pointer"
         >
-          <option value="current_month">This Month</option>
-          <option value="previous_month">Previous Month</option>
-          <option value="all_time">All Time</option>
+          <option value="today">Today</option>
+          <option value="this_week">This Week</option>
+          <option value="this_month">This Month</option>
+          <option value="this_year">This Year</option>
         </select>
       </div>
 
