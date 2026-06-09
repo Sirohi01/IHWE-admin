@@ -1,18 +1,8 @@
-export default function SalesLeaderboard({ leaderboard, currentUser, leaderboardPeriod, setLeaderboardPeriod }) {
+export default function SalesLeaderboard({ leaderboard, currentUser }) {
   return (
     <div className="bg-white rounded-lg border border-slate-200 p-2 shadow-sm lg:col-span-3 col-span-1 flex flex-col justify-start">
       <div className="flex justify-between items-center mb-1">
         <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">Sales Leaderboard</h3>
-        <select 
-          value={leaderboardPeriod} 
-          onChange={(e) => setLeaderboardPeriod(e.target.value)}
-          className="text-[10px] bg-slate-50 border border-slate-200 px-2 py-0.5 font-bold uppercase rounded-md text-slate-600 outline-none cursor-pointer"
-        >
-          <option value="today">Today</option>
-          <option value="this_week">This Week</option>
-          <option value="this_month">This Month</option>
-          <option value="this_year">This Year</option>
-        </select>
       </div>
 
       <div className="space-y-2 flex-1 overflow-y-auto pr-1" style={{ maxHeight: '125px', scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}>

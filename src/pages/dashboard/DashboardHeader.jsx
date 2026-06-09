@@ -1,6 +1,6 @@
 import { CalendarDays, MapPin } from "lucide-react";
 
-export default function DashboardHeader({ fullProfile, currentUser, loading }) {
+export default function DashboardHeader({ fullProfile, currentUser, loading, globalPeriod, setGlobalPeriod }) {
   return (
     <div className="flex flex-col lg:flex-row lg:justify-between lg:items-stretch gap-3 mb-1">
       {/* Left Welcome Info */}
@@ -49,7 +49,22 @@ export default function DashboardHeader({ fullProfile, currentUser, loading }) {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-3 items-center">
+        {/* Global Period Dropdown */}
+        <div className="flex items-center gap-2 px-2">
+          <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Period:</span>
+          <select 
+            value={globalPeriod} 
+            onChange={(e) => setGlobalPeriod(e.target.value)}
+            className="text-[12px] bg-white border border-slate-200 px-2 py-1 font-bold rounded-lg text-slate-700 shadow-sm outline-none cursor-pointer"
+          >
+            <option value="today">Today</option>
+            <option value="this_week">This Week</option>
+            <option value="this_month">This Month</option>
+            <option value="this_year">This Year</option>
+          </select>
+        </div>
+
         {/* Middle Event Details Card */}
         <div
           className="flex-none sm:w-[220px] bg-white border border-gray-200 rounded-md px-3 py-1.5 flex flex-col justify-center text-left"
