@@ -29,6 +29,7 @@ const newItem = () => ({
     subDesc: '',
     hsn: '',
     qty: 1,
+    area: '',
     size: '',
     unit: 'Nos',
     rate: 0,
@@ -160,7 +161,7 @@ export const PerformaInvoices = () => {
     });
 
     const [items, setItems] = useState([
-        { id: 1, description: 'Exhibition Stall Space (9 Sqm)', subDesc: '', hsn: '997331', qty: 1, size: 9, unit: 'Nos', rate: 11200, amount: 100800, disc: 0, taxable: 100800 }
+        { id: 1, description: 'Exhibition Stall Space (9 Sqm)', subDesc: '', hsn: '997331', qty: 1, area: '3x3', size: 9, unit: 'Sqm', rate: 11200, amount: 100800, disc: 0, taxable: 100800 }
     ]);
 
     const [gstOption, setGstOption] = useState('18% IGST');
@@ -178,7 +179,7 @@ export const PerformaInvoices = () => {
         setGstOption(prev => {
             const match = prev.match(/(\d+)%/);
             const pct = match ? match[1] : '18';
-            
+
             if (pct === '0') return '0% GST';
 
             if (form.estimateType === 'Intrastate') {
@@ -256,6 +257,7 @@ export const PerformaInvoices = () => {
                             subDesc: subDesc,
                             hsn: item.hsn || '',
                             qty: qty,
+                            area: item.area || '',
                             size: item.size || '',
                             unit: item.unit || 'Nos',
                             rate: rate,
@@ -472,6 +474,7 @@ export const PerformaInvoices = () => {
                 description: i.description + (i.subDesc ? `\n${i.subDesc}` : ''),
                 hsn: i.hsn,
                 qty: i.qty,
+                area: i.area,
                 size: i.size,
                 unit: i.unit,
                 rate: i.rate,
@@ -687,7 +690,7 @@ export const PerformaInvoices = () => {
                             <table className="w-full text-xs border-collapse">
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200">
-                                        {['#', 'Item Description *', 'HSN No. *', 'Qty. *', 'Size', 'Unit *', 'Rate (₹) *', 'Amount (₹)', 'Disc. %', 'Taxable Value (₹)', ''].map((h, i) => (
+                                        {['#', 'Item Description *', 'HSN No. *', 'Qty. *', 'Area', 'Size', 'Unit *', 'Rate (₹) *', 'Amount (₹)', 'Disc. %', 'Taxable Value (₹)', ''].map((h, i) => (
                                             <th key={i} className="text-left px-2 py-2 font-semibold text-gray-800 whitespace-nowrap">{h}</th>
                                         ))}
                                     </tr>
@@ -718,7 +721,10 @@ export const PerformaInvoices = () => {
                                             <td className="px-2 py-1.5 w-17">
                                                 <input type="number" min={1} className="w-full border border-gray-200 rounded px-2 py-[9px] text-xs focus:outline-none focus:border-blue-400 bg-white text-center" value={item.qty} onChange={(e) => updateItem(item.id, 'qty', e.target.value)} />
                                             </td>
-                                            <td className="px-2 py-1.5 min-w-[72px]">
+                                            <td className="px-2 py-1.5">
+                                                <input className="w-full border border-gray-200 rounded px-2 py-[9px] text-xs focus:outline-none focus:border-blue-400 bg-white" value={item.area} onChange={(e) => updateItem(item.id, 'area', e.target.value)} />
+                                            </td>
+                                            <td className="px-2 py-1.5">
                                                 <input className="w-full border border-gray-200 rounded px-2 py-[9px] text-xs focus:outline-none focus:border-blue-400 bg-white" value={item.size} onChange={(e) => updateItem(item.id, 'size', e.target.value)} />
                                             </td>
                                             <td className="px-2 py-1.5 w-20">

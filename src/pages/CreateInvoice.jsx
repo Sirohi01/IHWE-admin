@@ -576,7 +576,7 @@ const CreateInvoice = () => {
                                 </div>
                             </div>
                             <div>
-                                <Label required>State</Label>
+                                <Label required>Billing State</Label>
                                 <Select required options={['Delhi', 'Maharashtra', 'Karnataka']} value={form.billingState} onChange={(e) => setField('billingState', e.target.value)} className="py-2.5" />
                             </div>
                             <div>
@@ -587,16 +587,16 @@ const CreateInvoice = () => {
 
                         <div className="grid grid-cols-4 gap-4">
                             <div>
-                                <Label required>Country</Label>
-                                <Select required options={['India', 'USA', 'UK']} value={form.country} onChange={(e) => setField('country', e.target.value)} className="py-2.5" />
-                            </div>
-                            <div>
                                 <Label required>State</Label>
-                                <Select required options={['Delhi', 'Maharashtra']} value={form.state} onChange={(e) => setField('state', e.target.value)} className="py-2.5" />
+                                <Select required options={['Delhi', 'Maharashtra', 'Karnataka']} value={form.state} onChange={(e) => setField('state', e.target.value)} className="py-2.5" />
                             </div>
                             <div>
                                 <Label required>City</Label>
                                 <Input required value={form.city} onChange={(e) => setField('city', e.target.value)} className="py-2.5" />
+                            </div>
+                            <div>
+                                <Label required>Country</Label>
+                                <Select required options={['India', 'USA', 'UK']} value={form.country} onChange={(e) => setField('country', e.target.value)} className="py-2.5" />
                             </div>
                             <div>
                                 <Label required>Place of Supply</Label>

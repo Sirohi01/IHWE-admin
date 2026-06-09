@@ -111,7 +111,9 @@ const EstimateFormDetail = () => {
 
     const createdDateTime = matchedEstimate?.added ? (() => {
         const d = new Date(matchedEstimate.added);
-        return `${d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}, ${d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
+        return `${d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+        `;
+        // , ${d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
     })() : '';
 
     const totalTaxable = matchedEstimate?.items?.reduce((sum, item) => {
@@ -194,11 +196,11 @@ const EstimateFormDetail = () => {
                             <div style={{ marginTop: 2 }}>{eventPlaceOfSupply}</div>
                             <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%', marginTop: 4 }}>
                                 <tbody>
-                                    <tr>
+                                    {/* <tr>
                                         <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Place of Supply &amp; Code</td>
                                         <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0' }}>{matchedEstimate?.place_of_supply || matchedEstimate?.state || '—'}</td>
-                                    </tr>
+                                        <td style={{ border: 'none', padding: '1px 0' }}>{matchedEstimate?.place_of_supply || 'Delhi (07)'}</td>
+                                    </tr> */}
                                     <tr>
                                         <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact Person</td>
                                         <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
@@ -231,7 +233,7 @@ const EstimateFormDetail = () => {
                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{invoiceDate}</td>
                                     </tr>
                                     <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created Time</td>
+                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created Date</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{createdDateTime}</td>
                                     </tr>
@@ -254,15 +256,15 @@ const EstimateFormDetail = () => {
                     <tr style={{ background: '#0d1f3c', color: '#fff', textTransform: 'uppercase' }}>
                         {[
                             { label: 'S.No.', width: '3%' },
-                            { label: 'Item Description', width: '52%' },
+                            { label: 'Item Description', width: '48%' },
                             { label: 'HSN Code', width: '7%' },
                             { label: 'Qty.', width: '4%' },
-                            { label: 'Size', width: '6%' },
-                            { label: 'Area', width: '6%' },
-                            { label: 'Rate', width: '6%' },
-                            { label: 'Amount', width: '6%' },
-                            { label: 'Discount', width: '6%' },
-                            { label: 'Total', width: '7%' },
+                            { label: 'Area', width: '7%' },
+                            { label: 'Size', width: '7%' },
+                            { label: 'Unit', width: '6%' },
+                            { label: 'Rate', width: '7%' },
+                            { label: 'Discount', width: '8%' },
+                            { label: 'Total', width: '10%' },
                         ].map(h => (
                             <th key={h.label} style={{ border: '1px solid #0d1f3c', padding: '3px 2px', textAlign: 'center', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold', width: h.width }}>{h.label}</th>
                         ))}
@@ -283,11 +285,11 @@ const EstimateFormDetail = () => {
                                 </td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.hsn}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.qty}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.size || '—'} {item?.unit}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.area || '—'}</td>
+                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.size || '—'}</td>
+                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.unit || '—'}</td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(item?.rate)}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(amt)}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(item?.disc)}</td>
+                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{fmtNum(item?.disc)}%</td>
                                 <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right', fontWeight: 700 }}>{fmtNum(amt - (parseFloat(item?.disc) || 0))}</td>
                             </tr>
                         );
@@ -424,13 +426,13 @@ const EstimateFormDetail = () => {
                             </table>
                         </td>
                         <td style={{ border: '1px solid #ccc', padding: '6px 8px', textAlign: 'center', verticalAlign: 'bottom' }}>
-                            <div style={{ height: 60 }}></div>
+                            <div style={{ height: 80 }}></div>
                             <div style={{ borderTop: '1px solid #ccc', paddingTop: 4, fontWeight: 700, width: '60%', margin: '0 auto' }}>Auth Signatory</div>
                         </td>
                         <td style={{ border: '1px solid #ccc', padding: '6px 8px', textAlign: 'center', verticalAlign: 'bottom' }}>
                             <div style={{ height: 60, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-                                {sigUrl && <img src={sigUrl} alt="Signature" style={{ maxHeight: 50, maxWidth: 130 }} />}
-                                {stampUrl && <img src={stampUrl} alt="Stamp" style={{ maxHeight: 50, maxWidth: 60 }} />}
+                                {sigUrl && <img src={sigUrl} alt="Signature" style={{ maxHeight: 60, maxWidth: 130 }} />}
+                                {stampUrl && <img src={stampUrl} alt="Stamp" style={{ maxHeight: 60, maxWidth: 60 }} />}
                             </div>
                             <div style={{ borderTop: '1px solid #ccc', paddingTop: 4, fontWeight: 700, width: '60%', margin: '0 auto' }}>Auth Signatory</div>
                         </td>
