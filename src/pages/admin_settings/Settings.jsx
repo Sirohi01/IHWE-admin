@@ -1,0 +1,1488 @@
+import { useState, useEffect } from 'react';
+import {
+    Upload,
+    Mail,
+    Phone,
+    MapPin,
+    Plus,
+    Trash2,
+    X,
+    Edit2,
+    Globe,
+    Save,
+    Settings as SettingsIcon,
+    Image as ImageIcon,
+    ArrowUp,
+    Contact,
+    Type,
+    Calendar,
+    MessageSquare,
+    CreditCard,
+    Banknote,
+    FileText,
+    CheckCircle
+} from 'lucide-react';
+import api, { API_URL, SERVER_URL } from "../../lib/api";
+import Swal from 'sweetalert2';
+import Table from "../../components/table/Table";
+import PageHeader from "../../components/PageHeader";
+import MsmeLogosManager from "../../components/MsmeLogosManager";
+
+const Settings = () => {
+    // Logo state
+    const [logo, setLogo] = useState(null);
+    const [logoPreview, setLogoPreview] = useState('');
+
+    // Email Logo state (separate logo used only in email receipts)
+    const [emailLogo, setEmailLogo] = useState(null);
+    const [emailLogoPreview, setEmailLogoPreview] = useState('');
+
+    // Brochure state
+    const [brochureFile, setBrochureFile] = useState(null);
+    const [brochurePreview, setBrochurePreview] = useState('');
+    const [domesticFormFile, setDomesticFormFile] = useState(null);
+    const [domesticFormPreview, setDomesticFormPreview] = useState('');
+    const [internationalFormFile, setInternationalFormFile] = useState(null);
+    const [internationalFormPreview, setInternationalFormPreview] = useState('');
+    const [sponsorshipDeckFile, setSponsorshipDeckFile] = useState(null);
+    const [sponsorshipDeckPreview, setSponsorshipDeckPreview] = useState('');
+    const [downloadBrochureFile, setDownloadBrochureFile] = useState(null);
+    const [downloadBrochurePreview, setDownloadBrochurePreview] = useState('');
+
+    // Topbar state
+    const [marqueeText, setMarqueeText] = useState("• 150+ Speakers confirmed • Early Bird discount ending soon! • Join 8,000+ Professionals from 25+ Countries");
+    const [topbarDate, setTopbarDate] = useState("15–17 October 2026");
+    const [supportDeskText, setSupportDeskText] = useState("For exhibitors and delegates traveling from abroad, our international support team is available 24/7 during the expo period for visa, travel, and logistics assistance.");
+
+    // --- Financial & NGW Receipt State ---
+    const [companyName, setCompanyName] = useState("Namo Gange Wellness Pvt. Ltd.");
+    const [companyAddress, setCompanyAddress] = useState("12/29, Site-II, Loni Road, Industrial Area, Mohan Nagar, Ghaziabad, India");
+    const [companyGst, setCompanyGst] = useState("");
+    const [companyCin, setCompanyCin] = useState("");
+    const [fullPaymentDiscount, setFullPaymentDiscount] = useState(5);
+    const [availableTdsRates, setAvailableTdsRates] = useState([1, 2, 10]);
+    const [signatureFile, setSignatureFile] = useState(null);
+    const [signaturePreview, setSignaturePreview] = useState("");
+    const [stampFile, setStampFile] = useState(null);
+    const [stampPreview, setStampPreview] = useState("");
+
+    // MSME Logo state
+    const [msmeLogo, setMsmeLogo] = useState(null);
+    const [msmeLogoPreview, setMsmeLogoPreview] = useState('');
+    const [msmeLogoTitle, setMsmeLogoTitle] = useState('Supported by');
+    const [isMsmeLogoActive, setIsMsmeLogoActive] = useState(true);
+
+    // Multiple MSME Logos state
+    const [msmeLogos, setMsmeLogos] = useState([]);
+    const [showBrochurePopUp, setShowBrochurePopUp] = useState(true);
+    const [brochurePopUpDelay, setBrochurePopUpDelay] = useState(7);
+    const [showGovtPmsScheme, setShowGovtPmsScheme] = useState(true);
+
+    // Email addresses state
+    const [emails, setEmails] = useState([
+        { id: 1, email: 'info@tilesdesignhouse.com', isEditing: false, forTopbar: true, forContact: true }
+    ]);
+    const [newEmail, setNewEmail] = useState('');
+
+    // Phone numbers state
+    const [phones, setPhones] = useState([
+        { id: 1, phone: '+91 98765 43210', isEditing: false, forTopbar: true, forContact: true }
+    ]);
+    const [newPhone, setNewPhone] = useState('');
+
+    // Map Iframe state
+    const [mapIframe, setMapIframe] = useState('');
+
+    // Company addresses state
+    const [addresses, setAddresses] = useState([
+        {
+            id: 1,
+            title: 'Head Office',
+            street: '12/29, Site-II, Loni Road, Industrial Area, Mohan Nagar',
+            city: 'Ghaziabad',
+            state: 'Uttar Pradesh',
+            zipCode: '201007',
+            country: 'India',
+            isEditing: false
+        }
+    ]);
+
+    // Quick Links state
+    const [quickLinks, setQuickLinks] = useState([
+        { id: 1, label: 'Home', href: '/', isEditing: false },
+        { id: 2, label: 'About Us', href: '/about', isEditing: false },
+        { id: 3, label: 'Conference', href: '/conference', isEditing: false },
+        { id: 4, label: 'Blog', href: '/blog', isEditing: false },
+        { id: 5, label: 'Contact', href: '/contact', isEditing: false },
+    ]);
+    const [newLinkLabel, setNewLinkLabel] = useState('');
+    const [newLinkHref, setNewLinkHref] = useState('');
+    const [editMode, setEditMode] = useState(false);
+    const [currentLinkId, setCurrentLinkId] = useState(null);
+
+    // Exhibition Links state
+    const [exhibitionLinks, setExhibitionLinks] = useState([
+        { id: 1, label: 'Why Exhibit', href: '/exhibition', isEditing: false },
+        { id: 2, label: 'Exhibitors', href: '/exhibitors', isEditing: false },
+        { id: 3, label: 'Partners', href: '/partners', isEditing: false },
+        { id: 4, label: 'Floor Plan', href: '/exhibition#floor', isEditing: false },
+        { id: 5, label: 'Book a Stand', href: '/book-a-stand', isEditing: false },
+    ]);
+    const [newExLinkLabel, setNewExLinkLabel] = useState('');
+    const [newExLinkHref, setNewExLinkHref] = useState('');
+    const [exEditMode, setExEditMode] = useState(false);
+    const [currentExLinkId, setCurrentExLinkId] = useState(null);
+
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Fetch settings on mount
+    useEffect(() => {
+        fetchSettings();
+    }, []);
+
+    const fetchSettings = async () => {
+        setIsLoading(true);
+        try {
+            const res = await api.get('/api/settings');
+            if (res.data.success && res.data.data) {
+                const {
+                    logo, exhibitorBrochurePdf, domesticRegistrationFormPdf, internationalRegistrationFormPdf, sponsorshipDeckPdf,
+                    emails, phones, addresses, mapIframe: savedIframe,
+                    marqueeText: savedMarquee, topbarDate: savedDate, supportDeskText: savedSupportDeskText,
+                    companyName: sName, companyAddress: sAddress, companyGst: sGst, companyCin: sCin,
+                    fullPaymentDiscount: sDisc, availableTdsRates: sTds, authorizedSignature, companyStamp,
+                    showBrochurePopUp: sShowPopUp, brochurePopUpDelay: sPopUpDelay, showGovtPmsScheme: sShowPms,
+                    downloadBrochurePdf
+                } = res.data.data;
+
+                if (sShowPopUp !== undefined) setShowBrochurePopUp(sShowPopUp);
+                if (sPopUpDelay !== undefined) setBrochurePopUpDelay(sPopUpDelay);
+                if (sShowPms !== undefined) setShowGovtPmsScheme(sShowPms);
+
+                if (logo) {
+                    setLogoPreview(`${SERVER_URL}${logo}`);
+                }
+                if (res.data.data.emailLogo) {
+                    setEmailLogoPreview(`${SERVER_URL}${res.data.data.emailLogo}`);
+                }
+                if (exhibitorBrochurePdf) {
+                    setBrochurePreview(`${SERVER_URL}${exhibitorBrochurePdf}`);
+                }
+                if (domesticRegistrationFormPdf) {
+                    setDomesticFormPreview(`${SERVER_URL}${domesticRegistrationFormPdf}`);
+                }
+                if (internationalRegistrationFormPdf) {
+                    setInternationalFormPreview(`${SERVER_URL}${internationalRegistrationFormPdf}`);
+                }
+                if (sponsorshipDeckPdf) {
+                    setSponsorshipDeckPreview(`${SERVER_URL}${sponsorshipDeckPdf}`);
+                }
+                if (downloadBrochurePdf) {
+                    setDownloadBrochurePreview(`${SERVER_URL}${downloadBrochurePdf}`);
+                }
+                if (savedIframe) {
+                    setMapIframe(savedIframe);
+                }
+                if (savedMarquee) {
+                    setMarqueeText(savedMarquee);
+                }
+                if (savedDate) {
+                    setTopbarDate(savedDate);
+                }
+                if (savedSupportDeskText) {
+                    setSupportDeskText(savedSupportDeskText);
+                }
+
+                // Financials
+                if (sName) setCompanyName(sName);
+                if (sAddress) setCompanyAddress(sAddress);
+                if (sGst) setCompanyGst(sGst);
+                if (sCin) setCompanyCin(sCin);
+                if (sDisc !== undefined) setFullPaymentDiscount(sDisc);
+                if (sTds) setAvailableTdsRates(sTds);
+                if (authorizedSignature) setSignaturePreview(`${SERVER_URL}${authorizedSignature}`);
+                if (companyStamp) setStampPreview(`${SERVER_URL}${companyStamp}`);
+
+                // MSME Settings
+                if (res.data.data.msmeLogo) {
+                    setMsmeLogoPreview(`${SERVER_URL}${res.data.data.msmeLogo}`);
+                }
+                if (res.data.data.msmeLogoTitle) {
+                    setMsmeLogoTitle(res.data.data.msmeLogoTitle);
+                }
+                if (res.data.data.isMsmeLogoActive !== undefined) {
+                    setIsMsmeLogoActive(res.data.data.isMsmeLogoActive);
+                }
+
+                // Load Multiple MSME Logos
+                if (res.data.data.msmeLogos && res.data.data.msmeLogos.length > 0) {
+                    setMsmeLogos(res.data.data.msmeLogos.map((logo, index) => ({
+                        ...logo,
+                        id: Date.now() + index,
+                        preview: `${SERVER_URL}${logo.imageUrl}`
+                    })));
+                } else {
+                    setMsmeLogos([]);
+                }
+
+
+                if (emails && emails.length > 0) {
+                    setEmails(emails.map((e, index) => ({ ...e, id: Date.now() + index, isEditing: false })));
+                }
+                if (phones && phones.length > 0) {
+                    setPhones(phones.map((p, index) => ({ ...p, id: Date.now() + index, isEditing: false })));
+                }
+                if (addresses && addresses.length > 0) {
+                    setAddresses(addresses.map((a, index) => ({ ...a, id: Date.now() + index, isEditing: false })));
+                }
+                if (quickLinks && quickLinks.length > 0) {
+                    setQuickLinks(quickLinks.map((l, index) => ({ ...l, id: Date.now() + index, isEditing: false })));
+                }
+                if (exhibitionLinks && exhibitionLinks.length > 0) {
+                    setExhibitionLinks(exhibitionLinks.map((l, index) => ({ ...l, id: Date.now() + index, isEditing: false })));
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching settings:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const saveSystemSettings = async () => {
+        setIsLoading(true);
+        try {
+            const formData = new FormData();
+
+            if (logo) {
+                formData.append('logo', logo);
+            }
+            if (emailLogo) {
+                formData.append('emailLogo', emailLogo);
+            }
+            if (brochureFile) {
+                formData.append('exhibitorBrochurePdf', brochureFile);
+            }
+            if (domesticFormFile) {
+                formData.append('domesticRegistrationFormPdf', domesticFormFile);
+            }
+            if (internationalFormFile) {
+                formData.append('internationalRegistrationFormPdf', internationalFormFile);
+            }
+            if (sponsorshipDeckFile) {
+                formData.append('sponsorshipDeckPdf', sponsorshipDeckFile);
+            }
+            if (downloadBrochureFile) {
+                formData.append('downloadBrochurePdf', downloadBrochureFile);
+            }
+
+            const emailsToSave = emails.map(({ id, isEditing, ...rest }) => rest);
+            const phonesToSave = phones.map(({ id, isEditing, ...rest }) => rest);
+            const addressesToSave = addresses.map(({ id, isEditing, ...rest }) => rest);
+            const quickLinksToSave = quickLinks.map(({ id, isEditing, ...rest }) => rest);
+            const exhibitionLinksToSave = exhibitionLinks.map(({ id, isEditing, ...rest }) => rest);
+
+            formData.append('emails', JSON.stringify(emailsToSave));
+            formData.append('phones', JSON.stringify(phonesToSave));
+            formData.append('addresses', JSON.stringify(addressesToSave));
+            formData.append('quickLinks', JSON.stringify(quickLinksToSave));
+            formData.append('exhibitionLinks', JSON.stringify(exhibitionLinksToSave));
+            formData.append('mapIframe', mapIframe);
+            formData.append('marqueeText', marqueeText);
+            formData.append('topbarDate', topbarDate);
+            formData.append('supportDeskText', supportDeskText);
+
+            // Financials
+            formData.append('companyName', companyName);
+            formData.append('companyAddress', companyAddress);
+            formData.append('companyGst', companyGst);
+            formData.append('companyCin', companyCin);
+            formData.append('fullPaymentDiscount', fullPaymentDiscount);
+            formData.append('availableTdsRates', JSON.stringify(availableTdsRates));
+            if (signatureFile) formData.append('authorizedSignature', signatureFile);
+            if (stampFile) formData.append('companyStamp', stampFile);
+
+            // MSME
+            if (msmeLogo) formData.append('msmeLogo', msmeLogo);
+            formData.append('msmeLogoTitle', msmeLogoTitle);
+            formData.append('isMsmeLogoActive', isMsmeLogoActive);
+
+            // Multiple MSME Logos
+            const msmeLogosData = msmeLogos.map(({ id, preview, ...rest }) => rest);
+            formData.append('msmeLogos', JSON.stringify(msmeLogosData));
+            formData.append('showBrochurePopUp', showBrochurePopUp);
+            formData.append('brochurePopUpDelay', brochurePopUpDelay);
+            formData.append('showGovtPmsScheme', showGovtPmsScheme);
+
+
+            const res = await api.put('/api/settings', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            if (res.data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Configuration Saved',
+                    text: 'System settings have been updated successfully.',
+                    confirmButtonColor: '#23471d'
+                });
+
+                if (res.data.data.logo) {
+                    setLogoPreview(`${SERVER_URL}${res.data.data.logo}`);
+                    setLogo(null);
+                }
+                if (res.data.data.emailLogo) {
+                    setEmailLogoPreview(`${SERVER_URL}${res.data.data.emailLogo}`);
+                    setEmailLogo(null);
+                }
+                if (res.data.data.exhibitorBrochurePdf) {
+                    setBrochurePreview(`${SERVER_URL}${res.data.data.exhibitorBrochurePdf}`);
+                    setBrochureFile(null);
+                }
+                if (res.data.data.domesticRegistrationFormPdf) {
+                    setDomesticFormPreview(`${SERVER_URL}${res.data.data.domesticRegistrationFormPdf}`);
+                    setDomesticFormFile(null);
+                }
+                if (res.data.data.internationalRegistrationFormPdf) {
+                    setInternationalFormPreview(`${SERVER_URL}${res.data.data.internationalRegistrationFormPdf}`);
+                    setInternationalFormFile(null);
+                }
+                if (res.data.data.sponsorshipDeckPdf) {
+                    setSponsorshipDeckPreview(`${SERVER_URL}${res.data.data.sponsorshipDeckPdf}`);
+                    setSponsorshipDeckFile(null);
+                }
+                if (res.data.data.downloadBrochurePdf) {
+                    setDownloadBrochurePreview(`${SERVER_URL}${res.data.data.downloadBrochurePdf}`);
+                    setDownloadBrochureFile(null);
+                }
+                if (res.data.data.authorizedSignature) {
+                    setSignaturePreview(`${SERVER_URL}${res.data.data.authorizedSignature}`);
+                    setSignatureFile(null);
+                }
+                if (res.data.data.companyStamp) {
+                    setStampPreview(`${SERVER_URL}${res.data.data.companyStamp}`);
+                    setStampFile(null);
+                }
+                if (res.data.data.msmeLogo) {
+                    setMsmeLogoPreview(`${SERVER_URL}${res.data.data.msmeLogo}`);
+                    setMsmeLogo(null);
+                }
+                // Update msmeLogos from response
+                if (res.data.data.msmeLogos) {
+                    setMsmeLogos(res.data.data.msmeLogos.map((logo, index) => ({
+                        ...logo,
+                        id: Date.now() + index,
+                        preview: `${SERVER_URL}${logo.imageUrl}`
+                    })));
+                }
+            }
+        } catch (error) {
+            console.error('Error saving settings:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to save configuration. Please try again.',
+                confirmButtonColor: '#23471d'
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleLogoUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setLogo(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setLogoPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleEmailLogoUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setEmailLogo(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setEmailLogoPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleMsmeLogoUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setMsmeLogo(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setMsmeLogoPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const addEmail = () => {
+        if (newEmail && !emails.some(e => e.email === newEmail)) {
+            const newEmailObj = {
+                id: Date.now(),
+                email: newEmail,
+                isEditing: false,
+                forTopbar: emails.length === 0,
+                forContact: emails.length === 0
+            };
+            setEmails([...emails, newEmailObj]);
+            setNewEmail('');
+        }
+    };
+
+    const startEditingEmail = (id) => {
+        setEmails(emails.map(email =>
+            email.id === id ? { ...email, isEditing: true } : email
+        ));
+    };
+
+    const saveEmail = (id, newValue) => {
+        if (newValue.trim()) {
+            setEmails(emails.map(email =>
+                email.id === id ? { ...email, email: newValue, isEditing: false } : email
+            ));
+        }
+    };
+
+    const removeEmail = (id) => {
+        if (emails.length > 1) {
+            setEmails(emails.filter(email => email.id !== id));
+        }
+    };
+
+    const setTopbarEmail = (id) => {
+        setEmails(emails.map(email =>
+            email.id === id ? { ...email, forTopbar: !email.forTopbar } : email
+        ));
+    };
+
+    const setContactEmail = (id) => {
+        setEmails(emails.map(email =>
+            email.id === id ? { ...email, forContact: !email.forContact } : email
+        ));
+    };
+
+    const addPhone = () => {
+        if (newPhone && !phones.some(p => p.phone === newPhone)) {
+            const newPhoneObj = {
+                id: Date.now(),
+                phone: newPhone,
+                isEditing: false,
+                forTopbar: phones.length === 0,
+                forContact: phones.length === 0
+            };
+            setPhones([...phones, newPhoneObj]);
+            setNewPhone('');
+        }
+    };
+
+    const startEditingPhone = (id) => {
+        setPhones(phones.map(phone =>
+            phone.id === id ? { ...phone, isEditing: true } : phone
+        ));
+    };
+
+    const savePhone = (id, newValue) => {
+        if (newValue.trim()) {
+            setPhones(phones.map(phone =>
+                phone.id === id ? { ...phone, phone: newValue, isEditing: false } : phone
+            ));
+        }
+    };
+
+    const removePhone = (id) => {
+        if (phones.length > 1) {
+            setPhones(phones.filter(phone => phone.id !== id));
+        }
+    };
+
+    const setTopbarPhone = (id) => {
+        setPhones(phones.map(phone =>
+            phone.id === id ? { ...phone, forTopbar: !phone.forTopbar } : phone
+        ));
+    };
+
+    const setContactPhone = (id) => {
+        setPhones(phones.map(phone =>
+            phone.id === id ? { ...phone, forContact: !phone.forContact } : phone
+        ));
+    };
+
+    const addNewAddress = () => {
+        const newAddress = {
+            id: Date.now(),
+            title: '',
+            street: '',
+            city: '',
+            state: '',
+            zipCode: '',
+            country: '',
+            isEditing: true
+        };
+        setAddresses([newAddress, ...addresses]);
+    };
+
+    const startEditingAddress = (id) => {
+        setAddresses(addresses.map(address =>
+            address.id === id ? { ...address, isEditing: true } : address
+        ));
+    };
+
+    const saveAddressField = (id, field, value) => {
+        setAddresses(addresses.map(address =>
+            address.id === id ? { ...address, [field]: value } : address
+        ));
+    };
+
+    const saveAllAddressEdits = (id) => {
+        const address = addresses.find(a => a.id === id);
+        if (address.street && address.city && address.country && address.title) {
+            setAddresses(addresses.map(address =>
+                address.id === id ? { ...address, isEditing: false } : address
+            ));
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Missing Fields',
+                text: 'Please fill in Title, Street, City and Country.',
+                confirmButtonColor: '#23471d'
+            })
+        }
+    };
+
+    const cancelAddressEdit = (id) => {
+        const address = addresses.find(a => a.id === id);
+        if (!address.street && !address.city && !address.country) {
+            setAddresses(addresses.filter(a => a.id !== id));
+        } else {
+            setAddresses(addresses.map(address =>
+                address.id === id ? { ...address, isEditing: false } : address
+            ));
+        }
+    };
+
+    const removeAddress = (id) => {
+        if (addresses.length > 0) {
+            setAddresses(addresses.filter(address => address.id !== id));
+        }
+    };
+
+    const startEditingLink = (link) => {
+        setEditMode(true);
+        setCurrentLinkId(link.id);
+        setNewLinkLabel(link.label);
+        setNewLinkHref(link.href);
+    };
+
+    const handleLinkSubmit = () => {
+        if (newLinkLabel && newLinkHref) {
+            if (editMode) {
+                setQuickLinks(quickLinks.map(link =>
+                    link.id === currentLinkId ? { ...link, label: newLinkLabel, href: newLinkHref } : link
+                ));
+                setEditMode(false);
+                setCurrentLinkId(null);
+            } else {
+                setQuickLinks([...quickLinks, { id: Date.now(), label: newLinkLabel, href: newLinkHref, isEditing: false }]);
+            }
+            setNewLinkLabel('');
+            setNewLinkHref('');
+        }
+    };
+
+    const removeQuickLink = (link) => {
+        setQuickLinks(quickLinks.filter(l => l.id !== link.id));
+    };
+
+    // Exhibition Links logic
+    const startEditingExLink = (link) => {
+        setExEditMode(true);
+        setCurrentExLinkId(link.id);
+        setNewExLinkLabel(link.label);
+        setNewExLinkHref(link.href);
+    };
+
+    const handleExLinkSubmit = () => {
+        if (newExLinkLabel && newExLinkHref) {
+            if (exEditMode) {
+                setExhibitionLinks(exhibitionLinks.map(link =>
+                    link.id === currentExLinkId ? { ...link, label: newExLinkLabel, href: newExLinkHref } : link
+                ));
+                setExEditMode(false);
+                setCurrentExLinkId(null);
+            } else {
+                setExhibitionLinks([...exhibitionLinks, { id: Date.now(), label: newExLinkLabel, href: newExLinkHref, isEditing: false }]);
+            }
+            setNewExLinkLabel('');
+            setNewExLinkHref('');
+        }
+    };
+
+    const removeExLink = (link) => {
+        setExhibitionLinks(exhibitionLinks.filter(l => l.id !== link.id));
+    };
+
+    const linkColumns = [
+        {
+            key: "sno",
+            label: "S.NO",
+            width: "80px",
+            render: (row, index) => <div className="font-semibold">{index + 1}</div>
+        },
+        {
+            key: "label",
+            label: "LINK LABEL",
+            render: (row) => <div className="font-medium text-gray-800">{row.label}</div>
+        },
+        {
+            key: "href",
+            label: "URL / PATH",
+            render: (row) => <div className="text-gray-500 font-mono text-xs">{row.href}</div>
+        }
+    ];
+
+    return (
+        <div className="bg-white shadow-md  p-6 min-h-screen">
+            <PageHeader
+                title="SYSTEM CONFIGURATION"
+                description="Manage your exhibition's branding and contact information"
+            >
+                <button
+                    onClick={saveSystemSettings}
+                    disabled={isLoading}
+                    className="py-2.5 px-6 bg-[#23471d] text-white font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 uppercase text-xs tracking-wider disabled:opacity-50"
+                >
+                    <Save className="w-4 h-4" />
+                    {isLoading ? "Saving..." : "Save Configuration"}
+                </button>
+            </PageHeader>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left Column - Branding & Topbar */}
+                <div className="lg:col-span-1 space-y-6">
+                    {/* Brand Identity */}
+                    <div className="bg-white border border-gray-200 p-6 shadow-sm rounded-lg">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-blue-50 rounded">
+                                <SettingsIcon className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <h2 className="text-lg font-semibold text-gray-900 uppercase">Brand Identity</h2>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    Website Logo
+                                </label>
+                                <div className="border border-dashed border-gray-300 p-4 text-center relative group min-h-[160px] flex items-center justify-center bg-gray-50/30 rounded-lg hover:border-[#23471d] transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleLogoUpload}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {logoPreview ? (
+                                        <div className="relative w-full h-full flex flex-col items-center justify-center">
+                                            <div className="w-24 h-24 mb-2 p-2 border border-gray-100 bg-white rounded flex items-center justify-center">
+                                                <img src={logoPreview.startsWith('http') || logoPreview.startsWith('data:') || logoPreview.startsWith('blob:') ? logoPreview : `${SERVER_URL}${logoPreview}`} alt="Preview" className="max-w-full max-h-full object-contain" />
+                                            </div>
+                                            <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded pointer-events-none">
+                                                <span className="text-xs font-bold text-gray-600 bg-white/90 px-2 py-1 rounded shadow-sm">Change Logo</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center py-4">
+                                            <ImageIcon className="w-8 h-8 text-gray-300 mb-2" />
+                                            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Click to upload logo</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Email Logo Upload */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    Email Logo <span className="text-[10px] text-orange-500 normal-case font-normal ml-1">(Used in payment receipt emails)</span>
+                                </label>
+                                <div className="border border-dashed border-orange-300 p-4 text-center relative group min-h-[160px] flex items-center justify-center bg-orange-50/20 rounded-lg hover:border-orange-500 transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleEmailLogoUpload}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {emailLogoPreview ? (
+                                        <div className="relative w-full h-full flex flex-col items-center justify-center">
+                                            <div className="w-24 h-24 mb-2 p-2 border border-orange-100 bg-white rounded flex items-center justify-center">
+                                                <img src={emailLogoPreview.startsWith('http') || emailLogoPreview.startsWith('data:') || emailLogoPreview.startsWith('blob:') ? emailLogoPreview : `${SERVER_URL}${emailLogoPreview}`} alt="Email Logo Preview" className="max-w-full max-h-full object-contain" />
+                                            </div>
+                                            <p className="text-[9px] font-semibold text-orange-500 uppercase tracking-widest mt-1">Email Logo Set ✓</p>
+                                            <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded pointer-events-none">
+                                                <span className="text-xs font-bold text-gray-600 bg-white/90 px-2 py-1 rounded shadow-sm">Change Email Logo</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center py-4">
+                                            <Mail className="w-8 h-8 text-orange-200 mb-2" />
+                                            <p className="text-[10px] font-semibold text-orange-400 uppercase tracking-widest">Click to upload email logo</p>
+                                            <p className="text-[9px] text-gray-400 mt-1">Falls back to Website Logo if not set</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Multiple MSME Logos Management */}
+                            <MsmeLogosManager
+                                msmeLogos={msmeLogos}
+                                setMsmeLogos={setMsmeLogos}
+                                isMsmeLogoActive={isMsmeLogoActive}
+                                setIsMsmeLogoActive={setIsMsmeLogoActive}
+                            />
+
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    Exhibitor Brochure (PDF)
+                                </label>
+                                <div className="border border-dashed border-gray-300 p-4 text-center relative group min-h-[100px] flex items-center justify-center bg-gray-50/30 rounded-lg hover:border-[#23471d] transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={(e) => setBrochureFile(e.target.files[0])}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {brochureFile || brochurePreview ? (
+                                        <div className="flex flex-col items-center">
+                                            <FileText className="w-8 h-8 text-[#d26019] mb-1" />
+                                            <p className="text-[10px] font-bold text-gray-600 truncate max-w-[200px]">
+                                                {brochureFile ? brochureFile.name : "Current Brochure.pdf"}
+                                            </p>
+                                            {brochurePreview && !brochureFile && (
+                                                <a href={brochurePreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center">
+                                            <Plus className="w-6 h-6 text-gray-300 mb-1" />
+                                            <p className="text-[9px] font-bold text-gray-400 uppercase">Click to upload PDF</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Domestic Registration Form PDF */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    Domestic Registration Form (PDF)
+                                </label>
+                                <div className="border border-dashed border-gray-300 p-4 text-center relative group min-h-[100px] flex items-center justify-center bg-gray-50/30 rounded-lg hover:border-[#23471d] transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={(e) => setDomesticFormFile(e.target.files[0])}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {domesticFormFile || domesticFormPreview ? (
+                                        <div className="flex flex-col items-center">
+                                            <FileText className="w-8 h-8 text-blue-500 mb-1" />
+                                            <p className="text-[10px] font-bold text-gray-600 truncate max-w-[200px]">
+                                                {domesticFormFile ? domesticFormFile.name : "Domestic Form.pdf"}
+                                            </p>
+                                            {domesticFormPreview && !domesticFormFile && (
+                                                <a href={domesticFormPreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center">
+                                            <Plus className="w-6 h-6 text-gray-300 mb-1" />
+                                            <p className="text-[9px] font-bold text-gray-400 uppercase">Click to upload PDF</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* International Registration Form PDF */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    International Registration Form (PDF)
+                                </label>
+                                <div className="border border-dashed border-gray-300 p-4 text-center relative group min-h-[100px] flex items-center justify-center bg-gray-50/30 rounded-lg hover:border-[#23471d] transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={(e) => setInternationalFormFile(e.target.files[0])}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {internationalFormFile || internationalFormPreview ? (
+                                        <div className="flex flex-col items-center">
+                                            <FileText className="w-8 h-8 text-purple-500 mb-1" />
+                                            <p className="text-[10px] font-bold text-gray-600 truncate max-w-[200px]">
+                                                {internationalFormFile ? internationalFormFile.name : "International Form.pdf"}
+                                            </p>
+                                            {internationalFormPreview && !internationalFormFile && (
+                                                <a href={internationalFormPreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center">
+                                            <Plus className="w-6 h-6 text-gray-300 mb-1" />
+                                            <p className="text-[9px] font-bold text-gray-400 uppercase">Click to upload PDF</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Sponsorship Deck PDF */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    Awards Sponsorship Deck (PDF)
+                                </label>
+                                <div className="border border-dashed border-gray-300 p-4 text-center relative group min-h-[100px] flex items-center justify-center bg-gray-50/30 rounded-lg hover:border-[#23471d] transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={(e) => setSponsorshipDeckFile(e.target.files[0])}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {sponsorshipDeckFile || sponsorshipDeckPreview ? (
+                                        <div className="flex flex-col items-center">
+                                            <FileText className="w-8 h-8 text-green-600 mb-1" />
+                                            <p className="text-[10px] font-bold text-gray-600 truncate max-w-[200px]">
+                                                {sponsorshipDeckFile ? sponsorshipDeckFile.name : "Sponsorship Deck.pdf"}
+                                            </p>
+                                            {sponsorshipDeckPreview && !sponsorshipDeckFile && (
+                                                <a href={sponsorshipDeckPreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center">
+                                            <Plus className="w-6 h-6 text-gray-300 mb-1" />
+                                            <p className="text-[9px] font-bold text-gray-400 uppercase">Click to upload PDF</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Download Brochure PDF */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    General Download Brochure (PDF)
+                                </label>
+                                <div className="border border-dashed border-gray-300 p-4 text-center relative group min-h-[100px] flex items-center justify-center bg-gray-50/30 rounded-lg hover:border-[#23471d] transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={(e) => setDownloadBrochureFile(e.target.files[0])}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {downloadBrochureFile || downloadBrochurePreview ? (
+                                        <div className="flex flex-col items-center">
+                                            <FileText className="w-8 h-8 text-emerald-600 mb-1" />
+                                            <p className="text-[10px] font-bold text-gray-600 truncate max-w-[200px]">
+                                                {downloadBrochureFile ? downloadBrochureFile.name : "Brochure.pdf"}
+                                            </p>
+                                            {downloadBrochurePreview && !downloadBrochureFile && (
+                                                <a href={downloadBrochurePreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center">
+                                            <Plus className="w-6 h-6 text-gray-300 mb-1" />
+                                            <p className="text-[9px] font-bold text-gray-400 uppercase">Click to upload PDF</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Financial & NGW Receipt Settings */}
+                    <div className="bg-white border border-gray-200 p-6 shadow-sm rounded-lg">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-emerald-50 rounded">
+                                <CreditCard className="w-5 h-5 text-emerald-600" />
+                            </div>
+                            <h2 className="text-lg font-semibold text-gray-900 uppercase">NGW Receipt & Financials</h2>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Company Registered Name</label>
+                                <input
+                                    type="text"
+                                    value={companyName}
+                                    onChange={(e) => setCompanyName(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                    placeholder="e.g. Namo Gange Wellness Pvt. Ltd."
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Registered Office Address</label>
+                                <textarea
+                                    value={companyAddress}
+                                    onChange={(e) => setCompanyAddress(e.target.value)}
+                                    rows={2}
+                                    className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d] resize-none"
+                                    placeholder="Full address for receipt header..."
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Company GSTIN</label>
+                                    <input
+                                        type="text"
+                                        value={companyGst}
+                                        onChange={(e) => setCompanyGst(e.target.value.toUpperCase())}
+                                        className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d] font-mono"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Company CIN No.</label>
+                                    <input
+                                        type="text"
+                                        value={companyCin}
+                                        onChange={(e) => setCompanyCin(e.target.value.toUpperCase())}
+                                        className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d] font-mono"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="pt-2">
+                                <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Authorized Signature & Stamp</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {/* Signature */}
+                                    <div className="border border-dashed border-gray-200 p-2 text-center relative group bg-gray-50/50 rounded hover:border-[#23471d] transition-colors overflow-hidden">
+                                        <input
+                                            type="file"
+                                            accept="image/png"
+                                            onChange={(e) => {
+                                                const f = e.target.files[0];
+                                                if (f) { setSignatureFile(f); setSignaturePreview(URL.createObjectURL(f)); }
+                                            }}
+                                            className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                        />
+                                        {signaturePreview ? (
+                                            <div className="flex flex-col items-center">
+                                                <img src={signaturePreview} alt="Signature" className="h-12 object-contain" />
+                                                <p className="text-[8px] font-bold text-gray-400 mt-1 uppercase">Signature Added</p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center h-16">
+                                                <Edit2 className="w-4 h-4 text-gray-300 mb-1" />
+                                                <p className="text-[8px] font-bold text-gray-400 uppercase">Signature (PNG)</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Stamp */}
+                                    <div className="border border-dashed border-gray-200 p-2 text-center relative group bg-gray-50/50 rounded hover:border-[#23471d] transition-colors overflow-hidden">
+                                        <input
+                                            type="file"
+                                            accept="image/png"
+                                            onChange={(e) => {
+                                                const f = e.target.files[0];
+                                                if (f) { setStampFile(f); setStampPreview(URL.createObjectURL(f)); }
+                                            }}
+                                            className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                        />
+                                        {stampPreview ? (
+                                            <div className="flex flex-col items-center">
+                                                <img src={stampPreview} alt="Stamp" className="h-12 object-contain" />
+                                                <p className="text-[8px] font-bold text-gray-400 mt-1 uppercase">Stamp Added</p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center h-16">
+                                                <CheckCircle className="w-4 h-4 text-gray-300 mb-1" />
+                                                <p className="text-[8px] font-bold text-gray-400 uppercase">Stamp (PNG)</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 pt-2">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Full Pay Discount %</label>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            value={fullPaymentDiscount}
+                                            onChange={(e) => setFullPaymentDiscount(Number(e.target.value))}
+                                            className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                        />
+                                        <span className="absolute right-3 top-2 text-[10px] font-bold text-gray-400">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Topbar Settings */}
+                    <div className="bg-white border border-gray-200 p-6 shadow-sm rounded-lg">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-orange-50 rounded">
+                                <ArrowUp className="w-5 h-5 text-orange-600" />
+                            </div>
+                            <h2 className="text-lg font-semibold text-gray-900 uppercase">Topbar & Interface Settings</h2>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider flex items-center gap-2">
+                                    <Type className="w-3 h-3" /> Marquee Text
+                                </label>
+                                <textarea
+                                    value={marqueeText}
+                                    onChange={(e) => setMarqueeText(e.target.value)}
+                                    rows={4}
+                                    className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d] font-medium resize-none shadow-sm"
+                                    placeholder="Enter marquee text here..."
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider flex items-center gap-2">
+                                    <Calendar className="w-3 h-3" /> Event Date (Topbar)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={topbarDate}
+                                    onChange={(e) => setTopbarDate(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d] font-medium shadow-sm"
+                                    placeholder="e.g. 15–17 October 2026"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider flex items-center gap-2">
+                                    <MessageSquare className="w-3 h-3" /> Support Desk Text
+                                </label>
+                                <textarea
+                                    value={supportDeskText}
+                                    onChange={(e) => setSupportDeskText(e.target.value)}
+                                    rows={4}
+                                    className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d] font-medium resize-none shadow-sm"
+                                    placeholder="Enter support desk text for contact page..."
+                                />
+                            </div>
+
+                        </div>
+                    </div>
+
+                    {/* Google Map */}
+                    <div className="bg-white border border-gray-200 p-6 shadow-sm rounded-lg">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-purple-50 rounded">
+                                <Globe className="w-5 h-5 text-purple-600" />
+                            </div>
+                            <h2 className="text-lg font-semibold text-gray-900 uppercase">Map Configuration</h2>
+                        </div>
+                        <div className="space-y-3">
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider tracking-widest">Google Map Embed (Iframe)</label>
+                            <textarea
+                                value={mapIframe}
+                                onChange={(e) => setMapIframe(e.target.value)}
+                                placeholder='<iframe src="..." ...></iframe>'
+                                rows={4}
+                                className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d] font-mono resize-y"
+                            />
+                            {mapIframe && mapIframe.includes('<iframe') && (
+                                <div className="border border-gray-200 rounded overflow-hidden">
+                                    <div className="text-[10px] text-gray-400 px-3 py-1 bg-gray-50 border-b">Preview Map</div>
+                                    <div className="map-preview-container" dangerouslySetInnerHTML={{ __html: mapIframe }} />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Brochure Pop-up Settings */}
+                    <div className="bg-white border border-gray-200 p-6 shadow-sm rounded-lg">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-rose-50 rounded">
+                                <ImageIcon className="w-5 h-5 text-rose-600" />
+                            </div>
+                            <h2 className="text-lg font-semibold text-gray-900 uppercase">Banner Pop-up Settings</h2>
+                        </div>
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                <div>
+                                    <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Show Banner Pop-up</h3>
+                                    <p className="text-[10px] text-gray-500 mt-0.5 uppercase">Toggle the secondary brochure banner</p>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={showBrochurePopUp}
+                                        onChange={(e) => setShowBrochurePopUp(e.target.checked)}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#23471d]"></div>
+                                </label>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                    <Calendar className="w-3.5 h-3.5" /> Delay After Close (Seconds)
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        value={brochurePopUpDelay}
+                                        onChange={(e) => setBrochurePopUpDelay(Number(e.target.value))}
+                                        className="w-full pl-3 pr-16 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d] font-bold shadow-sm"
+                                        placeholder="e.g. 7"
+                                        min="1"
+                                    />
+                                    <div className="absolute right-10 top-2 text-[10px] font-bold text-gray-400 uppercase">SEC</div>
+                                </div>
+                                <p className="text-[9px] text-gray-400 italic">Delay before the banner appears after closing the download form.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Government MSME PMS Scheme Settings */}
+                    <div className="bg-white border border-gray-200 p-6 shadow-sm rounded-lg">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-emerald-50 rounded">
+                                <CheckCircle className="w-5 h-5 text-emerald-600" />
+                            </div>
+                            <h2 className="text-lg font-semibold text-gray-900 uppercase font-sans">Govt PMS Scheme Settings</h2>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                <div>
+                                    <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Show PMS Scheme Menu & Banner</h3>
+                                    <p className="text-[10px] text-gray-500 mt-0.5 uppercase">Toggle Government MSME PMS Scheme visibility</p>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={showGovtPmsScheme}
+                                        onChange={(e) => setShowGovtPmsScheme(e.target.checked)}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#23471d]"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Middle/Right Column - Contact Channels */}
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="bg-white border border-gray-200 p-6 shadow-sm rounded-lg">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-green-50 rounded">
+                                <Mail className="w-5 h-5 text-green-600" />
+                            </div>
+                            <h2 className="text-lg font-semibold text-gray-900 uppercase">Contact Channels</h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* Emails */}
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Email Addresses</label>
+                                </div>
+                                <div className="space-y-2">
+                                    {emails.map(item => (
+                                        <div key={item.id} className={`group flex items-center gap-2 p-2 border rounded transition-colors ${item.forTopbar || item.forContact ? 'border-green-500 bg-green-50/30' : 'border-gray-100 bg-gray-50/50'}`}>
+                                            <div className="flex gap-1">
+                                                <button
+                                                    onClick={() => setTopbarEmail(item.id)}
+                                                    className={`p-1.5 rounded-full transition-colors ${item.forTopbar ? 'text-green-600 bg-green-100' : 'text-gray-300'}`}
+                                                    title="Topbar Email"
+                                                >
+                                                    <ArrowUp className="w-3.5 h-3.5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => setContactEmail(item.id)}
+                                                    className={`p-1.5 rounded-full transition-colors ${item.forContact ? 'text-blue-600 bg-blue-100' : 'text-gray-300'}`}
+                                                    title="Contact Page Email"
+                                                >
+                                                    <Contact className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
+                                            {item.isEditing ? (
+                                                <input
+                                                    autoFocus
+                                                    type="email"
+                                                    defaultValue={item.email}
+                                                    onBlur={(e) => saveEmail(item.id, e.target.value)}
+                                                    className="flex-1 bg-white px-2 py-1 text-xs border border-blue-300 rounded"
+                                                />
+                                            ) : (
+                                                <span className="flex-1 text-sm text-gray-700 font-medium truncate">{item.email}</span>
+                                            )}
+                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onClick={() => startEditingEmail(item.id)} className="p-1 text-gray-400 hover:text-blue-600"><Edit2 className="w-3.5 h-3.5" /></button>
+                                                <button onClick={() => removeEmail(item.id)} className="p-1 text-gray-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <div className="flex gap-2 pt-2">
+                                        <input
+                                            type="text"
+                                            value={newEmail}
+                                            onChange={(e) => setNewEmail(e.target.value)}
+                                            placeholder="Add email..."
+                                            className="flex-1 px-3 py-1.5 border border-gray-200 text-xs rounded"
+                                        />
+                                        <button onClick={addEmail} className="p-1.5 bg-[#23471d] text-white rounded"><Plus className="w-4 h-4" /></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Phones */}
+                            <div className="space-y-4">
+                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Phone Numbers</label>
+                                <div className="space-y-2">
+                                    {phones.map(item => (
+                                        <div key={item.id} className={`group flex items-center gap-2 p-2 border rounded transition-colors ${item.forTopbar || item.forContact ? 'border-orange-500 bg-orange-50/30' : 'border-gray-100 bg-gray-50/50'}`}>
+                                            <div className="flex gap-1">
+                                                <button
+                                                    onClick={() => setTopbarPhone(item.id)}
+                                                    className={`p-1.5 rounded-full transition-colors ${item.forTopbar ? 'text-orange-600 bg-orange-100' : 'text-gray-300'}`}
+                                                    title="Topbar Phone"
+                                                >
+                                                    <ArrowUp className="w-3.5 h-3.5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => setContactPhone(item.id)}
+                                                    className={`p-1.5 rounded-full transition-colors ${item.forContact ? 'text-blue-600 bg-blue-100' : 'text-gray-300'}`}
+                                                    title="Contact Page Phone"
+                                                >
+                                                    <Contact className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
+                                            {item.isEditing ? (
+                                                <input
+                                                    autoFocus
+                                                    type="tel"
+                                                    defaultValue={item.phone}
+                                                    onBlur={(e) => savePhone(item.id, e.target.value)}
+                                                    className="flex-1 bg-white px-2 py-1 text-xs border border-blue-300 rounded"
+                                                />
+                                            ) : (
+                                                <span className="flex-1 text-sm text-gray-700 font-medium truncate">{item.phone}</span>
+                                            )}
+                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onClick={() => startEditingPhone(item.id)} className="p-1 text-gray-400 hover:text-blue-600"><Edit2 className="w-3.5 h-3.5" /></button>
+                                                <button onClick={() => removePhone(item.id)} className="p-1 text-gray-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <div className="flex gap-2 pt-2">
+                                        <input
+                                            type="text"
+                                            value={newPhone}
+                                            onChange={(e) => setNewPhone(e.target.value)}
+                                            placeholder="Add phone..."
+                                            className="flex-1 px-3 py-1.5 border border-gray-200 text-xs rounded"
+                                        />
+                                        <button onClick={addPhone} className="p-1.5 bg-[#23471d] text-white rounded"><Plus className="w-4 h-4" /></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Office Locations */}
+                    <div className="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
+                        <div className="px-6 py-4 border-b bg-[#23471d] flex justify-between items-center text-white">
+                            <div>
+                                <h2 className="text-sm font-semibold uppercase tracking-wider">Office Locations</h2>
+                            </div>
+                            <button
+                                onClick={addNewAddress}
+                                className="px-4 py-1.5 bg-white text-[#23471d] font-semibold text-[10px] uppercase rounded flex items-center gap-2"
+                            >
+                                <Plus className="w-3.5 h-3.5" /> Add Location
+                            </button>
+                        </div>
+                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {addresses.map((address) => (
+                                <div key={address.id} className={`relative border rounded-lg p-5 ${address.isEditing ? 'border-[#23471d] bg-gray-50' : 'border-gray-100'}`}>
+                                    {address.isEditing ? (
+                                        <div className="space-y-3">
+                                            <input type="text" value={address.title} onChange={(e) => saveAddressField(address.id, 'title', e.target.value)} className="w-full p-2 border text-xs" placeholder="Title" />
+                                            <input type="text" value={address.street} onChange={(e) => saveAddressField(address.id, 'street', e.target.value)} className="w-full p-2 border text-xs" placeholder="Street" />
+                                            <div className="flex gap-2">
+                                                <input type="text" value={address.city} onChange={(e) => saveAddressField(address.id, 'city', e.target.value)} className="flex-1 p-2 border text-xs" placeholder="City" />
+                                                <input type="text" value={address.state} onChange={(e) => saveAddressField(address.id, 'state', e.target.value)} className="flex-1 p-2 border text-xs" placeholder="State" />
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <input type="text" value={address.zipCode} onChange={(e) => saveAddressField(address.id, 'zipCode', e.target.value)} className="flex-1 p-2 border text-xs" placeholder="Zip Code" />
+                                                <input type="text" value={address.country} onChange={(e) => saveAddressField(address.id, 'country', e.target.value)} className="flex-1 p-2 border text-xs" placeholder="Country" />
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button onClick={() => saveAllAddressEdits(address.id)} className="flex-1 py-1.5 bg-[#23471d] text-white text-[10px] uppercase font-bold rounded">Save</button>
+                                                <button onClick={() => cancelAddressEdit(address.id)} className="flex-1 py-1.5 bg-gray-200 text-gray-700 text-[10px] uppercase font-bold rounded">Cancel</button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="flex justify-between mb-2">
+                                                <h3 className="font-bold text-sm text-gray-800 flex items-center gap-2"><MapPin className="w-3 h-3 text-[#23471d]" /> {address.title}</h3>
+                                                <div className="flex gap-1">
+                                                    <button onClick={() => startEditingAddress(address.id)} className="text-gray-400 hover:text-blue-600"><Edit2 className="w-3 h-3" /></button>
+                                                    <button onClick={() => removeAddress(address.id)} className="text-gray-400 hover:text-red-600"><Trash2 className="w-3 h-3" /></button>
+                                                </div>
+                                            </div>
+                                            <p className="text-xs text-gray-500">{address.street}, {address.city}, {address.state} {address.zipCode}, {address.country}</p>
+                                        </>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Quick Links */}
+                    <div className="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
+                        <div className="px-6 py-4 border-b bg-[#23471d] flex justify-between items-center text-white">
+                            <div>
+                                <h2 className="text-sm font-semibold uppercase tracking-wider">Quick Links</h2>
+                                <p className="text-[10px] text-blue-100 uppercase mt-0.5 font-medium">{quickLinks.length} Links Listed</p>
+                            </div>
+                        </div>
+
+                        <div className="p-6">
+                            {/* Form to Add/Edit Link */}
+                            <div className="bg-gray-50 border border-gray-100 p-4 rounded-lg mb-6">
+                                <h3 className="text-[10px] font-bold text-gray-500 uppercase mb-3 tracking-widest">{editMode ? 'Edit' : 'Add New'} Quick Link</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase">Label</label>
+                                        <input
+                                            type="text"
+                                            value={newLinkLabel}
+                                            onChange={(e) => setNewLinkLabel(e.target.value)}
+                                            placeholder="e.g. Exhibitor Directory"
+                                            className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase">URL / Path</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={newLinkHref}
+                                                onChange={(e) => setNewLinkHref(e.target.value)}
+                                                placeholder="/services/..."
+                                                className="flex-1 px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                            />
+                                            <button
+                                                onClick={handleLinkSubmit}
+                                                disabled={!newLinkLabel || !newLinkHref}
+                                                className={`px-4 bg-[#23471d] text-white rounded hover:bg-[#1a3615] transition-colors disabled:opacity-50`}
+                                            >
+                                                {editMode ? <Save className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                            </button>
+                                            {editMode && (
+                                                <button
+                                                    onClick={() => { setEditMode(false); setNewLinkLabel(''); setNewLinkHref(''); setCurrentLinkId(null); }}
+                                                    className="px-4 bg-white border border-gray-200 text-gray-400 rounded hover:bg-gray-50"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Links Table */}
+                            <Table
+                                columns={linkColumns}
+                                data={quickLinks}
+                                onEdit={startEditingLink}
+                                onDelete={removeQuickLink}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Exhibition Links */}
+                    <div className="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
+                        <div className="px-6 py-4 border-b bg-[#23471d] flex justify-between items-center text-white">
+                            <div>
+                                <h2 className="text-sm font-semibold uppercase tracking-wider">Exhibition</h2>
+                                <p className="text-[10px] text-blue-100 uppercase mt-0.5 font-medium">{exhibitionLinks.length} Links Listed</p>
+                            </div>
+                        </div>
+
+                        <div className="p-6">
+                            {/* Form to Add/Edit Link */}
+                            <div className="bg-gray-50 border border-gray-100 p-4 rounded-lg mb-6">
+                                <h3 className="text-[10px] font-bold text-gray-500 uppercase mb-3 tracking-widest">{exEditMode ? 'Edit' : 'Add New'} Exhibition Link</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase">Label</label>
+                                        <input
+                                            type="text"
+                                            value={newExLinkLabel}
+                                            onChange={(e) => setNewExLinkLabel(e.target.value)}
+                                            placeholder="e.g. Why Exhibit"
+                                            className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase">URL / Path</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={newExLinkHref}
+                                                onChange={(e) => setNewExLinkHref(e.target.value)}
+                                                placeholder="/exhibit/..."
+                                                className="flex-1 px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                            />
+                                            <button
+                                                onClick={handleExLinkSubmit}
+                                                disabled={!newExLinkLabel || !newExLinkHref}
+                                                className={`px-4 bg-[#23471d] text-white rounded hover:bg-[#1a3615] transition-colors disabled:opacity-50`}
+                                            >
+                                                {exEditMode ? <Save className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                            </button>
+                                            {exEditMode && (
+                                                <button
+                                                    onClick={() => { setExEditMode(false); setNewExLinkLabel(''); setNewExLinkHref(''); setCurrentExLinkId(null); }}
+                                                    className="px-4 bg-white border border-gray-200 text-gray-400 rounded hover:bg-gray-50"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Exhibition Table */}
+                            <Table
+                                columns={linkColumns}
+                                data={exhibitionLinks}
+                                onEdit={startEditingExLink}
+                                onDelete={removeExLink}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <style>{`
+                .map-preview-container iframe {
+                    width: 100% !important;
+                    height: 250px !important;
+                    border: 0 !important;
+                }
+            `}</style>
+        </div>
+    );
+};
+
+export default Settings;
