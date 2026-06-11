@@ -148,22 +148,37 @@ const CreateInvoice = () => {
                             terms: inv.terms || f.terms
                         }));
                         if (inv.items && inv.items.length > 0) {
-                            setItems(inv.items.map((item, idx) => ({
-                                id: Date.now() + idx,
-                                description: item.description || '',
-                                hsn: item.hsn || '',
-                                qty: item.qty || 1,
-                                size: item.size || '',
-                                area: item.area || '',
-                                unit: item.unit || 'Nos',
-                                rate: item.rate || 0,
-                                amount: item.amount || 0,
-                                discountPct: item.discountPct || 0,
-                                taxableValue: item.taxableValue || 0,
-                                gstPct: item.gstPct || '18%',
-                                gstAmount: item.gstAmount || 0,
-                                total: item.total || 0
-                            })));
+                            setItems(inv.items.map((item, idx) => {
+                                const rate = Number(item.rate) || 0;
+                                const qty = Number(item.qty) || 1;
+                                const area = Number(item.area) || 0;
+                                const multiplier = area > 0 ? area : (!isNaN(Number(item.size)) && Number(item.size) > 0 ? Number(item.size) : 1);
+                                const amount = item.amount ? Number(item.amount) : (rate * qty * multiplier);
+                                const discountPct = Number(item.discountPct) || 0;
+                                const discountAmount = amount * (discountPct / 100);
+                                const taxableValue = item.taxableValue ? Number(item.taxableValue) : (amount - discountAmount);
+                                const gstPctStr = item.gstPct || '18%';
+                                const gstRate = parseFloat(gstPctStr) || 0;
+                                const gstAmount = item.gstAmount ? Number(item.gstAmount) : (taxableValue * (gstRate / 100));
+                                const total = item.total ? Number(item.total) : (taxableValue + gstAmount);
+
+                                return {
+                                    id: Date.now() + idx,
+                                    description: item.description || '',
+                                    hsn: item.hsn || '',
+                                    qty: qty,
+                                    size: item.size || '',
+                                    area: item.area || '',
+                                    unit: item.unit || 'Nos',
+                                    rate: rate,
+                                    amount: amount,
+                                    discountPct: discountPct,
+                                    taxableValue: taxableValue,
+                                    gstPct: gstPctStr,
+                                    gstAmount: gstAmount,
+                                    total: total
+                                };
+                            }));
                         }
                     }
                 } catch (err) {
@@ -242,22 +257,37 @@ const CreateInvoice = () => {
             }));
 
             if (est.items && est.items.length > 0) {
-                setItems(est.items.map((item, idx) => ({
-                    id: Date.now() + idx,
-                    description: item.description || '',
-                    hsn: item.hsn || '',
-                    qty: item.qty || 1,
-                    size: item.size || '',
-                    area: item.area || '',
-                    unit: item.unit || 'Nos',
-                    rate: item.rate || 0,
-                    amount: item.amount || 0,
-                    discountPct: item.discountPct || 0,
-                    taxableValue: item.taxableValue || 0,
-                    gstPct: item.gstPct || '18%',
-                    gstAmount: item.gstAmount || 0,
-                    total: item.total || 0
-                })));
+                setItems(est.items.map((item, idx) => {
+                    const rate = Number(item.rate) || 0;
+                    const qty = Number(item.qty) || 1;
+                    const area = Number(item.area) || 0;
+                    const multiplier = area > 0 ? area : (!isNaN(Number(item.size)) && Number(item.size) > 0 ? Number(item.size) : 1);
+                    const amount = item.amount ? Number(item.amount) : (rate * qty * multiplier);
+                    const discountPct = Number(item.discountPct) || 0;
+                    const discountAmount = amount * (discountPct / 100);
+                    const taxableValue = item.taxableValue ? Number(item.taxableValue) : (amount - discountAmount);
+                    const gstPctStr = item.gstPct || '18%';
+                    const gstRate = parseFloat(gstPctStr) || 0;
+                    const gstAmount = item.gstAmount ? Number(item.gstAmount) : (taxableValue * (gstRate / 100));
+                    const total = item.total ? Number(item.total) : (taxableValue + gstAmount);
+
+                    return {
+                        id: Date.now() + idx,
+                        description: item.description || '',
+                        hsn: item.hsn || '',
+                        qty: qty,
+                        size: item.size || '',
+                        area: item.area || '',
+                        unit: item.unit || 'Nos',
+                        rate: rate,
+                        amount: amount,
+                        discountPct: discountPct,
+                        taxableValue: taxableValue,
+                        gstPct: gstPctStr,
+                        gstAmount: gstAmount,
+                        total: total
+                    };
+                }));
             }
         }
     };

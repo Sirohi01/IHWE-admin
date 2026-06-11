@@ -54,12 +54,24 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
     }, [dispatch]);
 
     useEffect(() => {
-        const targetCompanyId = matchedInvoice ? matchedInvoice.companyId : form?.companyId;
-        if (companies && companies.length > 0 && targetCompanyId) {
+        const fetchCompanyDetails = async () => {
+            const targetCompanyId = matchedInvoice ? (matchedInvoice.companyId || matchedInvoice.company_id) : form?.companyId;
+            if (!targetCompanyId) return;
             const cId = typeof targetCompanyId === 'object' ? targetCompanyId._id : targetCompanyId;
-            const matchedCompany = companies.find((c) => String(c._id) === String(cId));
-            setCompany(matchedCompany || null);
-        }
+            
+            try {
+                const res = await api.get(`/api/companies/lookup/${cId}`);
+                setCompany(res.data.data || res.data);
+            } catch (err) {
+                console.error("Error fetching company details:", err);
+                // Fallback to redux state if lookup fails
+                if (companies && companies.length > 0) {
+                    const matchedCompany = companies.find((c) => String(c._id) === String(cId));
+                    if (matchedCompany) setCompany(matchedCompany);
+                }
+            }
+        };
+        fetchCompanyDetails();
     }, [companies, form?.companyId, matchedInvoice]);
 
     const cur = '₹';
@@ -81,14 +93,14 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
     const totalGstAmount = activeItems?.reduce((sum, item) => sum + (parseFloat(item.gstAmount) || 0), 0) || 0;
     const grandTotal = matchedInvoice ? (matchedInvoice.finalAmount || 0) : (activeItems?.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0) || 0);
 
-    const c1 = company?.contacts?.[0] || {};
+    const c1 = company?.contacts?.[0] || company?.contact1 || {};
     const companyName = "Namo Gange Wellness Pvt. Ltd.";
 
     const PROFORMA_EVENT_NAME = '9th Edition of International Health & Wellness Expo (IHWE Global Edition)';
     const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, Bharat';
     const PROFORMA_EVENT_GST_NO = '08AAFCN9238F1Z6';
 
-    const clientCompanyName = matchedInvoice?.company_name || form?.company_name || company?.companyName || '—';
+    const clientCompanyName = matchedInvoice?.company_name || form?.company_name || company?.companyName || company?.exhibitorName || '—';
     const clientCompanyAddress = matchedInvoice?.company_addr || form?.company_addr || [company?.address, company?.city, company?.pincode ? `- ${company.pincode}` : '', company?.state, company?.country].filter(Boolean).join(', ');
     const clientGstNo = matchedInvoice?.company_gst_no || form?.company_gst_no || matchedInvoice?.gst_no || form?.gstin;
 
