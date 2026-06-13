@@ -1,6 +1,6 @@
 import { Users, Phone, Flame, Calendar, ShoppingBag, IndianRupee, Clock, Wallet } from "lucide-react";
 
-export default function DashboardStatsGrid({ statsMetrics, callsPeriod, setCallsPeriod }) {
+export default function DashboardStatsGrid({ statsMetrics }) {
   const stats = [
     {
       label: "Total Leads",
@@ -17,7 +17,6 @@ export default function DashboardStatsGrid({ statsMetrics, callsPeriod, setCalls
       iconColor: "text-blue-600",
       iconBg: "bg-blue-50",
       trend: "14%", up: true,
-      hasDropdown: true
     },
     {
       label: "Interested Clients",
@@ -83,23 +82,7 @@ export default function DashboardStatsGrid({ statsMetrics, callsPeriod, setCalls
 
           {/* Text block */}
           <div className="min-w-0 flex-1 text-left">
-            {s.hasDropdown ? (
-              <div className="flex items-center justify-between mb-0.5">
-                <p className="text-[9px] font-semibold text-black leading-tight truncate pr-1">{s.label}</p>
-                <select
-                  value={callsPeriod}
-                  onChange={(e) => setCallsPeriod(e.target.value)}
-                  className="text-[8px] border border-slate-200 rounded px-0.5 py-0.5 text-slate-600 bg-transparent outline-none cursor-pointer"
-                >
-                  <option value="today">Today</option>
-                  <option value="this_week">This Week</option>
-                  <option value="this_month">This Month</option>
-                  <option value="this_year">This Year</option>
-                </select>
-              </div>
-            ) : (
               <p className="text-[9px] font-semibold text-black leading-tight mb-0.5 truncate">{s.label}</p>
-            )}
             <div className="flex items-end gap-1.5 mb-0.5">
               <h3 className="text-[16px] font-bold text-slate-900 leading-none">{s.value}</h3>
             </div>

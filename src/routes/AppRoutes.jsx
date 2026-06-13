@@ -199,6 +199,12 @@ const BannerManagement = lazy(() => import("../pages/cms/BannerManagement"));
 const SellerSubscriptionPlans = lazy(() => import("../pages/add_by_admin/SellerSubscriptionPlans"));
 const SellerServiceRequests = lazy(() => import("../pages/enquiries/SellerServiceRequests"));
 const SellerExportInquiries = lazy(() => import("../pages/enquiries/SellerExportInquiries"));
+const MobilePassRequests = lazy(() => import("../pages/mobile_app_controls/MobilePassRequests"));
+const MobilePassConfig = lazy(() => import("../pages/mobile_app_controls/MobilePassConfig"));
+const MobileFeedback = lazy(() => import("../pages/mobile_app_controls/MobileFeedback"));
+const AdminReminders = lazy(() => import("../pages/mobile_app_controls/AdminReminders"));
+const MobileLeadCaptures = lazy(() => import("../pages/mobile_app_controls/MobileLeadCaptures"));
+
 const InternationalBuyerList = lazy(() => import("../pages/buyer/InternationalBuyerList"));
 const InternationalBuyerRegistrationDetail = lazy(() => import("../pages/buyers/InternationalBuyerRegistrationDetail"));
 const InternationalBuyerRegistrationEdit = lazy(() => import("../pages/buyers/InternationalBuyerRegistrationEdit"));
@@ -658,8 +664,13 @@ export default function AppRoutes() {
             <Route path="/seller-subscription-plans" element={<SellerSubscriptionPlans />} />
             <Route path="/seller-service-requests" element={<SellerServiceRequests />} />
             <Route path="/seller-export-inquiries" element={<SellerExportInquiries />} />
+            <Route path="/mobile-pass-requests" element={<MobilePassRequests />} />
+            <Route path="/mobile-pass-config" element={<MobilePassConfig />} />
+            <Route path="/mobile-feedback" element={<MobileFeedback />} />
+            <Route path="/mobile-lead-captures" element={<MobileLeadCaptures />} />
             <Route path="/marketing-toolkit-manage" element={<MarketingToolkitManage />} />
             <Route path="/reminder" element={<Reminder />} />
+            <Route path="/reminders" element={<AdminReminders />} />
             <Route path="/to-do-list" element={<ToDoList />} />
             <Route path="/new-leads" element={<NewLeads />} />
             <Route path="/notification" element={<Notification />} />
