@@ -642,6 +642,18 @@ export const menuItems = [
 
   {
     type: "dropdown",
+    label: "Mobile App Control",
+    icon: Phone,
+    children: [
+      { label: "Pass Requests", path: "/mobile-pass-requests" },
+      { label: "Pass Config", path: "/mobile-pass-config" },
+      { label: "Scanner Leads", path: "/mobile-lead-captures" },
+      { label: "Feedback", path: "/mobile-feedback" },
+    ],
+  },
+
+  {
+    type: "dropdown",
     label: "Admin Management",
     icon: TrendingUp,
     children: [

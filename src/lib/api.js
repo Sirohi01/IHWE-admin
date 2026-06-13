@@ -3,7 +3,7 @@ import axios from "axios";
 const getBaseUrl = () => {
   // Always prioritize the ENV value if present
   if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL.replace(/\/api$/, "");
+    return import.meta.env.VITE_API_URL.trim().replace(/\/api$/, "");
   }
 
   // Fallback for local development or subdomains
@@ -30,6 +30,8 @@ const api = axios.create({
 // ✅ REQUEST INTERCEPTOR
 api.interceptors.request.use(
   (config) => {
+    config.headers["ngrok-skip-browser-warning"] = "true";
+
     const token =
       localStorage.getItem("adminToken") ||
       sessionStorage.getItem("adminToken");
