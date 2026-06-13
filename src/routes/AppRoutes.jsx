@@ -202,6 +202,7 @@ const SellerExportInquiries = lazy(() => import("../pages/SellerExportInquiries"
 const MobilePassRequests = lazy(() => import("../pages/MobilePassRequests"));
 const MobilePassConfig = lazy(() => import("../pages/MobilePassConfig"));
 const MobileFeedback = lazy(() => import("../pages/MobileFeedback"));
+const AdminReminders = lazy(() => import("../pages/AdminReminders"));
 const MobileLeadCaptures = lazy(() => import("../pages/MobileLeadCaptures"));
 const InternationalBuyerList = lazy(() => import("../pages/buyer/InternationalBuyerList"));
 const InternationalBuyerRegistrationDetail = lazy(() => import("../pages/InternationalBuyerRegistrationDetail"));
@@ -668,6 +669,7 @@ export default function AppRoutes() {
             <Route path="/mobile-lead-captures" element={<MobileLeadCaptures />} />
             <Route path="/marketing-toolkit-manage" element={<MarketingToolkitManage />} />
             <Route path="/reminder" element={<Reminder />} />
+            <Route path="/reminders" element={<AdminReminders />} />
             <Route path="/to-do-list" element={<ToDoList />} />
             <Route path="/new-leads" element={<NewLeads />} />
             <Route path="/notification" element={<Notification />} />

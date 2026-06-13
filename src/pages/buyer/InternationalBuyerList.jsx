@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, Eye, Edit, Search, Globe, FileText, Download } from 'lucide-react';
+import { Trash2, Eye, Edit, Search, Globe, FileText, Download, QrCode, X } from 'lucide-react';
+import QRCode from 'react-qr-code';
 import { useNavigate } from 'react-router-dom';
 import api, { SERVER_URL } from "../../lib/api";
 import Swal from 'sweetalert2';
@@ -11,6 +12,7 @@ const InternationalBuyerList = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [selectedQR, setSelectedQR] = useState(null);
     const navigate = useNavigate();
     const itemsPerPage = 25;
 
@@ -245,6 +247,13 @@ const InternationalBuyerList = () => {
                                                         >
                                                             <Trash2 className="w-4 h-4" />
                                                         </button>
+                                                        <button
+                                                            onClick={() => setSelectedQR(row)}
+                                                            className="p-1 text-gray-500 hover:text-purple-600 transition-colors"
+                                                            title="View QR Code"
+                                                        >
+                                                            <QrCode className="w-4 h-4" />
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -281,6 +290,34 @@ const InternationalBuyerList = () => {
                     </div>
                 </div>
             </div>
+
+            {selectedQR && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col">
+                        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+                            <h3 className="font-semibold text-gray-800">Buyer QR Code</h3>
+                            <button onClick={() => setSelectedQR(null)} className="text-gray-400 hover:text-gray-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6 flex flex-col items-center justify-center bg-white">
+                            <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 mb-4">
+                                {selectedQR.qrCode ? (
+                                    <img src={selectedQR.qrCode} alt="QR Code" className="w-48 h-48 object-contain" />
+                                ) : (
+                                    <QRCode value={selectedQR.registrationId || selectedQR._id} size={192} />
+                                )}
+                            </div>
+                            <h4 className="text-lg font-bold text-gray-800 text-center">{selectedQR.brandName || "N/A"}</h4>
+                            <p className="text-sm text-gray-500 text-center">{selectedQR.primaryContact?.fullName || "N/A"}</p>
+                            <p className="text-xs text-gray-400 text-center mt-1">{selectedQR.primaryContact?.emailId}</p>
+                        </div>
+                        <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+                            <button onClick={() => setSelectedQR(null)} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium">Close</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

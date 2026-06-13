@@ -649,6 +649,7 @@ export const menuItems = [
       { label: "Pass Config", path: "/mobile-pass-config" },
       { label: "Scanner Leads", path: "/mobile-lead-captures" },
       { label: "Feedback", path: "/mobile-feedback" },
+      { label: "Reminders & Notifications", path: "/reminders" },
     ],
   },
 
