@@ -1,16 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-
-// ✅ API Base URL (change as per your setup)
-// || "http://localhost:5000/api/invoice";
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+import api from "../../lib/api";
 
 // 📍 GET All Invoices
 export const fetchInvoices = createAsyncThunk(
   "invoice/fetchAll",
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/invoices`);
+      const response = await api.get(`/api/invoices`);
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
@@ -23,7 +19,7 @@ export const fetchInvoiceById = createAsyncThunk(
   "invoice/fetchById",
   async (id, thunkAPI) => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/invoices/${id}`);
+      const response = await api.get(`/api/invoices/${id}`);
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
@@ -36,7 +32,7 @@ export const createInvoice = createAsyncThunk(
   "invoice/create",
   async (invoiceData, thunkAPI) => {
     try {
-      const response = await axios.post(`${BASE_URL}/api/invoices`, invoiceData);
+      const response = await api.post(`/api/invoices`, invoiceData);
       return response.data.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
@@ -49,7 +45,7 @@ export const updateInvoice = createAsyncThunk(
   "invoice/update",
   async ({ id, data }, thunkAPI) => {
     try {
-      const response = await axios.put(`${BASE_URL}/api/invoices/${id}`, data);
+      const response = await api.put(`/api/invoices/${id}`, data);
       return response.data.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
@@ -62,7 +58,7 @@ export const deleteInvoice = createAsyncThunk(
   "invoice/delete",
   async (id, thunkAPI) => {
     try {
-      await axios.delete(`${BASE_URL}/api/invoices/${id}`);
+      await api.delete(`/api/invoices/${id}`);
       return id;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);

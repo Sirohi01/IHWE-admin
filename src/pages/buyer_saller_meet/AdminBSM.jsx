@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
 import { toast } from 'react-toastify';
 import {
     Calendar, Users, Clock, MapPin,
     MoreVertical, CheckCircle, XCircle,
     Plus, Search, Filter, Trash2, Edit
 } from 'lucide-react';
+import api from '../lib/api';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const PAGE_SIZE = 12;
 
 const AdminBSM = () => {
@@ -43,7 +42,7 @@ const AdminBSM = () => {
 
     const fetchData = async () => {
         try {
-            const res = await axios.get(`${API_BASE}/bsm/admin/all`);
+            const res = await api.get('/api/bsm/admin/all');
             setMeetings(res.data.data);
             setLoading(false);
         } catch (err) {
@@ -53,7 +52,7 @@ const AdminBSM = () => {
 
     const fetchActiveEvent = async () => {
         try {
-            const res = await axios.get(`${API_BASE}/events`);
+            const res = await api.get('/api/events');
             // Assuming the first active event is the target
             const active = res.data.data.find(e => e.status === 'active');
             if (active) setActiveEvent(active);
@@ -82,8 +81,8 @@ const AdminBSM = () => {
     const fetchParticipants = async () => {
         try {
             const [bRes, eRes] = await Promise.all([
-                axios.get(`${API_BASE}/bsm/buyers`),
-                axios.get(`${API_BASE}/exhibitor-registration`)
+                api.get('/api/bsm/buyers'),
+                api.get('/api/exhibitor-registration')
             ]);
             setBuyers(bRes.data.data);
             setExhibitors(eRes.data.data);
@@ -95,12 +94,25 @@ const AdminBSM = () => {
     const handleAssign = async (e) => {
         e.preventDefault();
         try {
+            const updatePayload = { ...formData };
+            if (selectedMeeting && selectedMeeting.status === 'Pending' && formData.date && formData.timeSlot) {
+                if (selectedMeeting.requestedBy === 'Exhibitor') {
+                    updatePayload.exhibitorApproval = 'Approved';
+                    updatePayload.buyerApproval = 'Approved';
+                    updatePayload.status = 'Approved';
+                } else if (selectedMeeting.requestedBy === 'Buyer') {
+                    updatePayload.buyerApproval = 'Approved';
+                    updatePayload.exhibitorApproval = 'Approved';
+                    updatePayload.status = 'Approved';
+                }
+            }
+
             const url = selectedMeeting
-                ? `${API_BASE}/bsm/admin/update/${selectedMeeting._id}`
-                : `${API_BASE}/bsm/admin/create`;
+                ? `/api/bsm/admin/update/${selectedMeeting._id}`
+                : '/api/bsm/admin/create';
             const method = selectedMeeting ? 'put' : 'post';
 
-            const res = await axios[method](url, formData);
+            const res = await api[method](url, updatePayload);
             if (res.data.success) {
                 toast.success(selectedMeeting ? "Meeting Updated" : "Meeting Assigned Successfully");
                 setShowAssignModal(false);
@@ -115,7 +127,7 @@ const AdminBSM = () => {
 
     const updateStatus = async (id, status) => {
         try {
-            await axios.put(`${API_BASE}/bsm/admin/update/${id}`, { status });
+            await api.put(`/api/bsm/admin/update/${id}`, { status });
             toast.success(`Meeting ${status}`);
             fetchData();
         } catch (err) {
@@ -125,7 +137,7 @@ const AdminBSM = () => {
 
     const setApproval = async (id, side, approval) => {
         try {
-            await axios.put(`${API_BASE}/bsm/admin/approval/${id}`, { side, approval });
+            await api.put(`/api/bsm/admin/approval/${id}`, { side, approval });
             toast.success(`${side === 'exhibitor' ? 'Exhibitor' : 'Buyer'} approval set to ${approval}`);
             fetchData();
         } catch (err) {
