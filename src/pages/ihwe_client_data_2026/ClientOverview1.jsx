@@ -49,6 +49,21 @@ import EmailModal from "./communication/EmailModal";
 import CallLogModal from "./communication/CallLogModal";
 import SearchableDropdown from "../../components/SearchableDropdown";
 
+const getMediaUrl = (value) => {
+  if (!value) return "";
+  const normalized = String(value).replace(/\\/g, "/");
+  if (normalized.startsWith("blob:") || normalized.startsWith("http://") || normalized.startsWith("https://")) {
+    return normalized;
+  }
+  const uploadsIndex = normalized.indexOf("/uploads/");
+  if (uploadsIndex >= 0) return `${SERVER_URL}${normalized.slice(uploadsIndex)}`;
+  const relativeUploadsIndex = normalized.indexOf("uploads/");
+  if (relativeUploadsIndex >= 0) return `${SERVER_URL}/${normalized.slice(relativeUploadsIndex)}`;
+  if (normalized.startsWith("/uploads/")) return `${SERVER_URL}${normalized}`;
+  if (normalized.startsWith("uploads/")) return `${SERVER_URL}/${normalized}`;
+  return `${SERVER_URL}/${normalized.replace(/^\/+/, "")}`;
+};
+
 const ClientOverview1 = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -92,12 +107,16 @@ const ClientOverview1 = () => {
   if (!currentUserName) currentUserName = 'Admin';
 
   const [company, setCompany] = useState(null);
+  const [companyLogoSrc, setCompanyLogoSrc] = useState("");
+
+  const getCrmTargetId = () => (isExhibitor ? company?.clientId : company?._id);
+  const getExhibitorTargetId = () => (isExhibitor ? company?._id : null);
 
   const fetchCompanyDetails = async () => {
     try {
       if (isExhibitor) {
         try {
-          const res = await api.get(`/api/exhibitor-registration/${id}`);
+          const res = await api.get(`/api/exhibitor-registration/${id}?light=true&t=${Date.now()}`);
           let data = res.data.data || res.data;
 
           if (data.clientId) {
@@ -112,10 +131,10 @@ const ClientOverview1 = () => {
               };
 
               if (data.contact1 && crmData.contacts && crmData.contacts[0]) {
-                data.contact1.photo = data.contact1.photo || crmData.contacts[0].photo;
+                data.contact1.photoUrl = data.contact1.photoUrl || data.contact1.photo || crmData.contacts[0].photo;
               }
               if (data.contact2 && crmData.contacts && crmData.contacts[1]) {
-                data.contact2.photo = data.contact2.photo || crmData.contacts[1].photo;
+                data.contact2.photoUrl = data.contact2.photoUrl || data.contact2.photo || crmData.contacts[1].photo;
               }
             } catch (crmErr) {
               console.log("Failed to fetch CRM company for exhibitor", crmErr);
@@ -147,7 +166,7 @@ const ClientOverview1 = () => {
         // If 404 from companies, try exhibitor-registration
         if (err.response?.status === 404 || err.response?.status === 400) {
           console.log("Not found in companies, trying exhibitor-registration...");
-          const res = await api.get(`/api/exhibitor-registration/${id}`);
+          const res = await api.get(`/api/exhibitor-registration/${id}?light=true&t=${Date.now()}`);
           const data = res.data.data || res.data;
           const normalizedContacts = [];
           if (data.contact1 && data.contact1.firstName) normalizedContacts.push(data.contact1);
@@ -189,12 +208,15 @@ const ClientOverview1 = () => {
     if (id) {
       fetchCompanyDetails();
     }
+  }, [id]);
+
+  useEffect(() => {
+    if (!company) return;
     dispatch(fetchStatusOptions());
     dispatch(fetchNextActions());
     dispatch(fetchAdmins());
-
     fetchEvents();
-  }, [id]);
+  }, [company?._id]);
 
   useEffect(() => {
     if (company?._id) {
@@ -210,6 +232,38 @@ const ClientOverview1 = () => {
       }));
     }
   }, [company, isExhibitor]);
+
+  useEffect(() => {
+    let objectUrl = "";
+    const rawLogo = company?.companyLogoUrl || company?.companyLogo;
+
+    const loadLogo = async () => {
+      if (!rawLogo) {
+        setCompanyLogoSrc("");
+        return;
+      }
+
+      const mediaUrl = getMediaUrl(rawLogo);
+      if (!mediaUrl || mediaUrl.startsWith("blob:")) {
+        setCompanyLogoSrc(mediaUrl);
+        return;
+      }
+
+      try {
+        const res = await api.get(mediaUrl, { responseType: "blob" });
+        objectUrl = URL.createObjectURL(res.data);
+        setCompanyLogoSrc(objectUrl);
+      } catch (err) {
+        console.log("Logo blob load failed, using direct URL", err);
+        setCompanyLogoSrc(mediaUrl);
+      }
+    };
+
+    loadLogo();
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [company?.companyLogoUrl, company?.companyLogo]);
 
   const fetchEvents = async () => {
     try {
@@ -351,7 +405,7 @@ const ClientOverview1 = () => {
       companyDescription: company.companyDescription || "",
     });
     setLogoFile(null);
-    setLogoPreview(company?.companyLogo || "");
+    setLogoPreview(company?.companyLogoUrl || company?.companyLogo || "");
     setIsEditProfileOpen(true);
   };
 
@@ -371,18 +425,26 @@ const ClientOverview1 = () => {
     e.preventDefault();
     setIsSavingProfile(true);
     try {
-      const targetId = company?.clientId || company?._id;
+      const crmTargetId = getCrmTargetId();
+      const exhibitorTargetId = getExhibitorTargetId();
       let photoUrl = company?.companyLogoUrl || company?.companyLogo || "";
 
-      // 1. Upload logo if any (always upload to CRM company)
+      // 1. Upload logo if any. Exhibitor records without a linked CRM company use exhibitor KYC upload.
       if (logoFile) {
         const formData = new FormData();
         formData.append("companyLogo", logoFile);
         try {
-          const logoRes = await api.post(`/api/companies/${targetId}/logo`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-          photoUrl = logoRes.data.data.companyLogo;
+          if (crmTargetId) {
+            const logoRes = await api.post(`/api/companies/${crmTargetId}/logo`, formData, {
+              headers: { "Content-Type": "multipart/form-data" },
+            });
+            photoUrl = logoRes.data.data.companyLogo;
+          } else if (exhibitorTargetId) {
+            const logoRes = await api.put(`/api/exhibitor-registration/${exhibitorTargetId}/kyc-doc`, formData, {
+              headers: { "Content-Type": "multipart/form-data" },
+            });
+            photoUrl = logoRes.data?.data?.companyLogoUrl || photoUrl;
+          }
         } catch (logoErr) {
           console.log("Error uploading logo", logoErr);
         }
@@ -403,13 +465,15 @@ const ClientOverview1 = () => {
       }
 
       // 3. Update CRM company
-      await dispatch(updateCompany({
-        id: targetId,
-        data: crmDataToUpdate
-      })).unwrap();
+      if (crmTargetId) {
+        await dispatch(updateCompany({
+          id: crmTargetId,
+          data: crmDataToUpdate
+        })).unwrap();
+      }
 
       // 4. Update ExhibitorRegistration if applicable
-      if (isExhibitor) {
+      if (exhibitorTargetId) {
         const exhibitorDataToUpdate = {
           exhibitorName: editProfileData.companyName,
           website: editProfileData.website,
@@ -424,10 +488,10 @@ const ClientOverview1 = () => {
             alternateNo: c.alternateNo || c.alternate,
             mobile: editProfileData.mobile,
             email: editProfileData.email,
-            photo: c.photo
+            photoUrl: c.photoUrl || c.photo
           };
         }
-        await api.put(`/api/exhibitor-registration/${company._id}`, exhibitorDataToUpdate);
+        await api.put(`/api/exhibitor-registration/${exhibitorTargetId}`, exhibitorDataToUpdate);
       }
 
       Swal.fire({ icon: "success", title: "Profile Updated", timer: 1500, showConfirmButton: false });
@@ -448,7 +512,7 @@ const ClientOverview1 = () => {
         const logMessage = `[Profile Update] Changes by ${currentUserName}\n• ${changesText}`;
 
         // Log to communication panel
-        await dispatch(createReview({ cmpny_id: targetId, type: "log", re_msg: logMessage })).unwrap();
+        await dispatch(createReview({ cmpny_id: crmTargetId || exhibitorTargetId, type: "log", re_msg: logMessage })).unwrap();
         dispatch(fetchReviewById(id));
       }
     } catch (err) {
@@ -503,7 +567,7 @@ const ClientOverview1 = () => {
     setEditingContactIdx(idx);
     setContactForm({ title: c.title || "", firstName: c.firstName || "", surname: isExhibitor ? (c.lastName || "") : (c.surname || ""), designation: c.designation || "", email: c.email || "", mobile: c.mobile || "", alternate: isExhibitor ? (c.alternateNo || "") : (c.alternate || "") });
     setContactPhotoFile(null);
-    setContactPhotoPreview(c.photo || "");
+    setContactPhotoPreview(c.photoUrl || c.photo || "");
     setIsContactModalOpen(true);
   };
 
@@ -511,16 +575,23 @@ const ClientOverview1 = () => {
     e.preventDefault();
     setIsSavingContact(true);
     try {
-      const targetId = company?.clientId || company?._id;
-      let photoUrl = contactPhotoPreview && !contactPhotoPreview.startsWith("blob:") ? contactPhotoPreview : (company.contacts?.[editingContactIdx]?.photo || "");
+      const crmTargetId = getCrmTargetId();
+      const exhibitorTargetId = getExhibitorTargetId();
+      let photoUrl = contactPhotoPreview && !contactPhotoPreview.startsWith("blob:")
+        ? contactPhotoPreview
+        : (company.contacts?.[editingContactIdx]?.photoUrl || company.contacts?.[editingContactIdx]?.photo || "");
 
       if (contactPhotoFile) {
         const formData = new FormData();
         formData.append("contactPhoto", contactPhotoFile);
         try {
-          const res = await api.post(`/api/companies/${targetId}/contact-photo`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
+          const res = crmTargetId
+            ? await api.post(`/api/companies/${crmTargetId}/contact-photo`, formData, {
+              headers: { "Content-Type": "multipart/form-data" },
+            })
+            : await api.post(`/api/exhibitor-registration/${exhibitorTargetId}/contact-photo`, formData, {
+              headers: { "Content-Type": "multipart/form-data" },
+            });
           if (res.data?.photoUrl) photoUrl = res.data.photoUrl;
         } catch (err) {
           console.log(err);
@@ -532,17 +603,19 @@ const ClientOverview1 = () => {
       const currentUserName = JSON.parse(localStorage.getItem('user'))?.name || 'User';
 
       if (editingContactIdx !== null) {
-        updatedContacts[editingContactIdx] = { ...contactForm, photo: photoUrl };
+        updatedContacts[editingContactIdx] = { ...contactForm, photo: photoUrl, photoUrl };
         logMessage = `[Contact Update] Changes by ${currentUserName}\nUpdated Contact: ${contactForm.firstName} ${contactForm.surname}`;
       } else {
-        updatedContacts.push({ ...contactForm, photo: photoUrl });
+        updatedContacts.push({ ...contactForm, photo: photoUrl, photoUrl });
         const contactName = `${contactForm.title} ${contactForm.firstName} ${contactForm.surname}`.trim();
         logMessage = `[Contact Added] Changes by ${currentUserName}\nAdded New Contact: ${contactName}\n• Designation: ${contactForm.designation || "-"}\n• Mobile: ${contactForm.mobile}\n• Email: ${contactForm.email}`;
       }
 
-      await dispatch(updateCompany({ id: targetId, data: { contacts: updatedContacts } })).unwrap();
+      if (crmTargetId) {
+        await dispatch(updateCompany({ id: crmTargetId, data: { contacts: updatedContacts } })).unwrap();
+      }
 
-      if (isExhibitor) {
+      if (exhibitorTargetId) {
         const mapContact = (c) => c ? {
           title: c.title,
           firstName: c.firstName,
@@ -551,16 +624,16 @@ const ClientOverview1 = () => {
           designation: c.designation,
           mobile: c.mobile,
           alternateNo: c.alternate,
-          photo: c.photo
+          photoUrl: c.photoUrl || c.photo
         } : null;
 
         const payload = { contact1: null, contact2: null };
         if (updatedContacts[0]) payload.contact1 = mapContact(updatedContacts[0]);
         if (updatedContacts[1]) payload.contact2 = mapContact(updatedContacts[1]);
-        await api.put(`/api/exhibitor-registration/${company._id}`, payload);
+        await api.put(`/api/exhibitor-registration/${exhibitorTargetId}`, payload);
       }
 
-      await dispatch(createReview({ cmpny_id: targetId, type: "log", re_msg: logMessage })).unwrap();
+      await dispatch(createReview({ cmpny_id: crmTargetId || exhibitorTargetId, type: "log", re_msg: logMessage })).unwrap();
       dispatch(fetchReviewById(id));
 
       Swal.fire({ icon: "success", title: editingContactIdx !== null ? "Contact Updated" : "Contact Added", timer: 1500, showConfirmButton: false });
@@ -654,9 +727,9 @@ const ClientOverview1 = () => {
               {/* LOGO */}
 
               <div className="border border-gray-300 rounded-2xl p-3 flex items-center justify-center h-[130px] w-[160px] flex-shrink-0">
-                {(isExhibitor ? company.companyLogoUrl : company.companyLogo) ? (
+                {(companyLogoSrc || company.companyLogoUrl || company.companyLogo) ? (
                   <img
-                    src={(isExhibitor ? company.companyLogoUrl : company.companyLogo).startsWith('http') ? (isExhibitor ? company.companyLogoUrl : company.companyLogo) : `${SERVER_URL}${isExhibitor ? company.companyLogoUrl : company.companyLogo}`}
+                    src={companyLogoSrc || getMediaUrl(company.companyLogoUrl || company.companyLogo)}
                     alt="Logo"
                     className="w-full h-full object-contain"
                   />
@@ -1014,8 +1087,12 @@ const ClientOverview1 = () => {
                     </button>
                     {/* Avatar */}
                     <div className="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 text-indigo-600 font-bold text-lg overflow-hidden">
-                      {contact.photo ? (
-                        <img src={contact.photo.startsWith('http') ? contact.photo : `${SERVER_URL}${contact.photo}`} alt="" className="w-full h-full object-cover" />
+                      {(contact.photoUrl || contact.photo) ? (
+                        <img
+                          src={getMediaUrl(contact.photoUrl || contact.photo)}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         contact.firstName ? contact.firstName.charAt(0).toUpperCase() : "?"
                       )}
@@ -1075,7 +1152,7 @@ const ClientOverview1 = () => {
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Company Logo</label>
                   <div className="flex items-center gap-4">
                     {logoPreview && (
-                      <img src={logoPreview.startsWith('blob:') ? logoPreview : `http://localhost:5000${logoPreview}`} alt="Logo Preview" className="w-16 h-16 rounded-xl object-contain border border-gray-200 bg-gray-50" />
+                      <img src={getMediaUrl(logoPreview)} alt="Logo Preview" className="w-16 h-16 rounded-xl object-contain border border-gray-200 bg-gray-50" />
                     )}
                     <label className="flex-1 h-10 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 hover:border-green-500 cursor-pointer text-sm text-gray-500 hover:text-green-600 transition-colors">
                       <input type="file" accept="image/*" onChange={handleLogoFileChange} className="hidden" />
