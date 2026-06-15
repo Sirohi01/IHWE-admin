@@ -64,6 +64,39 @@ const getMediaUrl = (value) => {
   return `${SERVER_URL}/${normalized.replace(/^\/+/, "")}`;
 };
 
+const SecureImage = ({ src, alt, className }) => {
+  const [imgSrc, setImgSrc] = React.useState("");
+
+  React.useEffect(() => {
+    let objectUrl = "";
+    const loadImg = async () => {
+      if (!src) {
+        setImgSrc("");
+        return;
+      }
+      const mediaUrl = getMediaUrl(src);
+      if (!mediaUrl || mediaUrl.startsWith("blob:")) {
+        setImgSrc(mediaUrl);
+        return;
+      }
+      try {
+        const res = await api.get(mediaUrl, { responseType: "blob" });
+        objectUrl = URL.createObjectURL(res.data);
+        setImgSrc(objectUrl);
+      } catch (err) {
+        setImgSrc(mediaUrl);
+      }
+    };
+    loadImg();
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [src]);
+
+  if (!imgSrc) return null;
+  return <img src={imgSrc} alt={alt || ""} className={className} />;
+};
+
 const ClientOverview1 = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -1088,8 +1121,8 @@ const ClientOverview1 = () => {
                     {/* Avatar */}
                     <div className="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 text-indigo-600 font-bold text-lg overflow-hidden">
                       {(contact.photoUrl || contact.photo) ? (
-                        <img
-                          src={getMediaUrl(contact.photoUrl || contact.photo)}
+                        <SecureImage
+                          src={contact.photoUrl || contact.photo}
                           alt=""
                           className="w-full h-full object-cover"
                         />
@@ -1239,7 +1272,7 @@ const ClientOverview1 = () => {
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden flex-shrink-0 text-indigo-600 font-bold text-lg">
                   {contactPhotoPreview ? (
-                    <img src={contactPhotoPreview} alt="" className="w-full h-full object-cover" />
+                    <SecureImage src={contactPhotoPreview} alt="" className="w-full h-full object-cover" />
                   ) : (
                     contactForm.firstName ? contactForm.firstName.charAt(0).toUpperCase() : "?"
                   )}
