@@ -563,14 +563,18 @@ const ClientOverview1 = () => {
     try {
       if (isExhibitor) {
         await api.put(`/api/exhibitor-registration/${company._id}`, msmeData);
+        if (company.clientId) {
+          await dispatch(updateCompany({ id: company.clientId, data: msmeData })).unwrap();
+        }
+      } else {
+        await dispatch(updateCompany({ id: company._id, data: msmeData })).unwrap();
       }
-      const targetId = company?.clientId || company?._id;
-      await dispatch(updateCompany({ id: targetId, data: msmeData })).unwrap();
 
       const oldCategory = company.exhibitorCategory || "None";
       const newCategory = msmeData.exhibitorCategory || "None";
       const logMessage = `[Exhibitor Category Update] Changes by ${currentUserName}\n• Category changed from '${oldCategory}' to '${newCategory}'`;
 
+      const targetId = company?.clientId || company?._id;
       // Log to communication panel
       await dispatch(createReview({
         cmpny_id: targetId,
