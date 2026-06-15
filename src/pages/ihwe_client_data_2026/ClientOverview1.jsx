@@ -176,6 +176,7 @@ const ClientOverview1 = () => {
           data.companyDescription = data.companyDescription || data.aboutCompany;
           data.category = data.category || data.industrySector || data.typeOfBusiness;
           data.exhibitorCategory = data.exhibitorCategory || data.participation?.stallCategory;
+          data.companyStatus = data.companyStatus || data.status;
 
           const normalizedContacts = [];
           if (data.contact1 && data.contact1.firstName) normalizedContacts.push(data.contact1);
