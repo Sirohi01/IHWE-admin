@@ -213,13 +213,14 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { fetchHealthCampVisitors } from "../../features/visitor/freeHealthCampSlice";
-import ClientOverview from "../../Components/ClientOverview";
+import ClientOverview from "../../components/ClientOverview";
 import VisitorGloballytable from "./VisitorGloballytable";
 
 const HealthCampVisitorsList = () => {
   const dispatch = useDispatch();
   const [selectedClient, setSelectedClient] = useState(null);
   const [open, setOpen] = useState("");
+  const [modalQrCode, setModalQrCode] = useState(null);
 
   const { healthCampVisitors, loading } = useSelector(
     (state) => state.healthCampVisitors,
@@ -279,6 +280,7 @@ const HealthCampVisitorsList = () => {
         ? `${v.updated_by} | ${formatDateTime(v.updatedAt)}`
         : formatDateTime(v.updatedAt),
     },
+    qrCode: { image: v.qrCode || null },
     _original: v,
   }));
 
@@ -301,6 +303,11 @@ const HealthCampVisitorsList = () => {
     { label: "Appointment Details", accessor: "appointment.date" },
     { label: "Status", accessor: "status.status" },
     { label: "City & State", accessor: "location.city" },
+    {
+      label: "QR Code",
+      accessor: "qrCode.image",
+      render: (img) => img ? <img src={img} alt="QR Code" className="w-12 h-12 cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setModalQrCode(img); }} /> : <span className="text-gray-400">N/A</span>
+    },
     { label: "Created By", accessor: "meta.createdBy" },
     { label: "Updated By", accessor: "meta.updatedBy" },
     {
@@ -311,7 +318,7 @@ const HealthCampVisitorsList = () => {
           to={`/webVisitorData/healthCampVisitorDetails/${id}`}
           className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition-colors"
         >
-          View View
+          View
         </Link>
       ),
     },
@@ -413,6 +420,17 @@ const HealthCampVisitorsList = () => {
             </div>
           </div>
         </>
+      )}
+
+      {/* QR Code Modal */}
+      {modalQrCode && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }} onClick={(e) => { e.stopPropagation(); setModalQrCode(null); }}>
+          <div className="bg-white p-4 rounded-lg shadow-lg relative" onClick={(e) => e.stopPropagation()}>
+            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-xl" onClick={(e) => { e.stopPropagation(); setModalQrCode(null); }}>✕</button>
+            <h3 className="text-lg font-medium text-center mb-4 mt-2">Visitor QR Code</h3>
+            <img src={modalQrCode} alt="Enlarged QR Code" className="w-64 h-64 object-contain" />
+          </div>
+        </div>
       )}
     </div>
   );

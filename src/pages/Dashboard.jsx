@@ -38,9 +38,7 @@ export default function Dashboard() {
   const [actualRevenue, setActualRevenue] = useState(0);
   const [actualConvertedCount, setActualConvertedCount] = useState(0);
   const [actualLeaderboard, setActualLeaderboard] = useState([]);
-  const [revenuePeriod, setRevenuePeriod] = useState("this_month");
-  const [leaderboardPeriod, setLeaderboardPeriod] = useState("this_month");
-  const [callsPeriod, setCallsPeriod] = useState("today");
+  const [globalPeriod, setGlobalPeriod] = useState("this_month");
 
   // ─── Init: user context + targets ───────────────────────────────────────────
   useEffect(() => {
@@ -68,7 +66,7 @@ export default function Dashboard() {
     if (!currentUser) return;
     const fetchRevenue = async () => {
       try {
-        const res = await api.get(`/api/companies/achievement-revenue?username=${encodeURIComponent(currentUser.username)}&period=${revenuePeriod}`);
+        const res = await api.get(`/api/companies/achievement-revenue?username=${encodeURIComponent(currentUser.username)}&period=${globalPeriod}`);
         if (res.data?.success) {
           setActualRevenue(res.data.revenue || 0);
           setActualConvertedCount(res.data.convertedCount || 0);
@@ -80,7 +78,7 @@ export default function Dashboard() {
     
     const fetchLeaderboard = async () => {
       try {
-        const res = await api.get(`/api/companies/leaderboard?period=${leaderboardPeriod}`);
+        const res = await api.get(`/api/companies/leaderboard?period=${globalPeriod}`);
         if (res.data?.success) {
           setActualLeaderboard(res.data.leaderboard || []);
         }
@@ -90,14 +88,14 @@ export default function Dashboard() {
     };
     
     fetchLeaderboard();
-  }, [currentUser, leaderboardPeriod]);
+  }, [currentUser, globalPeriod]);
 
   // ─── Fetch real revenue based on period ─────────────────────
   useEffect(() => {
     if (!currentUser) return;
     const fetchRevenue = async () => {
       try {
-        const res = await api.get(`/api/companies/achievement-revenue?username=${encodeURIComponent(currentUser.username)}&period=${revenuePeriod}`);
+        const res = await api.get(`/api/companies/achievement-revenue?username=${encodeURIComponent(currentUser.username)}&period=${globalPeriod}`);
         if (res.data?.success) {
           setActualRevenue(res.data.revenue || 0);
           setActualConvertedCount(res.data.convertedCount || 0);
@@ -107,7 +105,7 @@ export default function Dashboard() {
       }
     };
     fetchRevenue();
-  }, [currentUser, revenuePeriod]);
+  }, [currentUser, globalPeriod]);
 
   // ─── Fetch actual calls made from CallLogs ───────────────────────────────────
   const [actualCallsMade, setActualCallsMade] = useState(0);
@@ -117,7 +115,7 @@ export default function Dashboard() {
       try {
         // Find user ID (from fullProfile if available, else fallback to currentUser._id)
         const userId = fullProfile?._id || fullProfile?.id || currentUser?._id || currentUser?.id || "";
-        const res = await api.get(`/api/user-targets/stats/dashboard?username=${encodeURIComponent(currentUser.username)}&userId=${encodeURIComponent(userId)}&period=${callsPeriod}`);
+        const res = await api.get(`/api/user-targets/stats/dashboard?username=${encodeURIComponent(currentUser.username)}&userId=${encodeURIComponent(userId)}&period=${globalPeriod}`);
         if (res.data?.success) {
           setActualCallsMade(res.data.completed.call || 0);
         }
@@ -126,7 +124,7 @@ export default function Dashboard() {
       }
     };
     fetchCalls();
-  }, [currentUser, fullProfile, callsPeriod]);
+  }, [currentUser, fullProfile, globalPeriod]);
 
   // ─── Fetch dashboard data ────────────────────────────────────────────────────
   useEffect(() => {
@@ -190,7 +188,7 @@ export default function Dashboard() {
       closed: actualConvertedCount, revenue, pendingFollowups, collection,
       categories: { newLeads, hot, warm, cold, converted: actualConvertedCount },
     };
-  }, [userLeads, activityLogs, currentUser, actualConvertedCount, actualRevenue, callsPeriod]);
+  }, [userLeads, activityLogs, currentUser, actualConvertedCount, actualRevenue, globalPeriod]);
 
   // ─── Target metrics ──────────────────────────────────────────────────────────
   const targetMetrics = useMemo(() => {
@@ -203,10 +201,10 @@ export default function Dashboard() {
     
     let targetVal = 0;
     if (match) {
-      if (revenuePeriod === "today") targetVal = Number(match.daily?.revenueTarget) || 0;
-      else if (revenuePeriod === "this_week") targetVal = Number(match.weekly?.revenueTarget) || 0;
-      else if (revenuePeriod === "this_month") targetVal = Number(match.monthly?.revenueTarget) || 0;
-      else if (revenuePeriod === "this_year") targetVal = Number(match.yearly?.revenueTarget) || 0;
+      if (globalPeriod === "today") targetVal = Number(match.daily?.revenueTarget) || 0;
+      else if (globalPeriod === "this_week") targetVal = Number(match.weekly?.revenueTarget) || 0;
+      else if (globalPeriod === "this_month") targetVal = Number(match.monthly?.revenueTarget) || 0;
+      else if (globalPeriod === "this_year") targetVal = Number(match.yearly?.revenueTarget) || 0;
     }
     
     // Scale down the achieved revenue to Lakhs for display
@@ -220,7 +218,7 @@ export default function Dashboard() {
       remaining: remaining.toFixed(2),
       pct:       targetVal > 0 ? Math.min(100, Math.round((achieved / targetVal) * 100)) : (achieved > 0 ? 100 : 0),
     };
-  }, [currentUser, targets, actualRevenue, revenuePeriod]);
+  }, [currentUser, targets, actualRevenue, globalPeriod]);
 
   // ─── Follow-ups list ─────────────────────────────────────────────────────────
   const followupsList = useMemo(() =>
@@ -276,16 +274,16 @@ export default function Dashboard() {
   return (
     <div className="w-full bg-[#f8fafc] px-3 sm:px-6 py-2 font-sans">
       {/* Row 0 — Header */}
-      <DashboardHeader fullProfile={fullProfile} currentUser={currentUser} loading={loading} />
+      <DashboardHeader fullProfile={fullProfile} currentUser={currentUser} loading={loading} globalPeriod={globalPeriod} setGlobalPeriod={setGlobalPeriod} />
 
       {/* Row 1 — 8 Stat Cards */}
-      <DashboardStatsGrid statsMetrics={statsMetrics} callsPeriod={callsPeriod} setCallsPeriod={setCallsPeriod} />
+      <DashboardStatsGrid statsMetrics={statsMetrics} />
 
       {/* Row 2 — Lead Summary | Follow-ups | Target Gauge */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-2 mb-1.5">
         <LeadSummaryCard donutData={donutData} totalLeads={statsMetrics.total} />
         <FollowupsTable  followupsList={followupsList} />
-        <TargetGaugeCard targetMetrics={targetMetrics} revenuePeriod={revenuePeriod} setRevenuePeriod={setRevenuePeriod} />
+        <TargetGaugeCard targetMetrics={targetMetrics} />
       </div>
 
       {/* Row 3 — Performance | Recent Activities | Quick Actions */}
@@ -298,7 +296,7 @@ export default function Dashboard() {
       {/* Row 4 — Top Leads | Leaderboard | Reminders | Next Action */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 items-stretch">
         <TopLeadsCard     userLeads={userLeads} />
-        <SalesLeaderboard leaderboard={actualLeaderboard} currentUser={currentUser} leaderboardPeriod={leaderboardPeriod} setLeaderboardPeriod={setLeaderboardPeriod} />
+        <SalesLeaderboard leaderboard={actualLeaderboard} currentUser={currentUser} />
         <RemindersCard    userLeads={userLeads} />
         <NextActionPanel />
       </div>

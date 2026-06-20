@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import {
     Calendar, Users, Clock, MapPin,
     MoreVertical, CheckCircle, XCircle,
     Plus, Search, Filter, Trash2, Edit
 } from 'lucide-react';
+import api from '../lib/api';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const PAGE_SIZE = 12;
 
 const AdminBSM = () => {
     const [meetings, setMeetings] = useState([]);
@@ -15,6 +15,9 @@ const AdminBSM = () => {
     const [exhibitors, setExhibitors] = useState([]);
     const [activeEvent, setActiveEvent] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('All');
+    const [currentPage, setCurrentPage] = useState(1);
 
     const [showAssignModal, setShowAssignModal] = useState(false);
     const [selectedMeeting, setSelectedMeeting] = useState(null);
@@ -33,9 +36,13 @@ const AdminBSM = () => {
         fetchActiveEvent();
     }, []);
 
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, statusFilter]);
+
     const fetchData = async () => {
         try {
-            const res = await axios.get(`${API_BASE}/bsm/admin/all`);
+            const res = await api.get('/api/bsm/admin/all');
             setMeetings(res.data.data);
             setLoading(false);
         } catch (err) {
@@ -45,7 +52,7 @@ const AdminBSM = () => {
 
     const fetchActiveEvent = async () => {
         try {
-            const res = await axios.get(`${API_BASE}/events`);
+            const res = await api.get('/api/events');
             // Assuming the first active event is the target
             const active = res.data.data.find(e => e.status === 'active');
             if (active) setActiveEvent(active);
@@ -74,8 +81,8 @@ const AdminBSM = () => {
     const fetchParticipants = async () => {
         try {
             const [bRes, eRes] = await Promise.all([
-                axios.get(`${API_BASE}/bsm/buyers`),
-                axios.get(`${API_BASE}/exhibitor-registration`)
+                api.get('/api/bsm/buyers'),
+                api.get('/api/exhibitor-registration')
             ]);
             setBuyers(bRes.data.data);
             setExhibitors(eRes.data.data);
@@ -87,12 +94,25 @@ const AdminBSM = () => {
     const handleAssign = async (e) => {
         e.preventDefault();
         try {
+            const updatePayload = { ...formData };
+            if (selectedMeeting && selectedMeeting.status === 'Pending' && formData.date && formData.timeSlot) {
+                if (selectedMeeting.requestedBy === 'Exhibitor') {
+                    updatePayload.exhibitorApproval = 'Approved';
+                    updatePayload.buyerApproval = 'Approved';
+                    updatePayload.status = 'Approved';
+                } else if (selectedMeeting.requestedBy === 'Buyer') {
+                    updatePayload.buyerApproval = 'Approved';
+                    updatePayload.exhibitorApproval = 'Approved';
+                    updatePayload.status = 'Approved';
+                }
+            }
+
             const url = selectedMeeting
-                ? `${API_BASE}/bsm/admin/update/${selectedMeeting._id}`
-                : `${API_BASE}/bsm/admin/create`;
+                ? `/api/bsm/admin/update/${selectedMeeting._id}`
+                : '/api/bsm/admin/create';
             const method = selectedMeeting ? 'put' : 'post';
 
-            const res = await axios[method](url, formData);
+            const res = await api[method](url, updatePayload);
             if (res.data.success) {
                 toast.success(selectedMeeting ? "Meeting Updated" : "Meeting Assigned Successfully");
                 setShowAssignModal(false);
@@ -107,7 +127,7 @@ const AdminBSM = () => {
 
     const updateStatus = async (id, status) => {
         try {
-            await axios.put(`${API_BASE}/bsm/admin/update/${id}`, { status });
+            await api.put(`/api/bsm/admin/update/${id}`, { status });
             toast.success(`Meeting ${status}`);
             fetchData();
         } catch (err) {
@@ -117,7 +137,7 @@ const AdminBSM = () => {
 
     const setApproval = async (id, side, approval) => {
         try {
-            await axios.put(`${API_BASE}/bsm/admin/approval/${id}`, { side, approval });
+            await api.put(`/api/bsm/admin/approval/${id}`, { side, approval });
             toast.success(`${side === 'exhibitor' ? 'Exhibitor' : 'Buyer'} approval set to ${approval}`);
             fetchData();
         } catch (err) {
@@ -137,6 +157,31 @@ const AdminBSM = () => {
         "06:00 PM - 06:20 PM", "06:30 PM - 06:50 PM",
         "07:00 PM - 07:20 PM",
     ];
+
+    const normalize = (value) => String(value || '').toLowerCase();
+
+    const filteredMeetings = useMemo(() => {
+        const query = normalize(searchQuery).trim();
+        return meetings.filter((meeting) => {
+            const matchesStatus = statusFilter === 'All' || meeting.status === statusFilter;
+            const haystack = [
+                meeting.buyerId?.companyName,
+                meeting.buyerId?.fullName,
+                meeting.buyerId?.registrationId,
+                meeting.exhibitorId?.exhibitorName,
+                meeting.exhibitorId?.registrationId,
+                meeting.location,
+                meeting.timeSlot,
+                meeting.status,
+                meeting.requestedBy,
+            ].map(normalize).join(' ');
+
+            return matchesStatus && (!query || haystack.includes(query));
+        });
+    }, [meetings, searchQuery, statusFilter]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredMeetings.length / PAGE_SIZE));
+    const paginatedMeetings = filteredMeetings.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
     return (
         <div className="p-6 bg-gray-50 min-h-screen">
@@ -175,6 +220,29 @@ const AdminBSM = () => {
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 border-b bg-white">
+                    <div className="relative flex-1 max-w-md">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input
+                            value={searchQuery}
+                            onChange={(event) => setSearchQuery(event.target.value)}
+                            placeholder="Search buyer, exhibitor, registration, venue..."
+                            className="w-full border rounded-lg h-10 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Filter size={16} className="text-gray-400" />
+                        <select
+                            value={statusFilter}
+                            onChange={(event) => setStatusFilter(event.target.value)}
+                            className="border rounded-lg h-10 px-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                            {['All', 'Pending', 'Approved', 'Rejected', 'Completed', 'Cancelled'].map(status => (
+                                <option key={status} value={status}>{status}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-gray-50 border-b">
@@ -187,7 +255,15 @@ const AdminBSM = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {meetings.map((m) => (
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="5" className="px-6 py-10 text-center text-gray-400 font-medium">Loading meetings...</td>
+                                </tr>
+                            ) : paginatedMeetings.length === 0 ? (
+                                <tr>
+                                    <td colSpan="5" className="px-6 py-10 text-center text-gray-400 font-medium">No meetings found</td>
+                                </tr>
+                            ) : paginatedMeetings.map((m) => (
                                 <tr key={m._id} className="hover:bg-gray-50 transition">
                                     <td className="px-6 py-4">
                                         <div className="flex flex-col">
@@ -283,6 +359,29 @@ const AdminBSM = () => {
                             ))}
                         </tbody>
                     </table>
+                </div>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-4 py-3 border-t bg-gray-50 text-sm">
+                    <span className="text-gray-500">
+                        Showing {filteredMeetings.length === 0 ? 0 : ((currentPage - 1) * PAGE_SIZE) + 1}
+                        -{Math.min(currentPage * PAGE_SIZE, filteredMeetings.length)} of {filteredMeetings.length}
+                    </span>
+                    <div className="flex items-center gap-2">
+                        <button
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
+                            className="px-3 py-1.5 border rounded-lg bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Previous
+                        </button>
+                        <span className="font-bold text-gray-700">Page {currentPage} / {totalPages}</span>
+                        <button
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage(page => Math.min(totalPages, page + 1))}
+                            className="px-3 py-1.5 border rounded-lg bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             </div>
 

@@ -86,7 +86,9 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
     const adminName2 = adminInfo2.fullName || adminInfo2.username || "Admin";
     const adminRole2 = adminInfo2.role || "";
 
-    fetch(`${SERVER_URL}/api/chat/rooms?adminUsername=${encodeURIComponent(adminName2)}&adminRole=${encodeURIComponent(adminRole2)}`)
+    fetch(`${SERVER_URL}/api/chat/rooms?adminUsername=${encodeURIComponent(adminName2)}&adminRole=${encodeURIComponent(adminRole2)}`, {
+      headers: { "ngrok-skip-browser-warning": "true" },
+    })
       .then(r => r.json())
       .then(res => {
         if (res.success) setChatUnread(res.data.reduce((s, r) => s + (r.unreadAdmin || 0), 0));

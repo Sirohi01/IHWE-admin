@@ -80,7 +80,6 @@ export default function DocumentConfiguration() {
             document_name: item.document_name,
             category: item.category,
             order: item.order || 0,
-            order: item.order || 0,
             status: item.status,
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
