@@ -243,6 +243,7 @@ export const menuItems = [
     children: [
       { label: "Home Slider", path: "/carousel" },
       { label: "Supported By", path: "/supported-by" },
+      { label: "Upcoming brands", path: "/upcoming-brands" },
       { label: "Introduction", path: "/introduction" },
       { label: "National Expo", path: "/national-expo" },
       { label: "Integrated Format", path: "/integrated-format" },
