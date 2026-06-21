@@ -73,6 +73,7 @@ const getInitialFormData = () => ({
     companyName: "",
     companyWebsite: "",
     industry: "",
+    otherIndustry: "",
     companySize: "",
     country: "",
     state: "",
@@ -312,11 +313,12 @@ const AddDomesticVisitor = () => {
 
         if (visitorType === "corporate") {
             if (!formData.companyName.trim()) return "Company name is required.";
-            if (!formData.companyWebsite.trim()) return "Company website is required.";
-            if (!formData.companyWebsite.includes('.')) {
-                return "Please enter a valid company website URL.";
-            }
+            // if (!formData.companyWebsite.trim()) return "Company website is required.";
+            // if (!formData.companyWebsite.includes('.')) {
+            //     return "Please enter a valid company website URL.";
+            // }
             if (!formData.industry) return "Industry/Sector is required.";
+            if (formData.industry === 'others' && !formData.otherIndustry.trim()) return "Please specify the other industry.";
             if (!formData.companySize) return "Company size is required.";
             if (!formData.b2bMeeting) return "Please select if you want to schedule B2B meetings.";
         }
@@ -338,7 +340,7 @@ const AddDomesticVisitor = () => {
         gender: formData.gender,
         companyName: formData.companyName,
         designation: formData.designation,
-        industrySector: formData.industry,
+        industrySector: formData.industry === 'others' ? formData.otherIndustry : formData.industry,
         country: formData.country,
         state: formData.state,
         city: formData.city,
@@ -359,7 +361,7 @@ const AddDomesticVisitor = () => {
         designation: formData.designation,
         companyName: formData.companyName,
         companyWebsite: formData.companyWebsite,
-        industrySector: formData.industry,
+        industrySector: formData.industry === 'others' ? formData.otherIndustry : formData.industry,
         companySize: formData.companySize,
         country: formData.country,
         state: formData.state,
@@ -543,8 +545,8 @@ const AddDomesticVisitor = () => {
                                         <input name="companyName" value={formData.companyName} onChange={handleInputChange} required placeholder="Enter Company Name.." className={inputClasses} />
                                     </div>
                                     <div>
-                                        <label className={labelClasses}>COMPANY WEBSITE *</label>
-                                        <input name="companyWebsite" value={formData.companyWebsite} onChange={handleInputChange} required placeholder="Enter Company Website.." className={inputClasses} />
+                                        <label className={labelClasses}>COMPANY WEBSITE</label>
+                                        <input name="companyWebsite" value={formData.companyWebsite} onChange={handleInputChange} placeholder="Enter Company Website.." className={inputClasses} />
                                     </div>
                                     <div>
                                         <label className={labelClasses}>INDUSTRY/SECTOR *</label>
@@ -555,8 +557,15 @@ const AddDomesticVisitor = () => {
                                                     {industry}
                                                 </option>
                                             ))}
+                                            <option value="others">Others</option>
                                         </select>
                                     </div>
+                                    {formData.industry === 'others' && (
+                                        <div>
+                                            <label className={labelClasses}>PLEASE SPECIFY INDUSTRY *</label>
+                                            <input name="otherIndustry" value={formData.otherIndustry} onChange={handleInputChange} required placeholder="Enter your industry.." className={inputClasses} />
+                                        </div>
+                                    )}
                                     <div>
                                         <label className={labelClasses}>COMPANY SIZE *</label>
                                         <select name="companySize" value={formData.companySize} onChange={handleInputChange} className={inputClasses}>
@@ -604,8 +613,8 @@ const AddDomesticVisitor = () => {
                                 </select>
                             </div>
                             <div>
-                                <label className={labelClasses}>Pincode *</label>
-                                <input name="companyPincode" value={formData.companyPincode} onChange={handleInputChange} required placeholder="Enter Pincode" className={inputClasses} />
+                                <label className={labelClasses}>Pincode</label>
+                                <input name="companyPincode" value={formData.companyPincode} onChange={handleInputChange} placeholder="Enter Pincode" className={inputClasses} />
                             </div>
                         </div>
                     </div>
