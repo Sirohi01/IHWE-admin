@@ -318,7 +318,7 @@ const AddDomesticVisitor = () => {
             //     return "Please enter a valid company website URL.";
             // }
             if (!formData.industry) return "Industry/Sector is required.";
-            if (formData.industry === 'others' && !formData.otherIndustry.trim()) return "Please specify the other industry.";
+            if (formData.industry?.toLowerCase() === 'others' && !formData.otherIndustry.trim()) return "Please specify the other industry.";
             if (!formData.companySize) return "Company size is required.";
             if (!formData.b2bMeeting) return "Please select if you want to schedule B2B meetings.";
         }
@@ -340,7 +340,7 @@ const AddDomesticVisitor = () => {
         gender: formData.gender,
         companyName: formData.companyName,
         designation: formData.designation,
-        industrySector: formData.industry === 'others' ? formData.otherIndustry : formData.industry,
+        industrySector: formData.industry?.toLowerCase() === 'others' ? formData.otherIndustry : formData.industry,
         country: formData.country,
         state: formData.state,
         city: formData.city,
@@ -361,7 +361,7 @@ const AddDomesticVisitor = () => {
         designation: formData.designation,
         companyName: formData.companyName,
         companyWebsite: formData.companyWebsite,
-        industrySector: formData.industry === 'others' ? formData.otherIndustry : formData.industry,
+        industrySector: formData.industry?.toLowerCase() === 'others' ? formData.otherIndustry : formData.industry,
         companySize: formData.companySize,
         country: formData.country,
         state: formData.state,
@@ -557,10 +557,12 @@ const AddDomesticVisitor = () => {
                                                     {industry}
                                                 </option>
                                             ))}
-                                            <option value="others">Others</option>
+                                            {!industryOptions.some(opt => opt?.toLowerCase() === 'others') && (
+                                                <option value="Others">Others</option>
+                                            )}
                                         </select>
                                     </div>
-                                    {formData.industry === 'others' && (
+                                    {formData.industry?.toLowerCase() === 'others' && (
                                         <div>
                                             <label className={labelClasses}>PLEASE SPECIFY INDUSTRY *</label>
                                             <input name="otherIndustry" value={formData.otherIndustry} onChange={handleInputChange} required placeholder="Enter your industry.." className={inputClasses} />
