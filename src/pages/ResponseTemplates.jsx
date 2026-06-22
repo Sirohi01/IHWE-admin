@@ -53,13 +53,17 @@ const ResponseTemplates = () => {
         whatsappBody: '',
         headerImage: null,
         footerImage: null,
+        smallLogo: null,
     });
     const [headerImageFile, setHeaderImageFile] = useState(null);
     const [footerImageFile, setFooterImageFile] = useState(null);
+    const [smallLogoFile, setSmallLogoFile] = useState(null);
     const [headerImagePreview, setHeaderImagePreview] = useState('');
     const [footerImagePreview, setFooterImagePreview] = useState('');
+    const [smallLogoPreview, setSmallLogoPreview] = useState('');
     const [removeHeaderImage, setRemoveHeaderImage] = useState(false);
     const [removeFooterImage, setRemoveFooterImage] = useState(false);
+    const [removeSmallLogo, setRemoveSmallLogo] = useState(false);
     const [allTemplates, setAllTemplates] = useState([]);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -90,26 +94,32 @@ const ResponseTemplates = () => {
                     whatsappBody: d.whatsappBody || '',
                     headerImage: d.headerImage || null,
                     footerImage: d.footerImage || null,
+                    smallLogo: d.smallLogo || null,
                 });
                 setHeaderImagePreview(d.headerImage ? `${SERVER_URL}${d.headerImage}` : '');
                 setFooterImagePreview(d.footerImage ? `${SERVER_URL}${d.footerImage}` : '');
+                setSmallLogoPreview(d.smallLogo ? `${SERVER_URL}${d.smallLogo}` : '');
             } else {
-                setTemplate({ emailSubject: '', emailBody: '', whatsappBody: '', headerImage: null, footerImage: null });
+                setTemplate({ emailSubject: '', emailBody: '', whatsappBody: '', headerImage: null, footerImage: null, smallLogo: null });
                 setHeaderImagePreview('');
                 setFooterImagePreview('');
+                setSmallLogoPreview('');
             }
         } catch (error) {
-            setTemplate({ emailSubject: '', emailBody: '', whatsappBody: '', headerImage: null, footerImage: null });
+            setTemplate({ emailSubject: '', emailBody: '', whatsappBody: '', headerImage: null, footerImage: null, smallLogo: null });
             setHeaderImagePreview('');
             setFooterImagePreview('');
+            setSmallLogoPreview('');
         } finally {
             setLoading(false);
         }
         // Reset file inputs on type change
         setHeaderImageFile(null);
         setFooterImageFile(null);
+        setSmallLogoFile(null);
         setRemoveHeaderImage(false);
         setRemoveFooterImage(false);
+        setRemoveSmallLogo(false);
     };
 
     useEffect(() => {
@@ -135,8 +145,10 @@ const ResponseTemplates = () => {
             formData.append('whatsappBody', template.whatsappBody || '');
             if (headerImageFile) formData.append('headerImage', headerImageFile);
             if (footerImageFile) formData.append('footerImage', footerImageFile);
+            if (smallLogoFile) formData.append('smallLogo', smallLogoFile);
             if (removeHeaderImage) formData.append('removeHeaderImage', 'true');
             if (removeFooterImage) formData.append('removeFooterImage', 'true');
+            if (removeSmallLogo) formData.append('removeSmallLogo', 'true');
 
             const response = await api.post('/api/message-templates/upsert', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
@@ -146,8 +158,10 @@ const ResponseTemplates = () => {
                 Swal.fire({ icon: 'success', title: 'Saved!', text: 'Response template updated successfully.', timer: 1500, showConfirmButton: false });
                 setHeaderImageFile(null);
                 setFooterImageFile(null);
+                setSmallLogoFile(null);
                 setRemoveHeaderImage(false);
                 setRemoveFooterImage(false);
+                setRemoveSmallLogo(false);
                 fetchAllTemplates();
                 fetchTemplate(selectedType);
             }
@@ -167,10 +181,14 @@ const ResponseTemplates = () => {
                 setHeaderImageFile(file);
                 setHeaderImagePreview(reader.result);
                 setRemoveHeaderImage(false);
-            } else {
+            } else if (field === 'footer') {
                 setFooterImageFile(file);
                 setFooterImagePreview(reader.result);
                 setRemoveFooterImage(false);
+            } else if (field === 'smallLogo') {
+                setSmallLogoFile(file);
+                setSmallLogoPreview(reader.result);
+                setRemoveSmallLogo(false);
             }
         };
         reader.readAsDataURL(file);
@@ -181,10 +199,14 @@ const ResponseTemplates = () => {
             setHeaderImageFile(null);
             setHeaderImagePreview('');
             setRemoveHeaderImage(true);
-        } else {
+        } else if (field === 'footer') {
             setFooterImageFile(null);
             setFooterImagePreview('');
             setRemoveFooterImage(true);
+        } else if (field === 'smallLogo') {
+            setSmallLogoFile(null);
+            setSmallLogoPreview('');
+            setRemoveSmallLogo(true);
         }
     };
 
@@ -259,6 +281,7 @@ const ResponseTemplates = () => {
                     ${headerSection}
                     <div class="content">
                         ${template.emailBody || '<p style="color: #999; font-style: italic;">No body content defined...</p>'}
+                        ${smallLogoPreview ? `<div><img src="${smallLogoPreview}" alt="Logo" width="200" style="display:block; max-width:200px; height:auto; border:0;" /></div>` : ''}
                         ${(selectedType === 'corporate-visitor' || selectedType === 'general-visitor') ? `<div class="qr-section"><p style="font-weight:700;color:#23471d;margin:0 0 12px;font-size:14px;text-transform:uppercase;letter-spacing:1px;">QR Code will appear here</p><div style="width:120px;height:120px;background:#f3f4f6;border:2px dashed #d1d5db;margin:0 auto;display:flex;align-items:center;justify-content:center;border-radius:8px;"><span style="font-size:11px;color:#9ca3af;">QR CODE</span></div><p style="margin:10px 0 0;font-size:12px;color:#6b7280;">Registration ID: NGT/IHWE/CV/100001</p></div>` : ''}
                     </div>
                     ${footerSection}
@@ -396,6 +419,36 @@ const ResponseTemplates = () => {
                                     )}
                                     {!footerImagePreview && (
                                         <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleImageSelect('footer', e)} />
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Small Logo Upload */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-tight flex items-center gap-2">
+                                    <ImageIcon size={14} className="text-blue-600" /> Small Logo (Under Body)
+                                </label>
+                                <div className="border-2 border-dashed border-gray-200 rounded p-3 relative group hover:border-blue-400 transition-colors">
+                                    {smallLogoPreview ? (
+                                        <div className="relative">
+                                            <img src={smallLogoPreview} alt="Small Logo" className="w-auto h-20 object-contain rounded" />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveImage('smallLogo')}
+                                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <label className="flex flex-col items-center cursor-pointer py-2">
+                                            <ImageIcon size={24} className="text-gray-300 mb-1" />
+                                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center px-2">Upload small logo<br />(e.g., Namo Gange Logo)</span>
+                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageSelect('smallLogo', e)} />
+                                        </label>
+                                    )}
+                                    {!smallLogoPreview && (
+                                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleImageSelect('smallLogo', e)} />
                                     )}
                                 </div>
                             </div>

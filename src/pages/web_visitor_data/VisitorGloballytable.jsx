@@ -66,10 +66,10 @@ const VisitorGloballytable = ({ rows = [], colomns = [], onRowClick }) => {
 
       const matchesGlobal = globalSearch
         ? colomns.some((col) =>
-            String(getValue(row, col.accessor))
-              .toLowerCase()
-              .includes(globalSearch.toLowerCase()),
-          )
+          String(getValue(row, col.accessor))
+            .toLowerCase()
+            .includes(globalSearch.toLowerCase()),
+        )
         : true;
 
       return matchesFilters && matchesGlobal;
@@ -124,11 +124,10 @@ const VisitorGloballytable = ({ rows = [], colomns = [], onRowClick }) => {
       <li
         key="prev"
         onClick={() => handlePageChange(currentPage - 1)}
-        className={`border border-gray-200 flex items-center justify-center h-8 w-12 cursor-pointer ${
-          currentPage === 1
-            ? "text-gray-300 cursor-not-allowed"
-            : "text-gray-600 hover:bg-gray-100"
-        }`}
+        className={`border border-gray-200 flex items-center justify-center h-8 w-12 cursor-pointer ${currentPage === 1
+          ? "text-gray-300 cursor-not-allowed"
+          : "text-gray-600 hover:bg-gray-100"
+          }`}
       >
         &lt;
       </li>,
@@ -140,11 +139,10 @@ const VisitorGloballytable = ({ rows = [], colomns = [], onRowClick }) => {
         <li
           key={1}
           onClick={() => handlePageChange(1)}
-          className={`border border-gray-200 flex items-center justify-center h-8 w-10 cursor-pointer ${
-            1 === currentPage
-              ? "bg-[#337ab7] text-white"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
+          className={`border border-gray-200 flex items-center justify-center h-8 w-10 cursor-pointer ${1 === currentPage
+            ? "bg-[#337ab7] text-white"
+            : "text-gray-600 hover:bg-gray-100"
+            }`}
         >
           1
         </li>,
@@ -155,11 +153,10 @@ const VisitorGloballytable = ({ rows = [], colomns = [], onRowClick }) => {
         <li
           key={2}
           onClick={() => handlePageChange(2)}
-          className={`border border-gray-200 flex items-center justify-center h-8 w-10 cursor-pointer ${
-            2 === currentPage
-              ? "bg-[#337ab7] text-white"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
+          className={`border border-gray-200 flex items-center justify-center h-8 w-10 cursor-pointer ${2 === currentPage
+            ? "bg-[#337ab7] text-white"
+            : "text-gray-600 hover:bg-gray-100"
+            }`}
         >
           2
         </li>,
@@ -170,11 +167,10 @@ const VisitorGloballytable = ({ rows = [], colomns = [], onRowClick }) => {
         <li
           key={3}
           onClick={() => handlePageChange(3)}
-          className={`border border-gray-200 flex items-center justify-center h-8 w-10 cursor-pointer ${
-            3 === currentPage
-              ? "bg-[#337ab7] text-white"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
+          className={`border border-gray-200 flex items-center justify-center h-8 w-10 cursor-pointer ${3 === currentPage
+            ? "bg-[#337ab7] text-white"
+            : "text-gray-600 hover:bg-gray-100"
+            }`}
         >
           3
         </li>,
@@ -202,11 +198,10 @@ const VisitorGloballytable = ({ rows = [], colomns = [], onRowClick }) => {
             <li
               key={i}
               onClick={() => handlePageChange(i)}
-              className={`border border-gray-200 flex items-center justify-center h-8 w-10 cursor-pointer ${
-                i === currentPage
-                  ? "bg-[#337ab7] text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
+              className={`border border-gray-200 flex items-center justify-center h-8 w-10 cursor-pointer ${i === currentPage
+                ? "bg-[#337ab7] text-white"
+                : "text-gray-600 hover:bg-gray-100"
+                }`}
             >
               {i}
             </li>,
@@ -233,11 +228,10 @@ const VisitorGloballytable = ({ rows = [], colomns = [], onRowClick }) => {
           <li
             key={i}
             onClick={() => handlePageChange(i)}
-            className={`border border-gray-200 flex items-center justify-center h-8 w-10 cursor-pointer ${
-              i === currentPage
-                ? "bg-[#337ab7] text-white"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
+            className={`border border-gray-200 flex items-center justify-center h-8 w-10 cursor-pointer ${i === currentPage
+              ? "bg-[#337ab7] text-white"
+              : "text-gray-600 hover:bg-gray-100"
+              }`}
           >
             {i}
           </li>,
@@ -250,11 +244,10 @@ const VisitorGloballytable = ({ rows = [], colomns = [], onRowClick }) => {
           <li
             key={i}
             onClick={() => handlePageChange(i)}
-            className={`border border-gray-200 flex items-center justify-center h-8 w-10 cursor-pointer ${
-              i === currentPage
-                ? "bg-[#337ab7] text-white"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
+            className={`border border-gray-200 flex items-center justify-center h-8 w-10 cursor-pointer ${i === currentPage
+              ? "bg-[#337ab7] text-white"
+              : "text-gray-600 hover:bg-gray-100"
+              }`}
           >
             {i}
           </li>,
@@ -267,11 +260,10 @@ const VisitorGloballytable = ({ rows = [], colomns = [], onRowClick }) => {
       <li
         key="next"
         onClick={() => handlePageChange(currentPage + 1)}
-        className={`border border-gray-200 flex items-center justify-center h-8 w-12 cursor-pointer ${
-          currentPage === totalPages
-            ? "text-gray-300 cursor-not-allowed"
-            : "text-gray-600 hover:bg-gray-100"
-        }`}
+        className={`border border-gray-200 flex items-center justify-center h-8 w-12 cursor-pointer ${currentPage === totalPages
+          ? "text-gray-300 cursor-not-allowed"
+          : "text-gray-600 hover:bg-gray-100"
+          }`}
       >
         &gt;
       </li>,
@@ -415,8 +407,8 @@ const VisitorGloballytable = ({ rows = [], colomns = [], onRowClick }) => {
                   return (
                     <tr
                       key={globalIndex}
-                      className="hover:bg-gray-50 cursor-pointer"
-                      onClick={() => onRowClick && onRowClick(row)}
+                    // className="hover:bg-gray-50 cursor-pointer"
+                    // onClick={() => onRowClick && onRowClick(row)}
                     >
                       <td className="h-8 w-[60px] pl-3 border border-gray-200 text-center print-hidden">
                         <div className="h-5 flex items-center justify-center">
@@ -503,9 +495,9 @@ const VisitorGloballytable = ({ rows = [], colomns = [], onRowClick }) => {
           {sortedRows.length === 0
             ? 0
             : Math.min(
-                (currentPage - 1) * pageSize + 1,
-                sortedRows.length,
-              )}{" "}
+              (currentPage - 1) * pageSize + 1,
+              sortedRows.length,
+            )}{" "}
           to {Math.min(currentPage * pageSize, sortedRows.length)} of{" "}
           {sortedRows.length} entries
         </p>

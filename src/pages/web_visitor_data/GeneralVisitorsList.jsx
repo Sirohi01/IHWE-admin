@@ -344,9 +344,9 @@ const GeneralVisitorsList = () => {
                   <VisitorGloballytable
                     rows={rows}
                     colomns={columns}
-                    onRowClick={handleClientClick}
                     extrabutton={false}
                   />
+                  {/* onRowClick={handleClientClick} */}
                 </div>
               </div>
             )}
