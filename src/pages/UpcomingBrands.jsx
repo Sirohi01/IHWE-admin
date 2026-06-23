@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Swal from "sweetalert2";
-import { Plus, Edit2, Trash2, Save, BadgeHelp, Edit, List, Type, Image as ImageIcon, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Edit2, Trash2, Save, BadgeHelp, Edit, List, Type, Image as ImageIcon, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
+import Cropper from "react-cropper";
+import "cropperjs/dist/cropper.css";
 import api, { SERVER_URL } from "../lib/api";
 import PageHeader from '../components/PageHeader';
 
@@ -25,6 +27,11 @@ const UpcomingBrands = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
+
+  // Cropping States
+  const [showCropper, setShowCropper] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState(null);
+  const [cropper, setCropper] = useState(null);
 
   // Pagination & Search States
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,12 +59,15 @@ const UpcomingBrands = () => {
         if (!isEditing && itemForm.order === 0) {
             setItemForm(prev => ({ ...prev, order: calculatedNextOrder }));
         }
+        return calculatedNextOrder;
       }
     } catch (error) {
       console.error("Error fetching data:", error);
+      Swal.fire("Error", "Failed to load data", "error");
     } finally {
       setIsLoading(false);
     }
+    return null;
   };
 
   const handleSearch = (e) => {
@@ -99,9 +109,35 @@ const UpcomingBrands = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setItemForm({ ...itemForm, logo: file });
-      setPreviewImage(URL.createObjectURL(file));
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        setImageToCrop(reader.result);
+        setShowCropper(true);
+      });
+      reader.readAsDataURL(file);
     }
+  };
+
+  const handleCropSave = () => {
+    if (typeof cropper !== "undefined" && cropper !== null) {
+      cropper.getCroppedCanvas().toBlob((blob) => {
+        if (blob) {
+          const file = new File([blob], "cropped-logo.png", { type: "image/png" });
+          setItemForm({ ...itemForm, logo: file });
+          setPreviewImage(URL.createObjectURL(blob));
+          setShowCropper(false);
+          setImageToCrop(null);
+        } else {
+          Swal.fire("Error", "Failed to crop image", "error");
+        }
+      }, 'image/png');
+    }
+  };
+
+  const cancelCrop = () => {
+    setShowCropper(false);
+    setImageToCrop(null);
+    document.getElementById("logoInput").value = "";
   };
 
   const handleItemSubmit = async (e) => {
@@ -131,8 +167,8 @@ const UpcomingBrands = () => {
 
       if (response.data.success) {
         Swal.fire({ icon: 'success', title: isEditing ? 'Brand Updated' : 'Brand Added', timer: 1500, showConfirmButton: false });
-        fetchData();
-        resetForm();
+        const latestOrder = await fetchData();
+        resetForm(latestOrder);
       }
     } catch (error) {
       Swal.fire("Error", "Action failed", "error");
@@ -141,8 +177,8 @@ const UpcomingBrands = () => {
     }
   };
 
-  const resetForm = () => {
-    setItemForm({ logo: null, logoName: "", altText: "", order: nextOrder });
+  const resetForm = (newOrder) => {
+    setItemForm({ logo: null, logoName: "", altText: "", order: newOrder ?? nextOrder });
     setPreviewImage(null);
     setIsEditing(false);
     setEditingId(null);
@@ -455,11 +491,63 @@ const UpcomingBrands = () => {
               <ul className="list-disc list-inside space-y-1 font-medium italic">
                 <li>Upload PNG logos with transparent backgrounds for best results.</li>
                 <li>Items are sorted by the 'Order' number provided.</li>
+                <li>You can crop your logo when adding or editing a brand.</li>
               </ul>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Cropper Modal */}
+      {showCropper && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden flex flex-col h-[80vh]">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-bold text-gray-800">Crop Logo</h3>
+              <button onClick={cancelCrop} className="text-gray-500 hover:text-red-500 transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="relative flex-1 w-full bg-gray-100 flex items-center justify-center p-4">
+              <div className="w-full h-full max-h-[500px]">
+                <Cropper
+                  style={{ height: "100%", width: "100%" }}
+                  initialAspectRatio={NaN}
+                  aspectRatio={NaN}
+                  src={imageToCrop}
+                  viewMode={1}
+                  minCropBoxHeight={10}
+                  minCropBoxWidth={10}
+                  background={false}
+                  responsive={true}
+                  autoCropArea={1}
+                  checkOrientation={false}
+                  onInitialized={(instance) => {
+                    setCropper(instance);
+                  }}
+                  guides={true}
+                />
+              </div>
+            </div>
+            
+            <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
+              <button
+                onClick={cancelCrop}
+                className="px-4 py-2 border border-gray-300 rounded font-bold text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCropSave}
+                className="px-4 py-2 bg-[#d26019] text-white rounded font-bold hover:bg-orange-700 transition-colors"
+              >
+                Apply Crop
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
