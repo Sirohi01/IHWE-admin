@@ -31,11 +31,12 @@ const UpcomingBrands = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [search, setSearch] = useState("");
-  const limit = 10;
+  const [limit, setLimit] = useState(10);
+  const [nextOrder, setNextOrder] = useState(1);
 
   useEffect(() => {
     fetchData();
-  }, [currentPage]);
+  }, [currentPage, limit]);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -45,6 +46,12 @@ const UpcomingBrands = () => {
         setSettings(response.data.data);
         setTotalPages(response.data.data.totalPages || 1);
         setTotalItems(response.data.data.total || response.data.data.items?.length || 0);
+        
+        const calculatedNextOrder = (response.data.data.maxOrder || 0) + 1;
+        setNextOrder(calculatedNextOrder);
+        if (!isEditing && itemForm.order === 0) {
+            setItemForm(prev => ({ ...prev, order: calculatedNextOrder }));
+        }
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -135,11 +142,12 @@ const UpcomingBrands = () => {
   };
 
   const resetForm = () => {
-    setItemForm({ logo: null, logoName: "", altText: "", order: 0 });
+    setItemForm({ logo: null, logoName: "", altText: "", order: nextOrder });
     setPreviewImage(null);
     setIsEditing(false);
     setEditingId(null);
-    document.getElementById("logoInput").value = "";
+    const fileInput = document.getElementById("logoInput");
+    if (fileInput) fileInput.value = "";
   };
 
   const startEdit = (item) => {
@@ -304,30 +312,48 @@ const UpcomingBrands = () => {
                 </span>
               </div>
 
-              <form onSubmit={handleSearch} className="flex items-center w-full sm:w-auto">
-                <div className="relative w-full sm:w-64">
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search by Brand Name..."
-                    className="w-full bg-white px-4 py-2 pl-10 rounded text-sm text-gray-900 border-none outline-none focus:ring-2 focus:ring-[#d26019]"
-                  />
-                  <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                  {search && (
-                    <button
-                      type="button"
-                      onClick={handleClearSearch}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 font-bold"
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                <div className="flex items-center gap-2 bg-white border border-gray-300 rounded px-3 py-2 w-full sm:w-auto justify-between">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Show</span>
+                    <select
+                      value={limit}
+                      onChange={(e) => {
+                        setLimit(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      className="border-none bg-transparent outline-none text-sm font-bold text-[#23471d] cursor-pointer"
                     >
-                      &times;
-                    </button>
-                  )}
+                      <option value={10}>10</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
                 </div>
-                <button type="submit" className="ml-2 bg-[#d26019] hover:bg-orange-700 text-white px-4 py-2 rounded text-sm font-bold transition-colors">
-                  Search
-                </button>
-              </form>
+
+                <form onSubmit={handleSearch} className="flex items-center w-full sm:w-auto">
+                  <div className="relative w-full sm:w-64">
+                    <input
+                      type="text"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Search by Brand Name..."
+                      className="w-full bg-white px-4 py-2 pl-10 rounded text-sm text-gray-900 border border-gray-300 outline-none focus:ring-2 focus:ring-[#d26019]"
+                    />
+                    <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                    {search && (
+                      <button
+                        type="button"
+                        onClick={handleClearSearch}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 font-bold"
+                      >
+                        &times;
+                      </button>
+                    )}
+                  </div>
+                  <button type="submit" className="ml-2 bg-[#d26019] hover:bg-orange-700 text-white px-4 py-2 rounded text-sm font-bold transition-colors">
+                    Search
+                  </button>
+                </form>
+              </div>
             </div>
 
             <div className="overflow-x-auto">
