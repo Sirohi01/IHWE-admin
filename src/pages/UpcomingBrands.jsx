@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
-import { Plus, Edit2, Trash2, Save, BadgeHelp, Edit, List, Type, Image as ImageIcon } from "lucide-react";
+import { Plus, Edit2, Trash2, Save, BadgeHelp, Edit, List, Type, Image as ImageIcon, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
 import PageHeader from '../components/PageHeader';
 
@@ -16,6 +16,7 @@ const UpcomingBrands = () => {
 
   const [itemForm, setItemForm] = useState({
     logo: null,
+    logoName: "",
     altText: "",
     order: 0
   });
@@ -24,22 +25,50 @@ const UpcomingBrands = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  
+  // Pagination & Search States
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [search, setSearch] = useState("");
+  const limit = 10;
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [currentPage]);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get("/api/upcoming-brands");
+      const response = await api.get(`/api/upcoming-brands?page=${currentPage}&limit=${limit}&search=${search}`);
       if (response.data.success) {
         setSettings(response.data.data);
+        setTotalPages(response.data.data.totalPages || 1);
+        setTotalItems(response.data.data.total || response.data.data.items?.length || 0);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    } else {
+      fetchData();
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearch("");
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    } else {
+      // Small timeout to allow state to update before fetch
+      setTimeout(() => fetchData(), 0);
     }
   };
 
@@ -77,6 +106,7 @@ const UpcomingBrands = () => {
     if (itemForm.logo instanceof File) {
         formData.append("logo", itemForm.logo);
     }
+    formData.append("logoName", itemForm.logoName);
     formData.append("altText", itemForm.altText);
     formData.append("order", itemForm.order);
 
@@ -105,7 +135,7 @@ const UpcomingBrands = () => {
   };
 
   const resetForm = () => {
-    setItemForm({ logo: null, altText: "", order: 0 });
+    setItemForm({ logo: null, logoName: "", altText: "", order: 0 });
     setPreviewImage(null);
     setIsEditing(false);
     setEditingId(null);
@@ -117,7 +147,8 @@ const UpcomingBrands = () => {
     setEditingId(item._id);
     setItemForm({
       logo: item.logo,
-      altText: item.altText,
+      logoName: item.logoName || "",
+      altText: item.altText || "",
       order: item.order || 0
     });
     setPreviewImage(getImageUrl(item.logo));
@@ -209,13 +240,23 @@ const UpcomingBrands = () => {
                 )}
               </div>
               <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Brand Name</label>
+                <input
+                  type="text"
+                  value={itemForm.logoName}
+                  onChange={(e) => setItemForm({ ...itemForm, logoName: e.target.value })}
+                  className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm"
+                  placeholder="e.g. Brand Name"
+                />
+              </div>
+              <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Alt Text (Optional)</label>
                 <input
                   type="text"
                   value={itemForm.altText}
                   onChange={(e) => setItemForm({ ...itemForm, altText: e.target.value })}
                   className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm"
-                  placeholder="e.g. Brand Name"
+                  placeholder="e.g. Image description"
                 />
               </div>
               <div>
@@ -253,13 +294,40 @@ const UpcomingBrands = () => {
         {/* Right Column: Items Table */}
         <div className="lg:col-span-2 space-y-8">
           <div className="bg-white border-2 border-gray-200 shadow-sm overflow-hidden rounded-lg">
-            <div className="px-6 py-4 border-b bg-[#23471d] flex items-center justify-between">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <List className="w-5 h-5 text-[#d26019]" /> Brands List
-              </h2>
-              <span className="bg-[#d26019] text-white text-[10px] font-bold px-2 py-1 rounded">
-                {settings.items?.length || 0} ITEMS
-              </span>
+            <div className="px-6 py-4 border-b bg-[#23471d] flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <List className="w-5 h-5 text-[#d26019]" /> Brands List
+                </h2>
+                <span className="bg-[#d26019] text-white text-[10px] font-bold px-2 py-1 rounded">
+                  {totalItems} ITEMS
+                </span>
+              </div>
+              
+              <form onSubmit={handleSearch} className="flex items-center w-full sm:w-auto">
+                <div className="relative w-full sm:w-64">
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search by Brand Name..."
+                    className="w-full px-4 py-2 pl-10 rounded text-sm text-gray-900 border-none outline-none focus:ring-2 focus:ring-[#d26019]"
+                  />
+                  <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={handleClearSearch}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 font-bold"
+                    >
+                      &times;
+                    </button>
+                  )}
+                </div>
+                <button type="submit" className="ml-2 bg-[#d26019] hover:bg-orange-700 text-white px-4 py-2 rounded text-sm font-bold transition-colors">
+                  Search
+                </button>
+              </form>
             </div>
 
             <div className="overflow-x-auto">
@@ -268,7 +336,7 @@ const UpcomingBrands = () => {
                   <tr className="bg-gray-50 text-gray-600 text-[10px] uppercase font-black tracking-widest border-b">
                     <th className="px-6 py-4">No.</th>
                     <th className="px-6 py-4">Logo</th>
-                    <th className="px-6 py-4">Alt Text</th>
+                    <th className="px-6 py-4">Brand Name</th>
                     <th className="px-6 py-4 text-center">Order</th>
                     <th className="px-6 py-4 text-center">Actions</th>
                   </tr>
@@ -289,7 +357,7 @@ const UpcomingBrands = () => {
                             <img src={getImageUrl(item.logo)} alt={item.altText} className="max-h-full max-w-full object-contain" />
                           </div>
                         </td>
-                        <td className="px-6 py-4 font-bold text-gray-900 text-sm">{item.altText || '-'}</td>
+                        <td className="px-6 py-4 font-bold text-gray-900 text-sm">{item.logoName || item.altText || '-'}</td>
                         <td className="px-6 py-4 text-center font-bold text-gray-600">{item.order}</td>
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-center gap-2">
@@ -313,6 +381,46 @@ const UpcomingBrands = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="px-6 py-4 border-t bg-gray-50 flex items-center justify-between">
+                <span className="text-sm text-gray-600 font-medium">
+                  Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, totalItems)} of {totalItems} entries
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="p-1 rounded border border-gray-300 disabled:opacity-50 hover:bg-gray-100"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                  <div className="flex gap-1">
+                    {[...Array(totalPages)].map((_, idx) => (
+                      <button
+                        key={idx + 1}
+                        onClick={() => setCurrentPage(idx + 1)}
+                        className={`w-8 h-8 flex items-center justify-center rounded font-bold text-sm ${
+                          currentPage === idx + 1
+                            ? 'bg-[#23471d] text-white'
+                            : 'border border-gray-300 text-gray-600 hover:bg-gray-100'
+                        }`}
+                      >
+                        {idx + 1}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="p-1 rounded border border-gray-300 disabled:opacity-50 hover:bg-gray-100"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           
           <div className="p-4 bg-gray-50 border-2 border-gray-200 rounded-lg text-xs text-gray-500 flex items-start gap-3">
