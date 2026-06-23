@@ -25,7 +25,7 @@ const UpcomingBrands = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  
+
   // Pagination & Search States
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -104,7 +104,7 @@ const UpcomingBrands = () => {
     setIsLoading(true);
     const formData = new FormData();
     if (itemForm.logo instanceof File) {
-        formData.append("logo", itemForm.logo);
+      formData.append("logo", itemForm.logo);
     }
     formData.append("logoName", itemForm.logoName);
     formData.append("altText", itemForm.altText);
@@ -114,11 +114,11 @@ const UpcomingBrands = () => {
       let response;
       if (isEditing) {
         response = await api.put(`/api/upcoming-brands/items/${editingId}`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
+          headers: { 'Content-Type': 'multipart/form-data' }
         });
       } else {
         response = await api.post("/api/upcoming-brands/items", formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
+          headers: { 'Content-Type': 'multipart/form-data' }
         });
       }
 
@@ -182,7 +182,7 @@ const UpcomingBrands = () => {
   };
 
   return (
-    <div className="bg-white shadow-md p-6 min-h-screen">
+    <div className="bg-white shadow-md p-6">
       <PageHeader
         title="UPCOMING BRANDS MANAGEMENT"
         description="Manage the upcoming leading brands logos and section heading"
@@ -234,9 +234,9 @@ const UpcomingBrands = () => {
                   className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm"
                 />
                 {previewImage && (
-                    <div className="mt-2 p-2 border border-gray-200 rounded flex justify-center bg-gray-50">
-                        <img src={previewImage} alt="Preview" className="h-16 object-contain" />
-                    </div>
+                  <div className="mt-2 p-2 border border-gray-200 rounded flex justify-center bg-gray-50">
+                    <img src={previewImage} alt="Preview" className="h-16 object-contain" />
+                  </div>
                 )}
               </div>
               <div>
@@ -303,7 +303,7 @@ const UpcomingBrands = () => {
                   {totalItems} ITEMS
                 </span>
               </div>
-              
+
               <form onSubmit={handleSearch} className="flex items-center w-full sm:w-auto">
                 <div className="relative w-full sm:w-64">
                   <input
@@ -401,11 +401,10 @@ const UpcomingBrands = () => {
                       <button
                         key={idx + 1}
                         onClick={() => setCurrentPage(idx + 1)}
-                        className={`w-8 h-8 flex items-center justify-center rounded font-bold text-sm ${
-                          currentPage === idx + 1
+                        className={`w-8 h-8 flex items-center justify-center rounded font-bold text-sm ${currentPage === idx + 1
                             ? 'bg-[#23471d] text-white'
                             : 'border border-gray-300 text-gray-600 hover:bg-gray-100'
-                        }`}
+                          }`}
                       >
                         {idx + 1}
                       </button>
@@ -422,7 +421,7 @@ const UpcomingBrands = () => {
               </div>
             )}
           </div>
-          
+
           <div className="p-4 bg-gray-50 border-2 border-gray-200 rounded-lg text-xs text-gray-500 flex items-start gap-3">
             <BadgeHelp size={18} className="text-[#23471d] shrink-0 mt-0.5" />
             <div>
