@@ -182,7 +182,7 @@ const UpcomingBrands = () => {
   };
 
   return (
-    <div className="bg-white shadow-md p-6">
+    <div className="bg-white shadow-md p-6 min-h-screen">
       <PageHeader
         title="UPCOMING BRANDS MANAGEMENT"
         description="Manage the upcoming leading brands logos and section heading"
