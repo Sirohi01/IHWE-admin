@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import headerBg from "../../assets/exhi.jpg";
 import arenaImg from "../../assets/hall.jpg";
@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import api, { SERVER_URL } from "../../lib/api";
 import Swal from 'sweetalert2';
+import Select from 'react-select';
 import { useDispatch } from "react-redux";
 import { createActivityLogThunk } from "../../features/activityLog/activityLogSlice";
 
@@ -114,6 +115,20 @@ const BookAStand = () => {
             isFullPayment: false
         }
     });
+
+    const [isStallDropdownOpen, setIsStallDropdownOpen] = useState(false);
+    const [stallSearchQuery, setStallSearchQuery] = useState("");
+    const stallDropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (stallDropdownRef.current && !stallDropdownRef.current.contains(event.target)) {
+                setIsStallDropdownOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     useEffect(() => {
         const fetchInitialData = async () => {
@@ -347,6 +362,27 @@ const BookAStand = () => {
             balanceAmount: Math.round(netPayable - amountToCollect)
         }));
     }, [formData.participation.stallNo, formData.participation.rate, availableStalls, formData.paymentPlanType, formData.chosenTdsPercent, settings, events, selectedEventId]);
+    useEffect(() => {
+        if (exhibitorType === 'domestic' && formData.pincode?.length === 6) {
+            const timerId = setTimeout(() => {
+                fetch(`https://api.postalpincode.in/pincode/${formData.pincode}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data[0] && data[0].Status === 'Success') {
+                            const postOffice = data[0].PostOffice[0];
+                            setFormData(prev => ({
+                                ...prev,
+                                state: postOffice.State || prev.state,
+                                city: postOffice.District || prev.city
+                            }));
+                        }
+                    })
+                    .catch(err => console.error("Error fetching pincode data:", err));
+            }, 600); // 600ms debounce
+
+            return () => clearTimeout(timerId);
+        }
+    }, [formData.pincode, exhibitorType]);
 
     const filteredStates = useMemo(() => {
         if (!formData.country || !countries.length) return [];
@@ -805,8 +841,8 @@ const BookAStand = () => {
                                 <label className={labelClasses}>Type of Business <span className="text-red-500">*</span></label>
                                 <select required value={formData.typeOfBusiness} onChange={(e) => handleSelectChange('typeOfBusiness', e.target.value)} className={inputClasses}>
                                     <option value="">Select Here</option>
-                                    <option>Private Ltd. Company</option>
-                                    <option>Public Ltd. Company</option>
+                                    <option>Pvt. Ltd. Company</option>
+                                    <option>Pub. Ltd. Company</option>
                                     <option>Partnership Company</option>
                                     <option>Limited Liability Partnership (LLP)</option>
                                     <option>One Person Company</option>
@@ -834,37 +870,43 @@ const BookAStand = () => {
                                 <input required type="text" value={formData.website} onChange={(e) => handleSelectChange('website', e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
                             <div>
-                                <label className={labelClasses}>Exhibitor Address <span className="text-red-500">*</span></label>
-                                <input required type="text" value={formData.address} onChange={(e) => handleSelectChange('address', e.target.value)} className={inputClasses} placeholder="Write Here.." />
+                                <label className={labelClasses}>Pincode <span className="text-red-500">*</span></label>
+                                <input required type="text" value={formData.pincode} onChange={(e) => handleSelectChange('pincode', e.target.value)} className={inputClasses} placeholder="Write Here.." inputMode="numeric" />
                             </div>
-                            <div>
-                                <label className={labelClasses}>Country <span className="text-red-500">*</span></label>
-                                {exhibitorType === 'domestic' ? (
-                                    <input readOnly value="India" className={`${inputClasses} bg-slate-50 cursor-not-allowed`} />
-                                ) : (
+                            {exhibitorType !== 'domestic' && (
+                                <div>
+                                    <label className={labelClasses}>Country <span className="text-red-500">*</span></label>
                                     <select required value={formData.country} onChange={(e) => handleSelectChange('country', e.target.value)} className={inputClasses}>
                                         <option value="">Select Here</option>
                                         {countries.filter(c => c.name.toLowerCase() !== 'india').map((c, i) => <option key={i} value={c.name}>{c.name}</option>)}
                                     </select>
+                                </div>
+                            )}
+                            <div>
+                                <label className={labelClasses}>{exhibitorType === 'domestic' ? 'State' : 'State / Province'} <span className="text-red-500">*</span></label>
+                                {exhibitorType === 'domestic' ? (
+                                    <input required type="text" value={formData.state} onChange={(e) => handleSelectChange('state', e.target.value)} className={inputClasses} placeholder="Auto-filled from Pincode" />
+                                ) : (
+                                    <select required value={formData.state} onChange={(e) => handleSelectChange('state', e.target.value)} disabled={!formData.country} className={inputClasses}>
+                                        <option value="">Select Here</option>
+                                        {filteredStates.map((s, i) => <option key={i} value={s.name}>{s.name}</option>)}
+                                    </select>
                                 )}
                             </div>
                             <div>
-                                <label className={labelClasses}>{exhibitorType === 'domestic' ? 'State' : 'State / Province'} <span className="text-red-500">*</span></label>
-                                <select required value={formData.state} onChange={(e) => handleSelectChange('state', e.target.value)} disabled={!formData.country} className={inputClasses}>
-                                    <option value="">Select Here</option>
-                                    {filteredStates.map((s, i) => <option key={i} value={s.name}>{s.name}</option>)}
-                                </select>
-                            </div>
-                            <div>
                                 <label className={labelClasses}>City <span className="text-red-500">*</span></label>
-                                <select required value={formData.city} onChange={(e) => handleSelectChange('city', e.target.value)} disabled={!formData.state} className={inputClasses}>
-                                    <option value="">Select Here</option>
-                                    {filteredCities.map((ct, i) => <option key={i} value={ct.name}>{ct.name}</option>)}
-                                </select>
+                                {exhibitorType === 'domestic' ? (
+                                    <input required type="text" value={formData.city} onChange={(e) => handleSelectChange('city', e.target.value)} className={inputClasses} placeholder="Auto-filled from Pincode" />
+                                ) : (
+                                    <select required value={formData.city} onChange={(e) => handleSelectChange('city', e.target.value)} disabled={!formData.state} className={inputClasses}>
+                                        <option value="">Select Here</option>
+                                        {filteredCities.map((ct, i) => <option key={i} value={ct.name}>{ct.name}</option>)}
+                                    </select>
+                                )}
                             </div>
                             <div>
-                                <label className={labelClasses}>Pincode <span className="text-red-500">*</span></label>
-                                <input required type="text" value={formData.pincode} onChange={(e) => handleSelectChange('pincode', e.target.value)} className={inputClasses} placeholder="Write Here.." inputMode="numeric" />
+                                <label className={labelClasses}>Office Address <span className="text-red-500">*</span></label>
+                                <input required type="text" value={formData.address} onChange={(e) => handleSelectChange('address', e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
                             <div>
                                 <label className={labelClasses}>Landline / Alternate No.</label>
@@ -884,13 +926,20 @@ const BookAStand = () => {
 
                             {/* About the Company */}
                             <div className="md:col-span-2 flex flex-col h-full">
-                                <label className={labelClasses}>About the Company</label>
+                                <label className={labelClasses}>About the Company <span className="text-red-500">*</span></label>
                                 <textarea
+                                    required
+                                    minLength={250}
                                     value={formData.aboutCompany}
                                     onChange={(e) => handleSelectChange('aboutCompany', e.target.value)}
-                                    className={`${inputClasses} flex-1 !h-full py-1.5 resize-y leading-tight`}
-                                    placeholder="Write a brief description about the company..."
+                                    className={`${inputClasses} flex-1 !h-full py-1.5 resize-y leading-tight ${formData.aboutCompany?.length > 0 && formData.aboutCompany.length < 250 ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`}
+                                    placeholder="Write a brief description about the company (minimum 250 characters)..."
                                 />
+                                <div className={`text-[10px] mt-1 font-medium ${!formData.aboutCompany || formData.aboutCompany.length < 250 ? 'text-red-500' : 'text-green-600'}`}>
+                                    {!formData.aboutCompany || formData.aboutCompany.length < 250 
+                                        ? `* Minimum 250 characters required. (Current: ${formData.aboutCompany?.length || 0})`
+                                        : '✓ Character requirement met.'}
+                                </div>
                             </div>
 
                             {/* REGISTRANT TYPE */}
@@ -904,11 +953,11 @@ const BookAStand = () => {
                                             value="registered"
                                             checked={formData.registrantType === 'registered'}
                                             onChange={() => setFormData(prev => ({ ...prev, registrantType: 'registered', panNo: '', aadhaarNo: '' }))}
-                                            className="accent-[#23471d] w-3 h-3"
+                                            className="accent-[#23471d] w-3.5 h-3.5"
                                         />
-                                        <span className="text-[9px] font-bold text-slate-800 group-hover:text-[#23471d] transition-colors leading-none flex items-center gap-1">
+                                        <span className="text-[11px] font-bold text-slate-800 group-hover:text-[#23471d] transition-colors leading-none flex items-center gap-1.5">
                                             Registered
-                                            <span className="text-[7.5px] font-semibold text-[#23471d] bg-green-50 border border-green-200 px-1 py-px rounded uppercase tracking-wider">GST</span>
+                                            <span className="text-[8.5px] font-semibold text-[#23471d] bg-green-50 border border-green-200 px-1.5 py-0.5 rounded uppercase tracking-wider">GST</span>
                                         </span>
                                     </label>
                                     <label className="flex items-center gap-1.5 cursor-pointer group">
@@ -918,11 +967,11 @@ const BookAStand = () => {
                                             value="unregistered"
                                             checked={formData.registrantType === 'unregistered'}
                                             onChange={() => setFormData(prev => ({ ...prev, registrantType: 'unregistered', gstNo: '' }))}
-                                            className="accent-[#d26019] w-3 h-3"
+                                            className="accent-[#d26019] w-3.5 h-3.5"
                                         />
-                                        <span className="text-[9px] font-bold text-slate-800 group-hover:text-[#d26019] transition-colors leading-none flex items-center gap-1">
+                                        <span className="text-[11px] font-bold text-slate-800 group-hover:text-[#d26019] transition-colors leading-none flex items-center gap-1.5">
                                             Unregistered
-                                            <span className="text-[7.5px] font-semibold text-[#d26019] bg-orange-50 border border-orange-200 px-1 py-px rounded uppercase tracking-wider">PAN+Aadhar</span>
+                                            <span className="text-[8.5px] font-semibold text-[#d26019] bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded uppercase tracking-wider">PAN+Aadhar</span>
                                         </span>
                                     </label>
                                 </div>
@@ -947,8 +996,8 @@ const BookAStand = () => {
                                             </div>
                                         </div>
                                         <div className="pt-1.5">
-                                            <label className={labelClasses}>Fascia Name <span className="text-red-500">*</span></label>
-                                            <input required type="text" value={formData.fasciaName} onChange={(e) => handleSelectChange('fasciaName', e.target.value)} className={inputClasses} placeholder="Name on stall board" />
+                                            <label className={labelClasses}>Fascia Name (Optional)</label>
+                                            <input type="text" value={formData.fasciaName} onChange={(e) => handleSelectChange('fasciaName', e.target.value)} className={inputClasses} placeholder="Name on stall board" />
                                         </div>
                                     </div>
                                 </>
@@ -983,8 +1032,8 @@ const BookAStand = () => {
                                             </div>
                                         </div>
                                         <div className="pt-1.5">
-                                            <label className={labelClasses}>Fascia Name <span className="text-red-500">*</span></label>
-                                            <input required type="text" value={formData.fasciaName} onChange={(e) => handleSelectChange('fasciaName', e.target.value)} className={inputClasses} placeholder="Name on stall board" />
+                                            <label className={labelClasses}>Fascia Name (Optional)</label>
+                                            <input type="text" value={formData.fasciaName} onChange={(e) => handleSelectChange('fasciaName', e.target.value)} className={inputClasses} placeholder="Name on stall board" />
                                         </div>
                                     </div>
                                 </>
@@ -1002,14 +1051,56 @@ const BookAStand = () => {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className={labelClasses}>Stall Number <span className="text-red-500">*</span></label>
-                                        <select required value={formData.participation.stallNo} onChange={(e) => handleStallSelect(e.target.value)} className={`${inputClasses} !text-[9.9px] !px-1.5 tracking-tighter`}>
-                                            <option value="">-- Choose Available Stall --</option>
-                                            {availableStalls.filter(s =>
-                                                (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId)
-                                            ).map(s => (
-                                                <option key={s._id} value={s._id} className="text-[11px]">{s.stallNumber} ({s.area} sqm - {s.plScheme})</option>
-                                            ))}
-                                        </select>
+                                        <div className="relative" ref={stallDropdownRef}>
+                                            <div 
+                                                className={`${inputClasses} flex items-center justify-between cursor-pointer`}
+                                                onClick={() => setIsStallDropdownOpen(!isStallDropdownOpen)}
+                                            >
+                                                <span className={formData.participation.stallNo ? "text-slate-800" : "text-slate-400"}>
+                                                    {formData.participation.stallNo 
+                                                        ? availableStalls.find(s => s._id === formData.participation.stallNo)?.stallNumber 
+                                                        : "Search & Choose Stall"}
+                                                </span>
+                                                <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                                            </div>
+                                            
+                                            {isStallDropdownOpen && (
+                                                <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded shadow-lg">
+                                                    <div className="p-1.5 border-b border-slate-100">
+                                                        <input 
+                                                            type="text" 
+                                                            className="w-full text-[12px] p-1.5 border border-slate-200 rounded outline-none focus:border-[#23471d]" 
+                                                            placeholder="Search stall..." 
+                                                            value={stallSearchQuery}
+                                                            onChange={(e) => setStallSearchQuery(e.target.value)}
+                                                            autoFocus
+                                                        />
+                                                    </div>
+                                                    <ul className="max-h-48 overflow-y-auto">
+                                                        {availableStalls
+                                                            .filter(s => (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId))
+                                                            .sort((a, b) => (a.stallNumber || '').localeCompare((b.stallNumber || ''), undefined, { numeric: true, sensitivity: 'base' }))
+                                                            .filter(s => (s.stallNumber || '').toLowerCase().includes(stallSearchQuery.toLowerCase()))
+                                                            .map(s => (
+                                                                <li 
+                                                                    key={s._id} 
+                                                                    className={`px-3 py-1.5 text-[12px] cursor-pointer hover:bg-slate-100 ${formData.participation.stallNo === s._id ? 'bg-[#23471d] text-white hover:bg-[#23471d]' : 'text-slate-700'}`}
+                                                                    onClick={() => {
+                                                                        handleStallSelect(s._id);
+                                                                        setIsStallDropdownOpen(false);
+                                                                        setStallSearchQuery("");
+                                                                    }}
+                                                                >
+                                                                    {s.stallNumber}
+                                                                </li>
+                                                            ))}
+                                                        {availableStalls.filter(s => (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId)).length === 0 && (
+                                                            <li className="px-3 py-2 text-[12px] text-slate-500 text-center">No stalls available</li>
+                                                        )}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                     <div>
                                         <label className={labelClasses}>Open Sides</label>
@@ -1124,9 +1215,12 @@ const BookAStand = () => {
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        {/* PAYMENT PLAN & TDS CONTROL */}
-                        <div className="p-4 bg-[#f8fafc] border border-slate-200 rounded-xl mt-3 flex flex-col lg:flex-row items-end justify-between gap-4">
+                    {/* PAYMENT PLAN & TDS CONTROL */}
+                    {/* PAYMENT PLAN, TDS & BREAKDOWNS MOVED TO CONVERTED CLIENT PAGE 
+                    <div className="p-4 bg-[#f8fafc] border border-slate-200 rounded-xl mt-3 flex flex-col lg:flex-row items-end justify-between gap-4">
+
 
                             {(() => {
                                 const currentEvent = events.find(e => e._id === selectedEventId);
@@ -1141,7 +1235,6 @@ const BookAStand = () => {
                                     <div className="flex-1">
                                         <label className={labelClasses}>Payment Plan <span className="text-red-500">*</span></label>
                                         <div className="flex flex-wrap gap-2 mt-1">
-                                            {/* Full Payment */}
                                             <button
                                                 type="button"
                                                 onClick={() => setFormData(prev => ({
@@ -1156,7 +1249,6 @@ const BookAStand = () => {
                                             >
                                                 Full Payment{settings?.fullPaymentDiscount > 0 ? ` (${settings.fullPaymentDiscount}% discount)` : ''}
                                             </button>
-                                            {/* Installment — sets Phase 1 automatically */}
                                             {firstInstallPlan && (
                                                 <button
                                                     type="button"
@@ -1183,7 +1275,7 @@ const BookAStand = () => {
                                     </div>
                                 );
                             })()}
-                            
+
                             <div className="flex items-end justify-end gap-6 shrink-0">
                                 <div>
                                     <label className={labelClasses}>Apply TDS Deduction <span className="text-red-500">*</span></label>
@@ -1196,7 +1288,6 @@ const BookAStand = () => {
                                             <option value={0}>0% TDS</option>
                                             <option value={1}>1% TDS</option>
                                             <option value={2}>2% TDS</option>
-                                            {/* <option value={10}>10% TDS</option> */}
                                         </select>
                                         <ChevronDown size={14} className="absolute right-2 top-1.5 text-red-600 pointer-events-none" />
                                     </div>
@@ -1212,7 +1303,6 @@ const BookAStand = () => {
                             </div>
                         </div>
 
-                        {/* COST BREAKDOWN */}
                         <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-wrap gap-6 items-end">
                             <div className="flex flex-col gap-0.5">
                                 <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Stall</p>
@@ -1243,7 +1333,6 @@ const BookAStand = () => {
 
 
 
-                    {/* FINANCIAL SETTLEMENT BREAKDOWN */}
                     <div className="px-2">
                         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] relative overflow-hidden group">
                             <div className="absolute top-0 left-0 w-1 h-full bg-[#23471d]"></div>
@@ -1257,7 +1346,6 @@ const BookAStand = () => {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
-                                {/* Gross Cost */}
                                 <div className="space-y-1">
                                     <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Gross Booking Cost</p>
                                     <p className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
@@ -1265,7 +1353,6 @@ const BookAStand = () => {
                                     </p>
                                 </div>
 
-                                {/* Discounts Combined */}
                                 <div className="space-y-1 border-l-0 md:border-l border-slate-100 pl-0 md:pl-6">
                                     <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest flex items-center justify-between">
                                         Applied Savings
@@ -1290,7 +1377,6 @@ const BookAStand = () => {
                                     </div>
                                 </div>
 
-                                {/* Taxes & Deductions */}
                                 <div className="space-y-1 border-l-0 md:border-l border-slate-100 pl-0 md:pl-6">
                                     <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Government Taxes & TDS</p>
                                     <div className="flex gap-4">
@@ -1307,7 +1393,6 @@ const BookAStand = () => {
                                     </div>
                                 </div>
 
-                                {/* Net Payable */}
                                 <div className="space-y-1 border-l-0 md:border-l border-slate-100 pl-0 md:pl-6 text-right">
                                     <p className="text-[9px] font-semibold text-[#23471d] uppercase tracking-[0.1em] mb-1">Net To Be Collected</p>
                                     <p className="text-3xl font-semibold text-[#23471d] leading-none mb-1">
@@ -1319,7 +1404,6 @@ const BookAStand = () => {
                         </div>
                     </div>
 
-                    {/* BOOKING SUMMARY */}
                     <div className="px-2 space-y-3">
                         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-wrap gap-6 items-end justify-between">
                             <div className="flex flex-col gap-0.5">
@@ -1346,6 +1430,8 @@ const BookAStand = () => {
                             </div>
                         </div>
                     </div>
+                    */}
+
 
                     {/* FOOTER ACTIONS */}
                     <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 px-2">

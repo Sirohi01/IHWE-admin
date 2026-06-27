@@ -31,6 +31,7 @@ const Glimpse = lazy(() => import("../pages/cms/Glimpse"));
 const ParallaxManage = lazy(() => import("../pages/cms/ParallaxManage"));
 const StatsManage = lazy(() => import("../pages/cms/StatsManage"));
 const SupportedBy = lazy(() => import("../pages/cms/SupportedBy"));
+const UpcomingBrands = lazy(() => import("../pages/UpcomingBrands"));
 const Introduction = lazy(() => import("../pages/cms/Introduction"));
 const NationalExpo = lazy(() => import("../pages/cms/NationalExpo"));
 const IntegratedFormat = lazy(() => import("../pages/cms/IntegratedFormat"));
@@ -337,6 +338,7 @@ export default function AppRoutes() {
             <Route path="marquee-text" element={<MarqueeManage />} />
             <Route path="/glimpse" element={<Glimpse />} />
             <Route path="/supported-by" element={<SupportedBy />} />
+            <Route path="/upcoming-brands" element={<UpcomingBrands />} />
             <Route path="/introduction" element={<Introduction />} />
             <Route path="/national-expo" element={<NationalExpo />} />
             <Route path="/integrated-format" element={<IntegratedFormat />} />

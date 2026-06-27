@@ -71,10 +71,14 @@ export default function MobilePassRequests() {
                   </span>
                 </td>
                 <td className="p-4">
-                  <div className="flex justify-end gap-2">
-                    <button onClick={() => updateStatus(item._id, "approved")} className="p-2 bg-green-100 text-green-700 rounded"><CheckCircle size={16} /></button>
-                    <button onClick={() => updateStatus(item._id, "rejected")} className="p-2 bg-red-100 text-red-700 rounded"><XCircle size={16} /></button>
-                  </div>
+                  {item.status === "pending" ? (
+                    <div className="flex justify-end gap-2">
+                      <button onClick={() => updateStatus(item._id, "approved")} title="Approve" className="p-2 bg-green-100 text-green-700 rounded hover:bg-green-200"><CheckCircle size={16} /></button>
+                      <button onClick={() => updateStatus(item._id, "rejected")} title="Reject" className="p-2 bg-red-100 text-red-700 rounded hover:bg-red-200"><XCircle size={16} /></button>
+                    </div>
+                  ) : (
+                    <div className="text-right text-xs text-slate-400 font-bold uppercase opacity-50">Done</div>
+                  )}
                 </td>
               </tr>
             ))}

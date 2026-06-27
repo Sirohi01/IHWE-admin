@@ -442,9 +442,9 @@ export default function LoginPage() {
                             Keep me logged in
                           </label>
                         </div>
-                        <button type="button" className="text-sm font-bold text-[#23471d] hover:underline uppercase tracking-wide">
+                        {/* <button type="button" className="text-sm font-bold text-[#23471d] hover:underline uppercase tracking-wide">
                           Forgot Password?
-                        </button>
+                        </button> */}
                       </div>
 
                       <button
