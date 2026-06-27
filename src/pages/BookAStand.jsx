@@ -1210,9 +1210,10 @@ const BookAStand = () => {
                                         <option value="" className="text-red-500 font-medium">How did you hear about us?</option>
                                         <option value="Direct Website">Direct Website</option>
                                         <option value="Email Marketing">Email Marketing</option>
+                                        <option value="WhatsApp Marketing">WhatsApp Marketing</option>
                                         <option value="Social Media">Social Media</option>
-                                        <option value="Search Engine">Search Engine</option>
-                                        <option value="Telecalling">Telecalling</option>
+                                        <option value="Google (GMB / GMV)">Google (GMB / GMV)</option>
+                                        <option value="Direct Calling">Direct Calling</option>
                                         <option value="Referral">Referral</option>
                                         <option value="Others">Others</option>
                                     </select>
