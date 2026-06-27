@@ -805,8 +805,8 @@ const BookAStand = () => {
                                 <label className={labelClasses}>Type of Business <span className="text-red-500">*</span></label>
                                 <select required value={formData.typeOfBusiness} onChange={(e) => handleSelectChange('typeOfBusiness', e.target.value)} className={inputClasses}>
                                     <option value="">Select Here</option>
-                                    <option>Private Ltd. Company</option>
-                                    <option>Public Ltd. Company</option>
+                                    <option>Pvt. Ltd. Company</option>
+                                    <option>Pub. Ltd. Company</option>
                                     <option>Partnership Company</option>
                                     <option>Limited Liability Partnership (LLP)</option>
                                     <option>One Person Company</option>
@@ -1183,7 +1183,7 @@ const BookAStand = () => {
                                     </div>
                                 );
                             })()}
-                            
+
                             <div className="flex items-end justify-end gap-6 shrink-0">
                                 <div>
                                     <label className={labelClasses}>Apply TDS Deduction <span className="text-red-500">*</span></label>
