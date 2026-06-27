@@ -10,7 +10,7 @@ import BaseLeadPage from "../../layout/BaseLeadPage";
 import {
   Search, Download, Plus, Upload, MessageCircle, Phone, Mail, MoreVertical,
   Calendar, CalendarDays, ArrowRight, RefreshCw, Flame, MessageSquare, Send, CheckCircle2,
-  Users, DollarSign, Star, FileText, ChevronDown
+  Users, DollarSign, Star, FileText, ChevronDown, ShieldCheck, X, Banknote
 } from "lucide-react";
 import { FaWhatsapp } from 'react-icons/fa';
 import {
@@ -24,6 +24,8 @@ const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
   return str.replace(/\b\w/g, (char) => char.toUpperCase());
 };
+
+import ManageFinanceModal from './ManageFinanceModal';
 
 // Removed dummy rows
 
@@ -47,15 +49,23 @@ const ConfirmClientList = () => {
   const [registrations, setRegistrations] = useState([]);
   const [masterCompanies, setMasterCompanies] = useState([]);
   const [allReviews, setAllReviews] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [settings, setSettings] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Finance Modal State
+  const [isFinanceModalOpen, setIsFinanceModalOpen] = useState(false);
+  const [selectedClientForFinance, setSelectedClientForFinance] = useState(null);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [regRes, compRes, reviewRes] = await Promise.all([
+      const [regRes, compRes, reviewRes, eventsRes, settingsRes] = await Promise.all([
         api.get('/api/exhibitor-registration'),
         api.get('/api/companies?dashboard=true').catch(() => ({ data: [] })),
-        api.get('/api/crm-exhibator-reviews').catch(() => ({ data: [] }))
+        api.get('/api/crm-exhibator-reviews').catch(() => ({ data: [] })),
+        api.get('/api/events/active').catch(() => ({ data: [] })),
+        api.get('/api/settings').catch(() => ({ data: null }))
       ]);
 
       if (regRes.data?.success) {
@@ -72,6 +82,14 @@ const ConfirmClientList = () => {
         setAllReviews(reviewRes.data);
       } else if (reviewRes.data?.data && Array.isArray(reviewRes.data.data)) {
         setAllReviews(reviewRes.data.data);
+      }
+
+      if (eventsRes.data?.success) {
+        setEvents(Array.isArray(eventsRes.data.data) ? eventsRes.data.data : []);
+      }
+
+      if (settingsRes.data?.success) {
+        setSettings(settingsRes.data.data);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -429,6 +447,18 @@ const ConfirmClientList = () => {
             </td>
             <td className="px-2 py-2 text-center">
               <div className="flex items-center gap-2 flex-wrap justify-center">
+                {row.status !== 'paid' && (!row.amountPaid || row.amountPaid < (row.financeBreakdown?.netPayable || row.participation?.total || Infinity)) && (
+                  <button
+                      onClick={() => {
+                          setSelectedClientForFinance(row);
+                          setIsFinanceModalOpen(true);
+                      }}
+                      className="p-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-[2px] transition-all border border-emerald-200"
+                      title="Manage Finance"
+                  >
+                      <Banknote size={14} />
+                  </button>
+                )}
                 {/* <button
                     onClick={() => navigate(`/exhibitor-booking/${row._id}`)}
                     className="p-2 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-[2px] transition-all border border-gray-200"
@@ -620,32 +650,51 @@ const ConfirmClientList = () => {
   );
 
   return (
-    <BaseLeadPage
-      title="Converted Clients"
-      subtitle="Leads that have been successfully converted into clients"
-      badgeCount={<span className="text-emerald-700">{totalLeads}</span>}
-      headerActions={
-        <button className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shadow-sm">
-          <CalendarDays size={14} className="text-slate-500" /> This Month <ChevronDown size={14} className="text-slate-500" />
-        </button>
-      }
-      statCards={statCards}
-      filterBar={filters}
-      tableHeaders={tableHeaders}
-      tableBody={tableBody}
-      rightSidebar={rightSidebar}
-      pagination={paginationBar}
-      isAllSelected={isAllSelected}
-      onSelectAll={onSelectAll}
-      onReset={() => {
-        setSearchTerm('');
-        setFilterSource('');
-        setFilterIndustry('');
-        setFilterStage('');
-        setPage(1);
-        setSelectedIds([]);
-      }}
-    />
+    <>
+      <BaseLeadPage
+        title="Converted Clients"
+        subtitle="Leads that have been successfully converted into clients"
+        badgeCount={<span className="text-emerald-700">{totalLeads}</span>}
+        headerActions={
+          <button className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shadow-sm">
+            <CalendarDays size={14} className="text-slate-500" /> This Month <ChevronDown size={14} className="text-slate-500" />
+          </button>
+        }
+        statCards={statCards}
+        filterBar={filters}
+        tableHeaders={tableHeaders}
+        tableBody={tableBody}
+        rightSidebar={rightSidebar}
+        pagination={paginationBar}
+        isAllSelected={isAllSelected}
+        onSelectAll={onSelectAll}
+        onReset={() => {
+          setSearchTerm('');
+          setFilterSource('');
+          setFilterIndustry('');
+          setFilterStage('');
+          setPage(1);
+          setSelectedIds([]);
+        }}
+      />
+      {/* MODALS */}
+      {isFinanceModalOpen && selectedClientForFinance && (
+        <ManageFinanceModal
+          client={selectedClientForFinance}
+          events={events}
+          settings={settings}
+          onClose={() => {
+            setIsFinanceModalOpen(false);
+            setSelectedClientForFinance(null);
+          }}
+          onSave={() => {
+            setIsFinanceModalOpen(false);
+            setSelectedClientForFinance(null);
+            fetchData();
+          }}
+        />
+      )}
+    </>
   );
 };
 
