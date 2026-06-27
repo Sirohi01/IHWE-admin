@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
+import Select from 'react-select';
 import { useDispatch } from "react-redux";
 import { createActivityLogThunk } from "../features/activityLog/activityLogSlice";
 
@@ -578,7 +579,7 @@ const BookAStand = () => {
         }));
     };
 
-    const inputClasses = "rounded border border-slate-400 h-7 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-800 font-medium shadow-none outline-none px-3 w-full text-left";
+    const inputClasses = "rounded border border-slate-400 h-[34px] focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-800 font-medium shadow-none outline-none px-3 w-full text-left";
     const labelClasses = "block text-[10px] font-semibold capitalize tracking-wide text-slate-700 mb-1";
     const sectionHeaderClasses = "text-[13px] font-semibold text-[#1a4d1a] capitalize tracking-wide pb-1.5 mb-2.5 flex items-center gap-2";
     const cardClasses = "bg-white border border-slate-200 rounded-xl p-3.5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)]";
@@ -984,8 +985,8 @@ const BookAStand = () => {
                                             </div>
                                         </div>
                                         <div className="pt-1.5">
-                                            <label className={labelClasses}>Fascia Name <span className="text-red-500">*</span></label>
-                                            <input required type="text" value={formData.fasciaName} onChange={(e) => handleSelectChange('fasciaName', e.target.value)} className={inputClasses} placeholder="Name on stall board" />
+                                            <label className={labelClasses}>Fascia Name (Optional)</label>
+                                            <input type="text" value={formData.fasciaName} onChange={(e) => handleSelectChange('fasciaName', e.target.value)} className={inputClasses} placeholder="Name on stall board" />
                                         </div>
                                     </div>
                                 </>
@@ -1020,8 +1021,8 @@ const BookAStand = () => {
                                             </div>
                                         </div>
                                         <div className="pt-1.5">
-                                            <label className={labelClasses}>Fascia Name <span className="text-red-500">*</span></label>
-                                            <input required type="text" value={formData.fasciaName} onChange={(e) => handleSelectChange('fasciaName', e.target.value)} className={inputClasses} placeholder="Name on stall board" />
+                                            <label className={labelClasses}>Fascia Name (Optional)</label>
+                                            <input type="text" value={formData.fasciaName} onChange={(e) => handleSelectChange('fasciaName', e.target.value)} className={inputClasses} placeholder="Name on stall board" />
                                         </div>
                                     </div>
                                 </>
@@ -1035,18 +1036,80 @@ const BookAStand = () => {
 
                         <div className="flex flex-col lg:flex-row gap-5 lg:items-stretch -mt-3">
                             {/* Left Side: Inputs */}
-                            <div className="w-full lg:w-[40%] flex flex-col gap-3">
+                            <div className="w-full lg:w-[32%] flex flex-col gap-3">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className={labelClasses}>Stall Number <span className="text-red-500">*</span></label>
-                                        <select required value={formData.participation.stallNo} onChange={(e) => handleStallSelect(e.target.value)} className={`${inputClasses} !text-[9.9px] !px-1.5 tracking-tighter`}>
-                                            <option value="">-- Choose Available Stall --</option>
-                                            {availableStalls.filter(s =>
-                                                (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId)
-                                            ).map(s => (
-                                                <option key={s._id} value={s._id} className="text-[11px]">{s.stallNumber} ({s.area} sqm - {s.plScheme})</option>
-                                            ))}
-                                        </select>
+                                        <Select
+                                            options={availableStalls
+                                                .filter(s => (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId))
+                                                .map(s => ({ value: s._id, label: s.stallNumber }))}
+                                            value={formData.participation.stallNo ? { value: formData.participation.stallNo, label: availableStalls.find(s => s._id === formData.participation.stallNo)?.stallNumber || '' } : null}
+                                            onChange={(selectedOption) => handleStallSelect(selectedOption ? selectedOption.value : '')}
+                                            placeholder="Search & Choose Stall"
+                                            isClearable
+                                            isSearchable
+                                            styles={{
+                                                control: (base) => ({
+                                                    ...base,
+                                                    minHeight: '34px',
+                                                    height: '34px',
+                                                    fontSize: '12px',
+                                                    fontWeight: '500',
+                                                    color: '#1e293b',
+                                                    borderRadius: '0.25rem',
+                                                    borderColor: '#94a3b8',
+                                                    boxShadow: 'none',
+                                                    '&:hover': { borderColor: '#23471d' },
+                                                    cursor: 'pointer'
+                                                }),
+                                                valueContainer: (base) => ({
+                                                    ...base,
+                                                    padding: '0 8px',
+                                                    height: '32px',
+                                                    margin: '0',
+                                                    display: 'flex',
+                                                    alignItems: 'center'
+                                                }),
+                                                input: (base) => ({
+                                                    ...base,
+                                                    margin: '0px',
+                                                    padding: '0px',
+                                                    color: '#1e293b'
+                                                }),
+                                                singleValue: (base) => ({
+                                                    ...base,
+                                                    color: '#1e293b',
+                                                    margin: '0px'
+                                                }),
+                                                placeholder: (base) => ({
+                                                    ...base,
+                                                    color: '#94a3b8',
+                                                    margin: '0px'
+                                                }),
+                                                indicatorSeparator: () => ({ display: 'none' }),
+                                                indicatorsContainer: (base) => ({
+                                                    ...base,
+                                                    height: '32px',
+                                                    padding: '0px'
+                                                }),
+                                                dropdownIndicator: (base) => ({
+                                                    ...base,
+                                                    padding: '0 4px',
+                                                    color: '#1e293b'
+                                                }),
+                                                clearIndicator: (base) => ({
+                                                    ...base,
+                                                    padding: '0 4px'
+                                                }),
+                                                menu: (base) => ({
+                                                    ...base,
+                                                    fontSize: '12px',
+                                                    zIndex: 50,
+                                                    fontWeight: '500'
+                                                })
+                                            }}
+                                        />
                                     </div>
                                     <div>
                                         <label className={labelClasses}>Open Sides</label>
@@ -1084,7 +1147,7 @@ const BookAStand = () => {
                             </div>
 
                             {/* Middle Side: LIVE RATES */}
-                            <div className="w-full lg:w-[32%]">
+                            <div className="w-full lg:w-[40%]">
                                 {selectedEventId && (() => {
                                     const currency = exhibitorType === 'domestic' ? 'INR' : 'USD';
                                     const filtered = allRates.filter(r => (r.eventId?._id || r.eventId) === selectedEventId && r.currency === currency);
