@@ -347,6 +347,27 @@ const BookAStand = () => {
             balanceAmount: Math.round(netPayable - amountToCollect)
         }));
     }, [formData.participation.stallNo, formData.participation.rate, availableStalls, formData.paymentPlanType, formData.chosenTdsPercent, settings, events, selectedEventId]);
+    useEffect(() => {
+        if (exhibitorType === 'domestic' && formData.pincode?.length === 6) {
+            const timerId = setTimeout(() => {
+                fetch(`https://api.postalpincode.in/pincode/${formData.pincode}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data[0] && data[0].Status === 'Success') {
+                            const postOffice = data[0].PostOffice[0];
+                            setFormData(prev => ({
+                                ...prev,
+                                state: postOffice.State || prev.state,
+                                city: postOffice.District || prev.city
+                            }));
+                        }
+                    })
+                    .catch(err => console.error("Error fetching pincode data:", err));
+            }, 600); // 600ms debounce
+
+            return () => clearTimeout(timerId);
+        }
+    }, [formData.pincode, exhibitorType]);
 
     const filteredStates = useMemo(() => {
         if (!formData.country || !countries.length) return [];
@@ -834,37 +855,43 @@ const BookAStand = () => {
                                 <input required type="text" value={formData.website} onChange={(e) => handleSelectChange('website', e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
                             <div>
+                                <label className={labelClasses}>Pincode <span className="text-red-500">*</span></label>
+                                <input required type="text" value={formData.pincode} onChange={(e) => handleSelectChange('pincode', e.target.value)} className={inputClasses} placeholder="Write Here.." inputMode="numeric" />
+                            </div>
+                            <div>
                                 <label className={labelClasses}>Office Address <span className="text-red-500">*</span></label>
                                 <input required type="text" value={formData.address} onChange={(e) => handleSelectChange('address', e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
-                            <div>
-                                <label className={labelClasses}>Country <span className="text-red-500">*</span></label>
-                                {exhibitorType === 'domestic' ? (
-                                    <input readOnly value="India" className={`${inputClasses} bg-slate-50 cursor-not-allowed`} />
-                                ) : (
+                            {exhibitorType !== 'domestic' && (
+                                <div>
+                                    <label className={labelClasses}>Country <span className="text-red-500">*</span></label>
                                     <select required value={formData.country} onChange={(e) => handleSelectChange('country', e.target.value)} className={inputClasses}>
                                         <option value="">Select Here</option>
                                         {countries.filter(c => c.name.toLowerCase() !== 'india').map((c, i) => <option key={i} value={c.name}>{c.name}</option>)}
                                     </select>
+                                </div>
+                            )}
+                            <div>
+                                <label className={labelClasses}>{exhibitorType === 'domestic' ? 'State' : 'State / Province'} <span className="text-red-500">*</span></label>
+                                {exhibitorType === 'domestic' ? (
+                                    <input required type="text" value={formData.state} onChange={(e) => handleSelectChange('state', e.target.value)} className={inputClasses} placeholder="Auto-filled from Pincode" />
+                                ) : (
+                                    <select required value={formData.state} onChange={(e) => handleSelectChange('state', e.target.value)} disabled={!formData.country} className={inputClasses}>
+                                        <option value="">Select Here</option>
+                                        {filteredStates.map((s, i) => <option key={i} value={s.name}>{s.name}</option>)}
+                                    </select>
                                 )}
                             </div>
                             <div>
-                                <label className={labelClasses}>{exhibitorType === 'domestic' ? 'State' : 'State / Province'} <span className="text-red-500">*</span></label>
-                                <select required value={formData.state} onChange={(e) => handleSelectChange('state', e.target.value)} disabled={!formData.country} className={inputClasses}>
-                                    <option value="">Select Here</option>
-                                    {filteredStates.map((s, i) => <option key={i} value={s.name}>{s.name}</option>)}
-                                </select>
-                            </div>
-                            <div>
                                 <label className={labelClasses}>City <span className="text-red-500">*</span></label>
-                                <select required value={formData.city} onChange={(e) => handleSelectChange('city', e.target.value)} disabled={!formData.state} className={inputClasses}>
-                                    <option value="">Select Here</option>
-                                    {filteredCities.map((ct, i) => <option key={i} value={ct.name}>{ct.name}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label className={labelClasses}>Pincode <span className="text-red-500">*</span></label>
-                                <input required type="text" value={formData.pincode} onChange={(e) => handleSelectChange('pincode', e.target.value)} className={inputClasses} placeholder="Write Here.." inputMode="numeric" />
+                                {exhibitorType === 'domestic' ? (
+                                    <input required type="text" value={formData.city} onChange={(e) => handleSelectChange('city', e.target.value)} className={inputClasses} placeholder="Auto-filled from Pincode" />
+                                ) : (
+                                    <select required value={formData.city} onChange={(e) => handleSelectChange('city', e.target.value)} disabled={!formData.state} className={inputClasses}>
+                                        <option value="">Select Here</option>
+                                        {filteredCities.map((ct, i) => <option key={i} value={ct.name}>{ct.name}</option>)}
+                                    </select>
+                                )}
                             </div>
                             <div>
                                 <label className={labelClasses}>Landline / Alternate No.</label>
