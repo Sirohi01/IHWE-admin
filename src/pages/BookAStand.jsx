@@ -91,6 +91,9 @@ const BookAStand = () => {
         primaryCategory: '',
         subCategory: '',
         referredBy: 'Direct Website',
+        socialMediaType: '',
+        referralName: '',
+        referralMobile: '',
         spokenWith: '',
         filledBy: 'Admin',
         status: 'pending',
@@ -1137,7 +1140,7 @@ const BookAStand = () => {
                             <h4 className="text-[11px] font-bold text-slate-800 uppercase tracking-widest mb-3 flex items-center gap-2">
                                 CRM Attribution
                             </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+                            <div className={`grid grid-cols-1 gap-x-4 gap-y-3 ${formData.referredBy === 'Social Media' ? 'md:grid-cols-3' : formData.referredBy === 'Referral' ? 'md:grid-cols-4' : 'md:grid-cols-2'}`}>
                                 <div>
                                     <label className={labelClasses}>Referral Channel <span className="text-red-500">*</span></label>
                                     <select required value={formData.referredBy} onChange={(e) => handleSelectChange('referredBy', e.target.value)} className={inputClasses}>
@@ -1146,9 +1149,38 @@ const BookAStand = () => {
                                         <option value="Email Marketing">Email Marketing</option>
                                         <option value="Social Media">Social Media</option>
                                         <option value="Search Engine">Search Engine</option>
+                                        <option value="Telecalling">Telecalling</option>
+                                        <option value="Referral">Referral</option>
                                         <option value="Others">Others</option>
                                     </select>
                                 </div>
+
+                                {formData.referredBy === 'Social Media' && (
+                                    <div>
+                                        <label className={labelClasses}>Social Media <span className="text-red-500">*</span></label>
+                                        <select required value={formData.socialMediaType} onChange={(e) => handleSelectChange('socialMediaType', e.target.value)} className={inputClasses}>
+                                            <option value="">Select Platform</option>
+                                            <option value="Instagram">Instagram</option>
+                                            <option value="Facebook">Facebook</option>
+                                            <option value="X">X (Twitter)</option>
+                                            <option value="LinkedIn">LinkedIn</option>
+                                        </select>
+                                    </div>
+                                )}
+
+                                {formData.referredBy === 'Referral' && (
+                                    <>
+                                        <div>
+                                            <label className={labelClasses}>Referral Name <span className="text-red-500">*</span></label>
+                                            <input required value={formData.referralName} onChange={(e) => handleSelectChange('referralName', e.target.value)} placeholder="Name" className={inputClasses} />
+                                        </div>
+                                        <div>
+                                            <label className={labelClasses}>Referral Mobile <span className="text-red-500">*</span></label>
+                                            <input required value={formData.referralMobile} onChange={(e) => handleSelectChange('referralMobile', e.target.value)} placeholder="Mobile" className={inputClasses} inputMode="numeric" maxLength={10} />
+                                        </div>
+                                    </>
+                                )}
+
                                 <div>
                                     <label className={labelClasses}>Spoken With <span className="text-red-500">*</span></label>
                                     <select required value={formData.spokenWith} onChange={(e) => handleSelectChange('spokenWith', e.target.value)} className={inputClasses}>
