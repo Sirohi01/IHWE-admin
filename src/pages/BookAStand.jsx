@@ -579,7 +579,7 @@ const BookAStand = () => {
         }));
     };
 
-    const inputClasses = "rounded border border-slate-400 h-[34px] focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-800 font-medium shadow-none outline-none px-3 w-full text-left";
+    const inputClasses = "rounded border border-slate-400 h-7 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-800 font-medium shadow-none outline-none px-3 w-full text-left";
     const labelClasses = "block text-[10px] font-semibold capitalize tracking-wide text-slate-700 mb-1";
     const sectionHeaderClasses = "text-[13px] font-semibold text-[#1a4d1a] capitalize tracking-wide pb-1.5 mb-2.5 flex items-center gap-2";
     const cardClasses = "bg-white border border-slate-200 rounded-xl p-3.5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)]";
@@ -1036,13 +1036,14 @@ const BookAStand = () => {
 
                         <div className="flex flex-col lg:flex-row gap-5 lg:items-stretch -mt-3">
                             {/* Left Side: Inputs */}
-                            <div className="w-full lg:w-[32%] flex flex-col gap-3">
+                            <div className="w-full lg:w-[40%] flex flex-col gap-3">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className={labelClasses}>Stall Number <span className="text-red-500">*</span></label>
                                         <Select
                                             options={availableStalls
                                                 .filter(s => (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId))
+                                                .sort((a, b) => (a.stallNumber || '').localeCompare((b.stallNumber || ''), undefined, { numeric: true, sensitivity: 'base' }))
                                                 .map(s => ({ value: s._id, label: s.stallNumber }))}
                                             value={formData.participation.stallNo ? { value: formData.participation.stallNo, label: availableStalls.find(s => s._id === formData.participation.stallNo)?.stallNumber || '' } : null}
                                             onChange={(selectedOption) => handleStallSelect(selectedOption ? selectedOption.value : '')}
@@ -1052,8 +1053,8 @@ const BookAStand = () => {
                                             styles={{
                                                 control: (base) => ({
                                                     ...base,
-                                                    minHeight: '34px',
-                                                    height: '34px',
+                                                    minHeight: '28px',
+                                                    height: '28px',
                                                     fontSize: '12px',
                                                     fontWeight: '500',
                                                     color: '#1e293b',
@@ -1066,7 +1067,7 @@ const BookAStand = () => {
                                                 valueContainer: (base) => ({
                                                     ...base,
                                                     padding: '0 8px',
-                                                    height: '32px',
+                                                    height: '26px',
                                                     margin: '0',
                                                     display: 'flex',
                                                     alignItems: 'center'
@@ -1090,7 +1091,7 @@ const BookAStand = () => {
                                                 indicatorSeparator: () => ({ display: 'none' }),
                                                 indicatorsContainer: (base) => ({
                                                     ...base,
-                                                    height: '32px',
+                                                    height: '26px',
                                                     padding: '0px'
                                                 }),
                                                 dropdownIndicator: (base) => ({
@@ -1147,7 +1148,7 @@ const BookAStand = () => {
                             </div>
 
                             {/* Middle Side: LIVE RATES */}
-                            <div className="w-full lg:w-[40%]">
+                            <div className="w-full lg:w-[32%]">
                                 {selectedEventId && (() => {
                                     const currency = exhibitorType === 'domestic' ? 'INR' : 'USD';
                                     const filtered = allRates.filter(r => (r.eventId?._id || r.eventId) === selectedEventId && r.currency === currency);
