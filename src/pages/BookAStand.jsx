@@ -911,13 +911,20 @@ const BookAStand = () => {
 
                             {/* About the Company */}
                             <div className="md:col-span-2 flex flex-col h-full">
-                                <label className={labelClasses}>About the Company</label>
+                                <label className={labelClasses}>About the Company <span className="text-red-500">*</span></label>
                                 <textarea
+                                    required
+                                    minLength={250}
                                     value={formData.aboutCompany}
                                     onChange={(e) => handleSelectChange('aboutCompany', e.target.value)}
-                                    className={`${inputClasses} flex-1 !h-full py-1.5 resize-y leading-tight`}
-                                    placeholder="Write a brief description about the company..."
+                                    className={`${inputClasses} flex-1 !h-full py-1.5 resize-y leading-tight ${formData.aboutCompany?.length > 0 && formData.aboutCompany.length < 250 ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`}
+                                    placeholder="Write a brief description about the company (minimum 250 characters)..."
                                 />
+                                <div className={`text-[10px] mt-1 font-medium ${!formData.aboutCompany || formData.aboutCompany.length < 250 ? 'text-red-500' : 'text-green-600'}`}>
+                                    {!formData.aboutCompany || formData.aboutCompany.length < 250 
+                                        ? `* Minimum 250 characters required. (Current: ${formData.aboutCompany?.length || 0})`
+                                        : '✓ Character requirement met.'}
+                                </div>
                             </div>
 
                             {/* REGISTRANT TYPE */}
