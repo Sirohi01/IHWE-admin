@@ -96,6 +96,8 @@ const BookAStand = () => {
         referralName: '',
         referralMobile: '',
         spokenWith: '',
+        exhibitorStatus: '',
+        previousExhibition: '',
         filledBy: 'Admin',
         status: 'pending',
         paymentMode: 'manual',
@@ -611,7 +613,7 @@ const BookAStand = () => {
                 <div className="w-full md:w-80">
                     <label className="text-[10px] font-bold text-[#23471d] uppercase mb-1 block tracking-widest">Select Exhibition Event <span className="text-red-500">*</span></label>
                     <select required value={selectedEventId} onChange={(e) => setSelectedEventId(e.target.value)} className={inputClasses}>
-                        <option value="">Choose Event</option>
+                        <option value="" className="text-red-500 font-medium">Choose Event</option>
                         {events.map(ev => <option key={ev._id} value={ev._id}>{ev.name} ({new Date(ev.startDate).getFullYear()})</option>)}
                     </select>
                 </div>
@@ -829,7 +831,7 @@ const BookAStand = () => {
                             <div>
                                 <label className={labelClasses}>Type of Business <span className="text-red-500">*</span></label>
                                 <select required value={formData.typeOfBusiness} onChange={(e) => handleSelectChange('typeOfBusiness', e.target.value)} className={inputClasses}>
-                                    <option value="">Select Here</option>
+                                    <option value="" className="text-red-500 font-medium">Select Here</option>
                                     <option>Pvt. Ltd. Company</option>
                                     <option>Pub. Ltd. Company</option>
                                     <option>Partnership Company</option>
@@ -843,7 +845,7 @@ const BookAStand = () => {
                             <div>
                                 <label className={labelClasses}>Industry / Sector <span className="text-red-500">*</span></label>
                                 <select required value={formData.industrySector} onChange={(e) => handleSelectChange('industrySector', e.target.value)} className={inputClasses}>
-                                    <option value="">Select Here</option>
+                                    <option value="" className="text-red-500 font-medium">Select Here</option>
                                     <option>Medical &amp; Healthcare</option>
                                     <option>AYUSH &amp; Traditional Medicine</option>
                                     <option>Wellness, Fitness &amp; Lifestyle</option>
@@ -866,7 +868,7 @@ const BookAStand = () => {
                                 <div>
                                     <label className={labelClasses}>Country <span className="text-red-500">*</span></label>
                                     <select required value={formData.country} onChange={(e) => handleSelectChange('country', e.target.value)} className={inputClasses}>
-                                        <option value="">Select Here</option>
+                                        <option value="" className="text-red-500 font-medium">Select Here</option>
                                         {countries.filter(c => c.name.toLowerCase() !== 'india').map((c, i) => <option key={i} value={c.name}>{c.name}</option>)}
                                     </select>
                                 </div>
@@ -877,7 +879,7 @@ const BookAStand = () => {
                                     <input required type="text" value={formData.state} onChange={(e) => handleSelectChange('state', e.target.value)} className={inputClasses} placeholder="Auto-filled from Pincode" />
                                 ) : (
                                     <select required value={formData.state} onChange={(e) => handleSelectChange('state', e.target.value)} disabled={!formData.country} className={inputClasses}>
-                                        <option value="">Select Here</option>
+                                        <option value="" className="text-red-500 font-medium">Select Here</option>
                                         {filteredStates.map((s, i) => <option key={i} value={s.name}>{s.name}</option>)}
                                     </select>
                                 )}
@@ -888,7 +890,7 @@ const BookAStand = () => {
                                     <input required type="text" value={formData.city} onChange={(e) => handleSelectChange('city', e.target.value)} className={inputClasses} placeholder="Auto-filled from Pincode" />
                                 ) : (
                                     <select required value={formData.city} onChange={(e) => handleSelectChange('city', e.target.value)} disabled={!formData.state} className={inputClasses}>
-                                        <option value="">Select Here</option>
+                                        <option value="" className="text-red-500 font-medium">Select Here</option>
                                         {filteredCities.map((ct, i) => <option key={i} value={ct.name}>{ct.name}</option>)}
                                     </select>
                                 )}
@@ -904,7 +906,7 @@ const BookAStand = () => {
                             {/* <div>
                                 <label className={labelClasses}>Nature of Business <span className="text-red-500">*</span></label>
                                 <select required value={formData.natureOfBusiness} onChange={(e) => handleSelectChange('natureOfBusiness', e.target.value)} className={inputClasses}>
-                                    <option value="">Select Here</option>
+                                    <option value="" className="text-red-500 font-medium">Select Here</option>
                                     <option>Agency</option><option>Aggregator</option><option>Association</option><option>College</option>
                                     <option>Dealer</option><option>Digital Media</option><option>Distributor</option><option>Electronic Media</option>
                                     <option>Government Body</option><option>Institution</option><option>Manufacturer</option><option>NGO</option>
@@ -1115,7 +1117,7 @@ const BookAStand = () => {
                                     <div>
                                         <label className={labelClasses}>Open Sides</label>
                                         <select value={formData.participation.stallScheme || ''} onChange={(e) => handleSelectChange('participation.stallScheme', e.target.value)} className={inputClasses}>
-                                            <option value="">Select Open Sides</option>
+                                            <option value="" className="text-red-500 font-medium">Select Open Sides</option>
                                             <option value="ONE SIDE OPEN">One Side Open</option>
                                             <option value="TWO SIDE OPEN">Two Side Open</option>
                                             <option value="THREE SIDE OPEN">Three Side Open</option>
@@ -1139,7 +1141,7 @@ const BookAStand = () => {
                                     <div>
                                         <label className={labelClasses}>Stall Category</label>
                                         <select value={formData.participation.stallCategory} onChange={(e) => handleSelectChange('participation.stallCategory', e.target.value)} className={inputClasses}>
-                                            <option value="">Select Category</option>
+                                            <option value="" className="text-red-500 font-medium">Select Category</option>
                                             <option value="Under MSME PSM Scheme">Under MSME PSM Scheme</option>
                                             <option value="Under General Category">Under General Category</option>
                                         </select>
@@ -1204,11 +1206,11 @@ const BookAStand = () => {
                             <h4 className="text-[11px] font-bold text-slate-800 uppercase tracking-widest mb-3 flex items-center gap-2">
                                 CRM Attribution
                             </h4>
-                            <div className={`grid grid-cols-1 gap-x-4 gap-y-3 ${formData.referredBy === 'Social Media' ? 'md:grid-cols-3' : formData.referredBy === 'Referral' ? 'md:grid-cols-4' : 'md:grid-cols-2'}`}>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-3">
                                 <div>
                                     <label className={labelClasses}>Referral Channel <span className="text-red-500">*</span></label>
                                     <select required value={formData.referredBy} onChange={(e) => handleSelectChange('referredBy', e.target.value)} className={inputClasses}>
-                                        <option value="">How did you hear about us?</option>
+                                        <option value="" className="text-red-500 font-medium">How did you hear about us?</option>
                                         <option value="Direct Website">Direct Website</option>
                                         <option value="Email Marketing">Email Marketing</option>
                                         <option value="Social Media">Social Media</option>
@@ -1223,7 +1225,7 @@ const BookAStand = () => {
                                     <div>
                                         <label className={labelClasses}>Social Media <span className="text-red-500">*</span></label>
                                         <select required value={formData.socialMediaType} onChange={(e) => handleSelectChange('socialMediaType', e.target.value)} className={inputClasses}>
-                                            <option value="">Select Platform</option>
+                                            <option value="" className="text-red-500 font-medium">Select Platform</option>
                                             <option value="Instagram">Instagram</option>
                                             <option value="Facebook">Facebook</option>
                                             <option value="X">X (Twitter)</option>
@@ -1248,10 +1250,26 @@ const BookAStand = () => {
                                 <div>
                                     <label className={labelClasses}>Spoken With <span className="text-red-500">*</span></label>
                                     <select required value={formData.spokenWith} onChange={(e) => handleSelectChange('spokenWith', e.target.value)} className={inputClasses}>
-                                        <option value="">Select Staff Member</option>
+                                        <option value="" className="text-red-500 font-medium">Select Staff Member</option>
                                         {marketingStaff.map(s => <option key={s._id} value={s.fullName || s.username}>{s.fullName || s.username}</option>)}
                                     </select>
                                 </div>
+
+                                <div>
+                                    <label className={labelClasses}>Exhibitor Status <span className="text-red-500">*</span></label>
+                                    <select required value={formData.exhibitorStatus} onChange={(e) => handleSelectChange('exhibitorStatus', e.target.value)} className={inputClasses}>
+                                        <option value="" className="text-red-500 font-medium">Select Status</option>
+                                        <option value="New Client">New Client</option>
+                                        <option value="Existing Client">Existing Client</option>
+                                    </select>
+                                </div>
+
+                                {formData.exhibitorStatus === 'Existing Client' && (
+                                    <div>
+                                        <label className={labelClasses}>Previous Exhibition <span className="text-red-500">*</span></label>
+                                        <input required value={formData.previousExhibition} onChange={(e) => handleSelectChange('previousExhibition', e.target.value)} placeholder="e.g. IHWE 2025" className={inputClasses} />
+                                    </div>
+                                )}
                             </div>
                         </div>
 
