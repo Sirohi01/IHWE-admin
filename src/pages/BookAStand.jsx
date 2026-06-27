@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import headerBg from "../assets/exhi.jpg";
 import arenaImg from "../assets/hall.jpg";
@@ -115,6 +115,20 @@ const BookAStand = () => {
             isFullPayment: false
         }
     });
+
+    const [isStallDropdownOpen, setIsStallDropdownOpen] = useState(false);
+    const [stallSearchQuery, setStallSearchQuery] = useState("");
+    const stallDropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (stallDropdownRef.current && !stallDropdownRef.current.contains(event.target)) {
+                setIsStallDropdownOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     useEffect(() => {
         const fetchInitialData = async () => {
@@ -1037,77 +1051,56 @@ const BookAStand = () => {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className={labelClasses}>Stall Number <span className="text-red-500">*</span></label>
-                                        <Select
-                                            options={availableStalls
-                                                .filter(s => (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId))
-                                                .sort((a, b) => (a.stallNumber || '').localeCompare((b.stallNumber || ''), undefined, { numeric: true, sensitivity: 'base' }))
-                                                .map(s => ({ value: s._id, label: s.stallNumber }))}
-                                            value={formData.participation.stallNo ? { value: formData.participation.stallNo, label: availableStalls.find(s => s._id === formData.participation.stallNo)?.stallNumber || '' } : null}
-                                            onChange={(selectedOption) => handleStallSelect(selectedOption ? selectedOption.value : '')}
-                                            placeholder="Search & Choose Stall"
-                                            isClearable
-                                            isSearchable
-                                            styles={{
-                                                control: (base) => ({
-                                                    ...base,
-                                                    minHeight: '28px',
-                                                    height: '28px',
-                                                    fontSize: '12px',
-                                                    fontWeight: '500',
-                                                    color: '#1e293b',
-                                                    borderRadius: '0.25rem',
-                                                    borderColor: '#94a3b8',
-                                                    boxShadow: 'none',
-                                                    '&:hover': { borderColor: '#23471d' },
-                                                    cursor: 'pointer'
-                                                }),
-                                                valueContainer: (base) => ({
-                                                    ...base,
-                                                    padding: '0 8px',
-                                                    height: '26px',
-                                                    margin: '0',
-                                                    display: 'flex',
-                                                    alignItems: 'center'
-                                                }),
-                                                input: (base) => ({
-                                                    ...base,
-                                                    margin: '0px',
-                                                    padding: '0px',
-                                                    color: '#1e293b'
-                                                }),
-                                                singleValue: (base) => ({
-                                                    ...base,
-                                                    color: '#1e293b',
-                                                    margin: '0px'
-                                                }),
-                                                placeholder: (base) => ({
-                                                    ...base,
-                                                    color: '#94a3b8',
-                                                    margin: '0px'
-                                                }),
-                                                indicatorSeparator: () => ({ display: 'none' }),
-                                                indicatorsContainer: (base) => ({
-                                                    ...base,
-                                                    height: '26px',
-                                                    padding: '0px'
-                                                }),
-                                                dropdownIndicator: (base) => ({
-                                                    ...base,
-                                                    padding: '0 4px',
-                                                    color: '#1e293b'
-                                                }),
-                                                clearIndicator: (base) => ({
-                                                    ...base,
-                                                    padding: '0 4px'
-                                                }),
-                                                menu: (base) => ({
-                                                    ...base,
-                                                    fontSize: '12px',
-                                                    zIndex: 50,
-                                                    fontWeight: '500'
-                                                })
-                                            }}
-                                        />
+                                        <div className="relative" ref={stallDropdownRef}>
+                                            <div 
+                                                className={`${inputClasses} flex items-center justify-between cursor-pointer`}
+                                                onClick={() => setIsStallDropdownOpen(!isStallDropdownOpen)}
+                                            >
+                                                <span className={formData.participation.stallNo ? "text-slate-800" : "text-slate-400"}>
+                                                    {formData.participation.stallNo 
+                                                        ? availableStalls.find(s => s._id === formData.participation.stallNo)?.stallNumber 
+                                                        : "Search & Choose Stall"}
+                                                </span>
+                                                <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                                            </div>
+                                            
+                                            {isStallDropdownOpen && (
+                                                <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded shadow-lg">
+                                                    <div className="p-1.5 border-b border-slate-100">
+                                                        <input 
+                                                            type="text" 
+                                                            className="w-full text-[12px] p-1.5 border border-slate-200 rounded outline-none focus:border-[#23471d]" 
+                                                            placeholder="Search stall..." 
+                                                            value={stallSearchQuery}
+                                                            onChange={(e) => setStallSearchQuery(e.target.value)}
+                                                            autoFocus
+                                                        />
+                                                    </div>
+                                                    <ul className="max-h-48 overflow-y-auto">
+                                                        {availableStalls
+                                                            .filter(s => (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId))
+                                                            .sort((a, b) => (a.stallNumber || '').localeCompare((b.stallNumber || ''), undefined, { numeric: true, sensitivity: 'base' }))
+                                                            .filter(s => (s.stallNumber || '').toLowerCase().includes(stallSearchQuery.toLowerCase()))
+                                                            .map(s => (
+                                                                <li 
+                                                                    key={s._id} 
+                                                                    className={`px-3 py-1.5 text-[12px] cursor-pointer hover:bg-slate-100 ${formData.participation.stallNo === s._id ? 'bg-[#23471d] text-white hover:bg-[#23471d]' : 'text-slate-700'}`}
+                                                                    onClick={() => {
+                                                                        handleStallSelect(s._id);
+                                                                        setIsStallDropdownOpen(false);
+                                                                        setStallSearchQuery("");
+                                                                    }}
+                                                                >
+                                                                    {s.stallNumber}
+                                                                </li>
+                                                            ))}
+                                                        {availableStalls.filter(s => (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId)).length === 0 && (
+                                                            <li className="px-3 py-2 text-[12px] text-slate-500 text-center">No stalls available</li>
+                                                        )}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                     <div>
                                         <label className={labelClasses}>Open Sides</label>
