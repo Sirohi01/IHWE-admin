@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ExternalLink, Search, ShoppingBag, Gift, CreditCard, CheckCircle2 } from 'lucide-react';
+import { ExternalLink, Search, ShoppingBag, Gift, CreditCard, CheckCircle2, Loader2, X } from 'lucide-react';
 import api from '../lib/api';
 
 const STATUS_STYLE = {
@@ -12,11 +12,18 @@ export default function AccessoryOrders() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [approvingOrder, setApprovingOrder] = useState('');
+    const [selectedOrder, setSelectedOrder] = useState(null);
 
-    useEffect(() => {
+    const loadOrders = () => {
+        setLoading(true);
         api.get('/api/stall-accessories/orders')
             .then(res => setOrders(res.data.data || []))
             .finally(() => setLoading(false));
+    };
+
+    useEffect(() => {
+        loadOrders();
     }, []);
 
     const fmt = (n) => `₹${Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
@@ -30,6 +37,21 @@ export default function AccessoryOrders() {
     );
 
     const totalRevenue = orders.filter(o => o.paymentStatus === 'paid').reduce((s, o) => s + (o.grandTotal || 0), 0);
+
+    const approveNeftOrder = async (order) => {
+        if (!window.confirm(`Approve NEFT payment for ${order.orderNo}?`)) return;
+        setApprovingOrder(order._id);
+        try {
+            await api.put(`/api/stall-accessories/orders/${order._id}/approve-neft`, {
+                processedBy: 'Admin',
+                notes: 'NEFT payment approved by admin',
+            });
+            loadOrders();
+            setSelectedOrder(prev => prev?._id === order._id ? { ...prev, paymentStatus: 'paid', processedBy: 'Admin' } : prev);
+        } finally {
+            setApprovingOrder('');
+        }
+    };
 
     return (
         <div className="p-6 min-h-screen bg-gray-50">
@@ -45,7 +67,7 @@ export default function AccessoryOrders() {
                 {[
                     { label: 'Total Orders', value: orders.length, icon: ShoppingBag, color: 'text-slate-700' },
                     { label: 'Complimentary', value: orders.filter(o => o.paymentStatus === 'complimentary').length, icon: Gift, color: 'text-emerald-600' },
-                    { label: 'Paid Orders', value: orders.filter(o => o.paymentStatus === 'paid').length, icon: CreditCard, color: 'text-blue-600' },
+                    { label: 'Pending NEFT', value: orders.filter(o => o.paymentStatus === 'pending' && o.paymentMode === 'neft').length, icon: CreditCard, color: 'text-amber-600' },
                     { label: 'Total Revenue', value: fmt(totalRevenue), icon: CheckCircle2, color: 'text-[#23471d]' },
                 ].map((s, i) => (
                     <div key={i} className="bg-white border border-gray-200 px-4 py-3 shadow-sm">
@@ -82,7 +104,7 @@ export default function AccessoryOrders() {
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="bg-[#23471d]">
-                                    {['Order No', 'Exhibitor', 'Stall', 'Items', 'Grand Total', 'Status', 'Processed By', 'Date', 'Receipt'].map(h => (
+                                    {['Order No', 'Exhibitor', 'Stall', 'Items', 'Grand Total', 'Status', 'Payment Mode', 'Processed By', 'Date', 'Receipt'].map(h => (
                                         <th key={h} className="py-2.5 px-4 text-[10px] font-black text-white uppercase text-left whitespace-nowrap">{h}</th>
                                     ))}
                                 </tr>
@@ -90,7 +112,14 @@ export default function AccessoryOrders() {
                             <tbody className="divide-y divide-gray-100">
                                 {filtered.map((order, i) => (
                                     <tr key={order._id} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
-                                        <td className="py-2.5 px-4 text-xs font-bold text-[#23471d] font-mono">{order.orderNo}</td>
+                                        <td className="py-2.5 px-4">
+                                            <button
+                                                onClick={() => setSelectedOrder(order)}
+                                                className="text-xs font-bold text-[#23471d] font-mono hover:underline"
+                                            >
+                                                {order.orderNo}
+                                            </button>
+                                        </td>
                                         <td className="py-2.5 px-4">
                                             <p className="text-xs font-bold text-gray-800">{order.exhibitorName}</p>
                                             <p className="text-[10px] text-gray-400">{order.registrationId}</p>
@@ -112,6 +141,9 @@ export default function AccessoryOrders() {
                                                 {order.paymentStatus}
                                             </span>
                                         </td>
+                                        <td className="py-2.5 px-4 text-xs font-bold uppercase text-blue-700">
+                                            {order.paymentMode === 'neft' ? 'NEFT / RTGS' : (order.paymentMode || '—')}
+                                        </td>
                                         <td className="py-2.5 px-4 text-xs text-gray-600">{order.processedBy || 'Admin'}</td>
                                         <td className="py-2.5 px-4 text-xs text-gray-500">
                                             {new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -131,6 +163,116 @@ export default function AccessoryOrders() {
                     </div>
                 )}
             </div>
+
+            {selectedOrder && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-2xl border border-gray-200">
+                        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-5 py-4 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-sm font-black text-[#23471d] uppercase tracking-wide">Order Overview</h2>
+                                <p className="text-xs text-gray-500 font-mono mt-0.5">{selectedOrder.orderNo}</p>
+                            </div>
+                            <button
+                                onClick={() => setSelectedOrder(null)}
+                                className="w-8 h-8 rounded border border-gray-200 text-gray-500 hover:bg-gray-50 flex items-center justify-center"
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+
+                        <div className="p-5 space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div className="border border-gray-200 rounded p-3">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Exhibitor</p>
+                                    <p className="text-xs font-bold text-gray-800 mt-1">{selectedOrder.exhibitorName || '—'}</p>
+                                    <p className="text-[10px] text-gray-500 mt-0.5">{selectedOrder.registrationId || '—'}</p>
+                                </div>
+                                <div className="border border-gray-200 rounded p-3">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Payment</p>
+                                    <div className="mt-1 flex items-center gap-2">
+                                        <span className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-full border ${STATUS_STYLE[selectedOrder.paymentStatus] || 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                                            {selectedOrder.paymentStatus}
+                                        </span>
+                                        <span className="text-[10px] font-black uppercase text-blue-700">
+                                            {selectedOrder.paymentMode === 'neft' ? 'NEFT / RTGS' : selectedOrder.paymentMode || '—'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="border border-gray-200 rounded p-3">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Grand Total</p>
+                                    <p className="text-sm font-black text-gray-800 mt-1">
+                                        {selectedOrder.paymentStatus === 'complimentary' ? 'Complimentary' : fmt(selectedOrder.grandTotal)}
+                                    </p>
+                                    <p className="text-[10px] text-gray-500 mt-0.5">
+                                        {new Date(selectedOrder.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {selectedOrder.paymentMode === 'neft' && (
+                                <div className="border border-gray-200 rounded overflow-hidden">
+                                    <div className="bg-slate-50 px-4 py-2 border-b border-gray-200">
+                                        <p className="text-[11px] font-black text-gray-700 uppercase tracking-wider">NEFT / RTGS Details</p>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-0">
+                                        {[
+                                            ['Beneficiary Name', selectedOrder.bankTransferDetails?.beneficiaryName],
+                                            ['Account Number', selectedOrder.bankTransferDetails?.beneficiaryAccountNumber],
+                                            ['IFSC Code', selectedOrder.bankTransferDetails?.ifscCode],
+                                            ['Bank Name', selectedOrder.bankTransferDetails?.bankName],
+                                            ['Account Type', selectedOrder.bankTransferDetails?.accountType],
+                                            ['Amount', fmt(selectedOrder.bankTransferDetails?.amount || selectedOrder.grandTotal)],
+                                        ].map(([label, value]) => (
+                                            <div key={label} className="px-4 py-2 border-b border-r border-gray-100">
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">{label}</p>
+                                                <p className="text-xs font-bold text-gray-800 mt-0.5">{value || '—'}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {selectedOrder.paymentStatus === 'pending' && (
+                                        <div className="px-4 py-3 bg-amber-50 border-t border-amber-100 flex justify-end">
+                                            <button
+                                                onClick={() => approveNeftOrder(selectedOrder)}
+                                                disabled={approvingOrder === selectedOrder._id}
+                                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded bg-[#23471d] text-white text-xs font-bold disabled:opacity-60"
+                                            >
+                                                {approvingOrder === selectedOrder._id ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />}
+                                                Approve Payment
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="border border-gray-200 rounded overflow-hidden">
+                                <div className="bg-slate-50 px-4 py-2 border-b border-gray-200">
+                                    <p className="text-[11px] font-black text-gray-700 uppercase tracking-wider">Items</p>
+                                </div>
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="bg-white">
+                                            {['Item', 'Qty', 'Unit Price', 'GST', 'Total'].map(h => (
+                                                <th key={h} className="py-2 px-4 text-[10px] font-black text-gray-400 uppercase text-left">{h}</th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {selectedOrder.items.map((item, i) => (
+                                            <tr key={i}>
+                                                <td className="py-2 px-4 text-xs font-bold text-gray-800">{item.name}</td>
+                                                <td className="py-2 px-4 text-xs text-gray-600">{item.qty}</td>
+                                                <td className="py-2 px-4 text-xs text-gray-600">{fmt(item.unitPrice)}</td>
+                                                <td className="py-2 px-4 text-xs text-gray-600">{fmt(item.gstAmount)}</td>
+                                                <td className="py-2 px-4 text-xs font-bold text-gray-800">{fmt(item.totalPrice)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
