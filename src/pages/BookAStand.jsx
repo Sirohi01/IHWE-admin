@@ -858,10 +858,6 @@ const BookAStand = () => {
                                 <label className={labelClasses}>Pincode <span className="text-red-500">*</span></label>
                                 <input required type="text" value={formData.pincode} onChange={(e) => handleSelectChange('pincode', e.target.value)} className={inputClasses} placeholder="Write Here.." inputMode="numeric" />
                             </div>
-                            <div>
-                                <label className={labelClasses}>Office Address <span className="text-red-500">*</span></label>
-                                <input required type="text" value={formData.address} onChange={(e) => handleSelectChange('address', e.target.value)} className={inputClasses} placeholder="Write Here.." />
-                            </div>
                             {exhibitorType !== 'domestic' && (
                                 <div>
                                     <label className={labelClasses}>Country <span className="text-red-500">*</span></label>
@@ -892,6 +888,10 @@ const BookAStand = () => {
                                         {filteredCities.map((ct, i) => <option key={i} value={ct.name}>{ct.name}</option>)}
                                     </select>
                                 )}
+                            </div>
+                            <div>
+                                <label className={labelClasses}>Office Address <span className="text-red-500">*</span></label>
+                                <input required type="text" value={formData.address} onChange={(e) => handleSelectChange('address', e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
                             <div>
                                 <label className={labelClasses}>Landline / Alternate No.</label>
