@@ -1208,14 +1208,14 @@ const BookAStand = () => {
                                     <label className={labelClasses}>Referral Channel <span className="text-red-500">*</span></label>
                                     <select required value={formData.referredBy} onChange={(e) => handleSelectChange('referredBy', e.target.value)} className={inputClasses}>
                                         <option value="" className="text-red-500 font-medium">How did you hear about us?</option>
+                                        <option value="Direct Calling">Direct Calling</option>
                                         <option value="Direct Website">Direct Website</option>
                                         <option value="Email Marketing">Email Marketing</option>
-                                        <option value="WhatsApp Marketing">WhatsApp Marketing</option>
-                                        <option value="Social Media">Social Media</option>
                                         <option value="Google (GMB / GMV)">Google (GMB / GMV)</option>
-                                        <option value="Direct Calling">Direct Calling</option>
-                                        <option value="Referral">Referral</option>
                                         <option value="Others">Others</option>
+                                        <option value="Referral">Referral</option>
+                                        <option value="Social Media">Social Media</option>
+                                        <option value="WhatsApp Marketing">WhatsApp Marketing</option>
                                     </select>
                                 </div>
 
@@ -1249,7 +1249,7 @@ const BookAStand = () => {
                                     <label className={labelClasses}>Spoken With <span className="text-red-500">*</span></label>
                                     <select required value={formData.spokenWith} onChange={(e) => handleSelectChange('spokenWith', e.target.value)} className={inputClasses}>
                                         <option value="" className="text-red-500 font-medium">Select Staff Member</option>
-                                        {marketingStaff.map(s => <option key={s._id} value={s.fullName || s.username}>{s.fullName || s.username}</option>)}
+                                        {marketingStaff.slice().sort((a, b) => (a.fullName || a.username || "").localeCompare(b.fullName || b.username || "")).map(s => <option key={s._id} value={s.fullName || s.username}>{s.fullName || s.username}</option>)}
                                     </select>
                                 </div>
 
