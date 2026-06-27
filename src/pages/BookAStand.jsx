@@ -595,7 +595,7 @@ const BookAStand = () => {
         }));
     };
 
-    const inputClasses = "rounded border border-slate-400 h-7 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-800 font-medium shadow-none outline-none px-3 w-full text-left";
+    const inputClasses = "rounded border border-slate-400 h-7 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-800 invalid:text-slate-400 font-medium shadow-none outline-none px-3 w-full text-left";
     const labelClasses = "block text-[10px] font-semibold capitalize tracking-wide text-slate-700 mb-1";
     const sectionHeaderClasses = "text-[13px] font-semibold text-[#1a4d1a] capitalize tracking-wide pb-1.5 mb-2.5 flex items-center gap-2";
     const cardClasses = "bg-white border border-slate-200 rounded-xl p-3.5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)]";
@@ -603,6 +603,10 @@ const BookAStand = () => {
 
     return (
         <div className="bg-[#f8fafc] shadow-md px-4 pt-4 pb-1 min-h-[calc(100vh-90px)] font-inter animate-fadeIn">
+            <style>{`
+                select option { color: #1e293b !important; }
+                select option[value=""] { color: #94a3b8 !important; font-weight: 500; }
+            `}</style>
             {/* HEADER */}
             {!exhibitorType && (
                 <div className="flex flex-col sm:flex-row justify-between items-center pb-3">
