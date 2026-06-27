@@ -938,11 +938,11 @@ const BookAStand = () => {
                                             value="registered"
                                             checked={formData.registrantType === 'registered'}
                                             onChange={() => setFormData(prev => ({ ...prev, registrantType: 'registered', panNo: '', aadhaarNo: '' }))}
-                                            className="accent-[#23471d] w-3 h-3"
+                                            className="accent-[#23471d] w-3.5 h-3.5"
                                         />
-                                        <span className="text-[9px] font-bold text-slate-800 group-hover:text-[#23471d] transition-colors leading-none flex items-center gap-1">
+                                        <span className="text-[11px] font-bold text-slate-800 group-hover:text-[#23471d] transition-colors leading-none flex items-center gap-1.5">
                                             Registered
-                                            <span className="text-[7.5px] font-semibold text-[#23471d] bg-green-50 border border-green-200 px-1 py-px rounded uppercase tracking-wider">GST</span>
+                                            <span className="text-[8.5px] font-semibold text-[#23471d] bg-green-50 border border-green-200 px-1.5 py-0.5 rounded uppercase tracking-wider">GST</span>
                                         </span>
                                     </label>
                                     <label className="flex items-center gap-1.5 cursor-pointer group">
@@ -952,11 +952,11 @@ const BookAStand = () => {
                                             value="unregistered"
                                             checked={formData.registrantType === 'unregistered'}
                                             onChange={() => setFormData(prev => ({ ...prev, registrantType: 'unregistered', gstNo: '' }))}
-                                            className="accent-[#d26019] w-3 h-3"
+                                            className="accent-[#d26019] w-3.5 h-3.5"
                                         />
-                                        <span className="text-[9px] font-bold text-slate-800 group-hover:text-[#d26019] transition-colors leading-none flex items-center gap-1">
+                                        <span className="text-[11px] font-bold text-slate-800 group-hover:text-[#d26019] transition-colors leading-none flex items-center gap-1.5">
                                             Unregistered
-                                            <span className="text-[7.5px] font-semibold text-[#d26019] bg-orange-50 border border-orange-200 px-1 py-px rounded uppercase tracking-wider">PAN+Aadhar</span>
+                                            <span className="text-[8.5px] font-semibold text-[#d26019] bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded uppercase tracking-wider">PAN+Aadhar</span>
                                         </span>
                                     </label>
                                 </div>
