@@ -275,7 +275,7 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
               <span className="text-[8px] font-medium text-slate-400 uppercase tracking-widest mb-0.5 leading-none">
                 Welcome back,
               </span>
-              <span className="text-[10px] font-md text-slate-200 uppercase tracking-widest truncate w-full text-left leading-none">
+              <span className="text-[12px] font-md text-slate-200 uppercase tracking-widest truncate w-full text-left leading-none">
                 {fullProfile?.fullName || adminData?.username || "My Profile"}
               </span>
             </div>
