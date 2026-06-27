@@ -834,7 +834,7 @@ const BookAStand = () => {
                                 <input required type="text" value={formData.website} onChange={(e) => handleSelectChange('website', e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
                             <div>
-                                <label className={labelClasses}>Exhibitor Address <span className="text-red-500">*</span></label>
+                                <label className={labelClasses}>Office Address <span className="text-red-500">*</span></label>
                                 <input required type="text" value={formData.address} onChange={(e) => handleSelectChange('address', e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
                             <div>
