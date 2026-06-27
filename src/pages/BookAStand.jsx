@@ -1215,9 +1215,12 @@ const BookAStand = () => {
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        {/* PAYMENT PLAN & TDS CONTROL */}
-                        <div className="p-4 bg-[#f8fafc] border border-slate-200 rounded-xl mt-3 flex flex-col lg:flex-row items-end justify-between gap-4">
+                    {/* PAYMENT PLAN & TDS CONTROL */}
+                    {/* PAYMENT PLAN, TDS & BREAKDOWNS MOVED TO CONVERTED CLIENT PAGE 
+                    <div className="p-4 bg-[#f8fafc] border border-slate-200 rounded-xl mt-3 flex flex-col lg:flex-row items-end justify-between gap-4">
+
 
                             {(() => {
                                 const currentEvent = events.find(e => e._id === selectedEventId);
@@ -1232,7 +1235,6 @@ const BookAStand = () => {
                                     <div className="flex-1">
                                         <label className={labelClasses}>Payment Plan <span className="text-red-500">*</span></label>
                                         <div className="flex flex-wrap gap-2 mt-1">
-                                            {/* Full Payment */}
                                             <button
                                                 type="button"
                                                 onClick={() => setFormData(prev => ({
@@ -1247,7 +1249,6 @@ const BookAStand = () => {
                                             >
                                                 Full Payment{settings?.fullPaymentDiscount > 0 ? ` (${settings.fullPaymentDiscount}% discount)` : ''}
                                             </button>
-                                            {/* Installment — sets Phase 1 automatically */}
                                             {firstInstallPlan && (
                                                 <button
                                                     type="button"
@@ -1287,7 +1288,6 @@ const BookAStand = () => {
                                             <option value={0}>0% TDS</option>
                                             <option value={1}>1% TDS</option>
                                             <option value={2}>2% TDS</option>
-                                            {/* <option value={10}>10% TDS</option> */}
                                         </select>
                                         <ChevronDown size={14} className="absolute right-2 top-1.5 text-red-600 pointer-events-none" />
                                     </div>
@@ -1303,7 +1303,6 @@ const BookAStand = () => {
                             </div>
                         </div>
 
-                        {/* COST BREAKDOWN */}
                         <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-wrap gap-6 items-end">
                             <div className="flex flex-col gap-0.5">
                                 <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Stall</p>
@@ -1334,7 +1333,6 @@ const BookAStand = () => {
 
 
 
-                    {/* FINANCIAL SETTLEMENT BREAKDOWN */}
                     <div className="px-2">
                         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] relative overflow-hidden group">
                             <div className="absolute top-0 left-0 w-1 h-full bg-[#23471d]"></div>
@@ -1348,7 +1346,6 @@ const BookAStand = () => {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
-                                {/* Gross Cost */}
                                 <div className="space-y-1">
                                     <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Gross Booking Cost</p>
                                     <p className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
@@ -1356,7 +1353,6 @@ const BookAStand = () => {
                                     </p>
                                 </div>
 
-                                {/* Discounts Combined */}
                                 <div className="space-y-1 border-l-0 md:border-l border-slate-100 pl-0 md:pl-6">
                                     <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest flex items-center justify-between">
                                         Applied Savings
@@ -1381,7 +1377,6 @@ const BookAStand = () => {
                                     </div>
                                 </div>
 
-                                {/* Taxes & Deductions */}
                                 <div className="space-y-1 border-l-0 md:border-l border-slate-100 pl-0 md:pl-6">
                                     <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Government Taxes & TDS</p>
                                     <div className="flex gap-4">
@@ -1398,7 +1393,6 @@ const BookAStand = () => {
                                     </div>
                                 </div>
 
-                                {/* Net Payable */}
                                 <div className="space-y-1 border-l-0 md:border-l border-slate-100 pl-0 md:pl-6 text-right">
                                     <p className="text-[9px] font-semibold text-[#23471d] uppercase tracking-[0.1em] mb-1">Net To Be Collected</p>
                                     <p className="text-3xl font-semibold text-[#23471d] leading-none mb-1">
@@ -1410,7 +1404,6 @@ const BookAStand = () => {
                         </div>
                     </div>
 
-                    {/* BOOKING SUMMARY */}
                     <div className="px-2 space-y-3">
                         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-wrap gap-6 items-end justify-between">
                             <div className="flex flex-col gap-0.5">
@@ -1437,6 +1430,8 @@ const BookAStand = () => {
                             </div>
                         </div>
                     </div>
+                    */}
+
 
                     {/* FOOTER ACTIONS */}
                     <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 px-2">
