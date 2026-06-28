@@ -5,7 +5,7 @@ import { aiVerificationSettingsApi } from "../../lib/api";
 
 const GEMINI_MODELS = [
     { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash (Recommended)" },
-    { value: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite" },
+    { value: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite (Faster, less reliable for nudity/safety checks)" },
 ];
 
 const OPENAI_MODELS = [
@@ -223,8 +223,8 @@ export default function AiVerificationSettings() {
                                     <button
                                         onClick={() => setProvider("gemini")}
                                         className={`relative p-4 rounded-xl border text-left transition-all ${provider === "gemini"
-                                                ? "border-[#23471d] bg-[#23471d]/5 ring-1 ring-[#23471d] shadow-sm"
-                                                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                                            ? "border-[#23471d] bg-[#23471d]/5 ring-1 ring-[#23471d] shadow-sm"
+                                            : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                                             }`}
                                     >
                                         <div className="flex items-start gap-3">
@@ -255,8 +255,8 @@ export default function AiVerificationSettings() {
                                     <button
                                         onClick={() => setProvider("openai")}
                                         className={`relative p-4 rounded-xl border text-left transition-all flex items-center gap-3 ${provider === "openai"
-                                                ? "border-[#23471d] bg-[#23471d]/5 ring-1 ring-[#23471d] shadow-sm"
-                                                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                                            ? "border-[#23471d] bg-[#23471d]/5 ring-1 ring-[#23471d] shadow-sm"
+                                            : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                                             }`}
                                     >
                                         <div className={`w-5 h-5 flex items-center justify-center shrink-0 ${provider === "openai" ? "text-gray-900" : "text-gray-500"}`}>
@@ -320,6 +320,14 @@ export default function AiVerificationSettings() {
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                                     </div>
                                 </div>
+                                {isGemini && currentModel === "gemini-2.5-flash-lite" && (
+                                    <div className="flex items-start gap-2 mt-2.5 bg-amber-50 border border-amber-200 rounded-lg p-2.5">
+                                        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                                        <p className="text-xs text-amber-800 leading-relaxed">
+                                            Lite models trade accuracy for speed and may miss nudity or inappropriate content. Use "Gemini 2.5 Flash" for reliable safety checks.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Info Box */}
