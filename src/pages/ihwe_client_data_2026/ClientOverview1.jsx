@@ -178,14 +178,12 @@ const ClientOverview1 = () => {
           data.exhibitorCategory = data.exhibitorCategory || data.participation?.stallCategory;
           data.companyStatus = data.companyStatus || data.status;
 
-          const normalizedContacts = [];
-          if (data.contact1 && data.contact1.firstName) normalizedContacts.push(data.contact1);
-          if (data.contact2 && data.contact2.firstName) normalizedContacts.push(data.contact2);
+          try {
+            const resContacts = await api.get(`/api/client-contacts/${id}`);
+            data.contacts = resContacts.data?.data || [];
+          } catch(e) { console.log(e); }
 
-          setCompany({
-            ...data,
-            contacts: normalizedContacts
-          });
+          setCompany(data);
           return;
         } catch (err) {
           console.log("Error fetching exhibitor, falling back to companies...", err);
@@ -195,21 +193,23 @@ const ClientOverview1 = () => {
       // Default to companies, or fallback from exhibitor
       try {
         const res = await api.get(`/api/companies/${id}`);
-        setCompany(res.data);
+        let data = res.data;
+        try {
+          const resContacts = await api.get(`/api/client-contacts/${id}`);
+          data.contacts = resContacts.data?.data || [];
+        } catch(e) { console.log(e); }
+        setCompany(data);
       } catch (err) {
         // If 404 from companies, try exhibitor-registration
         if (err.response?.status === 404 || err.response?.status === 400) {
           console.log("Not found in companies, trying exhibitor-registration...");
           const res = await api.get(`/api/exhibitor-registration/${id}?light=true&t=${Date.now()}`);
-          const data = res.data.data || res.data;
-          const normalizedContacts = [];
-          if (data.contact1 && data.contact1.firstName) normalizedContacts.push(data.contact1);
-          if (data.contact2 && data.contact2.firstName) normalizedContacts.push(data.contact2);
-
-          setCompany({
-            ...data,
-            contacts: normalizedContacts
-          });
+          let data = res.data.data || res.data;
+          try {
+            const resContacts = await api.get(`/api/client-contacts/${id}`);
+            data.contacts = resContacts.data?.data || [];
+          } catch(e) { console.log(e); }
+          setCompany(data);
         } else {
           throw err;
         }
@@ -1196,18 +1196,23 @@ const ClientOverview1 = () => {
 
           {/* CONTACT DETAILS */}
           <div className="bg-white rounded-2xl border border-gray-300 p-4">
-            <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center justify-between mb-6">
               <h2 className="text-base font-bold text-[#0f172a]">CONTACT DETAILS</h2>
-              <button onClick={handleOpenAddContact} className="h-10 px-6 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-bold flex items-center gap-2">
-                + Add More Contact
-              </button>
+              <div className="flex gap-2">
+                <button onClick={() => navigate(`/client-contacts/${company?.clientId || company?._id || id}`)} className="h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold flex items-center gap-2">
+                  View All
+                </button>
+                <button onClick={() => navigate(`/add-team-members/${company?.clientId || company?._id || id}`)} className="h-10 px-4 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-bold flex items-center gap-2">
+                  + Add Team Members
+                </button>
+              </div>
             </div>
 
             {company.contacts && company.contacts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-3 min-[1100px]:grid-cols-3 gap-1">
-                {company.contacts.map((contact, idx) => (
+                {company.contacts.slice(0, 3).map((contact, idx) => (
                   <div key={idx} className="flex flex-row items-center gap-2 p-2.5 rounded-xl border border-gray-200 bg-gray-50 w-full relative pr-6">
-                    <button onClick={() => handleOpenEditContact(idx)} className="absolute top-2 right-2 p-1 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
+                    <button onClick={() => navigate(`/client-contacts/${company?.clientId || company?._id || id}`)} className="absolute top-2 right-2 p-1 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
                       <Pencil size={12} />
                     </button>
                     {/* Avatar */}
@@ -1219,13 +1224,13 @@ const ClientOverview1 = () => {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        contact.firstName ? contact.firstName.charAt(0).toUpperCase() : "?"
+                        (contact.firstName || contact.name) ? (contact.firstName || contact.name).charAt(0).toUpperCase() : "?"
                       )}
                     </div>
                     {/* Info */}
                     <div className="min-w-0 flex-1 text-left">
                       <p className="text-[12px] font-bold text-gray-800 truncate">
-                        {[contact.title, contact.firstName, isExhibitor ? contact.lastName : contact.surname].filter(Boolean).join(" ") || "-"} / {contact.designation || "-"}
+                        {contact.name || [contact.title, contact.firstName, isExhibitor ? contact.lastName : contact.surname].filter(Boolean).join(" ") || "-"} / {contact.designation || "-"}
                       </p>
                       <a href={`tel:${contact.mobile}`} className="flex items-center justify-start gap-1 text-[11px] text-blue-600 hover:underline">
                         <Phone size={10} className="flex-shrink-0" /> <span className="truncate">{contact.mobile || "-"}{(isExhibitor ? contact.alternateNo : contact.alternate) ? ` / ${isExhibitor ? contact.alternateNo : contact.alternate}` : ""}</span>

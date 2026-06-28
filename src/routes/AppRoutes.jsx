@@ -173,6 +173,8 @@ const AddStatus = lazy(() => import("../pages/add_by_admin/AddStatus"));
 const AddTarget = lazy(() => import("../pages/add_by_admin/AddTarget"));
 const VisitorReviewLogs = lazy(() => import("../pages/web_visitor_data/VisitorReviewLogs"));
 const ClientOverview1 = lazy(() => import("../pages/ihwe_client_data_2026/ClientOverview1"));
+const ClientContacts = lazy(() => import("../pages/ihwe_client_data_2026/ClientContacts"));
+const AddTeamMembersAdmin = lazy(() => import("../pages/ihwe_client_data_2026/AddTeamMembersAdmin"));
 const ClientDocuments = lazy(() => import("../pages/ihwe_client_data_2026/ClientDocuments"));
 const EmailLogs = lazy(() => import("../pages/EmailLogs"));
 const WhatsAppLogs = lazy(() => import("../pages/WhatsAppLogs"));
@@ -650,6 +652,8 @@ export default function AppRoutes() {
 
         // ############################# -- Account Section
             <Route path="/client-overview/:id" element={<ClientOverview1 />} />
+            <Route path="/client-contacts/:id" element={<ClientContacts />} />
+            <Route path="/add-team-members/:id" element={<AddTeamMembersAdmin />} />
             <Route path="/client-documents/:id" element={<ClientDocuments />} />
             <Route path="/client-data/:id/marketing-materials" element={<MarketingMaterialPage />} />
             <Route path="/admin/marketing-management" element={<MarketingManagement />} />
