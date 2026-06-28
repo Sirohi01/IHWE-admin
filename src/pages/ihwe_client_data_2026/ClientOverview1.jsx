@@ -1056,7 +1056,7 @@ const ClientOverview1 = () => {
                 },
                 {
                   icon: Wallet,
-                  title: "Payments",
+                  title: "Account",
                   color: "green-600",
                   onClick: null,
                   disabled: true,
