@@ -85,6 +85,9 @@ const AddNewClients = () => {
         landline: "",
         email: "",
         dataSource: "",
+        socialMediaType: "",
+        referralName: "",
+        referralMobile: "",
         eventName: "",
         reminder: "",
         forwardTo: "",
@@ -216,6 +219,28 @@ const AddNewClients = () => {
         dispatch(fetchDataSources());
     }, [dispatch]);
 
+    // Auto-fetch State & City from Pincode
+    useEffect(() => {
+        if (formData.clientType === 'Domestic' && formData.pincode?.length === 6) {
+            const timerId = setTimeout(() => {
+                fetch(`https://api.postalpincode.in/pincode/${formData.pincode}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data[0] && data[0].Status === 'Success') {
+                            const postOffice = data[0].PostOffice[0];
+                            setFormData(prev => ({
+                                ...prev,
+                                state: postOffice.State,
+                                city: postOffice.District
+                            }));
+                        }
+                    })
+                    .catch(err => console.error("Error fetching pincode data:", err));
+            }, 600); // 600ms debounce
+            return () => clearTimeout(timerId);
+        }
+    }, [formData.pincode, formData.clientType]);
+
     // Prefill form for editing
     useEffect(() => {
         if (id && companiesArray.length > 0) {
@@ -235,6 +260,9 @@ const AddNewClients = () => {
                     landline: companyToEdit.landline || "",
                     email: companyToEdit.email || "",
                     dataSource: companyToEdit.dataSource || "",
+                    socialMediaType: companyToEdit.socialMediaType || "",
+                    referralName: companyToEdit.referralName || "",
+                    referralMobile: companyToEdit.referralMobile || "",
                     eventName: companyToEdit.eventName || "",
                     reminder: formatReminderDate(companyToEdit.reminder) || "",
                     forwardTo: companyToEdit.forwardTo || "",
@@ -424,6 +452,9 @@ const AddNewClients = () => {
             landline: "",
             email: "",
             dataSource: "",
+            socialMediaType: "",
+            referralName: "",
+            referralMobile: "",
             eventName: "",
             reminder: "",
             forwardTo: "",
@@ -500,24 +531,32 @@ const AddNewClients = () => {
                                 <input required type="text" value={formData.companyName} onChange={(e) => handleChange("companyName", e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
                             <div>
-                                <label className={labelClasses}>Category <span className="text-red-500">*</span></label>
-                                <SearchableDropdown
-                                    name="category"
-                                    value={formData.category}
-                                    onChange={(e) => handleChange("category", e.target.value)}
-                                    placeholder="Select Category"
-                                    options={categoriesArray.map(c => ({ label: c.cat_name, value: c.cat_name }))}
-                                />
+                                <label className={labelClasses}>Type of Business <span className="text-red-500">*</span></label>
+                                <select required value={formData.category} onChange={(e) => handleChange("category", e.target.value)} className={inputClasses}>
+                                    <option value="" className="text-red-500 font-medium">Select Here</option>
+                                    <option>Pvt. Ltd. Company</option>
+                                    <option>Pub. Ltd. Company</option>
+                                    <option>Partnership Company</option>
+                                    <option>Limited Liability Partnership (LLP)</option>
+                                    <option>One Person Company</option>
+                                    <option>Sole Proprietorship</option>
+                                    <option>Section 8 Company</option>
+                                    <option>Others</option>
+                                </select>
                             </div>
                             <div>
-                                <label className={labelClasses}>Nature of Business <span className="text-red-500">*</span></label>
-                                <SearchableDropdown
-                                    name="businessNature"
-                                    value={formData.businessNature}
-                                    onChange={(e) => handleChange("businessNature", e.target.value)}
-                                    placeholder="Select Business Nature"
-                                    options={naturesArray.map(n => ({ label: n.nature_name, value: n.nature_name }))}
-                                />
+                                <label className={labelClasses}>Industry / Sector <span className="text-red-500">*</span></label>
+                                <select required value={formData.businessNature} onChange={(e) => handleChange("businessNature", e.target.value)} className={inputClasses}>
+                                    <option value="" className="text-red-500 font-medium">Select Here</option>
+                                    <option>Medical &amp; Healthcare</option>
+                                    <option>AYUSH &amp; Traditional Medicine</option>
+                                    <option>Wellness, Fitness &amp; Lifestyle</option>
+                                    <option>Nutrition, Organic &amp; Health Foods</option>
+                                    <option>Beauty, Personal Care &amp; Aesthetic Wellness</option>
+                                    <option>Mental Health, Yoga &amp; Spiritual Wellness</option>
+                                    <option>Medical Technology, Diagnostics &amp; Devices</option>
+                                    <option>Institutions, Government Bodies &amp; Startups</option>
+                                </select>
                             </div>
                             <div>
                                 <label className={labelClasses}>Company Website <span className="text-gray-400 font-normal normal-case">(Optional)</span></label>
@@ -541,10 +580,13 @@ const AddNewClients = () => {
                         {/* Country indicator removed per user request */}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-x-2 gap-y-2">
-                            <div className="md:col-span-2 lg:col-span-2">
-                                <label className={labelClasses}>Full Address <span className="text-red-500">*</span></label>
-                                <input required type="text" value={formData.address} onChange={(e) => handleChange("address", e.target.value)} className={inputClasses} placeholder="Write Here.." />
-                            </div>
+                            {/* ✅ CONDITION 3: Pin Code — sirf Domestic mein dikhega */}
+                            {formData.clientType === "Domestic" && (
+                                <div>
+                                    <label className={labelClasses}>Pin Code <span className="text-red-500">*</span></label>
+                                    <input required type="text" maxLength={6} value={formData.pincode} onChange={(e) => { const val = e.target.value.replace(/\D/g, ""); if (val.length <= 6) handleChange("pincode", val); }} className={inputClasses} placeholder="Write Here.." />
+                                </div>
+                            )}
 
                             {/* ✅ CONDITION 2: Country dropdown — sirf International mein */}
                             {formData.clientType === "International" && (
@@ -562,35 +604,40 @@ const AddNewClients = () => {
 
                             <div>
                                 <label className={labelClasses}>State <span className="text-red-500">*</span></label>
-                                <SearchableDropdown
-                                    name="state"
-                                    value={formData.state}
-                                    onChange={(e) => { handleChange("state", e.target.value); handleChange("city", ""); }}
-                                    placeholder="Select State"
-                                    options={filteredStates.map(state => ({ label: state?.name, value: state?.name }))}
-                                    disabled={!formData.country}
-                                />
+                                {formData.clientType === "Domestic" ? (
+                                    <input required type="text" value={formData.state} onChange={(e) => handleChange("state", e.target.value)} className={inputClasses} placeholder="Auto-filled from Pincode" />
+                                ) : (
+                                    <SearchableDropdown
+                                        name="state"
+                                        value={formData.state}
+                                        onChange={(e) => { handleChange("state", e.target.value); handleChange("city", ""); }}
+                                        placeholder="Select State"
+                                        options={filteredStates.map(state => ({ label: state?.name, value: state?.name }))}
+                                        disabled={!formData.country}
+                                    />
+                                )}
                             </div>
 
                             <div>
                                 <label className={labelClasses}>City / Town <span className="text-red-500">*</span></label>
-                                <SearchableDropdown
-                                    name="city"
-                                    value={formData.city}
-                                    onChange={(e) => handleChange("city", e.target.value)}
-                                    placeholder="Select City"
-                                    options={filteredCities.map(city => ({ label: city?.name, value: city?.name }))}
-                                    disabled={!formData.state}
-                                />
+                                {formData.clientType === "Domestic" ? (
+                                    <input required type="text" value={formData.city} onChange={(e) => handleChange("city", e.target.value)} className={inputClasses} placeholder="Auto-filled from Pincode" />
+                                ) : (
+                                    <SearchableDropdown
+                                        name="city"
+                                        value={formData.city}
+                                        onChange={(e) => handleChange("city", e.target.value)}
+                                        placeholder="Select City"
+                                        options={filteredCities.map(city => ({ label: city?.name, value: city?.name }))}
+                                        disabled={!formData.state}
+                                    />
+                                )}
                             </div>
 
-                            {/* ✅ CONDITION 3: Pin Code — sirf Domestic mein dikhega */}
-                            {formData.clientType === "Domestic" && (
-                                <div>
-                                    <label className={labelClasses}>Pin Code <span className="text-red-500">*</span></label>
-                                    <input required type="text" maxLength={6} value={formData.pincode} onChange={(e) => { const val = e.target.value.replace(/\D/g, ""); if (val.length <= 6) handleChange("pincode", val); }} className={inputClasses} placeholder="Write Here.." />
-                                </div>
-                            )}
+                            <div className="md:col-span-2 lg:col-span-2">
+                                <label className={labelClasses}>Full Address <span className="text-red-500">*</span></label>
+                                <input required type="text" value={formData.address} onChange={(e) => handleChange("address", e.target.value)} className={inputClasses} placeholder="Write Here.." />
+                            </div>
                         </div>
                     </div>
 
@@ -666,9 +713,40 @@ const AddNewClients = () => {
                                     value={formData.dataSource}
                                     onChange={(e) => handleChange("dataSource", e.target.value)}
                                     placeholder="Select Source"
-                                    options={dataSourcesArray.map(source => ({ label: source?.source_name, value: source?.source_name }))}
+                                    options={[
+                                        "Direct Calling",
+                                        "Direct Website",
+                                        "Email Marketing",
+                                        "Google (GMB / GMV)",
+                                        "Others",
+                                        "Referral",
+                                        "Social Media",
+                                        "WhatsApp Marketing"
+                                    ].map(source => ({ label: source, value: source }))}
                                 />
                             </div>
+                            {formData.dataSource === 'Social Media' && (
+                                <div>
+                                    <label className={labelClasses}>Social Media <span className="text-red-500">*</span></label>
+                                    <select required value={formData.socialMediaType} onChange={(e) => handleChange('socialMediaType', e.target.value)} className={inputClasses}>
+                                        <option value="" className="text-red-500 font-medium">Select Platform</option>
+                                        <option value="Instagram">Instagram</option>
+                                        <option value="LinkedIn">LinkedIn</option>
+                                    </select>
+                                </div>
+                            )}
+                            {formData.dataSource === 'Referral' && (
+                                <>
+                                    <div>
+                                        <label className={labelClasses}>Referral Name <span className="text-red-500">*</span></label>
+                                        <input required value={formData.referralName} onChange={(e) => handleChange('referralName', e.target.value)} placeholder="Name" className={inputClasses} />
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>Referral Mobile <span className="text-red-500">*</span></label>
+                                        <input required value={formData.referralMobile} onChange={(e) => handleChange('referralMobile', e.target.value)} placeholder="Mobile" className={inputClasses} inputMode="numeric" maxLength={10} />
+                                    </div>
+                                </>
+                            )}
                             <div>
                                 <label className={labelClasses}>Event Attribution <span className="text-red-500">*</span></label>
                                 <select required disabled value={formData.eventName} onChange={(e) => handleChange("eventName", e.target.value)} className={`${inputClasses} bg-slate-50 cursor-not-allowed appearance-none`}>

@@ -868,7 +868,7 @@ const ClientOverview1 = () => {
                     {company.previousExhibition?.name
                       ? `Existing Exhibitor | ${company.previousExhibition.name} ${company.previousExhibition.year ? '| ' + company.previousExhibition.year : ''}`
                       : `New Lead${(company.referredBy || company.dataSource) ? ` From ${(company.referredBy || company.dataSource) === 'Referral' && company.referralName
-                        ? `Referral (${company.referralName})`
+                        ? `Referral (${company.referralName}${company.referralMobile ? ' - ' + company.referralMobile : ''})`
                         : (company.referredBy || company.dataSource) === 'Social Media' && company.socialMediaType
                           ? `Social Media (${company.socialMediaType})`
                           : (company.referredBy || company.dataSource)
