@@ -659,6 +659,7 @@ export const menuItems = [
     label: "Admin Management",
     icon: TrendingUp,
     children: [
+      { label: "Previous Exhibition List", path: "/previous-exhibitions" },
       { label: "Business Type", path: "/business-type" },
       { label: "Annual Turnover", path: "/annual-turnover" },
       { label: "Primary Product Interest", path: "/primary-product-interest" },
