@@ -699,6 +699,12 @@ const ClientOverview1 = () => {
     }
   };
 
+  const displayEmail =
+    company?.officialEmail
+    || company?.companyEmail
+    || (isExhibitor ? company?.contacts?.[0]?.email : company?.email)
+    || "";
+
   if (!company) {
     return (
       <div className="bg-[#f5f7fb] w-full min-h-screen flex flex-col items-center justify-center">
@@ -819,8 +825,8 @@ const ClientOverview1 = () => {
 
                   <div className="flex items-center gap-2 text-[13px]">
                     <Mail className="text-[#4338ca] flex-shrink-0" size={16} />
-                    <a href={`mailto:${isExhibitor ? company.contacts?.[0]?.email : company.email}`} className="text-[#4338ca] hover:underline">
-                      {isExhibitor ? company.contacts?.[0]?.email : company.email}
+                    <a href={`mailto:${displayEmail}`} className="text-[#4338ca] hover:underline">
+                      {displayEmail || "-"}
                     </a>
                   </div>
 
@@ -840,7 +846,7 @@ const ClientOverview1 = () => {
 
               {/* DESCRIPTION */}
               <div className="border-l-[3px] border-gray-600 pl-2 text-gray-700 leading-5 text-[10px] w-[260px] flex-shrink-0">
-                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">About Company</p>
+                <p className="text-md font-semibold text-gray-900 uppercase tracking-wider mb-1">About Company</p>
                 <p className="break-words whitespace-normal">
                   {company?.companyDescription || company?.aboutCompany ||
                     <span className="text-red-600 text-[12px] leading-5">Tell buyers, visitors, and business partners about your company, products, services, and expertise. A well-written company profile helps increase visibility and generate more business opportunities.</span>}

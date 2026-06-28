@@ -26,6 +26,87 @@ import Swal from 'sweetalert2';
 import { useDispatch } from "react-redux";
 import { createActivityLogThunk } from "../features/activityLog/activityLogSlice";
 
+const SearchableDropdown = ({
+    value,
+    options,
+    onChange,
+    placeholder,
+    searchPlaceholder,
+    inputClassName
+}) => {
+    const [open, setOpen] = useState(false);
+    const [search, setSearch] = useState("");
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleOutsideClick = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setOpen(false);
+                setSearch("");
+            }
+        };
+        document.addEventListener("mousedown", handleOutsideClick);
+        return () => document.removeEventListener("mousedown", handleOutsideClick);
+    }, []);
+
+    const selectedOption = options.find((option) => String(option.value) === String(value));
+    const filteredOptions = options.filter((option) =>
+        option.label.toLowerCase().includes(search.trim().toLowerCase())
+    );
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <button
+                type="button"
+                className={`${inputClassName} flex items-center justify-between cursor-pointer`}
+                onClick={() => setOpen((current) => !current)}
+            >
+                <span className={`truncate ${selectedOption ? "text-slate-800" : "text-slate-400"}`}>
+                    {selectedOption?.label || placeholder}
+                </span>
+                <ChevronDown className="w-3.5 h-3.5 shrink-0 text-slate-500" />
+            </button>
+
+            {open && (
+                <div className="absolute bottom-full z-50 mb-1 w-full rounded border border-slate-200 bg-white shadow-lg">
+                    <div className="border-b border-slate-100 p-1.5">
+                        <input
+                            type="text"
+                            className="w-full rounded border border-slate-200 p-1.5 text-[12px] outline-none focus:border-[#23471d]"
+                            placeholder={searchPlaceholder}
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            autoFocus
+                        />
+                    </div>
+                    <ul className="max-h-48 overflow-y-auto">
+                        {filteredOptions.map((option) => (
+                            <li
+                                key={String(option.value)}
+                                className={`cursor-pointer px-3 py-1.5 text-[12px] hover:bg-slate-100 ${String(value) === String(option.value)
+                                    ? "bg-[#23471d] text-white hover:bg-[#23471d]"
+                                    : "text-slate-700"}`}
+                                onClick={() => {
+                                    onChange(option.value);
+                                    setOpen(false);
+                                    setSearch("");
+                                }}
+                            >
+                                {option.label}
+                            </li>
+                        ))}
+                        {filteredOptions.length === 0 && (
+                            <li className="px-3 py-2 text-center text-[12px] text-slate-500">
+                                No options available
+                            </li>
+                        )}
+                    </ul>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const BookAStand = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -43,6 +124,13 @@ const BookAStand = () => {
     const [exhibitorType, setExhibitorType] = useState(null); // 'domestic' | 'international'
     const [settings, setSettings] = useState(null);
     const [previousExhibitions, setPreviousExhibitions] = useState([]);
+    const exhibitionYears = useMemo(
+        () => Array.from(
+            { length: new Date().getFullYear() - 2015 },
+            (_, index) => new Date().getFullYear() - index
+        ),
+        []
+    );
 
     useEffect(() => {
         const info = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
@@ -428,6 +516,18 @@ const BookAStand = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!formData.referredBy) {
+            return Swal.fire("Required", "Please select a Referral Channel.", "warning");
+        }
+        if (!formData.spokenWith) {
+            return Swal.fire("Required", "Please select the staff member in Spoken With.", "warning");
+        }
+        if (
+            formData.exhibitorStatus === 'Existing Client'
+            && (!formData.previousExhibition?.id || !formData.previousExhibition?.year)
+        ) {
+            return Swal.fire("Required", "Please select the Previous Exhibition and Exhibition Year.", "warning");
+        }
         setIsLoading(true);
         try {
             const finalData = {
@@ -903,14 +1003,15 @@ const BookAStand = () => {
                                 <textarea
                                     required
                                     minLength={250}
+                                    maxLength={300}
                                     value={formData.aboutCompany}
-                                    onChange={(e) => handleSelectChange('aboutCompany', e.target.value)}
+                                    onChange={(e) => handleSelectChange('aboutCompany', e.target.value.slice(0, 300))}
                                     className={`${inputClasses} flex-1 !h-full py-1.5 resize-y leading-tight ${formData.aboutCompany?.length > 0 && formData.aboutCompany.length < 250 ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`}
                                     placeholder="Write a brief description about the company (minimum 250 characters)..."
                                 />
                                 <div className={`text-[10px] mt-1 font-medium ${!formData.aboutCompany || formData.aboutCompany.length < 250 ? 'text-red-500' : 'text-green-600'}`}>
                                     {!formData.aboutCompany || formData.aboutCompany.length < 250
-                                        ? `* Minimum 250 characters required. (Current: ${formData.aboutCompany?.length || 0})`
+                                        ? `* Minimum 250 and maximum 300 characters required. (Current: ${formData.aboutCompany?.length || 0}/300)`
                                         : '✓ Character requirement met.'}
                                 </div>
                             </div>
@@ -1170,17 +1271,23 @@ const BookAStand = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-3">
                                 <div>
                                     <label className={labelClasses}>Referral Channel <span className="text-red-500">*</span></label>
-                                    <select required value={formData.referredBy} onChange={(e) => handleSelectChange('referredBy', e.target.value)} className={inputClasses}>
-                                        <option value="" className="text-red-500 font-medium">How did you hear about us?</option>
-                                        <option value="Direct Calling">Direct Calling</option>
-                                        <option value="Direct Website">Direct Website</option>
-                                        <option value="Email Marketing">Email Marketing</option>
-                                        <option value="Google (GMB / GMV)">Google (GMB / GMV)</option>
-                                        <option value="Others">Others</option>
-                                        <option value="Referral">Referral</option>
-                                        <option value="Social Media">Social Media</option>
-                                        <option value="WhatsApp Marketing">WhatsApp Marketing</option>
-                                    </select>
+                                    <SearchableDropdown
+                                        value={formData.referredBy}
+                                        options={[
+                                            "Direct Calling",
+                                            "Direct Website",
+                                            "Email Marketing",
+                                            "Google (GMB / GMV)",
+                                            "Others",
+                                            "Referral",
+                                            "Social Media",
+                                            "WhatsApp Marketing"
+                                        ].map((option) => ({ value: option, label: option }))}
+                                        onChange={(value) => handleSelectChange('referredBy', value)}
+                                        placeholder="How did you hear about us?"
+                                        searchPlaceholder="Search referral channel..."
+                                        inputClassName={inputClasses}
+                                    />
                                 </div>
 
                                 {formData.referredBy === 'Social Media' && (
@@ -1211,10 +1318,20 @@ const BookAStand = () => {
 
                                 <div>
                                     <label className={labelClasses}>Spoken With <span className="text-red-500">*</span></label>
-                                    <select required value={formData.spokenWith} onChange={(e) => handleSelectChange('spokenWith', e.target.value)} className={inputClasses}>
-                                        <option value="" className="text-red-500 font-medium">Select Staff Member</option>
-                                        {marketingStaff.slice().sort((a, b) => (a.fullName || a.username || "").localeCompare(b.fullName || b.username || "")).map(s => <option key={s._id} value={s.fullName || s.username}>{s.fullName || s.username}</option>)}
-                                    </select>
+                                    <SearchableDropdown
+                                        value={formData.spokenWith}
+                                        options={marketingStaff
+                                            .slice()
+                                            .sort((a, b) => (a.fullName || a.username || "").localeCompare(b.fullName || b.username || ""))
+                                            .map((staff) => ({
+                                                value: staff.fullName || staff.username,
+                                                label: staff.fullName || staff.username
+                                            }))}
+                                        onChange={(value) => handleSelectChange('spokenWith', value)}
+                                        placeholder="Select Staff Member"
+                                        searchPlaceholder="Search staff member..."
+                                        inputClassName={inputClasses}
+                                    />
                                 </div>
 
                                 <div>
@@ -1249,7 +1366,7 @@ const BookAStand = () => {
                                             >
                                                 <span className={`truncate ${formData.previousExhibition?.id ? "text-slate-800" : "text-slate-400"}`}>
                                                     {formData.previousExhibition?.id
-                                                        ? `${formData.previousExhibition.name} — ${formData.previousExhibition.year}`
+                                                        ? formData.previousExhibition.name
                                                         : "Search & Choose Exhibition"}
                                                 </span>
                                                 <ChevronDown className="w-3.5 h-3.5 shrink-0 text-slate-500" />
@@ -1261,7 +1378,7 @@ const BookAStand = () => {
                                                         <input
                                                             type="text"
                                                             className="w-full rounded border border-slate-200 p-1.5 text-[12px] outline-none focus:border-[#23471d]"
-                                                            placeholder="Search name or year..."
+                                                            placeholder="Search exhibition name..."
                                                             value={previousExhibitionSearchQuery}
                                                             onChange={(e) => setPreviousExhibitionSearchQuery(e.target.value)}
                                                             autoFocus
@@ -1272,7 +1389,7 @@ const BookAStand = () => {
                                                             .slice()
                                                             .sort((a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" }))
                                                             .filter((exhibition) =>
-                                                                `${exhibition.name} ${exhibition.year}`.toLowerCase()
+                                                                exhibition.name.toLowerCase()
                                                                     .includes(previousExhibitionSearchQuery.toLowerCase())
                                                             )
                                                             .map((exhibition) => (
@@ -1287,18 +1404,18 @@ const BookAStand = () => {
                                                                             previousExhibition: {
                                                                                 id: exhibition._id,
                                                                                 name: exhibition.name,
-                                                                                year: exhibition.year
+                                                                                year: prev.previousExhibition?.year || ""
                                                                             }
                                                                         }));
                                                                         setIsPreviousExhibitionDropdownOpen(false);
                                                                         setPreviousExhibitionSearchQuery("");
                                                                     }}
                                                                 >
-                                                                    {exhibition.name} — {exhibition.year}
+                                                                    {exhibition.name}
                                                                 </li>
                                                             ))}
                                                         {previousExhibitions.filter((exhibition) =>
-                                                            `${exhibition.name} ${exhibition.year}`.toLowerCase()
+                                                            exhibition.name.toLowerCase()
                                                                 .includes(previousExhibitionSearchQuery.toLowerCase())
                                                         ).length === 0 && (
                                                                 <li className="px-3 py-2 text-center text-[12px] text-slate-500">
@@ -1309,6 +1426,29 @@ const BookAStand = () => {
                                                 </div>
                                             )}
                                         </div>
+                                    </div>
+                                )}
+
+                                {formData.exhibitorStatus === 'Existing Client' && (
+                                    <div>
+                                        <label className={labelClasses}>Exhibition Year <span className="text-red-500">*</span></label>
+                                        <SearchableDropdown
+                                            value={formData.previousExhibition?.year || ""}
+                                            options={exhibitionYears.map((year) => ({
+                                                value: year,
+                                                label: String(year)
+                                            }))}
+                                            onChange={(year) => setFormData((prev) => ({
+                                                ...prev,
+                                                previousExhibition: {
+                                                    ...(prev.previousExhibition || {}),
+                                                    year: Number(year)
+                                                }
+                                            }))}
+                                            placeholder="Select Year"
+                                            searchPlaceholder="Search year..."
+                                            inputClassName={inputClasses}
+                                        />
                                     </div>
                                 )}
                             </div>

@@ -3,7 +3,7 @@ import { CalendarDays, Edit3, Plus, Search, Trash2, X } from "lucide-react";
 import Swal from "sweetalert2";
 import api from "../../lib/api";
 
-const EMPTY_FORM = { name: "", year: "", status: "Active" };
+const EMPTY_FORM = { name: "", status: "Active" };
 
 const formatDateTime = (value) => value
     ? new Intl.DateTimeFormat("en-IN", {
@@ -58,7 +58,6 @@ export default function PreviousExhibitionList() {
         return items.filter((item) =>
             [
                 item.name,
-                item.year,
                 item.status,
                 item.createdBy?.fullName,
                 item.createdBy?.username,
@@ -83,13 +82,13 @@ export default function PreviousExhibitionList() {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        if (!form.name.trim() || !form.year) {
-            return Swal.fire("Required", "Name and year are required.", "warning");
+        if (!form.name.trim()) {
+            return Swal.fire("Required", "Exhibition name is required.", "warning");
         }
 
         setSaving(true);
         try {
-            const payload = { ...form, year: Number(form.year) };
+            const payload = { ...form };
             if (editingId) {
                 await api.put(`/api/previous-exhibitions/${editingId}`, payload);
             } else {
@@ -114,7 +113,6 @@ export default function PreviousExhibitionList() {
         setEditingId(item._id);
         setForm({
             name: item.name,
-            year: String(item.year),
             status: item.status
         });
         setShowModal(true);
@@ -123,7 +121,7 @@ export default function PreviousExhibitionList() {
     const handleDelete = async (item) => {
         const result = await Swal.fire({
             title: "Delete exhibition?",
-            text: `${item.name} (${item.year})`,
+            text: item.name,
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#dc2626",
@@ -178,21 +176,20 @@ export default function PreviousExhibitionList() {
                     <table className="w-full min-w-[1050px] text-sm">
                         <thead className="bg-slate-50 text-slate-600">
                             <tr>
-                                {["S.No.", "Exhibition Name", "Year", "Status", "Modified At", "Actions"].map((head) => (
+                                {["S.No.", "Exhibition Name", "Status", "Modified At", "Actions"].map((head) => (
                                     <th key={head} className="text-left px-4 py-3 font-semibold">{head}</th>
                                 ))}
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan="6" className="p-8 text-center text-slate-500">Loading...</td></tr>
+                                <tr><td colSpan="5" className="p-8 text-center text-slate-500">Loading...</td></tr>
                             ) : filteredItems.length === 0 ? (
-                                <tr><td colSpan="6" className="p-8 text-center text-slate-500">No exhibitions found.</td></tr>
+                                <tr><td colSpan="5" className="p-8 text-center text-slate-500">No exhibitions found.</td></tr>
                             ) : filteredItems.map((item, index) => (
                                 <tr key={item._id} className="border-t border-slate-100 hover:bg-slate-50/60">
                                     <td className="px-4 py-3 text-slate-400">{index + 1}</td>
                                     <td className="px-4 py-3 font-medium text-slate-900">{item.name}</td>
-                                    <td className="px-4 py-3">{item.year}</td>
                                     <td className="px-4 py-3">
                                         <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${item.status === "Active"
                                             ? "bg-emerald-100 text-emerald-700"
@@ -255,7 +252,7 @@ export default function PreviousExhibitionList() {
                                     {editingId ? "Edit Exhibition" : "Add Exhibition"}
                                 </h2>
                                 <p className="mt-0.5 text-xs text-slate-500">
-                                    Enter the exhibition name, year and status.
+                                    Enter the exhibition name and status.
                                 </p>
                             </div>
                             <button
@@ -281,19 +278,7 @@ export default function PreviousExhibitionList() {
                                     className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-[#23471d] focus:ring-2 focus:ring-[#23471d]/15"
                                 />
                             </label>
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <label className="block text-sm font-medium text-slate-700">
-                                    Year <span className="text-red-500">*</span>
-                                    <input
-                                        type="number"
-                                        min="1900"
-                                        max="2200"
-                                        value={form.year}
-                                        onChange={(e) => setForm({ ...form, year: e.target.value })}
-                                        placeholder="2025"
-                                        className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-[#23471d] focus:ring-2 focus:ring-[#23471d]/15"
-                                    />
-                                </label>
+                            <div className="grid grid-cols-1 gap-4">
                                 <label className="block text-sm font-medium text-slate-700">
                                     Status
                                     <select
