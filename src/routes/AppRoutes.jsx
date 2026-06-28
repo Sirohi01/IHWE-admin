@@ -185,6 +185,8 @@ const MeetingPriorityLevel = lazy(() => import("../pages/admin_management/Meetin
 const DocumentConfiguration = lazy(() => import("../pages/admin_management/DocumentConfiguration"));
 const TransferClient = lazy(() => import("../pages/admin_management/TransferClient"));
 const ReassignLeads = lazy(() => import("../pages/admin_management/ReassignLeads"));
+const AiVerificationSettings = lazy(() => import("../pages/admin_management/AiVerificationSettings"));
+const PreviousExhibitionList = lazy(() => import("../pages/admin_management/PreviousExhibitionList"));
 const AddDomesticVisitor = lazy(() => import("../pages/web_visitor_data/add_new_visitor/AddDomesticVisitor"));
 const BuyerRegistration = lazy(() => import("../pages/buyer/BuyerRegistration"));
 const BuyerList = lazy(() => import("../pages/buyer/BuyerList"));
@@ -659,6 +661,8 @@ export default function AppRoutes() {
             <Route path="/document-configuration" element={<DocumentConfiguration />} />
             <Route path="/transfer-client" element={<TransferClient />} />
             <Route path="/reassign-leads" element={<ReassignLeads />} />
+            <Route path="/ai-verification-settings" element={<AiVerificationSettings />} />
+            <Route path="/previous-exhibitions" element={<PreviousExhibitionList />} />
             <Route path="manage-registrations" element={<ManageRegistrations />} />
             <Route path="bsm-management" element={<AdminBSM />} />
             <Route path="/buyer-list" element={<BuyerList />} />

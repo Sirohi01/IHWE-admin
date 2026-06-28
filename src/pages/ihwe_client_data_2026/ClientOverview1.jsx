@@ -42,7 +42,7 @@ import { fetchAdmins } from "../../features/auth/userSlice";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
-import api, { SERVER_URL } from "../../lib/api";
+import api, { SERVER_URL, aiVerificationSettingsApi } from "../../lib/api";
 import CommunicationPanel from "./communication/CommunicationPanel";
 import WhatsAppModal from "./communication/WhatsAppModal";
 import EmailModal from "./communication/EmailModal";
@@ -422,24 +422,26 @@ const ClientOverview1 = () => {
   const [editProfileData, setEditProfileData] = useState({
     companyName: "",
     email: "",
-    mobile: "",
+    landline: "",
     website: "",
     companyDescription: "",
   });
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState("");
+  const [logoVerification, setLogoVerification] = useState({ status: "idle", message: "" });
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const handleOpenEditProfile = () => {
     setEditProfileData({
       companyName: isExhibitor ? (company.exhibitorName || "") : (company.companyName || ""),
-      mobile: company.contacts?.[0]?.mobile || "",
-      email: isExhibitor ? (company.contacts?.[0]?.email || "") : (company.email || ""),
+      landline: company.landlineNo || company.landline || "",
+      email: company.officialEmail || company.companyEmail || (isExhibitor ? company.contacts?.[0]?.email : company.email) || "",
       website: company.website || "",
-      companyDescription: company.companyDescription || "",
+      companyDescription: company.companyDescription || company.aboutCompany || "",
     });
     setLogoFile(null);
     setLogoPreview(company?.companyLogoUrl || company?.companyLogo || "");
+    setLogoVerification({ status: "idle", message: "" });
     setIsEditProfileOpen(true);
   };
 
@@ -448,15 +450,87 @@ const ClientOverview1 = () => {
     setEditProfileData(prev => ({ ...prev, [id]: value }));
   };
 
-  const handleLogoFileChange = (e) => {
+  const handleLogoFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    const previewUrl = URL.createObjectURL(file);
     setLogoFile(file);
-    setLogoPreview(URL.createObjectURL(file));
+    setLogoPreview(previewUrl);
+    setLogoVerification({ status: "scanning", message: "Scanning logo..." });
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("documentName", "Company Logo");
+      const response = await aiVerificationSettingsApi.testDocument(formData);
+      const result = response?.result;
+      const logoRejectMessage = result?.issue === "mismatch"
+        ? "Please upload a clear company logo or brand image, not a person/model/photo shoot image."
+        : result?.reason?.includes("AI provider's safety system")
+          ? "AI could not verify this image confidently. Please upload a clear company logo or brand image."
+          : (result?.reason || "This logo was rejected by AI verification.");
+
+      if (!result?.skipped && result?.valid === false) {
+        URL.revokeObjectURL(previewUrl);
+        setLogoFile(null);
+        setLogoPreview(company?.companyLogoUrl || company?.companyLogo || "");
+        setLogoVerification({
+          status: "invalid",
+          message: logoRejectMessage
+        });
+        e.target.value = "";
+        return Swal.fire(
+          "Logo Rejected",
+          logoRejectMessage,
+          "warning"
+        );
+      }
+
+      setLogoVerification({
+        status: result?.skipped ? "idle" : "valid",
+        message: result?.skipped ? "" : "AI verified"
+      });
+    } catch (err) {
+      URL.revokeObjectURL(previewUrl);
+      setLogoFile(null);
+      setLogoPreview(company?.companyLogoUrl || company?.companyLogo || "");
+      setLogoVerification({
+        status: "invalid",
+        message: err.response?.data?.message || "Logo verification failed."
+      });
+      e.target.value = "";
+      Swal.fire(
+        "Logo Verification Failed",
+        err.response?.data?.message || "Please try another logo image.",
+        "warning"
+      );
+    }
   };
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
+    const requiredValues = [
+      editProfileData.companyName,
+      editProfileData.email,
+      editProfileData.landline,
+      editProfileData.website,
+      editProfileData.companyDescription
+    ];
+    if (requiredValues.some((value) => !String(value || "").trim())) {
+      return Swal.fire("Required", "Please fill all company profile fields.", "warning");
+    }
+    if (!logoPreview && !logoFile) {
+      return Swal.fire("Required", "Company Logo is required.", "warning");
+    }
+    if (logoVerification.status === "scanning") {
+      return Swal.fire("Please Wait", "Company Logo is still being scanned.", "info");
+    }
+    if (logoVerification.status === "invalid") {
+      return Swal.fire("Logo Rejected", logoVerification.message || "Please upload a valid company logo.", "warning");
+    }
+    if (editProfileData.companyDescription.length < 250 || editProfileData.companyDescription.length > 300) {
+      return Swal.fire("Invalid About Company", "About Company must contain 250 to 300 characters.", "warning");
+    }
     setIsSavingProfile(true);
     try {
       const crmTargetId = getCrmTargetId();
@@ -481,22 +555,15 @@ const ClientOverview1 = () => {
           }
         } catch (logoErr) {
           console.log("Error uploading logo", logoErr);
+          const message = logoErr.response?.data?.message || "Company logo could not be uploaded.";
+          Swal.fire("Logo Rejected", message, "warning");
+          setIsSavingProfile(false);
+          return;
         }
       }
 
       // 2. Prepare CRM company payload
       const crmDataToUpdate = { ...editProfileData, companyLogo: photoUrl };
-      if (company.contacts?.length > 0) {
-        const c = company.contacts[0];
-        crmDataToUpdate.contacts = [...company.contacts];
-        crmDataToUpdate.contacts[0] = {
-          ...c,
-          surname: isExhibitor ? (c.lastName || c.surname) : c.surname,
-          alternate: isExhibitor ? (c.alternateNo || c.alternate) : c.alternate,
-          mobile: editProfileData.mobile,
-          email: editProfileData.email
-        };
-      }
 
       // 3. Update CRM company
       if (crmTargetId) {
@@ -510,21 +577,12 @@ const ClientOverview1 = () => {
       if (exhibitorTargetId) {
         const exhibitorDataToUpdate = {
           exhibitorName: editProfileData.companyName,
+          companyEmail: editProfileData.email,
+          landlineNo: editProfileData.landline,
           website: editProfileData.website,
           aboutCompany: editProfileData.companyDescription,
           companyLogoUrl: photoUrl
         };
-        if (company.contacts?.length > 0) {
-          const c = company.contacts[0];
-          exhibitorDataToUpdate.contact1 = {
-            ...c,
-            lastName: c.lastName || c.surname,
-            alternateNo: c.alternateNo || c.alternate,
-            mobile: editProfileData.mobile,
-            email: editProfileData.email,
-            photoUrl: c.photoUrl || c.photo
-          };
-        }
         await api.put(`/api/exhibitor-registration/${exhibitorTargetId}`, exhibitorDataToUpdate);
       }
 
@@ -536,8 +594,8 @@ const ClientOverview1 = () => {
       const changes = [];
       const currentName = isExhibitor ? (company.exhibitorName || company.companyName) : company.companyName;
       if (currentName !== editProfileData.companyName) changes.push(`Name changed from '${currentName}' to '${editProfileData.companyName}'`);
-      if (company.contacts?.[0]?.mobile !== editProfileData.mobile) changes.push(`Mobile updated`);
-      if (company.contacts?.[0]?.email !== editProfileData.email) changes.push(`Email updated`);
+      if ((company.landlineNo || company.landline || "") !== editProfileData.landline) changes.push(`Landline updated`);
+      if ((company.officialEmail || company.companyEmail || company.email || "") !== editProfileData.email) changes.push(`Company Email updated`);
       if (logoFile) changes.push(`Company Logo updated`);
 
       if (changes.length > 0) {
@@ -699,6 +757,18 @@ const ClientOverview1 = () => {
     }
   };
 
+  const displayEmail =
+    company?.officialEmail
+    || company?.companyEmail
+    || (isExhibitor ? company?.contacts?.[0]?.email : company?.email)
+    || "";
+
+  const displayPhone =
+    company?.landlineNo
+    || company?.landline
+    || company?.contacts?.[0]?.mobile
+    || "";
+
   if (!company) {
     return (
       <div className="bg-[#f5f7fb] w-full min-h-screen flex flex-col items-center justify-center">
@@ -764,15 +834,15 @@ const ClientOverview1 = () => {
 
               {/* LOGO */}
 
-              <div className="border border-gray-300 rounded-2xl p-3 flex items-center justify-center h-[130px] w-[160px] flex-shrink-0">
+              <div className="border border-gray-300 rounded-2xl p-1 flex items-center justify-center w-fit h-fit min-h-[110px] min-w-[130px] flex-shrink-0 overflow-hidden bg-white">
                 {(companyLogoSrc || company.companyLogoUrl || company.companyLogo) ? (
                   <img
                     src={companyLogoSrc || getMediaUrl(company.companyLogoUrl || company.companyLogo)}
                     alt="Logo"
-                    className="w-full h-full object-contain"
+                    className="max-w-[160px] max-h-[130px] w-auto h-auto object-contain rounded-xl"
                   />
                 ) : (
-                  <div className="text-center">
+                  <div className="text-center w-[140px]">
                     <Building2 className="text-gray-300 mx-auto" size={36} />
                     <p className="text-[10px] font-bold text-gray-500 mt-1">Company Logo</p>
                     <p className="text-[11px] text-red-500 mt-1 leading-tight">Add your logo to enhance<br />brand visibility</p>
@@ -783,7 +853,6 @@ const ClientOverview1 = () => {
               {/* COMPANY INFO */}
 
               <div className="flex-1 min-w-[200px]">
-
                 <div className="flex items-center gap-1 w-full">
                   <h2 className="text-[14px] font-semibold text-[#0f172a] whitespace-nowrap">
                     {isExhibitor ? company.exhibitorName : company.companyName}
@@ -793,38 +862,54 @@ const ClientOverview1 = () => {
                   </button>
                 </div>
 
-                <div className="mt-1 text-gray-600 text-[10px] font-medium">
+                <div className="mt-1 flex flex-col gap-0.5 text-gray-600 text-[11px] font-medium">
                   <span>{isExhibitor ? (company.eventId?.name || "No Event") : (company.eventName || "No Event")}</span>
-                  <span className="whitespace-nowrap"> | {company.clientType || (isExhibitor ? "Confirmed Exhibitor" : "New Client")}</span>
+                  <span>
+                    {company.previousExhibition?.name
+                      ? `Existing Exhibitor | ${company.previousExhibition.name} ${company.previousExhibition.year ? '| ' + company.previousExhibition.year : ''}`
+                      : `New Lead${(company.referredBy || company.dataSource) ? ` From ${(company.referredBy || company.dataSource) === 'Referral' && company.referralName
+                        ? `Referral (${company.referralName})`
+                        : (company.referredBy || company.dataSource) === 'Social Media' && company.socialMediaType
+                          ? `Social Media (${company.socialMediaType})`
+                          : (company.referredBy || company.dataSource)
+                        }` : ''}`
+                    }
+                  </span>
                 </div>
 
                 <div className="mt-2 space-y-2">
 
-                  <div className="flex items-center gap-2 text-[13px]">
+                  <div className="flex items-center gap-2 text-[11px]">
                     <UserCircle className="text-[#4338ca] flex-shrink-0" size={16} />
                     <span className="font-medium text-gray-700">
                       {company.contacts?.[0]?.firstName
                         ? `${company?.contacts[0]?.firstName} ${isExhibitor ? (company?.contacts[0]?.lastName || "") : (company?.contacts[0]?.surname || "")}`.trim()
                         : (isExhibitor ? company?.exhibitorName : company?.companyName)}
                     </span>
-                    <span className="text-gray-400">/</span>
-                    <span className="font-medium text-gray-700">
-                      {company?.contacts[0]?.designation}
-                    </span>
-                    <span className="text-gray-400">-</span>
-                    <a href={`tel:${company.contacts?.[0]?.mobile}`} className="text-[#4338ca] hover:underline font-medium">
-                      {company.contacts?.[0]?.mobile}
+                    {company?.contacts?.[0]?.designation && (
+                      <>
+                        <span className="text-gray-400">/</span>
+                        <span className="font-medium text-gray-700">
+                          {company.contacts[0].designation}
+                        </span>
+                      </>
+                    )}
+                    {displayPhone && (
+                      <span className="text-gray-400">-</span>
+                    )}
+                    <a href={`tel:${displayPhone}`} className="text-[#4338ca] hover:underline font-medium">
+                      {displayPhone || "-"}
                     </a>
                   </div>
 
-                  <div className="flex items-center gap-2 text-[13px]">
+                  <div className="flex items-center gap-2 text-[11px]">
                     <Mail className="text-[#4338ca] flex-shrink-0" size={16} />
-                    <a href={`mailto:${isExhibitor ? company.contacts?.[0]?.email : company.email}`} className="text-[#4338ca] hover:underline">
-                      {isExhibitor ? company.contacts?.[0]?.email : company.email}
+                    <a href={`mailto:${displayEmail}`} className="text-[#4338ca] hover:underline">
+                      {displayEmail || "-"}
                     </a>
                   </div>
 
-                  <div className="flex items-center gap-2 text-[13px]">
+                  <div className="flex items-center gap-2 text-[11px]">
                     <Globe className="text-[#4338ca] flex-shrink-0" size={16} />
                     <a
                       href={company?.website?.startsWith('http') ? company?.website : `https://${company.website}`}
@@ -840,7 +925,7 @@ const ClientOverview1 = () => {
 
               {/* DESCRIPTION */}
               <div className="border-l-[3px] border-gray-600 pl-2 text-gray-700 leading-5 text-[10px] w-[260px] flex-shrink-0">
-                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">About Company</p>
+                <p className="text-md font-semibold text-gray-900 uppercase tracking-wider mb-1">About Company</p>
                 <p className="break-words whitespace-normal">
                   {company?.companyDescription || company?.aboutCompany ||
                     <span className="text-red-600 text-[12px] leading-5">Tell buyers, visitors, and business partners about your company, products, services, and expertise. A well-written company profile helps increase visibility and generate more business opportunities.</span>}
@@ -933,7 +1018,9 @@ const ClientOverview1 = () => {
                 </p>
 
                 <h3 className="font-semibold text-[10px] mt-0.5 truncate text-orange-500">
-                  {company?.companyStatus}
+                  {company?.companyStatus === 'Closed - Won' && company?.participation?.stallSize
+                    ? `${company.participation.stallSize} sqm Stall Booked`
+                    : company?.companyStatus}
                 </h3>
               </div>
             </div>
@@ -1183,14 +1270,14 @@ const ClientOverview1 = () => {
             <form onSubmit={handleSaveProfile} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Company Name</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Company Name <span className="text-red-500">*</span></label>
                   <input type="text" id="companyName" value={editProfileData.companyName} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Company Logo</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Company Logo <span className="text-red-500">*</span></label>
                   <div className="flex items-center gap-4">
                     {logoPreview && (
-                      <img src={getMediaUrl(logoPreview)} alt="Logo Preview" className="w-16 h-16 rounded-xl object-contain border border-gray-200 bg-gray-50" />
+                      <img src={getMediaUrl(logoPreview)} alt="Logo Preview" className="max-w-16 max-h-16 w-auto h-auto rounded-xl border border-gray-200 bg-gray-50" />
                     )}
                     <label className="flex-1 h-10 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 hover:border-green-500 cursor-pointer text-sm text-gray-500 hover:text-green-600 transition-colors">
                       <input type="file" accept="image/*" onChange={handleLogoFileChange} className="hidden" />
@@ -1198,21 +1285,45 @@ const ClientOverview1 = () => {
                     </label>
                   </div>
                 </div>
+                {logoVerification.message && (
+                  <div className="md:col-span-2 -mt-3">
+                    <p className={`text-xs font-semibold ${logoVerification.status === "invalid" ? "text-red-500" : "text-green-600"}`}>
+                      {logoVerification.message}
+                    </p>
+                  </div>
+                )}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Company Email <span className="text-red-500">*</span></label>
                   <input type="email" id="email" value={editProfileData.email} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Mobile</label>
-                  <input type="text" id="mobile" value={editProfileData.mobile} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500" />
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Landline <span className="text-red-500">*</span></label>
+                  <input type="text" id="landline" value={editProfileData.landline} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500" required />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Website</label>
-                  <input type="text" id="website" value={editProfileData.website} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500" />
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Website <span className="text-red-500">*</span></label>
+                  <input type="text" id="website" value={editProfileData.website} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500" required />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Company Description (About)</label>
-                  <textarea id="companyDescription" value={editProfileData.companyDescription} onChange={handleProfileChange} rows={5} className="w-full p-3 rounded-xl border border-gray-300 outline-none focus:border-green-500 resize-none" placeholder="Write about the company..." />
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Company Description (About) <span className="text-red-500">*</span></label>
+                  <textarea
+                    id="companyDescription"
+                    value={editProfileData.companyDescription}
+                    onChange={(event) => setEditProfileData((current) => ({
+                      ...current,
+                      companyDescription: event.target.value
+                    }))}
+                    minLength={250}
+                    required
+                    rows={5}
+                    className={`w-full p-3 rounded-xl border outline-none focus:border-green-500 resize-none ${(editProfileData.companyDescription.length > 0 && editProfileData.companyDescription.length < 250) || editProfileData.companyDescription.length > 300 ? "border-red-300" : "border-gray-300"}`}
+                    placeholder="Write about the company (250–300 characters)..."
+                  />
+                  <div className={`mt-1 text-xs font-medium ${editProfileData.companyDescription.length < 250 || editProfileData.companyDescription.length > 300 ? "text-red-500" : "text-green-600"}`}>
+                    {editProfileData.companyDescription.length < 250 || editProfileData.companyDescription.length > 300
+                      ? `Length must be 250 to 300 characters. (${editProfileData.companyDescription.length}/300)`
+                      : `Character requirement met. (${editProfileData.companyDescription.length}/300)`}
+                  </div>
                 </div>
               </div>
 
@@ -1220,8 +1331,8 @@ const ClientOverview1 = () => {
                 <button type="button" onClick={() => setIsEditProfileOpen(false)} className="px-6 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors">
                   Cancel
                 </button>
-                <button type="submit" disabled={isSavingProfile} className="px-6 py-2.5 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-70">
-                  {isSavingProfile ? "Saving..." : "Save Changes"}
+                <button type="submit" disabled={isSavingProfile || logoVerification.status === "scanning" || logoVerification.status === "invalid"} className="px-6 py-2.5 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-70">
+                  {isSavingProfile ? "Saving..." : logoVerification.status === "scanning" ? "Scanning..." : "Save Changes"}
                 </button>
               </div>
             </form>

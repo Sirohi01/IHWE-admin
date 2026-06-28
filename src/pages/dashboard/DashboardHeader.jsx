@@ -8,7 +8,7 @@ export default function DashboardHeader({ fullProfile, currentUser, loading, glo
         <p className="text-base lg:text-lg text-gray-700 mb-1 tracking-wide">Welcome back,</p>
         <div className="flex items-center gap-2 mb-1.5">
           <h2
-            className="text-[18px] lg:text-[20px] font-semibold text-gray-900 leading-tight"
+            className="text-[20px] lg:text-[25px] font-semibold text-gray-900 leading-tight"
             style={{ textShadow: '0 1px 0 rgba(255,255,255,0.9), 0 2px 4px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06)' }}
           >
             {fullProfile?.fullName || currentUser?.username}!

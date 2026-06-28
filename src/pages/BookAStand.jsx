@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import headerBg from "../assets/exhi.jpg";
 import arenaImg from "../assets/hall.jpg";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,12 +23,93 @@ import {
 } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
-import Select from 'react-select';
 import { useDispatch } from "react-redux";
 import { createActivityLogThunk } from "../features/activityLog/activityLogSlice";
 
+const SearchableDropdown = ({
+    value,
+    options,
+    onChange,
+    placeholder,
+    searchPlaceholder,
+    inputClassName
+}) => {
+    const [open, setOpen] = useState(false);
+    const [search, setSearch] = useState("");
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleOutsideClick = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setOpen(false);
+                setSearch("");
+            }
+        };
+        document.addEventListener("mousedown", handleOutsideClick);
+        return () => document.removeEventListener("mousedown", handleOutsideClick);
+    }, []);
+
+    const selectedOption = options.find((option) => String(option.value) === String(value));
+    const filteredOptions = options.filter((option) =>
+        option.label.toLowerCase().includes(search.trim().toLowerCase())
+    );
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <button
+                type="button"
+                className={`${inputClassName} flex items-center justify-between cursor-pointer`}
+                onClick={() => setOpen((current) => !current)}
+            >
+                <span className={`truncate ${selectedOption ? "text-slate-800" : "text-slate-400"}`}>
+                    {selectedOption?.label || placeholder}
+                </span>
+                <ChevronDown className="w-3.5 h-3.5 shrink-0 text-slate-500" />
+            </button>
+
+            {open && (
+                <div className="absolute bottom-full z-50 mb-1 w-full rounded border border-slate-200 bg-white shadow-lg">
+                    <div className="border-b border-slate-100 p-1.5">
+                        <input
+                            type="text"
+                            className="w-full rounded border border-slate-200 p-1.5 text-[12px] outline-none focus:border-[#23471d]"
+                            placeholder={searchPlaceholder}
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            autoFocus
+                        />
+                    </div>
+                    <ul className="max-h-48 overflow-y-auto">
+                        {filteredOptions.map((option) => (
+                            <li
+                                key={String(option.value)}
+                                className={`cursor-pointer px-3 py-1.5 text-[12px] hover:bg-slate-100 ${String(value) === String(option.value)
+                                    ? "bg-[#23471d] text-white hover:bg-[#23471d]"
+                                    : "text-slate-700"}`}
+                                onClick={() => {
+                                    onChange(option.value);
+                                    setOpen(false);
+                                    setSearch("");
+                                }}
+                            >
+                                {option.label}
+                            </li>
+                        ))}
+                        {filteredOptions.length === 0 && (
+                            <li className="px-3 py-2 text-center text-[12px] text-slate-500">
+                                No options available
+                            </li>
+                        )}
+                    </ul>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const BookAStand = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const dispatch = useDispatch();
     const [isLoading, setIsLoading] = useState(false);
     const [events, setEvents] = useState([]);
@@ -42,6 +123,14 @@ const BookAStand = () => {
     const [cities, setCities] = useState([]);
     const [exhibitorType, setExhibitorType] = useState(null); // 'domestic' | 'international'
     const [settings, setSettings] = useState(null);
+    const [previousExhibitions, setPreviousExhibitions] = useState([]);
+    const exhibitionYears = useMemo(
+        () => Array.from(
+            { length: new Date().getFullYear() - 2015 },
+            (_, index) => new Date().getFullYear() - index
+        ),
+        []
+    );
 
     useEffect(() => {
         const info = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
@@ -64,6 +153,7 @@ const BookAStand = () => {
         city: '',
         pincode: '',
         landlineNo: '',
+        companyEmail: '',
         gstNo: '',
         panNo: '',
         aadhaarNo: '',
@@ -97,7 +187,7 @@ const BookAStand = () => {
         referralMobile: '',
         spokenWith: '',
         exhibitorStatus: '',
-        previousExhibition: '',
+        previousExhibition: null,
         filledBy: 'Admin',
         status: 'pending',
         paymentMode: 'manual',
@@ -124,11 +214,17 @@ const BookAStand = () => {
     const [isStallDropdownOpen, setIsStallDropdownOpen] = useState(false);
     const [stallSearchQuery, setStallSearchQuery] = useState("");
     const stallDropdownRef = useRef(null);
+    const [isPreviousExhibitionDropdownOpen, setIsPreviousExhibitionDropdownOpen] = useState(false);
+    const [previousExhibitionSearchQuery, setPreviousExhibitionSearchQuery] = useState("");
+    const previousExhibitionDropdownRef = useRef(null);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (stallDropdownRef.current && !stallDropdownRef.current.contains(event.target)) {
                 setIsStallDropdownOpen(false);
+            }
+            if (previousExhibitionDropdownRef.current && !previousExhibitionDropdownRef.current.contains(event.target)) {
+                setIsPreviousExhibitionDropdownOpen(false);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
@@ -156,6 +252,10 @@ const BookAStand = () => {
                 api.get('/api/stall-rates').then(ratesRes => {
                     if (ratesRes.data.success) setAllRates(ratesRes.data.data);
                 }).catch(err => console.error("Error fetching rates:", err));
+
+                api.get('/api/previous-exhibitions/public').then(previousRes => {
+                    if (previousRes.data.success) setPreviousExhibitions(previousRes.data.data || []);
+                }).catch(err => console.error("Error fetching previous exhibitions:", err));
 
                 // Fetch other data in parallel
                 Promise.all([
@@ -200,6 +300,7 @@ const BookAStand = () => {
                         newF.city = comp.city || '';
                         newF.pincode = comp.pincode || '';
                         newF.landlineNo = comp.landline || '';
+                        newF.companyEmail = comp.email || '';
                         newF.gstNo = comp.gstNumber || '';
                         newF.aboutCompany = comp.companyDescription || '';
 
@@ -415,6 +516,18 @@ const BookAStand = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!formData.referredBy) {
+            return Swal.fire("Required", "Please select a Referral Channel.", "warning");
+        }
+        if (!formData.spokenWith) {
+            return Swal.fire("Required", "Please select the staff member in Spoken With.", "warning");
+        }
+        if (
+            formData.exhibitorStatus === 'Existing Client'
+            && (!formData.previousExhibition?.id || !formData.previousExhibition?.year)
+        ) {
+            return Swal.fire("Required", "Please select the Previous Exhibition and Exhibition Year.", "warning");
+        }
         setIsLoading(true);
         try {
             const finalData = {
@@ -454,70 +567,10 @@ const BookAStand = () => {
                     title: 'REGISTRATION SUCCESSFUL',
                     text: `Manual booking for ${formData.exhibitorName} has been recorded. Confirmation email & WhatsApp will be sent automatically.`,
                     confirmButtonColor: '#23471d'
-                }).then(() => {
-                    setExhibitorType(null);
-                    setFormData({
-                        clientId: '',
-                        exhibitorName: '',
-                        typeOfBusiness: '',
-                        industrySector: '',
-                        website: '',
-                        address: '',
-                        country: '',
-                        state: '',
-                        city: '',
-                        pincode: '',
-                        landlineNo: '',
-                        gstNo: '',
-                        panNo: '',
-                        aadhaarNo: '',
-                        aboutCompany: '',
-                        registrantType: 'registered',
-                        natureOfBusiness: '',
-                        fasciaName: '',
-                        contact1: { title: 'Mr.', firstName: '', lastName: '', email: '', designation: '', mobile: '', alternateNo: '' },
-                        contact2: { title: 'Mr.', firstName: '', lastName: '', email: '', designation: '', mobile: '', alternateNo: '' },
-                        participation: {
-                            eventId: '',
-                            stallNo: '',
-                            stallFor: '',
-                            stallSize: 0,
-                            stallType: 'Shell Space',
-                            currency: 'INR',
-                            rate: 0,
-                            amount: 0,
-                            gstPercent: 18,
-                            total: 0,
-                            dimension: ''
-                        },
-                        selectedSectors: [],
-                        primaryCategory: '',
-                        subCategory: '',
-                        referredBy: 'Direct Website',
-                        spokenWith: '',
-                        filledBy: 'Admin',
-                        status: 'pending',
-                        paymentMode: 'manual',
-                        paymentPlanType: 'full', paymentPlanLabel: 'Full Payment (100%)',
-                        chosenTdsPercent: 0,
-                        amountPaid: 0,
-                        balanceAmount: 0,
-                        financeBreakdown: {
-                            grossAmount: 0,
-                            stallDiscountPercent: 0,
-                            stallDiscountAmount: 0,
-                            subtotal1: 0,
-                            discountPercent: 0,
-                            discountAmount: 0,
-                            subtotal: 0,
-                            gstAmount: 0,
-                            tdsPercent: 0,
-                            tdsAmount: 0,
-                            netPayable: 0,
-                            isFullPayment: false
-                        }
-                    });
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        navigate('/ihweClientData2026/confirmClientList');
+                    }
                 });
             }
         } catch (error) {
@@ -918,8 +971,19 @@ const BookAStand = () => {
                                 <input required type="text" value={formData.address} onChange={(e) => handleSelectChange('address', e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
                             <div>
-                                <label className={labelClasses}>Landline / Alternate No.</label>
+                                <label className={labelClasses}>Landline.</label>
                                 <input type="text" value={formData.landlineNo} onChange={(e) => handleSelectChange('landlineNo', e.target.value)} className={inputClasses} placeholder="Write Here.." />
+                            </div>
+                            <div>
+                                <label className={labelClasses}>Company Email <span className="text-red-500">*</span></label>
+                                <input
+                                    required
+                                    type="email"
+                                    value={formData.companyEmail}
+                                    onChange={(e) => handleSelectChange('companyEmail', e.target.value)}
+                                    className={inputClasses}
+                                    placeholder="company@example.com"
+                                />
                             </div>
                             {/* <div>
                                 <label className={labelClasses}>Nature of Business <span className="text-red-500">*</span></label>
@@ -939,14 +1003,15 @@ const BookAStand = () => {
                                 <textarea
                                     required
                                     minLength={250}
+                                    maxLength={300}
                                     value={formData.aboutCompany}
-                                    onChange={(e) => handleSelectChange('aboutCompany', e.target.value)}
+                                    onChange={(e) => handleSelectChange('aboutCompany', e.target.value.slice(0, 300))}
                                     className={`${inputClasses} flex-1 !h-full py-1.5 resize-y leading-tight ${formData.aboutCompany?.length > 0 && formData.aboutCompany.length < 250 ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`}
                                     placeholder="Write a brief description about the company (minimum 250 characters)..."
                                 />
                                 <div className={`text-[10px] mt-1 font-medium ${!formData.aboutCompany || formData.aboutCompany.length < 250 ? 'text-red-500' : 'text-green-600'}`}>
-                                    {!formData.aboutCompany || formData.aboutCompany.length < 250 
-                                        ? `* Minimum 250 characters required. (Current: ${formData.aboutCompany?.length || 0})`
+                                    {!formData.aboutCompany || formData.aboutCompany.length < 250
+                                        ? `* Minimum 250 and maximum 300 characters required. (Current: ${formData.aboutCompany?.length || 0}/300)`
                                         : '✓ Character requirement met.'}
                                 </div>
                             </div>
@@ -1061,25 +1126,25 @@ const BookAStand = () => {
                                     <div>
                                         <label className={labelClasses}>Stall Number <span className="text-red-500">*</span></label>
                                         <div className="relative" ref={stallDropdownRef}>
-                                            <div 
+                                            <div
                                                 className={`${inputClasses} flex items-center justify-between cursor-pointer`}
                                                 onClick={() => setIsStallDropdownOpen(!isStallDropdownOpen)}
                                             >
                                                 <span className={formData.participation.stallNo ? "text-slate-800" : "text-slate-400"}>
-                                                    {formData.participation.stallNo 
-                                                        ? availableStalls.find(s => s._id === formData.participation.stallNo)?.stallNumber 
+                                                    {formData.participation.stallNo
+                                                        ? availableStalls.find(s => s._id === formData.participation.stallNo)?.stallNumber
                                                         : "Search & Choose Stall"}
                                                 </span>
                                                 <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
                                             </div>
-                                            
+
                                             {isStallDropdownOpen && (
                                                 <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded shadow-lg">
                                                     <div className="p-1.5 border-b border-slate-100">
-                                                        <input 
-                                                            type="text" 
-                                                            className="w-full text-[12px] p-1.5 border border-slate-200 rounded outline-none focus:border-[#23471d]" 
-                                                            placeholder="Search stall..." 
+                                                        <input
+                                                            type="text"
+                                                            className="w-full text-[12px] p-1.5 border border-slate-200 rounded outline-none focus:border-[#23471d]"
+                                                            placeholder="Search stall..."
                                                             value={stallSearchQuery}
                                                             onChange={(e) => setStallSearchQuery(e.target.value)}
                                                             autoFocus
@@ -1091,8 +1156,8 @@ const BookAStand = () => {
                                                             .sort((a, b) => (a.stallNumber || '').localeCompare((b.stallNumber || ''), undefined, { numeric: true, sensitivity: 'base' }))
                                                             .filter(s => (s.stallNumber || '').toLowerCase().includes(stallSearchQuery.toLowerCase()))
                                                             .map(s => (
-                                                                <li 
-                                                                    key={s._id} 
+                                                                <li
+                                                                    key={s._id}
                                                                     className={`px-3 py-1.5 text-[12px] cursor-pointer hover:bg-slate-100 ${formData.participation.stallNo === s._id ? 'bg-[#23471d] text-white hover:bg-[#23471d]' : 'text-slate-700'}`}
                                                                     onClick={() => {
                                                                         handleStallSelect(s._id);
@@ -1206,16 +1271,23 @@ const BookAStand = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-3">
                                 <div>
                                     <label className={labelClasses}>Referral Channel <span className="text-red-500">*</span></label>
-                                    <select required value={formData.referredBy} onChange={(e) => handleSelectChange('referredBy', e.target.value)} className={inputClasses}>
-                                        <option value="" className="text-red-500 font-medium">How did you hear about us?</option>
-                                        <option value="Direct Website">Direct Website</option>
-                                        <option value="Email Marketing">Email Marketing</option>
-                                        <option value="Social Media">Social Media</option>
-                                        <option value="Search Engine">Search Engine</option>
-                                        <option value="Telecalling">Telecalling</option>
-                                        <option value="Referral">Referral</option>
-                                        <option value="Others">Others</option>
-                                    </select>
+                                    <SearchableDropdown
+                                        value={formData.referredBy}
+                                        options={[
+                                            "Direct Calling",
+                                            "Direct Website",
+                                            "Email Marketing",
+                                            "Google (GMB / GMV)",
+                                            "Others",
+                                            "Referral",
+                                            "Social Media",
+                                            "WhatsApp Marketing"
+                                        ].map((option) => ({ value: option, label: option }))}
+                                        onChange={(value) => handleSelectChange('referredBy', value)}
+                                        placeholder="How did you hear about us?"
+                                        searchPlaceholder="Search referral channel..."
+                                        inputClassName={inputClasses}
+                                    />
                                 </div>
 
                                 {formData.referredBy === 'Social Media' && (
@@ -1246,15 +1318,38 @@ const BookAStand = () => {
 
                                 <div>
                                     <label className={labelClasses}>Spoken With <span className="text-red-500">*</span></label>
-                                    <select required value={formData.spokenWith} onChange={(e) => handleSelectChange('spokenWith', e.target.value)} className={inputClasses}>
-                                        <option value="" className="text-red-500 font-medium">Select Staff Member</option>
-                                        {marketingStaff.map(s => <option key={s._id} value={s.fullName || s.username}>{s.fullName || s.username}</option>)}
-                                    </select>
+                                    <SearchableDropdown
+                                        value={formData.spokenWith}
+                                        options={marketingStaff
+                                            .slice()
+                                            .sort((a, b) => (a.fullName || a.username || "").localeCompare(b.fullName || b.username || ""))
+                                            .map((staff) => ({
+                                                value: staff.fullName || staff.username,
+                                                label: staff.fullName || staff.username
+                                            }))}
+                                        onChange={(value) => handleSelectChange('spokenWith', value)}
+                                        placeholder="Select Staff Member"
+                                        searchPlaceholder="Search staff member..."
+                                        inputClassName={inputClasses}
+                                    />
                                 </div>
 
                                 <div>
                                     <label className={labelClasses}>Exhibitor Status <span className="text-red-500">*</span></label>
-                                    <select required value={formData.exhibitorStatus} onChange={(e) => handleSelectChange('exhibitorStatus', e.target.value)} className={inputClasses}>
+                                    <select
+                                        required
+                                        value={formData.exhibitorStatus}
+                                        onChange={(e) => {
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                exhibitorStatus: e.target.value,
+                                                previousExhibition: e.target.value === 'Existing Client' ? prev.previousExhibition : null
+                                            }));
+                                            setIsPreviousExhibitionDropdownOpen(false);
+                                            setPreviousExhibitionSearchQuery("");
+                                        }}
+                                        className={inputClasses}
+                                    >
                                         <option value="" className="text-red-500 font-medium">Select Status</option>
                                         <option value="New Client">New Client</option>
                                         <option value="Existing Client">Existing Client</option>
@@ -1264,7 +1359,96 @@ const BookAStand = () => {
                                 {formData.exhibitorStatus === 'Existing Client' && (
                                     <div>
                                         <label className={labelClasses}>Previous Exhibition <span className="text-red-500">*</span></label>
-                                        <input required value={formData.previousExhibition} onChange={(e) => handleSelectChange('previousExhibition', e.target.value)} placeholder="e.g. IHWE 2025" className={inputClasses} />
+                                        <div className="relative" ref={previousExhibitionDropdownRef}>
+                                            <div
+                                                className={`${inputClasses} flex items-center justify-between cursor-pointer`}
+                                                onClick={() => setIsPreviousExhibitionDropdownOpen((open) => !open)}
+                                            >
+                                                <span className={`truncate ${formData.previousExhibition?.id ? "text-slate-800" : "text-slate-400"}`}>
+                                                    {formData.previousExhibition?.id
+                                                        ? formData.previousExhibition.name
+                                                        : "Search & Choose Exhibition"}
+                                                </span>
+                                                <ChevronDown className="w-3.5 h-3.5 shrink-0 text-slate-500" />
+                                            </div>
+
+                                            {isPreviousExhibitionDropdownOpen && (
+                                                <div className="absolute bottom-full z-50 mb-1 w-full rounded border border-slate-200 bg-white shadow-lg">
+                                                    <div className="border-b border-slate-100 p-1.5">
+                                                        <input
+                                                            type="text"
+                                                            className="w-full rounded border border-slate-200 p-1.5 text-[12px] outline-none focus:border-[#23471d]"
+                                                            placeholder="Search exhibition name..."
+                                                            value={previousExhibitionSearchQuery}
+                                                            onChange={(e) => setPreviousExhibitionSearchQuery(e.target.value)}
+                                                            autoFocus
+                                                        />
+                                                    </div>
+                                                    <ul className="max-h-48 overflow-y-auto">
+                                                        {previousExhibitions
+                                                            .slice()
+                                                            .sort((a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" }))
+                                                            .filter((exhibition) =>
+                                                                exhibition.name.toLowerCase()
+                                                                    .includes(previousExhibitionSearchQuery.toLowerCase())
+                                                            )
+                                                            .map((exhibition) => (
+                                                                <li
+                                                                    key={exhibition._id}
+                                                                    className={`cursor-pointer px-3 py-1.5 text-[12px] hover:bg-slate-100 ${formData.previousExhibition?.id === exhibition._id
+                                                                        ? "bg-[#23471d] text-white hover:bg-[#23471d]"
+                                                                        : "text-slate-700"}`}
+                                                                    onClick={() => {
+                                                                        setFormData((prev) => ({
+                                                                            ...prev,
+                                                                            previousExhibition: {
+                                                                                id: exhibition._id,
+                                                                                name: exhibition.name,
+                                                                                year: prev.previousExhibition?.year || ""
+                                                                            }
+                                                                        }));
+                                                                        setIsPreviousExhibitionDropdownOpen(false);
+                                                                        setPreviousExhibitionSearchQuery("");
+                                                                    }}
+                                                                >
+                                                                    {exhibition.name}
+                                                                </li>
+                                                            ))}
+                                                        {previousExhibitions.filter((exhibition) =>
+                                                            exhibition.name.toLowerCase()
+                                                                .includes(previousExhibitionSearchQuery.toLowerCase())
+                                                        ).length === 0 && (
+                                                                <li className="px-3 py-2 text-center text-[12px] text-slate-500">
+                                                                    No exhibitions available
+                                                                </li>
+                                                            )}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {formData.exhibitorStatus === 'Existing Client' && (
+                                    <div>
+                                        <label className={labelClasses}>Exhibition Year <span className="text-red-500">*</span></label>
+                                        <SearchableDropdown
+                                            value={formData.previousExhibition?.year || ""}
+                                            options={exhibitionYears.map((year) => ({
+                                                value: year,
+                                                label: String(year)
+                                            }))}
+                                            onChange={(year) => setFormData((prev) => ({
+                                                ...prev,
+                                                previousExhibition: {
+                                                    ...(prev.previousExhibition || {}),
+                                                    year: Number(year)
+                                                }
+                                            }))}
+                                            placeholder="Select Year"
+                                            searchPlaceholder="Search year..."
+                                            inputClassName={inputClasses}
+                                        />
                                     </div>
                                 )}
                             </div>

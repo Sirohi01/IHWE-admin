@@ -10,7 +10,7 @@ import BaseLeadPage from "../../layout/BaseLeadPage";
 import {
   Search, Download, Plus, Upload, MessageCircle, Phone, Mail, MoreVertical,
   Calendar, CalendarDays, ArrowRight, RefreshCw, Flame, MessageSquare, Send, CheckCircle2,
-  Users, DollarSign, Star, FileText, ChevronDown, TrendingUp, Ticket
+  Users, DollarSign, Star, FileText, ChevronDown, TrendingUp, Ticket, ShieldCheck, X, Banknote
 } from "lucide-react";
 import { FaWhatsapp } from 'react-icons/fa';
 import {
@@ -24,6 +24,8 @@ const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
   return str.replace(/\b\w/g, (char) => char.toUpperCase());
 };
+
+import ManageFinanceModal from './ManageFinanceModal';
 
 // Removed dummy rows
 
@@ -47,15 +49,23 @@ const ConfirmClientList = () => {
   const [registrations, setRegistrations] = useState([]);
   const [masterCompanies, setMasterCompanies] = useState([]);
   const [allReviews, setAllReviews] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [settings, setSettings] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Finance Modal State
+  const [isFinanceModalOpen, setIsFinanceModalOpen] = useState(false);
+  const [selectedClientForFinance, setSelectedClientForFinance] = useState(null);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [regRes, compRes, reviewRes] = await Promise.all([
+      const [regRes, compRes, reviewRes, eventsRes, settingsRes] = await Promise.all([
         api.get('/api/exhibitor-registration'),
         api.get('/api/companies?dashboard=true').catch(() => ({ data: [] })),
-        api.get('/api/crm-exhibator-reviews').catch(() => ({ data: [] }))
+        api.get('/api/crm-exhibator-reviews').catch(() => ({ data: [] })),
+        api.get('/api/events/active').catch(() => ({ data: [] })),
+        api.get('/api/settings').catch(() => ({ data: null }))
       ]);
 
       if (regRes.data?.success) {
@@ -72,6 +82,14 @@ const ConfirmClientList = () => {
         setAllReviews(reviewRes.data);
       } else if (reviewRes.data?.data && Array.isArray(reviewRes.data.data)) {
         setAllReviews(reviewRes.data.data);
+      }
+
+      if (eventsRes.data?.success) {
+        setEvents(Array.isArray(eventsRes.data.data) ? eventsRes.data.data : []);
+      }
+
+      if (settingsRes.data?.success) {
+        setSettings(settingsRes.data.data);
       }
     } catch (error) {
       console.error("Error fetching data:", error);

@@ -101,7 +101,7 @@ const AddStatus = () => {
   return (
     <div className="bg-white shadow-md mt-6 p-6 min-h-screen animate-fadeIn">
       <PageHeader
-        title="STATUS CONFIGURATION"
+        title="Add Lead Status"
         description="Manage Lead Status options for CRM | International Health & Wellness Expo 2026"
       />
 
@@ -195,7 +195,7 @@ const AddStatus = () => {
                     <td className="p-4 text-sm font-medium text-gray-900">{(currentPage - 1) * itemsPerPage + index + 1}</td>
                     <td className="p-4"><div className="font-md text-[#23471d]">{item.name}</div></td>
                     <td className="p-4 text-center">
-                      <span className={`inline-flex px-2 py-1 text-[10px] font-bold rounded-full ${item.status === "active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{item.status}</span>
+                      <span className={`inline-flex px-2 py-1 text-[10px] font-bold rounded-full ${item.status === "active" ? "bg-green-100 text-green-700 capitalize" : "bg-red-100 text-red-700 capitalize"}`}>{item.status}</span>
                     </td>
                     <td className="p-4 text-center">
                       {item.updated_by && item.updated_by.trim() ? (

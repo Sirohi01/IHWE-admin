@@ -269,4 +269,25 @@ export const hospitalityPartnerApi = {
   }
 };
 
+export const aiVerificationSettingsApi = {
+  get: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/ai-verification-settings"));
+    return payload.success ? payload.data : null;
+  },
+  save: async (data) => {
+    const response = await api.put("/api/ai-verification-settings", data);
+    return unwrapApiResponse(response);
+  },
+  testConnection: async (data) => {
+    const response = await api.post("/api/ai-verification-settings/test", data);
+    return unwrapApiResponse(response);
+  },
+  testDocument: async (formData) => {
+    const response = await api.post("/api/ai-verification-settings/test-document", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return unwrapApiResponse(response);
+  },
+};
+
 export default api;
