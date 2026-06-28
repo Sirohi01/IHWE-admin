@@ -867,7 +867,13 @@ const ClientOverview1 = () => {
                   <span>
                     {company.previousExhibition?.name 
                       ? `Existing Exhibitor | ${company.previousExhibition.name} ${company.previousExhibition.year ? '| ' + company.previousExhibition.year : ''}`
-                      : (company.clientType || (isExhibitor ? "Confirmed Exhibitor" : "New Client"))
+                      : `New Lead${(company.referredBy || company.dataSource) ? ` From ${
+                          (company.referredBy || company.dataSource) === 'Referral' && company.referralName
+                            ? `Referral (${company.referralName})`
+                            : (company.referredBy || company.dataSource) === 'Social Media' && company.socialMediaType
+                              ? `Social Media (${company.socialMediaType})`
+                              : (company.referredBy || company.dataSource)
+                        }` : ''}`
                     }
                   </span>
                 </div>
@@ -1298,18 +1304,17 @@ const ClientOverview1 = () => {
                     value={editProfileData.companyDescription}
                     onChange={(event) => setEditProfileData((current) => ({
                       ...current,
-                      companyDescription: event.target.value.slice(0, 300)
+                      companyDescription: event.target.value
                     }))}
                     minLength={250}
-                    maxLength={300}
                     required
                     rows={5}
-                    className={`w-full p-3 rounded-xl border outline-none focus:border-green-500 resize-none ${editProfileData.companyDescription.length > 0 && editProfileData.companyDescription.length < 250 ? "border-red-300" : "border-gray-300"}`}
+                    className={`w-full p-3 rounded-xl border outline-none focus:border-green-500 resize-none ${(editProfileData.companyDescription.length > 0 && editProfileData.companyDescription.length < 250) || editProfileData.companyDescription.length > 300 ? "border-red-300" : "border-gray-300"}`}
                     placeholder="Write about the company (250–300 characters)..."
                   />
-                  <div className={`mt-1 text-xs font-medium ${editProfileData.companyDescription.length < 250 ? "text-red-500" : "text-green-600"}`}>
-                    {editProfileData.companyDescription.length < 250
-                      ? `Minimum 250 and maximum 300 characters required. (${editProfileData.companyDescription.length}/300)`
+                  <div className={`mt-1 text-xs font-medium ${editProfileData.companyDescription.length < 250 || editProfileData.companyDescription.length > 300 ? "text-red-500" : "text-green-600"}`}>
+                    {editProfileData.companyDescription.length < 250 || editProfileData.companyDescription.length > 300
+                      ? `Length must be 250 to 300 characters. (${editProfileData.companyDescription.length}/300)`
                       : `Character requirement met. (${editProfileData.companyDescription.length}/300)`}
                   </div>
                 </div>
