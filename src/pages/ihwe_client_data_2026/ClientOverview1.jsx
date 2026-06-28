@@ -864,7 +864,7 @@ const ClientOverview1 = () => {
 
                 <div className="mt-1 text-gray-600 text-[10px] font-medium">
                   <span>{isExhibitor ? (company.eventId?.name || "No Event") : (company.eventName || "No Event")}</span>
-                  <span className="whitespace-nowrap"> | {company.clientType || (isExhibitor ? "Confirmed Exhibitor" : "New Client")}</span>
+                  <span className="whitespace-nowrap">{company.clientType || (isExhibitor ? "Confirmed Exhibitor" : "New Client")}</span>
                 </div>
 
                 <div className="mt-2 space-y-2">
