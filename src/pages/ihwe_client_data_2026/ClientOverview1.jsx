@@ -887,11 +887,17 @@ const ClientOverview1 = () => {
                         ? `${company?.contacts[0]?.firstName} ${isExhibitor ? (company?.contacts[0]?.lastName || "") : (company?.contacts[0]?.surname || "")}`.trim()
                         : (isExhibitor ? company?.exhibitorName : company?.companyName)}
                     </span>
-                    <span className="text-gray-400">/</span>
-                    <span className="font-medium text-gray-700">
-                      {company?.contacts[0]?.designation}
-                    </span>
-                    <span className="text-gray-400">-</span>
+                    {company?.contacts?.[0]?.designation && (
+                      <>
+                        <span className="text-gray-400">/</span>
+                        <span className="font-medium text-gray-700">
+                          {company.contacts[0].designation}
+                        </span>
+                      </>
+                    )}
+                    {displayPhone && (
+                      <span className="text-gray-400">-</span>
+                    )}
                     <a href={`tel:${displayPhone}`} className="text-[#4338ca] hover:underline font-medium">
                       {displayPhone || "-"}
                     </a>
