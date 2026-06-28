@@ -862,17 +862,16 @@ const ClientOverview1 = () => {
                   </button>
                 </div>
 
-                <div className="mt-1 flex flex-col gap-0.5 text-gray-600 text-[10px] font-medium">
+                <div className="mt-1 flex flex-col gap-0.5 text-gray-600 text-[11px] font-medium">
                   <span>{isExhibitor ? (company.eventId?.name || "No Event") : (company.eventName || "No Event")}</span>
                   <span>
-                    {company.previousExhibition?.name 
+                    {company.previousExhibition?.name
                       ? `Existing Exhibitor | ${company.previousExhibition.name} ${company.previousExhibition.year ? '| ' + company.previousExhibition.year : ''}`
-                      : `New Lead${(company.referredBy || company.dataSource) ? ` From ${
-                          (company.referredBy || company.dataSource) === 'Referral' && company.referralName
-                            ? `Referral (${company.referralName})`
-                            : (company.referredBy || company.dataSource) === 'Social Media' && company.socialMediaType
-                              ? `Social Media (${company.socialMediaType})`
-                              : (company.referredBy || company.dataSource)
+                      : `New Lead${(company.referredBy || company.dataSource) ? ` From ${(company.referredBy || company.dataSource) === 'Referral' && company.referralName
+                        ? `Referral (${company.referralName})`
+                        : (company.referredBy || company.dataSource) === 'Social Media' && company.socialMediaType
+                          ? `Social Media (${company.socialMediaType})`
+                          : (company.referredBy || company.dataSource)
                         }` : ''}`
                     }
                   </span>
@@ -880,7 +879,7 @@ const ClientOverview1 = () => {
 
                 <div className="mt-2 space-y-2">
 
-                  <div className="flex items-center gap-2 text-[13px]">
+                  <div className="flex items-center gap-2 text-[11px]">
                     <UserCircle className="text-[#4338ca] flex-shrink-0" size={16} />
                     <span className="font-medium text-gray-700">
                       {company.contacts?.[0]?.firstName
@@ -903,14 +902,14 @@ const ClientOverview1 = () => {
                     </a>
                   </div>
 
-                  <div className="flex items-center gap-2 text-[13px]">
+                  <div className="flex items-center gap-2 text-[11px]">
                     <Mail className="text-[#4338ca] flex-shrink-0" size={16} />
                     <a href={`mailto:${displayEmail}`} className="text-[#4338ca] hover:underline">
                       {displayEmail || "-"}
                     </a>
                   </div>
 
-                  <div className="flex items-center gap-2 text-[13px]">
+                  <div className="flex items-center gap-2 text-[11px]">
                     <Globe className="text-[#4338ca] flex-shrink-0" size={16} />
                     <a
                       href={company?.website?.startsWith('http') ? company?.website : `https://${company.website}`}
