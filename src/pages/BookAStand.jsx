@@ -65,6 +65,7 @@ const BookAStand = () => {
         city: '',
         pincode: '',
         landlineNo: '',
+        companyEmail: '',
         gstNo: '',
         panNo: '',
         aadhaarNo: '',
@@ -211,6 +212,7 @@ const BookAStand = () => {
                         newF.city = comp.city || '';
                         newF.pincode = comp.pincode || '';
                         newF.landlineNo = comp.landline || '';
+                        newF.companyEmail = comp.email || '';
                         newF.gstNo = comp.gstNumber || '';
                         newF.aboutCompany = comp.companyDescription || '';
 
@@ -871,6 +873,17 @@ const BookAStand = () => {
                             <div>
                                 <label className={labelClasses}>Landline.</label>
                                 <input type="text" value={formData.landlineNo} onChange={(e) => handleSelectChange('landlineNo', e.target.value)} className={inputClasses} placeholder="Write Here.." />
+                            </div>
+                            <div>
+                                <label className={labelClasses}>Company Email <span className="text-red-500">*</span></label>
+                                <input
+                                    required
+                                    type="email"
+                                    value={formData.companyEmail}
+                                    onChange={(e) => handleSelectChange('companyEmail', e.target.value)}
+                                    className={inputClasses}
+                                    placeholder="company@example.com"
+                                />
                             </div>
                             {/* <div>
                                 <label className={labelClasses}>Nature of Business <span className="text-red-500">*</span></label>
