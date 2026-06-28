@@ -665,6 +665,7 @@ export const menuItems = [
       { label: "Secondary Product Categories", path: "/secondary-product-categories" },
       { label: "Meeting Priority Level", path: "/meeting-priority-level" },
       { label: "Document Configuration", path: "/document-configuration" },
+      { label: "AI Document Verification", path: "/ai-verification-settings" },
       { label: "Add Unit", path: "/add-unit" },
       { label: "Marketing Materials", path: "/admin/marketing-management" },
     ],

@@ -181,6 +181,7 @@ const PrimaryProductInterest = lazy(() => import("../pages/admin_management/Prim
 const SecondaryProductCategories = lazy(() => import("../pages/admin_management/SecondaryProductCategories"));
 const MeetingPriorityLevel = lazy(() => import("../pages/admin_management/MeetingPriorityLevel"));
 const DocumentConfiguration = lazy(() => import("../pages/admin_management/DocumentConfiguration"));
+const AiVerificationSettings = lazy(() => import("../pages/admin_management/AiVerificationSettings"));
 const AddDomesticVisitor = lazy(() => import("../pages/web_visitor_data/add_new_visitor/AddDomesticVisitor"));
 const BuyerRegistration = lazy(() => import("../pages/buyer/BuyerRegistration"));
 const BuyerList = lazy(() => import("../pages/buyer/BuyerList"));
@@ -653,6 +654,7 @@ export default function AppRoutes() {
             <Route path="/secondary-product-categories" element={<SecondaryProductCategories />} />
             <Route path="/meeting-priority-level" element={<MeetingPriorityLevel />} />
             <Route path="/document-configuration" element={<DocumentConfiguration />} />
+            <Route path="/ai-verification-settings" element={<AiVerificationSettings />} />
             <Route path="manage-registrations" element={<ManageRegistrations />} />
             <Route path="bsm-management" element={<AdminBSM />} />
             <Route path="/buyer-list" element={<BuyerList />} />
