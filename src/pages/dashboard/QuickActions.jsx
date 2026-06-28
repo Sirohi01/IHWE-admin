@@ -130,10 +130,10 @@ export default function QuickActions() {
   return (
     <>
       <div
-        className="bg-white rounded-lg border border-slate-200 p-2 shadow-sm lg:col-span-3 col-span-1 flex flex-col"
-        
+        className="bg-white rounded-lg border border-gray-100 p-2 lg:col-span-3 col-span-1 flex flex-col"
+        style={{ boxShadow: 'rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em', fontFamily: 'Inter, sans-serif' }}
       >
-        <h3 className="text-base font-black text-slate-800 mb-1.5 shrink-0">Quick Actions</h3>
+        <h3 className="text-sm font-bold mb-1.5 shrink-0" style={{ color: '#15173D' }}>Quick Actions</h3>
 
         <div className="grid grid-cols-4 gap-1 flex-1 content-center">
           {ACTIONS.map((action) => (
@@ -150,7 +150,7 @@ export default function QuickActions() {
               <div className={`w-6 h-6 rounded-xl flex items-center justify-center ${action.iconBg} ${!action.disabled ? "group-hover:scale-105" : ""} transition`}>
                 {action.icon}
               </div>
-              <span className="text-[9px] font-semibold text-slate-600 text-center leading-tight">
+              <span className="text-[9px] font-bold text-center leading-tight" style={{ color: '#093C5D' }}>
                 {action.label}
               </span>
             </button>

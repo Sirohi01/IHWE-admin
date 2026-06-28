@@ -18,15 +18,12 @@ export default function PerformanceOverview({ statsMetrics, globalPeriod }) {
     : "Today";
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-2 shadow-sm lg:col-span-5 col-span-1 flex flex-col">
+    <div className="bg-white rounded-lg border border-gray-100 p-2 lg:col-span-5 col-span-1 flex flex-col" style={{ boxShadow: 'rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em', fontFamily: 'Inter, sans-serif' }}>
       {/* Header */}
       <div className="flex justify-between items-center mb-2 shrink-0">
-        <h3 className="text-base font-semibold text-slate-800">Daily Performance Overview</h3>
-        <button className="flex items-center gap-1.5 text-[12px] font-medium text-slate-600 border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-slate-50 transition">
+        <h3 className="text-sm font-bold" style={{ color: '#15173D' }}>Daily Performance Overview</h3>
+        <button className="flex items-center gap-1.5 text-[10px] font-bold border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-slate-50 transition" style={{ color: '#093C5D' }}>
           {periodLabel}
-          {/* <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path d="M2 3.5L5 6.5L8 3.5" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg> */}
         </button>
       </div>
 
@@ -38,7 +35,7 @@ export default function PerformanceOverview({ statsMetrics, globalPeriod }) {
             className="bg-white rounded-lg border border-slate-100 p-1.5 flex flex-col shadow-sm"
           >
             {/* Label — colored */}
-            <span className="text-[12px] font-semibold mb-1" style={{ color: card.color }}>
+            <span className="text-[10px] font-bold mb-1" style={{ color: card.color }}>
               {card.label}
             </span>
 
@@ -53,7 +50,7 @@ export default function PerformanceOverview({ statsMetrics, globalPeriod }) {
                 <BarChart data={card.data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
                   <Tooltip 
                     cursor={{ fill: 'rgba(0,0,0,0.05)' }} 
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '10px', padding: '4px 8px' }}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '10px', padding: '4px 8px', fontFamily: 'Inter, sans-serif' }}
                     labelStyle={{ display: 'none' }}
                     itemStyle={{ color: card.color, fontWeight: 'bold' }}
                     formatter={(value) => [`${card.prefix}${value}${card.suffix}`, '']}
@@ -68,8 +65,8 @@ export default function PerformanceOverview({ statsMetrics, globalPeriod }) {
             </div>
 
             {/* Trend */}
-            <span className={`text-[12px] font-semibold mt-1 text-right ${card.trendUp ? "text-emerald-500" : "text-orange-500"}`}>
-              <span className="text-[15px] font-black">{card.trendUp ? "↑" : "↓"}</span> {card.trend.replace("↑ ", "").replace("↓ ", "")}
+            <span className={`text-[10px] font-bold mt-1 text-right ${card.trendUp ? "text-emerald-600" : "text-red-600"}`}>
+              <span className="text-[13px] font-black">{card.trendUp ? "↑" : "↓"}</span> {card.trend.replace("↑ ", "").replace("↓ ", "")}
             </span>
           </div>
         ))}

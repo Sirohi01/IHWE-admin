@@ -20,7 +20,7 @@ const BaseLeadPage = ({
   title,
   subtitle,
   badgeCount,
-  cardsInRow = 4,
+  cardsInRow = 6,
   headerActions,
   statCards,
   filterBar,
@@ -59,20 +59,32 @@ const BaseLeadPage = ({
 
         {/* LEFT COLUMN: STATS & TABLE */}
         <div className={`flex-grow flex flex-col gap-4 w-full ${rightSidebar ? 'xl:w-[78%]' : 'xl:w-full'} xl:min-h-0`}>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
-              {title}
-              {badgeCount !== undefined && (
-                <span className="bg-emerald-100 text-emerald-700 text-sm py-1 px-3 rounded-full font-semibold">
-                  {badgeCount}
-                </span>
-              )}
-            </h1>
-            <p className="text-xs text-slate-500 mt-1 font-medium">{subtitle}</p>
+          <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-1">
+            <div>
+              <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-3">
+                {title}
+                {badgeCount !== undefined && (
+                  <span className="bg-emerald-100 text-emerald-700 text-sm py-1 px-3 rounded-full font-semibold">
+                    {badgeCount}
+                  </span>
+                )}
+              </h1>
+              <p className="text-xs text-slate-500 mt-1 font-medium">{subtitle}</p>
+            </div>
+            {headerActions && (
+              <div className="flex flex-wrap items-center w-full xl:w-auto">
+                {headerActions}
+              </div>
+            )}
           </div>
           {/* STATS CARDS */}
           {statCards && (
-            <div className={`grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3`}>
+            <div className={`grid grid-cols-2 md:grid-cols-3 gap-3 ${
+              cardsInRow === 5 ? 'xl:grid-cols-5' :
+              cardsInRow === 4 ? 'xl:grid-cols-4' :
+              cardsInRow === 3 ? 'xl:grid-cols-3' :
+              'xl:grid-cols-6'
+            }`}>
               {statCards}
             </div>
           )}
@@ -82,18 +94,18 @@ const BaseLeadPage = ({
 
             {/* Filter Bar */}
             {filterBar && (
-              <div className="p-2 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 bg-white">
-                <div className="flex flex-wrap items-center gap-2">
+              <div className="px-3 pt-4 pb-3 border-b border-slate-100 flex items-center gap-2 bg-white overflow-x-auto">
+                <div className="flex items-center gap-2 flex-nowrap min-w-0">
                   {filterBar}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 ml-auto shrink-0">
                   {onReset && (
-                    <button onClick={onReset} className="flex items-center gap-1 py-1.5 px-2 text-slate-500 hover:text-slate-700 transition-colors text-[10px] font-medium">
-                      <RefreshCw size={12} /> Reset
+                    <button onClick={onReset} className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[10px] font-bold text-white transition-all duration-200 hover:opacity-90 shadow-sm whitespace-nowrap" style={{ backgroundColor: '#EF4444', fontFamily: 'Inter, sans-serif' }}>
+                      <RefreshCw size={11} /> Reset
                     </button>
                   )}
-                  <button className="flex items-center gap-1.5 py-1.5 px-3 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-                    <Download size={12} /> Export
+                  <button className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[10px] font-bold text-white transition-all duration-200 hover:opacity-90 shadow-sm whitespace-nowrap" style={{ backgroundColor: '#10B981', fontFamily: 'Inter, sans-serif' }}>
+                    <Download size={11} /> Export
                   </button>
                 </div>
               </div>
@@ -102,7 +114,7 @@ const BaseLeadPage = ({
             {/* Table */}
             <div className="overflow-auto flex-grow relative custom-scrollbar">
               <table className="w-full text-left border-collapse whitespace-nowrap text-[10px]">
-                <thead>
+                <thead className="sticky top-0 z-10">
                   <tr className="text-white tracking-wider" style={{ backgroundColor: '#0A2947' }}>
                     <th className="px-2 py-2 w-8 text-center">
                       <input

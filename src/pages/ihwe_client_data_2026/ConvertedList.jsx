@@ -65,7 +65,7 @@ import ManageFinanceModal from './ManageFinanceModal';
 
 // Removed dummy rows
 
-const ConfirmClientList = () => {
+const ConvertedList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -694,7 +694,7 @@ const ConfirmClientList = () => {
 
   return (
     <BaseLeadPage
-      title="Exhibitor List"
+      title="Converted Leads"
       subtitle="Leads that have been successfully converted into clients"
       badgeCount={<span className="text-emerald-700">{totalLeads}</span>}
       headerActions={
@@ -703,19 +703,25 @@ const ConfirmClientList = () => {
             Book a Stand
           </Link>
           <Link to="/ihweClientData2026/newLeadList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
-            New Lead List
+            New Leads
           </Link>
           <Link to="/ihweClientData2026/warmClientList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Warm Client
+            Follow-Ups
           </Link>
           <Link to="/ihweClientData2026/hotClientList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Hot Client
+            Hot Leads
+          </Link>
+          <Link to="/ihweClientData2026/proposalSentList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+            Proposal Sent
           </Link>
           <Link to="/ihweClientData2026/coldClientList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Cold Client
+            Lost Leads
           </Link>
-          <Link to="/ihweClientData2026/rawDataList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Raw Data List
+          <Link to="/ihweClientData2026/allLeadsList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+            All Leads
+          </Link>
+          <Link to="/ihweClientData2026/convertedList" className="px-2.5 py-1.5 bg-emerald-600 text-white rounded-md text-[10px] font-bold shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+            Converted
           </Link>
         </div>
       }
@@ -739,4 +745,4 @@ const ConfirmClientList = () => {
   );
 };
 
-export default ConfirmClientList;
+export default ConvertedList;

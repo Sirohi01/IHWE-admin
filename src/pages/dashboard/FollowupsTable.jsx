@@ -40,17 +40,17 @@ export default function FollowupsTable({ followupsList }) {
       <div className="overflow-x-auto -mx-1 px-1">
         <div className="overflow-y-auto pr-1" style={{ maxHeight: '140px', scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}>
           <table className="w-full text-left border-collapse">
-            <thead className="sticky top-0 bg-slate-50 z-10">
-              <tr className="border-b border-slate-200">
-                <th className="py-1.5 px-2 text-[10px] font-bold text-slate-600 uppercase tracking-wider rounded-tl-md">Client Name</th>
-                <th className="py-1.5 pr-2 text-[10px] font-bold text-slate-600 uppercase tracking-wider">Company</th>
-                <th className="py-1.5 pr-2 text-[10px] font-bold text-slate-600 uppercase tracking-wider">Time</th>
-                <th className="py-1.5 pr-2 text-[10px] font-bold text-slate-600 uppercase tracking-wider">Priority</th>
-                <th className="py-1.5 pr-2 text-[10px] font-bold text-slate-600 uppercase tracking-wider">Last Conversation</th>
-                <th className="py-1.5 px-2 text-[10px] font-bold text-slate-600 uppercase tracking-wider text-center rounded-tr-md">Action</th>
+            <thead className="sticky top-0 bg-[#f8fafc] z-10 shadow-[0_1px_2px_rgba(0,0,0,0.05)] border-b border-slate-200" style={{ fontFamily: 'Inter, sans-serif' }}>
+              <tr>
+                <th className="py-2.5 px-2 text-[10px] font-bold text-[#15173D] whitespace-nowrap text-left rounded-tl-md">Client Name</th>
+                <th className="py-2.5 pr-2 text-[10px] font-bold text-[#15173D] whitespace-nowrap text-left">Company</th>
+                <th className="py-2.5 pr-2 text-[10px] font-bold text-[#15173D] whitespace-nowrap text-left">Time</th>
+                <th className="py-2.5 pr-2 text-[10px] font-bold text-[#15173D] whitespace-nowrap text-left">Priority</th>
+                <th className="py-2.5 pr-2 text-[10px] font-bold text-[#15173D] whitespace-nowrap text-left">Last Conversation</th>
+                <th className="py-2.5 px-2 text-[10px] font-bold text-[#15173D] whitespace-nowrap text-center rounded-tr-md">Action</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody style={{ fontFamily: 'Inter, sans-serif' }}>
               {followupsList.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="py-4 text-center text-slate-400 italic text-sm">
@@ -62,40 +62,40 @@ export default function FollowupsTable({ followupsList }) {
                   <tr
                     key={i}
                     onClick={() => navigate(`/client-overview/${item.id}`)}
-                    className="border-b border-slate-50 hover:bg-slate-50/60 transition cursor-pointer"
+                    className="border-b border-slate-100 hover:bg-slate-50 transition cursor-pointer"
                   >
                     {/* Client Name */}
-                    <td className="py-1.5 pr-3">
-                      <span className="text-[13px] font-semibold text-slate-500">{item.name}</span>
+                    <td className="py-2 pr-3">
+                      <span className="text-[10px] font-bold" style={{ color: '#15173D' }}>{item.name}</span>
                     </td>
 
                     {/* Company */}
-                    <td className="py-1.5 pr-3">
-                      <span className="text-[13px] text-slate-500">{item.company}</span>
+                    <td className="py-2 pr-3">
+                      <span className="text-[10px] font-bold" style={{ color: '#093C5D' }}>{item.company}</span>
                     </td>
 
                     {/* Time */}
-                    <td className="py-1.5 pr-3">
-                      <span className="text-[13px] text-slate-700">{item.time}</span>
+                    <td className="py-2 pr-3">
+                      <span className="text-[10px] font-bold" style={{ color: '#016B61' }}>{item.time}</span>
                     </td>
 
                     {/* Priority badge */}
-                    <td className="py-1.5 pr-3">
-                      <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold ${item.priorityColor}`}>
+                    <td className="py-2 pr-3">
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${item.priorityColor}`}>
                         {item.priority}
                       </span>
                     </td>
 
                     {/* Last Conversation */}
-                    <td className="py-1.5 pr-3">
-                      <p className="text-[12px] text-slate-700 leading-snug">{item.lastConv}</p>
+                    <td className="py-2 pr-3">
+                      <p className="text-[10px] font-bold leading-snug" style={{ color: '#15173D' }}>{item.lastConv}</p>
                       {item.convTime && (
-                        <p className="text-[10px] text-slate-400 mt-0.5">{item.convTime}</p>
+                        <p className="text-[9px] font-bold mt-0.5" style={{ color: '#5E0006' }}>{item.convTime}</p>
                       )}
                     </td>
 
                     {/* Action buttons */}
-                    <td className="py-1.5" onClick={e => e.stopPropagation()}>
+                    <td className="py-2 text-center" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-1.5">
                         {/* Call */}
                         <a

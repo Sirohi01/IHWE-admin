@@ -142,6 +142,9 @@ const ConfirmClientList = lazy(() => import("../pages/ihwe_client_data_2026/Conf
 const NewLeadList = lazy(() => import("../pages/ihwe_client_data_2026/NewLeadList"));
 const WarmClientList = lazy(() => import("../pages/ihwe_client_data_2026/WarmClientList"));
 const HotClientList = lazy(() => import("../pages/ihwe_client_data_2026/HotClientList"));
+const ProposalSentList = lazy(() => import("../pages/ihwe_client_data_2026/ProposalSentList"));
+const ConvertedList = lazy(() => import("../pages/ihwe_client_data_2026/ConvertedList"));
+const AllLeadsList = lazy(() => import("../pages/ihwe_client_data_2026/AllLeadsList"));
 const MasterClientsList = lazy(() => import("../pages/ihwe_client_data_2026/MasterClientsList"));
 const RawDataList = lazy(() => import("../pages/ihwe_client_data_2026/RawDataList"));
 const UploadExhibitor = lazy(() => import("../pages/ihwe_client_data_2026/UploadExhibitor"));
@@ -518,6 +521,18 @@ export default function AppRoutes() {
             <Route
               path="ihweClientData2026/coldClientList"
               element={<ColdClientList />}
+            />
+            <Route
+              path="ihweClientData2026/proposalSentList"
+              element={<ProposalSentList />}
+            />
+            <Route
+              path="ihweClientData2026/convertedList"
+              element={<ConvertedList />}
+            />
+            <Route
+              path="ihweClientData2026/allLeadsList"
+              element={<AllLeadsList />}
             />
             <Route
               path="ihweClientData2026/masterData"

@@ -58,11 +58,20 @@ export const menuItems = [
     icon: FileText,
     children: [
       { label: "Sales Tools", path: "/sales-tools" },
-      { label: "Add New Leads", path: "/ihweClientData2026/addNewClients" },
-      { label: "New Leads List", path: "/ihweClientData2026/newLeadList" },
-      { label: "Follow-Ups", path: "/ihweClientData2026/warmClientList" },
-      { label: "Hot Leads", path: "/ihweClientData2026/hotClientList" },
-      { label: "Hold / Lost Leads", path: "/ihweClientData2026/coldClientList" },
+      {
+        type: "dropdown",
+        label: "Lead Section",
+        children: [
+          { label: "New Leads", path: "/ihweClientData2026/newLeadList" },
+          { label: "Follow-Ups", path: "/ihweClientData2026/warmClientList" },
+          { label: "Hot Leads", path: "/ihweClientData2026/hotClientList" },
+          { label: "Proposal Sent", path: "/ihweClientData2026/proposalSentList" },
+         
+          { label: "Lost Leads", path: "/ihweClientData2026/coldClientList" },
+          { label: "All Leads", path: "/ihweClientData2026/allLeadsList" },
+           { label: "Converted", path: "/ihweClientData2026/convertedList" },
+        ]
+      },
       // { label: "Master Data", path: "/ihweClientData2026/masterData" },
       // { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
       // { label: "Exhibitor Section", path: "/ihweClientData2026/confirmClientList" },
@@ -70,8 +79,8 @@ export const menuItems = [
     ],
   },
 
- 
-    {
+
+  {
     type: "dropdown",
     label: "Exhibitor Section",
     icon: FileText,

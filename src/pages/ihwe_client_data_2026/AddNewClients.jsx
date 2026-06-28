@@ -24,7 +24,10 @@ import {
     ArrowRightCircle,
     Upload,
     ArrowRight,
-    Shield
+    Shield,
+    PhoneCall,
+    Flame,
+    PauseCircle
 } from "lucide-react";
 import Swal from "sweetalert2";
 import { fetchUsers, fetchAdmins } from "../../features/auth/userSlice";
@@ -269,6 +272,33 @@ const AddNewClients = () => {
         });
     };
 
+    const handlePincodeChange = async (val) => {
+        const numericVal = val.replace(/\D/g, "");
+        if (numericVal.length <= 6) {
+            handleChange("pincode", numericVal);
+        }
+
+        if (numericVal.length === 6 && formData.clientType === "Domestic") {
+            try {
+                const response = await fetch(`https://api.postalpincode.in/pincode/${numericVal}`);
+                const data = await response.json();
+                if (data && data[0] && data[0].Status === "Success") {
+                    const postOffice = data[0].PostOffice[0];
+                    const stateName = postOffice.State;
+                    const cityName = postOffice.District; 
+                    
+                    setFormData(prev => ({
+                        ...prev,
+                        state: stateName,
+                        city: cityName
+                    }));
+                }
+            } catch (error) {
+                console.error("Error fetching pincode details:", error);
+            }
+        }
+    };
+
     const handleContactChange = (index, field, value) => {
         setFormData((prev) => {
             const updatedContacts = prev.contacts.map((contact, i) => {
@@ -443,21 +473,30 @@ const AddNewClients = () => {
                 <div className="flex flex-col lg:flex-row justify-between items-center pb-4 border-b border-gray-300 gap-4">
                     <div className="flex flex-col items-center lg:items-start gap-1">
                         <h1 className="text-xl font-semibold text-slate-600 uppercase tracking-tight leading-none text-center lg:text-left">
-                            {id ? "EDIT NEW LEADS" : "ADD NEW LEADS"} | Sales Management Section
+                            {id ? "EDIT NEW LEADS" : "ADD NEW LEADS"} | <span className="text-[#0A2947]">LEAD SECTION</span>
                         </h1>
                     </div>
-                    <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
-                        <button onClick={() => navigate("/ihweClientData2026/uploadExhibitor")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
-                            <Upload size={12} /> Upload Exhibitor
+                    <div className="flex flex-wrap justify-center lg:justify-end gap-1.5 w-full lg:w-auto">
+                        <button onClick={() => navigate("/ihweClientData2026/uploadExhibitor")} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap" style={{ fontFamily: 'Inter, sans-serif' }}>
+                            <Upload size={12} /> Add New Data
                         </button>
-                        <button onClick={() => navigate("/ihweClientData2026/newLeadList")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+                        <button onClick={() => navigate("/ihweClientData2026/newLeadList")} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap" style={{ fontFamily: 'Inter, sans-serif' }}>
                             <UserCheck size={12} /> New Leads List
                         </button>
-                        <button onClick={() => navigate("/ihweClientData2026/masterData")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+                        <button onClick={() => navigate("/ihweClientData2026/masterData")} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap" style={{ fontFamily: 'Inter, sans-serif' }}>
                             <LayoutGrid size={12} /> Master List
                         </button>
-                        <button onClick={() => navigate("/ihweClientData2026/confirmClientList")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+                        <button onClick={() => navigate("/ihweClientData2026/confirmClientList")} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap" style={{ fontFamily: 'Inter, sans-serif' }}>
                             <UserCheck size={12} /> Exhibitor List
+                        </button>
+                        <button onClick={() => navigate("/ihweClientData2026/followUps")} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap" style={{ fontFamily: 'Inter, sans-serif' }}>
+                            <PhoneCall size={12} /> Follow-Ups
+                        </button>
+                        <button onClick={() => navigate("/ihweClientData2026/hotLeads")} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap" style={{ fontFamily: 'Inter, sans-serif' }}>
+                            <Flame size={12} /> Hot Leads
+                        </button>
+                        <button onClick={() => navigate("/ihweClientData2026/holdLostLeads")} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap" style={{ fontFamily: 'Inter, sans-serif' }}>
+                            <PauseCircle size={12} /> Hold / Lost Leads
                         </button>
                     </div>
                 </div>
@@ -546,6 +585,20 @@ const AddNewClients = () => {
                                 <input required type="text" value={formData.address} onChange={(e) => handleChange("address", e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
 
+                            {/* ✅ CONDITION 3: Country (Disabled) & Pin Code — sirf Domestic mein dikhega */}
+                            {formData.clientType === "Domestic" && (
+                                <>
+                                    <div>
+                                        <label className={labelClasses}>Country <span className="text-red-500">*</span></label>
+                                        <input disabled type="text" value="India" className={`${inputClasses} bg-slate-100 text-slate-500 cursor-not-allowed`} />
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>Pin Code <span className="text-red-500">*</span></label>
+                                        <input required type="text" maxLength={6} value={formData.pincode} onChange={(e) => handlePincodeChange(e.target.value)} className={inputClasses} placeholder="Write Here.." />
+                                    </div>
+                                </>
+                            )}
+
                             {/* ✅ CONDITION 2: Country dropdown — sirf International mein */}
                             {formData.clientType === "International" && (
                                 <div>
@@ -583,14 +636,6 @@ const AddNewClients = () => {
                                     disabled={!formData.state}
                                 />
                             </div>
-
-                            {/* ✅ CONDITION 3: Pin Code — sirf Domestic mein dikhega */}
-                            {formData.clientType === "Domestic" && (
-                                <div>
-                                    <label className={labelClasses}>Pin Code <span className="text-red-500">*</span></label>
-                                    <input required type="text" maxLength={6} value={formData.pincode} onChange={(e) => { const val = e.target.value.replace(/\D/g, ""); if (val.length <= 6) handleChange("pincode", val); }} className={inputClasses} placeholder="Write Here.." />
-                                </div>
-                            )}
                         </div>
                     </div>
 

@@ -4,12 +4,12 @@ export default function LeadSummaryCard({ donutData, totalLeads }) {
   const circumference = 2 * Math.PI * 32; // ≈ 201.06
 
   return (
-    <div className="bg-white rounded-lg p-2.5 lg:col-span-3 col-span-1 flex flex-col justify-between" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+    <div className="bg-white rounded-lg p-2.5 lg:col-span-3 col-span-1 flex flex-col justify-between" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px', fontFamily: 'Inter, sans-serif' }}>
       {/* Top Header */}
       <div className="flex justify-between items-center mb-1">
-        <h3 className="text-base font-medium text-[#1e2e5c] tracking-tight">Lead Summary</h3>
-        <span className="text-[12px] font-medium text-slate-500">
-          Total Leads: <strong className="font-bold text-[#1e2e5c]">{totalLeads}</strong>
+        <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Lead Summary</h3>
+        <span className="text-[10px] font-bold text-slate-500">
+          Total Leads: <strong className="font-bold text-[#15173D]">{totalLeads}</strong>
         </span>
       </div>
 
@@ -50,8 +50,8 @@ export default function LeadSummaryCard({ donutData, totalLeads }) {
             })()}
           </svg>
           <div className="absolute text-center">
-            <p className="text-[16px] font-black text-[#1e2e5c] leading-none mb-0.5">{totalLeads}</p>
-            <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none block">Total</span>
+            <p className="text-base font-black text-[#15173D] leading-none mb-0.5">{totalLeads}</p>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none block">Total</span>
           </div>
         </div>
 
@@ -63,9 +63,9 @@ export default function LeadSummaryCard({ donutData, totalLeads }) {
               <div key={i} className="flex items-center gap-2 min-w-0">
                 <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
                 <div className="flex items-center justify-between w-full min-w-0 gap-1">
-                  <span className="text-slate-700 font-bold truncate text-base">{d.name}</span>
-                  <span className="text-slate-500 font-bold flex-shrink-0 text-base">
-                    {d.value} <span className="text-slate-400">({pct}%)</span>
+                  <span className="text-[#15173D] font-bold truncate text-[10px]">{d.name}</span>
+                  <span className="text-[#093C5D] font-bold flex-shrink-0 text-[10px]">
+                    {d.value} <span className="text-slate-500">({pct}%)</span>
                   </span>
                 </div>
               </div>

@@ -30,6 +30,7 @@ export default function Sidebar({
 }) {
   const location = useLocation();
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [openNestedDropdown, setOpenNestedDropdown] = useState(null);
   const [openSections, setOpenSections] = useState({});
   const [theme, setTheme] = useState(DEFAULT_THEME);
   const [currentUser, setCurrentUser] = useState(null);
@@ -269,6 +270,42 @@ export default function Sidebar({
                 {item.children.map((sub, idx) => {
                   if (sub.type === 'label') {
                     return <div key={`label-${idx}`} className="px-3 py-1 mt-2 text-[10px] text-white/50 font-bold uppercase tracking-wider">{sub.label}</div>;
+                  }
+                  if (sub.type === 'dropdown') {
+                    const isNestedOpen = openNestedDropdown === sub.label;
+                    return (
+                      <div key={sub.label} className="w-full mt-1">
+                        <button
+                          onClick={() => setOpenNestedDropdown(isNestedOpen ? null : sub.label)}
+                          className={`w-full flex items-center justify-between px-3 py-1.5 rounded-md transition-all duration-200 sb-label ${isNestedOpen ? "bg-white/10 text-white" : "text-white/70 hover:bg-white/5 hover:text-white"}`}
+                        >
+                          <span>{sub.label}</span>
+                          <ChevronDown size={12} className={`transition-transform duration-300 ${isNestedOpen ? "rotate-180" : ""}`} />
+                        </button>
+                        <AnimatePresence initial={false}>
+                          {isNestedOpen && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="ml-3 mt-1 space-y-1 border-l border-white/10 pl-2 overflow-hidden"
+                            >
+                              {sub.children.map((child, cIdx) => (
+                                <NavLink
+                                  key={child.path || cIdx}
+                                  to={child.path}
+                                  onClick={() => setMobileMenuOpen(false)}
+                                  className={({ isActive }) => `sb-sub-item block px-3 py-1.5 rounded-md sb-label transition-colors ${isActive ? "active bg-white/10" : "text-white/70 hover:bg-white/5 hover:text-white"}`}
+                                >
+                                  {child.label}
+                                </NavLink>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
                   }
                   return (
                     <NavLink

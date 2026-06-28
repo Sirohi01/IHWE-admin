@@ -150,7 +150,7 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
   };
 
   return (
-    <div className={`fixed top-0 right-0 z-[100] h-[64px] bg-gradient-to-r from-[#051c47] via-[#082b6b] to-[#051c47] border-b border-blue-900/50 shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center justify-between px-6 print:hidden transition-all duration-300 left-0 ${sidebarOpen ? 'lg:left-[240px]' : 'lg:left-[70px]'}`}>
+    <div className={`fixed top-0 right-0 z-[100] h-[42px] bg-gradient-to-r from-[#051c47] via-[#082b6b] to-[#051c47] border-b border-blue-900/50 shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center justify-between px-6 print:hidden transition-all duration-300 left-0 ${sidebarOpen ? 'lg:left-[240px]' : 'lg:left-[70px]'}`}>
 
       {/* Left */}
       <div className="flex items-center gap-3">
@@ -160,8 +160,8 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
         >
           {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
-        <h2 className="text-white text-2xl uppercase font-semibold tracking-tight">
-          User Interface <span className="text-yellow-200 text-md font-medium tracking-normal capitalize ml-1">
+        <h2 className="text-white text-[15px] uppercase font-semibold tracking-tight">
+          IHWE 2026 <span className="text-yellow-200 font-medium tracking-normal capitalize ml-1">
             | {sectionName ? `${sectionName} > ` : ''}{pageName}
           </span>
         </h2>
@@ -173,11 +173,11 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
         {/* Task & Alerts Button */}
         <button
           onClick={() => navigate("/task-alerts")}
-          className="relative hidden sm:flex cursor-pointer items-center justify-center px-5 py-2 mr-2 rounded border border-red-500 bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition-all shadow-sm tracking-wider"
+          className="relative hidden sm:flex cursor-pointer items-center justify-center px-2.5 py-1 mr-2 rounded border border-red-500 bg-red-600 text-white font-semibold text-[10px] hover:bg-red-700 transition-all shadow-sm tracking-wider"
         >
           Task & Alerts
           {newLeadsCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-white text-blue-700 text-[13px] min-w-[22px] h-[22px] px-1 rounded-full flex items-center justify-center font-black shadow-md border border-gray-200">
+            <span className="absolute -top-1.5 -right-1.5 bg-white text-blue-700 text-[10px] min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center font-black shadow-md border border-gray-200">
               {newLeadsCount > 99 ? "99+" : newLeadsCount}
             </span>
           )}
@@ -263,7 +263,7 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
               )}
             </div>
             <div className="hidden md:flex flex-col items-start justify-center max-w-[120px]">
-              <span className="text-[8px] font-medium text-slate-400 uppercase tracking-widest mb-0.5 leading-none">
+              <span className="text-[8px] font-medium text-white uppercase tracking-widest mb-0.5 leading-none">
                 Hello,
               </span>
               <span className="text-[10px] font-md text-white uppercase tracking-widest truncate w-full text-left leading-none">

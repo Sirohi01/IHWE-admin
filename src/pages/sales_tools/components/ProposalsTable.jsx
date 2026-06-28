@@ -170,24 +170,34 @@ export default function ProposalsTable({ data = [], parentLoading = false }) {
       </div>
 
       {/* Table Content */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+      <div className="overflow-x-auto custom-scrollbar">
+        <table className="w-full text-left border-collapse whitespace-nowrap text-[10px]" style={{ fontFamily: 'Inter, sans-serif', color: '#15173D' }}>
           <thead>
-            <tr className="bg-gray-100 border-b border-[#EDF0F7]">
-              <th className="px-4 py-2 text-[11px] font-semibold text-black whitespace-nowrap">Proposal No.</th>
-              <th className="px-4 py-2 text-[11px] font-semibold text-black whitespace-nowrap">Client / Company</th>
-              <th className="px-4 py-2 text-[11px] font-semibold text-black whitespace-nowrap">Sales Executive</th>
-              <th className="px-4 py-2 text-[11px] font-semibold text-black whitespace-nowrap">Proposal Date</th>
-              <th className="px-4 py-2 text-[11px] font-semibold text-black whitespace-nowrap">Amount</th>
-              <th className="px-4 py-2 text-[11px] font-semibold text-black whitespace-nowrap">Status</th>
-                <th className="px-4 py-2 text-[12px] font-bold text-black whitespace-nowrap">Action</th>
-              </tr>
+            <tr className="text-white tracking-wider" style={{ backgroundColor: '#0A2947' }}>
+              <th className="px-2 py-2 font-medium text-center">Proposal No.</th>
+              <th className="px-2 py-2 font-medium">Client / Company</th>
+              <th className="px-2 py-2 font-medium">Sales Executive</th>
+              <th className="px-2 py-2 font-medium text-center">Proposal Date</th>
+              <th className="px-2 py-2 font-medium text-right">Amount</th>
+              <th className="px-2 py-2 font-medium text-center">Status</th>
+              <th className="px-2 py-2 font-medium text-center">Action</th>
+            </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-slate-100">
             {loading ? (
-              <tr><td colSpan="7" className="text-center py-4 text-sm text-slate-500">Loading proposals...</td></tr>
+              [...Array(10)].map((_, index) => (
+                <tr key={`skeleton-${index}`} className="animate-pulse border-b border-slate-100 bg-white">
+                  <td className="px-2 py-3 text-center"><div className="w-16 h-3 bg-slate-200 rounded-sm mx-auto"></div></td>
+                  <td className="px-2 py-3"><div className="h-3 w-32 bg-slate-200 rounded mb-1.5"></div><div className="h-2 w-24 bg-slate-100 rounded"></div></td>
+                  <td className="px-2 py-3"><div className="h-3 w-24 bg-slate-200 rounded mb-1.5"></div><div className="h-2 w-20 bg-slate-100 rounded"></div></td>
+                  <td className="px-2 py-3 text-center"><div className="h-4 w-20 bg-slate-200 rounded mx-auto"></div></td>
+                  <td className="px-2 py-3 text-right"><div className="h-3 w-16 bg-slate-200 rounded ml-auto"></div></td>
+                  <td className="px-2 py-3 text-center"><div className="h-4 w-16 bg-slate-200 rounded-full mx-auto"></div></td>
+                  <td className="px-2 py-3 text-center"><div className="h-3 w-16 bg-slate-200 rounded mx-auto"></div></td>
+                </tr>
+              ))
             ) : currentItems.length === 0 ? (
-              <tr><td colSpan="7" className="text-center py-4 text-sm text-slate-500">No proposals found</td></tr>
+              <tr><td colSpan="7" className="px-2 py-4 text-center text-slate-500 font-medium text-[11px]">No proposals found</td></tr>
             ) : (
               currentItems.map((item, index) => {
                 let computedStatus = 'Pending';
@@ -198,23 +208,29 @@ export default function ProposalsTable({ data = [], parentLoading = false }) {
                 }
                 
                 return (
-                  <tr key={item._id || index} className="border-b border-[#EDF0F7] last:border-0 hover:bg-slate-50/50 transition-colors">
-                    <td className="px-4 py-2">
-                      <div className="flex items-center gap-2">
-                        <FileText size={16} className="text-slate-400" />
-                        <span className="text-sm font-semibold text-slate-900">{item.est_no}</span>
+                  <tr key={item._id || index} className="border-b border-slate-100 bg-white hover:bg-slate-50/50 transition-colors group">
+                    <td className="px-2 py-2 text-center font-bold" style={{ color: '#5E0006' }}>{item.est_no}</td>
+                    <td className="px-2 py-2">
+                      <div className="font-bold text-[11px]" style={{ color: '#093C5D' }}>
+                        {item.companyName || item.company_name || item.consignee_name}
                       </div>
                     </td>
-                    <td className="px-4 py-2 text-sm font-semibold text-slate-900">{item.companyName || item.company_name || item.consignee_name}</td>
-                    <td className="px-4 py-2 text-sm text-slate-600">{item.added_by || 'Unassigned'}</td>
-                    <td className="px-4 py-2 text-sm text-slate-600">{new Date(item.added).toLocaleDateString('en-GB')}</td>
-                    <td className="px-4 py-2 text-sm font-semibold text-slate-900 whitespace-nowrap">₹ {item.finalAmount || 0}</td>
-                    <td className="px-4 py-2">{getStatusBadge(computedStatus)}</td>
-                    <td className="px-4 py-2">
-                      <div className="flex items-center gap-3">
-                        <button className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"><Eye size={16} /></button>
-                        <button className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors"><Download size={16} /></button>
-                        <button className="p-1.5 text-slate-700 hover:bg-slate-100 rounded transition-colors"><MoreVertical size={16} /></button>
+                    <td className="px-2 py-2 font-bold text-blue-600">{item.added_by || 'Unassigned'}</td>
+                    <td className="px-2 py-2 text-center font-medium">{new Date(item.added).toLocaleDateString('en-GB')}</td>
+                    <td className="px-2 py-2 text-right font-bold text-emerald-700">₹ {item.finalAmount || 0}</td>
+                    <td className="px-2 py-2 text-center">
+                      <span className={`px-2 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                        computedStatus === 'Accepted' ? 'bg-emerald-100 text-emerald-700' :
+                        computedStatus === 'Sent' ? 'bg-blue-100 text-blue-700' :
+                        'bg-amber-100 text-amber-700'
+                      }`}>
+                        {computedStatus}
+                      </span>
+                    </td>
+                    <td className="px-2 py-2 text-center">
+                      <div className="flex items-center justify-center gap-1.5 transition-opacity">
+                        <button className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"><Eye size={13} /></button>
+                        <button className="p-1 text-emerald-600 hover:bg-emerald-50 rounded transition-colors"><Download size={13} /></button>
                       </div>
                     </td>
                   </tr>
@@ -226,54 +242,93 @@ export default function ProposalsTable({ data = [], parentLoading = false }) {
       </div>
 
       {/* Pagination Footer */}
-      <div className="p-4 border-t border-[#EDF0F7] flex flex-wrap items-center justify-between gap-4">
-        <span className="text-sm text-slate-500 font-medium">
-          Showing {filteredProposals.length === 0 ? 0 : indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredProposals.length)} of {filteredProposals.length} proposals
-        </span>
-
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => handlePageChange(1)}
-            disabled={currentPage === 1}
-            className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-50 transition-colors"
-          ><ChevronsLeft size={14} /></button>
-          
-          <button 
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-50 transition-colors"
-          ><ChevronLeft size={14} /></button>
-          
-          {renderPageNumbers()}
-          
-          <button 
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages || totalPages === 0}
-            className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-50 transition-colors"
-          ><ChevronRight size={14} /></button>
-          
-          <button 
-            onClick={() => handlePageChange(totalPages)}
-            disabled={currentPage === totalPages || totalPages === 0}
-            className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-50 transition-colors"
-          ><ChevronsRight size={14} /></button>
+      <div className="p-2 border-t border-slate-100 bg-white flex flex-wrap items-center justify-between text-[10px] font-medium text-slate-600 gap-4">
+        {/* Showing info */}
+        <div className="flex items-center gap-1.5" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <span className="text-[11px] font-bold" style={{ color: '#334155' }}>Showing</span>
+          <span className="text-[11px] font-black px-1.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-100" style={{ color: '#016B61' }}>
+            {filteredProposals.length === 0 ? 0 : indexOfFirstItem + 1}–{Math.min(indexOfLastItem, filteredProposals.length)}
+          </span>
+          <span className="text-[11px] font-bold" style={{ color: '#334155' }}>of</span>
+          <span className="text-[11px] font-black" style={{ color: '#15173D' }}>{filteredProposals.length}</span>
+          <span className="text-[11px] font-bold" style={{ color: '#334155' }}>proposals</span>
         </div>
 
-        <div className="flex items-center gap-2 relative group">
-          <span className="text-sm text-slate-500 font-medium">Rows per page:</span>
+        {/* Page buttons */}
+        <div className="flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <button
+            onClick={() => handlePageChange(1)}
+            disabled={currentPage === 1}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100"
+            style={{ borderColor: '#e2e8f0', color: '#334155' }}
+          >«</button>
+          <button
+            onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100"
+            style={{ borderColor: '#e2e8f0', color: '#334155' }}
+          >‹</button>
+          
+          {(() => {
+            const pages = [];
+            const paginationTotalPages = totalPages === 0 ? 1 : totalPages;
+            if (paginationTotalPages <= 7) {
+              for (let i = 1; i <= paginationTotalPages; i++) pages.push(i);
+            } else {
+              pages.push(1);
+              if (currentPage > 3) pages.push('...');
+              for (let i = Math.max(2, currentPage - 1); i <= Math.min(paginationTotalPages - 1, currentPage + 1); i++) pages.push(i);
+              if (currentPage < paginationTotalPages - 2) pages.push('...');
+              pages.push(paginationTotalPages);
+            }
+            return pages.map((p, i) =>
+              p === '...' ? (
+                <span key={`dot-${i}`} className="w-7 h-7 flex items-center justify-center text-[11px] text-slate-400 font-bold">…</span>
+              ) : (
+                <button
+                  key={p}
+                  onClick={() => handlePageChange(p)}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-black border transition-all duration-200"
+                  style={
+                    p === currentPage
+                      ? { backgroundColor: '#016B61', color: '#fff', borderColor: '#016B61', boxShadow: '0 2px 8px rgba(1,107,97,0.3)' }
+                      : { backgroundColor: '#fff', color: '#15173D', borderColor: '#e2e8f0' }
+                  }
+                >{p}</button>
+              )
+            );
+          })()}
+          
+          <button
+            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage >= totalPages || totalPages === 0}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100"
+            style={{ borderColor: '#e2e8f0', color: '#334155' }}
+          >›</button>
+          <button
+            onClick={() => handlePageChange(totalPages)}
+            disabled={currentPage >= totalPages || totalPages === 0}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100"
+            style={{ borderColor: '#e2e8f0', color: '#334155' }}
+          >»</button>
+        </div>
+
+        {/* Rows per page */}
+        <div className="flex items-center gap-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <span className="text-[11px] font-bold" style={{ color: '#334155' }}>Rows:</span>
           <select 
             value={itemsPerPage}
             onChange={(e) => {
               setItemsPerPage(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="appearance-none outline-none flex items-center gap-2 px-3 py-1.5 pr-8 border border-slate-200 rounded text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+            className="border rounded-lg py-1 px-2 bg-white outline-none cursor-pointer text-[11px] font-bold"
+            style={{ borderColor: '#e2e8f0', color: '#15173D', fontFamily: 'Inter, sans-serif' }}
           >
             <option value={10}>10</option>
             <option value={20}>20</option>
             <option value={50}>50</option>
           </select>
-          <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500" />
         </div>
       </div>
     </div>

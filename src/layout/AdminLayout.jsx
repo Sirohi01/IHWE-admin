@@ -25,7 +25,7 @@ export default function AdminLayout({ onLogout }) {
       />
 
       {/* PAGE BODY */}
-      <div className="flex pt-[64px] flex-1 ">
+      <div className="flex pt-[42px] flex-1 ">
         {/* SIDEBAR (fixed position) */}
         <Sidebar
           sidebarOpen={sidebarOpen}

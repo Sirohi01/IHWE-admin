@@ -3,67 +3,75 @@ import { Users, Phone, Flame, Calendar, ShoppingBag, IndianRupee, Clock, Wallet 
 export default function DashboardStatsGrid({ statsMetrics }) {
   const stats = [
     {
-      label: "Total Leads",
+      label: "TOTAL LEADS",
       value: statsMetrics.total,
-      icon: <Users size={18} strokeWidth={1.8} />,
+      icon: <Users size={16} strokeWidth={2.5} />,
       iconColor: "text-emerald-600",
-      iconBg: "bg-emerald-50",
+      iconBg: "bg-emerald-100",
+      gradientTo: "to-emerald-50",
       trend: "12%", up: true,
     },
     {
-      label: "Calls Made",
+      label: "CALLS MADE",
       value: statsMetrics.callsMade,
-      icon: <Phone size={18} strokeWidth={1.8} />,
+      icon: <Phone size={16} strokeWidth={2.5} />,
       iconColor: "text-blue-600",
-      iconBg: "bg-blue-50",
+      iconBg: "bg-blue-100",
+      gradientTo: "to-blue-50",
       trend: "14%", up: true,
     },
     {
-      label: "Interested Clients",
+      label: "INTERESTED",
       value: statsMetrics.interested,
-      icon: <Flame size={18} strokeWidth={1.8} />,
+      icon: <Flame size={16} strokeWidth={2.5} />,
       iconColor: "text-rose-600",
-      iconBg: "bg-rose-50",
+      iconBg: "bg-rose-100",
+      gradientTo: "to-rose-50",
       trend: "9%", up: true,
     },
     {
-      label: "Meetings Scheduled",
+      label: "MEETINGS",
       value: statsMetrics.meetings,
-      icon: <Calendar size={18} strokeWidth={1.8} />,
+      icon: <Calendar size={16} strokeWidth={2.5} />,
       iconColor: "text-teal-600",
-      iconBg: "bg-teal-50",
+      iconBg: "bg-teal-100",
+      gradientTo: "to-teal-50",
       trend: "6%", up: true,
     },
     {
-      label: "Stall Booked",
+      label: "STALL BOOKED",
       value: statsMetrics.closed,
-      icon: <ShoppingBag size={18} strokeWidth={1.8} />,
+      icon: <ShoppingBag size={16} strokeWidth={2.5} />,
       iconColor: "text-amber-600",
-      iconBg: "bg-amber-50",
+      iconBg: "bg-amber-100",
+      gradientTo: "to-amber-50",
       trend: "25%", up: true,
     },
     {
-      label: "Revenue",
+      label: "REVENUE",
       value: `₹ ${statsMetrics.revenue} L`,
-      icon: <IndianRupee size={18} strokeWidth={1.8} />,
+      icon: <IndianRupee size={16} strokeWidth={2.5} />,
       iconColor: "text-emerald-600",
-      iconBg: "bg-emerald-50",
+      iconBg: "bg-emerald-100",
+      gradientTo: "to-emerald-50",
       trend: "18%", up: true,
     },
     {
-      label: "Follow-ups Due",
+      label: "FOLLOW-UPS",
       value: statsMetrics.pendingFollowups,
-      icon: <Clock size={18} strokeWidth={1.8} />,
+      icon: <Clock size={16} strokeWidth={2.5} />,
       iconColor: "text-pink-600",
-      iconBg: "bg-pink-50",
+      iconBg: "bg-pink-100",
+      gradientTo: "to-pink-50",
       trend: "8%", up: false,
     },
     {
-      label: "Payments Due",
+      label: "PAYMENTS DUE",
       value: `₹ ${statsMetrics.collection} L`,
-      icon: <Wallet size={18} strokeWidth={1.8} />,
+      icon: <Wallet size={16} strokeWidth={2.5} />,
       iconColor: "text-purple-600",
-      iconBg: "bg-purple-50",
+      iconBg: "bg-purple-100",
+      gradientTo: "to-purple-50",
       trend: "5%", up: false,
     },
   ];
@@ -73,23 +81,23 @@ export default function DashboardStatsGrid({ statsMetrics }) {
       {stats.map((s, i) => (
         <div
           key={i}
-          className={`${s.iconBg} rounded-lg px-2 py-1.5 transition flex items-center gap-2`}
-          style={{ boxShadow: "rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px" }}
+          className={`group cursor-pointer relative bg-gradient-to-br from-white from-50% ${s.gradientTo} p-3 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}
         >
-          {/* Icon — left, colored, no background */}
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 bg-white shadow-sm ${s.iconColor}`}>
-            {s.icon}
-          </div>
-
-          {/* Text block */}
-          <div className="min-w-0 flex-1 text-left">
-              <p className="text-[9.5px] font-bold text-slate-800 tracking-wider leading-tight mb-0.5 truncate">{s.label}</p>
-            <div className="flex items-end gap-1.5 mb-0.5">
-              <h3 className={`text-[17px] font-semibold leading-none ${s.iconColor}`}>{s.value}</h3>
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 xl:gap-3 mb-3">
+              <div className={`w-8 h-8 xl:w-9 xl:h-9 ${s.iconBg} rounded-full flex items-center justify-center shrink-0`}>
+                <div className={`${s.iconColor}`}>
+                  {s.icon}
+                </div>
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="truncate" style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '3px', display: 'block', fontFamily: 'Inter, sans-serif' }}>{s.value}</span>
+                <span className="truncate" style={{ fontSize: '8px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif', textTransform: 'uppercase' }}>{s.label}</span>
+              </div>
             </div>
-            <p className={`text-[8.5px] font-semibold leading-none flex items-center gap-0.5 ${s.up ? "text-emerald-500" : "text-red-500"}`}>
+            <div style={{ fontSize: '9px', fontWeight: 700, fontFamily: 'Inter, sans-serif' }} className={`text-center ${s.up ? "text-emerald-600" : "text-red-600"}`}>
               {s.up ? "↑" : "↓"} {s.trend} vs yesterday
-            </p>
+            </div>
           </div>
         </div>
       ))}
