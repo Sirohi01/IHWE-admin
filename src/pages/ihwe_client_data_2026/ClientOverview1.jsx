@@ -1018,7 +1018,9 @@ const ClientOverview1 = () => {
                 </p>
 
                 <h3 className="font-semibold text-[10px] mt-0.5 truncate text-orange-500">
-                  {company?.companyStatus}
+                  {company?.companyStatus === 'Closed - Won' && company?.participation?.stallSize
+                    ? `${company.participation.stallSize} sqm Stall Booked`
+                    : company?.companyStatus}
                 </h3>
               </div>
             </div>
