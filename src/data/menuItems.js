@@ -684,7 +684,7 @@ export const menuItems = [
       { label: "Add Nature Of Business", path: "/ihweClientData2026/AddNatureOfBusiness" },
       { label: "Add Next Action", path: "/ihweClientData2026/AddNextAction" },
       { label: "Add Remark Length Fixed", path: "/ihweClientData2026/AddRemarkLengthFixed" },
-      { label: "Add Status", path: "/ihweClientData2026/AddStatus" },
+      { label: "Add Lead Status", path: "/ihweClientData2026/AddStatus" },
       { label: "USER TARGET", path: "/ihweClientData2026/AddTarget" },
       { label: "Buyer Registration Config", path: "/buyer-registration-config" },
       { label: "International Registration Config", path: "/international-buyer-registration-config" },
