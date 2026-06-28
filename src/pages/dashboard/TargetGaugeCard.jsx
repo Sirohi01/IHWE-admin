@@ -4,7 +4,7 @@ export default function TargetGaugeCard({ targetMetrics }) {
   const achieved = Math.min(Number(targetMetrics.pct) || 0, 100);
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-2.5 shadow-sm lg:col-span-3 col-span-1 flex flex-col justify-between">
+    <div className="bg-white rounded-lg p-2.5 lg:col-span-3 col-span-1 flex flex-col justify-between" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
       <div className="flex justify-between items-center mb-1">
         <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Target vs Achievement</h3>
       </div>

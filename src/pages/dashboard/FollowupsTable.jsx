@@ -28,10 +28,10 @@ export default function FollowupsTable({ followupsList }) {
   const navigate = useNavigate();
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-2.5 shadow-sm lg:col-span-6 col-span-1">
+    <div className="bg-white rounded-lg p-2.5 lg:col-span-6 col-span-1" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
       {/* Header */}
       <div className="flex justify-between items-center mb-2 flex-shrink-0">
-        <h3 className="text-base font-bold text-slate-800">Today's Follow-ups</h3>
+        <h3 className="text-base font-semibold text-slate-800">Today's Follow-ups</h3>
         <Link to="/ihweClientData2026/warmClientList" className="text-sm font-semibold text-blue-500 hover:underline">
           View All
         </Link>
@@ -39,15 +39,15 @@ export default function FollowupsTable({ followupsList }) {
 
       <div className="overflow-x-auto -mx-1 px-1">
         <div className="overflow-y-auto pr-1" style={{ maxHeight: '140px', scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}>
-          <table className="w-full text-left">
-            <thead className="sticky top-0 bg-white z-10">
-              <tr className="border-b border-slate-100">
-                <th className="pb-1.5 text-[12px] font-semibold text-slate-500">Client Name</th>
-                <th className="pb-1.5 text-[12px] font-semibold text-slate-500">Company</th>
-                <th className="pb-1.5 text-[12px] font-semibold text-slate-500">Time</th>
-                <th className="pb-1.5 text-[12px] font-semibold text-slate-500">Priority</th>
-                <th className="pb-1.5 text-[12px] font-semibold text-slate-500">Last Conversation</th>
-                <th className="pb-1.5 text-[12px] font-semibold text-slate-500 text-center">Action</th>
+          <table className="w-full text-left border-collapse">
+            <thead className="sticky top-0 bg-slate-50 z-10">
+              <tr className="border-b border-slate-200">
+                <th className="py-1.5 px-2 text-[10px] font-bold text-slate-600 uppercase tracking-wider rounded-tl-md">Client Name</th>
+                <th className="py-1.5 pr-2 text-[10px] font-bold text-slate-600 uppercase tracking-wider">Company</th>
+                <th className="py-1.5 pr-2 text-[10px] font-bold text-slate-600 uppercase tracking-wider">Time</th>
+                <th className="py-1.5 pr-2 text-[10px] font-bold text-slate-600 uppercase tracking-wider">Priority</th>
+                <th className="py-1.5 pr-2 text-[10px] font-bold text-slate-600 uppercase tracking-wider">Last Conversation</th>
+                <th className="py-1.5 px-2 text-[10px] font-bold text-slate-600 uppercase tracking-wider text-center rounded-tr-md">Action</th>
               </tr>
             </thead>
             <tbody>

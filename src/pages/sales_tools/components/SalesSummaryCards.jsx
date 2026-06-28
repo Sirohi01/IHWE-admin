@@ -28,40 +28,40 @@ export default function SalesSummaryCards({ data = [], loading = false, leadsDat
         value: leadsLoading ? "..." : totalLeads.toString(),
         growth: "All time",
         icon: Users,
-        cardBg: "bg-[#F2FCF5]",
-        iconBg: "bg-[#E3F8EB]",
-        color: "text-[#16A34A]",
-        growthColor: "text-[#16A34A]",
+        cardBg: "bg-gradient-to-br from-white from-50% to-blue-50",
+        iconBg: "bg-blue-100",
+        color: "text-blue-600",
+        growthColor: "text-blue-600",
       },
       {
         title: "New Leads",
         value: leadsLoading ? "..." : newLeads.toString(),
         growth: leadsLoading ? "..." : getLeadsPercentage(newLeads),
         icon: UserPlus,
-        cardBg: "bg-[#F8F4FF]",
-        iconBg: "bg-[#EFE8FF]",
-        color: "text-[#9333EA]",
-        growthColor: "text-[#9333EA]",
+        cardBg: "bg-gradient-to-br from-white from-50% to-purple-50",
+        iconBg: "bg-purple-100",
+        color: "text-purple-600",
+        growthColor: "text-purple-600",
       },
       {
         title: "Assigned Leads",
         value: leadsLoading ? "..." : assignedLeads.toString(),
         growth: leadsLoading ? "..." : getLeadsPercentage(assignedLeads),
         icon: UserCheck,
-        cardBg: "bg-[#F2FBFF]",
-        iconBg: "bg-[#E2F5FF]",
-        color: "text-[#2563EB]",
-        growthColor: "text-[#2563EB]",
+        cardBg: "bg-gradient-to-br from-white from-50% to-green-50",
+        iconBg: "bg-green-100",
+        color: "text-green-600",
+        growthColor: "text-green-600",
       },
       {
         title: "Unassigned Leads",
         value: leadsLoading ? "..." : unassignedLeads.toString(),
         growth: leadsLoading ? "..." : getLeadsPercentage(unassignedLeads),
         icon: UserX,
-        cardBg: "bg-[#FFF8EE]",
-        iconBg: "bg-[#FFEED5]",
-        color: "text-[#F59E0B]",
-        growthColor: "text-[#F59E0B]",
+        cardBg: "bg-gradient-to-br from-white from-50% to-orange-50",
+        iconBg: "bg-orange-100",
+        color: "text-orange-600",
+        growthColor: "text-orange-600",
       },
     ];
 
@@ -72,21 +72,27 @@ export default function SalesSummaryCards({ data = [], loading = false, leadsDat
           return (
             <div
               key={index}
-              className={`${item.cardBg} rounded-xl px-4 py-1 border border-slate-100 shadow-sm relative overflow-hidden`}
+              className={`group relative ${item.cardBg} p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}
             >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[13px] font-bold text-[#475569]">
-                  {item.title}
-                </span>
-                <Icon size={18} strokeWidth={2.5} className={item.color} />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[24px] font-bold text-[#0F172A] leading-none mb-1">
-                  {item.value}
-                </span>
-                <span className={`text-[11px] font-bold ${item.growthColor}`}>
-                  {item.growth}
-                </span>
+              <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-4">
+                      <div
+                          className={`w-10 h-10 ${item.iconBg} rounded-full flex items-center justify-center shrink-0`}
+                      >
+                          <Icon className={`w-5 h-5 ${item.color}`} strokeWidth={2.5} />
+                      </div>
+                      <div className="flex flex-col">
+                          <p className="text-xl font-extrabold text-slate-900 leading-none mb-1">
+                              {item.value}
+                          </p>
+                          <p className="text-[9px] font-extrabold text-slate-700 leading-tight uppercase whitespace-nowrap truncate">
+                              {item.title}
+                          </p>
+                      </div>
+                  </div>
+                  <div className={`text-[10px] font-bold mt-2 ${item.growthColor} text-center`}>
+                      {item.growth}
+                  </div>
               </div>
             </div>
           );
@@ -122,40 +128,40 @@ export default function SalesSummaryCards({ data = [], loading = false, leadsDat
       value: loading ? "..." : total.toString(),
       growth: "All time",
       icon: FileText,
-      cardBg: "bg-[#F2FCF5]",
-      iconBg: "bg-[#E3F8EB]",
-      color: "text-[#16A34A]",
-      growthColor: "text-[#16A34A]",
+      cardBg: "bg-gradient-to-br from-white from-50% to-blue-50",
+      iconBg: "bg-blue-100",
+      color: "text-blue-600",
+      growthColor: "text-blue-600",
     },
     {
       title: `Sent ${label}`,
       value: loading ? "..." : sentCount.toString(),
       growth: loading ? "..." : getPercentage(sentCount),
       icon: Send,
-      cardBg: "bg-[#F8F4FF]",
-      iconBg: "bg-[#EFE8FF]",
-      color: "text-[#9333EA]",
-      growthColor: "text-[#9333EA]",
+      cardBg: "bg-gradient-to-br from-white from-50% to-purple-50",
+      iconBg: "bg-purple-100",
+      color: "text-purple-600",
+      growthColor: "text-purple-600",
     },
     {
       title: `Pending ${label}`,
       value: loading ? "..." : pendingCount.toString(),
       growth: loading ? "..." : getPercentage(pendingCount),
       icon: Hourglass,
-      cardBg: "bg-[#FFF8EE]",
-      iconBg: "bg-[#FFEED5]",
-      color: "text-[#F59E0B]",
-      growthColor: "text-[#F59E0B]",
+      cardBg: "bg-gradient-to-br from-white from-50% to-orange-50",
+      iconBg: "bg-orange-100",
+      color: "text-orange-600",
+      growthColor: "text-orange-600",
     },
     {
       title: `Accepted ${label}`,
       value: loading ? "..." : acceptedCount.toString(),
       growth: loading ? "..." : getPercentage(acceptedCount),
       icon: CheckCircle2,
-      cardBg: "bg-[#F2FBFF]",
-      iconBg: "bg-[#E2F5FF]",
-      color: "text-[#2563EB]",
-      growthColor: "text-[#2563EB]",
+      cardBg: "bg-gradient-to-br from-white from-50% to-green-50",
+      iconBg: "bg-green-100",
+      color: "text-green-600",
+      growthColor: "text-green-600",
     },
   ];
 
@@ -166,21 +172,27 @@ export default function SalesSummaryCards({ data = [], loading = false, leadsDat
         return (
           <div
             key={index}
-            className={`${item.cardBg} rounded-xl px-4 py-1 border border-slate-100 shadow-sm relative overflow-hidden`}
+            className={`group relative ${item.cardBg} p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}
           >
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[13px] font-bold text-[#475569]">
-                {item.title}
-              </span>
-              <Icon size={18} strokeWidth={2.5} className={item.color} />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[24px] font-bold text-[#0F172A] leading-none mb-1">
-                {item.value}
-              </span>
-              <span className={`text-[11px] font-bold ${item.growthColor}`}>
-                {item.growth}
-              </span>
+            <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-4">
+                    <div
+                        className={`w-10 h-10 ${item.iconBg} rounded-full flex items-center justify-center shrink-0`}
+                    >
+                        <Icon className={`w-5 h-5 ${item.color}`} strokeWidth={2.5} />
+                    </div>
+                    <div className="flex flex-col">
+                        <p className="text-xl font-extrabold text-slate-900 leading-none mb-1">
+                            {item.value}
+                        </p>
+                        <p className="text-[9px] font-extrabold text-slate-700 leading-tight uppercase whitespace-nowrap truncate">
+                            {item.title}
+                        </p>
+                    </div>
+                </div>
+                <div className={`text-[10px] font-bold mt-2 ${item.growthColor} text-center`}>
+                    {item.growth}
+                </div>
             </div>
           </div>
         );

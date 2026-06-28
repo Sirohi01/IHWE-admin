@@ -11,6 +11,8 @@ const FestivalCarousel = lazy(() => import("../pages/FestivalCarousel"));
 const EnquiryList = lazy(() => import("../pages/EnquiryList"));
 const Remainder = lazy(() => import("../pages/Remainder"));
 const BookAStand = lazy(() => import("../pages/BookAStand"));
+const TaskAndAlerts = lazy(() => import("../pages/TaskAndAlerts"));
+const ActivityLog = lazy(() => import("../pages/ActivityLog"));
 
 const CreatePage = lazy(() => import("../pages/CreatePage"));
 const PageList = lazy(() => import("../pages/PageList"));
@@ -181,6 +183,8 @@ const PrimaryProductInterest = lazy(() => import("../pages/admin_management/Prim
 const SecondaryProductCategories = lazy(() => import("../pages/admin_management/SecondaryProductCategories"));
 const MeetingPriorityLevel = lazy(() => import("../pages/admin_management/MeetingPriorityLevel"));
 const DocumentConfiguration = lazy(() => import("../pages/admin_management/DocumentConfiguration"));
+const TransferClient = lazy(() => import("../pages/admin_management/TransferClient"));
+const ReassignLeads = lazy(() => import("../pages/admin_management/ReassignLeads"));
 const AddDomesticVisitor = lazy(() => import("../pages/web_visitor_data/add_new_visitor/AddDomesticVisitor"));
 const BuyerRegistration = lazy(() => import("../pages/buyer/BuyerRegistration"));
 const BuyerList = lazy(() => import("../pages/buyer/BuyerList"));
@@ -653,6 +657,8 @@ export default function AppRoutes() {
             <Route path="/secondary-product-categories" element={<SecondaryProductCategories />} />
             <Route path="/meeting-priority-level" element={<MeetingPriorityLevel />} />
             <Route path="/document-configuration" element={<DocumentConfiguration />} />
+            <Route path="/transfer-client" element={<TransferClient />} />
+            <Route path="/reassign-leads" element={<ReassignLeads />} />
             <Route path="manage-registrations" element={<ManageRegistrations />} />
             <Route path="bsm-management" element={<AdminBSM />} />
             <Route path="/buyer-list" element={<BuyerList />} />
@@ -675,6 +681,8 @@ export default function AppRoutes() {
             <Route path="/to-do-list" element={<ToDoList />} />
             <Route path="/new-leads" element={<NewLeads />} />
             <Route path="/notification" element={<Notification />} />
+            <Route path="/task-alerts" element={<TaskAndAlerts />} />
+            <Route path="/activity-log" element={<ActivityLog />} />
             <Route path="/floating-video-management" element={<FloatingVideoManagement />} />
             <Route path="/referral-members" element={<ReferralMembers />} />
             <Route path="/expo-support-enquiries" element={<ExpoSupportEnquiries />} />

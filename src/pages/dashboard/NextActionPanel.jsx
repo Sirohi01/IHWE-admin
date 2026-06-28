@@ -173,7 +173,7 @@ export default function NextActionPanel() {
       <div className="border-t border-slate-100/80 pt-1.5 mt-1.5">
         <Link
           to="/exhibitor-chat"
-          className="w-full h-6 bg-slate-50 hover:bg-[#23471d] text-[9.5px] font-black text-slate-700 hover:text-white uppercase tracking-wider flex items-center justify-center gap-1.5 rounded-xl transition-all duration-300 border border-slate-100 shadow-sm group"
+          className="w-full h-6 bg-slate-50 hover:bg-[#23471d] text-[10px] font-semibold text-slate-700 hover:text-white uppercase tracking-tight flex items-center justify-center gap-1.5 rounded-xl transition-all duration-300 border border-slate-100 shadow-sm group"
         >
           Open Chat Messenger 
           <ArrowRight size={12} className="transform group-hover:translate-x-1 transition-transform duration-200" />

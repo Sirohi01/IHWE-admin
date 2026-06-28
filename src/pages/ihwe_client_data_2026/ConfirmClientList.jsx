@@ -10,7 +10,7 @@ import BaseLeadPage from "../../layout/BaseLeadPage";
 import {
   Search, Download, Plus, Upload, MessageCircle, Phone, Mail, MoreVertical,
   Calendar, CalendarDays, ArrowRight, RefreshCw, Flame, MessageSquare, Send, CheckCircle2,
-  Users, DollarSign, Star, FileText, ChevronDown
+  Users, DollarSign, Star, FileText, ChevronDown, TrendingUp, Ticket
 } from "lucide-react";
 import { FaWhatsapp } from 'react-icons/fa';
 import {
@@ -232,62 +232,102 @@ const ConfirmClientList = () => {
 
   const avgConversionTime = companiesWithConversion > 0 ? Math.round(totalConversionDays / companiesWithConversion) : 0;
 
-  // Stat Cards
   const statCards = (
     <>
-      <div className="bg-white p-3 rounded-xl border border-emerald-100 shadow-sm flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-          <Users size={20} className="fill-emerald-600" />
-        </div>
-        <div>
-          <div className="text-slate-800 text-[10px] font-bold">Total Converted</div>
-          <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{totalConverted || 0}</div>
+      <div className="group cursor-pointer relative bg-gradient-to-br from-white from-50% to-emerald-50 p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden">
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />
+            </div>
+            <div className="flex flex-col">
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>{totalConverted || 0}</span>
+              <span style={{ fontSize: '9px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif' }}>TOTAL EXHIBITORS</span>
+            </div>
           </div>
-          <div className="text-[9px] text-emerald-600 font-medium">Till Date</div>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: '#059669', textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>Till Date</div>
         </div>
       </div>
 
-      <div className="bg-white p-3 rounded-xl border border-blue-100 shadow-sm flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-          <div className="border border-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold">₹</div>
-        </div>
-        <div>
-          <div className="text-slate-800 text-[10px] font-bold">Total Revenue</div>
-          <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">₹ {totalRevenue ? totalRevenue.toLocaleString('en-IN') : 0}</div>
+      <div className="group cursor-pointer relative bg-gradient-to-br from-white from-50% to-blue-50 p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden">
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+              <DollarSign className="w-5 h-5 text-blue-600" strokeWidth={2.5} />
+            </div>
+            <div className="flex flex-col">
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>₹ {totalRevenue ? (totalRevenue / 100000).toFixed(1) + 'L' : 0}</span>
+              <span style={{ fontSize: '9px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif' }}>TOTAL REVENUE</span>
+            </div>
           </div>
-          <div className="text-[9px] text-emerald-600 font-medium">All Time</div>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: '#2563eb', textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>All Time</div>
         </div>
       </div>
 
-      <div className="bg-white p-3 rounded-xl border border-purple-100 shadow-sm flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-          <CalendarDays size={20} />
-        </div>
-        <div>
-          <div className="text-slate-800 text-[10px] font-bold">Avg. Conversion Time</div>
-          <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{avgConversionTime || 0} Days</div>
+      <div className="group cursor-pointer relative bg-gradient-to-br from-white from-50% to-purple-50 p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden">
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center shrink-0">
+              <CalendarDays className="w-5 h-5 text-purple-600" strokeWidth={2.5} />
+            </div>
+            <div className="flex flex-col">
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>{avgConversionTime || 0} Days</span>
+              <span style={{ fontSize: '9px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif' }}>AVG. CONVERSION</span>
+            </div>
           </div>
-          <div className="text-[9px] text-emerald-600 font-medium">Average time</div>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: '#9333ea', textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>Average time</div>
         </div>
       </div>
 
-      <div className="bg-white p-3 rounded-xl border border-orange-100 shadow-sm flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
-          <Star size={20} className="fill-orange-500" />
-        </div>
-        <div>
-          <div className="text-slate-800 text-[10px] font-bold">Existing Clients</div>
-          <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{existingClientsCount || 0}</div>
+      <div className="group cursor-pointer relative bg-gradient-to-br from-white from-50% to-orange-50 p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden">
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center shrink-0">
+              <Star className="w-5 h-5 text-orange-500 fill-orange-500" strokeWidth={2.5} />
+            </div>
+            <div className="flex flex-col">
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>{existingClientsCount || 0}</span>
+              <span style={{ fontSize: '9px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif' }}>EXISTING CLIENTS</span>
+            </div>
           </div>
-          <div className="text-[9px] text-orange-500 font-medium">{totalConverted ? Math.round((existingClientsCount / totalConverted) * 100) : 0}% of total clients</div>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: '#f97316', textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>{totalConverted ? Math.round((existingClientsCount / totalConverted) * 100) : 0}% of total clients</div>
+        </div>
+      </div>
+
+      <div className="group cursor-pointer relative bg-gradient-to-br from-white from-50% to-green-50 p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden">
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0">
+              <TrendingUp className="w-5 h-5 text-green-600" strokeWidth={2.5} />
+            </div>
+            <div className="flex flex-col">
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>{totalConverted > 0 ? Math.round((existingClientsCount / totalConverted) * 100) : 0}%</span>
+              <span style={{ fontSize: '9px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif' }}>CONVERSION RATE</span>
+            </div>
+          </div>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: '#16a34a', textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>Overall</div>
+        </div>
+      </div>
+
+      <div className="group cursor-pointer relative bg-gradient-to-br from-white from-50% to-cyan-50 p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden">
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center shrink-0">
+              <Ticket className="w-5 h-5 text-cyan-600" strokeWidth={2.5} />
+            </div>
+            <div className="flex flex-col">
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>{(totalConverted - existingClientsCount) || 0}</span>
+              <span style={{ fontSize: '9px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif' }}>NEW CLIENTS</span>
+            </div>
+          </div>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: '#0891b2', textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>First-time exhibitors</div>
         </div>
       </div>
     </>
   );
+
+
+
 
   // Filters
   const filters = (
@@ -364,13 +404,16 @@ const ConfirmClientList = () => {
   // Table Config
   const tableHeaders = (
     <>
-      <th className="px-2 py-2 font-medium">Company / Client</th>
-      <th className="px-2 py-2 font-medium">Industry</th>
+      <th className="px-2 py-2 font-medium">Company Name</th>
+      <th className="px-2 py-2 font-medium">Contact Details</th>
+      <th className="px-2 py-2 font-medium text-center">Category</th>
       <th className="px-2 py-2 font-medium text-center">Source</th>
-      <th className="px-2 py-2 font-medium text-center">Converted Date</th>
-      <th className="px-2 py-2 font-medium text-center">Sales Stage</th>
+      <th className="px-2 py-2 font-medium text-center">Stall Size</th>
+      <th className="px-2 py-2 font-medium text-center">Booking Date</th>
+      <th className="px-2 py-2 font-medium text-center">Location</th>
       <th className="px-2 py-2 font-medium text-right">Revenue</th>
-      <th className="px-2 py-2 font-medium text-center">Action</th>
+      <th className="px-2 py-2 font-medium text-center">PYMT Status</th>
+      <th className="px-2 py-2 font-medium text-center">Updated Details</th>
     </>
   );
 
@@ -396,15 +439,30 @@ const ConfirmClientList = () => {
               />
             </td>
             <td className="px-2 py-2">
-              <div className="font-semibold text-slate-800 text-[11px] cursor-pointer hover:text-emerald-600">
+              <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D' }}>
                 <Link to={`/client-overview/${row._id}?source=exhibitor`}>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
               </div>
-              <div className="text-[9px] text-slate-500">{toTitleCase(row.natureOfBusiness || row.industrySector || row.typeOfBusiness) || "-"}</div>
+              <div className="text-[9px] font-bold" style={{ color: '#5E0006' }}>{toTitleCase(row.natureOfBusiness || row.industrySector || row.typeOfBusiness) || "-"}</div>
             </td>
             <td className="px-2 py-2">
-              <span className={`px-1.5 py-0.5 rounded font-semibold text-[9px] ${getIndustryStyle(row.natureOfBusiness || row.industrySector || row.typeOfBusiness)}`}>
-                {toTitleCase(row.natureOfBusiness || row.industrySector || row.typeOfBusiness) || "-"}
-              </span>
+              <div className="font-bold text-[10px]" style={{ color: '#15173D' }}>
+                {toTitleCase(row.contact1?.name || (row.contact1?.firstName ? `${row.contact1.firstName} ${row.contact1.lastName || ''}`.trim() : null) || row.contactPerson || "N/A")}
+              </div>
+              <div className="text-[9px] text-blue-600 font-medium flex items-center gap-1 mt-0.5">
+                <Phone size={9} className="text-blue-500 shrink-0" />
+                {row.contact1?.mobile || row.contact1?.phone || row.mobile || row.phone || "N/A"}
+              </div>
+            </td>
+            <td className="px-2 py-2 text-center">
+              {row.msme?.udyamRegNo || row.msme?.msmeCategory || row.isMSME ? (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded font-bold text-[9px] text-emerald-700 bg-emerald-50 border border-emerald-200">
+                  MSME
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded font-bold text-[9px] text-amber-700 bg-amber-50 border border-amber-200">
+                  Non-MSME
+                </span>
+              )}
             </td>
             <td className="px-2 py-2 text-center">
               <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-semibold text-[9px] ${getSourceStyle(source)}`}>
@@ -412,189 +470,89 @@ const ConfirmClientList = () => {
               </span>
             </td>
             <td className="px-2 py-2 text-center">
-              <div className="flex items-center justify-center gap-1.5">
-                <CalendarDays className="text-slate-400" size={10} />
-                <span className="text-[9px] font-medium text-slate-800">
-                  {row.updatedAt ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt)) : "-"}
-                </span>
-              </div>
-            </td>
-            <td className="px-2 py-2 text-center">
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold text-emerald-600 bg-emerald-50">
-                {toTitleCase(row.status || "Converted")}
+              <span className="font-bold text-[10px]" style={{ color: '#016B61' }}>
+                {row.participation?.stallSize || row.stallSize ? `${row.participation?.stallSize || row.stallSize} sqm` : "N/A"}
               </span>
             </td>
-            <td className="px-2 py-2 text-right">
-              <span className="font-semibold text-slate-800 text-[10px]">{row.participation?.currency === 'USD' ? '$' : '₹'} {(row.amountPaid || row.financeBreakdown?.netPayable || row.participation?.total || 0).toLocaleString()}</span>
-            </td>
             <td className="px-2 py-2 text-center">
-              <div className="flex items-center gap-2 flex-wrap justify-center">
-                {/* <button
-                    onClick={() => navigate(`/exhibitor-booking/${row._id}`)}
-                    className="p-2 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-[2px] transition-all border border-gray-200"
-                    title="View Details"
-                >
-                    <Eye size={16} />
-                </button> */}
-                {row.status === 'advance-paid' ? (
-                  <button
-                    onClick={() => handleStatusUpdate(row._id, 'advance-paid', row, api, dispatch, createActivityLogThunk, fetchData)}
-                    title="Record Next Installment"
-                    className="px-2 py-1 bg-[#337ab7] text-white text-[9px] font-black uppercase rounded-[2px] border border-[#286090] hover:bg-[#286090] transition-all whitespace-nowrap"
-                  >
-                    + Installment
-                  </button>
-                ) : (
-                  <select
-                    onChange={(e) => handleStatusUpdate(row._id, e.target.value, row, api, dispatch, createActivityLogThunk, fetchData)}
-                    className="text-[10px] font-bold border-2 border-gray-200 rounded-[2px] px-2 py-1 outline-none bg-white focus:border-[#337ab7]"
-                    value={row.status || 'pending'}
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    {(row.paymentPlanType === 'full' || !row.paymentPlanType) ? (
-                      <option value="paid">Paid (Full)</option>
-                    ) : (
-                      <option value="advance-paid">Installment Paid</option>
-                    )}
-                    <option value="confirmed">Confirmed</option>
-                    <option value="rejected">Rejected</option>
-                    <option value="payment-failed">Payment Failed</option>
-                  </select>
-                )}
+              <div className="flex flex-col items-center justify-center gap-0.5">
+                {(row.createdAt || row.updatedAt) ? (() => {
+                  const d = new Date(row.createdAt || row.updatedAt);
+                  const date = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).format(d);
+                  const time = new Intl.DateTimeFormat('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }).format(d);
+                  return (
+                    <>
+                      <div className="flex items-center gap-1">
+                        <CalendarDays className="text-slate-400" size={10} />
+                        <span className="text-[10px] font-bold" style={{ color: '#111844' }}>{date}</span>
+                      </div>
+                      <span className="text-[9px] text-slate-500 font-medium">{time}</span>
+                    </>
+                  );
+                })() : "-"}
               </div>
             </td>
+
+            <td className="px-2 py-2 text-center">
+              <div className="font-bold text-[10px]" style={{ color: '#093C5D' }}>
+                {toTitleCase(row.city || row.address?.city || row.companyCity || "N/A")}
+              </div>
+              <div className="text-[9px] font-bold" style={{ color: '#5E0006' }}>
+                {toTitleCase(row.state || row.address?.state || row.companyState || "N/A")}
+              </div>
+            </td>
+            <td className="px-2 py-2 text-right">
+              <span className="font-bold text-[10px]" style={{ color: '#064232' }}>{row.participation?.currency === 'USD' ? '$' : '₹'} {(row.amountPaid || row.financeBreakdown?.netPayable || row.participation?.total || 0).toLocaleString()}</span>
+            </td>
+            <td className="px-2 py-2 text-center">
+              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold whitespace-nowrap ${
+                row.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                row.status === 'confirmed' ? 'bg-green-50 text-green-700 border border-green-200' :
+                row.status === 'approved' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                row.status === 'advance-paid' ? 'bg-cyan-50 text-cyan-700 border border-cyan-200' :
+                row.status === 'rejected' || row.status === 'payment-failed' ? 'bg-red-50 text-red-600 border border-red-200' :
+                'bg-amber-50 text-amber-600 border border-amber-200'
+              }`}>
+                {row.status === 'paid' ? 'Paid (Full)' :
+                 row.status === 'confirmed' ? 'Confirmed' :
+                 row.status === 'approved' ? 'Approved' :
+                 row.status === 'advance-paid' ? 'Installment' :
+                 row.status === 'rejected' ? 'Rejected' :
+                 row.status === 'payment-failed' ? 'Failed' :
+                 'Pending'}
+              </span>
+            </td>
+            <td className="px-2 py-2 text-center">
+              <div className="flex flex-col items-center justify-center gap-0.5">
+                {row.updatedAt ? (() => {
+                  const d = new Date(row.updatedAt);
+                  const date = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).format(d);
+                  const time = new Intl.DateTimeFormat('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }).format(d);
+                  return (
+                    <>
+                      <div className="flex items-center gap-1">
+                        <RefreshCw className="text-slate-400" size={10} />
+                        <span className="text-[10px] font-bold text-slate-700">{date}</span>
+                      </div>
+                      <span className="text-[9px] text-slate-500 font-medium">{time}</span>
+                    </>
+                  );
+                })() : "-"}
+              </div>
+            </td>
+
           </tr>
         );
       })}
     </>
   );
 
-  const rightSidebar = (
-    <>
-      {/* Conversion Overview */}
-      <div className="bg-white rounded-xl border border-gray-100 p-3">
-        <h3 className="text-[13px] font-semibold text-[#0F172A] mb-2">Conversion Overview</h3>
-        <div className="flex items-center justify-between gap-1">
-          <div className="relative w-[56px] h-[56px] shrink-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={[
-                    { name: "This Month", value: 32, color: "#059669" }, // Emerald 600
-                  ]}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={18}
-                  outerRadius={26}
-                  paddingAngle={0}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  <Cell fill="#059669" />
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex flex-col items-center justify-center mt-1">
-              <h3 className="text-[14px] font-bold text-[#0F172A] leading-none">32</h3>
-              <p className="text-[7px] text-gray-500 uppercase tracking-wider">Total</p>
-            </div>
-          </div>
-          <div className="flex flex-col gap-1.5 flex-grow">
-            {[
-              { name: "This Month", value: 32, pct: "100%", color: "#059669" },
-              { name: "Last Month", value: 27, pct: "100%", color: "#cbd5e1" },
-            ].map((item) => (
-              <div key={item.name} className="flex items-center justify-between text-[11px]">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: item.color }} />
-                  <span className="font-medium text-[#0F172A] truncate">{item.name}</span>
-                </div>
-                <span className="font-semibold text-[#0F172A] shrink-0 ml-1">{item.value} <span className="text-gray-400 font-normal">({item.pct})</span></span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
-      {/* Industry Wise Conversions */}
-      <div className="bg-white rounded-xl border border-gray-100 p-3">
-        <h3 className="text-[14px] font-semibold text-[#0F172A] mb-2">Industry Wise Conversions</h3>
-        <div className="flex flex-col gap-2.5">
-          {[
-            { label: "Healthcare", count: 12, pct: "38%", color: "bg-emerald-600" },
-            { label: "FMCG", count: 8, pct: "25%", color: "bg-blue-600" },
-            { label: "Retail", count: 5, pct: "16%", color: "bg-orange-500" },
-            { label: "Biotechnology", count: 4, pct: "13%", color: "bg-purple-600" },
-            { label: "Manufacturing", count: 3, pct: "9%", color: "bg-sky-500" },
-          ].map((s, i) => (
-            <div key={i} className="flex items-center justify-between text-[11px]">
-              <span className="text-slate-700 w-24 font-medium pr-2 shrink-0">{s.label}</span>
-              <div className="flex-grow mx-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div className={`h-full ${s.color} rounded-full`} style={{ width: s.pct }}></div>
-              </div>
-              <div className="flex items-center gap-1 w-12 justify-end shrink-0">
-                <span className="font-semibold text-slate-800">{s.count}</span>
-                <span className="text-slate-400 text-[9px]">({s.pct})</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Recent Conversions */}
-      <div className="bg-white rounded-xl border border-gray-100 p-3">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-[14px] font-semibold text-[#0F172A]">Recent Conversions</h3>
-        </div>
-        <div className="flex flex-col gap-2.5">
-          {[
-            { name: "GreenLife Ayurveda", date: "27 May 2026" },
-            { name: "Nature's Harmony Pvt. Ltd.", date: "26 May 2026" },
-            { name: "Wellness World", date: "25 May 2026" },
-            { name: "Herbal King Exports", date: "24 May 2026" },
-            { name: "Arogya Organics", date: "23 May 2026" },
-          ].map((lead, i) => (
-            <div key={i} className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                  <Users size={12} className="fill-emerald-600" />
-                </div>
-                <span className="text-[11px] font-medium text-slate-700 truncate max-w-[130px]">{lead.name}</span>
-              </div>
-              <span className="text-[9px] text-slate-400 font-medium shrink-0">{lead.date}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-      {/* Quick Actions */}
-      <div className="bg-white rounded-xl border border-gray-100 p-3">
-        <h3 className="text-[14px] font-semibold text-[#0F172A] mb-2">Quick Actions</h3>
-        <div className="grid grid-cols-2 gap-2">
-          <button className="h-[34px] rounded-lg bg-[#EEF9F2] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
-            <FaWhatsapp size={12} className="text-green-600 shrink-0" />
-            <span className="text-[9px] font-bold text-green-700 leading-tight">Send Bulk WhatsApp</span>
-          </button>
-          <button className="h-[34px] rounded-lg bg-[#FFF3E0] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
-            <CalendarDays size={12} className="text-orange-600 shrink-0" />
-            <span className="text-[9px] font-bold text-orange-700 leading-tight">Schedule Follow-Up</span>
-          </button>
-          <button className="h-[34px] rounded-lg bg-[#F3E8FF] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
-            <Mail size={12} className="text-purple-600 shrink-0" />
-            <span className="text-[9px] font-bold text-purple-700 leading-tight">Send Email</span>
-          </button>
-          <button className="h-[34px] rounded-lg bg-[#E0F2FE] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
-            <FileText size={12} className="text-blue-600 shrink-0" />
-            <span className="text-[9px] font-bold text-blue-700 leading-tight">Create Proposal</span>
-          </button>
-        </div>
-      </div>
-    </>
-  );
 
   const paginationBar = (
     <>
-      <div className="text-slate-500">
+      <div className="text-blue-600 font-medium">
         Showing {totalLeads === 0 ? 0 : (page - 1) * limit + 1} to {Math.min(page * limit, totalLeads)} of {totalLeads} clients
       </div>
       <div className="flex items-center gap-1">
@@ -608,7 +566,7 @@ const ConfirmClientList = () => {
         <button onClick={() => setPage(p => Math.min(pagination?.totalPages || 1, p + 1))} disabled={page >= (pagination?.totalPages || 1)} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">›</button>
         <button onClick={() => setPage(pagination?.totalPages || 1)} disabled={page >= (pagination?.totalPages || 1)} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">»</button>
       </div>
-      <div className="flex items-center gap-2 text-slate-500">
+      <div className="flex items-center gap-2 text-blue-600 font-medium">
         <span>Rows per page:</span>
         <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }} className="border border-slate-200 rounded py-0.5 px-1 bg-white outline-none cursor-pointer text-slate-700">
           <option value={10}>10</option>
@@ -621,7 +579,7 @@ const ConfirmClientList = () => {
 
   return (
     <BaseLeadPage
-      title="Converted Clients"
+      title="Exhibitor List"
       subtitle="Leads that have been successfully converted into clients"
       badgeCount={<span className="text-emerald-700">{totalLeads}</span>}
       headerActions={
@@ -633,7 +591,7 @@ const ConfirmClientList = () => {
       filterBar={filters}
       tableHeaders={tableHeaders}
       tableBody={tableBody}
-      rightSidebar={rightSidebar}
+
       pagination={paginationBar}
       isAllSelected={isAllSelected}
       onSelectAll={onSelectAll}

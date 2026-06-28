@@ -2,7 +2,7 @@ export default function SalesLeaderboard({ leaderboard, currentUser }) {
   return (
     <div className="bg-white rounded-lg border border-slate-200 p-2 shadow-sm lg:col-span-3 col-span-1 flex flex-col justify-start">
       <div className="flex justify-between items-center mb-1">
-        <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">Sales Leaderboard</h3>
+        <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Sales Leaderboard</h3>
       </div>
 
       <div className="space-y-2 flex-1 overflow-y-auto pr-1" style={{ maxHeight: '125px', scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}>
@@ -14,7 +14,7 @@ export default function SalesLeaderboard({ leaderboard, currentUser }) {
               className={`flex items-center justify-between p-1.5 rounded-xl border ${
                 isActiveUser
                   ? "bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm"
-                  : "bg-white border-slate-100 text-slate-800"
+                  : "bg-white border-slate-100 text-slate-900"
               }`}
             >
               <div className="flex items-center gap-2">
@@ -30,7 +30,7 @@ export default function SalesLeaderboard({ leaderboard, currentUser }) {
                     <span className="text-[10px] font-bold uppercase">{item.name?.[0] || 'S'}</span>
                   )}
                 </div>
-                <span className="text-[11px] font-bold truncate max-w-[90px]">{item.name}</span>
+                <span className="text-[11px] font-semibold truncate max-w-[90px]">{item.name}</span>
               </div>
               <span className="text-[11px] font-black">₹ {(item.revenue / 100000).toFixed(2)} L</span>
             </div>

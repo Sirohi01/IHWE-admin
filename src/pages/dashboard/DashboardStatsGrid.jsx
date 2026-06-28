@@ -35,7 +35,7 @@ export default function DashboardStatsGrid({ statsMetrics }) {
       trend: "6%", up: true,
     },
     {
-      label: "Stall Bookings Closed",
+      label: "Stall Booked",
       value: statsMetrics.closed,
       icon: <ShoppingBag size={18} strokeWidth={1.8} />,
       iconColor: "text-amber-600",
@@ -43,7 +43,7 @@ export default function DashboardStatsGrid({ statsMetrics }) {
       trend: "25%", up: true,
     },
     {
-      label: "Revenue Generated",
+      label: "Revenue",
       value: `₹ ${statsMetrics.revenue} L`,
       icon: <IndianRupee size={18} strokeWidth={1.8} />,
       iconColor: "text-emerald-600",
@@ -51,7 +51,7 @@ export default function DashboardStatsGrid({ statsMetrics }) {
       trend: "18%", up: true,
     },
     {
-      label: "Pending Follow-ups",
+      label: "Follow-ups Due",
       value: statsMetrics.pendingFollowups,
       icon: <Clock size={18} strokeWidth={1.8} />,
       iconColor: "text-pink-600",
@@ -59,7 +59,7 @@ export default function DashboardStatsGrid({ statsMetrics }) {
       trend: "8%", up: false,
     },
     {
-      label: "Collection Pending",
+      label: "Payments Due",
       value: `₹ ${statsMetrics.collection} L`,
       icon: <Wallet size={18} strokeWidth={1.8} />,
       iconColor: "text-purple-600",
@@ -73,18 +73,19 @@ export default function DashboardStatsGrid({ statsMetrics }) {
       {stats.map((s, i) => (
         <div
           key={i}
-          className="bg-white rounded-lg border border-slate-100 px-2 py-1.5 shadow-sm hover:shadow-md transition flex items-center gap-2"
+          className={`${s.iconBg} rounded-lg px-2 py-1.5 transition flex items-center gap-2`}
+          style={{ boxShadow: "rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px" }}
         >
           {/* Icon — left, colored, no background */}
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${s.iconBg} ${s.iconColor}`}>
+          <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 bg-white shadow-sm ${s.iconColor}`}>
             {s.icon}
           </div>
 
           {/* Text block */}
           <div className="min-w-0 flex-1 text-left">
-              <p className="text-[9px] font-semibold text-black leading-tight mb-0.5 truncate">{s.label}</p>
+              <p className="text-[9.5px] font-bold text-slate-800 tracking-wider leading-tight mb-0.5 truncate">{s.label}</p>
             <div className="flex items-end gap-1.5 mb-0.5">
-              <h3 className="text-[16px] font-bold text-slate-900 leading-none">{s.value}</h3>
+              <h3 className={`text-[17px] font-semibold leading-none ${s.iconColor}`}>{s.value}</h3>
             </div>
             <p className={`text-[8.5px] font-semibold leading-none flex items-center gap-0.5 ${s.up ? "text-emerald-500" : "text-red-500"}`}>
               {s.up ? "↑" : "↓"} {s.trend} vs yesterday

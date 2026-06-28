@@ -31,34 +31,36 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
 
   const getPageNameFromMenu = (pathname) => {
     let foundLabel = null;
+    let foundParentLabel = null;
     let bestMatchLength = 0;
 
-    const searchMenu = (items) => {
+    const searchMenu = (items, parentLabel = null) => {
       for (const item of items) {
         if (item.path) {
           if (pathname === item.path || pathname.startsWith(item.path + '/')) {
             if (item.path.length > bestMatchLength) {
               bestMatchLength = item.path.length;
               foundLabel = item.label;
+              foundParentLabel = parentLabel;
             }
           }
         }
         if (item.children) {
-          searchMenu(item.children);
+          searchMenu(item.children, item.label);
         }
       }
     };
 
     searchMenu(menuItems);
 
-    if (foundLabel) return foundLabel;
+    if (foundLabel) return { page: foundLabel, section: foundParentLabel };
 
     const pathSegments = pathname.split('/').filter(Boolean);
     const pageNameRaw = pathSegments.length > 0 ? pathSegments[0] : 'Dashboard';
-    return pageNameRaw.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    return { page: pageNameRaw.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), section: null };
   };
 
-  const pageName = getPageNameFromMenu(location.pathname);
+  const { page: pageName, section: sectionName } = getPageNameFromMenu(location.pathname);
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [chatUnread, setChatUnread] = useState(0);
@@ -159,23 +161,27 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
           {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
         <h2 className="text-white text-2xl uppercase font-semibold tracking-tight">
-          User Interface <span className="text-yellow-200 text-md font-medium tracking-normal capitalize ml-1">| {pageName}</span>
+          User Interface <span className="text-yellow-200 text-md font-medium tracking-normal capitalize ml-1">
+            | {sectionName ? `${sectionName} > ` : ''}{pageName}
+          </span>
         </h2>
       </div>
 
       {/* Right */}
       <div className="flex items-center gap-3">
 
-        {/* Rank Badge */}
-        {myRank !== null && (
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300 shadow-sm cursor-help group relative">
-            <span className="text-[11px] font-black uppercase tracking-wider">Rank</span>
-            <span className="text-sm font-black leading-none text-[#06d6a0]">#{myRank}</span>
-            <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] font-bold px-2 py-1 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50 shadow-md">
-              Sales Leaderboard Position
+        {/* Task & Alerts Button */}
+        <button
+          onClick={() => navigate("/task-alerts")}
+          className="relative hidden sm:flex cursor-pointer items-center justify-center px-5 py-2 mr-2 rounded border border-red-500 bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition-all shadow-sm tracking-wider"
+        >
+          Task & Alerts
+          {newLeadsCount > 0 && (
+            <span className="absolute -top-2 -right-2 bg-white text-blue-700 text-[13px] min-w-[22px] h-[22px] px-1 rounded-full flex items-center justify-center font-black shadow-md border border-gray-200">
+              {newLeadsCount > 99 ? "99+" : newLeadsCount}
             </span>
-          </div>
-        )}
+          )}
+        </button>
 
         {/* Live Chat */}
         <div className="relative group">
@@ -208,21 +214,6 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
           </span>
         </div>
 
-        {/* Notifications */}
-        <div className="relative group">
-          <button
-            onClick={() => navigate('/notification')}
-            className="relative p-2.5 rounded-full border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300 shadow-sm"
-          >
-            <IoNotificationsOutline size={19} />
-            <span className="absolute -top-1 -right-1 bg-gradient-to-br from-red-500 to-orange-600 border border-white/20 text-white text-[9px] min-w-[15px] h-3.5 px-0.5 rounded-full flex items-center justify-center font-black shadow-sm">
-              2
-            </span>
-          </button>
-          <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] font-bold px-2 py-1 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50 shadow-md">
-            Notifications
-          </span>
-        </div>
 
         {/* To-Do */}
         <div className="relative hidden md:block group">
@@ -273,10 +264,10 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
             </div>
             <div className="hidden md:flex flex-col items-start justify-center max-w-[120px]">
               <span className="text-[8px] font-medium text-slate-400 uppercase tracking-widest mb-0.5 leading-none">
-                Welcome back,
+                Hello,
               </span>
-              <span className="text-[10px] font-md text-slate-200 uppercase tracking-widest truncate w-full text-left leading-none">
-                {fullProfile?.fullName || adminData?.username || "My Profile"}
+              <span className="text-[10px] font-md text-white uppercase tracking-widest truncate w-full text-left leading-none">
+                {(fullProfile?.fullName || adminData?.username || "My Profile").split(' ')[0]}!
               </span>
             </div>
             <div className="p-0.5">

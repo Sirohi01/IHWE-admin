@@ -5,13 +5,13 @@ export default function DashboardHeader({ fullProfile, currentUser, loading, glo
     <div className="flex flex-col lg:flex-row lg:justify-between lg:items-stretch gap-3 mb-1">
       {/* Left Welcome Info */}
       <div className="flex flex-col justify-center">
-        <p className="text-base lg:text-lg text-gray-500 mb-1 tracking-wide">Welcome back,</p>
+        <p className="text-base lg:text-lg text-gray-700 mb-1 tracking-wide">Welcome back,</p>
         <div className="flex items-center gap-2 mb-1.5">
           <h2
             className="text-[18px] lg:text-[20px] font-semibold text-gray-900 leading-tight"
             style={{ textShadow: '0 1px 0 rgba(255,255,255,0.9), 0 2px 4px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06)' }}
           >
-            {fullProfile?.fullName || currentUser?.username}.
+            {fullProfile?.fullName || currentUser?.username}!
           </h2>
           <>
             <style>{`
@@ -33,12 +33,12 @@ export default function DashboardHeader({ fullProfile, currentUser, loading, glo
                 display: inline-block;
               }
             `}</style>
-            <span className="text-[18px] waving-hand select-none ml-1">👋</span>
+            {/* <span className="text-[18px] waving-hand select-none ml-1">👋</span> */}
           </>
         </div>
         <div className="flex items-center gap-2.5 mt-0.5 flex-wrap">
           <p className="text-xs lg:text-sm text-gray-500 leading-relaxed">
-            Here's what's happening with your participation in IHWE 2026.
+            Here's what's happening with your participation in 9th Edition of IHWE  2026
           </p>
           {loading && (
             <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[#08775e] text-[9px] font-black uppercase tracking-wider animate-pulse shadow-sm">
@@ -52,16 +52,23 @@ export default function DashboardHeader({ fullProfile, currentUser, loading, glo
       <div className="flex flex-col sm:flex-row gap-3 items-center">
         {/* Global Period Dropdown */}
         <div className="flex items-center gap-2 px-2">
-          <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Period:</span>
-          <select 
-            value={globalPeriod} 
+          <span className="text-[11px] font-bold text-gray-800  tracking-wider">Duration</span>
+          <select
+            value={globalPeriod}
             onChange={(e) => setGlobalPeriod(e.target.value)}
-            className="text-[12px] bg-white border border-slate-200 px-2 py-1 font-bold rounded-lg text-slate-700 shadow-sm outline-none cursor-pointer"
+            className="text-[10px] bg-white border border-slate-200 px-2 py-1 font-bold rounded-lg text-slate-700 shadow-sm outline-none cursor-pointer"
           >
             <option value="today">Today</option>
-            <option value="this_week">This Week</option>
-            <option value="this_month">This Month</option>
+            <option value="this_week">Yesterday</option>
+            <option value="this_month">This Week</option>
+            <option value="this_year">Last Week</option>
+
+            <option value="today">This Month</option>
+            <option value="this_week">Last Month</option>
+            <option value="this_month">This Quarter</option>
+            <option value="this_year">Last Quarter</option>
             <option value="this_year">This Year</option>
+
           </select>
         </div>
 
@@ -85,7 +92,7 @@ export default function DashboardHeader({ fullProfile, currentUser, loading, glo
             <div className="w-[32px] h-[32px] flex items-center justify-center flex-shrink-0">
               <MapPin size={17} className="text-[#1a3a7c]" />
             </div>
-            <p className="text-[13px] font-medium text-[#1a3a7c] leading-snug" style={{ textShadow: '0 1px 2px rgba(26,58,124,0.15)' }}>
+            <p className="text-[11px] font-medium text-[#1a3a7c] leading-snug" style={{ textShadow: '0 1px 2px rgba(26,58,124,0.15)' }}>
               PRAGATI MAIDAN,<br />NEW DELHI, INDIA
             </p>
           </div>

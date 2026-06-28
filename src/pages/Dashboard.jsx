@@ -288,7 +288,7 @@ export default function Dashboard() {
 
       {/* Row 3 — Performance | Recent Activities | Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-2 mb-1.5">
-        <PerformanceOverview statsMetrics={statsMetrics} />
+        <PerformanceOverview statsMetrics={statsMetrics} globalPeriod={globalPeriod} />
         <RecentActivities    activityLogs={activityLogs} />
         <QuickActions />
       </div>

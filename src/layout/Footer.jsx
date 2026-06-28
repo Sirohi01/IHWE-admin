@@ -9,10 +9,10 @@ const Footer = ({ darkMode }) => (
 
       {/* COPYRIGHT */}
       <p
-        className={`text-[10px]  font-bold uppercase tracking-widest ${darkMode ? "text-white" : "text-white"
+        className={`text-[10px]  font-semibold tracking-widest ${darkMode ? "text-white" : "text-white"
           }`}
       >
-        © 2026 International Health & Wellness Expo. |<span> An Intellectual Property of Namo Gange Wellness Pvt. Ltd. All Rights Reserved Worldwide.</span></p>
+      © 2026 International Health & Wellness Expo | Namo Gange Wellness Pvt. Ltd. | |<span> All Rights Reserved.</span></p>
     </div>
   </footer >
 );

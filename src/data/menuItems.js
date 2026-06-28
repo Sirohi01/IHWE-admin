@@ -57,6 +57,7 @@ export const menuItems = [
     label: "IHWE 2026",
     icon: FileText,
     children: [
+      { label: "Sales Tools", path: "/sales-tools" },
       { label: "Add New Leads", path: "/ihweClientData2026/addNewClients" },
       { label: "New Leads List", path: "/ihweClientData2026/newLeadList" },
       { label: "Follow-Ups", path: "/ihweClientData2026/warmClientList" },
@@ -64,10 +65,28 @@ export const menuItems = [
       { label: "Hold / Lost Leads", path: "/ihweClientData2026/coldClientList" },
       // { label: "Master Data", path: "/ihweClientData2026/masterData" },
       // { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
-      { label: "Converted Clients", path: "/ihweClientData2026/confirmClientList" },
-      { label: "Exhibitor Registration", path: "/book-a-stand" },
+      // { label: "Exhibitor Section", path: "/ihweClientData2026/confirmClientList" },
+      // { label: "New  Registration", path: "/book-a-stand" },
     ],
   },
+
+ 
+    {
+    type: "dropdown",
+    label: "Exhibitor Section",
+    icon: FileText,
+    children: [
+      // { label: "Sales Tools", path: "/sales-tools" },
+      // { label: "Add New Leads", path: "/ihweClientData2026/addNewClients" },
+      // { label: "New Leads List", path: "/ihweClientData2026/newLeadList" },
+      // { label: "Follow-Ups", path: "/ihweClientData2026/warmClientList" },
+      // { label: "Hot Leads", path: "/ihweClientData2026/hotClientList" },
+      { label: "Exhibitor List", path: "/ihweClientData2026/confirmClientList" },
+      { label: "New  Registration", path: "/book-a-stand" },
+    ],
+  },
+
+
   {
     type: "dropdown",
     label: "Organic Expo 2026",
@@ -86,12 +105,6 @@ export const menuItems = [
   },
   { type: "item", label: "Master Data", icon: LibraryBig, path: "/ihweClientData2026/masterData" },
 
-  {
-    type: "item",
-    label: "Sales Tools",
-    icon: FileText,
-    path: "/sales-tools",
-  },
 
   {
     type: "item",
@@ -593,6 +606,15 @@ export const menuItems = [
   {
     type: "heading",
     label: "Admin Section",
+  },
+  {
+    type: "dropdown",
+    label: "Ownership Transfer",
+    icon: Users,
+    children: [
+      { label: "Transfer Client", path: "/transfer-client" },
+      { label: "Reassign Leads", path: "/reassign-leads" },
+    ],
   },
   {
     type: "item",

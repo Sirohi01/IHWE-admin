@@ -33,7 +33,7 @@ const BaseLeadPage = ({
   onSelectAll
 }) => {
   return (
-    <div className="w-full bg-[#f8fafc] min-h-[calc(100vh-110px)] xl:h-[calc(100vh-110px)] overflow-y-auto flex flex-col font-sans text-slate-800 p-4 md:px-6 lg:px-8">
+    <div className="w-full bg-[#f8fafc] min-h-[calc(100vh-110px)] xl:h-[calc(100vh-110px)] overflow-y-auto flex flex-col text-slate-800 p-4 md:px-6 lg:px-8" style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }}>
 
       {/* TOP HEADER */}
       {/* <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-4">
@@ -58,7 +58,7 @@ const BaseLeadPage = ({
       <div className="flex flex-col xl:flex-row gap-4 flex-grow items-stretch xl:min-h-0">
 
         {/* LEFT COLUMN: STATS & TABLE */}
-        <div className="flex-grow flex flex-col gap-4 w-full xl:w-[78%] xl:min-h-0">
+        <div className={`flex-grow flex flex-col gap-4 w-full ${rightSidebar ? 'xl:w-[78%]' : 'xl:w-full'} xl:min-h-0`}>
           <div>
             <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
               {title}
@@ -72,13 +72,13 @@ const BaseLeadPage = ({
           </div>
           {/* STATS CARDS */}
           {statCards && (
-            <div className={`grid grid-cols-2 md:grid-cols-3 xl:grid-cols-${cardsInRow} gap-3`}>
+            <div className={`grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3`}>
               {statCards}
             </div>
           )}
 
           {/* TABLE SECTION */}
-          <div className="flex-grow flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-h-[400px] xl:min-h-0">
+          <div className="flex-grow flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden min-h-[400px] xl:min-h-0">
 
             {/* Filter Bar */}
             {filterBar && (
@@ -103,7 +103,7 @@ const BaseLeadPage = ({
             <div className="overflow-auto flex-grow relative custom-scrollbar">
               <table className="w-full text-left border-collapse whitespace-nowrap text-[10px]">
                 <thead>
-                  <tr className="bg-[#334155] text-white uppercase tracking-wider">
+                  <tr className="text-white tracking-wider" style={{ backgroundColor: '#0A2947' }}>
                     <th className="px-2 py-2 w-8 text-center">
                       <input
                         type="checkbox"
@@ -132,9 +132,11 @@ const BaseLeadPage = ({
         </div>
 
         {/* RIGHT COLUMN: SIDEBAR */}
-        <div className="w-full xl:w-[20%] flex flex-col justify-between shrink-0 xl:h-full">
-          {rightSidebar}
-        </div>
+        {rightSidebar && (
+          <div className="w-full xl:w-[20%] flex flex-col justify-between shrink-0 xl:h-full">
+            {rightSidebar}
+          </div>
+        )}
 
       </div>
     </div>

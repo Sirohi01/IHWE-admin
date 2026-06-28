@@ -173,15 +173,15 @@ export default function ProposalsTable({ data = [], parentLoading = false }) {
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50/50 border-b border-[#EDF0F7]">
-              <th className="px-4 py-2 text-[12px] font-semibold text-slate-500 whitespace-nowrap">Proposal No.</th>
-              <th className="px-4 py-2 text-[12px] font-semibold text-slate-500 whitespace-nowrap">Client / Company</th>
-              <th className="px-4 py-2 text-[12px] font-semibold text-slate-500 whitespace-nowrap">Sales Executive</th>
-              <th className="px-4 py-2 text-[12px] font-semibold text-slate-500 whitespace-nowrap">Proposal Date</th>
-              <th className="px-4 py-2 text-[12px] font-semibold text-slate-500 whitespace-nowrap">Amount</th>
-              <th className="px-4 py-2 text-[12px] font-semibold text-slate-500 whitespace-nowrap">Status</th>
-              <th className="px-4 py-2 text-[12px] font-semibold text-slate-500 whitespace-nowrap">Action</th>
-            </tr>
+            <tr className="bg-gray-100 border-b border-[#EDF0F7]">
+              <th className="px-4 py-2 text-[11px] font-semibold text-black whitespace-nowrap">Proposal No.</th>
+              <th className="px-4 py-2 text-[11px] font-semibold text-black whitespace-nowrap">Client / Company</th>
+              <th className="px-4 py-2 text-[11px] font-semibold text-black whitespace-nowrap">Sales Executive</th>
+              <th className="px-4 py-2 text-[11px] font-semibold text-black whitespace-nowrap">Proposal Date</th>
+              <th className="px-4 py-2 text-[11px] font-semibold text-black whitespace-nowrap">Amount</th>
+              <th className="px-4 py-2 text-[11px] font-semibold text-black whitespace-nowrap">Status</th>
+                <th className="px-4 py-2 text-[12px] font-bold text-black whitespace-nowrap">Action</th>
+              </tr>
           </thead>
           <tbody>
             {loading ? (
@@ -208,13 +208,13 @@ export default function ProposalsTable({ data = [], parentLoading = false }) {
                     <td className="px-4 py-2 text-sm font-semibold text-slate-900">{item.companyName || item.company_name || item.consignee_name}</td>
                     <td className="px-4 py-2 text-sm text-slate-600">{item.added_by || 'Unassigned'}</td>
                     <td className="px-4 py-2 text-sm text-slate-600">{new Date(item.added).toLocaleDateString('en-GB')}</td>
-                    <td className="px-4 py-2 text-sm font-semibold text-slate-900">₹ {item.finalAmount || 0}</td>
+                    <td className="px-4 py-2 text-sm font-semibold text-slate-900 whitespace-nowrap">₹ {item.finalAmount || 0}</td>
                     <td className="px-4 py-2">{getStatusBadge(computedStatus)}</td>
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-3">
-                        <button disabled className="p-1.5 text-slate-400 hover:bg-slate-100 rounded transition-colors opacity-50 cursor-not-allowed"><Eye size={16} /></button>
-                        <button disabled className="p-1.5 text-slate-400 hover:bg-slate-100 rounded transition-colors opacity-50 cursor-not-allowed"><Download size={16} /></button>
-                        <button disabled className="p-1.5 text-slate-400 hover:bg-slate-100 rounded transition-colors opacity-50 cursor-not-allowed"><MoreVertical size={16} /></button>
+                        <button className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"><Eye size={16} /></button>
+                        <button className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors"><Download size={16} /></button>
+                        <button className="p-1.5 text-slate-700 hover:bg-slate-100 rounded transition-colors"><MoreVertical size={16} /></button>
                       </div>
                     </td>
                   </tr>

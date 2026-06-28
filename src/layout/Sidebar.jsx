@@ -266,16 +266,21 @@ export default function Sidebar({
                 transition={{ duration: 0.2, ease: "easeInOut" }}
                 className="sb-sub-border ml-5 mt-1 space-y-1 border-l pl-3 overflow-hidden"
               >
-                {item.children.map((sub) => (
-                  <NavLink
-                    key={sub.path}
-                    to={sub.path}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={({ isActive }) => `sb-sub-item block px-3 py-1.5 rounded-md sb-label transition-colors ${isActive ? "active" : ""}`}
-                  >
-                    {sub.label}
-                  </NavLink>
-                ))}
+                {item.children.map((sub, idx) => {
+                  if (sub.type === 'label') {
+                    return <div key={`label-${idx}`} className="px-3 py-1 mt-2 text-[10px] text-white/50 font-bold uppercase tracking-wider">{sub.label}</div>;
+                  }
+                  return (
+                    <NavLink
+                      key={sub.path || idx}
+                      to={sub.path}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={({ isActive }) => `sb-sub-item block px-3 py-1.5 rounded-md sb-label transition-colors ${isActive ? "active" : ""}`}
+                    >
+                      {sub.label}
+                    </NavLink>
+                  );
+                })}
               </motion.div>
             )}
           </AnimatePresence>
