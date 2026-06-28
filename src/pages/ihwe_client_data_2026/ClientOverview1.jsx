@@ -862,9 +862,14 @@ const ClientOverview1 = () => {
                   </button>
                 </div>
 
-                <div className="mt-1 text-gray-600 text-[10px] font-medium">
+                <div className="mt-1 flex flex-col gap-0.5 text-gray-600 text-[10px] font-medium">
                   <span>{isExhibitor ? (company.eventId?.name || "No Event") : (company.eventName || "No Event")}</span>
-                  <span className="whitespace-nowrap">{company.clientType || (isExhibitor ? "Confirmed Exhibitor" : "New Client")}</span>
+                  <span>
+                    {company.previousExhibition?.name 
+                      ? `Existing Exhibitor | ${company.previousExhibition.name} ${company.previousExhibition.year ? '| ' + company.previousExhibition.year : ''}`
+                      : (company.clientType || (isExhibitor ? "Confirmed Exhibitor" : "New Client"))
+                    }
+                  </span>
                 </div>
 
                 <div className="mt-2 space-y-2">
