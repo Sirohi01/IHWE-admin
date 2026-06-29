@@ -138,16 +138,16 @@ const AccountOverview = () => {
           <div className="overflow-x-auto flex-1 table-scroll-wrapper">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="text-[10px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
-                  <th className="pb-2 pr-3">Document Type</th>
-                  <th className="pb-2 pr-3">Document No.</th>
-                  <th className="pb-2 pr-3">Date</th>
-                  <th className="pb-2 pr-3">Amount</th>
-                  <th className="pb-2 pr-3">Status</th>
+                <tr className="text-[9px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
+                  <th className="pb-2 pr-2">Document Type</th>
+                  <th className="pb-2 pr-2">Document No.</th>
+                  <th className="pb-2 pr-2">Date</th>
+                  <th className="pb-2 pr-2">Amount</th>
+                  <th className="pb-2 pr-2">Status</th>
                   <th className="pb-2">Action</th>
                 </tr>
               </thead>
-              <tbody className="text-[12px] text-slate-700">
+              <tbody className="text-[11px] text-slate-700">
                 {recentDocuments.length === 0 && (
                   <tr>
                     <td colSpan={6} className="py-8 text-center text-slate-400">No documents yet.</td>
@@ -169,16 +169,16 @@ const AccountOverview = () => {
 
                   return (
                     <tr key={idx} className="border-b border-gray-50 last:border-0 hover:bg-slate-50/50">
-                      <td className="py-2.5 pr-3 whitespace-nowrap">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-medium whitespace-nowrap ${docTypeBg}`}>
+                      <td className="py-2.5 pr-2 whitespace-nowrap">
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium whitespace-nowrap ${docTypeBg}`}>
                           {doc.documentType}
                         </span>
                       </td>
-                      <td className="py-2.5 pr-3 font-medium text-[#1a2b4b] whitespace-nowrap">{doc.documentNo}</td>
-                      <td className="py-2.5 pr-3 whitespace-nowrap">{doc.date ? new Date(doc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</td>
-                      <td className="py-2.5 pr-3 font-medium text-[13px] text-[#1a2b4b] whitespace-nowrap">{formatCurrency(doc.amount)}</td>
-                      <td className="py-2.5 pr-3 whitespace-nowrap">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-medium whitespace-nowrap ${statusBg}`}>
+                      <td className="py-2.5 pr-2 font-medium text-[#1a2b4b] whitespace-nowrap">{doc.documentNo}</td>
+                      <td className="py-2.5 pr-2 whitespace-nowrap">{doc.date ? new Date(doc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</td>
+                      <td className="py-2.5 pr-2 font-medium text-[12px] text-[#1a2b4b] whitespace-nowrap">{formatCurrency(doc.amount)}</td>
+                      <td className="py-2.5 pr-2 whitespace-nowrap">
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium whitespace-nowrap ${statusBg}`}>
                           {doc.status}
                         </span>
                       </td>
@@ -210,15 +210,15 @@ const AccountOverview = () => {
           <div className="overflow-x-auto flex-1 flex flex-col justify-between table-scroll-wrapper">
             <table className="w-full text-left border-collapse mb-1">
               <thead>
-                <tr className="text-[10px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
-                  <th className="pb-2 pr-2">#</th>
-                  <th className="pb-2 pr-3">Schedule Type</th>
-                  <th className="pb-2 pr-3">Due Date</th>
-                  <th className="pb-2 pr-3">Due Amount</th>
+                <tr className="text-[9px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
+                  <th className="pb-2 pr-1">#</th>
+                  <th className="pb-2 pr-2">Schedule Type</th>
+                  <th className="pb-2 pr-2">Due Date</th>
+                  <th className="pb-2 pr-2">Due Amount</th>
                   <th className="pb-2">Status</th>
                 </tr>
               </thead>
-              <tbody className="text-[12px] text-slate-700">
+              <tbody className="text-[11px] text-slate-700">
                 {paymentSchedule.length === 0 && (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-slate-400">No payment schedule yet.</td>
@@ -226,12 +226,12 @@ const AccountOverview = () => {
                 )}
                 {paymentSchedule.map((schedule, idx) => (
                   <tr key={schedule.id} className="border-b border-gray-50 hover:bg-slate-50/50">
-                    <td className="py-2.5 pr-2 text-slate-400 font-medium whitespace-nowrap">{idx + 1}</td>
-                    <td className="py-2.5 pr-3 font-medium text-[#1a2b4b] whitespace-nowrap">{schedule.scheduleType}</td>
-                    <td className="py-2.5 pr-3 whitespace-nowrap">{schedule.dueDate}</td>
-                    <td className="py-2.5 pr-3 whitespace-nowrap">{formatCurrency(schedule.dueAmount)}</td>
+                    <td className="py-2.5 pr-1 text-slate-400 font-medium whitespace-nowrap">{idx + 1}</td>
+                    <td className="py-2.5 pr-2 font-medium text-[#1a2b4b] whitespace-nowrap">{schedule.scheduleType}</td>
+                    <td className="py-2.5 pr-2 whitespace-nowrap">{schedule.dueDate}</td>
+                    <td className="py-2.5 pr-2 whitespace-nowrap">{formatCurrency(schedule.dueAmount)}</td>
                     <td className="py-2.5 whitespace-nowrap">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-medium whitespace-nowrap ${schedule.status === 'Paid' ? 'bg-[#e6f7ec] text-[#00a86b]' : 'bg-[#fff1f2] text-[#ea580c]'}`}>
+                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium whitespace-nowrap ${schedule.status === 'Paid' ? 'bg-[#e6f7ec] text-[#00a86b]' : 'bg-[#fff1f2] text-[#ea580c]'}`}>
                         {schedule.status}
                       </span>
                     </td>
@@ -243,7 +243,7 @@ const AccountOverview = () => {
             {/* Total Row */}
             <div className="mt-1 p-3 bg-[#f8f9fc] rounded-lg flex justify-between items-center">
               <span className="font-medium text-[#1a2b4b]">Total</span>
-              <span className="text-[17px] font-medium text-[#194090]">{formatCurrency(financials.totalDue)}</span>
+              <span className="text-[15px] font-medium text-[#194090]">{formatCurrency(financials.totalDue)}</span>
             </div>
           </div>
         </div>
@@ -270,7 +270,7 @@ const AccountOverview = () => {
                 </div>
                 <div className="flex justify-between items-center gap-3">
                   <span className="font-medium text-slate-500 whitespace-nowrap">Amount Received</span>
-                  <span className="font-medium text-[#00a86b] text-[15px] whitespace-nowrap">{formatCurrency(lastPayment.amount_text)}</span>
+                  <span className="font-medium text-[#00a86b] text-[13px] whitespace-nowrap">{formatCurrency(lastPayment.amount_text)}</span>
                 </div>
                 <div className="flex justify-between items-center gap-3">
                   <span className="font-medium text-slate-500 whitespace-nowrap">Payment Mode</span>
