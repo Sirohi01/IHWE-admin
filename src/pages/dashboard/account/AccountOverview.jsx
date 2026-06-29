@@ -65,7 +65,7 @@ const AccountOverview = () => {
   const { companyInfo, financials, recentDocuments, paymentSchedule, lastPayment } = data;
 
   return (
-    <div className="bg-[#f8f9fc] p-6">
+    <div className="bg-[#f8f9fc] p-4">
 
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-[#194090] font-semibold mb-1">
