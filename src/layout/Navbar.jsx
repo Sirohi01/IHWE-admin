@@ -121,11 +121,20 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
 
     s.on("document_uploaded", (data) => {
       if (window.location.pathname !== "/task-alerts") {
-        setLatestDocument(data);
+        setLatestDocument({ type: 'document', ...data });
         setShowDemoAlert(true);
         setHasUnreadTaskAlert(true);
       }
     });
+    
+    s.on("accessory_order_placed", (data) => {
+      if (window.location.pathname !== "/task-alerts") {
+        setLatestDocument({ type: 'accessory', ...data });
+        setShowDemoAlert(true);
+        setHasUnreadTaskAlert(true);
+      }
+    });
+
     return () => { s.disconnect(); };
   }, []);
 
@@ -369,6 +378,9 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
                     {latestDocument ? (
                       <>
                         <span className="font-bold text-blue-700">{(() => {
+                          if (latestDocument.type === 'accessory') {
+                              return latestDocument.exhibitorName || 'A client';
+                          }
                           let compName = latestDocument.companyName;
                           if (!compName || compName === 'Unknown Client') {
                               const c = companiesArray.find(co => 
@@ -379,14 +391,16 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
                               compName = c ? c.companyName : 'A client';
                           }
                           return compName;
-                        })()}</span> has uploaded a new document.
+                        })()}</span> {latestDocument.type === 'accessory' ? 'has placed a new material/service request.' : 'has uploaded a new document.'}
                       </>
                     ) : (
                       <>You have <span className="font-bold text-red-700">pending tasks</span> that need your attention.</>
                     )}
                   </p>
                   {latestDocument && (
-                    <p className="text-[10px] text-red-800 font-bold uppercase tracking-wider">{latestDocument.document_name}</p>
+                    <p className="text-[10px] text-red-800 font-bold uppercase tracking-wider">
+                        {latestDocument.type === 'accessory' ? `Order: ${latestDocument.orderNo}` : latestDocument.document_name}
+                    </p>
                   )}
                 </div>
               </div>

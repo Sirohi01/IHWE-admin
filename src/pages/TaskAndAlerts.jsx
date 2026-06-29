@@ -109,7 +109,8 @@ const TaskAndAlerts = () => {
         setIsLoadingAcc(true);
         api.get('/api/stall-accessories/orders')
             .then(res => {
-                setAccOrders(res.data.data || []);
+                const unviewed = (res.data.data || []).filter(o => !o.isViewed);
+                setAccOrders(unviewed);
                 setIsLoadingAcc(false);
             })
             .catch(err => {
@@ -462,30 +463,15 @@ const TaskAndAlerts = () => {
                 {/* 4. Material / Service Requests */}
                 <div className="bg-white rounded-2xl p-5 border border-gray-100 flex flex-col justify-between" style={{ boxShadow: "rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em" }}>
                     <div>
-                        <div className="flex justify-between items-center mb-4">
-                            <CardHeader icon={Wrench} title="Material / Service Requests" colorClass="text-blue-600" />
-                            {accOrders.length > ACC_PER_PAGE && (
-                                <div className="flex items-center gap-1.5 bg-gray-50 rounded px-1.5 py-0.5">
-                                    <button 
-                                        onClick={() => setAccPage(p => Math.max(1, p - 1))}
-                                        disabled={accPage === 1}
-                                        className="text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:hover:text-gray-400"
-                                    >
-                                        <ChevronLeft size={14} />
-                                    </button>
-                                    <span className="text-[10px] font-bold text-gray-600 min-w-[20px] text-center">
-                                        {accPage} <span className="font-normal text-gray-400">/</span> {Math.ceil(accOrders.length / ACC_PER_PAGE) || 1}
-                                    </span>
-                                    <button 
-                                        onClick={() => setAccPage(p => Math.min(Math.ceil(accOrders.length / ACC_PER_PAGE), p + 1))}
-                                        disabled={accPage === Math.ceil(accOrders.length / ACC_PER_PAGE) || accOrders.length === 0}
-                                        className="text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:hover:text-gray-400"
-                                    >
-                                        <ChevronRight size={14} />
-                                    </button>
-                                </div>
-                            )}
-                        </div>
+                        <CardHeader 
+                            icon={Wrench} 
+                            title="Material / Service Requests" 
+                            colorClass="text-blue-600" 
+                            currentPage={accPage}
+                            totalPages={Math.ceil(accOrders.length / ACC_PER_PAGE) || 1}
+                            onPrev={() => setAccPage(p => Math.max(1, p - 1))}
+                            onNext={() => setAccPage(p => Math.min(Math.ceil(accOrders.length / ACC_PER_PAGE), p + 1))}
+                        />
                         <div className="space-y-3.5 min-h-[160px]">
                             {isLoadingAcc ? (
                                 Array(5).fill(0).map((_, idx) => (
@@ -501,21 +487,29 @@ const TaskAndAlerts = () => {
                                         ? `${order.items[0].name}${order.items.length > 1 ? ` (+${order.items.length - 1} more)` : ''}`
                                         : 'Accessories';
                                     return (
-                                        <div key={i} className="flex justify-between items-center gap-2 hover:bg-blue-50/50 p-1 -mx-1 rounded transition-colors">
-                                            <div className="flex-[2] overflow-hidden">
-                                                <p className="text-[11px] font-bold text-gray-700 truncate">{productName}</p>
-                                            </div>
-                                            <div className="flex-[1.5] overflow-hidden">
+                                        <div key={i} className="flex justify-between items-center hover:bg-blue-50/50 p-1 -mx-1 rounded transition-colors">
+                                            <div className="flex-1 overflow-hidden pr-2">
                                                 <p 
-                                                    className="text-[10px] font-medium text-[#0055DA] hover:underline cursor-pointer truncate"
-                                                    onClick={() => navigate(`/accessory-orders?search=${encodeURIComponent(order.exhibitorName || '')}`)}
+                                                    className="text-[11px] font-medium text-[#0055DA] hover:underline cursor-pointer truncate"
+                                                    onClick={async () => {
+                                                        try {
+                                                            await api.put(`/api/stall-accessories/orders/${order._id}/view`);
+                                                            setAccOrders(prev => prev.filter(o => o._id !== order._id));
+                                                        } catch (e) {
+                                                            console.error('Failed to mark order as viewed:', e);
+                                                        }
+                                                        navigate(`/accessory-orders?search=${encodeURIComponent(order.exhibitorName || '')}`);
+                                                    }}
                                                 >
                                                     {order.exhibitorName || 'Unknown Company'}
                                                 </p>
                                             </div>
-                                            <div className="flex-1 text-right">
-                                                <p className="text-[11px] font-bold text-[#23471d]">₹{order.grandTotal?.toLocaleString('en-IN')}</p>
+                                            <div className="flex-1 overflow-hidden">
+                                                <p className="text-[10px] font-bold text-[#4B1426] truncate">{productName}</p>
                                             </div>
+                                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-50 text-green-600 border border-green-100 whitespace-nowrap shrink-0">
+                                                ₹{order.grandTotal?.toLocaleString('en-IN')}
+                                            </span>
                                         </div>
                                     );
                                 })
