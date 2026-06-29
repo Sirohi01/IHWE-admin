@@ -4,8 +4,14 @@ import { toast } from 'react-toastify';
 import api from '../lib/api';
 import { resolveLinkedIds } from '../utils/resolveLinkedIds';
 import {
+    estimateItemsToDebitNoteItems,
+    fetchLatestEstimateForClient,
+    loadClientLikeProforma,
+} from '../utils/invoicePrefill';
+import {
     ChevronLeft, Info, Plus, Trash2, FileText,
     Eye, FileSearch, CircleDot, Wallet, TrendingUp, SlidersHorizontal, Upload,
+    List,
 } from 'lucide-react';
 
 const newItem = () => ({
@@ -111,9 +117,22 @@ const CreateDebitNote = () => {
                 ]);
 
                 const invoices = (Array.isArray(invRes.data) ? invRes.data : invRes.data?.data || [])
-                    .filter((inv) => linkedIds.includes(inv.companyId));
+                    .filter((inv) => linkedIds.includes(String(inv.companyId)));
                 const estimates = (Array.isArray(estRes.data) ? estRes.data : estRes.data?.data || [])
-                    .filter((est) => linkedIds.includes(est.companyId));
+                    .filter((est) => linkedIds.includes(String(est.companyId)));
+
+                if (estimates.length === 0) {
+                    try {
+                        const client = await loadClientLikeProforma(id);
+                        const latestEstimate = await fetchLatestEstimateForClient(id, client);
+                        if (latestEstimate && !estimates.some((est) => est._id === latestEstimate._id)) {
+                            estimates.push(latestEstimate);
+                        }
+                    } catch (estimateErr) {
+                        console.error('Failed to load fallback proforma for debit note', estimateErr);
+                    }
+                }
+
                 const allPayments = Array.isArray(payRes.data) ? payRes.data : payRes.data?.data || [];
                 setPayments(allPayments);
 
@@ -122,27 +141,40 @@ const CreateDebitNote = () => {
                         key: `invoice:${inv._id}`,
                         type: 'Invoice',
                         id: inv._id,
+                        companyId: inv.companyId,
                         label: `${inv.invoice_no} - ${inv.consignee_name || ''}`,
                         date: inv.invoice_date,
                         amount: inv.finalAmount,
                         consignee: inv.consignee_name,
                         state: inv.state,
                         docNo: inv.invoice_no,
+                        items: inv.items || [],
                     })),
                     ...estimates.map((est) => ({
                         key: `estimate:${est._id}`,
                         type: 'Proforma Invoice',
                         id: est._id,
+                        companyId: est.companyId,
                         label: `${est.est_no} - ${est.consignee_name || ''}`,
                         date: est.supply_date,
                         amount: est.finalAmount,
                         consignee: est.consignee_name,
                         state: est.state,
                         docNo: est.est_no,
-                        items: est.items,
+                        items: estimateItemsToDebitNoteItems(est.items || []),
                     })),
                 ];
                 setSourceDocs(docs);
+                if (docs.length > 0) {
+                    setForm((f) => {
+                        if (f.sourceKey && docs.some((doc) => doc.key === f.sourceKey)) return f;
+                        return {
+                            ...f,
+                            sourceKey: docs[0].key,
+                            clientState: docs[0].state || f.clientState,
+                        };
+                    });
+                }
             } catch (err) {
                 console.error('Failed to load invoices/estimates for debit note', err);
             }
@@ -244,7 +276,7 @@ const CreateDebitNote = () => {
         }
 
         const payload = {
-            companyId: id,
+            companyId: selectedDoc.companyId || id,
             debit_note_date: form.debitNoteDate,
             toInvoiceId: selectedDoc.id,
             toInvoiceNo: selectedDoc.docNo,
@@ -276,27 +308,16 @@ const CreateDebitNote = () => {
 
         try {
             setSubmitting(true);
-            const formData = new FormData();
-            Object.entries(payload).forEach(([key, value]) => {
-                if (key === 'items') {
-                    formData.append('items', JSON.stringify(value));
-                } else {
-                    formData.append(key, value ?? '');
-                }
-            });
-            if (attachmentFile) {
-                formData.append('attachment', attachmentFile);
-            }
-
-            await api.post('/api/debitnotes', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
+            await api.post('/api/debitnotes', payload, {
+                headers: { 'Content-Type': 'application/json' },
             });
 
             toast.success('Debit Note generated successfully!');
-            navigate(`/dashboard/account/${id}`);
+            navigate(`/debit-note-list/${id || 'all'}`);
         } catch (err) {
             console.error(err);
-            toast.error(err.response?.data?.message || 'Failed to generate debit note.');
+            const serverMessage = err.response?.data?.error || err.response?.data?.message;
+            toast.error(serverMessage || 'Failed to generate debit note.');
         } finally {
             setSubmitting(false);
         }
@@ -327,13 +348,22 @@ const CreateDebitNote = () => {
                         <p className="text-xs text-gray-500 mt-0.5">Raise debit note for additional charges, expenses or adjustments</p>
                     </div>
                 </div>
-                <button
-                    onClick={() => navigate(id ? `/dashboard/account/${id}` : -1)}
-                    className="flex items-center gap-1.5 border border-gray-200 rounded-md px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition shadow-sm"
-                >
-                    <ChevronLeft className="w-4 h-4" />
-                    Back to Overview
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => navigate(`/debit-note-list/${id || 'all'}`)}
+                        className="flex items-center gap-1.5 border border-purple-200 bg-purple-50 rounded-md px-3 py-1.5 text-xs font-semibold text-purple-700 hover:bg-purple-100 transition shadow-sm"
+                    >
+                        <List className="w-4 h-4" />
+                        All Debit Notes
+                    </button>
+                    <button
+                        onClick={() => navigate(id ? `/dashboard/account/${id}` : -1)}
+                        className="flex items-center gap-1.5 border border-gray-200 rounded-md px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition shadow-sm"
+                    >
+                        <ChevronLeft className="w-4 h-4" />
+                        Back to Overview
+                    </button>
+                </div>
             </div>
 
             <div className="max-w-[1400px] mx-auto px-4 pt-3 flex gap-3 items-start">
