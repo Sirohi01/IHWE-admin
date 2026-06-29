@@ -239,10 +239,11 @@ export default function MobilePassConfig() {
                   </div>
 
                   {/* Card Body - Inputs */}
-                  <div className="grid flex-1 grid-cols-2 gap-5 p-6 lg:grid-cols-4">
+                  <div className="grid flex-1 grid-cols-2 gap-5 p-6 lg:grid-cols-5">
                     {numberInput(item, "complimentaryQuota", "Free Quota", CheckCircle2)}
                     {numberInput(item, "totalQuota", "Total Quota", Ticket)}
                     {numberInput(item, "price", "Price (₹)", IndianRupee)}
+                    {numberInput(item, "gstPercentage", "GST (%)", Activity)}
                     {numberInput(item, "maxPerRequest", "Max/Req", Users)}
                   </div>
 
