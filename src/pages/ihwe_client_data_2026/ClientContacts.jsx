@@ -264,12 +264,12 @@ const ClientContacts = () => {
                         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2">
                         <Plus size={18} /> Add Team Member
                     </button>
-                    <button className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
+                    {/* <button className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
                         <Upload size={18} /> Import from Excel
                     </button>
                     <button className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
                         <Download size={18} /> Download Template
-                    </button>
+                    </button> */}
                 </div>
             </div>
 
@@ -286,7 +286,9 @@ const ClientContacts = () => {
                     </div>
                 </div>
 
-                {source === "ExhibitorRegistration" && (() => {
+                {(() => {
+                    const isExhibitor = source === "ExhibitorRegistration";
+                    const disabledClass = isExhibitor ? "" : "opacity-50 grayscale pointer-events-none";
                     const getFreeQuota = (type) => {
                         const config = passConfigs.find(c => c.passType?.toLowerCase() === type.toLowerCase());
                         return config ? config.complimentaryQuota : 0;
@@ -294,54 +296,62 @@ const ClientContacts = () => {
 
                     return (
                         <>
-                            <div className="bg-orange-50 border border-orange-100 p-4 rounded-xl flex items-center gap-4">
+                            <div className={`bg-orange-50 border border-orange-100 p-4 rounded-xl flex items-center gap-4 ${disabledClass}`}>
                                 <div className="w-12 h-12 bg-orange-500 text-white rounded-lg flex items-center justify-center shrink-0">
                                     <IdCard size={24} />
                                 </div>
                                 <div>
                                     <div className="text-2xl font-bold text-[#0A143D] leading-none">{String(stats.exhibitorPass).padStart(2, '0')}</div>
                                     <div className="text-xs font-semibold text-gray-600 mt-1">Exhibitor Pass</div>
-                                    <div className="text-[10px] text-gray-500 mt-1 font-medium">{String(stats.exhibitorPass).padStart(2, '0')} members • {String(getFreeQuota('exhibitor')).padStart(2, '0')} Free</div>
+                                    <div className="text-[10px] text-gray-500 mt-1 font-medium">
+                                        {isExhibitor ? `${String(stats.exhibitorPass).padStart(2, '0')} members • ${String(getFreeQuota('exhibitor')).padStart(2, '0')} Free` : "Not applicable"}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="bg-green-50 border border-green-100 p-4 rounded-xl flex items-center gap-4">
+                            <div className={`bg-green-50 border border-green-100 p-4 rounded-xl flex items-center gap-4 ${disabledClass}`}>
                                 <div className="w-12 h-12 bg-green-500 text-white rounded-lg flex items-center justify-center shrink-0">
                                     <Car size={24} />
                                 </div>
                                 <div>
                                     <div className="text-2xl font-bold text-[#0A143D] leading-none">{String(stats.vehiclePass).padStart(2, '0')}</div>
                                     <div className="text-xs font-semibold text-gray-600 mt-1">Vehicle Pass</div>
-                                    <div className="text-[10px] text-gray-500 mt-1 font-medium">{String(stats.vehiclePass).padStart(2, '0')} members • {String(getFreeQuota('vehicle')).padStart(2, '0')} Free</div>
+                                    <div className="text-[10px] text-gray-500 mt-1 font-medium">
+                                        {isExhibitor ? `${String(stats.vehiclePass).padStart(2, '0')} members • ${String(getFreeQuota('vehicle')).padStart(2, '0')} Free` : "Not applicable"}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="bg-purple-50 border border-purple-100 p-4 rounded-xl flex items-center gap-4">
+                            <div className={`bg-purple-50 border border-purple-100 p-4 rounded-xl flex items-center gap-4 ${disabledClass}`}>
                                 <div className="w-12 h-12 bg-purple-500 text-white rounded-lg flex items-center justify-center shrink-0">
                                     <Badge size={24} />
                                 </div>
                                 <div>
                                     <div className="text-2xl font-bold text-[#0A143D] leading-none">{String(stats.servicePass).padStart(2, '0')}</div>
                                     <div className="text-xs font-semibold text-gray-600 mt-1">Service Pass</div>
-                                    <div className="text-[10px] text-gray-500 mt-1 font-medium">{String(stats.servicePass).padStart(2, '0')} members • {String(getFreeQuota('service')).padStart(2, '0')} Free</div>
+                                    <div className="text-[10px] text-gray-500 mt-1 font-medium">
+                                        {isExhibitor ? `${String(stats.servicePass).padStart(2, '0')} members • ${String(getFreeQuota('service')).padStart(2, '0')} Free` : "Not applicable"}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center gap-4">
+                            <div className={`bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center gap-4 ${disabledClass}`}>
                                 <div className="w-12 h-12 bg-blue-400 text-white rounded-lg flex items-center justify-center shrink-0">
                                     <Users size={24} />
                                 </div>
                                 <div>
                                     <div className="text-2xl font-bold text-[#0A143D] leading-none">{String(stats.visitorPass).padStart(2, '0')}</div>
                                     <div className="text-xs font-semibold text-gray-600 mt-1">Visitor Pass</div>
-                                    <div className="text-[10px] text-gray-500 mt-1 font-medium">{String(stats.visitorPass).padStart(2, '0')} members • {String(getFreeQuota('visitor')).padStart(2, '0')} Free</div>
+                                    <div className="text-[10px] text-gray-500 mt-1 font-medium">
+                                        {isExhibitor ? `${String(stats.visitorPass).padStart(2, '0')} members • ${String(getFreeQuota('visitor')).padStart(2, '0')} Free` : "Not applicable"}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="bg-rose-50 border border-rose-100 p-4 rounded-xl flex items-center gap-4">
+                            <div className={`bg-rose-50 border border-rose-100 p-4 rounded-xl flex items-center gap-4 ${disabledClass}`}>
                                 <div className="w-12 h-12 bg-rose-500 text-white rounded-lg flex items-center justify-center shrink-0">
                                     <ShieldAlert size={24} />
                                 </div>
                                 <div>
                                     <div className="text-2xl font-bold text-[#0A143D] leading-none">{String(stats.pending).padStart(2, '0')}</div>
                                     <div className="text-xs font-semibold text-gray-600 mt-1">Pending Verification</div>
-                                    <div className="text-[10px] text-gray-500 mt-1">ID Proof / Details</div>
+                                    <div className="text-[10px] text-gray-500 mt-1">{isExhibitor ? "ID Proof / Details" : "Not applicable"}</div>
                                 </div>
                             </div>
                         </>
