@@ -82,7 +82,7 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
   const statusClass = STATUS_COLORS[companyInfo?.statusColor] || STATUS_COLORS.gray;
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-12 gap-3 mb-1">
+    <div className="grid grid-cols-1 xl:grid-cols-12 gap-2 mb-1">
       {/* Company Info Card */}
       <div className="xl:col-span-7 bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-4 flex flex-col md:flex-row gap-4 items-center md:items-start">
         <CompanyLogo logo={companyInfo?.logo} name={companyInfo?.name} />
@@ -136,10 +136,10 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
       </div>
 
       {/* Financial Cards - stretched to match the company card's height */}
-      <div className="xl:col-span-5 grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-4 flex flex-col justify-between h-full">
-          <div className="w-9 h-9 bg-[#ffebee] rounded-lg flex items-center justify-center">
-            <FileText size={17} className="text-[#ff4d4f]" />
+      <div className="xl:col-span-5 grid grid-cols-1 md:grid-cols-3 gap-2">
+        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-4 flex flex-col h-full">
+          <div className="w-12 h-12 mb-6 bg-[#ffebee] rounded-lg flex items-center justify-center">
+            <FileText size={28} className="text-[#ff4d4f]" />
           </div>
           <div>
             <h3 className="text-[12px] font-bold text-[#1a2b4b] mb-0.5">Total Due</h3>
@@ -150,9 +150,9 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-4 flex flex-col justify-between h-full">
-          <div className="w-9 h-9 bg-[#e6f7ec] rounded-lg flex items-center justify-center">
-            <Receipt size={17} className="text-[#00a86b]" />
+        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-4 flex flex-col h-full">
+          <div className="w-12 h-12 mb-6 bg-[#e6f7ec] rounded-lg flex items-center justify-center">
+            <Receipt size={28} className="text-[#00a86b]" />
           </div>
           <div>
             <h3 className="text-[12px] font-bold text-[#1a2b4b] mb-0.5">Paid Amount</h3>
@@ -163,9 +163,9 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-4 flex flex-col justify-between h-full">
-          <div className="w-9 h-9 bg-[#e6f0fa] rounded-lg flex items-center justify-center">
-            <Wallet size={17} className="text-[#194090]" />
+        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-4 flex flex-col h-full">
+          <div className="w-12 h-12 mb-6 bg-[#e6f0fa] rounded-lg flex items-center justify-center">
+            <Wallet size={28} className="text-[#194090]" />
           </div>
           <div>
             <h3 className="text-[12px] font-bold text-[#1a2b4b] mb-0.5">Remaining Balance</h3>
