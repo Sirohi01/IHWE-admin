@@ -12,6 +12,13 @@ import SearchableDropdown from '../components/SearchableDropdown';
 import InvoicePreviewTemplate from './ihwe_client_data_2026/invoice/InvoicePreviewTemplate';
 import { useReactToPrint } from 'react-to-print';
 import Swal from 'sweetalert2';
+import {
+    clientToInvoiceForm,
+    estimateItemsToInvoiceItems,
+    estimateToInvoiceForm,
+    fetchLatestEstimateForClient,
+    loadClientLikeProforma,
+} from '../utils/invoicePrefill';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 const newItem = () => ({
@@ -186,31 +193,23 @@ const CreateInvoice = () => {
                     }
                 } catch (err) {
                 }
+
                 setIsEditMode(false);
                 try {
-                    const clientRes = await api.get(`/api/companies/lookup/${id}`);
-                    const client = clientRes.data;
+                    const client = await loadClientLikeProforma(id);
                     if (client) {
-                        const isExhibitor = client._source === 'exhibitor';
-                        const name = isExhibitor ? client.exhibitorName : client.companyName;
-                        const gst = isExhibitor ? client.gstNo : client.gstNumber;
-                        const address = [client.address, client.city, client.state].filter(Boolean).join(', ');
-                        setForm(f => ({
-                            ...f,
-                            companyId: id,
-                            clientName: f.clientName || name || '',
-                            gstin: f.gstin || gst || '',
-                            company_name: f.company_name || name || '',
-                            company_addr: f.company_addr || address || '',
-                            consignee_name: f.consignee_name || name || '',
-                            consignee_addr: f.consignee_addr || address || '',
-                            billingAddress: f.billingAddress || address || '',
-                            shippingAddress: f.shippingAddress || address || '',
-                            country: f.country || client.country || 'India',
-                            state: f.state || client.state || '',
-                            city: f.city || client.city || '',
-                            billingPin: f.billingPin || client.pincode || '',
-                        }));
+                        const latestEstimate = await fetchLatestEstimateForClient(id, client);
+                        if (latestEstimate) {
+                            setSelectedPi(latestEstimate.est_no || '');
+                            setForm(f => estimateToInvoiceForm(latestEstimate, client, f));
+                            if (latestEstimate.items && latestEstimate.items.length > 0) {
+                                setItems(estimateItemsToInvoiceItems(latestEstimate.items));
+                            }
+                            return;
+                        }
+
+                        setSelectedPi('');
+                        setForm(f => clientToInvoiceForm(client, id, f));
                     }
                 } catch (lookupErr) {
                     console.error("Failed to load company details for prefill", lookupErr);
