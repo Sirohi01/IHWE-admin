@@ -192,14 +192,6 @@ const AccountOverview = () => {
                           >
                             <Eye size={16} />
                           </button>
-                          <button
-                            disabled={!viewPath}
-                            onClick={() => viewPath && navigate(viewPath)}
-                            className={viewPath ? "hover:text-blue-800" : "text-gray-300 cursor-not-allowed"}
-                            title={viewPath ? "Open document" : "No detail view available"}
-                          >
-                            <Download size={16} />
-                          </button>
                         </div>
                       </td>
                     </tr>
