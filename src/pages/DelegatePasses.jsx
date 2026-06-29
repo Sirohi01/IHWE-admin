@@ -191,8 +191,8 @@ const DelegatePasses = () => {
                 </td>
 
                 <td className="px-2 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-slate-200 shrink-0 overflow-hidden border border-slate-300">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-full bg-slate-200 shrink-0 overflow-hidden border border-slate-300">
                       <img src={row.avatar} alt={row.name} className="w-full h-full object-cover" />
                     </div>
                     <div>
@@ -241,12 +241,12 @@ const DelegatePasses = () => {
                 <td className="px-2 py-3 text-center">
                   {row.payStatus !== '-' ? (
                     <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] uppercase tracking-wider ${row.payStatus === 'Paid' ? 'bg-emerald-50 text-emerald-700' :
-                        row.payStatus === 'Partial' ? 'bg-blue-50 text-blue-700' :
-                          'bg-orange-50 text-orange-700'
+                      row.payStatus === 'Partial' ? 'bg-blue-50 text-blue-700' :
+                        'bg-orange-50 text-orange-700'
                       }`}>
                       <span className={`w-1 h-1 rounded-full ${row.payStatus === 'Paid' ? 'bg-emerald-500' :
-                          row.payStatus === 'Partial' ? 'bg-blue-500' :
-                            'bg-orange-500'
+                        row.payStatus === 'Partial' ? 'bg-blue-500' :
+                          'bg-orange-500'
                         }`}></span>
                       {row.payStatus}
                     </span>
