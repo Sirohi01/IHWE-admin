@@ -99,7 +99,9 @@ export const estimateItemsToInvoiceItems = (estimateItems = []) => {
     const qty = Number(item.qty) || 1;
     const size = item.size || "";
     const area = item.area || "";
-    const multiplier = Number(area) > 0 ? Number(area) : (Number(size) > 0 ? Number(size) : 1);
+    const normalizedSize = String(size).trim();
+    const sizeAsNumber = Number(normalizedSize);
+    const multiplier = Number(area) > 0 ? Number(area) : (Number.isFinite(sizeAsNumber) && sizeAsNumber > 0 ? sizeAsNumber : 1);
     const amount = roundAmount(Number(item.amount) || rate * qty * multiplier);
     const discountPct = Number(item.discountPct ?? item.disc ?? 0);
     const taxableValue = roundAmount(Number(item.taxableValue) || amount - (amount * discountPct) / 100);
@@ -113,8 +115,8 @@ export const estimateItemsToInvoiceItems = (estimateItems = []) => {
       description: item.description || "",
       hsn: item.hsn || "",
       qty,
-      size,
-      area,
+      size: normalizedSize || size || "",
+      area: item.area || (Number.isFinite(sizeAsNumber) && sizeAsNumber > 0 ? String(sizeAsNumber) : normalizedSize || ""),
       unit: item.unit || "Nos",
       rate,
       amount,
