@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ExternalLink, Search, ShoppingBag, Gift, CreditCard, CheckCircle2, Loader2, X } from 'lucide-react';
 import api from '../lib/api';
 
@@ -9,9 +10,10 @@ const STATUS_STYLE = {
 };
 
 export default function AccessoryOrders() {
+    const location = useLocation();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState('');
+    const [search, setSearch] = useState(new URLSearchParams(location.search).get('search') || '');
     const [approvingOrder, setApprovingOrder] = useState('');
     const [selectedOrder, setSelectedOrder] = useState(null);
 

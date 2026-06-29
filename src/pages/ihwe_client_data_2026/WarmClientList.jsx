@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
@@ -7,13 +7,48 @@ import BaseLeadPage from "../../layout/BaseLeadPage";
 import {
   Search, Plus, Upload, MessageCircle, CalendarDays, Clock3, Filter, ChevronDown, MoreVertical, ArrowRight, Bell, Phone, Mail
 } from "lucide-react";
-import { FaWhatsapp, FaStar } from 'react-icons/fa';
+import { FaWhatsapp, FaStar, FaRegStar } from 'react-icons/fa';
 import {
   PieChart,
   Pie,
   Cell,
   ResponsiveContainer,
 } from "recharts";
+
+// Hook: animate number from 0 to target when element enters viewport
+function useCountUp(target, duration = 1200) {
+  const [count, setCount] = useState(0);
+  const [started, setStarted] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting && !started) setStarted(true); },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [started]);
+
+  useEffect(() => {
+    if (!started) return;
+    const numTarget = parseFloat(target) || 0;
+    if (numTarget === 0) { setCount(0); return; }
+    const startTime = performance.now();
+    const tick = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      setCount(ease * numTarget);
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [started, target, duration]);
+
+  return { ref, count };
+}
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
@@ -89,89 +124,128 @@ const WarmClientList = () => {
 
   const getStatusStyle = (status) => {
     const s = (status || "").toLowerCase();
-    if (s.includes('today')) return "bg-orange-100 text-orange-700";
-    if (s.includes('overdue')) return "bg-red-100 text-red-700";
-    if (s.includes('upcoming')) return "bg-blue-100 text-blue-700";
-    return "bg-slate-100 text-slate-700";
+    if (s.includes('today')) return "bg-orange-50 text-orange-700 border-orange-100 dot-orange-500";
+    if (s.includes('overdue')) return "bg-red-50 text-red-700 border-red-100 dot-red-500";
+    if (s.includes('upcoming')) return "bg-blue-50 text-blue-700 border-blue-100 dot-blue-500";
+    if (s.includes('follow-up')) return "bg-cyan-50 text-cyan-700 border-cyan-100 dot-cyan-500";
+    return "bg-slate-50 text-slate-700 border-slate-200 dot-slate-500";
   };
 
   // Header Actions
   const headerActions = (
-    <>
-      <button onClick={() => navigate("/ihweClientData2026/addNewClients")} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm">
-        <Plus size={14} /> Add Lead
+    <div className="flex flex-wrap items-center gap-1.5">
+      <Link to="/ihweClientData2026/addNewClients" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <Plus size={12} /> Add Lead
+      </Link>
+      <Link to="/ihweClientData2026/uploadExhibitor" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <Upload size={12} /> Import Leads
+      </Link>
+      <button className="px-2.5 py-1.5 bg-[#0D530E] text-white rounded-md text-[10px] font-bold hover:bg-[#093a0a] transition-all shadow-sm flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <FaWhatsapp size={12} /> Send Bulk WhatsApp
       </button>
-      <button onClick={() => navigate("/ihweClientData2026/uploadExhibitor")} className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm">
-        <Upload size={14} /> Import Leads
-      </button>
-      <button className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm">
-        <MessageCircle size={14} /> Send Bulk WhatsApp
-      </button>
-    </>
+    </div>
   );
 
   // Stat Cards
   const dueTodayCount = overviewData?.[0]?.value || 0;
   const overdueCount = overviewData?.[3]?.value || 0;
-  const stats = [
-    { title: "Total Follow-Ups", value: pendingFollowUpsCount.toString(), subtitle: "Pending", icon: CalendarDays, bg: "bg-[#F3F7FF]", iconBg: "bg-[#E7F0FF]", iconColor: "text-[#2563EB]" },
-    { title: "Due Today", value: dueTodayCount.toString().padStart(2), subtitle: "Follow-ups", icon: CalendarDays, bg: "bg-[#FFF8EE]", iconBg: "bg-[#FFE8C7]", iconColor: "text-[#F97316]" },
-    { title: "Overdue", value: overdueCount.toString().padStart(2), subtitle: "Follow-ups", icon: Clock3, bg: "bg-[#FFF2F4]", iconBg: "bg-[#FFDDE3]", iconColor: "text-[#EF4444]" },
-    { title: "Due This Week", value: thisWeekLeads.toString().padStart(2), subtitle: "Follow-ups", icon: CalendarDays, bg: "bg-[#F1FBF5]", iconBg: "bg-[#DDF7E6]", iconColor: "text-[#16A34A]" },
-    { title: "Due This Month", value: thisMonthLeads.toString().padStart(2), subtitle: "Follow-ups", icon: CalendarDays, bg: "bg-[#F8F3FF]", iconBg: "bg-[#EBDDFF]", iconColor: "text-[#7C3AED]" },
-  ];
+
+  function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, label, subLabel, subColor }) {
+    const { ref, count } = useCountUp(rawValue);
+    return (
+      <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white ${gradientTo} p-3 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}>
+        <div className="relative z-10">
+          <div className="flex items-center gap-2.5 mb-2">
+            <div className={`w-9 h-9 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
+              {icon}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>
+                {displayValue(count)}
+              </span>
+              <span style={{ fontSize: '8.5px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>{label}</span>
+            </div>
+          </div>
+          <div style={{ fontSize: '9.5px', fontWeight: 700, color: subColor, textAlign: 'center', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>{subLabel}</div>
+        </div>
+      </div>
+    );
+  }
 
   const statCards = (
     <>
-      {stats.map((item, index) => {
-        const Icon = item.icon;
-        return (
-          <div key={index} className={`${item.bg} rounded-xl border border-gray-100 p-3 shadow-sm flex items-center gap-3`}>
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${item.iconBg}`}>
-              <Icon size={18} className={item.iconColor} />
-            </div>
-            <div>
-              <div className="text-[10px] font-bold text-slate-800">{item.title}</div>
-              <div className="flex items-baseline gap-2">
-                <div className="text-xl font-bold text-slate-800 leading-none mb-1">{item.value}</div>
-              </div>
-              <div className="text-[9px] text-slate-500 font-medium">{item.subtitle}</div>
-            </div>
-          </div>
-        );
-      })}
+      <AnimatedStatCard
+        icon={<CalendarDays className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
+        gradientTo="to-emerald-50" iconBg="bg-emerald-100"
+        rawValue={pendingFollowUpsCount}
+        displayValue={(c) => Math.round(c)}
+        label="TOTAL FOLLOW-UPS"
+        subLabel="Pending" subColor="#059669"
+      />
+      <AnimatedStatCard
+        icon={<CalendarDays className="w-5 h-5 text-orange-600" strokeWidth={2.5} />}
+        gradientTo="to-orange-50" iconBg="bg-orange-100"
+        rawValue={dueTodayCount}
+        displayValue={(c) => Math.round(c).toString().padStart(2, '0')}
+        label="DUE TODAY"
+        subLabel="Follow-ups" subColor="#ea580c"
+      />
+      <AnimatedStatCard
+        icon={<Clock3 className="w-5 h-5 text-red-600" strokeWidth={2.5} />}
+        gradientTo="to-red-50" iconBg="bg-red-100"
+        rawValue={overdueCount}
+        displayValue={(c) => Math.round(c).toString().padStart(2, '0')}
+        label="OVERDUE"
+        subLabel="Follow-ups" subColor="#dc2626"
+      />
+      <AnimatedStatCard
+        icon={<CalendarDays className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
+        gradientTo="to-blue-50" iconBg="bg-blue-100"
+        rawValue={thisWeekLeads}
+        displayValue={(c) => Math.round(c).toString().padStart(2, '0')}
+        label="DUE THIS WEEK"
+        subLabel="Follow-ups" subColor="#2563eb"
+      />
+      <AnimatedStatCard
+        icon={<CalendarDays className="w-5 h-5 text-purple-600" strokeWidth={2.5} />}
+        gradientTo="to-purple-50" iconBg="bg-purple-100"
+        rawValue={thisMonthLeads}
+        displayValue={(c) => Math.round(c).toString().padStart(2, '0')}
+        label="DUE THIS MONTH"
+        subLabel="Follow-ups" subColor="#9333ea"
+      />
     </>
   );
 
   // Filter Bar
   const filterBar = (
     <>
-      <div className="relative min-w-[200px]">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={12} />
+      <div className="relative shrink-0 w-[140px]">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" size={10} />
         <input
           type="text"
           placeholder="Search within follow-ups..."
           value={searchTerm}
           onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
-          className="w-full pl-7 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full pl-6 pr-2 py-1 bg-white border border-slate-200 rounded text-[9px] text-slate-800 font-medium placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
         />
       </div>
-      <button className="flex items-center gap-2 py-1.5 px-3 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700">
-        Follow-Up Date <CalendarDays size={12} className="text-slate-500" />
+      <button className="flex items-center gap-1 py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 shrink-0">
+        Follow-Up Date <CalendarDays size={10} className="text-slate-500" />
       </button>
-      <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
+      <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
         <option value="">Status</option>
         {uniqueStatuses.map((s, i) => <option key={i} value={s}>{s}</option>)}
       </select>
-      <select value={filterSource} onChange={e => { setFilterSource(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
+      <select value={filterSource} onChange={e => { setFilterSource(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
         <option value="">Source</option>
         {uniqueSources.map((s, i) => <option key={i} value={s}>{s}</option>)}
       </select>
-      <button className="flex items-center gap-2 py-1.5 px-3 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700">
-        Lead Owner: Me <ChevronDown size={12} className="text-slate-500" />
+      <button className="flex items-center gap-1 py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 shrink-0">
+        Lead Owner: Me <ChevronDown size={10} className="text-slate-500" />
       </button>
-      <button className="flex items-center gap-2 py-1.5 px-3 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700">
-        <Filter size={12} /> More Filters <ChevronDown size={12} className="text-slate-500" />
+      <button className="flex items-center gap-1 py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 shrink-0">
+        <Filter size={10} /> More Filters <ChevronDown size={10} className="text-slate-500" />
       </button>
     </>
   );
@@ -182,7 +256,7 @@ const WarmClientList = () => {
       <th className="px-2 py-2 font-medium">Company Name</th>
       <th className="px-2 py-2 font-medium">Source</th>
       <th className="px-2 py-2 font-medium">Lead Score</th>
-      <th className="px-2 py-2 font-medium">Status</th>
+      <th className="px-2 py-2 font-medium text-center">Status</th>
       <th className="px-2 py-2 font-medium">Follow-Up Date</th>
       <th className="px-2 py-2 font-medium">Last Conversation</th>
       <th className="px-2 py-2 w-10 text-center">Action</th>
@@ -200,67 +274,77 @@ const WarmClientList = () => {
       ) : allCompanies.map((row, i) => {
         const isSelected = selectedIds.includes(row._id);
         const source = row.dataSource || "Website";
+        const status = row.companyStatus || "Due Today";
+        const style = getStatusStyle(status);
+        const statusBg = style.split(' ')[0];
+        const statusText = style.split(' ')[1];
+        const statusDot = style.split(' ')[3]?.replace('dot-', 'bg-') || "bg-slate-500";
         return (
-          <tr key={row._id || i} className={`hover:bg-slate-50 transition-colors ${isSelected ? 'bg-blue-50/30' : ''}`}>
-            <td className="px-2 py-2 text-center">
-              <input
-                type="checkbox"
-                className="w-3 h-3 accent-blue-500 cursor-pointer rounded-sm"
-                checked={isSelected}
-                onChange={() => onSelectRow(row._id)}
-              />
-            </td>
-            <td className="px-2 py-2 font-semibold text-slate-800 text-[11px] cursor-pointer hover:text-blue-600">
-              <Link to={`/client-overview/${row._id}`}>{toTitleCase(row.companyName)}</Link>
-            </td>
-            <td className="px-2 py-2">
-              <span className={`px-2 py-0.5 rounded-full font-semibold text-[9px] ${getSourceStyle(source)}`}>
-                {toTitleCase(source)}
-              </span>
-            </td>
-            <td className="px-2 py-2">
-              <div className="flex items-center gap-1.5">
-                <div className="flex text-green-500 text-[9px]">
-                  <FaStar /><FaStar /><FaStar /><FaStar />
-                  <FaStar className="text-green-200" />
+          <tr key={row._id || i} className={`hover:bg-slate-50 transition-colors bg-white border-b border-slate-100 ${isSelected ? 'bg-blue-50/30' : ''}`}>
+              <td className="px-2 py-2 text-center">
+                <input
+                  type="checkbox"
+                  className="w-3 h-3 accent-blue-500 cursor-pointer rounded-sm"
+                  checked={isSelected}
+                  onChange={() => onSelectRow(row._id)}
+                />
+              </td>
+              <td className="px-2 py-2">
+                <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D', fontFamily: 'Inter, sans-serif' }}>
+                  <Link to={`/client-overview/${row._id}`}>{toTitleCase(row.companyName)}</Link>
                 </div>
-                <span className="font-semibold text-slate-700 text-[10px]">{row.leadScore || 70}</span>
-              </div>
-            </td>
-            <td className="px-2 py-2">
-              <span className={`inline-flex px-2 py-0.5 rounded font-semibold text-[9px] ${getStatusStyle(row.companyStatus || "Due Today")}`}>
-                {toTitleCase(row.companyStatus || "Due Today")}
-              </span>
-            </td>
-            <td className="px-2 py-2">
-              <div className="flex flex-col">
-                <span className="font-medium text-slate-800 text-[10px]">
-                  {row.updatedAt ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt)) : "-"}
+              </td>
+              <td className="px-2 py-2">
+                <span className={`px-1.5 py-0.5 rounded font-semibold text-[9px] ${getSourceStyle(source)}`}>
+                  @{toTitleCase(source)}
                 </span>
-                <span className="text-[9px] text-slate-500">
-                  {row.updatedAt ? new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt)) : "-"}
-                </span>
-              </div>
-            </td>
-            <td className="px-2 py-2">
-              <div className="flex gap-2">
-                <MessageCircle size={14} className="text-green-500 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-[9px] font-medium text-slate-800">
-                    {row.updatedAt ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt)) : "-"}
-                  </p>
-                  <p className="text-[8px] text-slate-500">WhatsApp</p>
+              </td>
+              <td className="px-2 py-1.5">
+                <div className="flex items-center gap-0.5 text-emerald-500 text-[9px]">
+                  <FaStar /><FaStar /><FaStar /><FaRegStar className="text-slate-300" /><FaRegStar className="text-slate-300" />
+                  <span className="ml-1 font-semibold text-slate-700">{row.leadScore || 70}</span>
                 </div>
-              </div>
-            </td>
-            <td className="px-2 py-2 text-center">
-              <div className="flex items-center justify-center gap-2">
-                <Phone size={14} className="text-green-600 cursor-pointer hover:text-green-700" />
-                <MessageCircle size={14} className="text-green-600 cursor-pointer hover:text-green-700" />
-                <MoreVertical size={14} className="text-slate-400 cursor-pointer hover:text-slate-700" />
-              </div>
-            </td>
-          </tr>
+              </td>
+              <td className="px-2 py-2 text-center">
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${statusBg} ${statusText} border-transparent`}>
+                  <span className={`w-1 h-1 rounded-full ${statusDot}`}></span>
+                  {toTitleCase(status)}
+                </span>
+              </td>
+              <td className="px-2 py-1.5">
+                <span className="text-[10px] font-medium whitespace-nowrap">
+                  {row.updatedAt ? (
+                    <>
+                      <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt))}</span>
+                      <span className="text-slate-400">, </span>
+                      <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt))}</span>
+                    </>
+                  ) : "-"}
+                </span>
+              </td>
+              <td className="px-2 py-1.5">
+                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                  <div className="shrink-0 p-1 bg-slate-100 rounded-full">
+                    <MessageCircle size={12} className="text-emerald-500" />
+                  </div>
+                  <span className="text-[10px] font-medium whitespace-nowrap">
+                    {row.updatedAt ? (
+                      <>
+                        <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt))}</span>
+                        <span className="text-slate-400">, </span>
+                        <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt))}</span>
+                      </>
+                    ) : "-"}
+                  </span>
+                  <span className="text-[9px] font-bold" style={{ color: '#0D530E' }}>(WhatsApp)</span>
+                </div>
+              </td>
+              <td className="px-2 py-1.5 text-right">
+                <button className="text-slate-400 hover:text-slate-700">
+                  <MoreVertical size={14} />
+                </button>
+              </td>
+            </tr>
         );
       })}
     </>
@@ -388,25 +472,50 @@ const WarmClientList = () => {
     </>
   );
 
+  const getPageNumbers = () => {
+    const paginationTotalPages = pagination?.totalPages || 1;
+    const pages = [];
+    if (paginationTotalPages <= 7) {
+      for (let i = 1; i <= paginationTotalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (page > 3) pages.push('...');
+      for (let i = Math.max(2, page - 1); i <= Math.min(paginationTotalPages - 1, page + 1); i++) pages.push(i);
+      if (page < paginationTotalPages - 2) pages.push('...');
+      pages.push(paginationTotalPages);
+    }
+    return pages;
+  };
+
+  const paginationTotalPages = pagination?.totalPages || 1;
+
   const paginationBar = (
     <>
-      <div className="text-slate-500">
-        Showing {totalLeads === 0 ? 0 : (page - 1) * limit + 1} to {Math.min(page * limit, totalLeads)} of {totalLeads} follow-ups
+      <div className="flex items-center gap-1.5" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <span className="text-[11px] font-bold" style={{ color: '#334155' }}>Showing</span>
+        <span className="text-[11px] font-black px-1.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-100" style={{ color: '#016B61' }}>
+          {totalLeads === 0 ? 0 : (page - 1) * limit + 1}–{Math.min(page * limit, totalLeads)}
+        </span>
+        <span className="text-[11px] font-bold" style={{ color: '#334155' }}>of</span>
+        <span className="text-[11px] font-black" style={{ color: '#15173D' }}>{totalLeads}</span>
+        <span className="text-[11px] font-bold" style={{ color: '#334155' }}>follow-ups</span>
       </div>
-      <div className="flex items-center gap-1">
-        <button onClick={() => setPage(1)} disabled={page === 1} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">«</button>
-        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">‹</button>
-
-        <button className={`w-6 h-6 rounded font-bold flex items-center justify-center bg-[#082A84] text-white`}>
-          {page}
-        </button>
-
-        <button onClick={() => setPage(p => Math.min(pagination?.totalPages || 1, p + 1))} disabled={page >= (pagination?.totalPages || 1)} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">›</button>
-        <button onClick={() => setPage(pagination?.totalPages || 1)} disabled={page >= (pagination?.totalPages || 1)} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">»</button>
+      <div className="flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <button onClick={() => setPage(1)} disabled={page === 1} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100" style={{ borderColor: '#e2e8f0', color: '#334155' }}>«</button>
+        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100" style={{ borderColor: '#e2e8f0', color: '#334155' }}>‹</button>
+        {getPageNumbers().map((p, i) =>
+          p === '...' ? (
+            <span key={`dot-${i}`} className="w-7 h-7 flex items-center justify-center text-[11px] text-slate-400 font-bold">…</span>
+          ) : (
+            <button key={p} onClick={() => setPage(p)} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-black border transition-all duration-200" style={p === page ? { backgroundColor: '#016B61', color: '#fff', borderColor: '#016B61', boxShadow: '0 2px 8px rgba(1,107,97,0.3)' } : { backgroundColor: '#fff', color: '#15173D', borderColor: '#e2e8f0' }}>{p}</button>
+          )
+        )}
+        <button onClick={() => setPage(p => Math.min(paginationTotalPages, p + 1))} disabled={page >= paginationTotalPages} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100" style={{ borderColor: '#e2e8f0', color: '#334155' }}>›</button>
+        <button onClick={() => setPage(paginationTotalPages)} disabled={page >= paginationTotalPages} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100" style={{ borderColor: '#e2e8f0', color: '#334155' }}>»</button>
       </div>
-      <div className="flex items-center gap-2 text-slate-500">
-        <span>Rows per page:</span>
-        <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }} className="border border-slate-200 rounded py-0.5 px-1 bg-white outline-none cursor-pointer text-slate-700">
+      <div className="flex items-center gap-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <span className="text-[11px] font-bold" style={{ color: '#334155' }}>Rows:</span>
+        <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }} className="border rounded-lg py-1 px-2 bg-white outline-none cursor-pointer text-[11px] font-bold" style={{ borderColor: '#e2e8f0', color: '#15173D', fontFamily: 'Inter, sans-serif' }}>
           <option value={10}>10</option>
           <option value={20}>20</option>
           <option value={50}>50</option>

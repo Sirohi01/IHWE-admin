@@ -66,8 +66,8 @@ export default function SalesTools() {
         <div className="xl:col-span-8 2xl:col-span-9">
           {/* Header */}
           <div className="mb-4">
-            <h1 className="text-[24px] font-md text-[#0F172A] mb-1">Sales Tools</h1>
-            <p className="text-sm font-medium text-slate-500">Manage proposals, quotations and lead assignments</p>
+            <h1 className="text-[16px] font-bold text-slate-800 mb-1 flex items-center gap-3">Sales Tools</h1>
+            <p className="text-xs text-slate-500 mt-1 font-medium">Manage proposals, quotations and lead assignments</p>
           </div>
 
           {/* Tabs */}

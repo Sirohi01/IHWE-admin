@@ -72,19 +72,19 @@ export default function NextActionPanel() {
   const totalUnread = rooms.reduce((s, r) => s + (r.unreadAdmin || 0), 0);
 
   return (
-    <div className="bg-white rounded-lg border border-slate-100 p-2 shadow-sm lg:col-span-3 col-span-1 flex flex-col justify-between hover:shadow-md transition-all duration-300 relative overflow-hidden group" >
+    <div className="bg-white rounded-lg border border-slate-100 p-2 shadow-sm lg:col-span-3 col-span-1 flex flex-col justify-between hover:shadow-md transition-all duration-300 relative overflow-hidden group" style={{ fontFamily: 'Inter, sans-serif' }}>
       {/* Decorative subtle header line */}
       <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#23471d] via-[#3a7031] to-[#d26019] opacity-70" />
 
       {/* Premium Header */}
-      <div className="flex justify-between items-center mb-1">
+      <div className="flex justify-between items-center -mx-2 -mt-2 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-[#23471d]/5 flex items-center justify-center text-[#23471d] shadow-sm border border-[#23471d]/10">
             <MessageSquare size={15} className="animate-pulse" />
           </div>
           <div>
-            <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest leading-none">Live Support</h3>
-            <span className="text-[8px] text-slate-400 font-extrabold uppercase tracking-wider mt-1 block">Assigned Messenger</span>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">Live Support</h3>
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">Assigned Messenger</span>
           </div>
         </div>
         
@@ -130,29 +130,29 @@ export default function NextActionPanel() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-1 leading-none mb-1.5">
                     <h5 className={`text-[11px] truncate flex items-center gap-1.5 ${
-                      room.unreadAdmin > 0 ? "font-black text-slate-900" : "font-extrabold text-slate-700"
+                      room.unreadAdmin > 0 ? "font-extrabold text-slate-900" : "font-bold text-slate-800"
                     }`}>
                       {/* Online dot indicator inside text block */}
                       <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                         isOnline(room) ? "bg-emerald-500 animate-pulse" : "bg-slate-300"
                       }`} />
-                      <span className={`text-[6.5px] px-1 py-0.5 rounded-sm font-black uppercase flex-shrink-0 leading-none ${
+                      <span className={`text-[9px] px-1 py-0.5 rounded font-bold uppercase flex-shrink-0 leading-none ${
                         room.isBuyer 
-                          ? 'bg-blue-100 text-blue-700 border border-blue-200/55' 
-                          : 'bg-amber-100 text-amber-800 border border-amber-200/55'
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200/55' 
+                          : 'bg-amber-50 text-amber-800 border border-amber-200/55'
                       }`}>
                         {room.isBuyer ? 'Buyer' : 'Exhibitor'}
                       </span>
                       <span className="truncate">{room.exhibitorName || room.buyerName || "Unknown"}</span>
                     </h5>
-                    <span className="text-[8px] text-slate-400 flex-shrink-0 font-semibold">{timeAgo(room.lastMessageAt)}</span>
+                    <span className="text-[9px] font-bold text-slate-400 flex-shrink-0 whitespace-nowrap">{timeAgo(room.lastMessageAt)}</span>
                   </div>
                   
-                  <p className="text-[9.5px] text-slate-500 truncate leading-none">
+                  <p className="text-[10px] font-bold text-slate-500 truncate leading-none">
                     {room.noMessages ? (
                       <span className="text-slate-300 italic">Start chatting</span>
                     ) : (
-                      <>{room.lastSenderType === "admin" ? <span className="font-bold text-[#23471d]/75">You: </span> : ""}{room.lastMessage}</>
+                      <>{room.lastSenderType === "admin" ? <span className="font-extrabold text-slate-700">You: </span> : ""}{room.lastMessage}</>
                     )}
                   </p>
                 </div>
@@ -173,7 +173,7 @@ export default function NextActionPanel() {
       <div className="border-t border-slate-100/80 pt-1.5 mt-1.5">
         <Link
           to="/exhibitor-chat"
-          className="w-full h-6 bg-slate-50 hover:bg-[#23471d] text-[10px] font-semibold text-slate-700 hover:text-white uppercase tracking-tight flex items-center justify-center gap-1.5 rounded-xl transition-all duration-300 border border-slate-100 shadow-sm group"
+          className="w-full h-6 bg-slate-50 hover:bg-[#23471d] text-[10px] font-extrabold text-slate-900 hover:text-white uppercase tracking-wide flex items-center justify-center gap-1.5 rounded-xl transition-all duration-300 border border-slate-100 shadow-sm group"
         >
           Open Chat Messenger 
           <ArrowRight size={12} className="transform group-hover:translate-x-1 transition-transform duration-200" />

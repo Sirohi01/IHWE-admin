@@ -485,26 +485,35 @@ export default function Sidebar({
         </div>
 
         <div className="sb-header relative z-10 flex py-2 items-center justify-center px-4 border-b border-white/10">
-          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-            <div className="w-56 h-20 bg-white rounded-full blur-[35px]" />
+          <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
+            {/* Main Center Glow */}
+            <div className="w-48 h-8 bg-white/70 rounded-full blur-[25px] absolute translate-y-3" />
+            {/* Extra Bottom Glow */}
+            <div className="w-40 h-8 bg-white/60 rounded-full blur-[25px] absolute translate-y-5" />
+            
+            {/* Highly Visible Sparkles */}
+            <div className="absolute top-2 left-10 w-2 h-2 bg-white rounded-full shadow-[0_0_10px_3px_rgba(255,255,255,1)] animate-pulse" />
+            <div className="absolute bottom-1 right-12 w-2.5 h-2.5 bg-white rounded-full shadow-[0_0_12px_4px_rgba(255,255,255,1)] animate-pulse" style={{ animationDuration: '2s' }} />
+            <div className="absolute top-5 right-6 w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_2px_rgba(255,255,255,1)] animate-pulse" style={{ animationDelay: '500ms' }} />
+            <div className="absolute bottom-4 left-6 w-2 h-2 bg-white rounded-full shadow-[0_0_10px_3px_rgba(255,255,255,1)] animate-pulse" style={{ animationDelay: '800ms' }} />
           </div>
           <img
             src={namogangelogo}
             alt="IHWE 2026"
-            className="relative h-[70px] w-full object-contain z-10"
-            style={{ filter: "drop-shadow(0 0 3px #ffffff) drop-shadow(0 0 15px #ffffff) drop-shadow(0 0 30px rgba(255,255,255,0.8))" }}
+            className="relative h-[65px] w-full object-contain z-10 my-1"
+            style={{ filter: "drop-shadow(0 0 2px rgba(255,255,255,0.8))" }}
           />
-          {/* {sidebarOpen && (
+          {sidebarOpen && (
             <button
               onClick={() => {
                 setSidebarOpen(false);
                 setMobileMenuOpen(false);
               }}
-              className="sb-close-btn absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg z-20"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-white rounded-xl z-20 shadow-md border border-slate-200 hover:bg-slate-50 transition-colors"
             >
-              <X size={18} />
+              <X size={16} className="text-[#08775e]" />
             </button>
-          )} */}
+          )}
         </div>
 
         {!sidebarOpen && (

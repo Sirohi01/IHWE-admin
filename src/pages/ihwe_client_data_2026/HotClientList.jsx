@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
@@ -6,7 +6,7 @@ import useDashboardStats from "../../hooks/useDashboardStats";
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import {
   Search, Download, Plus, Upload, MessageCircle, Phone, Mail, MoreVertical,
-  Calendar, CalendarDays, ArrowRight, RefreshCw, Flame, MessageSquare, Send, CheckCircle2
+  Calendar, CalendarDays, ArrowRight, RefreshCw, Flame, MessageSquare, Send, CheckCircle2, Filter, ChevronDown
 } from "lucide-react";
 import { FaStar, FaRegStar, FaWhatsapp } from 'react-icons/fa';
 import {
@@ -21,7 +21,40 @@ const toTitleCase = (str) => {
   return str.replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
-// Removed dummy rows
+// Hook: animate number from 0 to target when element enters viewport
+function useCountUp(target, duration = 1200) {
+  const [count, setCount] = useState(0);
+  const [started, setStarted] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting && !started) setStarted(true); },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [started]);
+
+  useEffect(() => {
+    if (!started) return;
+    const numTarget = parseFloat(target) || 0;
+    if (numTarget === 0) { setCount(0); return; }
+    const startTime = performance.now();
+    const tick = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      setCount(ease * numTarget);
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [started, target, duration]);
+
+  return { ref, count };
+}
 
 const HotClientList = () => {
   const dispatch = useDispatch();
@@ -99,7 +132,7 @@ const HotClientList = () => {
     if (s.includes('in discussion')) return "bg-orange-50 text-orange-700 border-orange-100 dot-orange-500";
     if (s.includes('proposal sent')) return "bg-blue-50 text-blue-700 border-blue-100 dot-blue-500";
     if (s.includes('ready')) return "bg-emerald-50 text-emerald-700 border-emerald-100 dot-emerald-500";
-    return "bg-slate-50 text-slate-700 border-slate-200 dot-slate-500";
+    return "bg-emerald-50 text-emerald-700 border-emerald-100 dot-emerald-500";
   };
 
   // Dynamic stats computation
@@ -140,114 +173,114 @@ const HotClientList = () => {
       icon: <FaWhatsapp size={10} className="text-emerald-500" />
     }));
 
-  // Header Actions
   const headerActions = (
-    <>
-      <div className="relative flex-grow xl:flex-grow-0 min-w-[200px] w-full sm:w-auto">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-        <input
-          type="text"
-          placeholder="Search by Name, Company, Email..."
-          className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      <button onClick={() => navigate("/ihweClientData2026/addNewClients")} className="flex items-center gap-2 bg-[#00a65a] hover:bg-[#008d4c] text-white px-4 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm">
-        <Plus size={14} /> Add Lead
+    <div className="flex flex-wrap items-center gap-1.5">
+      <Link to="/ihweClientData2026/addNewClients" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <Plus size={12} /> Add Lead
+      </Link>
+      <Link to="/ihweClientData2026/uploadExhibitor" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <Upload size={12} /> Import Leads
+      </Link>
+      <button className="px-2.5 py-1.5 bg-[#0D530E] text-white rounded-md text-[10px] font-bold hover:bg-[#093a0a] transition-all shadow-sm flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <FaWhatsapp size={12} /> Send Bulk WhatsApp
       </button>
-      <button onClick={() => navigate("/ihweClientData2026/uploadExhibitor")} className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm">
-        <Upload size={14} className="text-blue-500" /> Import Leads
-      </button>
-      <button className="flex items-center gap-2 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white px-4 py-2 rounded-lg text-xs font-semibold transition-colors shadow-sm">
-        <FaWhatsapp size={14} /> Send Bulk WhatsApp
-      </button>
-    </>
+    </div>
   );
+
+  function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, label, subLabel, subColor }) {
+    const { ref, count } = useCountUp(rawValue);
+    return (
+      <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white ${gradientTo} p-3 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}>
+        <div className="relative z-10">
+          <div className="flex items-center gap-2.5 mb-2">
+            <div className={`w-9 h-9 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
+              {icon}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>
+                {displayValue(count)}
+              </span>
+              <span style={{ fontSize: '8.5px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>{label}</span>
+            </div>
+          </div>
+          <div style={{ fontSize: '9.5px', fontWeight: 700, color: subColor, textAlign: 'center', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>{subLabel}</div>
+        </div>
+      </div>
+    );
+  }
 
   // Stat Cards
   const statCards = (
     <>
-      <div className="bg-white p-3 rounded-xl border border-rose-100 shadow-sm flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
-          <Flame size={20} className="fill-rose-500" />
-        </div>
-        <div>
-          <div className="text-slate-800 text-[10px] font-bold">Total Hot Leads</div>
-          <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{totalLeads}</div>
-            <div className="text-[9px] text-rose-500 font-medium">High potential</div>
-          </div>
-        </div>
-      </div>
-      <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
-          <MessageSquare size={18} />
-        </div>
-        <div>
-          <div className="text-slate-800 text-[10px] font-bold">In Discussion</div>
-          <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{inDiscussionCount}</div>
-            <div className="text-[9px] text-orange-600 font-medium">Actively engaged</div>
-          </div>
-        </div>
-      </div>
-      <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
-          <Send size={18} />
-        </div>
-        <div>
-          <div className="text-slate-800 text-[10px] font-bold">Proposal Sent</div>
-          <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{proposalSentCount}</div>
-            <div className="text-[9px] text-blue-600 font-medium">Awaiting response</div>
-          </div>
-        </div>
-      </div>
-      <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center shrink-0">
-          <CheckCircle2 size={18} />
-        </div>
-        <div>
-          <div className="text-slate-800 text-[10px] font-bold">Ready to Convert</div>
-          <div className="flex items-baseline gap-2">
-            <div className="text-xl font-bold text-slate-800 leading-none mb-1">{readyCount}</div>
-            <div className="text-[9px] text-emerald-600 font-medium">Hot prospects</div>
-          </div>
-        </div>
-      </div>
+      <AnimatedStatCard
+        icon={<Flame className="w-5 h-5 text-rose-600" strokeWidth={2.5} />}
+        gradientTo="to-rose-50" iconBg="bg-rose-100"
+        rawValue={totalLeads}
+        displayValue={(c) => Math.round(c)}
+        label="TOTAL HOT LEADS"
+        subLabel="High potential" subColor="#e11d48"
+      />
+      <AnimatedStatCard
+        icon={<MessageSquare className="w-5 h-5 text-orange-600" strokeWidth={2.5} />}
+        gradientTo="to-orange-50" iconBg="bg-orange-100"
+        rawValue={inDiscussionCount}
+        displayValue={(c) => Math.round(c)}
+        label="IN DISCUSSION"
+        subLabel="Actively engaged" subColor="#ea580c"
+      />
+      <AnimatedStatCard
+        icon={<Send className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
+        gradientTo="to-blue-50" iconBg="bg-blue-100"
+        rawValue={proposalSentCount}
+        displayValue={(c) => Math.round(c)}
+        label="PROPOSAL SENT"
+        subLabel="Awaiting response" subColor="#2563eb"
+      />
+      <AnimatedStatCard
+        icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
+        gradientTo="to-emerald-50" iconBg="bg-emerald-100"
+        rawValue={readyCount}
+        displayValue={(c) => Math.round(c)}
+        label="READY TO CONVERT"
+        subLabel="Hot prospects" subColor="#059669"
+      />
     </>
   );
 
   // Filter Bar
   const filterBar = (
     <>
-      <div className="relative min-w-[180px]">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={12} />
+      <div className="relative shrink-0 w-[140px]">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" size={10} />
         <input
           type="text"
-          placeholder="Search within my hot leads..."
+          placeholder="Search hot leads..."
           value={searchTerm}
           onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
-          className="w-full pl-7 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full pl-6 pr-2 py-1 bg-white border border-slate-200 rounded text-[9px] text-slate-800 font-medium placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
         />
       </div>
-      <select value={filterSource} onChange={e => { setFilterSource(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
+      <select value={filterSource} onChange={e => { setFilterSource(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
         <option value="">Source</option>
         {uniqueSources.map((s, i) => <option key={i} value={s}>{s}</option>)}
       </select>
-      <select value={filterIndustry} onChange={e => { setFilterIndustry(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
+      <select value={filterIndustry} onChange={e => { setFilterIndustry(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
         <option value="">Industry</option>
         {uniqueIndustries.map((s, i) => <option key={i} value={s}>{s}</option>)}
       </select>
-      <select value={filterLeadScore} onChange={e => { setFilterLeadScore(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
+      <select value={filterLeadScore} onChange={e => { setFilterLeadScore(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
         <option value="">Lead Score</option>
         <option value="90">90 - 100</option>
         <option value="80">80 - 89</option>
         <option value="70">70 - 79</option>
       </select>
-      <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }} className="py-1.5 px-2 bg-white border border-slate-200 rounded text-[10px] font-medium text-slate-700 outline-none cursor-pointer">
+      <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
         <option value="">Status</option>
         {uniqueStatuses.map((s, i) => <option key={i} value={s}>{s}</option>)}
       </select>
+      <button className="flex items-center gap-1 py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 shrink-0">
+        <Filter size={10} /> More Filters <ChevronDown size={10} className="text-slate-500" />
+      </button>
     </>
   );
 
@@ -258,7 +291,7 @@ const HotClientList = () => {
       <th className="px-2 py-2 font-medium">Source</th>
       <th className="px-2 py-2 font-medium">Industry</th>
       <th className="px-2 py-2 font-medium">Lead Score</th>
-      <th className="px-2 py-2 font-medium">Status</th>
+      <th className="px-2 py-2 font-medium text-center">Status</th>
       <th className="px-2 py-2 font-medium">Last Conversation</th>
       <th className="px-2 py-2 w-28 text-right">Action</th>
     </>
@@ -273,6 +306,7 @@ const HotClientList = () => {
           <td colSpan="8" className="px-2 py-4 text-center text-slate-500 font-medium">No results found</td>
         </tr>
       ) : allCompanies.map((row, i) => {
+        const isSelected = selectedIds.includes(row._id);
         const style = getStatusStyle(row.companyStatus || "Est./PI Sent");
         const statusBg = style.split(' ')[0];
         const statusText = style.split(' ')[1];
@@ -280,73 +314,74 @@ const HotClientList = () => {
         const source = row.dataSource || "Website";
 
         return (
-          <tr key={row._id || i} className="hover:bg-slate-50 transition-colors">
+          <tr key={row._id || i} className={`hover:bg-slate-50 transition-colors bg-white border-b border-slate-100 ${isSelected ? 'bg-blue-50/30' : ''}`}>
             <td className="px-2 py-2 text-center">
               <input
                 type="checkbox"
                 className="w-3 h-3 accent-blue-500 cursor-pointer rounded-sm"
-                checked={selectedIds.includes(row._id)}
+                checked={isSelected}
                 onChange={() => onSelectRow(row._id)}
               />
             </td>
-            <td className="px-2 py-2 font-semibold text-slate-800 text-[11px] cursor-pointer hover:text-blue-600">
-              <Link to={`/client-overview/${row._id}`}>{toTitleCase(row.companyName)}</Link>
+            <td className="px-2 py-2">
+              <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D', fontFamily: 'Inter, sans-serif' }}>
+                <Link to={`/client-overview/${row._id}`}>{toTitleCase(row.companyName)}</Link>
+              </div>
             </td>
             <td className="px-2 py-2">
               <span className={`px-1.5 py-0.5 rounded font-semibold text-[9px] ${getSourceStyle(source)}`}>
                 @{toTitleCase(source)}
               </span>
             </td>
-            <td className="px-2 py-2 text-slate-600">{toTitleCase(row.businessNature) || "-"}</td>
-            <td className="px-2 py-2">
-              <div className="flex flex-col gap-0.5">
-                <span className="font-bold text-rose-500 text-[10px]">{row.leadScore || 85}/100</span>
-                <div className="flex text-[8px] text-rose-500">
-                  {Array.from({ length: 5 }).map((_, starIdx) => {
-                    const starsToFill = Math.round((row.leadScore || 85) / 20);
-                    return starIdx < starsToFill ? <FaStar key={starIdx} /> : <FaRegStar key={starIdx} />;
-                  })}
-                </div>
+            <td className="px-2 py-2 text-[9px] font-bold" style={{ color: '#5E0006' }}>{toTitleCase(row.businessNature) || "-"}</td>
+            <td className="px-2 py-1.5">
+              <div className="flex items-center gap-0.5 text-rose-500 text-[9px]">
+                {Array.from({ length: 5 }).map((_, starIdx) => {
+                  const starsToFill = Math.round((row.leadScore || 85) / 20);
+                  return starIdx < starsToFill ? <FaStar key={starIdx} /> : <FaRegStar key={starIdx} className="text-slate-300" />;
+                })}
+                <span className="ml-1 font-semibold text-slate-700">{row.leadScore || 85}/100</span>
               </div>
             </td>
-            <td className="px-2 py-2">
-              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-medium border ${statusBg} ${statusText} border-transparent`}>
+            <td className="px-2 py-2 text-center">
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${statusBg} ${statusText} border-transparent`}>
                 <span className={`w-1 h-1 rounded-full ${statusDot}`}></span>
                 {toTitleCase(row.companyStatus || "Est./PI Sent")}
               </span>
             </td>
-            <td className="px-2 py-2">
-              <div className="flex items-center gap-1.5">
-                <div className="p-1 bg-slate-100 rounded-full"><MessageCircle className="text-slate-500" size={10} /></div>
-                <div>
-                  <div className="text-[9px] font-medium text-slate-800">
-                    {row.updatedAt ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt)) : "-"}
-                  </div>
-                  <div className="text-[8px] text-slate-500">
-                    {row.updatedAt ? new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt)) : "-"}
-                  </div>
+            <td className="px-2 py-1.5">
+              <div className="flex items-center gap-1.5 whitespace-nowrap">
+                <div className="shrink-0 p-1 bg-slate-100 rounded-full">
+                  <MessageCircle size={12} className="text-emerald-500" />
                 </div>
+                <span className="text-[10px] font-medium whitespace-nowrap">
+                  {row.updatedAt ? (
+                    <>
+                      <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt))}</span>
+                      <span className="text-slate-400">, </span>
+                      <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt))}</span>
+                    </>
+                  ) : "-"}
+                </span>
+                <span className="text-[9px] font-bold" style={{ color: '#0D530E' }}>(WhatsApp)</span>
               </div>
             </td>
             <td className="px-2 py-2 text-right">
               {row.exhibitorRegistrationId ? (
                 <button
                   disabled
-                  className="text-[10px] bg-slate-300 text-slate-600 px-2 py-1 rounded shadow-sm mr-2 cursor-not-allowed"
+                  className="text-[10px] font-bold bg-slate-100 text-slate-400 px-2 py-1 rounded-md shadow-sm mr-2 cursor-not-allowed" style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   Stand Booked
                 </button>
               ) : (
                 <button
                   onClick={() => navigate(`/book-a-stand/${row._id}`)}
-                  className="text-[10px] bg-[#00a65a] hover:bg-[#008d4c] text-white px-2 py-1 rounded shadow-sm mr-2"
+                  className="text-[10px] font-bold bg-[#124170] hover:bg-[#0A2643] text-white px-2 py-1 rounded-md shadow-sm mr-2 transition-all" style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   Book Stand
                 </button>
               )}
-              {/* <button className="text-slate-400 hover:text-slate-700">
-                <MoreVertical size={14} />
-              </button> */}
             </td>
           </tr>
         );
@@ -469,25 +504,50 @@ const HotClientList = () => {
     </>
   );
 
+  const getPageNumbers = () => {
+    const paginationTotalPages = pagination?.totalPages || 1;
+    const pages = [];
+    if (paginationTotalPages <= 7) {
+      for (let i = 1; i <= paginationTotalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (page > 3) pages.push('...');
+      for (let i = Math.max(2, page - 1); i <= Math.min(paginationTotalPages - 1, page + 1); i++) pages.push(i);
+      if (page < paginationTotalPages - 2) pages.push('...');
+      pages.push(paginationTotalPages);
+    }
+    return pages;
+  };
+
+  const paginationTotalPages = pagination?.totalPages || 1;
+
   const paginationBar = (
     <>
-      <div className="text-slate-500">
-        Showing {totalLeads === 0 ? 0 : (page - 1) * limit + 1} to {Math.min(page * limit, totalLeads)} of {totalLeads} leads
+      <div className="flex items-center gap-1.5" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <span className="text-[11px] font-bold" style={{ color: '#334155' }}>Showing</span>
+        <span className="text-[11px] font-black px-1.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-100" style={{ color: '#016B61' }}>
+          {totalLeads === 0 ? 0 : (page - 1) * limit + 1}–{Math.min(page * limit, totalLeads)}
+        </span>
+        <span className="text-[11px] font-bold" style={{ color: '#334155' }}>of</span>
+        <span className="text-[11px] font-black" style={{ color: '#15173D' }}>{totalLeads}</span>
+        <span className="text-[11px] font-bold" style={{ color: '#334155' }}>leads</span>
       </div>
-      <div className="flex items-center gap-1">
-        <button onClick={() => setPage(1)} disabled={page === 1} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">«</button>
-        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">‹</button>
-
-        <button className={`w-6 h-6 rounded font-bold flex items-center justify-center bg-[#00a65a] text-white`}>
-          {page}
-        </button>
-
-        <button onClick={() => setPage(p => Math.min(pagination?.totalPages || 1, p + 1))} disabled={page >= (pagination?.totalPages || 1)} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">›</button>
-        <button onClick={() => setPage(pagination?.totalPages || 1)} disabled={page >= (pagination?.totalPages || 1)} className="p-1 rounded hover:bg-slate-100 text-slate-400 disabled:opacity-50">»</button>
+      <div className="flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <button onClick={() => setPage(1)} disabled={page === 1} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100" style={{ borderColor: '#e2e8f0', color: '#334155' }}>«</button>
+        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100" style={{ borderColor: '#e2e8f0', color: '#334155' }}>‹</button>
+        {getPageNumbers().map((p, i) =>
+          p === '...' ? (
+            <span key={`dot-${i}`} className="w-7 h-7 flex items-center justify-center text-[11px] text-slate-400 font-bold">…</span>
+          ) : (
+            <button key={p} onClick={() => setPage(p)} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-black border transition-all duration-200" style={p === page ? { backgroundColor: '#016B61', color: '#fff', borderColor: '#016B61', boxShadow: '0 2px 8px rgba(1,107,97,0.3)' } : { backgroundColor: '#fff', color: '#15173D', borderColor: '#e2e8f0' }}>{p}</button>
+          )
+        )}
+        <button onClick={() => setPage(p => Math.min(paginationTotalPages, p + 1))} disabled={page >= paginationTotalPages} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100" style={{ borderColor: '#e2e8f0', color: '#334155' }}>›</button>
+        <button onClick={() => setPage(paginationTotalPages)} disabled={page >= paginationTotalPages} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100" style={{ borderColor: '#e2e8f0', color: '#334155' }}>»</button>
       </div>
-      <div className="flex items-center gap-2 text-slate-500">
-        <span>Rows per page:</span>
-        <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }} className="border border-slate-200 rounded py-0.5 px-1 bg-white outline-none cursor-pointer text-slate-700">
+      <div className="flex items-center gap-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <span className="text-[11px] font-bold" style={{ color: '#334155' }}>Rows:</span>
+        <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }} className="border rounded-lg py-1 px-2 bg-white outline-none cursor-pointer text-[11px] font-bold" style={{ borderColor: '#e2e8f0', color: '#15173D', fontFamily: 'Inter, sans-serif' }}>
           <option value={10}>10</option>
           <option value={20}>20</option>
           <option value={50}>50</option>
@@ -501,6 +561,7 @@ const HotClientList = () => {
       title="My Hot Leads"
       subtitle="High potential leads that are most likely to convert"
       badgeCount={<><Flame size={12} className="inline mr-1 fill-rose-500 text-rose-500" />{totalLeads || 0}</>}
+      cardsInRow={4}
       headerActions={headerActions}
       statCards={statCards}
       filterBar={filterBar}

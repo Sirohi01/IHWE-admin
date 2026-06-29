@@ -1,3 +1,5 @@
+import { User, Mail, Users, CreditCard, FileText, ClipboardList } from "lucide-react";
+
 // Utility: format "X min ago / X hr ago"
 function timeAgo(dateStr) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
@@ -10,12 +12,14 @@ function timeAgo(dateStr) {
 // Icon by activity type keyword
 function ActivityIcon({ message }) {
   const m = (message || "").toLowerCase();
-  if (m.includes("lead")) return <span className="text-base">🧑‍💼</span>;
-  if (m.includes("email") || m.includes("replied")) return <span className="text-base">✉️</span>;
-  if (m.includes("meeting")) return <span className="text-base">🤝</span>;
-  if (m.includes("payment") || m.includes("pay")) return <span className="text-base">💰</span>;
-  if (m.includes("proposal") || m.includes("opened")) return <span className="text-base">📄</span>;
-  return <span className="text-base">📋</span>;
+  const iconProps = { size: 14, className: "text-[#2C5EAD]" };
+  
+  if (m.includes("lead")) return <User {...iconProps} />;
+  if (m.includes("email") || m.includes("replied")) return <Mail {...iconProps} />;
+  if (m.includes("meeting")) return <Users {...iconProps} />;
+  if (m.includes("payment") || m.includes("pay")) return <CreditCard {...iconProps} />;
+  if (m.includes("proposal") || m.includes("opened")) return <FileText {...iconProps} />;
+  return <ClipboardList {...iconProps} />;
 }
 
 const iconBg = [
@@ -33,8 +37,8 @@ export default function RecentActivities({ activityLogs }) {
       style={{ boxShadow: 'rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em', fontFamily: 'Inter, sans-serif' }}
     >
       {/* Header */}
-      <div className="flex justify-between items-center mb-2 shrink-0">
-        <h3 className="text-sm font-bold" style={{ color: '#15173D' }}>Recent Activities</h3>
+      <div className="flex justify-between items-center -mx-2 -mt-2 mb-2 px-3 pt-2.5 pb-2.5 bg-slate-100 border-b border-slate-200 rounded-t-lg shrink-0">
+        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">Recent Activities</h3>
         <button className="text-[10px] font-bold text-[#08775e] hover:underline">View All</button>
       </div>
 
@@ -52,7 +56,7 @@ export default function RecentActivities({ activityLogs }) {
                 <ActivityIcon message={log.details || log.message} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold leading-snug truncate" style={{ color: '#15173D' }}>
+                <p className="text-[10px] font-bold leading-snug truncate text-[#2C5EAD]">
                   {log.details || log.message}
                 </p>
               </div>

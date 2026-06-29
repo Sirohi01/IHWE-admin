@@ -24,34 +24,59 @@ const CalIcon = () => (
   </svg>
 );
 
-export default function FollowupsTable({ followupsList }) {
+export default function FollowupsTable({ followupsList, loading }) {
   const navigate = useNavigate();
 
+  // Skeleton rows for loading state
+  const renderSkeletons = () => (
+    [...Array(3)].map((_, i) => (
+      <tr key={i} className="border-b border-slate-200">
+        <td className="py-2 pl-3 pr-3"><div className="h-2.5 w-24 bg-slate-200 rounded animate-pulse"></div></td>
+        <td className="py-2 pr-3"><div className="h-2.5 w-20 bg-slate-200 rounded animate-pulse"></div></td>
+        <td className="py-2 pr-3"><div className="h-2.5 w-14 bg-slate-200 rounded animate-pulse"></div></td>
+        <td className="py-2 pr-3"><div className="h-4 w-12 bg-slate-200 rounded-full animate-pulse"></div></td>
+        <td className="py-2 pr-3">
+          <div className="h-2.5 w-20 bg-slate-200 rounded animate-pulse mb-1"></div>
+          <div className="h-2 w-16 bg-slate-200 rounded animate-pulse"></div>
+        </td>
+        <td className="py-2">
+          <div className="flex items-center justify-center gap-1.5">
+            <div className="w-7 h-7 bg-slate-200 rounded-lg animate-pulse"></div>
+            <div className="w-7 h-7 bg-slate-200 rounded-lg animate-pulse"></div>
+            <div className="w-7 h-7 bg-slate-200 rounded-lg animate-pulse"></div>
+          </div>
+        </td>
+      </tr>
+    ))
+  );
+
   return (
-    <div className="bg-white rounded-lg p-2.5 lg:col-span-6 col-span-1" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+    <div className="bg-white rounded-lg border border-gray-100 lg:col-span-6 col-span-1 flex flex-col justify-start overflow-hidden" style={{ boxShadow: 'rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em', fontFamily: 'Inter, sans-serif' }}>
       {/* Header */}
-      <div className="flex justify-between items-center mb-2 flex-shrink-0">
-        <h3 className="text-base font-semibold text-slate-800">Today's Follow-ups</h3>
-        <Link to="/ihweClientData2026/warmClientList" className="text-sm font-semibold text-blue-500 hover:underline">
+      <div className="flex justify-between items-center mb-0 flex-shrink-0 px-3 pt-2.5 pb-2.5 bg-slate-100 border-b border-slate-200">
+        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">Today's Follow-ups</h3>
+        <Link to="/ihweClientData2026/warmClientList" className="text-[10px] font-bold text-blue-500 hover:underline">
           View All
         </Link>
       </div>
 
-      <div className="overflow-x-auto -mx-1 px-1">
-        <div className="overflow-y-auto pr-1" style={{ maxHeight: '140px', scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}>
+      <div className="overflow-x-auto">
+        <div className="overflow-y-auto" style={{ maxHeight: '140px', scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}>
           <table className="w-full text-left border-collapse">
-            <thead className="sticky top-0 bg-[#f8fafc] z-10 shadow-[0_1px_2px_rgba(0,0,0,0.05)] border-b border-slate-200" style={{ fontFamily: 'Inter, sans-serif' }}>
-              <tr>
-                <th className="py-2.5 px-2 text-[10px] font-bold text-[#15173D] whitespace-nowrap text-left rounded-tl-md">Client Name</th>
-                <th className="py-2.5 pr-2 text-[10px] font-bold text-[#15173D] whitespace-nowrap text-left">Company</th>
-                <th className="py-2.5 pr-2 text-[10px] font-bold text-[#15173D] whitespace-nowrap text-left">Time</th>
-                <th className="py-2.5 pr-2 text-[10px] font-bold text-[#15173D] whitespace-nowrap text-left">Priority</th>
-                <th className="py-2.5 pr-2 text-[10px] font-bold text-[#15173D] whitespace-nowrap text-left">Last Conversation</th>
-                <th className="py-2.5 px-2 text-[10px] font-bold text-[#15173D] whitespace-nowrap text-center rounded-tr-md">Action</th>
+            <thead className="sticky top-0 z-10" style={{ fontFamily: 'Inter, sans-serif' }}>
+              <tr className="text-white tracking-wider" style={{ backgroundColor: '#0A2947' }}>
+                <th className="py-2.5 pl-3 pr-2 text-[10px] font-medium whitespace-nowrap text-left">Client Name</th>
+                <th className="py-2.5 pr-2 text-[10px] font-medium whitespace-nowrap text-left">Company</th>
+                <th className="py-2.5 pr-2 text-[10px] font-medium whitespace-nowrap text-left">Time</th>
+                <th className="py-2.5 pr-2 text-[10px] font-medium whitespace-nowrap text-left">Priority</th>
+                <th className="py-2.5 pr-2 text-[10px] font-medium whitespace-nowrap text-left">Last Conversation</th>
+                <th className="py-2.5 pr-3 pl-2 text-[10px] font-medium whitespace-nowrap text-center">Action</th>
               </tr>
             </thead>
             <tbody style={{ fontFamily: 'Inter, sans-serif' }}>
-              {followupsList.length === 0 ? (
+              {loading ? (
+                renderSkeletons()
+              ) : followupsList.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="py-4 text-center text-slate-400 italic text-sm">
                     No scheduled follow-ups for today
@@ -62,11 +87,11 @@ export default function FollowupsTable({ followupsList }) {
                   <tr
                     key={i}
                     onClick={() => navigate(`/client-overview/${item.id}`)}
-                    className="border-b border-slate-100 hover:bg-slate-50 transition cursor-pointer"
+                    className="border-b border-slate-200 hover:bg-slate-50 transition cursor-pointer"
                   >
                     {/* Client Name */}
-                    <td className="py-2 pr-3">
-                      <span className="text-[10px] font-bold" style={{ color: '#15173D' }}>{item.name}</span>
+                    <td className="py-2 pl-3 pr-3">
+                      <span className="text-[10px] font-bold text-blue-600">{item.name}</span>
                     </td>
 
                     {/* Company */}
@@ -100,7 +125,7 @@ export default function FollowupsTable({ followupsList }) {
                         {/* Call */}
                         <a
                           href={`tel:${item.phone}`}
-                          className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition"
+                          className="w-7 h-7 rounded-lg bg-red-50 border border-red-100 text-red-600 flex items-center justify-center hover:bg-red-100 transition"
                           title="Call"
                         >
                           <PhoneIcon />

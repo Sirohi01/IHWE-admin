@@ -209,10 +209,12 @@ export default function QuotationsTable({ data = [], parentLoading = false }) {
                 }
 
                 return (
-                  <tr key={item._id || index} className="border-b border-slate-100 bg-white hover:bg-slate-50/50 transition-colors">
+                  <tr key={item._id || index} className="border-b border-slate-100 bg-white hover:bg-slate-50/50 transition-colors group">
                     <td className="px-2 py-2 text-center font-bold" style={{ color: '#5E0006' }}>{item.est_no}</td>
                     <td className="px-2 py-2">
-                      <div className="font-bold text-[11px]" style={{ color: '#093C5D' }}>{item.companyName || item.company_name || item.consignee_name}</div>
+                      <div className="font-bold text-[11px]" style={{ color: '#093C5D' }}>
+                        {item.companyName || item.company_name || item.consignee_name}
+                      </div>
                     </td>
                     <td className="px-2 py-2 font-bold text-blue-600">{item.added_by || 'Unassigned'}</td>
                     <td className="px-2 py-2 text-center font-medium">{new Date(item.added).toLocaleDateString('en-GB')}</td>
@@ -225,9 +227,9 @@ export default function QuotationsTable({ data = [], parentLoading = false }) {
                       }`}>{computedStatus}</span>
                     </td>
                     <td className="px-2 py-2 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button disabled className="p-1 text-blue-400 hover:bg-blue-50 rounded transition-colors opacity-50 cursor-not-allowed"><Eye size={13} /></button>
-                        <button disabled className="p-1 text-emerald-400 hover:bg-emerald-50 rounded transition-colors opacity-50 cursor-not-allowed"><Download size={13} /></button>
+                      <div className="flex items-center justify-center gap-1.5 transition-opacity">
+                        <button className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"><Eye size={13} /></button>
+                        <button className="p-1 text-emerald-600 hover:bg-emerald-50 rounded transition-colors"><Download size={13} /></button>
                       </div>
                     </td>
                   </tr>

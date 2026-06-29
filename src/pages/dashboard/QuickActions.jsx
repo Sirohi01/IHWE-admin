@@ -133,7 +133,9 @@ export default function QuickActions() {
         className="bg-white rounded-lg border border-gray-100 p-2 lg:col-span-3 col-span-1 flex flex-col"
         style={{ boxShadow: 'rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em', fontFamily: 'Inter, sans-serif' }}
       >
-        <h3 className="text-sm font-bold mb-1.5 shrink-0" style={{ color: '#15173D' }}>Quick Actions</h3>
+        <div className="flex justify-between items-center -mx-2 -mt-2 mb-2 px-3 pt-2.5 pb-2.5 bg-slate-100 border-b border-slate-200 rounded-t-lg shrink-0">
+          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">Quick Actions</h3>
+        </div>
 
         <div className="grid grid-cols-4 gap-1 flex-1 content-center">
           {ACTIONS.map((action) => (

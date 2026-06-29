@@ -14,8 +14,8 @@ export default function TopLeadsCard({ userLeads }) {
   return (
     <div className="bg-white rounded-lg border border-gray-100 p-2 lg:col-span-3 col-span-1 flex flex-col" style={{ boxShadow: 'rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em', fontFamily: 'Inter, sans-serif' }}>
       {/* Header */}
-      <div className="flex justify-between items-center mb-1">
-        <h3 className="text-sm font-bold" style={{ color: '#15173D' }}>Top Leads (High Potential)</h3>
+      <div className="flex justify-between items-center -mx-2 -mt-2 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">Top Leads (High Potential)</h3>
         <Link to="/ihweClientData2026/hotClientList" className="text-[10px] font-bold text-blue-500 hover:underline">
           View All
         </Link>
@@ -25,8 +25,8 @@ export default function TopLeadsCard({ userLeads }) {
       {hotLeads.length > 0 && (
         <div className="flex items-center mb-1 px-1">
           <div className="flex-1" />
-          <div className="w-12 text-[9px] font-bold text-slate-400 text-center">Score</div>
-          <div className="w-20 text-[9px] font-bold text-slate-400 text-center">Est. Value</div>
+          <div className="w-12 text-[9px] font-bold text-[#111844] text-center">Score</div>
+          <div className="w-20 text-[9px] font-bold text-[#111844] text-center">Est. Value</div>
           <div className="w-14" />
         </div>
       )}
@@ -57,9 +57,9 @@ export default function TopLeadsCard({ userLeads }) {
 
                 {/* Company + Name + Badge */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold leading-tight truncate" style={{ color: '#15173D' }}>{lead.companyName}</p>
+                  <p className="text-[11px] font-bold text-slate-800 leading-tight truncate">{lead.companyName}</p>
                   <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                    <span className="text-[9px] font-bold truncate" style={{ color: '#093C5D' }}>{name}</span>
+                    <span className="text-[9px] font-bold text-slate-700 truncate">{name}</span>
                     {isHot && (
                       <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-rose-50 text-rose-500 border border-rose-100 flex-shrink-0">Hot</span>
                     )}
@@ -71,12 +71,12 @@ export default function TopLeadsCard({ userLeads }) {
 
                 {/* Score */}
                 <div className="w-12 text-center">
-                  <span className="text-[10px] font-bold" style={{ color: '#15173D' }}>{SCORES[i]}</span>
+                  <span className="text-[10px] font-bold text-slate-800">{SCORES[i]}</span>
                 </div>
 
                 {/* Est. Value */}
                 <div className="w-20 text-center">
-                  <span className="text-[10px] font-bold" style={{ color: '#016B61' }}>{EST_VALUE[i]}</span>
+                  <span className="text-[10px] font-bold text-emerald-600">{EST_VALUE[i]}</span>
                 </div>
 
                 {/* Call button */}

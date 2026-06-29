@@ -233,7 +233,7 @@ const NewLeadList = () => {
         <input
           type="text"
           placeholder="Search lead by name, company, email, mobile..."
-          className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-emerald-500 w-64"
+          className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 font-medium placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 w-64"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -242,7 +242,7 @@ const NewLeadList = () => {
       <select
         value={filterSource}
         onChange={(e) => setFilterSource(e.target.value)}
-        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-emerald-500 shrink-0"
+        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 font-medium focus:outline-none focus:border-emerald-500 shrink-0"
       >
         <option value="">Source</option>
         {uniqueSources.map(s => (
@@ -253,7 +253,7 @@ const NewLeadList = () => {
       <select
         value={filterStatus}
         onChange={(e) => setFilterStatus(e.target.value)}
-        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-emerald-500 shrink-0"
+        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 font-medium focus:outline-none focus:border-emerald-500 shrink-0"
       >
         <option value="">Status</option>
         {uniqueStatuses.map(s => (
@@ -264,7 +264,7 @@ const NewLeadList = () => {
       <select
         value={filterIndustry}
         onChange={(e) => setFilterIndustry(e.target.value)}
-        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-emerald-500 shrink-0"
+        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 font-medium focus:outline-none focus:border-emerald-500 shrink-0"
       >
         <option value="">Industry</option>
         {uniqueIndustries.map(s => (
@@ -276,7 +276,7 @@ const NewLeadList = () => {
         <select
           value={filterAssignedTo}
           onChange={(e) => setFilterAssignedTo(e.target.value)}
-          className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-emerald-500 shrink-0"
+          className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 font-medium focus:outline-none focus:border-emerald-500 shrink-0"
         >
           <option value="">Assigned To</option>
           {uniqueAssignedTo.map(s => (
@@ -368,10 +368,16 @@ const NewLeadList = () => {
                   <div className="shrink-0 p-1 bg-slate-100 rounded-full">
                     {getConvIcon("WhatsApp")}
                   </div>
-                  <span className="text-[10px] font-medium text-slate-800 whitespace-nowrap">
-                    {row.updatedAt ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt)) : "-"}
+                  <span className="text-[10px] font-medium whitespace-nowrap">
+                    {row.updatedAt ? (
+                      <>
+                        <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt))}</span>
+                        <span className="text-slate-400">, </span>
+                        <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt))}</span>
+                      </>
+                    ) : "-"}
                   </span>
-                  <span className="text-[9px] text-slate-500">(WhatsApp)</span>
+                  <span className="text-[9px] font-bold" style={{ color: '#0D530E' }}>(WhatsApp)</span>
                 </div>
               </td>
               <td className="px-2 py-1.5 text-right">
@@ -389,8 +395,8 @@ const NewLeadList = () => {
   const rightSidebarContent = (
     <>
       {!isSuperAdmin && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
-          <h3 className="text-[11px] font-bold text-slate-800 mb-1">Follow-Ups Due <span className="text-[8px] text-slate-400 font-normal ml-1">(Next 7 Days)</span></h3>
+        <div className="bg-white rounded-xl p-1.5 px-2" style={{ fontFamily: 'Inter, sans-serif', boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+          <h3 className="text-[11px] font-semibold text-slate-800 mb-1">Follow-Ups Due <span className="text-[8px] text-red-500 font-semibold ml-1">(Next 7 Days)</span></h3>
           <div className="flex flex-col gap-1">
             {followUps.length === 0 ? <p className="text-xs text-slate-400">No follow-ups due.</p> : followUps.map((fu, idx) => (
               <div key={idx} className="flex items-start gap-2">
@@ -398,8 +404,19 @@ const NewLeadList = () => {
                   <Phone size={12} className="text-blue-500" />
                 </div>
                 <div className="flex-grow">
-                  <div className="text-[10px] font-bold text-slate-800 leading-tight">{fu.name}</div>
-                  <div className="text-[8px] text-slate-500 mt-0.5">{fu.date}</div>
+                  <div className="text-[10px] font-bold leading-tight" style={{ color: '#093C5D' }}>{fu.name}</div>
+                  <div className="text-[8px] mt-0.5 whitespace-nowrap">
+                    {(() => {
+                      const parts = fu.date ? fu.date.split(', ') : [];
+                      return (
+                        <>
+                          <span style={{ color: '#111844', fontWeight: 'bold' }}>{parts[0]}</span>
+                          {parts.length > 1 && <span className="text-slate-400">, </span>}
+                          {parts.length > 1 && <span style={{ color: '#810B38', fontWeight: 'bold' }}>{parts.slice(1).join(', ')}</span>}
+                        </>
+                      );
+                    })()}
+                  </div>
                 </div>
                 <div className={`px-1.5 py-0.5 rounded text-[8px] font-semibold ${fu.tagBg}`}>
                   {fu.type}
