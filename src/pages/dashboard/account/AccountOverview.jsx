@@ -257,7 +257,7 @@ const AccountOverview = () => {
         </div>
 
         {/* Last Payment Received */}
-        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col">
+        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col min-h-[320px]">
           <div className="mb-1.5">
             <h2 className="text-[14px] font-medium text-[#1a2b4b] tracking-tight">Last Payment Received</h2>
           </div>
