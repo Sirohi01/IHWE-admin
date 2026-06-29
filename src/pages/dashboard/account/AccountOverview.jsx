@@ -131,7 +131,7 @@ const AccountOverview = () => {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-2 mb-2">
 
         {/* Recent Documents */}
-        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col">
+        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col min-h-[320px]">
           <div className="flex justify-between items-center mb-1.5">
             <h2 className="text-[14px] font-medium text-[#1a2b4b] tracking-tight">Recent Documents</h2>
           </div>
@@ -211,7 +211,7 @@ const AccountOverview = () => {
         </div>
 
         {/* Payment Schedule */}
-        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col">
+        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col min-h-[320px]">
           <div className="flex justify-between items-center mb-1.5">
             <h2 className="text-[14px] font-medium text-[#1a2b4b] tracking-tight">Payment Schedule</h2>
           </div>
