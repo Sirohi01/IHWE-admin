@@ -87,6 +87,7 @@ const CreateInvoice = () => {
     const [attachedFile, setAttachedFile] = useState(null);
     const [estimates, setEstimates] = useState([]);
     const [selectedPi, setSelectedPi] = useState('');
+    const [isEditMode, setIsEditMode] = useState(false);
 
     const fetchEstimates = async () => {
         try {
@@ -118,7 +119,8 @@ const CreateInvoice = () => {
                 try {
                     const res = await api.get(`/api/invoices/${id}`);
                     const inv = res.data?.data || res.data;
-                    if (inv) {
+                    if (inv && inv._id) {
+                        setIsEditMode(true);
                         setSelectedPi(inv.estimate_no || '');
                         setForm(f => ({
                             ...f,
@@ -180,9 +182,38 @@ const CreateInvoice = () => {
                                 };
                             }));
                         }
+                        return;
                     }
                 } catch (err) {
-                    console.error("Failed to fetch invoice for edit", err);
+                }
+                setIsEditMode(false);
+                try {
+                    const clientRes = await api.get(`/api/companies/lookup/${id}`);
+                    const client = clientRes.data;
+                    if (client) {
+                        const isExhibitor = client._source === 'exhibitor';
+                        const name = isExhibitor ? client.exhibitorName : client.companyName;
+                        const gst = isExhibitor ? client.gstNo : client.gstNumber;
+                        const address = [client.address, client.city, client.state].filter(Boolean).join(', ');
+                        setForm(f => ({
+                            ...f,
+                            companyId: id,
+                            clientName: f.clientName || name || '',
+                            gstin: f.gstin || gst || '',
+                            company_name: f.company_name || name || '',
+                            company_addr: f.company_addr || address || '',
+                            consignee_name: f.consignee_name || name || '',
+                            consignee_addr: f.consignee_addr || address || '',
+                            billingAddress: f.billingAddress || address || '',
+                            shippingAddress: f.shippingAddress || address || '',
+                            country: f.country || client.country || 'India',
+                            state: f.state || client.state || '',
+                            city: f.city || client.city || '',
+                            billingPin: f.billingPin || client.pincode || '',
+                        }));
+                    }
+                } catch (lookupErr) {
+                    console.error("Failed to load company details for prefill", lookupErr);
                 }
             };
             fetchInvoice();
@@ -336,7 +367,7 @@ const CreateInvoice = () => {
         let finalAmount = items.reduce((acc, item) => acc + (Number(item.total) || 0), 0);
 
         const payload = {
-            companyId: form.companyId || 'UNKNOWN',
+            companyId: form.companyId || id,
             estimate_no: selectedPi || '',
             type_of_invoice: form.invoiceType,
             invoice_date: form.invoiceDate,
@@ -378,7 +409,7 @@ const CreateInvoice = () => {
 
         try {
             let res;
-            if (id) {
+            if (isEditMode) {
                 res = await api.put(`/api/invoices/${id}`, payload);
                 if (res.status === 200 || res.status === 201) {
                     alert('Invoice updated successfully!');
@@ -388,12 +419,12 @@ const CreateInvoice = () => {
                 res = await api.post('/api/invoices', payload);
                 if (res.status === 201 || res.status === 200) {
                     alert('Invoice generated successfully!');
-                    navigate('/invoice-list');
+                    navigate(`/dashboard/account/${payload.companyId}`);
                 }
             }
         } catch (err) {
             console.error(err);
-            alert(`Failed to ${id ? 'update' : 'generate'} invoice: ` + (err.response?.data?.message || err.message));
+            alert(`Failed to ${isEditMode ? 'update' : 'generate'} invoice: ` + (err.response?.data?.message || err.message));
         }
     };
 

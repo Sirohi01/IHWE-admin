@@ -1,15 +1,12 @@
-import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import api from '../lib/api';
+import { resolveLinkedIds } from '../utils/resolveLinkedIds';
 import {
-    ChevronLeft, Settings, Info, Plus, Trash2, FileText,
-    Download, Mail, MessageCircleMore, Printer, Eye,
-    UploadCloud, FileSearch, CircleDot, Wallet, TrendingUp, SlidersHorizontal, Upload,
-    File
+    ChevronLeft, Info, Plus, Trash2, FileText,
+    Eye, FileSearch, CircleDot, Wallet, TrendingUp, SlidersHorizontal, Upload,
 } from 'lucide-react';
-
-// ── helpers ──────────────────────────────────────────────────────────────────
-const fmt = (n) =>
-    '₹ ' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
 const newItem = () => ({
     id: Date.now(),
@@ -26,8 +23,8 @@ const newItem = () => ({
 
 const GST_OPTIONS = ['0%', '5%', '12%', '18%', '28%'];
 const UNITS = ['Nos', 'Sqm', 'Sqft', 'Mtrs', 'Kgs', 'Ltrs', 'Pcs'];
+const REASON_OPTIONS = ['Select Reason', 'Extra Services', 'Price Revision', 'Material Cost Increase', 'Additional Stall Work', 'Other Adjustment'];
 
-// ── Section heading ──────────────────────────────────────────────────────────
 const SectionHead = ({ num, label }) => (
     <div className="flex items-center gap-2 mb-4">
         <div className="w-6 h-6 rounded-full bg-purple-700 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
@@ -37,14 +34,12 @@ const SectionHead = ({ num, label }) => (
     </div>
 );
 
-// ── Field label ──────────────────────────────────────────────────────────────
 const Label = ({ children, required }) => (
     <label className="block text-xs font-semibold text-gray-800 mb-1.5">
         {children}{required && <span className="text-red-500 ml-0.5">*</span>}
     </label>
 );
 
-// ── Input ────────────────────────────────────────────────────────────────────
 const Input = (props) => (
     <input
         {...props}
@@ -52,7 +47,6 @@ const Input = (props) => (
     />
 );
 
-// ── Select ───────────────────────────────────────────────────────────────────
 const Select = ({ options, ...props }) => (
     <select
         {...props}
@@ -64,18 +58,6 @@ const Select = ({ options, ...props }) => (
     </select>
 );
 
-// ── Quick Action row ─────────────────────────────────────────────────────────
-const QuickAction = ({ icon: Icon, label }) => (
-    <button className="flex items-center justify-between w-full py-2  transition  border-b border-gray-100 last:border-0">
-        <div className="flex items-center gap-2.5">
-            <Icon className={`w-4 h-4  transition ${label === 'Print Debit Note' || label === 'Send via Email' || label === 'Preview Debit Note' ? 'text-purple-800' : 'text-green-800'}`} />
-            <span className="text-xs font-medium text-gray-700">{label}</span>
-        </div>
-        <ChevronLeft className="w-3.5 h-3.5 text-gray-300 rotate-180 " />
-    </button>
-);
-
-// ── Type Card ─────────────────────────────────────────────────────────────────
 const TypeCard = ({ selected, icon: Icon, title, desc, onClick }) => (
     <div
         onClick={onClick}
@@ -96,62 +78,138 @@ const TypeCard = ({ selected, icon: Icon, title, desc, onClick }) => (
     </div>
 );
 
-// ══════════════════════════════════════════════════════════════════════════════
 const CreateDebitNote = () => {
     const navigate = useNavigate();
+    const { id } = useParams();
 
-    // ── form state ──────────────────────────────────────────────────────────────
+    const [sourceDocs, setSourceDocs] = useState([]); // [{key, type, id, label, date, amount, consignee}]
+    const [payments, setPayments] = useState([]);
+    const [submitting, setSubmitting] = useState(false);
+    const [attachmentFile, setAttachmentFile] = useState(null);
+
     const [form, setForm] = useState({
-        toInvoice: 'INV/26-27/0001',
-        invoiceDate: '2026-05-15',
-        clientName: 'Organic Expo 2026',
-        originalAmount: '103000.00',
-        outstandingAmount: '78000.00',
-
-        debitNoteNo: 'DN/26-27/----',
-        debitNoteDate: '2026-05-31',
+        sourceKey: '',
+        debitNoteDate: new Date().toISOString().split('T')[0],
         reason: 'Select Reason',
         reference: '',
-
         type: 'additional_charges',
-        remarks: ''
+        remarks: '',
+        clientState: '',
     });
 
-    const [items, setItems] = useState([
-        {
-            id: 1,
-            description: 'Additional Fabrication Work',
-            hsn: '9988',
-            qty: 1,
-            unit: 'Nos',
-            rate: 20000.00,
-            amount: 20000.00,
-            gstPct: '18%',
-            gstAmount: 3600.00,
-            total: 23600.00
+    const [items, setItems] = useState([newItem()]);
+
+    useEffect(() => {
+        if (!id) return;
+        const loadSourceData = async () => {
+            try {
+                const [linkedIds, invRes, estRes, payRes] = await Promise.all([
+                    resolveLinkedIds(id),
+                    api.get('/api/invoices'),
+                    api.get('/api/estimates'),
+                    api.get('/api/payments'),
+                ]);
+
+                const invoices = (Array.isArray(invRes.data) ? invRes.data : invRes.data?.data || [])
+                    .filter((inv) => linkedIds.includes(inv.companyId));
+                const estimates = (Array.isArray(estRes.data) ? estRes.data : estRes.data?.data || [])
+                    .filter((est) => linkedIds.includes(est.companyId));
+                const allPayments = Array.isArray(payRes.data) ? payRes.data : payRes.data?.data || [];
+                setPayments(allPayments);
+
+                const docs = [
+                    ...invoices.map((inv) => ({
+                        key: `invoice:${inv._id}`,
+                        type: 'Invoice',
+                        id: inv._id,
+                        label: `${inv.invoice_no} - ${inv.consignee_name || ''}`,
+                        date: inv.invoice_date,
+                        amount: inv.finalAmount,
+                        consignee: inv.consignee_name,
+                        state: inv.state,
+                        docNo: inv.invoice_no,
+                    })),
+                    ...estimates.map((est) => ({
+                        key: `estimate:${est._id}`,
+                        type: 'Proforma Invoice',
+                        id: est._id,
+                        label: `${est.est_no} - ${est.consignee_name || ''}`,
+                        date: est.supply_date,
+                        amount: est.finalAmount,
+                        consignee: est.consignee_name,
+                        state: est.state,
+                        docNo: est.est_no,
+                        items: est.items,
+                    })),
+                ];
+                setSourceDocs(docs);
+            } catch (err) {
+                console.error('Failed to load invoices/estimates for debit note', err);
+            }
+        };
+        loadSourceData();
+    }, [id]);
+
+    const selectedDoc = useMemo(
+        () => sourceDocs.find((d) => d.key === form.sourceKey) || null,
+        [sourceDocs, form.sourceKey]
+    );
+
+    const outstandingAmount = useMemo(() => {
+        if (!selectedDoc) return 0;
+        const docPaid = payments
+            .filter((p) => p.invoice_id === selectedDoc.id)
+            .reduce((sum, p) => sum + (parseFloat(p.amount_text) || 0), 0);
+        return Math.max(0, (selectedDoc.amount || 0) - docPaid);
+    }, [selectedDoc, payments]);
+
+    const handleSourceSelect = (key) => {
+        setForm((f) => ({ ...f, sourceKey: key }));
+        const doc = sourceDocs.find((d) => d.key === key);
+        if (doc) {
+            setForm((f) => ({ ...f, clientState: doc.state || f.clientState }));
         }
-    ]);
+    };
 
-    // ── computed ─────────────────────────────────────────────────────────────────
+    const importItemsFromSource = () => {
+        if (!selectedDoc || !selectedDoc.items || selectedDoc.items.length === 0) {
+            toast.info('Selected document has no items to import.');
+            return;
+        }
+        setItems(selectedDoc.items.map((it, idx) => {
+            const rate = Number(it.rate) || 0;
+            const qty = Number(it.qty) || 1;
+            const amount = Number(it.amount) || rate * qty;
+            const gstPctStr = it.gstPct || it.gstRate || '18%';
+            const gstRate = parseFloat(gstPctStr) || 0;
+            const gstAmount = Number(it.gstAmount) || amount * (gstRate / 100);
+            return {
+                id: Date.now() + idx,
+                description: it.description || '',
+                hsn: it.hsn || '',
+                qty,
+                unit: it.unit || 'Nos',
+                rate,
+                amount,
+                gstPct: typeof gstPctStr === 'string' ? gstPctStr : `${gstPctStr}%`,
+                gstAmount,
+                total: amount + gstAmount,
+            };
+        }));
+    };
+
     const taxableAmount = items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+    const totalGst = items.reduce((sum, item) => sum + (Number(item.gstAmount) || 0), 0);
+    const isIntrastate = (form.clientState || '').toLowerCase().includes('delhi');
+    const cgstAmount = isIntrastate ? totalGst / 2 : 0;
+    const sgstAmount = isIntrastate ? totalGst / 2 : 0;
+    const igstAmount = isIntrastate ? 0 : totalGst;
+    const totalAmount = taxableAmount + totalGst;
 
-
-    // Here we'll just hardcode the split shown in the image for the demo
-    const cgst = taxableAmount * 0.09;
-    const sgst = taxableAmount * 0.09;
-    const igst = 0; // For demo matching image where IGST is 3600 but let's match the summary block precisely
-
-    const summaryTaxable = 21350.00;
-    const summaryCgst = 1925.00;
-    const summarySgst = 1925.00;
-    const summaryIgst = 3600.00;
-    const summaryTotal = 25000.00;
-
-    // ── handlers ────────────────────────────────────────────────────────────────
-    const updateItem = useCallback((id, field, val) => {
+    const updateItem = useCallback((itemId, field, val) => {
         setItems((prev) =>
             prev.map((item) => {
-                if (item.id !== id) return item;
+                if (item.id !== itemId) return item;
                 const updated = { ...item, [field]: val };
                 const rate = Number(field === 'rate' ? val : updated.rate) || 0;
                 const qty = Number(field === 'qty' ? val : updated.qty) || 0;
@@ -168,14 +226,86 @@ const CreateDebitNote = () => {
     }, []);
 
     const addItem = () => setItems((p) => [...p, newItem()]);
-    const removeItem = (id) => setItems((p) => p.filter((i) => i.id !== id));
+    const removeItem = (itemId) => setItems((p) => p.filter((i) => i.id !== itemId));
     const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+    const handleSubmit = async () => {
+        if (!selectedDoc) {
+            toast.error('Please select the invoice/estimate this debit note is raised against.');
+            return;
+        }
+        if (form.reason === 'Select Reason') {
+            toast.error('Please select a reason for this debit note.');
+            return;
+        }
+        if (items.every((it) => !it.description)) {
+            toast.error('Please add at least one item.');
+            return;
+        }
+
+        const payload = {
+            companyId: id,
+            debit_note_date: form.debitNoteDate,
+            toInvoiceId: selectedDoc.id,
+            toInvoiceNo: selectedDoc.docNo,
+            toDocumentType: selectedDoc.type,
+            clientName: selectedDoc.consignee,
+            originalAmount: selectedDoc.amount,
+            reason: form.reason,
+            reference: form.reference,
+            type: form.type,
+            items: items.filter((it) => it.description).map((it) => ({
+                description: it.description,
+                hsn: it.hsn,
+                qty: Number(it.qty),
+                unit: it.unit,
+                rate: Number(it.rate),
+                amount: Number(it.amount),
+                gstPct: it.gstPct,
+                gstAmount: Number(it.gstAmount),
+                total: Number(it.total),
+            })),
+            taxableAmount,
+            cgstAmount,
+            sgstAmount,
+            igstAmount,
+            totalAmount,
+            remarks: form.remarks,
+            added_by: localStorage.getItem('user_name') || 'Admin',
+        };
+
+        try {
+            setSubmitting(true);
+            const formData = new FormData();
+            Object.entries(payload).forEach(([key, value]) => {
+                if (key === 'items') {
+                    formData.append('items', JSON.stringify(value));
+                } else {
+                    formData.append(key, value ?? '');
+                }
+            });
+            if (attachmentFile) {
+                formData.append('attachment', attachmentFile);
+            }
+
+            await api.post('/api/debitnotes', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+
+            toast.success('Debit Note generated successfully!');
+            navigate(`/dashboard/account/${id}`);
+        } catch (err) {
+            console.error(err);
+            toast.error(err.response?.data?.message || 'Failed to generate debit note.');
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gray-50/50 pb-5 mt-4">
             <style>
                 {`
-                /* Hide number input spinners on this page */
                 input[type="number"]::-webkit-inner-spin-button,
                 input[type="number"]::-webkit-outer-spin-button {
                     -webkit-appearance: none;
@@ -198,19 +328,19 @@ const CreateDebitNote = () => {
                     </div>
                 </div>
                 <button
-                    onClick={() => navigate(-1)}
+                    onClick={() => navigate(id ? `/dashboard/account/${id}` : -1)}
                     className="flex items-center gap-1.5 border border-gray-200 rounded-md px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition shadow-sm"
                 >
                     <ChevronLeft className="w-4 h-4" />
-                    Back to List
+                    Back to Overview
                 </button>
             </div>
 
             <div className="max-w-[1400px] mx-auto px-4 pt-3 flex gap-3 items-start">
-                {/* ── LEFT FORM ── */}
+                {/* LEFT FORM */}
                 <div className="flex-1 space-y-3 min-w-0">
 
-                    {/* SECTION 1 – Source */}
+                    {/* SECTION 1 - Source */}
                     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                         <SectionHead num="1" label="Debit Note Source" />
 
@@ -218,40 +348,47 @@ const CreateDebitNote = () => {
                             <div className="col-span-2">
                                 <Label required>To Invoice / Estimate</Label>
                                 <Select
-                                    options={[
-                                        { value: 'INV/26-27/0001', label: 'INV/26-27/0001 - Organic Expo 2026' }
-                                    ]}
-                                    value={form.toInvoice}
-                                    onChange={(e) => setField('toInvoice', e.target.value)}
+                                    options={[{ value: '', label: sourceDocs.length ? 'Select document' : 'No invoices/proformas found' }, ...sourceDocs.map((d) => ({ value: d.key, label: d.label }))]}
+                                    value={form.sourceKey}
+                                    onChange={(e) => handleSourceSelect(e.target.value)}
                                     className="py-2.5"
                                 />
                             </div>
                             <div>
-                                <Label>Invoice Date</Label>
-                                <Input type="date" value={form.invoiceDate} readOnly className="bg-gray-50 text-gray-600 py-2.5" />
+                                <Label>Document Date</Label>
+                                <Input
+                                    type="text"
+                                    value={selectedDoc?.date ? new Date(selectedDoc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                                    readOnly
+                                    className="bg-gray-50 text-gray-600 py-2.5"
+                                />
                             </div>
                             <div>
                                 <Label>Client / Company</Label>
-                                <Input value={form.clientName} readOnly className="bg-gray-50 text-gray-600 py-2.5" />
+                                <Input value={selectedDoc?.consignee || '-'} readOnly className="bg-gray-50 text-gray-600 py-2.5" />
                             </div>
                             <div>
-                                <Label>Original Invoice Amount</Label>
-                                <Input value={`₹ ${parseFloat(form.originalAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`} readOnly className="bg-gray-50 text-gray-600 py-2.5" />
-                            </div>
-                            {/* Wait, design shows 5 columns including Outstanding Amount */}
-                        </div>
-                        <div className="grid grid-cols-5 gap-4 mt-4">
-                            <div className="col-span-2">
-                                {/* The design shows the select dropdown has "Organic Expo 2026" inside it, I mocked it in options above */}
+                                <Label>Original Amount</Label>
+                                <Input
+                                    value={`₹ ${Number(selectedDoc?.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
+                                    readOnly
+                                    className="bg-gray-50 text-gray-600 py-2.5"
+                                />
                             </div>
                         </div>
 
-                        {/* Adjusting grid to match exactly */}
-                        <div className="grid grid-cols-5 gap-4 -mt-4">
-                            {/* Empty, restructuring */}
-                        </div>
-
-
+                        {selectedDoc && (
+                            <div className="grid grid-cols-5 gap-4 mt-4">
+                                <div>
+                                    <Label>Outstanding Amount</Label>
+                                    <Input
+                                        value={`₹ ${outstandingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
+                                        readOnly
+                                        className="bg-gray-50 text-gray-600 py-2.5"
+                                    />
+                                </div>
+                            </div>
+                        )}
 
                         <div className="mt-5 bg-blue-50/50 border border-blue-100 rounded-md p-3 flex items-center gap-2.5 text-blue-700">
                             <Info className="w-4 h-4" />
@@ -259,19 +396,14 @@ const CreateDebitNote = () => {
                         </div>
                     </div>
 
-                    {/* SECTION 2 – Details */}
+                    {/* SECTION 2 - Details */}
                     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                         <SectionHead num="2" label="Debit Note Details" />
 
                         <div className="grid grid-cols-4 gap-4 mb-3">
                             <div>
-                                <Label required>Debit Note No.</Label>
-                                <div className="flex">
-                                    <Input value={form.debitNoteNo} onChange={(e) => setField('debitNoteNo', e.target.value)} className="rounded-r-none border-r-0 py-2.5" />
-                                    <button className="border border-gray-300 rounded-r-md px-2.5 bg-gray-50 text-gray-500 hover:bg-gray-100">
-                                        <Settings className="w-4 h-4" />
-                                    </button>
-                                </div>
+                                <Label>Debit Note No.</Label>
+                                <Input value="Auto-generated on save" readOnly className="bg-gray-50 text-gray-500 py-2.5" />
                             </div>
                             <div>
                                 <Label required>Debit Note Date</Label>
@@ -279,7 +411,7 @@ const CreateDebitNote = () => {
                             </div>
                             <div>
                                 <Label required>Reason</Label>
-                                <Select options={['Select Reason', 'Extra Services', 'Price Revision']} value={form.reason} onChange={(e) => setField('reason', e.target.value)} className="py-2.5" />
+                                <Select options={REASON_OPTIONS} value={form.reason} onChange={(e) => setField('reason', e.target.value)} className="py-2.5" />
                             </div>
                             <div>
                                 <Label>Reference <span className="text-gray-400 font-normal">(Optional)</span></Label>
@@ -320,11 +452,11 @@ const CreateDebitNote = () => {
                         </div>
                     </div>
 
-                    {/* SECTION 3 – Items */}
+                    {/* SECTION 3 - Items */}
                     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                         <SectionHead num="3" label="Item / Charge Details" />
 
-                        <div className="overflow-x-none border border-gray-200 rounded-lg">
+                        <div className="overflow-x-auto border border-gray-200 rounded-lg">
                             <table className="w-full text-xs">
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200 whitespace-nowrap">
@@ -404,13 +536,17 @@ const CreateDebitNote = () => {
                             >
                                 <Plus className="w-4 h-4" /> Add Row
                             </button>
-                            <button className="flex items-center gap-1.5 border border-gray-300 text-gray-600 rounded-md px-3 py-1.5 text-xs font-semibold hover:bg-gray-50 transition shadow-sm">
+                            <button
+                                onClick={importItemsFromSource}
+                                disabled={!selectedDoc}
+                                className="flex items-center gap-1.5 border border-gray-300 text-gray-600 rounded-md px-3 py-1.5 text-xs font-semibold hover:bg-gray-50 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
                                 <FileSearch className="w-4 h-4 text-blue-500" /> Import Items from Invoice
                             </button>
                         </div>
                     </div>
 
-                    {/* SECTION 4 – Additional Info */}
+                    {/* SECTION 4 - Additional Info */}
                     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                         <SectionHead num="4" label={<>Additional Information <span className="text-gray-500 font-normal text-xs ml-0.5">(Optional)</span></>} />
 
@@ -426,42 +562,48 @@ const CreateDebitNote = () => {
                             </div>
                             <div>
                                 <Label>Attach Documents</Label>
-                                <div className="border border-gray-200 rounded-md h-[60px] flex items-center px-4 bg-white hover:bg-gray-50 transition cursor-pointer">
+                                <label className="border border-gray-200 rounded-md h-[60px] flex items-center px-4 bg-white hover:bg-gray-50 transition cursor-pointer">
                                     <div className="w-10 h-10 rounded-lg bg-[#F0F4FF] flex items-center justify-center mr-3 shrink-0">
                                         <Upload className="w-5 h-5 text-[#2E4383]" strokeWidth={2.5} />
                                     </div>
                                     <div className="flex flex-col">
-                                        <p className="text-xs text-gray-500"><span className="font-semibold text-[#1E1B4B]">Click to upload</span> or drag and drop</p>
-                                        <p className="text-[10px] text-gray-400 mt-0.5">PNG, JPG, PDF (Max. 5MB)</p>
+                                        <p className="text-xs text-gray-500">
+                                            <span className="font-semibold text-[#1E1B4B]">Click to upload</span> or drag and drop
+                                        </p>
+                                        <p className="text-[10px] text-gray-400 mt-0.5">
+                                            {attachmentFile ? attachmentFile.name : 'PNG, JPG, PDF (Max. 5MB)'}
+                                        </p>
                                     </div>
-                                    <button className="ml-auto border border-gray-200 rounded-md px-4 py-1.5 text-xs font-semibold text-blue-600 bg-white hover:bg-gray-50 transition shadow-sm">
-                                        Browse Files
-                                    </button>
-                                </div>
+                                    <input
+                                        type="file"
+                                        accept=".jpg,.jpeg,.png,.pdf"
+                                        className="hidden"
+                                        onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)}
+                                    />
+                                </label>
                             </div>
                         </div>
                     </div>
 
                     {/* Action Bar */}
-                    <div className="flex items-center justify-between  rounded-xl border border-gray-200 p-4 shadow-sm bg-white">
+                    <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 shadow-sm bg-white">
                         <button
-                            onClick={() => navigate(-1)}
+                            onClick={() => navigate(id ? `/dashboard/account/${id}` : -1)}
                             className="flex items-center gap-1.5 border border-gray-300 rounded-lg px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition bg-white shadow-sm"
                         >
                             <Trash2 className="w-4 h-4 text-gray-400" /> Cancel
                         </button>
-                        <div className="flex gap-3">
-                            <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-5 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50 transition bg-white shadow-sm">
-                                <Download className="w-4 h-4" /> Save as Draft
-                            </button>
-                            <button className="flex items-center gap-2 bg-[#00A859] hover:bg-[#00904C] text-white rounded-lg px-6 py-2.5 text-sm font-medium transition shadow-sm">
-                                <FileText className="w-4 h-4" /> Generate Debit Note
-                            </button>
-                        </div>
+                        <button
+                            onClick={handleSubmit}
+                            disabled={submitting}
+                            className="flex items-center gap-2 bg-[#00A859] hover:bg-[#00904C] text-white rounded-lg px-6 py-2.5 text-sm font-medium transition shadow-sm disabled:opacity-60"
+                        >
+                            <FileText className="w-4 h-4" /> {submitting ? 'Saving...' : 'Generate Debit Note'}
+                        </button>
                     </div>
                 </div>
 
-                {/* ── RIGHT SIDEBAR ── */}
+                {/* RIGHT SIDEBAR */}
                 <div className="w-[250px] flex-shrink-0 space-y-3">
 
                     {/* Summary */}
@@ -477,11 +619,11 @@ const CreateDebitNote = () => {
                             <div className="space-y-2.5 text-xs">
                                 <div className="flex justify-between text-gray-600">
                                     <span className="font-semibold text-gray-800">Original Invoice Amount</span>
-                                    <span className="font-bold text-gray-800">₹ 1,03,000.00</span>
+                                    <span className="font-bold text-gray-800">₹ {Number(selectedDoc?.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-600">
                                     <span className="font-semibold text-gray-800">Total Debit Note Amount</span>
-                                    <span className="font-bold text-blue-600">₹ 25,000.00</span>
+                                    <span className="font-bold text-blue-600">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                                 </div>
                             </div>
 
@@ -490,69 +632,63 @@ const CreateDebitNote = () => {
                             <div className="space-y-2.5 text-xs">
                                 <div className="flex justify-between text-gray-600">
                                     <span className="font-bold text-gray-800">Taxable Amount</span>
-                                    <span className="font-bold text-gray-800">₹ 21,350.00</span>
+                                    <span className="font-bold text-gray-800">₹ {taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                                 </div>
-                                <div className="flex justify-between text-gray-500">
-                                    <span className="font-semibold text-gray-800">CGST (9%)</span>
-                                    <span className="font-semibold text-gray-800">₹ 1,925.00</span>
-                                </div>
-                                <div className="flex justify-between text-gray-500">
-                                    <span className="font-semibold text-gray-800">SGST (9%)</span>
-                                    <span className="font-semibold text-gray-800">₹ 1,925.00</span>
-                                </div>
-                                <div className="flex justify-between text-gray-500">
-                                    <span className="font-semibold text-gray-800">IGST (18%)</span>
-                                    <span className="font-semibold text-gray-800">₹ 3,600.00</span>
-                                </div>
+                                {isIntrastate ? (
+                                    <>
+                                        <div className="flex justify-between text-gray-500">
+                                            <span className="font-semibold text-gray-800">CGST</span>
+                                            <span className="font-semibold text-gray-800">₹ {cgstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                        </div>
+                                        <div className="flex justify-between text-gray-500">
+                                            <span className="font-semibold text-gray-800">SGST</span>
+                                            <span className="font-semibold text-gray-800">₹ {sgstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex justify-between text-gray-500">
+                                        <span className="font-semibold text-gray-800">IGST</span>
+                                        <span className="font-semibold text-gray-800">₹ {igstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="mt-4 bg-purple-100/50 rounded-lg px-4 py-3 flex items-center justify-between border border-purple-100">
                                 <span className="text-purple-700 text-[9px] font-bold whitespace-nowrap">Total Debit Note Amount</span>
-                                <span className="text-purple-700 text-md font-bold whitespace-nowrap">₹ 25,000.00</span>
+                                <span className="text-purple-700 text-md font-bold whitespace-nowrap">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Quick Actions */}
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                            <span className="text-purple-600">⚡</span>
-                            <h3 className="text-sm font-bold text-gray-800">Quick Actions</h3>
-                        </div>
-                        <div className="flex flex-col">
-                            <QuickAction icon={Eye} label="Preview Debit Note" />
-                            <QuickAction icon={File} label="Download PDF" />
-                            <QuickAction icon={Mail} label="Send via Email" />
-                            <QuickAction icon={MessageCircleMore} label="Send via WhatsApp" />
-                            <QuickAction icon={Printer} label="Print Debit Note" />
                         </div>
                     </div>
 
                     {/* Related Invoice */}
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="w-6 h-6 rounded bg-green-100 text-green-600 flex items-center justify-center">
-                                <FileText className="w-3.5 h-3.5" />
+                    {selectedDoc && (
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="w-6 h-6 rounded bg-green-100 text-green-600 flex items-center justify-center">
+                                    <FileText className="w-3.5 h-3.5" />
+                                </div>
+                                <h3 className="text-sm font-bold text-gray-800">Related {selectedDoc.type}</h3>
                             </div>
-                            <h3 className="text-sm font-bold text-gray-800">Related Invoice</h3>
-                        </div>
 
-                        <div className="flex justify-between items-start mb-1">
-                            <span className="text-sm font-bold text-gray-800">INV/26-27/0001</span>
-                            <span className="text-sm font-bold text-gray-800">₹ 1,03,000.00</span>
+                            <div className="flex justify-between items-start mb-1">
+                                <span className="text-sm font-bold text-gray-800">{selectedDoc.docNo}</span>
+                                <span className="text-sm font-bold text-gray-800">₹ {Number(selectedDoc.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            <div className="flex justify-between items-center mb-4">
+                                <span className="text-[10px] text-gray-500 font-medium">
+                                    {selectedDoc.date ? new Date(selectedDoc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                                </span>
+                            </div>
+                            <div className="flex justify-center">
+                                <button
+                                    onClick={() => navigate(selectedDoc.type === 'Invoice' ? `/payments/invoiceDetails/${selectedDoc.id}` : `/payments/estimateDetails/${selectedDoc.id}`)}
+                                    className="w-1/2 py-2 border border-gray-200 rounded-lg text-xs font-bold text-purple-800 flex items-center justify-center gap-1.5 hover:bg-gray-50 transition"
+                                >
+                                    <Eye className="w-3.5 h-3.5" /> View
+                                </button>
+                            </div>
                         </div>
-                        <div className="flex justify-between items-center mb-4">
-                            <span className="text-[10px] text-gray-500 font-medium">15 May 2026</span>
-                            <span className="px-2 py-0.5 rounded-md bg-green-100 text-green-700 text-[10px] font-bold">Approved</span>
-                        </div>
-                        <div className="flex justify-center">
-
-                            <button className="w-1/2 py-2 border border-gray-200 rounded-lg text-xs font-bold text-purple-800 flex items-center justify-center gap-1.5 hover:bg-gray-50 transition">
-                                <Eye className="w-3.5 h-3.5" /> View Invoice
-                            </button>
-                        </div>
-                    </div>
-
+                    )}
                 </div>
             </div>
         </div>
