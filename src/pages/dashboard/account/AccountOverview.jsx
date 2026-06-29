@@ -300,25 +300,25 @@ const AccountOverview = () => {
       </div>
 
       {/* Footer / Exhibitor Contact */}
-      <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-6 flex flex-col md:flex-row items-center gap-6 justify-between">
-        <h2 className="text-[15px] font-medium text-[#1a2b4b] tracking-tight shrink-0">Exhibitor Contact</h2>
+      <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-4 flex flex-col md:flex-row items-center gap-3 justify-between">
+        <h2 className="text-[14px] font-medium text-[#1a2b4b] tracking-tight shrink-0">Exhibitor Contact</h2>
 
-        <div className="flex-1 flex flex-wrap justify-between items-center gap-4 w-full text-[13px] text-slate-700">
-          <div className="flex items-center gap-3">
-            <User size={18} className="text-[#194090]" />
-            <span className="font-semibold">{companyInfo?.contactPerson}</span>
+        <div className="flex-1 flex flex-wrap justify-between items-center gap-3 w-full text-[12px] text-slate-700">
+          <div className="flex items-center gap-2">
+            <User size={15} className="text-[#194090] shrink-0" />
+            <span className="font-medium whitespace-nowrap">{companyInfo?.contactPerson}</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Mail size={18} className="text-[#194090]" />
-            <span>{companyInfo?.email}</span>
+          <div className="flex items-center gap-2">
+            <Mail size={15} className="text-[#194090] shrink-0" />
+            <span className="whitespace-nowrap">{companyInfo?.email}</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Phone size={18} className="text-[#194090]" />
-            <span>{companyInfo?.mobile}</span>
+          <div className="flex items-center gap-2">
+            <Phone size={15} className="text-[#194090] shrink-0" />
+            <span className="whitespace-nowrap">{companyInfo?.mobile}</span>
           </div>
-          <div className="flex items-center gap-3 max-w-xs">
-            <MapPin size={18} className="text-[#194090] shrink-0" />
-            <span className="truncate">{companyInfo?.address}</span>
+          <div className="flex items-center gap-2 max-w-[280px] sm:max-w-sm">
+            <MapPin size={15} className="text-[#194090] shrink-0" />
+            <span className="truncate" title={companyInfo?.address}>{companyInfo?.address}</span>
           </div>
         </div>
       </div>
