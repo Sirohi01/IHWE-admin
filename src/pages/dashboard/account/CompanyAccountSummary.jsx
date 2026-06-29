@@ -84,7 +84,7 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-2 mb-1">
       {/* Company Info Card */}
-      <div className="xl:col-span-7 bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-4 flex flex-col md:flex-row gap-4 items-center md:items-start">
+      <div className="xl:col-span-7 bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col md:flex-row gap-4 items-center md:items-start">
         <CompanyLogo logo={companyInfo?.logo} name={companyInfo?.name} />
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-1">
@@ -137,8 +137,8 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
 
       {/* Financial Cards - stretched to match the company card's height */}
       <div className="xl:col-span-5 grid grid-cols-1 md:grid-cols-3 gap-2">
-        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-4 flex flex-col h-full">
-          <div className="w-12 h-12 mb-6 bg-[#ffebee] rounded-lg flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-full">
+          <div className="w-10 h-10 mb-1 bg-[#ffebee] rounded-lg flex items-center justify-center">
             <FileText size={28} className="text-[#ff4d4f]" />
           </div>
           <div>
@@ -150,8 +150,8 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-4 flex flex-col h-full">
-          <div className="w-12 h-12 mb-6 bg-[#e6f7ec] rounded-lg flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-full">
+          <div className="w-10 h-10 mb-1 bg-[#e6f7ec] rounded-lg flex items-center justify-center">
             <Receipt size={28} className="text-[#00a86b]" />
           </div>
           <div>
@@ -163,8 +163,8 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-4 flex flex-col h-full">
-          <div className="w-12 h-12 mb-6 bg-[#e6f0fa] rounded-lg flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-full">
+          <div className="w-10 h-10 mb-1 bg-[#e6f0fa] rounded-lg flex items-center justify-center">
             <Wallet size={28} className="text-[#194090]" />
           </div>
           <div>

@@ -145,6 +145,7 @@ export const menuItems = [
         label: "Exhibitors Products",
         path: "/exhibitor-products-profile",
       },
+
       {
         label: "Failed Payments",
         path: "/failed-payments",
@@ -691,6 +692,7 @@ export const menuItems = [
     icon: TrendingUp,
     children: [
       { label: "Previous Exhibition List", path: "/previous-exhibitions" },
+      { label: "Delegate Passes", path: "/delegate-passes" },
       { label: "Business Type", path: "/business-type" },
       { label: "Annual Turnover", path: "/annual-turnover" },
       { label: "Primary Product Interest", path: "/primary-product-interest" },
