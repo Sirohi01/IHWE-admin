@@ -271,6 +271,7 @@ const PerformaInvoices = lazy(() => import("../pages/PerformaInvoices"));
 const SalesReport = lazy(() => import("../pages/accounts/SalesReport"));
 const CreateDebitNote = lazy(() => import("../pages/CreateDebitNote"));
 const DebitNoteList = lazy(() => import("../pages/DebitNoteList"));
+const DebitNoteView = lazy(() => import("../pages/DebitNoteView"));
 const CreateInvoicePage = lazy(() => import("../pages/CreateInvoice"));
 const BankDetailsManage = lazy(() => import("../pages/accounts/BankDetailsManage"));
 // Sales Tools
@@ -344,6 +345,7 @@ export default function AppRoutes() {
             <Route path="performa-invoice/:id" element={<PerformaInvoices />} />
             <Route path="performa-invoice-list/:id" element={<PerformaInvoiceList />} />
             <Route path="debit-note-list/:id" element={<DebitNoteList />} />
+            <Route path="debit-note-view/:id" element={<DebitNoteView />} />
             <Route path="create-debit-note" element={<CreateDebitNote />} />
             <Route path="create-debit-note/:id" element={<CreateDebitNote />} />
             <Route path="page-create-invoice" element={<CreateInvoicePage />} />

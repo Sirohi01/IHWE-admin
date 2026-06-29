@@ -163,7 +163,7 @@ const DebitNoteList = () => {
                                 </td>
                                 <td className="px-4 py-3">
                                     <button
-                                        onClick={() => navigate(`/debit-note-list/${note.companyId || id}`)}
+                                        onClick={() => navigate(`/debit-note-view/${note._id}`)}
                                         className="inline-flex items-center gap-1 text-purple-700 hover:text-purple-900 text-sm font-semibold"
                                         title="View debit note list"
                                     >
