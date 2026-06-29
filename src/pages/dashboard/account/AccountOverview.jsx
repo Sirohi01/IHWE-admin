@@ -295,7 +295,7 @@ const AccountOverview = () => {
       <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-4 flex flex-col md:flex-row items-center gap-1 justify-between">
         <h2 className="text-[12px] font-medium text-[#1a2b4b] tracking-tight shrink-0">Exhibitor Contact</h2>
 
-        <div className="flex-1 flex flex-wrap justify-between items-center gap-3 w-full text-[10px] text-slate-700">
+        <div className="flex-1 flex flex-wrap justify-between items-center gap-1 w-full text-[10px] text-slate-700">
           <div className="flex items-center gap-1">
             <User size={15} className="text-[#194090] shrink-0" />
             <span className="font-medium whitespace-nowrap">{companyInfo?.contactPerson}</span>
