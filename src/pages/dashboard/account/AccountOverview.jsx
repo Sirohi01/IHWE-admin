@@ -135,7 +135,7 @@ const AccountOverview = () => {
           <div className="flex justify-between items-center mb-1.5">
             <h2 className="text-[14px] font-medium text-[#1a2b4b] tracking-tight">Recent Documents</h2>
           </div>
-          <div className="overflow-x-auto flex-1">
+          <div className="overflow-x-auto flex-1 table-scroll-wrapper">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="text-[10px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
@@ -169,16 +169,16 @@ const AccountOverview = () => {
 
                   return (
                     <tr key={idx} className="border-b border-gray-50 last:border-0 hover:bg-slate-50/50">
-                      <td className="py-2.5 pr-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${docTypeBg}`}>
+                      <td className="py-2.5 pr-3 whitespace-nowrap">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-medium whitespace-nowrap ${docTypeBg}`}>
                           {doc.documentType}
                         </span>
                       </td>
-                      <td className="py-2.5 pr-3 font-medium text-[#1a2b4b]">{doc.documentNo}</td>
-                      <td className="py-2.5 pr-3">{doc.date ? new Date(doc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</td>
-                      <td className="py-2.5 pr-3 font-medium text-[13px] text-[#1a2b4b]">{formatCurrency(doc.amount)}</td>
-                      <td className="py-2.5 pr-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${statusBg}`}>
+                      <td className="py-2.5 pr-3 font-medium text-[#1a2b4b] whitespace-nowrap">{doc.documentNo}</td>
+                      <td className="py-2.5 pr-3 whitespace-nowrap">{doc.date ? new Date(doc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</td>
+                      <td className="py-2.5 pr-3 font-medium text-[13px] text-[#1a2b4b] whitespace-nowrap">{formatCurrency(doc.amount)}</td>
+                      <td className="py-2.5 pr-3 whitespace-nowrap">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-medium whitespace-nowrap ${statusBg}`}>
                           {doc.status}
                         </span>
                       </td>
@@ -215,7 +215,7 @@ const AccountOverview = () => {
           <div className="flex justify-between items-center mb-1.5">
             <h2 className="text-[14px] font-medium text-[#1a2b4b] tracking-tight">Payment Schedule</h2>
           </div>
-          <div className="overflow-x-auto flex-1 flex flex-col justify-between">
+          <div className="overflow-x-auto flex-1 flex flex-col justify-between table-scroll-wrapper">
             <table className="w-full text-left border-collapse mb-1">
               <thead>
                 <tr className="text-[10px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
@@ -234,12 +234,12 @@ const AccountOverview = () => {
                 )}
                 {paymentSchedule.map((schedule, idx) => (
                   <tr key={schedule.id} className="border-b border-gray-50 hover:bg-slate-50/50">
-                    <td className="py-2.5 pr-2 text-slate-400 font-medium">{idx + 1}</td>
-                    <td className="py-2.5 pr-3 font-medium text-[#1a2b4b]">{schedule.scheduleType}</td>
-                    <td className="py-2.5 pr-3">{schedule.dueDate}</td>
-                    <td className="py-2.5 pr-3">{formatCurrency(schedule.dueAmount)}</td>
-                    <td className="py-2.5">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${schedule.status === 'Paid' ? 'bg-[#e6f7ec] text-[#00a86b]' : 'bg-[#fff1f2] text-[#ea580c]'}`}>
+                    <td className="py-2.5 pr-2 text-slate-400 font-medium whitespace-nowrap">{idx + 1}</td>
+                    <td className="py-2.5 pr-3 font-medium text-[#1a2b4b] whitespace-nowrap">{schedule.scheduleType}</td>
+                    <td className="py-2.5 pr-3 whitespace-nowrap">{schedule.dueDate}</td>
+                    <td className="py-2.5 pr-3 whitespace-nowrap">{formatCurrency(schedule.dueAmount)}</td>
+                    <td className="py-2.5 whitespace-nowrap">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-medium whitespace-nowrap ${schedule.status === 'Paid' ? 'bg-[#e6f7ec] text-[#00a86b]' : 'bg-[#fff1f2] text-[#ea580c]'}`}>
                         {schedule.status}
                       </span>
                     </td>
