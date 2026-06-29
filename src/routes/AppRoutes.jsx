@@ -13,6 +13,7 @@ const Remainder = lazy(() => import("../pages/Remainder"));
 const BookAStand = lazy(() => import("../pages/BookAStand"));
 const TaskAndAlerts = lazy(() => import("../pages/TaskAndAlerts"));
 const ActivityLog = lazy(() => import("../pages/ActivityLog"));
+const DelegatePasses = lazy(() => import("../pages/DelegatePasses"));
 
 const CreatePage = lazy(() => import("../pages/CreatePage"));
 const PageList = lazy(() => import("../pages/PageList"));
@@ -452,6 +453,7 @@ export default function AppRoutes() {
             <Route path="exhibitor-booking/:id" element={<ExhibitorBookingDetail />} />
             <Route path="failed-payments" element={<FailedPayments />} />
             <Route path="payment-delay-warnings" element={<PaymentDelayWarnings />} />
+            <Route path="delegate-passes" element={<DelegatePasses />} />
             <Route path="events" element={<ManageEvents />} />
             <Route path="stall-rates" element={<ManageStallRates />} />
             <Route path="terms-conditions" element={<ManageTerms />} />
