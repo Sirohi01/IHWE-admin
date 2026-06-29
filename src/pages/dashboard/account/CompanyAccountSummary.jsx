@@ -97,7 +97,7 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1.5 gap-x-4 text-[13px] text-slate-600">
             <div className="flex items-center gap-2">
               <Mail size={15} className="text-[#194090]" />
-              <span className="truncate">{companyInfo?.email}</span>
+              <a href={`mailto:${companyInfo?.email}`} className="truncate hover:text-[#194090] hover:underline">{companyInfo?.email}</a>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="font-semibold text-slate-700 whitespace-nowrap">Stall No.</span>

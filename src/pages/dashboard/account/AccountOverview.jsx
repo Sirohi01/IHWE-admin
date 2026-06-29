@@ -302,7 +302,7 @@ const AccountOverview = () => {
           </div>
           <div className="flex items-center gap-2">
             <Mail size={15} className="text-[#194090] shrink-0" />
-            <span className="whitespace-nowrap">{companyInfo?.email}</span>
+            <a href={`mailto:${companyInfo?.email}`} className="whitespace-nowrap hover:text-[#194090] hover:underline">{companyInfo?.email}</a>
           </div>
           <div className="flex items-center gap-2">
             <Phone size={15} className="text-[#194090] shrink-0" />
