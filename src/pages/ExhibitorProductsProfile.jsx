@@ -45,15 +45,9 @@ export default function ExhibitorProductsProfile() {
     const fetchExhibitors = async () => {
         setLoading(true);
         try {
-            const res = await api.get("/api/exhibitor-registration");
+            const res = await api.get("/api/stall-products/admin/exhibitors-with-products");
             if (res.data && res.data.success && Array.isArray(res.data.data)) {
-                const activeOnes = res.data.data
-                    .filter(e =>
-                        e &&
-                        e.isSeller === true &&
-                        e.sellerStatus === 'active' &&
-                        e.sellerSubscription?.status === 'active'
-                    )
+                const exhibitorsWithProducts = res.data.data
                     .map(e => ({
                         _id: e._id,
                         title: e.exhibitorName || 'Unknown Company',
@@ -61,15 +55,15 @@ export default function ExhibitorProductsProfile() {
                         email: e.contact1?.email || 'No Email',
                         companyLogoUrl: e.companyLogoUrl,
                         registrationId: e.registrationId,
-                        planName: e.sellerSubscription?.plan || 'Active Plan',
+                        planName: e.productCount ? `${e.productCount} Products` : 'Products',
                     }));
-                setExhibitors(activeOnes);
+                setExhibitors(exhibitorsWithProducts);
             } else {
                 setExhibitors([]);
             }
         } catch (err) {
             console.error("Fetch Error:", err);
-            toast.error("Failed to load exhibitors");
+            setExhibitors([]);
         } finally {
             setLoading(false);
         }
@@ -95,7 +89,6 @@ export default function ExhibitorProductsProfile() {
             if (aRes?.data?.success) setExhibitorAnalytics(aRes.data.data || null);
         } catch (err) {
             console.error("Select Error:", err);
-            toast.error("Error fetching data");
             setProducts([]);
             setExhibitorAnalytics(null);
         } finally {

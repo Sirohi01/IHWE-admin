@@ -67,6 +67,9 @@ const ClientContacts = () => {
     const [editingIndex, setEditingIndex] = useState(null);
     const photoInputRef = useRef(null);
 
+    // View (read-only details) modal
+    const [viewingMember, setViewingMember] = useState(null);
+
     const initialForm = {
         name: "",
         designation: "",
@@ -264,12 +267,12 @@ const ClientContacts = () => {
                         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2">
                         <Plus size={18} /> Add Team Member
                     </button>
-                    <button className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
+                    {/* <button className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
                         <Upload size={18} /> Import from Excel
                     </button>
                     <button className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
                         <Download size={18} /> Download Template
-                    </button>
+                    </button> */}
                 </div>
             </div>
 
@@ -286,7 +289,9 @@ const ClientContacts = () => {
                     </div>
                 </div>
 
-                {source === "ExhibitorRegistration" && (() => {
+                {(() => {
+                    const isExhibitor = source === "ExhibitorRegistration";
+                    const disabledClass = isExhibitor ? "" : "opacity-50 grayscale pointer-events-none";
                     const getFreeQuota = (type) => {
                         const config = passConfigs.find(c => c.passType?.toLowerCase() === type.toLowerCase());
                         return config ? config.complimentaryQuota : 0;
@@ -294,54 +299,62 @@ const ClientContacts = () => {
 
                     return (
                         <>
-                            <div className="bg-orange-50 border border-orange-100 p-4 rounded-xl flex items-center gap-4">
+                            <div className={`bg-orange-50 border border-orange-100 p-4 rounded-xl flex items-center gap-4 ${disabledClass}`}>
                                 <div className="w-12 h-12 bg-orange-500 text-white rounded-lg flex items-center justify-center shrink-0">
                                     <IdCard size={24} />
                                 </div>
                                 <div>
                                     <div className="text-2xl font-bold text-[#0A143D] leading-none">{String(stats.exhibitorPass).padStart(2, '0')}</div>
                                     <div className="text-xs font-semibold text-gray-600 mt-1">Exhibitor Pass</div>
-                                    <div className="text-[10px] text-gray-500 mt-1 font-medium">{String(stats.exhibitorPass).padStart(2, '0')} members • {String(getFreeQuota('exhibitor')).padStart(2, '0')} Free</div>
+                                    <div className="text-[10px] text-gray-500 mt-1 font-medium">
+                                        {isExhibitor ? `${String(stats.exhibitorPass).padStart(2, '0')} members • ${String(getFreeQuota('exhibitor')).padStart(2, '0')} Free` : "Not applicable"}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="bg-green-50 border border-green-100 p-4 rounded-xl flex items-center gap-4">
+                            <div className={`bg-green-50 border border-green-100 p-4 rounded-xl flex items-center gap-4 ${disabledClass}`}>
                                 <div className="w-12 h-12 bg-green-500 text-white rounded-lg flex items-center justify-center shrink-0">
                                     <Car size={24} />
                                 </div>
                                 <div>
                                     <div className="text-2xl font-bold text-[#0A143D] leading-none">{String(stats.vehiclePass).padStart(2, '0')}</div>
                                     <div className="text-xs font-semibold text-gray-600 mt-1">Vehicle Pass</div>
-                                    <div className="text-[10px] text-gray-500 mt-1 font-medium">{String(stats.vehiclePass).padStart(2, '0')} members • {String(getFreeQuota('vehicle')).padStart(2, '0')} Free</div>
+                                    <div className="text-[10px] text-gray-500 mt-1 font-medium">
+                                        {isExhibitor ? `${String(stats.vehiclePass).padStart(2, '0')} members • ${String(getFreeQuota('vehicle')).padStart(2, '0')} Free` : "Not applicable"}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="bg-purple-50 border border-purple-100 p-4 rounded-xl flex items-center gap-4">
+                            <div className={`bg-purple-50 border border-purple-100 p-4 rounded-xl flex items-center gap-4 ${disabledClass}`}>
                                 <div className="w-12 h-12 bg-purple-500 text-white rounded-lg flex items-center justify-center shrink-0">
                                     <Badge size={24} />
                                 </div>
                                 <div>
                                     <div className="text-2xl font-bold text-[#0A143D] leading-none">{String(stats.servicePass).padStart(2, '0')}</div>
                                     <div className="text-xs font-semibold text-gray-600 mt-1">Service Pass</div>
-                                    <div className="text-[10px] text-gray-500 mt-1 font-medium">{String(stats.servicePass).padStart(2, '0')} members • {String(getFreeQuota('service')).padStart(2, '0')} Free</div>
+                                    <div className="text-[10px] text-gray-500 mt-1 font-medium">
+                                        {isExhibitor ? `${String(stats.servicePass).padStart(2, '0')} members • ${String(getFreeQuota('service')).padStart(2, '0')} Free` : "Not applicable"}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center gap-4">
+                            <div className={`bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center gap-4 ${disabledClass}`}>
                                 <div className="w-12 h-12 bg-blue-400 text-white rounded-lg flex items-center justify-center shrink-0">
                                     <Users size={24} />
                                 </div>
                                 <div>
                                     <div className="text-2xl font-bold text-[#0A143D] leading-none">{String(stats.visitorPass).padStart(2, '0')}</div>
                                     <div className="text-xs font-semibold text-gray-600 mt-1">Visitor Pass</div>
-                                    <div className="text-[10px] text-gray-500 mt-1 font-medium">{String(stats.visitorPass).padStart(2, '0')} members • {String(getFreeQuota('visitor')).padStart(2, '0')} Free</div>
+                                    <div className="text-[10px] text-gray-500 mt-1 font-medium">
+                                        {isExhibitor ? `${String(stats.visitorPass).padStart(2, '0')} members • ${String(getFreeQuota('visitor')).padStart(2, '0')} Free` : "Not applicable"}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="bg-rose-50 border border-rose-100 p-4 rounded-xl flex items-center gap-4">
+                            <div className={`bg-rose-50 border border-rose-100 p-4 rounded-xl flex items-center gap-4 ${disabledClass}`}>
                                 <div className="w-12 h-12 bg-rose-500 text-white rounded-lg flex items-center justify-center shrink-0">
                                     <ShieldAlert size={24} />
                                 </div>
                                 <div>
                                     <div className="text-2xl font-bold text-[#0A143D] leading-none">{String(stats.pending).padStart(2, '0')}</div>
                                     <div className="text-xs font-semibold text-gray-600 mt-1">Pending Verification</div>
-                                    <div className="text-[10px] text-gray-500 mt-1">ID Proof / Details</div>
+                                    <div className="text-[10px] text-gray-500 mt-1">{isExhibitor ? "ID Proof / Details" : "Not applicable"}</div>
                                 </div>
                             </div>
                         </>
@@ -439,7 +452,7 @@ const ClientContacts = () => {
                                     </td>
                                     <td className="py-4 px-6">
                                         <div className="flex items-center justify-center gap-2">
-                                            <button className="p-1.5 text-blue-600 hover:bg-blue-50 rounded border border-blue-100 transition-colors">
+                                            <button onClick={() => setViewingMember(member)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded border border-blue-100 transition-colors">
                                                 <Eye size={14} />
                                             </button>
                                             <button onClick={() => {
@@ -615,6 +628,102 @@ const ClientContacts = () => {
                             </button>
                             <button onClick={handleSave} className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors flex items-center gap-2 shadow-sm">
                                 Save Team Member
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* View Details Modal */}
+            {viewingMember && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-slate-100 max-h-[85vh] flex flex-col">
+                        <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                            <h3 className="font-bold text-slate-900 text-sm uppercase tracking-tight">Team Member Details</h3>
+                            <button onClick={() => setViewingMember(null)} className="p-1 rounded-lg text-slate-400 hover:bg-slate-100">
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div className="p-4 overflow-y-auto space-y-3 flex-1">
+                            {/* Identity row */}
+                            <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center overflow-hidden border border-slate-200 shrink-0">
+                                    {viewingMember.photoUrl || viewingMember.photo ? (
+                                        <SecureImage src={viewingMember.photoUrl || viewingMember.photo} alt="user" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <User className="text-slate-400" size={22} />
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold text-slate-900 text-sm truncate">{viewingMember.name || viewingMember.firstName}</span>
+                                        {viewingMember.isPrimary && (
+                                            <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold shrink-0">Primary</span>
+                                        )}
+                                    </div>
+                                    <span className="text-xs text-slate-500 truncate block">{viewingMember.designation || '-'}</span>
+                                </div>
+                                {viewingMember.verificationStatus === 'Verified' && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-600 rounded-full text-[10px] font-bold shrink-0"><ShieldCheck size={12} /> Verified</span>
+                                )}
+                                {viewingMember.verificationStatus === 'Pending' && (
+                                    <span className="inline-flex items-center px-2 py-1 bg-orange-50 text-orange-600 rounded-full text-[10px] font-bold shrink-0">Pending</span>
+                                )}
+                                {viewingMember.verificationStatus === 'Rejected' && (
+                                    <span className="inline-flex items-center px-2 py-1 bg-red-50 text-red-600 rounded-full text-[10px] font-bold shrink-0">Rejected</span>
+                                )}
+                            </div>
+
+                            {/* Info grid */}
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-lg">
+                                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Department</div>
+                                    <div className="text-xs font-medium text-slate-800 truncate mt-0.5">{viewingMember.department || '-'}</div>
+                                </div>
+                                <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-lg">
+                                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Role at Exhibition</div>
+                                    <div className="text-xs font-medium text-slate-800 truncate mt-0.5">{viewingMember.roleAtExhibition || '-'}</div>
+                                </div>
+                                <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-lg">
+                                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Mobile</div>
+                                    <div className="text-xs font-medium text-slate-800 truncate mt-0.5">{viewingMember.mobile || '-'}</div>
+                                </div>
+                                <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-lg">
+                                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Email</div>
+                                    <div className="text-xs font-medium text-slate-800 truncate mt-0.5">{viewingMember.email || '-'}</div>
+                                </div>
+                                <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-lg col-span-2 flex items-center justify-between">
+                                    <div>
+                                        <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">ID Proof</div>
+                                        <div className="text-xs font-medium text-slate-800 truncate mt-0.5">{viewingMember.idProof || '-'}</div>
+                                    </div>
+                                    {viewingMember.idProofUrl && (
+                                        <a href={viewingMember.idProofUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline shrink-0">
+                                            <FileText size={13} /> View
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Passes */}
+                            <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-lg">
+                                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5">Passes</div>
+                                <div className="flex gap-1.5 flex-wrap">
+                                    {viewingMember.passes?.exhibitor && <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-orange-50 text-orange-600 text-[11px] font-semibold"><IdCard size={12} /> Exhibitor</span>}
+                                    {viewingMember.passes?.vehicle && <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-green-50 text-green-600 text-[11px] font-semibold"><Car size={12} /> Vehicle</span>}
+                                    {viewingMember.passes?.service && <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-purple-50 text-purple-600 text-[11px] font-semibold"><Badge size={12} /> Service</span>}
+                                    {viewingMember.passes?.visitor && <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-50 text-blue-600 text-[11px] font-semibold"><Users size={12} /> Visitor</span>}
+                                    {!viewingMember.passes?.exhibitor && !viewingMember.passes?.vehicle && !viewingMember.passes?.service && !viewingMember.passes?.visitor && (
+                                        <span className="text-xs text-slate-400">No passes assigned</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-end bg-slate-50/50">
+                            <button onClick={() => setViewingMember(null)} className="px-4 py-2 rounded-lg text-sm font-semibold border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors">
+                                Close
                             </button>
                         </div>
                     </div>

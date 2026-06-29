@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ExternalLink, Search, ShoppingBag, Gift, CreditCard, CheckCircle2, Loader2, X } from 'lucide-react';
-import api from '../lib/api';
+import api, { SERVER_URL } from '../lib/api';
 
 const STATUS_STYLE = {
     paid: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -29,6 +29,14 @@ export default function AccessoryOrders() {
     }, []);
 
     const fmt = (n) => `₹${Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+    const formatDate = (value) => value
+        ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '—';
+    const getAssetUrl = (url) => {
+        if (!url) return '';
+        if (/^https?:\/\//i.test(url)) return url;
+        return `${SERVER_URL}${url.startsWith('/') ? url : `/${url}`}`;
+    };
 
     const filtered = orders.filter(o =>
         !search ||
@@ -218,12 +226,27 @@ export default function AccessoryOrders() {
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-0">
                                         {[
-                                            ['Beneficiary Name', selectedOrder.bankTransferDetails?.beneficiaryName],
-                                            ['Account Number', selectedOrder.bankTransferDetails?.beneficiaryAccountNumber],
-                                            ['IFSC Code', selectedOrder.bankTransferDetails?.ifscCode],
-                                            ['Bank Name', selectedOrder.bankTransferDetails?.bankName],
-                                            ['Account Type', selectedOrder.bankTransferDetails?.accountType],
-                                            ['Amount', fmt(selectedOrder.bankTransferDetails?.amount || selectedOrder.grandTotal)],
+                                            ['Transaction Reference Number (UTR No.)', selectedOrder.bankTransferDetails?.transactionReferenceNumber || selectedOrder.transactionId],
+                                            ['Transaction Date', formatDate(selectedOrder.bankTransferDetails?.transactionDate)],
+                                            ['Transaction Time', selectedOrder.bankTransferDetails?.transactionTime],
+                                            ['Transferred Amount', fmt(selectedOrder.bankTransferDetails?.transferredAmount || selectedOrder.grandTotal)],
+                                            ['Sender Bank Name', selectedOrder.bankTransferDetails?.senderBankName],
+                                            ['Sender Account Holder Name', selectedOrder.bankTransferDetails?.senderAccountHolderName],
+                                            [
+                                                'Payment Screenshot / Bank Receipt',
+                                                selectedOrder.bankTransferDetails?.paymentScreenshotUrl
+                                                    ? (
+                                                        <a
+                                                            href={getAssetUrl(selectedOrder.bankTransferDetails.paymentScreenshotUrl)}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-1 text-[#23471d] hover:underline"
+                                                        >
+                                                            <ExternalLink size={11} /> View Receipt
+                                                        </a>
+                                                    )
+                                                    : '—'
+                                            ],
                                         ].map(([label, value]) => (
                                             <div key={label} className="px-4 py-2 border-b border-r border-gray-100">
                                                 <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">{label}</p>

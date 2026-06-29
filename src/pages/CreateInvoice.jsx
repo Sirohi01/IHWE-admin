@@ -12,6 +12,13 @@ import SearchableDropdown from '../components/SearchableDropdown';
 import InvoicePreviewTemplate from './ihwe_client_data_2026/invoice/InvoicePreviewTemplate';
 import { useReactToPrint } from 'react-to-print';
 import Swal from 'sweetalert2';
+import {
+    clientToInvoiceForm,
+    estimateItemsToInvoiceItems,
+    estimateToInvoiceForm,
+    fetchLatestEstimateForClient,
+    loadClientLikeProforma,
+} from '../utils/invoicePrefill';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 const newItem = () => ({
@@ -87,6 +94,7 @@ const CreateInvoice = () => {
     const [attachedFile, setAttachedFile] = useState(null);
     const [estimates, setEstimates] = useState([]);
     const [selectedPi, setSelectedPi] = useState('');
+    const [isEditMode, setIsEditMode] = useState(false);
 
     const fetchEstimates = async () => {
         try {
@@ -118,7 +126,8 @@ const CreateInvoice = () => {
                 try {
                     const res = await api.get(`/api/invoices/${id}`);
                     const inv = res.data?.data || res.data;
-                    if (inv) {
+                    if (inv && inv._id) {
+                        setIsEditMode(true);
                         setSelectedPi(inv.estimate_no || '');
                         setForm(f => ({
                             ...f,
@@ -148,41 +157,32 @@ const CreateInvoice = () => {
                             terms: inv.terms || f.terms
                         }));
                         if (inv.items && inv.items.length > 0) {
-                            setItems(inv.items.map((item, idx) => {
-                                const rate = Number(item.rate) || 0;
-                                const qty = Number(item.qty) || 1;
-                                const area = Number(item.area) || 0;
-                                const multiplier = area > 0 ? area : (!isNaN(Number(item.size)) && Number(item.size) > 0 ? Number(item.size) : 1);
-                                const amount = item.amount ? Number(item.amount) : (rate * qty * multiplier);
-                                const discountPct = Number(item.discountPct) || 0;
-                                const discountAmount = amount * (discountPct / 100);
-                                const taxableValue = item.taxableValue ? Number(item.taxableValue) : (amount - discountAmount);
-                                const gstPctStr = item.gstPct || '18%';
-                                const gstRate = parseFloat(gstPctStr) || 0;
-                                const gstAmount = item.gstAmount ? Number(item.gstAmount) : (taxableValue * (gstRate / 100));
-                                const total = item.total ? Number(item.total) : (taxableValue + gstAmount);
-
-                                return {
-                                    id: Date.now() + idx,
-                                    description: item.description || '',
-                                    hsn: item.hsn || '',
-                                    qty: qty,
-                                    size: item.size || '',
-                                    area: item.area || '',
-                                    unit: item.unit || 'Nos',
-                                    rate: rate,
-                                    amount: amount,
-                                    discountPct: discountPct,
-                                    taxableValue: taxableValue,
-                                    gstPct: gstPctStr,
-                                    gstAmount: gstAmount,
-                                    total: total
-                                };
-                            }));
+                            setItems(estimateItemsToInvoiceItems(inv.items || []));
                         }
+                        return;
                     }
                 } catch (err) {
-                    console.error("Failed to fetch invoice for edit", err);
+                }
+
+                setIsEditMode(false);
+                try {
+                    const client = await loadClientLikeProforma(id);
+                    if (client) {
+                        const latestEstimate = await fetchLatestEstimateForClient(id, client);
+                        if (latestEstimate) {
+                            setSelectedPi(latestEstimate.est_no || '');
+                            setForm(f => estimateToInvoiceForm(latestEstimate, client, f));
+                            if (latestEstimate.items && latestEstimate.items.length > 0) {
+                                setItems(estimateItemsToInvoiceItems(latestEstimate.items));
+                            }
+                            return;
+                        }
+
+                        setSelectedPi('');
+                        setForm(f => clientToInvoiceForm(client, id, f));
+                    }
+                } catch (lookupErr) {
+                    console.error("Failed to load company details for prefill", lookupErr);
                 }
             };
             fetchInvoice();
@@ -257,37 +257,7 @@ const CreateInvoice = () => {
             }));
 
             if (est.items && est.items.length > 0) {
-                setItems(est.items.map((item, idx) => {
-                    const rate = Number(item.rate) || 0;
-                    const qty = Number(item.qty) || 1;
-                    const area = Number(item.area) || 0;
-                    const multiplier = area > 0 ? area : (!isNaN(Number(item.size)) && Number(item.size) > 0 ? Number(item.size) : 1);
-                    const amount = item.amount ? Number(item.amount) : (rate * qty * multiplier);
-                    const discountPct = Number(item.discountPct) || 0;
-                    const discountAmount = amount * (discountPct / 100);
-                    const taxableValue = item.taxableValue ? Number(item.taxableValue) : (amount - discountAmount);
-                    const gstPctStr = item.gstPct || '18%';
-                    const gstRate = parseFloat(gstPctStr) || 0;
-                    const gstAmount = item.gstAmount ? Number(item.gstAmount) : (taxableValue * (gstRate / 100));
-                    const total = item.total ? Number(item.total) : (taxableValue + gstAmount);
-
-                    return {
-                        id: Date.now() + idx,
-                        description: item.description || '',
-                        hsn: item.hsn || '',
-                        qty: qty,
-                        size: item.size || '',
-                        area: item.area || '',
-                        unit: item.unit || 'Nos',
-                        rate: rate,
-                        amount: amount,
-                        discountPct: discountPct,
-                        taxableValue: taxableValue,
-                        gstPct: gstPctStr,
-                        gstAmount: gstAmount,
-                        total: total
-                    };
-                }));
+                setItems(estimateItemsToInvoiceItems(est.items || []));
             }
         }
     };
@@ -336,7 +306,7 @@ const CreateInvoice = () => {
         let finalAmount = items.reduce((acc, item) => acc + (Number(item.total) || 0), 0);
 
         const payload = {
-            companyId: form.companyId || 'UNKNOWN',
+            companyId: form.companyId || id,
             estimate_no: selectedPi || '',
             type_of_invoice: form.invoiceType,
             invoice_date: form.invoiceDate,
@@ -378,7 +348,7 @@ const CreateInvoice = () => {
 
         try {
             let res;
-            if (id) {
+            if (isEditMode) {
                 res = await api.put(`/api/invoices/${id}`, payload);
                 if (res.status === 200 || res.status === 201) {
                     alert('Invoice updated successfully!');
@@ -388,12 +358,12 @@ const CreateInvoice = () => {
                 res = await api.post('/api/invoices', payload);
                 if (res.status === 201 || res.status === 200) {
                     alert('Invoice generated successfully!');
-                    navigate('/invoice-list');
+                    navigate(`/dashboard/account/${payload.companyId}`);
                 }
             }
         } catch (err) {
             console.error(err);
-            alert(`Failed to ${id ? 'update' : 'generate'} invoice: ` + (err.response?.data?.message || err.message));
+            alert(`Failed to ${isEditMode ? 'update' : 'generate'} invoice: ` + (err.response?.data?.message || err.message));
         }
     };
 

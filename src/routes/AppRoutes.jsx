@@ -239,6 +239,7 @@ const InvoiceNumberDetails = lazy(() => import("../pages/ihwe_client_data_2026/i
 const InvoiceList = lazy(() => import("../pages/ihwe_client_data_2026/invoice/InvoiceList"));
 const Payments = lazy(() => import("../pages/ihwe_client_data_2026/payments/Payment"));
 const AddPayment = lazy(() => import("../pages/dashboard/account/AddPayment"));
+const AccountOverview = lazy(() => import("../pages/dashboard/account/AccountOverview"));
 const AgendaManagement = lazy(() => import("../pages/AgendaManagement"));
 const SpeakerRegistrationList = lazy(() => import("../pages/SpeakerRegistrationList"));
 const SpeakerRegistrationDetail = lazy(() => import("../pages/SpeakerRegistrationDetail"));
@@ -269,6 +270,8 @@ const PerformaInvoices = lazy(() => import("../pages/PerformaInvoices"));
 //Account Section
 const SalesReport = lazy(() => import("../pages/accounts/SalesReport"));
 const CreateDebitNote = lazy(() => import("../pages/CreateDebitNote"));
+const DebitNoteList = lazy(() => import("../pages/DebitNoteList"));
+const DebitNoteView = lazy(() => import("../pages/DebitNoteView"));
 const CreateInvoicePage = lazy(() => import("../pages/CreateInvoice"));
 const BankDetailsManage = lazy(() => import("../pages/accounts/BankDetailsManage"));
 // Sales Tools
@@ -296,6 +299,7 @@ export default function AppRoutes() {
             <Route path="role-permissions" element={<RolePermissions />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="dashboard/add-payment" element={<AddPayment />} />
+            <Route path="dashboard/account/AddPayment/:id" element={<AddPayment />} />
             <Route path="dashboard-banners" element={<BannerManagement />} />
             <Route path="click-analytics" element={<ClickAnalytics />} />
             <Route path="about-us" element={<About />} />
@@ -340,7 +344,10 @@ export default function AppRoutes() {
             />
             <Route path="performa-invoice/:id" element={<PerformaInvoices />} />
             <Route path="performa-invoice-list/:id" element={<PerformaInvoiceList />} />
+            <Route path="debit-note-list/:id" element={<DebitNoteList />} />
+            <Route path="debit-note-view/:id" element={<DebitNoteView />} />
             <Route path="create-debit-note" element={<CreateDebitNote />} />
+            <Route path="create-debit-note/:id" element={<CreateDebitNote />} />
             <Route path="page-create-invoice" element={<CreateInvoicePage />} />
             <Route path="page-create-invoice/:id" element={<CreateInvoicePage />} />
             <Route path="e-promotion-manage" element={<EPromotionManage />} />
@@ -564,6 +571,10 @@ export default function AppRoutes() {
             <Route
               path="/ihweClientData2026/payments/:id"
               element={<Payments />}
+            />
+            <Route
+              path="dashboard/account/:id"
+              element={<AccountOverview />}
             />
             {/* <Route
             path="ihweClientData2026/AddNewVisitor"
