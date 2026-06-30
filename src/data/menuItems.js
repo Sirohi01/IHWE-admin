@@ -691,6 +691,7 @@ export const menuItems = [
     label: "Admin Management",
     icon: TrendingUp,
     children: [
+      { label: "Delegate Session Config", path: "/delegate-config" },
       { label: "Previous Exhibition List", path: "/previous-exhibitions" },
       { label: "Delegate Passes", path: "/delegate-passes" },
       { label: "Business Type", path: "/business-type" },
