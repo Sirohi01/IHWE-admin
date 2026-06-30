@@ -50,17 +50,17 @@ const PROFORMA_EVENT_GST_NO = '09AAFCN9238F1Z6';
 
 // ── Section heading ──────────────────────────────────────────────────────────
 const SectionHead = ({ num, label }) => (
-    <div className="flex items-center gap-2 mb-4">
-        <div className="w-6 h-6 rounded-full bg-blue-800 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+    <div className="flex items-center gap-3 mb-4">
+        <div className="w-5 h-5 rounded-full bg-[#3b82f6] text-white flex items-center justify-center text-[11px] font-bold shrink-0">
             {num}
         </div>
-        <h2 className="text-sm font-bold text-gray-800">{label}</h2>
+        <h3 className="text-[14px] font-medium text-[#1a2b4b]">{label}</h3>
     </div>
 );
 
 // ── Field label ──────────────────────────────────────────────────────────────
 const Label = ({ children, required }) => (
-    <label className="block text-xs font-semibold text-gray-800 mb-1">
+    <label className="block text-[12px] font-medium text-[#1a2b4b] mb-1">
         {children}{required && <span className="text-red-500 ml-0.5">*</span>}
     </label>
 );
@@ -69,7 +69,7 @@ const Label = ({ children, required }) => (
 const Input = (props) => (
     <input
         {...props}
-        className={`w-full border border-gray-300 rounded px-2.5 py-2.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 bg-white ${props.className || ''}`}
+        className={`w-full appearance-none border border-gray-200 rounded-lg px-3 py-1.5 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/10 transition-all h-[32px] ${props.className || ''}`}
     />
 );
 
@@ -77,7 +77,7 @@ const Input = (props) => (
 const Select = ({ options, ...props }) => (
     <select
         {...props}
-        className={`w-full border border-gray-300 rounded px-2.5 py-2.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 bg-white ${props.className || ''}`}
+        className={`w-full appearance-none border border-gray-200 rounded-lg px-3 py-1 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/10 transition-all h-[32px] cursor-pointer ${props.className || ''}`}
     >
         {options.map((o) => (
             <option key={o} value={o}>{o}</option>
@@ -91,18 +91,18 @@ const QuickAction = ({ icon: Icon, color, label, sub, onClick, disabled }) => (
         type="button"
         onClick={onClick}
         disabled={disabled}
-        className={`flex items-center justify-between w-full p-2.5 rounded-lg border border-gray-100 transition group ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:border-blue-200 hover:bg-blue-50/40'}`}
+        className={`flex items-center justify-between w-full p-3 rounded-lg border border-gray-100 transition group ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:border-[#3b82f6] hover:shadow-sm hover:bg-white bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)]'}`}
     >
-        <div className="flex items-center gap-2.5">
-            <div className={`w-7 h-7 rounded ${color} flex items-center justify-center ${disabled ? 'grayscale' : ''}`}>
-                <Icon className="w-5 h-5 " />
+        <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-lg ${color} flex items-center justify-center ${disabled ? 'grayscale' : ''}`}>
+                <Icon size={16} />
             </div>
             <div className="text-left">
-                <p className={`text-[9px] font-semibold ${label === "Save Draft" ? "text-green-700" : label === "Generate Estimate" ? "text-green-700" : label === "Download PDF" ? "text-gray-800" : label === "Send via WhatsApp" ? "text-green-700" : label === "Send via Email" ? "text-gray-800" : "text-gray-800"}`}>{label}</p>
-                <p className="text-[10px] text-gray-400">{sub}</p>
+                <p className={`text-[12px] font-medium ${label === "Save Draft" ? "text-emerald-600" : label === "Generate Estimate" ? "text-emerald-600" : label === "Download PDF" ? "text-[#1a2b4b]" : label === "Send via WhatsApp" ? "text-emerald-600" : label === "Send via Email" ? "text-[#1a2b4b]" : "text-[#1a2b4b]"}`}>{label}</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">{sub}</p>
             </div>
         </div>
-        <ChevronRight className={`w-3.5 h-3.5 ${disabled ? 'text-gray-200' : 'text-gray-300 group-hover:text-blue-400'}`} />
+        <ChevronRight size={16} className={`shrink-0 ${disabled ? 'text-gray-200' : 'text-gray-400 group-hover:text-[#3b82f6]'}`} />
     </button>
 );
 
@@ -542,7 +542,7 @@ export const PerformaInvoices = () => {
                 `}
             </style>
             {/* ── page header ── */}
-            <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
+            <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between ">
                 <div>
                     <h1 className="text-lg font-bold text-gray-900">Create Estimate (Proforma Invoice)</h1>
                     <div className="flex items-center gap-1 mt-0.5 text-xs text-gray-400">
@@ -572,12 +572,12 @@ export const PerformaInvoices = () => {
             </div>
 
             {/* ── body ── */}
-            <div className="px-3.5 pt-3.5 pb-1 flex gap-3 items-start">
+            <div className="px-3.5 pt-3.5 pb-1 pr-16 flex gap-3 items-start">
                 {/* ── LEFT FORM ── */}
                 <div className="flex-1 space-y-3 min-w-0">
 
                     {/* SECTION 1 – Estimate Details */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-5">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <SectionHead num="1" label="Estimate Details" />
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                             <div>
@@ -613,7 +613,7 @@ export const PerformaInvoices = () => {
                                     placeholder="Company address"
                                     value={form.consigneeAddress}
                                     onChange={(e) => setField('consigneeAddress', e.target.value)}
-                                    className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500 resize-y bg-white"
+                                    className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-1.5 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/10 transition-all resize-y"
                                 />
                             </div>
                             <div>
@@ -682,74 +682,74 @@ export const PerformaInvoices = () => {
                     </div>
 
                     {/* SECTION 2 – Item & Pricing */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-5">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-4">
                         <SectionHead num="2" label="Item & Pricing Details" />
 
                         {/* Table */}
                         <div className="overflow-x-auto">
-                            <table className="w-full text-xs border-collapse">
+                            <table className="w-full text-[10px] border-collapse">
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200">
                                         {['#', 'Item Description *', 'HSN No. *', 'Qty. *', 'Area', 'Size', 'Unit *', 'Rate (₹) *', 'Amount (₹)', 'Disc. %', 'Taxable Value (₹)', ''].map((h, i) => (
-                                            <th key={i} className="text-left px-2 py-2 font-semibold text-gray-800 whitespace-nowrap">{h}</th>
+                                            <th key={i} className="text-left px-1 py-2 font-medium text-[#1a2b4b] whitespace-nowrap">{h}</th>
                                         ))}
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {items.map((item, idx) => (
-                                        <tr key={item.id} className=" hover:bg-gray-50/50">
-                                            <td className="px-2 py-2 font-semibold text-gray-500">{idx + 1}</td>
-                                            <td className="px-2 py-1 min-w-[160px]  ">
-                                                <div className='border border-gray-200 rounded'>
+                                        <tr key={item.id} className=" hover:bg-gray-50/50 border-b border-gray-50 last:border-0">
+                                            <td className="px-1 py-1.5 font-medium text-slate-400 text-center">{idx + 1}</td>
+                                            <td className="px-1 py-1.5 min-w-[120px]">
+                                                <div className='border border-gray-200 rounded-md overflow-hidden focus-within:border-[#3b82f6] focus-within:ring-1 focus-within:ring-[#3b82f6]/20 transition-all shadow-sm'>
                                                     <input
-                                                        className="w-full  px-2 py-1 text-xs focus:outline-none focus:border-blue-400 bg-white"
+                                                        className="w-full px-1.5 py-1 text-[11px] text-[#1a2b4b] focus:outline-none bg-white"
                                                         value={item.description}
                                                         placeholder="Item description"
                                                         onChange={(e) => updateItem(item.id, 'description', e.target.value)}
                                                     />
                                                     <input
-                                                        className="w-full border-0 px-2 py-0.5 text-[10px] text-gray-400 focus:outline-none bg-transparent"
+                                                        className="w-full border-t border-gray-100 px-1.5 py-1 text-[10px] text-gray-400 focus:outline-none bg-gray-50/50"
                                                         value={item.subDesc}
                                                         placeholder="Sub description"
                                                         onChange={(e) => updateItem(item.id, 'subDesc', e.target.value)}
                                                     />
                                                 </div>
                                             </td>
-                                            <td className="px-2 py-1.5 min-w-[72px]">
-                                                <input type='number' className="w-full border border-gray-200 rounded px-2 py-[9px] text-xs focus:outline-none focus:border-blue-400 bg-white" value={item.hsn} onChange={(e) => updateItem(item.id, 'hsn', e.target.value)} />
+                                            <td className="px-1 py-1.5 min-w-[50px]">
+                                                <input type='number' className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px]" value={item.hsn} onChange={(e) => updateItem(item.id, 'hsn', e.target.value)} />
                                             </td>
-                                            <td className="px-2 py-1.5 w-17">
-                                                <input type="number" min={1} className="w-full border border-gray-200 rounded px-2 py-[9px] text-xs focus:outline-none focus:border-blue-400 bg-white text-center" value={item.qty} onChange={(e) => updateItem(item.id, 'qty', e.target.value)} />
+                                            <td className="px-1 py-1.5 w-14">
+                                                <input type="number" min={1} className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all text-center h-[26px]" value={item.qty} onChange={(e) => updateItem(item.id, 'qty', e.target.value)} />
                                             </td>
-                                            <td className="px-2 py-1.5">
-                                                <input className="w-full border border-gray-200 rounded px-2 py-[9px] text-xs focus:outline-none focus:border-blue-400 bg-white" value={item.area} onChange={(e) => updateItem(item.id, 'area', e.target.value)} />
+                                            <td className="px-1 py-1.5 w-14">
+                                                <input className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px]" value={item.area} onChange={(e) => updateItem(item.id, 'area', e.target.value)} />
                                             </td>
-                                            <td className="px-2 py-1.5">
-                                                <input className="w-full border border-gray-200 rounded px-2 py-[9px] text-xs focus:outline-none focus:border-blue-400 bg-white" value={item.size} onChange={(e) => updateItem(item.id, 'size', e.target.value)} />
+                                            <td className="px-1 py-1.5 w-14">
+                                                <input className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px]" value={item.size} onChange={(e) => updateItem(item.id, 'size', e.target.value)} />
                                             </td>
-                                            <td className="px-2 py-1.5 w-20">
-                                                <select className="w-full border border-gray-200 rounded px-1 py-[9px] text-xs focus:outline-none bg-white" value={item.unit} onChange={(e) => updateItem(item.id, 'unit', e.target.value)}>
+                                            <td className="px-1 py-1.5 w-16">
+                                                <select className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] cursor-pointer" value={item.unit} onChange={(e) => updateItem(item.id, 'unit', e.target.value)}>
                                                     {UNITS.map((u) => <option key={u}>{u}</option>)}
                                                 </select>
                                             </td>
-                                            <td className="px-2 py-1.5 min-w-[80px]">
-                                                <input type="number" className="w-full border border-gray-200 rounded px-2 py-[9px] text-xs focus:outline-none focus:border-blue-400 bg-white" value={item.rate} onChange={(e) => updateItem(item.id, 'rate', e.target.value)} />
+                                            <td className="px-1 py-1.5 min-w-[60px]">
+                                                <input type="number" className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-right" value={item.rate} onChange={(e) => updateItem(item.id, 'rate', e.target.value)} />
                                             </td>
-                                            <td className="px-2 py-1.5 min-w-[60px]">
-                                                <span className="px-3 py-2 text-xs text-gray-700 bg-gray-100 ">{roundAmount(item.amount).toLocaleString('en-IN')}</span>
+                                            <td className="px-1 py-1.5 min-w-[70px]">
+                                                <div className="flex justify-end items-center h-[26px] px-1.5 rounded-md bg-gray-50 border border-gray-100 text-[11px] font-medium text-slate-700">{roundAmount(item.amount).toLocaleString('en-IN')}</div>
                                             </td>
-                                            <td className="px-2 py-1.5 w-14">
-                                                <input type="number" min={0} max={100} className="w-full border border-gray-200 rounded px-2 py-[9px] text-xs focus:outline-none focus:border-blue-400 bg-white text-center" value={item.disc} onChange={(e) => updateItem(item.id, 'disc', e.target.value)} />
+                                            <td className="px-1 py-1.5 w-14">
+                                                <input type="number" min={0} max={100} className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all text-center h-[26px]" value={item.disc} onChange={(e) => updateItem(item.id, 'disc', e.target.value)} />
                                             </td>
-                                            <td className="pl-2 pr-5 py-1.5 min-w-[100px]">
-                                                <div className="block w-full px-2 py-[9px] border border-gray-200 rounded text-xs text-gray-700 bg-white">
+                                            <td className="px-1 py-1.5 min-w-[70px]">
+                                                <div className="flex justify-end items-center h-[26px] px-1.5 rounded-md bg-gray-50 border border-gray-100 text-[11px] font-medium text-[#1a2b4b]">
                                                     {roundAmount(item.taxable).toLocaleString('en-IN')}
                                                 </div>
                                             </td>
-                                            <td className="pl-0 pr-2 py-1.5 w-6 text-center">
+                                            <td className="px-1 py-1.5 w-6 text-center">
                                                 {items.length > 1 && (
                                                     <button onClick={() => removeItem(item.id)} className="text-red-400 hover:text-red-600 transition">
-                                                        <Trash2 className="w-4 h-4 mx-auto" />
+                                                        <Trash2 className="w-3.5 h-3.5 mx-auto" />
                                                     </button>
                                                 )}
                                             </td>
@@ -818,67 +818,71 @@ export const PerformaInvoices = () => {
                 </div>
 
                 {/* ── RIGHT SIDEBAR ── */}
-                <div className="w-80 flex-shrink-0 space-y-3">
+                <div className="w-80 flex-shrink-0 space-y-4">
                     {/* Estimate Summary */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-4">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                         <div className="flex items-center gap-2 mb-4">
-                            <FileText className="w-4 h-4 text-blue-600" />
-                            <h3 className="text-sm font-bold text-gray-800">Estimate Summary</h3>
+                            <div className="w-6 h-6 rounded flex items-center justify-center bg-[#f0f5ff] text-[#194090]">
+                                <FileText size={14} />
+                            </div>
+                            <h3 className="text-[14px] font-medium text-[#1a2b4b]">Estimate Summary</h3>
                         </div>
 
-                        <div className="space-y-2.5 text-xs">
-                            <div className="flex justify-between text-gray-600">
-                                <span className="font-semibold text-gray-800">Sub Total</span>
-                                <span className="font-semibold text-gray-800">{fmt(subTotal)}</span>
+                        <div className="space-y-3 text-[13px]">
+                            <div className="flex justify-between text-slate-500">
+                                <span className="font-medium text-slate-500">Sub Total</span>
+                                <span className="font-medium text-[#1a2b4b]">{fmt(subTotal)}</span>
                             </div>
-                            <div className="flex justify-between text-gray-600">
-                                <span className="font-semibold text-gray-800">Discount</span>
+                            <div className="flex justify-between text-slate-500">
+                                <span className="font-medium text-slate-500">Discount</span>
                                 <div className="flex items-center gap-1">
-                                    <span className="text-green-800 font-semibold">- {fmt(calculatedDiscount)}</span>
+                                    <span className="text-emerald-600 font-medium">- {fmt(calculatedDiscount)}</span>
                                 </div>
                             </div>
-                            <div className="flex justify-between text-gray-600 border-t border-dashed border-gray-200 pt-2">
-                                <span className="font-semibold text-gray-800">Taxable Amount</span>
-                                <span className="font-semibold text-gray-800">{fmt(taxable)}</span>
-                            </div>
-
-                            <div className="mt-1 space-y-1.5 pt-1">
-                                <div className="flex justify-between text-gray-500">
-                                    <span className="font-semibold text-gray-800">CGST ({isIGST ? 0 : gstPct / 2}%)</span>
-                                    <span className="font-semibold text-gray-800">{fmt(cgst)}</span>
-                                </div>
-                                <div className="flex justify-between text-gray-500">
-                                    <span className="font-semibold text-gray-800">SGST ({isIGST ? 0 : gstPct / 2}%)</span>
-                                    <span className="font-semibold text-gray-800">{fmt(sgst)}</span>
-                                </div>
-                                <div className="flex justify-between text-gray-500">
-                                    <span className="font-semibold text-gray-800">IGST ({isIGST ? gstPct : 0}%)</span>
-                                    <span className="font-semibold text-gray-800">{fmt(igst)}</span>
-                                </div>
+                            <div className="flex justify-between text-slate-500 border-t border-dashed border-gray-200 pt-3">
+                                <span className="font-medium text-slate-500">Taxable Amount</span>
+                                <span className="font-medium text-[#1a2b4b]">{fmt(taxable)}</span>
                             </div>
 
-                            <div className="flex justify-between text-gray-600 border-t border-dashed border-gray-200 pt-2">
-                                <span className="font-bold text-black">Total Tax</span>
-                                <span className="font-bold text-black">{fmt(totalTax)}</span>
+                            <div className="mt-2 space-y-2 pt-2">
+                                <div className="flex justify-between text-slate-400">
+                                    <span className="font-medium">CGST ({isIGST ? 0 : gstPct / 2}%)</span>
+                                    <span className="font-medium text-slate-600">{fmt(cgst)}</span>
+                                </div>
+                                <div className="flex justify-between text-slate-400">
+                                    <span className="font-medium">SGST ({isIGST ? 0 : gstPct / 2}%)</span>
+                                    <span className="font-medium text-slate-600">{fmt(sgst)}</span>
+                                </div>
+                                <div className="flex justify-between text-slate-400">
+                                    <span className="font-medium">IGST ({isIGST ? gstPct : 0}%)</span>
+                                    <span className="font-medium text-slate-600">{fmt(igst)}</span>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-between text-slate-500 border-t border-dashed border-gray-200 pt-3">
+                                <span className="font-bold text-[#1a2b4b]">Total Tax</span>
+                                <span className="font-bold text-[#1a2b4b]">{fmt(totalTax)}</span>
                             </div>
                         </div>
 
                         {/* Grand Total */}
-                        <div className="mt-3 bg-blue-100 rounded-lg px-4 py-[8px] flex items-center justify-between">
-                            <span className="text-blue-800 text-base font-black">Grand Total</span>
-                            <span className="text-blue-800 text-base font-black">{fmt(grandTotal)}</span>
+                        <div className="mt-4 bg-[#f8f9fc] rounded-lg px-4 py-3 flex items-center justify-between">
+                            <span className="text-[#1a2b4b] text-[14px] font-semibold">Grand Total</span>
+                            <span className="text-[#194090] text-[16px] font-bold">{fmt(grandTotal)}</span>
                         </div>
                     </div>
 
                     {/* Quick Actions */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-4">
-                        <h3 className="text-xs font-extrabold text-gray-800 mb-3 uppercase tracking-wider">Quick Actions</h3>
-                        <div className="space-y-2">
-                            <QuickAction icon={Bookmark} color="bg-blue-100 text-blue-500" label="Save Draft" sub="Save as draft for later" disabled={true} />
-                            <QuickAction icon={FileSpreadsheet} color="bg-green-100 text-green-600" label={existingEstimateId ? "Update Estimate" : "Generate Estimate"} sub="Create or update Proforma Invoice" onClick={handleGenerateEstimate} disabled={true} />
-                            <QuickAction icon={File} color="bg-red-100 text-red-500" label="Download PDF" sub="Download estimate as PDF" onClick={() => window.open(`/payments/estimateDetails/${existingEstimateId}`, '_blank')} disabled={!existingEstimateId} />
-                            <QuickAction icon={MessageCircleMore} color="bg-green-100 text-green-600" label={isWhatsAppLoading ? "Sending..." : "Send via WhatsApp"} sub="Share estimate on WhatsApp" onClick={handleSendWhatsApp} disabled={!existingEstimateId || isWhatsAppLoading} />
-                            <QuickAction icon={Mail} color="bg-blue-100 text-blue-500" label={isEmailLoading ? "Sending..." : "Send via Email"} sub="Email estimate to client" onClick={handleSendEmail} disabled={!existingEstimateId || isEmailLoading} />
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                        <div className="flex items-center gap-2 mb-4">
+                            <h3 className="text-[14px] font-medium text-[#1a2b4b]">Quick Actions</h3>
+                        </div>
+                        <div className="space-y-2.5">
+                            <QuickAction icon={Bookmark} color="bg-blue-50 text-blue-500" label="Save Draft" sub="Save as draft for later" disabled={true} />
+                            <QuickAction icon={FileSpreadsheet} color="bg-emerald-50 text-emerald-600" label={existingEstimateId ? "Update Estimate" : "Generate Estimate"} sub="Create or update Proforma Invoice" onClick={handleGenerateEstimate} disabled={true} />
+                            <QuickAction icon={File} color="bg-red-50 text-red-500" label="Download PDF" sub="Download estimate as PDF" onClick={() => window.open(`/payments/estimateDetails/${existingEstimateId}`, '_blank')} disabled={!existingEstimateId} />
+                            <QuickAction icon={MessageCircleMore} color="bg-emerald-50 text-emerald-600" label={isWhatsAppLoading ? "Sending..." : "Send via WhatsApp"} sub="Share estimate on WhatsApp" onClick={handleSendWhatsApp} disabled={!existingEstimateId || isWhatsAppLoading} />
+                            <QuickAction icon={Mail} color="bg-blue-50 text-blue-500" label={isEmailLoading ? "Sending..." : "Send via Email"} sub="Email estimate to client" onClick={handleSendEmail} disabled={!existingEstimateId || isEmailLoading} />
                         </div>
                     </div>
                 </div>
