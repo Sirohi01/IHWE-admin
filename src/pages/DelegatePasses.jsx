@@ -12,6 +12,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const DelegatePasses = () => {
   const [delegates, setDelegates] = useState([]);
   const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState({ totalPaid: 0, totalPending: 0, totalRevenue: 0 });
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [loading, setLoading] = useState(false);
@@ -50,6 +51,11 @@ const DelegatePasses = () => {
         setDelegates(res.data.registrations);
         setTotal(res.data.total);
         setTotalPages(res.data.totalPages);
+        setStats({
+          totalPaid: res.data.totalPaid || 0,
+          totalPending: res.data.totalPending || 0,
+          totalRevenue: res.data.totalRevenue || 0
+        });
       }
     } catch (error) {
       console.error("Failed to fetch registrations", error);
@@ -126,21 +132,59 @@ const DelegatePasses = () => {
         </div>
       </div>
 
-      {/* STATS SECTION - Simplified for now based on live total */}
+      {/* STATS SECTION */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 shrink-0">
-        <div className="bg-white p-3 rounded-lg border border-slate-200 flex flex-col gap-2 shadow-sm">
+        <div className="bg-white p-3 rounded-lg border border-slate-200 flex flex-col gap-2 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-emerald-50 text-emerald-600">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-blue-50 text-blue-600">
               <Users size={16} />
             </div>
-            <p className="text-md font-medium text-slate-600 tracking-wide">Total Registrations</p>
+            <p className="text-md font-medium text-slate-600 tracking-wide">Total Passes</p>
           </div>
           <div>
             <h3 className="text-lg text-slate-800">{total}</h3>
-            <p className="text-[9px] text-emerald-600">All Time</p>
+            <p className="text-[9px] text-blue-600">All Time Registrations</p>
           </div>
         </div>
-        {/* We can add more live stats by creating an aggregate endpoint later if needed */}
+
+        <div className="bg-white p-3 rounded-lg border border-slate-200 flex flex-col gap-2 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-emerald-50 text-emerald-600">
+              <CheckCircle2 size={16} />
+            </div>
+            <p className="text-md font-medium text-slate-600 tracking-wide">Paid Passes</p>
+          </div>
+          <div>
+            <h3 className="text-lg text-slate-800">{stats.totalPaid}</h3>
+            <p className="text-[9px] text-emerald-600">Successfully Paid</p>
+          </div>
+        </div>
+
+        <div className="bg-white p-3 rounded-lg border border-slate-200 flex flex-col gap-2 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-orange-50 text-orange-600">
+              <Clock size={16} />
+            </div>
+            <p className="text-md font-medium text-slate-600 tracking-wide">Pending Passes</p>
+          </div>
+          <div>
+            <h3 className="text-lg text-slate-800">{stats.totalPending}</h3>
+            <p className="text-[9px] text-orange-600">Payment Pending</p>
+          </div>
+        </div>
+
+        <div className="bg-white p-3 rounded-lg border border-slate-200 flex flex-col gap-2 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-purple-50 text-purple-600">
+              <IndianRupee size={16} />
+            </div>
+            <p className="text-md font-medium text-slate-600 tracking-wide">Total Revenue</p>
+          </div>
+          <div>
+            <h3 className="text-lg text-slate-800">₹{stats.totalRevenue.toLocaleString('en-IN')}</h3>
+            <p className="text-[9px] text-purple-600">From Paid Passes</p>
+          </div>
+        </div>
       </div>
 
       {/* Filter Bar */}
