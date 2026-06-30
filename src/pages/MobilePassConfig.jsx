@@ -3,6 +3,7 @@ import {
   Car,
   CheckCircle2,
   IndianRupee,
+  Sparkles,
   RefreshCw,
   Save,
   Settings,
@@ -22,6 +23,7 @@ const passMeta = {
   vehicle: { icon: Car, color: "emerald", label: "Vehicle" },
   service: { icon: Wrench, color: "purple", label: "Service" },
   visitor: { icon: Users, color: "blue", label: "Visitor" },
+  delegate: { icon: Sparkles, color: "pink", label: "Delegate" },
 };
 
 const colorClass = {
@@ -29,6 +31,7 @@ const colorClass = {
   emerald: "from-emerald-500 to-teal-500 shadow-emerald-500/20",
   purple: "from-purple-500 to-indigo-500 shadow-purple-500/20",
   blue: "from-blue-500 to-cyan-500 shadow-blue-500/20",
+  pink: "from-pink-500 to-rose-500 shadow-pink-500/20",
 };
 
 export default function MobilePassConfig() {

@@ -185,6 +185,17 @@ export const menuItems = [
 
   {
     type: "dropdown",
+    label: "Delegate Management",
+    icon: Users,
+    children: [
+      { label: "Add Delegate Pass", path: "/add-delegate-pass" },
+      { label: "Delegate Passes", path: "/delegate-passes" },
+      { label: "Delegate Session Config", path: "/delegate-config" },
+    ],
+  },
+
+  {
+    type: "dropdown",
     label: "Buyer Management",
     icon: Users,
     children: [
@@ -692,7 +703,6 @@ export const menuItems = [
     icon: TrendingUp,
     children: [
       { label: "Previous Exhibition List", path: "/previous-exhibitions" },
-      { label: "Delegate Passes", path: "/delegate-passes" },
       { label: "Business Type", path: "/business-type" },
       { label: "Annual Turnover", path: "/annual-turnover" },
       { label: "Primary Product Interest", path: "/primary-product-interest" },

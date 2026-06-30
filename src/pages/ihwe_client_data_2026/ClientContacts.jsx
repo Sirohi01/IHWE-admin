@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
     Users, Shield, Utensils, Badge, IdCard, Car, Plus, Download, Upload,
-    Search, Filter, Eye, Edit2, Trash2, X, Phone, User, ShieldCheck, ShieldAlert, FileText, Loader2
+    Search, Filter, Eye, Edit2, Trash2, X, Phone, User, ShieldCheck, ShieldAlert, FileText, Loader2, Activity
 } from "lucide-react";
 import api, { SERVER_URL } from "../../lib/api";
 import Swal from "sweetalert2";
@@ -61,6 +61,7 @@ const ClientContacts = () => {
     const [loading, setLoading] = useState(true);
     const [source, setSource] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
+    const [activityLogs, setActivityLogs] = useState([]);
 
     // Modal states
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -102,6 +103,7 @@ const ClientContacts = () => {
                 if (response.data.success) {
                     setTeamMembers(response.data.data);
                     setSource(response.data.source);
+                    setActivityLogs(response.data.activityLogs || []);
 
                     if (response.data.source === "ExhibitorRegistration") {
                         try {
@@ -242,6 +244,28 @@ const ClientContacts = () => {
         m.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (m.designation && m.designation.toLowerCase().includes(searchTerm.toLowerCase()))
     );
+
+    const formatActivityTime = (timestamp) => {
+        if (!timestamp) return "-";
+        const date = new Date(timestamp);
+        if (Number.isNaN(date.getTime())) return "-";
+        return date.toLocaleString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    };
+
+    const getActionBadgeClass = (action = "") => {
+        const normalized = String(action).toLowerCase();
+        if (normalized.includes("create")) return "bg-[#e6f7ec] text-[#00a86b]";
+        if (normalized.includes("update")) return "bg-[#e6f0fa] text-[#194090]";
+        if (normalized.includes("delete")) return "bg-[#ffebee] text-[#ea580c]";
+        if (normalized.includes("login")) return "bg-[#f3e8ff] text-[#7e22ce]";
+        return "bg-gray-100 text-gray-600";
+    };
 
     const stats = {
         total: teamMembers.length,
@@ -489,6 +513,55 @@ const ClientContacts = () => {
                             )}
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            {/* Activity Logs */}
+            <div className="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                        <h2 className="text-lg font-bold text-[#0A143D]">Activity Logs</h2>
+                        <p className="text-xs text-gray-500 mt-1">Recent create, update and delete activity for this exhibitor.</p>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">
+                        <Activity size={14} />
+                        {activityLogs.length} Recent
+                    </div>
+                </div>
+                <div className="h-[380px] overflow-y-auto p-4">
+                    {activityLogs.length > 0 ? (
+                        <div className="space-y-2">
+                            {activityLogs.map((log) => (
+                                <div key={log.id} className="rounded-lg border border-gray-100 bg-[#fafbff] px-3 py-2.5">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${getActionBadgeClass(log.action)}`}>
+                                                    {log.action || "Activity"}
+                                                </span>
+                                                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
+                                                    {log.module || "System"}
+                                                </span>
+                                            </div>
+                                            <p className="text-[12px] font-medium text-[#1a2b4b] leading-snug">
+                                                {log.details || "-"}
+                                            </p>
+                                            <p className="text-[10px] text-slate-500 mt-1">
+                                                {log.user || "System"}{log.ip_address ? ` • ${log.ip_address}` : ""}
+                                            </p>
+                                        </div>
+                                        <span className="text-[10px] text-slate-400 whitespace-nowrap shrink-0">
+                                            {formatActivityTime(log.timestamp)}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="h-full flex items-center justify-center text-sm text-slate-500">
+                            No activity recorded yet.
+                        </div>
+                    )}
                 </div>
             </div>
 

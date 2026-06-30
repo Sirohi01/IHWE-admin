@@ -43,17 +43,17 @@ const UNITS = ['Nos', 'Sqm', 'Sqft', 'Mtrs', 'Kgs', 'Ltrs', 'Pcs'];
 
 // ── Section heading ──────────────────────────────────────────────────────────
 const SectionHead = ({ num, label }) => (
-    <div className="flex items-center gap-2 mb-4">
-        <div className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+    <div className="flex items-center gap-3 mb-4">
+        <div className="w-5 h-5 rounded-full bg-[#3b82f6] text-white flex items-center justify-center text-[11px] font-bold shrink-0">
             {num}
         </div>
-        <h2 className="text-sm font-bold text-gray-800">{label}</h2>
+        <h3 className="text-[14px] font-medium text-[#1a2b4b]">{label}</h3>
     </div>
 );
 
 // ── Field label ──────────────────────────────────────────────────────────────
 const Label = ({ children, required }) => (
-    <label className="block text-xs font-semibold text-gray-800 mb-1.5">
+    <label className="block text-[12px] font-medium text-[#1a2b4b] mb-1">
         {children}{required && <span className="text-red-500 ml-0.5">*</span>}
     </label>
 );
@@ -62,7 +62,7 @@ const Label = ({ children, required }) => (
 const Input = (props) => (
     <input
         {...props}
-        className={`w-full border border-gray-300 rounded-md px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-100 bg-white disabled:bg-gray-50 disabled:text-gray-500 ${props.className || ''}`}
+        className={`w-full appearance-none border border-gray-200 rounded-lg px-3 py-1.5 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/10 transition-all h-[32px] disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed ${props.className || ''}`}
     />
 );
 
@@ -70,7 +70,7 @@ const Input = (props) => (
 const Select = ({ options, ...props }) => (
     <select
         {...props}
-        className={`w-full border border-gray-300 rounded-md px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-100 bg-white disabled:bg-gray-50 disabled:text-gray-500 ${props.className || ''}`}
+        className={`w-full appearance-none border border-gray-200 rounded-lg px-3 py-1 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/10 transition-all h-[32px] cursor-pointer disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed ${props.className || ''}`}
     >
         {options.map((o, i) => (
             <option key={i} value={typeof o === 'string' ? o : o.value}>{typeof o === 'string' ? o : o.label}</option>
@@ -79,10 +79,10 @@ const Select = ({ options, ...props }) => (
 );
 
 // ── Quick Action row ─────────────────────────────────────────────────────────
-const QuickAction = ({ icon: Icon, label, colorClass = "text-blue-600", onClick }) => (
-    <div onClick={onClick} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition">
-        <Icon className={`w-4 h-4 ${colorClass}`} />
-        <span className="text-xs font-semibold text-gray-700">{label}</span>
+const QuickAction = ({ icon: Icon, label, colorClass = "text-[#3b82f6]", onClick, disabled }) => (
+    <div onClick={disabled ? undefined : onClick} className={`flex items-center gap-3 p-3 rounded-lg border border-transparent transition ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:border-gray-100 hover:shadow-sm hover:bg-gray-50 cursor-pointer'}`}>
+        <Icon size={16} className={colorClass} />
+        <span className="text-[12px] font-medium text-[#1a2b4b]">{label}</span>
     </div>
 );
 
@@ -467,13 +467,13 @@ const CreateInvoice = () => {
                 </button>
             </div>
 
-            <div className="max-w-[1400px] mx-auto px-4 pt-3 flex gap-3 items-start">
+            <div className="w-full  pr-16 px-4 pt-3 flex gap-3 items-start">
 
                 {/* ── LEFT FORM ── */}
                 <form onSubmit={handleSubmit} className="flex-1 space-y-3 min-w-0">
 
                     {/* SECTION 1 – Invoice Details */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <SectionHead num="1" label="Invoice Details" />
 
                         <div className="grid grid-cols-4 gap-4 mb-3">
@@ -486,7 +486,7 @@ const CreateInvoice = () => {
                                     </button>
                                 </div> */}
                                 {id ? (
-                                    <Input value={selectedPi || 'No PI / Estimate'} disabled className="py-2.5 bg-gray-50" />
+                                    <Input value={selectedPi || 'No PI / Estimate'} disabled />
                                 ) : (
                                     <SearchableDropdown
                                         value={selectedPi}
@@ -500,17 +500,17 @@ const CreateInvoice = () => {
                             </div>
                             <div>
                                 <Label>GSTIN / PAN No.</Label>
-                                <Input placeholder="Enter GSTIN / PAN No." value={form.gstin} onChange={(e) => setField('gstin', e.target.value)} className="py-2.5" />
+                                <Input placeholder="Enter GSTIN / PAN No." value={form.gstin} onChange={(e) => setField('gstin', e.target.value)} />
                             </div>
                             <div>
                                 <Label required>Invoice Type</Label>
-                                <Select required options={['Select Invoice Type', 'Intrastate', 'Interstate Sale', 'Foreign Sale']} value={form.invoiceType} onChange={(e) => setField('invoiceType', e.target.value)} className="py-2.5" />
+                                <Select required options={['Select Invoice Type', 'Intrastate', 'Interstate Sale', 'Foreign Sale']} value={form.invoiceType} onChange={(e) => setField('invoiceType', e.target.value)} />
                             </div>
                             <div>
                                 <Label required>Invoice No.</Label>
-                                <div className="flex">
-                                    <Input required value={form.invoiceNo} onChange={(e) => setField('invoiceNo', e.target.value)} disabled className="rounded-r-none border-r-0 py-2.5 bg-gray-50" />
-                                    <button type="button" className="border border-gray-300 rounded-r-md px-2.5 bg-gray-50 text-gray-500 hover:bg-gray-100">
+                                <div className="flex h-[32px]">
+                                    <Input required value={form.invoiceNo} onChange={(e) => setField('invoiceNo', e.target.value)} disabled className="rounded-r-none border-r-0 focus:z-10" />
+                                    <button type="button" className="border border-gray-200 rounded-r-lg px-2.5 bg-gray-50 text-gray-500 hover:bg-gray-100 flex items-center justify-center shrink-0">
                                         <Settings className="w-4 h-4" />
                                     </button>
                                 </div>
@@ -542,7 +542,7 @@ const CreateInvoice = () => {
                     </div>
 
                     {/* SECTION 2 – Billing & Shipping Details */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-4">
                         <SectionHead num="2" label="Billing & Shipping Details" />
 
                         <div className="grid grid-cols-4 gap-4 mb-2">
@@ -552,7 +552,7 @@ const CreateInvoice = () => {
                                     required
                                     value={form.company_addr}
                                     onChange={(e) => setField('company_addr', e.target.value)}
-                                    className="w-full h-[50px] border border-gray-300 rounded-md px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-100 bg-white resize-y"
+                                    className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-1.5 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/10 transition-all resize-y h-[60px]"
                                 />
                             </div>
                             <div>
@@ -562,17 +562,17 @@ const CreateInvoice = () => {
                                     placeholder={form.sameAsBilling ? "Same as billing address" : "Enter shipping address"}
                                     value={form.sameAsBilling ? form.company_addr : form.consignee_addr}
                                     onChange={(e) => setField('consignee_addr', e.target.value)}
-                                    className="w-full h-[30px] border border-gray-300 rounded-md px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-100 disabled:bg-gray-50 resize-y"
+                                    className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-1.5 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/10 transition-all resize-y h-[60px] disabled:bg-gray-50"
                                 />
-                                <div className="flex items-center gap-1.5 mt-1">
+                                <div className="flex items-center gap-1.5 mt-1.5">
                                     <input
                                         type="checkbox"
                                         id="sameAsBilling"
                                         checked={form.sameAsBilling}
                                         onChange={(e) => setField('sameAsBilling', e.target.checked)}
-                                        className="w-3.5 h-3.5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
+                                        className="w-3.5 h-3.5 text-[#3b82f6] rounded border-gray-300 focus:ring-[#3b82f6] cursor-pointer"
                                     />
-                                    <label htmlFor="sameAsBilling" className="text-xs font-semibold text-gray-700 cursor-pointer">Same as Billing Address</label>
+                                    <label htmlFor="sameAsBilling" className="text-[12px] font-medium text-slate-500 cursor-pointer">Same as Billing Address</label>
                                 </div>
                             </div>
                             <div>
@@ -600,99 +600,99 @@ const CreateInvoice = () => {
                             </div>
                             <div>
                                 <Label required>Place of Supply</Label>
-                                <Select required options={['Select Place of Supply', 'Delhi (07)', 'Maharashtra (27)', 'Uttar Pradesh (09)', 'Haryana (06)']} value={form.placeOfSupply} onChange={(e) => setField('placeOfSupply', e.target.value)} className="py-2.5" />
+                                <Select required options={['Select Place of Supply', 'Delhi (07)', 'Maharashtra (27)', 'Uttar Pradesh (09)', 'Haryana (06)']} value={form.placeOfSupply} onChange={(e) => setField('placeOfSupply', e.target.value)} />
                             </div>
                         </div>
                     </div>
 
                     {/* SECTION 3 – Items */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-6 py-3">
                         <SectionHead num="3" label="Item Details" />
 
-                        <div className="overflow-x-none border border-gray-200 rounded-lg mb-3">
-                            <table className="w-full text-xs">
+                        <div className="overflow-x-none mb-3">
+                            <table className="w-full text-[9px] border-collapse">
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200 whitespace-nowrap">
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 w-8">#</th>
-                                        <th className="px-3 py-2.5 text-left font-semibold text-gray-700 min-w-[110px]">Item Description <span className="text-red-500">*</span></th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[30px]">HSN / SAC</th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[30px]">Qty <span className="text-red-500">*</span></th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[40px]">Area</th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[40px]">Size</th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[30px]">Unit <span className="text-red-500">*</span></th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[30px]">Rate (₹) <span className="text-red-500">*</span></th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[30px]">Amount (₹)</th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[30px]">Discount %</th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[30px]">Taxable Value (₹)</th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[30px]">GST % <span className="text-red-500">*</span></th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[30px]">GST Amount (₹)</th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[30px]">Total (₹)</th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[30px]">Action</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] w-8">#</th>
+                                        <th className="px-1 py-2 text-left font-medium text-[#1a2b4b] min-w-[110px]">Item Description <span className="text-red-500">*</span></th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">HSN / SAC</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">Qty <span className="text-red-500">*</span></th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[40px]">Area</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[40px]">Size</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">Unit <span className="text-red-500">*</span></th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">Rate (₹) <span className="text-red-500">*</span></th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">Amount (₹)</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">Disc. %</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">Taxable (₹)</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">GST % <span className="text-red-500">*</span></th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">GST (₹)</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">Total (₹)</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {items.map((item, idx) => (
-                                        <tr key={item.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50">
-                                            <td className="px-1.5 py-2 text-center text-gray-500 font-medium">{idx + 1}</td>
-                                            <td className="px-1.5 py-2">
+                                        <tr key={item.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
+                                            <td className="px-1 py-1.5 text-center text-slate-400 font-medium text-[11px]">{idx + 1}</td>
+                                            <td className="px-1 py-1.5">
                                                 <input
                                                     required
-                                                    className="w-full border border-gray-200 rounded px-2 py-1.5 text-[10px] focus:outline-none focus:border-green-500 bg-white"
+                                                    className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px]"
                                                     value={item.description}
                                                     onChange={(e) => updateItem(item.id, 'description', e.target.value)}
                                                 />
                                             </td>
-                                            <td className="px-1.5 py-2">
-                                                <input className="w-full border border-gray-200 rounded px-2 py-1.5 text-[10px] focus:outline-none focus:border-green-500 bg-white text-center" value={item.hsn} onChange={(e) => updateItem(item.id, 'hsn', e.target.value)} />
+                                            <td className="px-1 py-1.5">
+                                                <input className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-center" value={item.hsn} onChange={(e) => updateItem(item.id, 'hsn', e.target.value)} />
                                             </td>
-                                            <td className="px-1.5 py-2">
-                                                <input required type="number" min={1} className="w-full border border-gray-200 rounded px-1 py-1.5 text-[10px] focus:outline-none focus:border-green-500 bg-white text-center" value={item.qty} onChange={(e) => updateItem(item.id, 'qty', e.target.value)} />
+                                            <td className="px-1 py-1.5">
+                                                <input required type="number" min={1} className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-center" value={item.qty} onChange={(e) => updateItem(item.id, 'qty', e.target.value)} />
                                             </td>
-                                            <td className="px-1.5 py-2">
-                                                <input className="w-full border border-gray-200 rounded px-1 py-1.5 text-[10px] focus:outline-none focus:border-green-500 bg-white text-center" value={item.area} onChange={(e) => updateItem(item.id, 'area', e.target.value)} placeholder="Area" />
+                                            <td className="px-1 py-1.5">
+                                                <input className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-center" value={item.area} onChange={(e) => updateItem(item.id, 'area', e.target.value)} placeholder="Area" />
                                             </td>
-                                            <td className="px-1.5 py-2">
-                                                <input className="w-full border border-gray-200 rounded px-1 py-1.5 text-[10px] focus:outline-none focus:border-green-500 bg-white text-center" value={item.size} onChange={(e) => updateItem(item.id, 'size', e.target.value)} placeholder="Size" />
+                                            <td className="px-1 py-1.5">
+                                                <input className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-center" value={item.size} onChange={(e) => updateItem(item.id, 'size', e.target.value)} placeholder="Size" />
                                             </td>
-                                            <td className="px-1.5 py-2">
-                                                <select required className="min-w-[30px] border border-gray-200 rounded px-1 py-1.5 text-[10px] focus:outline-none focus:border-green-500 bg-white" value={item.unit} onChange={(e) => updateItem(item.id, 'unit', e.target.value)}>
+                                            <td className="px-1 py-1.5">
+                                                <select required className="min-w-[40px] appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] cursor-pointer" value={item.unit} onChange={(e) => updateItem(item.id, 'unit', e.target.value)}>
                                                     {UNITS.map((u) => <option key={u}>{u}</option>)}
                                                 </select>
                                             </td>
-                                            <td className="px-1.5 py-2">
-                                                <input required type="number" className="w-full border border-gray-200 rounded px-2 py-1.5 text-[10px] focus:outline-none focus:border-green-500 bg-white text-right" value={item.rate} onChange={(e) => updateItem(item.id, 'rate', e.target.value)} />
+                                            <td className="px-1 py-1.5">
+                                                <input required type="number" className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-right" value={item.rate} onChange={(e) => updateItem(item.id, 'rate', e.target.value)} />
                                             </td>
-                                            <td className="px-1.5 py-2">
-                                                <div className="w-full px-1 py-1.5 text-[10px] text-right text-gray-700">
+                                            <td className="px-1 py-1.5">
+                                                <div className="flex items-center justify-end h-[26px] px-1.5 rounded-md bg-gray-50 border border-gray-100 text-[11px] font-medium text-slate-700 text-right">
                                                     {item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                                 </div>
                                             </td>
-                                            <td className="px-1.5 py-2">
-                                                <input type="number" className="w-full border border-gray-200 rounded px-1 py-1.5 text-[10px] focus:outline-none focus:border-green-500 bg-white text-center" value={item.discountPct} onChange={(e) => updateItem(item.id, 'discountPct', e.target.value)} />
+                                            <td className="px-1 py-1.5">
+                                                <input type="number" className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-center" value={item.discountPct} onChange={(e) => updateItem(item.id, 'discountPct', e.target.value)} />
                                             </td>
-                                            <td className="px-1.5 py-2">
-                                                <div className="w-full px-1 py-1.5 text-[10px] text-right text-gray-700">
+                                            <td className="px-1 py-1.5">
+                                                <div className="flex items-center justify-end h-[26px] px-1.5 rounded-md bg-gray-50 border border-gray-100 text-[11px] font-medium text-slate-700 text-right">
                                                     {item.taxableValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                                 </div>
                                             </td>
-                                            <td className="px-1.5 py-2">
-                                                <select required className="min-w-[30px] border border-gray-200 rounded px-1 py-1.5 text-[10px] focus:outline-none focus:border-green-500 bg-white" value={item.gstPct} onChange={(e) => updateItem(item.id, 'gstPct', e.target.value)}>
+                                            <td className="px-1 py-1.5">
+                                                <select required className="min-w-[40px] appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] cursor-pointer" value={item.gstPct} onChange={(e) => updateItem(item.id, 'gstPct', e.target.value)}>
                                                     {GST_OPTIONS.map((u) => <option key={u}>{u}</option>)}
                                                 </select>
                                             </td>
-                                            <td className="px-1.5 py-2">
-                                                <div className="w-full px-1 py-1.5 text-[10px] text-right text-gray-700">
+                                            <td className="px-1 py-1.5">
+                                                <div className="flex items-center justify-end h-[26px] px-1.5 rounded-md bg-gray-50 border border-gray-100 text-[11px] font-medium text-slate-700 text-right">
                                                     {item.gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                                 </div>
                                             </td>
-                                            <td className="px-1.5 py-2">
-                                                <div className="w-full px-1 py-1.5 text-[10px] text-right text-gray-800 font-medium">
+                                            <td className="px-1 py-1.5">
+                                                <div className="flex items-center justify-end h-[26px] px-1.5 rounded-md bg-emerald-50 border border-emerald-100 text-[11px] font-medium text-emerald-700 text-right">
                                                     {item.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                                 </div>
                                             </td>
-                                            <td className="px-1.5 py-2 text-center">
-                                                <button type="button" onClick={() => removeItem(item.id)} className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition">
-                                                    <Trash2 className="w-4 h-4 mx-auto" />
+                                            <td className="px-1 py-1.5 text-center">
+                                                <button type="button" onClick={() => removeItem(item.id)} className="p-1 text-red-400 hover:text-red-500 hover:bg-red-50 rounded transition">
+                                                    <Trash2 className="w-3.5 h-3.5 mx-auto" />
                                                 </button>
                                             </td>
                                         </tr>
@@ -711,7 +711,7 @@ const CreateInvoice = () => {
                     </div>
 
                     {/* SECTION 4 – Additional Info */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm mb-3">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-3 mt-4">
                         <SectionHead num="4" label="Additional Information" />
 
                         <div className="grid grid-cols-2 gap-6 mb-2">
@@ -721,7 +721,7 @@ const CreateInvoice = () => {
                                     placeholder="Enter any remarks or notes (optional)"
                                     value={form.remarks}
                                     onChange={(e) => setField('remarks', e.target.value)}
-                                    className="w-full h-16 border border-gray-200 rounded-md px-3 py-2.5 text-xs text-gray-800 focus:outline-none focus:border-green-500 bg-white resize-y"
+                                    className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-1.5 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/10 transition-all resize-y h-[60px]"
                                 />
                             </div>
                             <div>
@@ -730,7 +730,7 @@ const CreateInvoice = () => {
                                     placeholder="Enter terms & conditions (optional)"
                                     value={form.terms}
                                     onChange={(e) => setField('terms', e.target.value)}
-                                    className="w-full h-16 border border-gray-200 rounded-md px-3 py-2.5 text-xs text-gray-800 focus:outline-none focus:border-green-500 bg-white resize-y"
+                                    className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-1.5 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/10 transition-all resize-y h-[60px]"
                                 />
                             </div>
                         </div>
@@ -806,48 +806,37 @@ const CreateInvoice = () => {
                 <div className="w-[250px] flex-shrink-0 space-y-3">
 
                     {/* Summary */}
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="p-4 border-b border-gray-100 flex items-center gap-2 bg-gray-50/50">
-                            <div className="w-8 h-8 rounded-lg bg-green-50 text-green-600 flex items-center justify-center border border-green-100">
-                                <FileText className="w-4 h-4" />
+                    {/* Invoice Summary */}
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="w-6 h-6 rounded flex items-center justify-center bg-[#f0f5ff] text-[#194090]">
+                                <FileText size={14} />
                             </div>
-                            <h3 className="text-sm font-bold text-gray-800">Invoice Summary</h3>
+                            <h3 className="text-[14px] font-medium text-[#1a2b4b]">Invoice Summary</h3>
                         </div>
 
-                        <div className="p-5 space-y-3.5">
-                            <div className="space-y-2.5 text-xs">
-                                <div className="flex justify-between text-gray-600">
-                                    <span className="font-semibold text-gray-700">Sub Total</span>
-                                    <span className="font-bold text-gray-800">₹ {sumSubTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                </div>
-                                <div className="flex justify-between text-gray-600">
-                                    <span className="font-semibold text-gray-700">Total Discount</span>
-                                    <span className="font-bold text-red-500">- ₹ {sumDiscount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                </div>
-                                <div className="flex justify-between text-gray-600">
-                                    <span className="font-semibold text-gray-700">Taxable Amount</span>
-                                    <span className="font-bold text-gray-800">₹ {sumTaxable.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                </div>
+                        <div className="space-y-3 text-[13px]">
+                            <div className="flex justify-between text-slate-500">
+                                <span className="font-medium text-slate-500">Sub Total</span>
+                                <span className="font-medium text-[#1a2b4b]">₹ {sumTaxable.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                             </div>
 
-                            <hr className="border-dashed border-gray-200 my-2" />
-
-                            <div className="space-y-2.5 text-xs">
-                                {!isIgst ? (
+                            <div className="mt-2 space-y-2 pt-2 border-t border-dashed border-gray-200">
+                                {form.invoiceType === 'Intrastate' ? (
                                     <>
-                                        <div className="flex justify-between text-gray-600">
-                                            <span className="font-semibold text-gray-700">CGST</span>
-                                            <span className="font-bold text-gray-800">₹ {(sumGst / 2).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        <div className="flex justify-between text-slate-400">
+                                            <span className="font-medium">CGST</span>
+                                            <span className="font-medium text-slate-600">₹ {(sumGst / 2).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
-                                        <div className="flex justify-between text-gray-600">
-                                            <span className="font-semibold text-gray-700">SGST</span>
-                                            <span className="font-bold text-gray-800">₹ {(sumGst / 2).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        <div className="flex justify-between text-slate-400">
+                                            <span className="font-medium">SGST</span>
+                                            <span className="font-medium text-slate-600">₹ {(sumGst / 2).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="flex justify-between text-gray-600">
-                                        <span className="font-semibold text-gray-700">IGST</span>
-                                        <span className="font-bold text-gray-800">₹ {sumGst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    <div className="flex justify-between text-slate-400">
+                                        <span className="font-medium">IGST</span>
+                                        <span className="font-medium text-slate-600">₹ {sumGst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                     </div>
                                 )}
                             </div>
@@ -860,70 +849,69 @@ const CreateInvoice = () => {
                     </div>
 
                     {/* Quick Actions */}
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                            <span className="text-indigo-600">⚡</span>
-                            <h3 className="text-sm font-bold text-gray-800">Quick Actions</h3>
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                        <div className="flex items-center gap-2 mb-4">
+                            <h3 className="text-[14px] font-medium text-[#1a2b4b]">Quick Actions</h3>
                         </div>
-                        <div className="flex flex-col">
-                            <QuickAction icon={Mail} label={isEmailLoading ? "Sending Email..." : "Send Invoice via Email"} colorClass="text-blue-600" onClick={handleSendEmail} disabled={isEmailLoading} />
-                            <QuickAction icon={MessageCircleMore} label={isWhatsAppLoading ? "Sending WhatsApp..." : "Send Invoice via WhatsApp"} colorClass="text-green-600" onClick={handleSendWhatsApp} disabled={isWhatsAppLoading} />
-                            <QuickAction icon={File} label="Download PDF" colorClass="text-red-600" onClick={handlePrint} />
+                        <div className="space-y-2.5">
+                            <QuickAction icon={Mail} label={isEmailLoading ? "Sending Email..." : "Send Invoice via Email"} colorClass="text-[#3b82f6]" onClick={handleSendEmail} disabled={isEmailLoading} />
+                            <QuickAction icon={MessageCircleMore} label={isWhatsAppLoading ? "Sending WhatsApp..." : "Send Invoice via WhatsApp"} colorClass="text-emerald-600" onClick={handleSendWhatsApp} disabled={isWhatsAppLoading} />
+                            <QuickAction icon={File} label="Download PDF" colorClass="text-red-500" onClick={handlePrint} />
                             <QuickAction icon={Printer} label="Print Invoice" colorClass="text-indigo-600" onClick={handlePrint} />
-                            <QuickAction icon={Bookmark} label="Save as Template" colorClass="text-blue-500" onClick={() => alert("Save as Template functionality coming soon!")} />
+                            <QuickAction icon={Bookmark} label="Save as Template" colorClass="text-amber-500" onClick={() => alert("Save as Template functionality coming soon!")} />
                         </div>
                     </div>
 
                     {/* Recent Invoices */}
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-bold text-gray-800">Recent Invoices</h3>
-                            <a href="#" className="text-xs font-bold text-blue-600 hover:underline">View All</a>
+                            <h3 className="text-[14px] font-medium text-[#1a2b4b]">Recent Invoices</h3>
+                            <a href="#" className="text-[12px] font-medium text-[#3b82f6] hover:underline">View All</a>
                         </div>
 
                         <div className="space-y-4">
                             {/* Invoice 1 */}
                             <div className="flex items-start justify-between">
-                                <div className="flex gap-2.5">
-                                    <span className="text-xs font-bold text-gray-500">1</span>
+                                <div className="flex gap-3">
+                                    <span className="text-[12px] font-bold text-slate-300">1</span>
                                     <div>
-                                        <p className="text-xs font-bold text-gray-800">INV/26-27/0001</p>
-                                        <p className="text-[10px] text-gray-500 mt-0.5">31 May 2026</p>
+                                        <p className="text-[12px] font-medium text-[#1a2b4b]">INV/26-27/0001</p>
+                                        <p className="text-[10px] text-slate-500 mt-0.5">31 May 2026</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-xs font-bold text-gray-800">₹ 1,00,300.00</p>
-                                    <p className="text-[10px] font-bold text-gray-400 mt-0.5">Draft</p>
+                                    <p className="text-[12px] font-medium text-[#1a2b4b]">₹ 1,00,300.00</p>
+                                    <p className="text-[10px] font-medium text-slate-400 mt-0.5">Draft</p>
                                 </div>
                             </div>
 
                             {/* Invoice 2 */}
                             <div className="flex items-start justify-between">
-                                <div className="flex gap-2.5">
-                                    <span className="text-xs font-bold text-gray-500">2</span>
+                                <div className="flex gap-3">
+                                    <span className="text-[12px] font-bold text-slate-300">2</span>
                                     <div>
-                                        <p className="text-xs font-bold text-gray-800">INV/26-27/0000</p>
-                                        <p className="text-[10px] text-gray-500 mt-0.5">25 May 2026</p>
+                                        <p className="text-[12px] font-medium text-[#1a2b4b]">INV/26-27/0000</p>
+                                        <p className="text-[10px] text-slate-500 mt-0.5">25 May 2026</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-xs font-bold text-green-800">₹ 75,400.00</p>
-                                    <p className="text-[10px] font-bold text-green-500 mt-0.5">Paid</p>
+                                    <p className="text-[12px] font-medium text-emerald-600">₹ 75,400.00</p>
+                                    <p className="text-[10px] font-medium text-emerald-500 mt-0.5">Paid</p>
                                 </div>
                             </div>
 
                             {/* Invoice 3 */}
                             <div className="flex items-start justify-between">
-                                <div className="flex gap-2.5">
-                                    <span className="text-xs font-bold text-gray-500">3</span>
+                                <div className="flex gap-3">
+                                    <span className="text-[12px] font-bold text-slate-300">3</span>
                                     <div>
-                                        <p className="text-xs font-bold text-gray-800">INV/26-27/0009</p>
-                                        <p className="text-[10px] text-gray-400 mt-0.5">20 May 2026</p>
+                                        <p className="text-[12px] font-medium text-[#1a2b4b]">INV/26-27/0009</p>
+                                        <p className="text-[10px] text-slate-500 mt-0.5">20 May 2026</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-xs font-bold text-red-700">₹ 1,25,000.00</p>
-                                    <p className="text-[10px] font-bold text-red-400 mt-0.5">Overdue</p>
+                                    <p className="text-[12px] font-medium text-red-600">₹ 1,25,000.00</p>
+                                    <p className="text-[10px] font-medium text-red-500 mt-0.5">Overdue</p>
                                 </div>
                             </div>
                         </div>

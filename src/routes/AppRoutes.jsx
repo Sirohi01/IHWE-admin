@@ -15,6 +15,7 @@ const TaskAndAlerts = lazy(() => import("../pages/TaskAndAlerts"));
 const ActivityLog = lazy(() => import("../pages/ActivityLog"));
 const DelegatePasses = lazy(() => import("../pages/DelegatePasses"));
 
+
 const CreatePage = lazy(() => import("../pages/CreatePage"));
 const PageList = lazy(() => import("../pages/PageList"));
 const UploadPdf = lazy(() => import("../pages/UploadPdf"));
@@ -138,6 +139,7 @@ const ConferenceTestimonialsManage = lazy(() => import("../pages/ConferenceTesti
 const SidebarCustomize = lazy(() => import("../pages/SidebarCustomize"));
 import ProtectedRoute from "./ProtectedRoute";
 const AddNewClients = lazy(() => import("../pages/ihwe_client_data_2026/AddNewClients"));
+const DelegateConfig = lazy(() => import("../pages/admin_management/DelegateConfig"));
 const ColdClientList = lazy(() => import("../pages/ihwe_client_data_2026/ColdClientList"));
 const ConfirmClientList = lazy(() => import("../pages/ihwe_client_data_2026/ConfirmClientList"));
 const NewLeadList = lazy(() => import("../pages/ihwe_client_data_2026/NewLeadList"));
@@ -187,6 +189,7 @@ const BusinessType = lazy(() => import("../pages/admin_management/BusinessType")
 const AnnualTurnover = lazy(() => import("../pages/admin_management/AnnualTurnover"));
 const PrimaryProductInterest = lazy(() => import("../pages/admin_management/PrimaryProductInterest"));
 const SecondaryProductCategories = lazy(() => import("../pages/admin_management/SecondaryProductCategories"));
+const AddDelegatePass = lazy(() => import("../pages/admin_management/AddDelegatePass"));
 const MeetingPriorityLevel = lazy(() => import("../pages/admin_management/MeetingPriorityLevel"));
 const DocumentConfiguration = lazy(() => import("../pages/admin_management/DocumentConfiguration"));
 const TransferClient = lazy(() => import("../pages/admin_management/TransferClient"));
@@ -453,9 +456,13 @@ export default function AppRoutes() {
             <Route path="exhibitor-booking/:id" element={<ExhibitorBookingDetail />} />
             <Route path="failed-payments" element={<FailedPayments />} />
             <Route path="payment-delay-warnings" element={<PaymentDelayWarnings />} />
-            <Route path="delegate-passes" element={<DelegatePasses />} />
             <Route path="events" element={<ManageEvents />} />
             <Route path="stall-rates" element={<ManageStallRates />} />
+            <Route
+              path="/add-delegate-pass"
+              element={<AddDelegatePass />}
+            />
+            <Route path="delegate-passes" element={<DelegatePasses />} />
             <Route path="terms-conditions" element={<ManageTerms />} />
 
             <Route path="add-meta" element={<AddSeo />} />
@@ -578,6 +585,7 @@ export default function AppRoutes() {
               path="dashboard/account/:id"
               element={<AccountOverview />}
             />
+            <Route path="delegate-config" element={<DelegateConfig />} />
             {/* <Route
             path="ihweClientData2026/AddNewVisitor"
             element={<VisitorRegistration />}
