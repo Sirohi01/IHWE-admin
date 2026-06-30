@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import api from "../../../lib/api";
 import { resolveLinkedIds } from "../../../utils/resolveLinkedIds";
+import { getCurrentUserName } from "../../../utils/currentUser";
 import CompanyAccountSummary, { formatCurrency } from "./CompanyAccountSummary";
 
 const PAYMENT_FOR_OPTIONS = ["Advance Payment", "Running Payment", "Final Payment", "Part Payment", "Balance Payment"];
@@ -131,6 +132,7 @@ const AddPayment = () => {
     try {
       setSubmitting(true);
       const formData = new FormData();
+      formData.append("companyId", selectedDoc.companyId || id);
       formData.append("invoice_id", selectedDoc._id);
       formData.append("f_amount", String(invoiceAmount));
       formData.append("amount_text", String(received));
@@ -147,7 +149,7 @@ const AddPayment = () => {
       formData.append("tds_section", deductTds ? tdsSection : "");
       formData.append("tds_certificate_no", deductTds ? tdsCertNo : "");
       formData.append("ex_no", docType === "Invoice" ? selectedDoc.invoice_no : selectedDoc.est_no);
-      formData.append("added_by", localStorage.getItem("user_name") || "Admin");
+      formData.append("added_by", getCurrentUserName());
       formData.append("notes", notes);
       if (proofFile) formData.append("paymentProof", proofFile);
 

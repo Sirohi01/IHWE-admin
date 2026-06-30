@@ -1,18 +1,21 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "../../lib/api";
 
-// 🧾 Base URL
-const BASE_URL = import.meta.env.VITE_API_URL;
+const normalizeCreditNotes = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.creditNotes)) return payload.creditNotes;
+  return [];
+};
+
+const normalizeCreditNote = (payload) => payload?.data || payload || null;
 
 export const createCreditNote = createAsyncThunk(
   "creditnotes/create",
   async (creditNoteData, thunkAPI) => {
     try {
-      const response = await axios.post(
-        `${BASE_URL}/api/creditnotes`,
-        creditNoteData
-      );
-      return response.data.data;
+      const response = await api.post(`/api/creditnotes`, creditNoteData);
+      return normalizeCreditNote(response.data);
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
     }
@@ -23,8 +26,8 @@ export const fetchCreditNotes = createAsyncThunk(
   "creditnotes/fetchAll",
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/creditnotes`);
-      return response.data;
+      const response = await api.get(`/api/creditnotes`);
+      return normalizeCreditNotes(response.data);
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
     }
@@ -35,8 +38,8 @@ export const fetchCreditNoteById = createAsyncThunk(
   "creditnotes/fetchById",
   async (id, thunkAPI) => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/creditnotes/${id}`);
-      return response.data;
+      const response = await api.get(`/api/creditnotes/${id}`);
+      return normalizeCreditNote(response.data);
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
     }
@@ -47,11 +50,8 @@ export const updateCreditNote = createAsyncThunk(
   "creditnotes/update",
   async ({ id, updatedData }, thunkAPI) => {
     try {
-      const response = await axios.put(
-        `${BASE_URL}/api/creditnotes/${id}`,
-        updatedData
-      );
-      return response.data.data;
+      const response = await api.put(`/api/creditnotes/${id}`, updatedData);
+      return normalizeCreditNote(response.data);
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
     }
@@ -62,7 +62,7 @@ export const deleteCreditNote = createAsyncThunk(
   "creditnotes/delete",
   async (id, thunkAPI) => {
     try {
-      await axios.delete(`${BASE_URL}/api/creditnotes/${id}`);
+      await api.delete(`/api/creditnotes/${id}`);
       return id;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
@@ -95,7 +95,7 @@ const creditNoteSlice = createSlice({
       .addCase(createCreditNote.fulfilled, (state, action) => {
         state.loading = false;
         state.success = true;
-        state.creditNotes.push(action.payload);
+        if (action.payload) state.creditNotes.push(action.payload);
       })
       .addCase(createCreditNote.rejected, (state, action) => {
         state.loading = false;
@@ -108,7 +108,7 @@ const creditNoteSlice = createSlice({
       })
       .addCase(fetchCreditNotes.fulfilled, (state, action) => {
         state.loading = false;
-        state.creditNotes = action.payload;
+        state.creditNotes = normalizeCreditNotes(action.payload);
       })
       .addCase(fetchCreditNotes.rejected, (state, action) => {
         state.loading = false;
@@ -135,6 +135,7 @@ const creditNoteSlice = createSlice({
       .addCase(updateCreditNote.fulfilled, (state, action) => {
         state.loading = false;
         state.success = true;
+        if (!action.payload) return;
         state.creditNotes = state.creditNotes.map((note) =>
           note._id === action.payload._id ? action.payload : note
         );

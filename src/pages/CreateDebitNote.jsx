@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../lib/api';
 import { resolveLinkedIds } from '../utils/resolveLinkedIds';
+import { getCurrentUserName } from '../utils/currentUser';
 import {
     estimateItemsToDebitNoteItems,
     fetchLatestEstimateForClient,
@@ -303,7 +304,7 @@ const CreateDebitNote = () => {
             igstAmount,
             totalAmount,
             remarks: form.remarks,
-            added_by: localStorage.getItem('user_name') || 'Admin',
+            added_by: getCurrentUserName(),
         };
 
         try {

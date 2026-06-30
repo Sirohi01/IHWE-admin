@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import api, { SERVER_URL } from "../../lib/api";
 import Swal from "sweetalert2";
+import { getCurrentUserName, getCurrentUsername } from "../../utils/currentUser";
 
 const getMediaUrl = (value) => {
     if (!value) return "";
@@ -96,34 +97,35 @@ const ClientContacts = () => {
     const [form, setForm] = useState(initialForm);
     const [passConfigs, setPassConfigs] = useState([]);
 
-    useEffect(() => {
-        const fetchContacts = async () => {
-            try {
-                const response = await api.get(`/api/client-contacts/${id}`);
-                if (response.data.success) {
-                    setTeamMembers(response.data.data);
-                    setSource(response.data.source);
-                    setActivityLogs(response.data.activityLogs || []);
+    const fetchContacts = async (showLoader = true) => {
+        try {
+            if (showLoader) setLoading(true);
+            const response = await api.get(`/api/client-contacts/${id}`);
+            if (response.data.success) {
+                setTeamMembers(response.data.data);
+                setSource(response.data.source);
+                setActivityLogs(response.data.activityLogs || []);
 
-                    if (response.data.source === "ExhibitorRegistration") {
-                        try {
-                            const configRes = await api.get('/api/exhibitor-pass-config/active');
-                            if (configRes.data.success) {
-                                setPassConfigs(configRes.data.data);
-                            }
-                        } catch (err) {
-                            console.error("Error fetching pass config:", err);
+                if (response.data.source === "ExhibitorRegistration") {
+                    try {
+                        const configRes = await api.get('/api/exhibitor-pass-config/active');
+                        if (configRes.data.success) {
+                            setPassConfigs(configRes.data.data);
                         }
+                    } catch (err) {
+                        console.error("Error fetching pass config:", err);
                     }
                 }
-            } catch (error) {
-                console.error("Error fetching contacts:", error);
-                Swal.fire("Error", "Could not fetch team members.", "error");
-            } finally {
-                setLoading(false);
             }
-        };
+        } catch (error) {
+            console.error("Error fetching contacts:", error);
+            Swal.fire("Error", "Could not fetch team members.", "error");
+        } finally {
+            if (showLoader) setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchContacts();
     }, [id]);
 
@@ -170,27 +172,34 @@ const ClientContacts = () => {
     const handleSave = async (e) => {
         e.preventDefault();
         try {
-            const token = localStorage.getItem("token");
             let updatedList = [...teamMembers];
+            const isEdit = editingIndex !== null;
+            const contactName = form.name || form.firstName || form.email || form.mobile || "Team Member";
 
             // Handle primary logic: if this is primary, unset others
             if (form.isPrimary) {
                 updatedList = updatedList.map(member => ({ ...member, isPrimary: false }));
             }
 
-            if (editingIndex !== null) {
+            if (isEdit) {
                 updatedList[editingIndex] = form;
             } else {
                 updatedList.push(form);
             }
 
             const response = await api.put(`/api/client-contacts/${id}/contacts`,
-                { contacts: updatedList }
+                {
+                    contacts: updatedList,
+                    contactOperation: isEdit ? "update" : "create",
+                    contactName,
+                    updated_by: getCurrentUserName()
+                }
             );
 
             if (response.data.success) {
                 setTeamMembers(response.data.data);
                 setIsModalOpen(false);
+                await fetchContacts(false);
                 Swal.fire("Success", "Team members updated successfully", "success");
             }
         } catch (error) {
@@ -212,15 +221,21 @@ const ClientContacts = () => {
 
         if (result.isConfirmed) {
             try {
-                const token = localStorage.getItem("token");
+                const deletedMember = teamMembers[index] || {};
                 const updatedList = teamMembers.filter((_, i) => i !== index);
 
                 const response = await api.put(`/api/client-contacts/${id}/contacts`,
-                    { contacts: updatedList }
+                    {
+                        contacts: updatedList,
+                        contactOperation: "delete",
+                        contactName: deletedMember.name || deletedMember.firstName || deletedMember.email || deletedMember.mobile || "Team Member",
+                        updated_by: getCurrentUserName()
+                    }
                 );
 
                 if (response.data.success) {
                     setTeamMembers(response.data.data);
+                    await fetchContacts(false);
                     Swal.fire("Deleted!", "Team member has been deleted.", "success");
                 }
             } catch (error) {
@@ -265,6 +280,16 @@ const ClientContacts = () => {
         if (normalized.includes("delete")) return "bg-[#ffebee] text-[#ea580c]";
         if (normalized.includes("login")) return "bg-[#f3e8ff] text-[#7e22ce]";
         return "bg-gray-100 text-gray-600";
+    };
+
+    const currentUserName = getCurrentUserName("Admin");
+    const currentUsername = getCurrentUsername();
+    const getActivityUserName = (user) => {
+        const normalized = String(user || "").trim().toLowerCase();
+        if (!normalized || ["admin", "system", "unknown_user", "unknown", "n/a"].includes(normalized) || normalized === currentUsername.toLowerCase()) {
+            return currentUserName;
+        }
+        return user;
     };
 
     const stats = {
@@ -547,7 +572,7 @@ const ClientContacts = () => {
                                                 {log.details || "-"}
                                             </p>
                                             <p className="text-[10px] text-slate-500 mt-1">
-                                                {log.user || "System"}{log.ip_address ? ` • ${log.ip_address}` : ""}
+                                                {getActivityUserName(log.user)}{log.ip_address ? ` • ${log.ip_address}` : ""}
                                             </p>
                                         </div>
                                         <span className="text-[10px] text-slate-400 whitespace-nowrap shrink-0">

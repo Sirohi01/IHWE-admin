@@ -3,9 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../../lib/api";
 import CompanyAccountSummary, { formatCurrency } from "./CompanyAccountSummary";
+import { getCurrentUserName, getCurrentUsername } from "../../../utils/currentUser";
 import {
   MapPin, Mail, Phone,
-  Download, Eye,
+  Eye,
   RefreshCw, ChevronRight,
   User, ArrowRight, FilePlus, CreditCard, Activity,
   FileMinus,
@@ -46,8 +47,7 @@ const AccountOverview = () => {
     }
   };
 
-  // Eye icon in Recent Documents opens the real detail page for that doc type.
-  // Credit/Debit Notes have no standalone detail viewer yet, so their action is disabled.
+
   const getDocViewPath = (doc) => {
     if (doc.documentType === "Invoice") return `/payments/invoiceDetails/${doc.id}`;
     if (doc.documentType === "Proforma Invoice") return `/payments/estimateDetails/${doc.id}`;
@@ -64,6 +64,15 @@ const AccountOverview = () => {
   }
 
   const { companyInfo, financials, recentDocuments, paymentSchedule, activityLogs } = data;
+  const currentUserName = getCurrentUserName("Admin");
+  const currentUsername = getCurrentUsername();
+  const getActivityUserName = (user) => {
+    const normalized = String(user || "").trim().toLowerCase();
+    if (!normalized || ["admin", "system", "unknown_user", "unknown", "n/a"].includes(normalized) || normalized === currentUsername.toLowerCase()) {
+      return currentUserName;
+    }
+    return user;
+  };
 
   const getActionBadgeClass = (action = "") => {
     const normalized = String(action).toLowerCase();
@@ -215,14 +224,6 @@ const AccountOverview = () => {
                           >
                             <Eye size={13} />
                           </button>
-                          <button
-                            disabled={!viewPath}
-                            onClick={() => viewPath && navigate(viewPath)}
-                            className={viewPath ? "hover:text-blue-800" : "text-gray-300 cursor-not-allowed"}
-                            title={viewPath ? "Open document" : "No detail view available"}
-                          >
-                            <Download size={13} />
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -307,7 +308,7 @@ const AccountOverview = () => {
                           {log.details || "-"}
                         </p>
                         <p className="text-[9px] text-slate-500 mt-0.5">
-                          {log.user || "System"}{log.ip_address ? ` • ${log.ip_address}` : ""}
+                          {getActivityUserName(log.user)}{log.ip_address ? ` • ${log.ip_address}` : ""}
                         </p>
                       </div>
                       <span className="text-[9px] text-slate-400 whitespace-nowrap shrink-0">
