@@ -6,8 +6,27 @@ import Swal from 'sweetalert2';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const DelegateConfig = () => {
+  // Days State
   const [days, setDays] = useState([]);
+  const [daysTotal, setDaysTotal] = useState(0);
+  const [daysPage, setDaysPage] = useState(1);
+  const [daysSearch, setDaysSearch] = useState('');
+
+  // Sessions State
+  const [sessions, setSessions] = useState([]);
+  const [sessionsTotal, setSessionsTotal] = useState(0);
+  const [sessionsPage, setSessionsPage] = useState(1);
+  const [sessionsSearch, setSessionsSearch] = useState('');
+
+  // Passes State
   const [passes, setPasses] = useState([]);
+  const [passesTotal, setPassesTotal] = useState(0);
+  const [passesPage, setPassesPage] = useState(1);
+  const [passesSearch, setPassesSearch] = useState('');
+
+  // We also need all days for the dropdown when adding/editing sessions
+  const [allDaysForDropdown, setAllDaysForDropdown] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -25,21 +44,75 @@ const DelegateConfig = () => {
   const [newSession, setNewSession] = useState({ dayId: '', number: '', time: '', title: '', description: '', price: 500, displayOrder: 0 });
   const [newPass, setNewPass] = useState({ passKey: '', title: '', subtitle: '', price: 3000, perks: '' });
 
+  const limit = 10;
+
   useEffect(() => {
-    fetchData();
+    fetchAllDropdownDays();
   }, []);
 
-  const fetchData = async () => {
+  useEffect(() => {
+    fetchDays();
+  }, [daysPage, daysSearch]);
+
+  useEffect(() => {
+    fetchSessions();
+  }, [sessionsPage, sessionsSearch]);
+
+  useEffect(() => {
+    fetchPasses();
+  }, [passesPage, passesSearch]);
+
+  const fetchAllDropdownDays = async () => {
     try {
       const res = await axios.get(`${API_URL}/delegate-config/admin`);
+      setAllDaysForDropdown(res.data.data);
+    } catch (error) { }
+  };
+
+  const fetchDays = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_URL}/delegate-config/admin/days/paginated?page=${daysPage}&limit=${limit}&search=${daysSearch}`);
       setDays(res.data.data);
-      const passRes = await axios.get(`${API_URL}/delegate-config/admin/passes`);
-      setPasses(passRes.data.data);
+      setDaysTotal(res.data.totalPages);
     } catch (error) {
-      toast.error('Failed to fetch data');
+      toast.error('Failed to fetch days');
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchSessions = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_URL}/delegate-config/admin/sessions/paginated?page=${sessionsPage}&limit=${limit}&search=${sessionsSearch}`);
+      setSessions(res.data.data);
+      setSessionsTotal(res.data.totalPages);
+    } catch (error) {
+      toast.error('Failed to fetch sessions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPasses = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_URL}/delegate-config/admin/passes/paginated?page=${passesPage}&limit=${limit}&search=${passesSearch}`);
+      setPasses(res.data.data);
+      setPassesTotal(res.data.totalPages);
+    } catch (error) {
+      toast.error('Failed to fetch passes');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshAll = () => {
+    fetchDays();
+    fetchSessions();
+    fetchPasses();
+    fetchAllDropdownDays();
   };
 
   const getAdminName = () => {
@@ -66,7 +139,7 @@ const DelegateConfig = () => {
         Swal.fire('Added!', 'Day added successfully.', 'success');
       }
       closeDayModal();
-      fetchData();
+      refreshAll();
     } catch (error) {
       Swal.fire('Error', 'Failed to save day', 'error');
     } finally {
@@ -87,7 +160,7 @@ const DelegateConfig = () => {
         Swal.fire('Added!', 'Session added successfully.', 'success');
       }
       closeSessionModal();
-      fetchData();
+      refreshAll();
     } catch (error) {
       Swal.fire('Error', 'Failed to save session', 'error');
     } finally {
@@ -113,7 +186,7 @@ const DelegateConfig = () => {
         Swal.fire('Added!', 'Pass added successfully.', 'success');
       }
       closePassModal();
-      fetchData();
+      refreshAll();
     } catch (error) {
       Swal.fire('Error', error.response?.data?.message || 'Failed to save pass', 'error');
     } finally {
@@ -132,12 +205,12 @@ const DelegateConfig = () => {
       confirmButtonText: 'Yes, delete it!'
     });
     if (!result.isConfirmed) return;
-
+    
     setIsSubmitting(true);
     try {
       await axios.delete(`${API_URL}/delegate-config/days/${id}`);
       Swal.fire('Deleted!', 'Day deleted successfully.', 'success');
-      fetchData();
+      refreshAll();
     } catch (error) {
       Swal.fire('Error', 'Failed to delete day', 'error');
     } finally {
@@ -161,7 +234,7 @@ const DelegateConfig = () => {
     try {
       await axios.delete(`${API_URL}/delegate-config/sessions/${id}`);
       Swal.fire('Deleted!', 'Session deleted successfully.', 'success');
-      fetchData();
+      refreshAll();
     } catch (error) {
       Swal.fire('Error', 'Failed to delete session', 'error');
     } finally {
@@ -185,7 +258,7 @@ const DelegateConfig = () => {
     try {
       await axios.delete(`${API_URL}/delegate-config/passes/${id}`);
       Swal.fire('Deleted!', 'Pass deleted successfully.', 'success');
-      fetchData();
+      refreshAll();
     } catch (error) {
       Swal.fire('Error', 'Failed to delete pass', 'error');
     } finally {
@@ -202,7 +275,7 @@ const DelegateConfig = () => {
 
   const handleEditSession = (session) => {
     setEditSessionId(session._id);
-    setNewSession({ dayId: session.dayId, number: session.number, time: session.time, title: session.title, description: session.description, price: session.price, displayOrder: session.displayOrder || 0 });
+    setNewSession({ dayId: session.dayId?._id || session.dayId, number: session.number, time: session.time, title: session.title, description: session.description, price: session.price, displayOrder: session.displayOrder || 0 });
     setShowSessionModal(true);
   };
 
@@ -250,14 +323,28 @@ const DelegateConfig = () => {
     return <span className="text-slate-400 text-xs">-</span>;
   };
 
-  if (loading) return (
-    <div className="p-6 h-screen flex items-center justify-center bg-slate-50">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 border-4 border-[#134698] border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-[#23471d] font-medium text-sm">Loading delegate configuration...</p>
+  const renderPagination = (page, totalPages, setPage) => {
+    if (totalPages <= 1) return null;
+    return (
+      <div className="flex justify-end items-center gap-2 mt-3">
+        <button 
+          disabled={page === 1}
+          onClick={() => setPage(p => Math.max(1, p - 1))}
+          className="px-3 py-1 text-xs font-medium border border-slate-300 rounded text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+        >
+          Prev
+        </button>
+        <span className="text-xs text-slate-500 font-medium">Page {page} of {totalPages}</span>
+        <button 
+          disabled={page === totalPages}
+          onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+          className="px-3 py-1 text-xs font-medium border border-slate-300 rounded text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="p-6 bg-slate-50 min-h-screen relative">
@@ -285,7 +372,16 @@ const DelegateConfig = () => {
 
         {/* Days Table */}
         <div>
-          <h2 className="text-sm font-bold text-[#15173D] mb-2 uppercase tracking-wide">Configured Days List</h2>
+          <div className="flex justify-between items-end mb-2">
+            <h2 className="text-sm font-bold text-[#15173D] uppercase tracking-wide">Configured Days List</h2>
+            <input 
+              type="text" 
+              placeholder="Search days..." 
+              value={daysSearch}
+              onChange={(e) => { setDaysSearch(e.target.value); setDaysPage(1); }}
+              className="border border-slate-300 rounded px-3 py-1 text-xs focus:outline-none focus:border-[#134698] w-64 shadow-sm"
+            />
+          </div>
           <div className="overflow-auto relative custom-scrollbar bg-white border border-slate-200 rounded-xl shadow-sm">
             <table className="w-full text-left border-collapse whitespace-nowrap text-[12px]" style={{ fontFamily: 'Inter, sans-serif', color: '#15173D' }}>
               <thead className="sticky top-0 z-10">
@@ -302,7 +398,7 @@ const DelegateConfig = () => {
                 {days.length === 0 && <tr><td colSpan="6" className="px-4 py-4 text-center text-slate-500">No days configured.</td></tr>}
                 {days.map((day, i) => (
                   <tr key={day._id} className="hover:bg-slate-50 transition-colors bg-white">
-                    <td className="px-4 py-3 text-slate-500">{i + 1}</td>
+                    <td className="px-4 py-3 text-slate-500">{((daysPage - 1) * limit) + i + 1}</td>
                     <td className="px-4 py-3 font-medium text-[#093C5D]">{day.date} ({day.day})</td>
                     <td className="px-4 py-3">{day.title}</td>
                     <td className="px-4 py-3"><span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider">{day.sessions?.length || 0} Sessions</span></td>
@@ -316,11 +412,21 @@ const DelegateConfig = () => {
               </tbody>
             </table>
           </div>
+          {renderPagination(daysPage, daysTotal, setDaysPage)}
         </div>
 
         {/* Sessions Table */}
         <div>
-          <h2 className="text-sm font-bold text-[#15173D] mb-2 uppercase tracking-wide">Sessions List</h2>
+          <div className="flex justify-between items-end mb-2">
+            <h2 className="text-sm font-bold text-[#15173D] uppercase tracking-wide">Sessions List</h2>
+            <input 
+              type="text" 
+              placeholder="Search sessions..." 
+              value={sessionsSearch}
+              onChange={(e) => { setSessionsSearch(e.target.value); setSessionsPage(1); }}
+              className="border border-slate-300 rounded px-3 py-1 text-xs focus:outline-none focus:border-[#134698] w-64 shadow-sm"
+            />
+          </div>
           <div className="overflow-auto relative custom-scrollbar bg-white border border-slate-200 rounded-xl shadow-sm">
             <table className="w-full text-left border-collapse whitespace-nowrap text-[12px]" style={{ fontFamily: 'Inter, sans-serif', color: '#15173D' }}>
               <thead className="sticky top-0 z-10">
@@ -334,33 +440,43 @@ const DelegateConfig = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {days.flatMap(d => d.sessions || []).length === 0 && <tr><td colSpan="6" className="px-4 py-4 text-center text-slate-500">No sessions configured.</td></tr>}
-                {days.map(day => (
-                  day.sessions && day.sessions.map(s => (
-                    <tr key={s._id} className="hover:bg-slate-50 transition-colors bg-white">
-                      <td className="px-4 py-3 text-[#093C5D] font-bold">Session {s.number}</td>
-                      <td className="px-4 py-3"><span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] border border-blue-100">{day.date}</span></td>
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-[#15173D]">{s.title}</div>
-                        <div className="text-[10px] text-slate-500">{s.time}</div>
-                      </td>
-                      <td className="px-4 py-3 font-bold text-emerald-600">₹{s.price}</td>
-                      <td className="px-4 py-3">{getModifyText(s)}</td>
-                      <td className="px-4 py-3 text-right">
-                        <button onClick={() => handleEditSession(s)} className="text-blue-500 hover:text-blue-700 font-medium text-xs hover:underline mr-3">Edit</button>
-                        <button onClick={() => handleDeleteSession(s._id)} className="text-red-500 hover:text-red-700 font-medium text-xs hover:underline">Delete</button>
-                      </td>
-                    </tr>
-                  ))
+                {sessions.length === 0 && <tr><td colSpan="6" className="px-4 py-4 text-center text-slate-500">No sessions configured.</td></tr>}
+                {sessions.map((s) => (
+                  <tr key={s._id} className="hover:bg-slate-50 transition-colors bg-white">
+                    <td className="px-4 py-3 text-[#093C5D] font-bold">Session {s.number}</td>
+                    <td className="px-4 py-3">
+                      {s.dayId ? <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] border border-blue-100">{s.dayId.date}</span> : <span className="text-slate-400">N/A</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-[#15173D]">{s.title}</div>
+                      <div className="text-[10px] text-slate-500">{s.time}</div>
+                    </td>
+                    <td className="px-4 py-3 font-bold text-emerald-600">₹{s.price}</td>
+                    <td className="px-4 py-3">{getModifyText(s)}</td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={() => handleEditSession(s)} className="text-blue-500 hover:text-blue-700 font-medium text-xs hover:underline mr-3">Edit</button>
+                      <button onClick={() => handleDeleteSession(s._id)} className="text-red-500 hover:text-red-700 font-medium text-xs hover:underline">Delete</button>
+                    </td>
+                  </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          {renderPagination(sessionsPage, sessionsTotal, setSessionsPage)}
         </div>
 
         {/* Special Passes Table */}
         <div>
-          <h2 className="text-sm font-bold text-[#15173D] mb-2 uppercase tracking-wide">Special Passes List</h2>
+          <div className="flex justify-between items-end mb-2">
+            <h2 className="text-sm font-bold text-[#15173D] uppercase tracking-wide">Special Passes List</h2>
+            <input 
+              type="text" 
+              placeholder="Search passes..." 
+              value={passesSearch}
+              onChange={(e) => { setPassesSearch(e.target.value); setPassesPage(1); }}
+              className="border border-slate-300 rounded px-3 py-1 text-xs focus:outline-none focus:border-[#134698] w-64 shadow-sm"
+            />
+          </div>
           <div className="overflow-auto relative custom-scrollbar bg-white border border-slate-200 rounded-xl shadow-sm">
             <table className="w-full text-left border-collapse whitespace-nowrap text-[12px]" style={{ fontFamily: 'Inter, sans-serif', color: '#15173D' }}>
               <thead className="sticky top-0 z-10">
@@ -398,6 +514,7 @@ const DelegateConfig = () => {
               </tbody>
             </table>
           </div>
+          {renderPagination(passesPage, passesTotal, setPassesPage)}
         </div>
 
       </div>
@@ -445,7 +562,7 @@ const DelegateConfig = () => {
                 <label className="block text-[12px] font-medium text-slate-700 mb-1">Select Day</label>
                 <select required value={newSession.dayId} onChange={e => setNewSession({ ...newSession, dayId: e.target.value })} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 bg-white">
                   <option value="">-- Choose Day --</option>
-                  {days.map(d => <option key={d._id} value={d._id}>{d.date} - {d.title}</option>)}
+                  {allDaysForDropdown.map(d => <option key={d._id} value={d._id}>{d.date} - {d.title}</option>)}
                 </select>
               </div>
               <div className="flex gap-4">
