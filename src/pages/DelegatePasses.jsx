@@ -12,7 +12,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const DelegatePasses = () => {
   const [delegates, setDelegates] = useState([]);
   const [total, setTotal] = useState(0);
-  const [stats, setStats] = useState({ totalPaid: 0, totalPending: 0, totalRevenue: 0, globalTotal: 0 });
+  const [stats, setStats] = useState({ totalPaid: 0, totalPending: 0, totalComplimentary: 0, totalRevenue: 0, globalTotal: 0 });
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [loading, setLoading] = useState(false);
@@ -54,6 +54,7 @@ const DelegatePasses = () => {
         setStats({
           totalPaid: res.data.totalPaid || 0,
           totalPending: res.data.totalPending || 0,
+          totalComplimentary: res.data.totalComplimentary || 0,
           totalRevenue: res.data.totalRevenue || 0,
           globalTotal: res.data.globalTotal || 0
         });
@@ -88,6 +89,20 @@ const DelegatePasses = () => {
     if (status === 'pending') return 'bg-orange-50 text-orange-700 marker-orange-500';
     if (status === 'failed') return 'bg-red-50 text-red-700 marker-red-500';
     return 'bg-slate-50 text-slate-700 marker-slate-500';
+  };
+
+  const getSourceDisplay = (row) => {
+    if (row.registrationSource === 'exhibitor') {
+      return {
+        label: row.isComplimentary ? 'Exhibitor Free' : 'Exhibitor Paid',
+        detail: row.exhibitorCompanyName || 'Exhibitor Dashboard',
+        cls: row.isComplimentary ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-pink-50 text-pink-700 border-pink-200'
+      };
+    }
+    if (row.registrationSource === 'admin') {
+      return { label: 'Admin', detail: row.paymentMode || 'Offline', cls: 'bg-purple-50 text-purple-700 border-purple-200' };
+    }
+    return { label: 'Website', detail: row.sourceChannel || 'Online', cls: 'bg-blue-50 text-blue-700 border-blue-200' };
   };
 
   // Formatting passes & sessions for display
@@ -247,6 +262,7 @@ const DelegatePasses = () => {
               <th className="px-2 py-2">Organization</th>
               <th className="px-2 py-2">Contact Details</th>
               <th className="px-2 py-2">Event / Registration For</th>
+              <th className="px-2 py-2">Source</th>
               <th className="px-2 py-2">Registration No.</th>
               <th className="px-2 py-2 text-center">Payment Status</th>
               <th className="px-2 py-2">Total Amount</th>
@@ -257,6 +273,7 @@ const DelegatePasses = () => {
             {delegates.map((row) => {
               const display = getEventDisplay(row);
               const statusColor = getPaymentStatusColor(row.paymentStatus);
+              const source = getSourceDisplay(row);
               return (
               <tr key={row._id} className="hover:bg-slate-50 transition-colors border-b border-slate-100 bg-white">
                 <td className="px-2 py-3">
@@ -294,6 +311,13 @@ const DelegatePasses = () => {
                 </td>
 
                 <td className="px-2 py-3">
+                  <span className={`inline-flex px-1.5 py-0.5 rounded-full border text-[8px] font-black uppercase tracking-wide ${source.cls}`}>
+                    {source.label}
+                  </span>
+                  <div className="text-[9px] text-slate-500 max-w-[130px] truncate mt-1">{source.detail}</div>
+                </td>
+
+                <td className="px-2 py-3">
                   <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">{row.regNo || 'N/A'}</span>
                 </td>
 
@@ -305,8 +329,8 @@ const DelegatePasses = () => {
                 </td>
 
                 <td className="px-2 py-3">
-                  <div className="text-[11px] font-semibold flex items-center"><IndianRupee size={10}/> {row.totalAmount}</div>
-                  <div className="text-[8px] text-slate-500">Sub: ₹{row.subTotal} + GST/Fee</div>
+                  <div className={`text-[11px] font-semibold flex items-center ${row.isComplimentary ? 'text-emerald-700 font-black' : ''}`}>{row.isComplimentary ? 'Free' : <><IndianRupee size={10}/> {row.totalAmount}</>}</div>
+                  <div className="text-[8px] text-slate-500">{row.isComplimentary ? 'Complimentary' : <>Sub: ₹{row.subTotal} + GST/Fee</>}</div>
                 </td>
 
                 <td className="px-2 py-3">

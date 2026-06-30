@@ -212,30 +212,56 @@ const AddDelegatePass = () => {
 
         {/* Delegate Pass Selection - Moved to Top */}
         <div className={`${sectionCardClass} ring-1 ring-[#143111]/5`}>
-          <h2 className={sectionHeaderClass}>
-            <div className="p-2 bg-[#143111]/10 rounded-lg"><Calendar className="text-[#143111]" size={20} /></div>
-            Step 1: Choose Day, Session & Passes
-          </h2>
+          <div className="mb-5 flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#143111] text-white">
+                <Calendar size={18} />
+              </div>
+              <div>
+                <div className="mb-0.5 flex items-center gap-2">
+                  <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-black uppercase text-emerald-700">Step 1</span>
+                  <span className="text-[10px] font-bold uppercase text-slate-400">Pass selection</span>
+                </div>
+                <h2 className="text-base font-bold text-[#143111]">Choose Day, Sessions & Passes</h2>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+              <div>
+                <p className="text-[9px] font-bold uppercase text-slate-400">Selected</p>
+                <p className="text-xs font-black text-slate-700">{selectedSessions.length + selectedPasses.length} items</p>
+              </div>
+              <div className="h-7 w-px bg-slate-200" />
+              <div className="text-right">
+                <p className="text-[9px] font-bold uppercase text-slate-400">Subtotal</p>
+                <p className="text-sm font-black text-emerald-700">₹{calculateSubtotal()}</p>
+              </div>
+            </div>
+          </div>
 
           <div className="w-full">
             {/* Day Cards - Compact */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-8">
+            <p className="mb-2 text-[10px] font-black uppercase text-slate-400">Select conference day</p>
+            <div className="grid grid-cols-1 gap-2 rounded-xl bg-slate-100 p-1.5 sm:grid-cols-3 mb-5">
               {dayData.map((day, index) => (
                 <button
                   type="button"
                   key={day._id}
                   onClick={() => setActiveDay(day._id)}
-                  className={`relative flex flex-col p-2 sm:p-2.5 rounded-xl border-2 transition-all text-left ${activeDay === day._id
-                    ? "bg-[#143111] border-[#143111] text-white shadow-md scale-[1.02]"
-                    : "bg-white border-slate-200 text-slate-400 hover:border-[#143111]/40 hover:bg-slate-50"
+                  className={`relative flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-all text-left ${activeDay === day._id
+                    ? "bg-[#143111] border-[#143111] text-white shadow-sm"
+                    : "bg-white border-transparent text-slate-400 hover:border-slate-300"
                     }`}
                 >
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <Calendar className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${activeDay === day._id ? "text-white" : "text-slate-300"}`} />
-                    <span className="text-[11px] sm:text-[13px] font-black uppercase tracking-wider">DAY {index + 1}</span>
+                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sm font-black ${activeDay === day._id ? "bg-white/15" : "bg-slate-100 text-slate-500"}`}>
+                    {index + 1}
                   </div>
-                  <div className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-tight leading-none mb-0.5 ${activeDay === day._id ? "opacity-90" : "text-slate-600"}`}>{day.date}</div>
-                  <div className={`text-[9px] sm:text-[10px] font-semibold uppercase leading-none ${activeDay === day._id ? "opacity-75" : "text-slate-400"}`}>{day.day}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11px] font-black uppercase">Day {index + 1}</div>
+                    <div className={`truncate text-[10px] font-bold uppercase ${activeDay === day._id ? "text-white/80" : "text-slate-600"}`}>
+                      {day.date} · {day.day}
+                    </div>
+                  </div>
+                  {activeDay === day._id && <CheckCircle2 size={16} className="shrink-0 text-emerald-300" />}
                 </button>
               ))}
             </div>
@@ -257,7 +283,7 @@ const AddDelegatePass = () => {
             )}
 
             {/* Sessions List */}
-            <div className="space-y-4 mb-8">
+            <div className="space-y-2 mb-7">
               {sessionsData[activeDay]?.map((session) => {
                 const currentDay = dayData.find(d => d._id === activeDay);
                 const isSelected = selectedSessions.some((s) => s.session === session._id);
@@ -265,7 +291,7 @@ const AddDelegatePass = () => {
                   <div
                     key={session._id}
                     onClick={() => handleSessionToggle(session, currentDay)}
-                    className={`flex flex-col sm:flex-row items-stretch rounded-xl border overflow-hidden transition-all cursor-pointer group ${isSelected ? "border-[#143111] bg-[#143111]/[0.02] shadow-sm" : "bg-white border-slate-100 hover:border-slate-300 hover:shadow-sm"
+                    className={`flex flex-col sm:flex-row items-stretch rounded-lg border overflow-hidden transition-all cursor-pointer group ${isSelected ? "border-emerald-500 bg-emerald-50/40 shadow-sm" : "bg-white border-slate-200 hover:border-slate-400"
                       }`}
                   >
                     <div className={`w-full sm:w-[70px] p-2 flex flex-row sm:flex-col justify-between sm:justify-center items-center shrink-0 gap-1 transition-colors ${isSelected ? "bg-[#143111] text-white" : "bg-slate-50 text-slate-400 group-hover:bg-[#143111] group-hover:text-white"
@@ -276,27 +302,26 @@ const AddDelegatePass = () => {
                       </div>
                     </div>
 
-                    <div className="flex-1 p-2 sm:p-3 flex items-center justify-between">
-                      <div>
-                        <h3 className="text-[13px] sm:text-[15px] font-bold text-slate-800 leading-snug mb-1">
+                    <div className="flex-1 min-w-0 px-3 py-2.5 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5">
+                      <h3 className="min-w-0 flex-1 text-[13px] sm:text-[15px] font-bold text-slate-800 leading-snug truncate">
                           {session.title}
-                        </h3>
-                        <div className="flex flex-row items-center gap-4">
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-slate-400" />
-                            <span className="text-[11px] font-bold text-slate-600">{session.time}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <IndianRupee className="w-3.5 h-3.5 text-emerald-600" />
-                            <span className="text-[12px] font-black text-emerald-600">{session.price}</span>
-                          </div>
+                      </h3>
+                      <div className="flex shrink-0 flex-row items-center gap-4 sm:gap-5">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          <span className="whitespace-nowrap text-[11px] font-bold text-slate-600">{session.time}</span>
+                        </div>
+                        <div className="flex items-center gap-0.5">
+                          <IndianRupee className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="whitespace-nowrap text-[12px] font-black text-emerald-600">{session.price}</span>
                         </div>
                       </div>
                       {isSelected && (
-                        <div className="bg-[#143111] text-white p-1 rounded-full shrink-0 shadow-sm animate-in zoom-in-50 mr-2">
-                          <Check size={14} strokeWidth={3} />
+                        <div className="bg-emerald-600 text-white p-1 rounded-md shrink-0 shadow-sm animate-in zoom-in-50">
+                          <Check size={13} strokeWidth={3} />
                         </div>
                       )}
+                      {!isSelected && <div className="h-[22px] w-[22px] shrink-0 rounded-md border-2 border-slate-200" />}
                     </div>
                   </div>)
               })}
@@ -304,26 +329,34 @@ const AddDelegatePass = () => {
 
             {/* Passes Selection */}
             {passesData.length > 0 && (
-              <div className="pt-2">
-                <h3 className="text-[12px] font-black text-[#143111]/70 uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
-                  <CreditCard size={16} /> Available Passes
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="border-t border-slate-100 pt-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-slate-400">Bundle options</p>
+                    <h3 className="flex items-center gap-2 text-sm font-bold text-[#143111]">
+                      <CreditCard size={15} /> Available Passes
+                    </h3>
+                  </div>
+                  <span className="hidden text-[10px] font-semibold text-slate-400 sm:block">Select any applicable pass</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   {passesData.filter(p => p.isActive).map(pass => {
                     const isSelected = selectedPasses.some(p => p.pass === pass._id);
                     return (
                       <div
                         key={pass._id}
                         onClick={() => handlePassToggle(pass)}
-                        className={`relative p-3 border-2 rounded-xl cursor-pointer transition-all overflow-hidden flex flex-col justify-center ${isSelected ? 'border-[#143111] bg-[#143111]/[0.03] shadow-sm' : 'border-slate-200 bg-white hover:border-[#143111]/30 hover:bg-slate-50'
+                        className={`relative p-3 border rounded-lg cursor-pointer transition-all overflow-hidden flex flex-col justify-center ${isSelected ? 'border-emerald-500 bg-emerald-50/50 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-400'
                           }`}
                       >
                         {isSelected && <div className="absolute top-0 right-0 w-12 h-12 bg-[#143111] opacity-5 rounded-bl-full" />}
-                        <div className="flex justify-between items-start mb-2 relative z-10">
-                          <div className={`p-1.5 rounded-lg transition-colors ${isSelected ? 'bg-[#143111]' : 'bg-slate-100'}`}>
+                        <div className="flex justify-between items-start mb-1.5 relative z-10">
+                          <div className={`p-1.5 rounded-md transition-colors ${isSelected ? 'bg-emerald-600' : 'bg-slate-100'}`}>
                             <CreditCard className={isSelected ? "text-white" : "text-slate-400"} size={14} />
                           </div>
-                          {isSelected && <div className="bg-[#143111] text-white p-1 rounded-full animate-in zoom-in-50"><Check size={12} strokeWidth={3} /></div>}
+                          <div className={`flex h-[22px] w-[22px] items-center justify-center rounded-md border-2 ${isSelected ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-200'}`}>
+                            {isSelected && <Check size={12} strokeWidth={3} />}
+                          </div>
                         </div>
                         <h3 className="font-bold text-xs text-slate-800 leading-snug relative z-10 line-clamp-2">{pass.title}</h3>
                         <p className="text-lg font-black mt-1 text-[#143111] relative z-10">₹{pass.price}</p>
