@@ -34,15 +34,15 @@ const REASON_OPTIONS = ['Select Reason', 'Extra Services', 'Price Revision', 'Ma
 
 const SectionHead = ({ num, label }) => (
     <div className="flex items-center gap-2 mb-4">
-        <div className="w-6 h-6 rounded-full bg-purple-700 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+        <div className="w-6 h-6 rounded flex items-center justify-center bg-[#f3e8ff] text-[#7e22ce] text-[13px] font-bold flex-shrink-0">
             {num}
         </div>
-        <h2 className="text-sm font-bold text-gray-800">{label}</h2>
+        <h2 className="text-[14px] font-semibold text-[#1a2b4b]">{label}</h2>
     </div>
 );
 
 const Label = ({ children, required }) => (
-    <label className="block text-xs font-semibold text-gray-800 mb-1.5">
+    <label className="block text-[13px] font-medium text-[#1a2b4b] mb-1.5">
         {children}{required && <span className="text-red-500 ml-0.5">*</span>}
     </label>
 );
@@ -50,14 +50,14 @@ const Label = ({ children, required }) => (
 const Input = (props) => (
     <input
         {...props}
-        className={`w-full border border-gray-300 rounded-md px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-100 bg-white disabled:bg-gray-50 disabled:text-gray-500 ${props.className || ''}`}
+        className={`w-full appearance-none border border-gray-200 rounded-lg px-3 py-1.5 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#7e22ce] focus:ring-2 focus:ring-[#7e22ce]/10 transition-all h-[32px] disabled:bg-gray-50 disabled:text-gray-500 ${props.className || ''}`}
     />
 );
 
 const Select = ({ options, ...props }) => (
     <select
         {...props}
-        className={`w-full border border-gray-300 rounded-md px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-100 bg-white disabled:bg-gray-50 disabled:text-gray-500 ${props.className || ''}`}
+        className={`w-full appearance-none border border-gray-200 rounded-lg px-3 py-1 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#7e22ce] focus:ring-2 focus:ring-[#7e22ce]/10 transition-all h-[32px] disabled:bg-gray-50 disabled:text-gray-500 cursor-pointer ${props.className || ''}`}
     >
         {options.map((o, i) => (
             <option key={i} value={typeof o === 'string' ? o : o.value}>{typeof o === 'string' ? o : o.label}</option>
@@ -68,18 +68,18 @@ const Select = ({ options, ...props }) => (
 const TypeCard = ({ selected, icon: Icon, title, desc, onClick }) => (
     <div
         onClick={onClick}
-        className={`p-3 rounded-lg border cursor-pointer transition-all ${selected
-            ? 'border-purple-500 bg-purple-50/50'
-            : 'border-gray-200 hover:border-purple-300 bg-white'
+        className={`p-3 rounded-lg border cursor-pointer transition-all h-full ${selected
+            ? 'border-[#7e22ce] bg-[#f3e8ff]/50 shadow-[0_2px_8px_rgba(126,34,206,0.1)]'
+            : 'border-gray-200 hover:border-purple-300 bg-white shadow-sm hover:shadow-md'
             }`}
     >
         <div className="flex items-start gap-2.5">
-            <div className={`mt-0.5 flex items-center justify-center flex-shrink-0 ${selected ? 'text-purple-600' : 'text-[#005189]'}`}>
-                <Icon className="w-5 h-5 stroke-[1.5]" />
+            <div className={`mt-0.5 flex items-center justify-center flex-shrink-0 ${selected ? 'text-[#7e22ce]' : 'text-[#1a2b4b]'}`}>
+                <Icon size={20} strokeWidth={1.5} />
             </div>
             <div>
-                <h4 className="text-xs font-bold text-gray-800 mb-1">{title}</h4>
-                <p className="text-[10px] text-gray-500 leading-snug">{desc}</p>
+                <h4 className="text-[13px] font-semibold text-[#1a2b4b] mb-1">{title}</h4>
+                <p className="text-[11px] text-slate-500 leading-snug">{desc}</p>
             </div>
         </div>
     </div>
@@ -325,7 +325,7 @@ const CreateDebitNote = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50/50 pb-5 mt-4">
+        <div className="min-h-screen bg-[#f8f9fc] pb-5">
             <style>
                 {`
                 input[type="number"]::-webkit-inner-spin-button,
@@ -339,50 +339,49 @@ const CreateDebitNote = () => {
                 `}
             </style>
             {/* Header */}
-            <div className="bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between sticky top-0 z-10">
+            <div className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
-                        <FileText className="w-5 h-5" />
+                    <div className="w-10 h-10 rounded-lg bg-[#f3e8ff] text-[#7e22ce] flex items-center justify-center">
+                        <FileText size={20} />
                     </div>
                     <div>
-                        <h1 className="text-lg font-bold text-gray-900 leading-tight">Create Debit Note</h1>
-                        <p className="text-xs text-gray-500 mt-0.5">Raise debit note for additional charges, expenses or adjustments</p>
+                        <h1 className="text-[18px] font-bold text-[#1a2b4b] leading-tight">Create Debit Note</h1>
+                        <p className="text-[12px] text-slate-500 mt-0.5">Raise debit note for additional charges, expenses or adjustments</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => navigate(`/debit-note-list/${id || 'all'}`)}
-                        className="flex items-center gap-1.5 border border-purple-200 bg-purple-50 rounded-md px-3 py-1.5 text-xs font-semibold text-purple-700 hover:bg-purple-100 transition shadow-sm"
+                        className="flex items-center gap-1.5 border border-[#e9d5ff] bg-[#f3e8ff] rounded-lg px-4 py-2 text-[13px] font-semibold text-[#7e22ce] hover:bg-[#e9d5ff] transition shadow-sm"
                     >
-                        <List className="w-4 h-4" />
+                        <List size={16} />
                         All Debit Notes
                     </button>
                     <button
                         onClick={() => navigate(id ? `/dashboard/account/${id}` : -1)}
-                        className="flex items-center gap-1.5 border border-gray-200 rounded-md px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition shadow-sm"
+                        className="flex items-center gap-1.5 border border-gray-200 rounded-lg px-4 py-2 text-[13px] font-semibold text-[#1a2b4b] hover:bg-gray-50 transition shadow-sm"
                     >
-                        <ChevronLeft className="w-4 h-4" />
+                        <ChevronLeft size={16} />
                         Back to Overview
                     </button>
                 </div>
             </div>
 
-            <div className="max-w-[1400px] mx-auto px-4 pt-3 flex gap-3 items-start">
+            <div className="w-full pr-16 px-4 pt-6 flex gap-4 items-start">
                 {/* LEFT FORM */}
-                <div className="flex-1 space-y-3 min-w-0">
+                <div className="flex-1 space-y-4 min-w-0">
 
                     {/* SECTION 1 - Source */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <SectionHead num="1" label="Debit Note Source" />
 
-                        <div className="grid grid-cols-5 gap-4">
+                        <div className="grid grid-cols-5 gap-6">
                             <div className="col-span-2">
                                 <Label required>To Invoice / Estimate</Label>
                                 <Select
                                     options={[{ value: '', label: sourceDocs.length ? 'Select document' : 'No invoices/proformas found' }, ...sourceDocs.map((d) => ({ value: d.key, label: d.label }))]}
                                     value={form.sourceKey}
                                     onChange={(e) => handleSourceSelect(e.target.value)}
-                                    className="py-2.5"
                                 />
                             </div>
                             <div>
@@ -391,62 +390,62 @@ const CreateDebitNote = () => {
                                     type="text"
                                     value={selectedDoc?.date ? new Date(selectedDoc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
                                     readOnly
-                                    className="bg-gray-50 text-gray-600 py-2.5"
+                                    className="bg-gray-50 text-slate-500 font-medium"
                                 />
                             </div>
                             <div>
                                 <Label>Client / Company</Label>
-                                <Input value={selectedDoc?.consignee || '-'} readOnly className="bg-gray-50 text-gray-600 py-2.5" />
+                                <Input value={selectedDoc?.consignee || '-'} readOnly className="bg-gray-50 text-slate-500 font-medium" />
                             </div>
                             <div>
                                 <Label>Original Amount</Label>
                                 <Input
                                     value={`₹ ${Number(selectedDoc?.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
                                     readOnly
-                                    className="bg-gray-50 text-gray-600 py-2.5"
+                                    className="bg-gray-50 text-slate-500 font-medium text-right"
                                 />
                             </div>
                         </div>
 
                         {selectedDoc && (
-                            <div className="grid grid-cols-5 gap-4 mt-4">
+                            <div className="grid grid-cols-5 gap-6 mt-4">
                                 <div>
                                     <Label>Outstanding Amount</Label>
                                     <Input
                                         value={`₹ ${outstandingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
                                         readOnly
-                                        className="bg-gray-50 text-gray-600 py-2.5"
+                                        className="bg-[#f0f5ff] text-[#194090] font-bold border-[#c7d2fe] text-right"
                                     />
                                 </div>
                             </div>
                         )}
 
-                        <div className="mt-5 bg-blue-50/50 border border-blue-100 rounded-md p-3 flex items-center gap-2.5 text-blue-700">
-                            <Info className="w-4 h-4" />
-                            <span className="text-xs">Debit note will be created against the selected invoice. You can add additional charges or adjustments.</span>
+                        <div className="mt-5 bg-[#eff6ff] border border-[#bfdbfe] rounded-lg p-3 flex items-start gap-2.5 text-[#1e40af]">
+                            <Info size={16} className="mt-0.5 flex-shrink-0" />
+                            <span className="text-[12px] font-medium leading-relaxed">Debit note will be created against the selected invoice. You can add additional charges or adjustments below.</span>
                         </div>
                     </div>
 
                     {/* SECTION 2 - Details */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <SectionHead num="2" label="Debit Note Details" />
 
-                        <div className="grid grid-cols-4 gap-4 mb-3">
+                        <div className="grid grid-cols-4 gap-6 mb-4">
                             <div>
                                 <Label>Debit Note No.</Label>
-                                <Input value="Auto-generated on save" readOnly className="bg-gray-50 text-gray-500 py-2.5" />
+                                <Input value="Auto-generated on save" readOnly className="bg-gray-50 text-slate-500 font-medium italic" />
                             </div>
                             <div>
                                 <Label required>Debit Note Date</Label>
-                                <Input type="date" value={form.debitNoteDate} onChange={(e) => setField('debitNoteDate', e.target.value)} className="py-2.5" />
+                                <Input type="date" value={form.debitNoteDate} onChange={(e) => setField('debitNoteDate', e.target.value)} />
                             </div>
                             <div>
                                 <Label required>Reason</Label>
-                                <Select options={REASON_OPTIONS} value={form.reason} onChange={(e) => setField('reason', e.target.value)} className="py-2.5" />
+                                <Select options={REASON_OPTIONS} value={form.reason} onChange={(e) => setField('reason', e.target.value)} />
                             </div>
                             <div>
-                                <Label>Reference <span className="text-gray-400 font-normal">(Optional)</span></Label>
-                                <Input placeholder="Enter reference / remarks" value={form.reference} onChange={(e) => setField('reference', e.target.value)} className="py-2.5" />
+                                <Label>Reference <span className="text-slate-400 font-normal">(Optional)</span></Label>
+                                <Input placeholder="Enter reference / remarks" value={form.reference} onChange={(e) => setField('reference', e.target.value)} />
                             </div>
                         </div>
 
@@ -484,74 +483,74 @@ const CreateDebitNote = () => {
                     </div>
 
                     {/* SECTION 3 - Items */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-6 py-3">
                         <SectionHead num="3" label="Item / Charge Details" />
 
-                        <div className="overflow-x-auto border border-gray-200 rounded-lg">
-                            <table className="w-full text-xs">
+                        <div className="overflow-x-none mb-3">
+                            <table className="w-full text-[10px] border-collapse">
                                 <thead>
-                                    <tr className="bg-gray-50 border-b border-gray-200 whitespace-nowrap">
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 w-10">#</th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 min-w-[160px]">Item Description <span className="text-red-500">*</span></th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 w-24">HSN / SAC</th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 w-16">Qty</th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 w-24">Unit</th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 w-28">Rate (₹)</th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 w-28">Amount (₹)</th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 w-28">GST %</th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 w-28">GST Amount (₹)</th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 w-28">Total (₹)</th>
-                                        <th className="px-1.5 py-2.5 text-center font-semibold text-gray-700 w-12">Action</th>
+                                    <tr className="bg-gray-50 border-b border-gray-200">
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] w-8">#</th>
+                                        <th className="px-1 py-2 text-left font-medium text-[#1a2b4b] min-w-[120px]">Item Description <span className="text-red-500">*</span></th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] w-20">HSN / SAC</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] w-14">Qty</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] w-16">Unit</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] w-24">Rate (₹)</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] w-24">Amount (₹)</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] w-16">GST %</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] w-24">GST (₹)</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] w-24">Total (₹)</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] w-8">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {items.map((item, idx) => (
-                                        <tr key={item.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50">
-                                            <td className="px-2 py-2 text-gray-500">{idx + 1}</td>
-                                            <td className="px-2 py-2">
+                                        <tr key={item.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
+                                            <td className="px-1 py-1.5 text-center text-slate-400 font-medium text-[11px]">{idx + 1}</td>
+                                            <td className="px-1 py-1.5">
                                                 <input
-                                                    className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-purple-400 bg-white"
+                                                    className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#7e22ce] focus:ring-1 focus:ring-[#7e22ce]/20 transition-all h-[26px]"
                                                     value={item.description}
                                                     onChange={(e) => updateItem(item.id, 'description', e.target.value)}
                                                 />
                                             </td>
-                                            <td className="px-2 py-2">
-                                                <input className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-purple-400 bg-white" value={item.hsn} onChange={(e) => updateItem(item.id, 'hsn', e.target.value)} />
+                                            <td className="px-1 py-1.5">
+                                                <input className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#7e22ce] focus:ring-1 focus:ring-[#7e22ce]/20 transition-all h-[26px] text-center" value={item.hsn} onChange={(e) => updateItem(item.id, 'hsn', e.target.value)} />
                                             </td>
-                                            <td className="px-2 py-2">
-                                                <input type="number" min={1} className="w-full border border-gray-200 rounded px-1 py-1.5 text-xs focus:outline-none focus:border-purple-400 bg-white text-center" value={item.qty} onChange={(e) => updateItem(item.id, 'qty', e.target.value)} />
+                                            <td className="px-1 py-1.5">
+                                                <input type="number" min={1} className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#7e22ce] focus:ring-1 focus:ring-[#7e22ce]/20 transition-all h-[26px] text-center" value={item.qty} onChange={(e) => updateItem(item.id, 'qty', e.target.value)} />
                                             </td>
-                                            <td className="px-2 py-2">
-                                                <select className="w-full min-w-[45px] border border-gray-200 rounded px-1 py-1.5 text-xs focus:outline-none focus:border-purple-400 bg-white" value={item.unit} onChange={(e) => updateItem(item.id, 'unit', e.target.value)}>
+                                            <td className="px-1 py-1.5">
+                                                <select className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#7e22ce] focus:ring-1 focus:ring-[#7e22ce]/20 transition-all h-[26px] cursor-pointer" value={item.unit} onChange={(e) => updateItem(item.id, 'unit', e.target.value)}>
                                                     {UNITS.map((u) => <option key={u}>{u}</option>)}
                                                 </select>
                                             </td>
-                                            <td className="px-2 py-2">
-                                                <input type="number" className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-purple-400 bg-white text-right" value={item.rate} onChange={(e) => updateItem(item.id, 'rate', e.target.value)} />
+                                            <td className="px-1 py-1.5">
+                                                <input type="number" className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#7e22ce] focus:ring-1 focus:ring-[#7e22ce]/20 transition-all h-[26px] text-right" value={item.rate} onChange={(e) => updateItem(item.id, 'rate', e.target.value)} />
                                             </td>
-                                            <td className="px-2 py-2">
-                                                <div className="w-full border border-transparent px-2 py-1.5 text-xs text-right text-gray-700 bg-transparent">
+                                            <td className="px-1 py-1.5">
+                                                <div className="flex items-center justify-end h-[26px] px-1.5 rounded-md bg-gray-50 border border-gray-100 text-[11px] font-medium text-slate-700 text-right">
                                                     {item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                                 </div>
                                             </td>
-                                            <td className="px-2 py-2">
-                                                <select className="w-full min-w-[45px] border border-gray-200 rounded px-1 py-1.5 text-xs focus:outline-none focus:border-purple-400 bg-white" value={item.gstPct} onChange={(e) => updateItem(item.id, 'gstPct', e.target.value)}>
+                                            <td className="px-1 py-1.5">
+                                                <select className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#7e22ce] focus:ring-1 focus:ring-[#7e22ce]/20 transition-all h-[26px] cursor-pointer" value={item.gstPct} onChange={(e) => updateItem(item.id, 'gstPct', e.target.value)}>
                                                     {GST_OPTIONS.map((u) => <option key={u}>{u}</option>)}
                                                 </select>
                                             </td>
-                                            <td className="px-2 py-2">
-                                                <div className="w-full border border-transparent px-2 py-1.5 text-xs text-right text-gray-700 bg-transparent">
+                                            <td className="px-1 py-1.5">
+                                                <div className="flex items-center justify-end h-[26px] px-1.5 rounded-md bg-gray-50 border border-gray-100 text-[11px] font-medium text-slate-700 text-right">
                                                     {item.gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                                 </div>
                                             </td>
-                                            <td className="px-2 py-2">
-                                                <div className="w-full border border-transparent px-2 py-1.5 text-xs text-right text-gray-700 bg-transparent">
+                                            <td className="px-1 py-1.5">
+                                                <div className="flex items-center justify-end h-[26px] px-1.5 rounded-md bg-purple-50 border border-purple-100 text-[11px] font-medium text-[#7e22ce] text-right">
                                                     {item.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                                 </div>
                                             </td>
-                                            <td className="px-2 py-2 text-center">
-                                                <button onClick={() => removeItem(item.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition">
-                                                    <Trash2 className="w-4 h-4 mx-auto" />
+                                            <td className="px-1 py-1.5 text-center">
+                                                <button onClick={() => removeItem(item.id)} className="p-1 text-red-400 hover:text-red-500 hover:bg-red-50 rounded transition">
+                                                    <Trash2 className="w-3.5 h-3.5 mx-auto" />
                                                 </button>
                                             </td>
                                         </tr>
@@ -560,26 +559,26 @@ const CreateDebitNote = () => {
                             </table>
                         </div>
 
-                        <div className="mt-4 flex items-center justify-between">
+                        <div className="mt-4 flex items-center gap-3">
                             <button
                                 onClick={addItem}
-                                className="flex items-center gap-1.5 bg-[#00A859] hover:bg-[#00904C] text-white rounded-md px-3 py-1.5 text-xs font-semibold shadow-sm transition"
+                                className="flex items-center gap-1.5 bg-[#00A859] hover:bg-[#00904C] text-white rounded-md px-4 py-2 text-xs font-semibold shadow-sm transition"
                             >
-                                <Plus className="w-4 h-4" /> Add Row
+                                <Plus size={16} strokeWidth={3} /> Add Row
                             </button>
                             <button
                                 onClick={importItemsFromSource}
                                 disabled={!selectedDoc}
-                                className="flex items-center gap-1.5 border border-gray-300 text-gray-600 rounded-md px-3 py-1.5 text-xs font-semibold hover:bg-gray-50 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center gap-1.5 border border-gray-200 text-[#1a2b4b] rounded-md px-4 py-2 text-xs font-semibold hover:bg-gray-50 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <FileSearch className="w-4 h-4 text-blue-500" /> Import Items from Invoice
+                                <FileSearch size={16} className="text-[#3b82f6]" /> Import Items from Source
                             </button>
                         </div>
                     </div>
 
                     {/* SECTION 4 - Additional Info */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-                        <SectionHead num="4" label={<>Additional Information <span className="text-gray-500 font-normal text-xs ml-0.5">(Optional)</span></>} />
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-3 mt-4">
+                        <SectionHead num="4" label={<>Additional Information <span className="text-slate-400 font-normal text-[12px] ml-0.5">(Optional)</span></>} />
 
                         <div className="grid grid-cols-2 gap-6">
                             <div>
@@ -588,20 +587,20 @@ const CreateDebitNote = () => {
                                     placeholder="Enter any remarks or notes (optional)"
                                     value={form.remarks}
                                     onChange={(e) => setField('remarks', e.target.value)}
-                                    className="w-full h-[60px] border border-gray-200 rounded-md px-3 py-2.5 text-xs text-gray-800 focus:outline-none focus:border-purple-500 bg-white"
+                                    className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-2 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#7e22ce] focus:ring-2 focus:ring-[#7e22ce]/10 transition-all resize-y h-[72px]"
                                 />
                             </div>
                             <div>
                                 <Label>Attach Documents</Label>
-                                <label className="border border-gray-200 rounded-md h-[60px] flex items-center px-4 bg-white hover:bg-gray-50 transition cursor-pointer">
-                                    <div className="w-10 h-10 rounded-lg bg-[#F0F4FF] flex items-center justify-center mr-3 shrink-0">
-                                        <Upload className="w-5 h-5 text-[#2E4383]" strokeWidth={2.5} />
+                                <label className="border border-dashed border-gray-300 rounded-lg h-[72px] flex items-center px-4 bg-gray-50 hover:bg-gray-100 transition cursor-pointer">
+                                    <div className="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center mr-3 shrink-0 text-[#7e22ce]">
+                                        <Upload size={18} strokeWidth={2.5} />
                                     </div>
                                     <div className="flex flex-col">
-                                        <p className="text-xs text-gray-500">
-                                            <span className="font-semibold text-[#1E1B4B]">Click to upload</span> or drag and drop
+                                        <p className="text-[12px] text-[#1a2b4b]">
+                                            <span className="font-bold">Click to upload</span> or drag and drop
                                         </p>
-                                        <p className="text-[10px] text-gray-400 mt-0.5">
+                                        <p className="text-[11px] text-slate-500 mt-0.5">
                                             {attachmentFile ? attachmentFile.name : 'PNG, JPG, PDF (Max. 5MB)'}
                                         </p>
                                     </div>
@@ -617,106 +616,106 @@ const CreateDebitNote = () => {
                     </div>
 
                     {/* Action Bar */}
-                    <div className="flex items-center justify-between rounded-xl border border-gray-200 p-4 shadow-sm bg-white">
+                    <div className="flex items-center justify-between rounded-xl shadow-sm border border-gray-100 p-4 bg-white mt-4">
                         <button
                             onClick={() => navigate(id ? `/dashboard/account/${id}` : -1)}
-                            className="flex items-center gap-1.5 border border-gray-300 rounded-lg px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition bg-white shadow-sm"
+                            className="flex items-center gap-1.5 border border-gray-200 rounded-lg px-5 py-2.5 text-[13px] font-semibold text-[#1a2b4b] hover:bg-gray-50 transition bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
                         >
-                            <Trash2 className="w-4 h-4 text-gray-400" /> Cancel
+                            <Trash2 size={16} className="text-slate-400" /> Cancel
                         </button>
                         <button
                             onClick={handleSubmit}
                             disabled={submitting}
-                            className="flex items-center gap-2 bg-[#00A859] hover:bg-[#00904C] text-white rounded-lg px-6 py-2.5 text-sm font-medium transition shadow-sm disabled:opacity-60"
+                            className="flex items-center gap-2 bg-[#00A859] hover:bg-[#00904C] text-white rounded-lg px-8 py-2.5 text-[14px] font-bold transition shadow-sm disabled:opacity-60"
                         >
-                            <FileText className="w-4 h-4" /> {submitting ? 'Saving...' : 'Generate Debit Note'}
+                            <FileText size={16} /> {submitting ? 'Saving...' : 'Generate Debit Note'}
                         </button>
                     </div>
                 </div>
 
                 {/* RIGHT SIDEBAR */}
-                <div className="w-[250px] flex-shrink-0 space-y-3">
+                {/* RIGHT SIDEBAR */}
+                <div className="w-[250px] flex-shrink-0 space-y-4">
 
                     {/* Summary */}
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="p-4 border-b border-gray-100 flex items-center gap-2 bg-purple-50/30">
-                            <div className="w-7 h-7 rounded-md bg-purple-100 text-purple-600 flex items-center justify-center">
-                                <FileText className="w-4 h-4" />
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="w-6 h-6 rounded flex items-center justify-center bg-[#f3e8ff] text-[#7e22ce]">
+                                <FileText size={14} />
                             </div>
-                            <h3 className="text-sm font-bold text-gray-800">Debit Note Summary</h3>
+                            <h3 className="text-[14px] font-medium text-[#1a2b4b]">Debit Note Summary</h3>
                         </div>
 
-                        <div className="p-5 space-y-4">
-                            <div className="space-y-2.5 text-xs">
-                                <div className="flex justify-between text-gray-600">
-                                    <span className="font-semibold text-gray-800">Original Invoice Amount</span>
-                                    <span className="font-bold text-gray-800">₹ {Number(selectedDoc?.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                                </div>
-                                <div className="flex justify-between text-gray-600">
-                                    <span className="font-semibold text-gray-800">Total Debit Note Amount</span>
-                                    <span className="font-bold text-blue-600">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                                </div>
+                        <div className="space-y-3 text-[13px]">
+                            <div className="flex justify-between text-slate-500">
+                                <span className="font-medium text-slate-500">Original Amount</span>
+                                <span className="font-medium text-[#1a2b4b]">₹ {Number(selectedDoc?.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                             </div>
-
-                            <hr className="border-dashed border-gray-200" />
-
-                            <div className="space-y-2.5 text-xs">
-                                <div className="flex justify-between text-gray-600">
-                                    <span className="font-bold text-gray-800">Taxable Amount</span>
-                                    <span className="font-bold text-gray-800">₹ {taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                            <div className="flex justify-between text-slate-500">
+                                <span className="font-medium text-slate-500">Debit Total</span>
+                                <span className="font-semibold text-[#7e22ce]">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            
+                            <div className="mt-2 space-y-2 pt-2 border-t border-dashed border-gray-200">
+                                <div className="flex justify-between text-slate-400">
+                                    <span className="font-medium">Taxable</span>
+                                    <span className="font-medium text-slate-600">₹ {taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                                 </div>
                                 {isIntrastate ? (
                                     <>
-                                        <div className="flex justify-between text-gray-500">
-                                            <span className="font-semibold text-gray-800">CGST</span>
-                                            <span className="font-semibold text-gray-800">₹ {cgstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                        <div className="flex justify-between text-slate-400">
+                                            <span className="font-medium">CGST</span>
+                                            <span className="font-medium text-slate-600">₹ {cgstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                                         </div>
-                                        <div className="flex justify-between text-gray-500">
-                                            <span className="font-semibold text-gray-800">SGST</span>
-                                            <span className="font-semibold text-gray-800">₹ {sgstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                        <div className="flex justify-between text-slate-400">
+                                            <span className="font-medium">SGST</span>
+                                            <span className="font-medium text-slate-600">₹ {sgstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="flex justify-between text-gray-500">
-                                        <span className="font-semibold text-gray-800">IGST</span>
-                                        <span className="font-semibold text-gray-800">₹ {igstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                    <div className="flex justify-between text-slate-400">
+                                        <span className="font-medium">IGST</span>
+                                        <span className="font-medium text-slate-600">₹ {igstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                                     </div>
                                 )}
                             </div>
 
-                            <div className="mt-4 bg-purple-100/50 rounded-lg px-4 py-3 flex items-center justify-between border border-purple-100">
-                                <span className="text-purple-700 text-[9px] font-bold whitespace-nowrap">Total Debit Note Amount</span>
-                                <span className="text-purple-700 text-md font-bold whitespace-nowrap">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                            <div className="mt-4 bg-[#f3e8ff]/50 rounded-lg px-4 py-3 flex items-center justify-between border border-[#e9d5ff]/50">
+                                <span className="text-[#7e22ce] text-[12px] font-bold whitespace-nowrap">Grand Total</span>
+                                <span className="text-[#7e22ce] text-[15px] font-bold whitespace-nowrap">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Related Invoice */}
                     {selectedDoc && (
-                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-6 h-6 rounded bg-green-100 text-green-600 flex items-center justify-center">
-                                    <FileText className="w-3.5 h-3.5" />
-                                </div>
-                                <h3 className="text-sm font-bold text-gray-800">Related {selectedDoc.type}</h3>
-                            </div>
-
-                            <div className="flex justify-between items-start mb-1">
-                                <span className="text-sm font-bold text-gray-800">{selectedDoc.docNo}</span>
-                                <span className="text-sm font-bold text-gray-800">₹ {Number(selectedDoc.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                            </div>
-                            <div className="flex justify-between items-center mb-4">
-                                <span className="text-[10px] text-gray-500 font-medium">
-                                    {selectedDoc.date ? new Date(selectedDoc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
-                                </span>
-                            </div>
-                            <div className="flex justify-center">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-[14px] font-medium text-[#1a2b4b]">Related {selectedDoc.type}</h3>
                                 <button
                                     onClick={() => navigate(selectedDoc.type === 'Invoice' ? `/payments/invoiceDetails/${selectedDoc.id}` : `/payments/estimateDetails/${selectedDoc.id}`)}
-                                    className="w-1/2 py-2 border border-gray-200 rounded-lg text-xs font-bold text-purple-800 flex items-center justify-center gap-1.5 hover:bg-gray-50 transition"
+                                    className="text-[12px] font-medium text-[#3b82f6] hover:underline flex items-center gap-1"
                                 >
-                                    <Eye className="w-3.5 h-3.5" /> View
+                                    <Eye size={12} /> View
                                 </button>
+                            </div>
+
+                            <div className="flex items-start justify-between">
+                                <div className="flex gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-green-50 text-green-600 flex items-center justify-center border border-green-100 shrink-0">
+                                        <FileText size={14} />
+                                    </div>
+                                    <div>
+                                        <p className="text-[12px] font-medium text-[#1a2b4b]">{selectedDoc.docNo}</p>
+                                        <p className="text-[10px] text-slate-500 mt-0.5">
+                                            {selectedDoc.date ? new Date(selectedDoc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[12px] font-medium text-[#1a2b4b]">₹ {Number(selectedDoc.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                                    <p className="text-[10px] font-medium text-emerald-500 mt-0.5">Original</p>
+                                </div>
                             </div>
                         </div>
                     )}
