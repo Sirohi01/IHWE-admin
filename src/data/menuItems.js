@@ -188,6 +188,7 @@ export const menuItems = [
     label: "Delegate Management",
     icon: Users,
     children: [
+      { label: "Add Delegate Pass", path: "/add-delegate-pass" },
       { label: "Delegate Passes", path: "/delegate-passes" },
       { label: "Delegate Session Config", path: "/delegate-config" },
     ],

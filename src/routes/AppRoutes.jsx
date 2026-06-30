@@ -189,6 +189,7 @@ const BusinessType = lazy(() => import("../pages/admin_management/BusinessType")
 const AnnualTurnover = lazy(() => import("../pages/admin_management/AnnualTurnover"));
 const PrimaryProductInterest = lazy(() => import("../pages/admin_management/PrimaryProductInterest"));
 const SecondaryProductCategories = lazy(() => import("../pages/admin_management/SecondaryProductCategories"));
+const AddDelegatePass = lazy(() => import("../pages/admin_management/AddDelegatePass"));
 const MeetingPriorityLevel = lazy(() => import("../pages/admin_management/MeetingPriorityLevel"));
 const DocumentConfiguration = lazy(() => import("../pages/admin_management/DocumentConfiguration"));
 const TransferClient = lazy(() => import("../pages/admin_management/TransferClient"));
@@ -457,6 +458,10 @@ export default function AppRoutes() {
             <Route path="payment-delay-warnings" element={<PaymentDelayWarnings />} />
             <Route path="events" element={<ManageEvents />} />
             <Route path="stall-rates" element={<ManageStallRates />} />
+            <Route
+              path="/add-delegate-pass"
+              element={<AddDelegatePass />}
+            />
             <Route path="delegate-passes" element={<DelegatePasses />} />
             <Route path="terms-conditions" element={<ManageTerms />} />
 
