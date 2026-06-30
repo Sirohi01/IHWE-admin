@@ -76,6 +76,7 @@ const TABS = [
     { id: 'documents', label: 'Documents', icon: FileText },
     { id: 'msme', label: 'MSME', icon: Award },
     { id: 'accessories', label: 'Accessories', icon: Package },
+    { id: 'entitlements', label: 'Entitlements', icon: Gift },
     { id: 'seller', label: 'Seller Portal', icon: ShoppingCart },
 ];
 
@@ -2108,6 +2109,7 @@ export default function ExhibitorBookingDetail() {
             {reg && activeTab === 'documents' && <DocumentsTab reg={reg} id={id} onRefresh={fetchReg} />}
             {reg && activeTab === 'msme' && <MSMETab reg={reg} id={id} onRefresh={fetchReg} />}
             {reg && activeTab === 'accessories' && <AccessoriesTab reg={reg} id={id} />}
+            {reg && activeTab === 'entitlements' && <EntitlementsTab reg={reg} id={id} onRefresh={fetchReg} />}
             {reg && activeTab === 'seller' && <SellerTab reg={reg} id={id} onRefresh={fetchReg} />}
         </div>
     );
