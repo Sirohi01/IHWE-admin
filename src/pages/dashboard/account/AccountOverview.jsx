@@ -88,7 +88,7 @@ const AccountOverview = () => {
   };
 
   return (
-    <div className="bg-[#f8f9fc] p-6">
+    <div className="bg-[#f8f9fc] p-4">
 
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-[#194090] font-semibold mb-1">
@@ -158,16 +158,16 @@ const AccountOverview = () => {
           <div className="flex justify-between items-center mb-1.5">
             <h2 className="text-[13px] font-medium text-[#1a2b4b] tracking-tight">Recent Documents</h2>
           </div>
-          <div className="overflow-x-auto flex-1 min-h-0 overflow-y-auto">
+          <div className="overflow-x-auto flex-1 table-scroll-wrapper">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="text-[9px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
-                  <th className="pb-1 pr-2">Document Type</th>
-                  <th className="pb-1 pr-2">Document No.</th>
-                  <th className="pb-1 pr-2">Date</th>
-                  <th className="pb-1 pr-2">Amount</th>
-                  <th className="pb-1 pr-2">Status</th>
-                  <th className="pb-1">Action</th>
+                  <th className="pb-2 pr-2">Document Type</th>
+                  <th className="pb-2 pr-2">Document No.</th>
+                  <th className="pb-2 pr-2">Date</th>
+                  <th className="pb-2 pr-2">Amount</th>
+                  <th className="pb-2 pr-2">Status</th>
+                  <th className="pb-2">Action</th>
                 </tr>
               </thead>
               <tbody className="text-[11px] text-slate-700">
@@ -328,25 +328,25 @@ const AccountOverview = () => {
       </div>
 
       {/* Footer / Exhibitor Contact */}
-      <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-6 flex flex-col md:flex-row items-center gap-6 justify-between">
-        <h2 className="text-[15px] font-medium text-[#1a2b4b] tracking-tight shrink-0">Exhibitor Contact</h2>
+      <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-4 flex flex-col md:flex-row items-center gap-1 justify-between">
+        <h2 className="text-[12px] font-medium text-[#1a2b4b] tracking-tight shrink-0">Exhibitor Contact</h2>
 
-        <div className="flex-1 flex flex-wrap justify-between items-center gap-4 w-full text-[13px] text-slate-700">
-          <div className="flex items-center gap-3">
-            <User size={18} className="text-[#194090]" />
-            <span className="font-semibold">{companyInfo?.contactPerson}</span>
+        <div className="flex-1 flex flex-wrap justify-between items-center gap-1 w-full text-[10px] text-slate-700">
+          <div className="flex items-center gap-1">
+            <User size={15} className="text-[#194090] shrink-0" />
+            <span className="font-medium whitespace-nowrap">{companyInfo?.contactPerson}</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Mail size={18} className="text-[#194090]" />
-            <span>{companyInfo?.email}</span>
+          <div className="flex items-center gap-1">
+            <Mail size={15} className="text-[#194090] shrink-0" />
+            <a href={`mailto:${companyInfo?.email}`} className="whitespace-nowrap hover:text-[#194090] hover:underline">{companyInfo?.email}</a>
           </div>
-          <div className="flex items-center gap-3">
-            <Phone size={18} className="text-[#194090]" />
-            <span>{companyInfo?.mobile}</span>
+          <div className="flex items-center gap-1">
+            <Phone size={15} className="text-[#194090] shrink-0" />
+            <span className="whitespace-nowrap">{companyInfo?.mobile}</span>
           </div>
-          <div className="flex items-center gap-3 max-w-xs">
-            <MapPin size={18} className="text-[#194090] shrink-0" />
-            <span className="truncate">{companyInfo?.address}</span>
+          <div className="flex items-center gap-1 max-w-[280px] sm:max-w-sm">
+            <MapPin size={15} className="text-[#194090] shrink-0" />
+            <span className="truncate" title={companyInfo?.address}>{companyInfo?.address}</span>
           </div>
         </div>
       </div>

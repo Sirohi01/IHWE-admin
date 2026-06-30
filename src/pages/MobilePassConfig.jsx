@@ -3,6 +3,7 @@ import {
   Car,
   CheckCircle2,
   IndianRupee,
+  Sparkles,
   RefreshCw,
   Save,
   Settings,
@@ -22,6 +23,7 @@ const passMeta = {
   vehicle: { icon: Car, color: "emerald", label: "Vehicle" },
   service: { icon: Wrench, color: "purple", label: "Service" },
   visitor: { icon: Users, color: "blue", label: "Visitor" },
+  delegate: { icon: Sparkles, color: "pink", label: "Delegate" },
 };
 
 const colorClass = {
@@ -29,6 +31,7 @@ const colorClass = {
   emerald: "from-emerald-500 to-teal-500 shadow-emerald-500/20",
   purple: "from-purple-500 to-indigo-500 shadow-purple-500/20",
   blue: "from-blue-500 to-cyan-500 shadow-blue-500/20",
+  pink: "from-pink-500 to-rose-500 shadow-pink-500/20",
 };
 
 export default function MobilePassConfig() {
@@ -239,10 +242,11 @@ export default function MobilePassConfig() {
                   </div>
 
                   {/* Card Body - Inputs */}
-                  <div className="grid flex-1 grid-cols-2 gap-5 p-6 lg:grid-cols-4">
+                  <div className="grid flex-1 grid-cols-2 gap-5 p-6 lg:grid-cols-5">
                     {numberInput(item, "complimentaryQuota", "Free Quota", CheckCircle2)}
                     {numberInput(item, "totalQuota", "Total Quota", Ticket)}
                     {numberInput(item, "price", "Price (₹)", IndianRupee)}
+                    {numberInput(item, "gstPercentage", "GST (%)", Activity)}
                     {numberInput(item, "maxPerRequest", "Max/Req", Users)}
                   </div>
 

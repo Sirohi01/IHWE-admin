@@ -145,6 +145,7 @@ export const menuItems = [
         label: "Exhibitors Products",
         path: "/exhibitor-products-profile",
       },
+
       {
         label: "Failed Payments",
         path: "/failed-payments",
@@ -180,6 +181,17 @@ export const menuItems = [
       },
 
     ]
+  },
+
+  {
+    type: "dropdown",
+    label: "Delegate Management",
+    icon: Users,
+    children: [
+      { label: "Add Delegate Pass", path: "/add-delegate-pass" },
+      { label: "Delegate Passes", path: "/delegate-passes" },
+      { label: "Delegate Session Config", path: "/delegate-config" },
+    ],
   },
 
   {

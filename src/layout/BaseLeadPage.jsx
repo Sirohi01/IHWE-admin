@@ -33,7 +33,7 @@ const BaseLeadPage = ({
   onSelectAll
 }) => {
   return (
-    <div className="w-full bg-[#f8fafc] min-h-[calc(100vh-110px)] xl:h-[calc(100vh-110px)] overflow-y-auto flex flex-col text-slate-800 p-4 md:px-6 lg:px-8" style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }}>
+    <div className="w-full bg-[#f8fafc] min-h-[calc(100vh-110px)] xl:min-h-[calc(100vh-110px)] flex flex-col text-slate-800 p-4 md:px-6 lg:px-8" style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }}>
 
       {/* TOP HEADER */}
       {/* <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-4">

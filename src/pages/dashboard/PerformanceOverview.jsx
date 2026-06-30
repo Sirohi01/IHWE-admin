@@ -20,9 +20,9 @@ export default function PerformanceOverview({ statsMetrics, globalPeriod }) {
   return (
     <div className="bg-white rounded-lg border border-gray-100 p-2 lg:col-span-5 col-span-1 flex flex-col" style={{ boxShadow: 'rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em', fontFamily: 'Inter, sans-serif' }}>
       {/* Header */}
-      <div className="flex justify-between items-center mb-2 shrink-0">
-        <h3 className="text-sm font-bold" style={{ color: '#15173D' }}>Daily Performance Overview</h3>
-        <button className="flex items-center gap-1.5 text-[10px] font-bold border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-slate-50 transition" style={{ color: '#093C5D' }}>
+      <div className="flex justify-between items-center -mx-2 -mt-2 mb-2 px-3 pt-2.5 pb-2.5 bg-slate-100 border-b border-slate-200 rounded-t-lg shrink-0">
+        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">Daily Performance Overview</h3>
+        <button className="flex items-center gap-1.5 text-[9px] font-bold border border-slate-200 bg-white rounded px-2 py-0.5 hover:bg-slate-100 transition leading-none" style={{ color: '#093C5D' }}>
           {periodLabel}
         </button>
       </div>
@@ -40,7 +40,7 @@ export default function PerformanceOverview({ statsMetrics, globalPeriod }) {
             </span>
 
             {/* Value — large, colored */}
-            <span className="text-[15px] font-black leading-none mb-1 truncate" style={{ color: card.color }}>
+            <span className="text-[15px] font-bold leading-none mb-1 truncate" style={{ color: card.color }}>
               {card.prefix}{statsMetrics[card.valueKey]}{card.suffix}
             </span>
 

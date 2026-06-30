@@ -171,7 +171,7 @@ export default function LeadAssignmentTable({ data = [], parentLoading = false }
               <tr><td colSpan="6" className="px-2 py-4 text-center text-slate-500 font-medium text-[11px]">No leads found</td></tr>
             ) : (
               currentItems.map((item, index) => (
-                <tr key={item._id || index} className="border-b border-slate-100 bg-white hover:bg-slate-50/50 transition-colors">
+                <tr key={item._id || index} className="border-b border-slate-100 bg-white hover:bg-slate-50/50 transition-colors group">
                   <td className="px-2 py-2">
                     <div className="font-bold text-[11px] capitalize" style={{ color: '#093C5D' }}>{item.companyName}</div>
                   </td>
@@ -181,7 +181,7 @@ export default function LeadAssignmentTable({ data = [], parentLoading = false }
                       : 'N/A'}
                   </td>
                   <td className="px-2 py-2 text-center font-medium">{new Date(item.added || item.createdAt).toLocaleDateString('en-GB')}</td>
-                  <td className="px-2 py-2 font-bold capitalize" style={{ color: '#15173D' }}>{item.forwardTo || 'Unassigned'}</td>
+                  <td className="px-2 py-2 font-bold capitalize text-emerald-700">{item.forwardTo || 'Unassigned'}</td>
                   <td className="px-2 py-2 text-center">
                     <span className={`px-2 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${
                       item.forwardTo ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
@@ -190,7 +190,7 @@ export default function LeadAssignmentTable({ data = [], parentLoading = false }
                     </span>
                   </td>
                   <td className="px-2 py-2 text-center">
-                    <button disabled className="flex items-center gap-1 px-2 py-1 text-[9px] font-bold bg-slate-50 text-slate-400 border border-slate-200 rounded-md opacity-50 cursor-not-allowed mx-auto">
+                    <button className="flex items-center gap-1 px-2 py-1 text-[9px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded transition-colors mx-auto">
                       <UserPlus size={11} /> Assign
                     </button>
                   </td>
