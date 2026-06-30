@@ -1,16 +1,50 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Download, Upload, Trash2, Plus, Save, Calendar, UserCheck, Utensils, Car, Info, AlertCircle, ShieldCheck, Loader2 } from 'lucide-react';
+import { Download, Upload, Trash2, Plus, Save, Calendar, UserCheck, Utensils, Car, Info, AlertCircle, ShieldCheck, Loader2, CheckCircle } from 'lucide-react';
 import Swal from 'sweetalert2';
-import api from '../../lib/api';
+import api, { otpApi } from '../../lib/api';
+
+const normalizeIndianMobile = (value = '') => {
+    const digits = String(value).replace(/\D/g, '');
+    if (digits.startsWith('91') && digits.length > 10) return digits.slice(-10);
+    if (digits.startsWith('0') && digits.length > 10) return digits.slice(-10);
+    return digits.slice(0, 10);
+};
+
+const isValidIndianMobile = (value = '') => /^[6-9]\d{9}$/.test(normalizeIndianMobile(value));
+const isValidEmail = (value = '') => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value).trim());
 
 const AddTeamMembersAdmin = () => {
     const { id } = useParams();
     const navigate = useNavigate();
 
-    const emptyRow = { photo: null, photoPreview: '', name: '', designation: '', mobile: '', email: '', roleAtExhibition: '', idProof: '', idProofDoc: null, idProofDocPreview: '', isUploadingPhoto: false, isUploadingId: false };
+    const emptyRow = {
+        photo: null,
+        photoPreview: '',
+        name: '',
+        designation: '',
+        mobile: '',
+        email: '',
+        roleAtExhibition: '',
+        useCustomRole: false,
+        emailOtpSent: false,
+        mobileOtpSent: false,
+        emailVerified: false,
+        mobileVerified: false,
+        emailOtpVerifiedAt: null,
+        mobileOtpVerifiedAt: null,
+        idProof: '',
+        idProofDoc: null,
+        idProofDocPreview: '',
+        isUploadingPhoto: false,
+        isUploadingId: false
+    };
     const [rows, setRows] = useState(Array(3).fill().map(() => ({ ...emptyRow })));
     const [isSaving, setIsSaving] = useState(false);
+
+    const updateRow = (index, patch) => {
+        setRows((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, ...patch } : row)));
+    };
 
     const handleAddRow = () => {
         setRows([...rows, { ...emptyRow }]);
@@ -24,9 +58,106 @@ const AddTeamMembersAdmin = () => {
     };
 
     const handleFieldChange = (index, field, value) => {
-        const newRows = [...rows];
-        newRows[index][field] = value;
-        setRows(newRows);
+        if (field === 'mobile') {
+            updateRow(index, { mobile: normalizeIndianMobile(value), mobileOtpSent: false, mobileVerified: false, mobileOtpVerifiedAt: null });
+            return;
+        }
+        if (field === 'email') {
+            updateRow(index, { email: value, emailOtpSent: false, emailVerified: false, emailOtpVerifiedAt: null });
+            return;
+        }
+        updateRow(index, { [field]: value });
+    };
+
+    const handleDesignationChange = (index, value) => {
+        updateRow(index, { designation: value });
+    };
+
+    const handleRolePreset = (index, value) => {
+        if (value === 'Other') {
+            updateRow(index, { useCustomRole: true, roleAtExhibition: '' });
+            return;
+        }
+        updateRow(index, { useCustomRole: false, roleAtExhibition: value });
+    };
+
+    const handleOtpRequest = async (index, channel) => {
+        const row = rows[index];
+        const identifier = channel === 'email' ? row.email?.trim() : normalizeIndianMobile(row.mobile);
+        const isEmail = channel === 'email';
+        const valid = isEmail ? isValidEmail(identifier) : isValidIndianMobile(identifier);
+
+        if (!valid) {
+            Swal.fire('Error', isEmail ? 'Enter a valid email address' : 'Enter a valid 10-digit Indian mobile number', 'error');
+            return;
+        }
+
+        try {
+            const response = await otpApi.request(identifier, isEmail ? 'email' : 'phone', row.name || 'Team Member', 'EXHIBITOR_TEAM');
+            if (response?.success) {
+                updateRow(index, isEmail ? { emailOtpSent: true } : { mobileOtpSent: true });
+                Swal.fire({
+                    icon: 'success',
+                    title: 'OTP Sent',
+                    text: `OTP sent to ${isEmail ? 'email' : 'mobile'}`,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 1800,
+                    timerProgressBar: true,
+                });
+            } else {
+                Swal.fire('Error', response?.message || 'Failed to send OTP', 'error');
+            }
+        } catch (error) {
+            Swal.fire('Error', error.response?.data?.message || error.message || 'Failed to send OTP', 'error');
+        }
+    };
+
+    const handleOtpVerify = async (index, channel) => {
+        const row = rows[index];
+        const identifier = channel === 'email' ? row.email?.trim() : normalizeIndianMobile(row.mobile);
+        const isEmail = channel === 'email';
+        const valid = isEmail ? isValidEmail(identifier) : isValidIndianMobile(identifier);
+
+        if (!valid) {
+            Swal.fire('Error', isEmail ? 'Enter a valid email address' : 'Enter a valid 10-digit Indian mobile number', 'error');
+            return;
+        }
+
+        const result = await Swal.fire({
+            title: `Verify ${isEmail ? 'Email' : 'Mobile'}`,
+            input: 'text',
+            inputPlaceholder: 'Enter OTP',
+            showCancelButton: true,
+            confirmButtonText: 'Verify',
+            confirmButtonColor: '#2563eb',
+        });
+
+        if (!result.isConfirmed || !result.value) return;
+
+        try {
+            const response = await otpApi.verify(identifier, String(result.value).trim(), isEmail ? 'email' : 'phone');
+            if (response?.success) {
+                updateRow(index, isEmail
+                    ? { emailVerified: true, emailOtpVerifiedAt: new Date().toISOString() }
+                    : { mobileVerified: true, mobileOtpVerifiedAt: new Date().toISOString() });
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Verified',
+                    text: `${isEmail ? 'Email' : 'Mobile'} OTP verified successfully`,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 1800,
+                    timerProgressBar: true,
+                });
+            } else {
+                Swal.fire('Error', response?.message || 'Invalid OTP', 'error');
+            }
+        } catch (error) {
+            Swal.fire('Error', error.response?.data?.message || error.message || 'OTP verification failed', 'error');
+        }
     };
 
     const handlePhotoUpload = async (index, file) => {
@@ -107,8 +238,21 @@ const AddTeamMembersAdmin = () => {
 
         for (let i = 0; i < validRows.length; i++) {
             const r = validRows[i];
-            if (!r.name || !r.designation || !r.mobile || !r.email || !r.roleAtExhibition) {
+            const roleValue = r.useCustomRole ? r.roleAtExhibition?.trim() : r.roleAtExhibition;
+            if (!r.name || !r.designation || !r.mobile || !r.email || !roleValue) {
                 Swal.fire('Error', `Please fill all mandatory fields (*) for Row ${i + 1}`, 'error');
+                return;
+            }
+            if (!isValidEmail(r.email)) {
+                Swal.fire('Error', `Please enter a valid email for Row ${i + 1}`, 'error');
+                return;
+            }
+            if (!isValidIndianMobile(r.mobile)) {
+                Swal.fire('Error', `Please enter a valid 10-digit Indian mobile for Row ${i + 1}`, 'error');
+                return;
+            }
+            if (!r.emailVerified || !r.mobileVerified) {
+                Swal.fire('Error', `Please verify both email and mobile via OTP for Row ${i + 1}`, 'error');
                 return;
             }
         }
@@ -123,12 +267,16 @@ const AddTeamMembersAdmin = () => {
                 uploadedMembers.push({
                     name: row.name,
                     designation: row.designation,
-                    mobile: row.mobile,
+                    mobile: normalizeIndianMobile(row.mobile),
                     email: row.email,
-                    roleAtExhibition: row.roleAtExhibition,
+                    roleAtExhibition: row.useCustomRole ? row.roleAtExhibition?.trim() : row.roleAtExhibition,
                     idProof: row.idProof,
                     idProofUrl: idProofUrl,
                     photoUrl: photoUrl,
+                    emailVerified: row.emailVerified,
+                    mobileVerified: row.mobileVerified,
+                    emailOtpVerifiedAt: row.emailOtpVerifiedAt,
+                    mobileOtpVerifiedAt: row.mobileOtpVerifiedAt,
                     passes: {
                         exhibitor: true, vehicle: true, service: true, visitor: false
                     },
@@ -203,26 +351,26 @@ const AddTeamMembersAdmin = () => {
                         <table className="w-full text-left border-collapse min-w-[1200px]">
                             <thead>
                                 <tr className="border-b border-slate-100 text-xs font-bold text-slate-800 uppercase tracking-wider bg-slate-50/50">
-                                    <th className="p-4 w-12 text-center">#</th>
-                                    <th className="p-4 w-24">Photo</th>
-                                    <th className="p-4 min-w-[180px]">Full Name <span className="text-red-500">*</span></th>
-                                    <th className="p-4 min-w-[160px]">Designation <span className="text-red-500">*</span></th>
-                                    <th className="p-4 min-w-[150px]">Mobile Number <span className="text-red-500">*</span></th>
-                                    <th className="p-4 min-w-[180px]">Email ID <span className="text-red-500">*</span></th>
-                                    <th className="p-4 min-w-[160px]">Role at Exhibition <span className="text-red-500">*</span></th>
-                                    <th className="p-4 min-w-[140px]">ID Proof</th>
-                                    <th className="p-4 w-16 text-center">Delete</th>
+                                    <th className="p-1 w-12 text-center">#</th>
+                                    <th className="p-1 w-24">Photo</th>
+                                    <th className="p-1 min-w-[180px]">Full Name <span className="text-red-500">*</span></th>
+                                    <th className="p-1 min-w-[160px]">Designation <span className="text-red-500">*</span></th>
+                                    <th className="p-1 min-w-[150px]">Mobile Number <span className="text-red-500">*</span></th>
+                                    <th className="p-1 min-w-[180px]">Email ID <span className="text-red-500">*</span></th>
+                                    <th className="p-1 min-w-[160px]">Role at Exhibition <span className="text-red-500">*</span></th>
+                                    <th className="p-1 min-w-[140px]">ID Proof</th>
+                                    <th className="p-1 w-16 text-center">Delete</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {rows.map((row, index) => (
                                     <tr key={index} className="hover:bg-slate-50/30 transition-colors">
-                                        <td className="p-4">
+                                        <td className="p-1">
                                             <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-xs mx-auto">
                                                 {index + 1}
                                             </div>
                                         </td>
-                                        <td className="p-4">
+                                        <td className="p-1">
                                             <label className="w-14 h-14 rounded-lg border-2 border-dashed border-blue-200 bg-blue-50 hover:bg-blue-100 flex flex-col items-center justify-center cursor-pointer transition-colors overflow-hidden group mx-auto">
                                                 <input type="file" accept="image/jpeg, image/png" className="hidden" onChange={(e) => handlePhotoUpload(index, e.target.files[0])} disabled={row.isUploadingPhoto} />
                                                 {row.isUploadingPhoto ? (
@@ -240,46 +388,94 @@ const AddTeamMembersAdmin = () => {
                                                 )}
                                             </label>
                                         </td>
-                                        <td className="p-4">
-                                            <input type="text" value={row.name} onChange={(e) => handleFieldChange(index, 'name', e.target.value)} placeholder="Full Name" className="w-full h-10 px-3 rounded-lg border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700" />
+                                        <td className="p-1">
+                                            <input type="text" value={row.name} onChange={(e) => handleFieldChange(index, 'name', e.target.value)} placeholder="Full Name" className="w-full h-8 px-2 rounded-md border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700" />
                                         </td>
-                                        <td className="p-4">
-                                            <select value={row.designation} onChange={(e) => handleFieldChange(index, 'designation', e.target.value)} className="w-full h-10 px-3 rounded-lg border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700 bg-white">
-                                                <option value="">Select</option>
-                                                <option value="Sales Manager">Sales Manager</option>
-                                                <option value="Marketing Executive">Marketing Executive</option>
-                                                <option value="Sales Executive">Sales Executive</option>
-                                                <option value="Stall Incharge">Stall Incharge</option>
-                                                <option value="Technical Executive">Technical Executive</option>
-                                                <option value="CEO">CEO</option>
-                                                <option value="CTO">CTO</option>
-                                                <option value="Other">Other</option>
-                                            </select>
+                                        <td className="p-1">
+                                            <input
+                                                type="text"
+                                                value={row.designation}
+                                                onChange={(e) => handleDesignationChange(index, e.target.value)}
+                                                placeholder="Designation"
+                                                className="w-full h-8 px-2 rounded-md border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700"
+                                            />
                                         </td>
-                                        <td className="p-4">
-                                            <div className="flex h-10 rounded-lg border border-slate-200 overflow-hidden focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
-                                                <div className="bg-slate-50 px-2 flex items-center justify-center border-r border-slate-200 text-slate-500 text-sm font-medium">
-                                                    +91
+                                        <td className="p-1">
+                                            <div className="space-y-0">
+                                                <input
+                                                    type="tel"
+                                                    inputMode="numeric"
+                                                    maxLength={10}
+                                                    value={row.mobile}
+                                                    onChange={(e) => handleFieldChange(index, 'mobile', e.target.value)}
+                                                    placeholder="10-digit Mobile Number"
+                                                    className="w-full h-8 px-2 rounded-md border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700"
+                                                />
+                                                <div className="flex items-center gap-0 flex-wrap">
+                                                    <button type="button" onClick={() => handleOtpRequest(index, 'mobile')} className="px-2 py-0.5 rounded-md border border-blue-200 text-blue-700 text-[11px] font-semibold hover:bg-blue-50">Send OTP</button>
+                                                    <button type="button" onClick={() => handleOtpVerify(index, 'mobile')} className="px-2 py-0.5 rounded-md border border-slate-200 text-slate-700 text-[11px] font-semibold hover:bg-slate-50">Verify</button>
+                                                    {row.mobileOtpSent && !row.mobileVerified && (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold">
+                                                            <CheckCircle size={12} /> OTP Sent
+                                                        </span>
+                                                    )}
+                                                    {row.mobileVerified && (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold">
+                                                            <CheckCircle size={12} /> Verified
+                                                        </span>
+                                                    )}
                                                 </div>
-                                                <input type="tel" value={row.mobile} onChange={(e) => handleFieldChange(index, 'mobile', e.target.value)} placeholder="Mobile Number" className="w-full h-full px-3 outline-none text-sm font-medium text-slate-700" />
                                             </div>
                                         </td>
-                                        <td className="p-4">
-                                            <input type="email" value={row.email} onChange={(e) => handleFieldChange(index, 'email', e.target.value)} placeholder="Email ID" className="w-full h-10 px-3 rounded-lg border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700" />
+                                        <td className="p-1">
+                                            <div className="space-y-0">
+                                                <input
+                                                    type="email"
+                                                    value={row.email}
+                                                    onChange={(e) => handleFieldChange(index, 'email', e.target.value)}
+                                                    placeholder="Email ID"
+                                                    className="w-full h-8 px-2 rounded-md border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700"
+                                                />
+                                                <div className="flex items-center gap-0 flex-wrap">
+                                                    <button type="button" onClick={() => handleOtpRequest(index, 'email')} className="px-2 py-0.5 rounded-md border border-blue-200 text-blue-700 text-[11px] font-semibold hover:bg-blue-50">Send OTP</button>
+                                                    <button type="button" onClick={() => handleOtpVerify(index, 'email')} className="px-2 py-0.5 rounded-md border border-slate-200 text-slate-700 text-[11px] font-semibold hover:bg-slate-50">Verify</button>
+                                                    {row.emailOtpSent && !row.emailVerified && (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold">
+                                                            <CheckCircle size={12} /> OTP Sent
+                                                        </span>
+                                                    )}
+                                                    {row.emailVerified && (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold">
+                                                            <CheckCircle size={12} /> Verified
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </td>
-                                        <td className="p-4">
-                                            <select value={row.roleAtExhibition} onChange={(e) => handleFieldChange(index, 'roleAtExhibition', e.target.value)} className="w-full h-10 px-3 rounded-lg border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700 bg-white">
-                                                <option value="">Select</option>
-                                                <option value="Primary Contact">Primary Contact</option>
-                                                <option value="Marketing Team">Marketing Team</option>
-                                                <option value="Sales Team">Sales Team</option>
-                                                <option value="Stall Incharge">Stall Incharge</option>
-                                                <option value="Technical Team">Technical Team</option>
-                                            </select>
+                                        <td className="p-1">
+                                            <div className="min-w-[170px] flex items-center justify-center">
+                                                {row.useCustomRole ? (
+                                                    <input
+                                                        type="text"
+                                                        value={row.roleAtExhibition}
+                                                        onChange={(e) => handleFieldChange(index, 'roleAtExhibition', e.target.value)}
+                                                        placeholder="Type role at exhibition"
+                                                        className="w-full h-8 px-2 rounded-md border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700 bg-white"
+                                                    />
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRolePreset(index, 'Other')}
+                                                        className="h-8 w-full rounded-md border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors bg-white"
+                                                    >
+                                                        Other
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
-                                        <td className="p-4">
-                                            <div className="flex flex-col gap-2">
-                                                <select value={row.idProof} onChange={(e) => handleFieldChange(index, 'idProof', e.target.value)} className="w-full h-10 px-3 rounded-lg border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700 bg-white">
+                                        <td className="p-1">
+                                            <div className="flex flex-col gap-0">
+                                                <select value={row.idProof} onChange={(e) => handleFieldChange(index, 'idProof', e.target.value)} className="w-full h-8 px-2 rounded-md border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700 bg-white">
                                                     <option value="">Select</option>
                                                     <option value="Aadhaar Card">Aadhaar Card</option>
                                                     <option value="PAN Card">PAN Card</option>
@@ -301,7 +497,7 @@ const AddTeamMembersAdmin = () => {
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="p-4 text-center">
+                                        <td className="p-1 text-center">
                                             <button onClick={() => handleDeleteRow(index)} className="w-8 h-8 rounded-lg border border-red-200 text-red-500 flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors mx-auto" disabled={rows.length === 1}>
                                                 <Trash2 size={16} />
                                             </button>

@@ -7,7 +7,7 @@ import {
   MapPin, Mail, Phone,
   Download, Eye,
   RefreshCw, ChevronRight,
-  User, ArrowRight, FilePlus, CreditCard,
+  User, ArrowRight, FilePlus, CreditCard, Activity,
   FileMinus,
 } from "lucide-react";
 
@@ -21,7 +21,8 @@ const AccountOverview = () => {
     financials: { totalDue: 0, paidAmount: 0, remainingBalance: 0 },
     recentDocuments: [],
     paymentSchedule: [],
-    lastPayment: null
+    lastPayment: null,
+    activityLogs: [],
   });
 
   useEffect(() => {
@@ -62,7 +63,29 @@ const AccountOverview = () => {
     );
   }
 
-  const { companyInfo, financials, recentDocuments, paymentSchedule, lastPayment } = data;
+  const { companyInfo, financials, recentDocuments, paymentSchedule, activityLogs } = data;
+
+  const getActionBadgeClass = (action = "") => {
+    const normalized = String(action).toLowerCase();
+    if (normalized.includes("create")) return "bg-[#e6f7ec] text-[#00a86b]";
+    if (normalized.includes("update")) return "bg-[#e6f0fa] text-[#194090]";
+    if (normalized.includes("delete")) return "bg-[#ffebee] text-[#ea580c]";
+    if (normalized.includes("login")) return "bg-[#f3e8ff] text-[#7e22ce]";
+    return "bg-gray-100 text-gray-600";
+  };
+
+  const formatActivityTime = (timestamp) => {
+    if (!timestamp) return "-";
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return "-";
+    return date.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   return (
     <div className="bg-[#f8f9fc] p-6">
@@ -128,26 +151,26 @@ const AccountOverview = () => {
       </div>
 
       {/* 3 Column Grid (Recent Docs, Payment Schedule, Last Payment) */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-2 mb-2">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-2 mb-2 items-start">
 
         {/* Recent Documents */}
-        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col min-h-[320px]">
+        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-[380px] overflow-hidden self-start">
           <div className="flex justify-between items-center mb-1.5">
-            <h2 className="text-[14px] font-medium text-[#1a2b4b] tracking-tight">Recent Documents</h2>
+            <h2 className="text-[13px] font-medium text-[#1a2b4b] tracking-tight">Recent Documents</h2>
           </div>
-          <div className="overflow-x-auto flex-1">
+          <div className="overflow-x-auto flex-1 min-h-0 overflow-y-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="text-[10px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
-                  <th className="pb-2 pr-3">Document Type</th>
-                  <th className="pb-2 pr-3">Document No.</th>
-                  <th className="pb-2 pr-3">Date</th>
-                  <th className="pb-2 pr-3">Amount</th>
-                  <th className="pb-2 pr-3">Status</th>
-                  <th className="pb-2">Action</th>
+                <tr className="text-[9px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
+                  <th className="pb-1 pr-2">Document Type</th>
+                  <th className="pb-1 pr-2">Document No.</th>
+                  <th className="pb-1 pr-2">Date</th>
+                  <th className="pb-1 pr-2">Amount</th>
+                  <th className="pb-1 pr-2">Status</th>
+                  <th className="pb-1">Action</th>
                 </tr>
               </thead>
-              <tbody className="text-[12px] text-slate-700">
+              <tbody className="text-[11px] text-slate-700">
                 {recentDocuments.length === 0 && (
                   <tr>
                     <td colSpan={6} className="py-8 text-center text-slate-400">No documents yet.</td>
@@ -169,28 +192,28 @@ const AccountOverview = () => {
 
                   return (
                     <tr key={idx} className="border-b border-gray-50 last:border-0 hover:bg-slate-50/50">
-                      <td className="py-2.5 pr-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${docTypeBg}`}>
+                      <td className="py-1 pr-2">
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${docTypeBg}`}>
                           {doc.documentType}
                         </span>
                       </td>
-                      <td className="py-2.5 pr-3 font-medium text-[#1a2b4b]">{doc.documentNo}</td>
-                      <td className="py-2.5 pr-3">{doc.date ? new Date(doc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</td>
-                      <td className="py-2.5 pr-3 font-medium text-[13px] text-[#1a2b4b]">{formatCurrency(doc.amount)}</td>
-                      <td className="py-2.5 pr-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${statusBg}`}>
+                      <td className="py-1 pr-2 font-medium text-[#1a2b4b]">{doc.documentNo}</td>
+                      <td className="py-1 pr-2">{doc.date ? new Date(doc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</td>
+                      <td className="py-1 pr-2 font-medium text-[12px] text-[#1a2b4b]">{formatCurrency(doc.amount)}</td>
+                      <td className="py-1 pr-2">
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${statusBg}`}>
                           {doc.status}
                         </span>
                       </td>
-                      <td className="py-2.5">
-                        <div className="flex items-center gap-3 text-[#194090]">
+                      <td className="py-1">
+                        <div className="flex items-center gap-2 text-[#194090]">
                           <button
                             disabled={!viewPath}
                             onClick={() => viewPath && navigate(viewPath)}
                             className={viewPath ? "hover:text-blue-800" : "text-gray-300 cursor-not-allowed"}
                             title={viewPath ? "View" : "No detail view available"}
                           >
-                            <Eye size={16} />
+                            <Eye size={13} />
                           </button>
                           <button
                             disabled={!viewPath}
@@ -198,7 +221,7 @@ const AccountOverview = () => {
                             className={viewPath ? "hover:text-blue-800" : "text-gray-300 cursor-not-allowed"}
                             title={viewPath ? "Open document" : "No detail view available"}
                           >
-                            <Download size={16} />
+                            <Download size={13} />
                           </button>
                         </div>
                       </td>
@@ -211,22 +234,22 @@ const AccountOverview = () => {
         </div>
 
         {/* Payment Schedule */}
-        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col min-h-[320px]">
+        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-[380px] overflow-hidden self-start">
           <div className="flex justify-between items-center mb-1.5">
-            <h2 className="text-[14px] font-medium text-[#1a2b4b] tracking-tight">Payment Schedule</h2>
+            <h2 className="text-[13px] font-medium text-[#1a2b4b] tracking-tight">Payment Schedule</h2>
           </div>
-          <div className="overflow-x-auto flex-1 flex flex-col justify-between">
+          <div className="overflow-x-auto flex-1">
             <table className="w-full text-left border-collapse mb-1">
               <thead>
-                <tr className="text-[10px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
-                  <th className="pb-2 pr-2">#</th>
-                  <th className="pb-2 pr-3">Schedule Type</th>
-                  <th className="pb-2 pr-3">Due Date</th>
-                  <th className="pb-2 pr-3">Due Amount</th>
-                  <th className="pb-2">Status</th>
+                <tr className="text-[9px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
+                  <th className="pb-1 pr-1">#</th>
+                  <th className="pb-1 pr-2">Schedule Type</th>
+                  <th className="pb-1 pr-2">Due Date</th>
+                  <th className="pb-1 pr-2">Due Amount</th>
+                  <th className="pb-1">Status</th>
                 </tr>
               </thead>
-              <tbody className="text-[12px] text-slate-700">
+              <tbody className="text-[11px] text-slate-700">
                 {paymentSchedule.length === 0 && (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-slate-400">No payment schedule yet.</td>
@@ -234,12 +257,12 @@ const AccountOverview = () => {
                 )}
                 {paymentSchedule.map((schedule, idx) => (
                   <tr key={schedule.id} className="border-b border-gray-50 hover:bg-slate-50/50">
-                    <td className="py-2.5 pr-2 text-slate-400 font-medium">{idx + 1}</td>
-                    <td className="py-2.5 pr-3 font-medium text-[#1a2b4b]">{schedule.scheduleType}</td>
-                    <td className="py-2.5 pr-3">{schedule.dueDate}</td>
-                    <td className="py-2.5 pr-3">{formatCurrency(schedule.dueAmount)}</td>
-                    <td className="py-2.5">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${schedule.status === 'Paid' ? 'bg-[#e6f7ec] text-[#00a86b]' : 'bg-[#fff1f2] text-[#ea580c]'}`}>
+                    <td className="py-1 pr-1 text-slate-400 font-medium">{idx + 1}</td>
+                    <td className="py-1 pr-2 font-medium text-[#1a2b4b]">{schedule.scheduleType}</td>
+                    <td className="py-1 pr-2">{schedule.dueDate}</td>
+                    <td className="py-1 pr-2">{formatCurrency(schedule.dueAmount)}</td>
+                    <td className="py-1">
+                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${schedule.status === 'Paid' ? 'bg-[#e6f7ec] text-[#00a86b]' : 'bg-[#fff1f2] text-[#ea580c]'}`}>
                         {schedule.status}
                       </span>
                     </td>
@@ -249,49 +272,54 @@ const AccountOverview = () => {
             </table>
 
             {/* Total Row */}
-            <div className="mt-1 p-3 bg-[#f8f9fc] rounded-lg flex justify-between items-center">
+            <div className="mt-1 p-2 bg-[#f8f9fc] rounded-lg flex justify-between items-center">
               <span className="font-medium text-[#1a2b4b]">Total</span>
-              <span className="text-[17px] font-medium text-[#194090]">{formatCurrency(financials.totalDue)}</span>
+              <span className="text-[15px] font-medium text-[#194090]">{formatCurrency(financials.totalDue)}</span>
             </div>
           </div>
         </div>
 
-        {/* Last Payment Received */}
-        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col min-h-[320px]">
-          <div className="mb-1.5">
-            <h2 className="text-[14px] font-medium text-[#1a2b4b] tracking-tight">Last Payment Received</h2>
+        {/* Activity Logs */}
+        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-[380px] overflow-hidden self-start">
+          <div className="flex items-center justify-between mb-1.5">
+            <h2 className="text-[13px] font-medium text-[#1a2b4b] tracking-tight">Activity Logs</h2>
+            <div className="flex items-center gap-1 text-[9px] font-semibold text-[#194090] bg-[#e6f0fa] px-1.5 py-0.5 rounded-full">
+              <Activity size={11} />
+              <span>{activityLogs.length} Recent</span>
+            </div>
           </div>
-          <div className="flex-1 flex flex-col justify-between">
-            {lastPayment ? (
-              <div className="space-y-3 text-[12px]">
-                <div className="flex justify-between items-center gap-3">
-                  <span className="font-medium text-slate-500 whitespace-nowrap">Payment No.</span>
-                  <span className="text-slate-600 whitespace-nowrap truncate">{lastPayment.payment_no || '-'}</span>
-                </div>
-                <div className="flex justify-between items-center gap-3">
-                  <span className="font-medium text-slate-500 whitespace-nowrap">Payment Date</span>
-                  <span className="text-slate-600 whitespace-nowrap">
-                    {(lastPayment.payment_date || lastPayment.added)
-                      ? new Date(lastPayment.payment_date || lastPayment.added).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                      : '-'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center gap-3">
-                  <span className="font-medium text-slate-500 whitespace-nowrap">Amount Received</span>
-                  <span className="font-medium text-[#00a86b] text-[15px] whitespace-nowrap">{formatCurrency(lastPayment.amount_text)}</span>
-                </div>
-                <div className="flex justify-between items-center gap-3">
-                  <span className="font-medium text-slate-500 whitespace-nowrap">Payment Mode</span>
-                  <span className="text-slate-600 whitespace-nowrap">{lastPayment.payment_mode}</span>
-                </div>
-                <div className="flex justify-between items-center gap-3">
-                  <span className="font-medium text-slate-500 whitespace-nowrap">Reference No.</span>
-                  <span className="text-slate-600 whitespace-nowrap truncate">{lastPayment.utr_no || lastPayment.cheque_no || lastPayment.card_transaction_no || lastPayment.wallet_transaction_no || '-'}</span>
-                </div>
+          <div className="flex-1 min-h-0 overflow-y-auto pr-1 pb-1 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+            {activityLogs.length > 0 ? (
+              <div className="space-y-1.5">
+                {activityLogs.map((log) => (
+                  <div key={log.id} className="rounded-lg border border-gray-100 bg-[#fafbff] px-2 py-1.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${getActionBadgeClass(log.action)}`}>
+                            {log.action || "Activity"}
+                          </span>
+                          <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wide">
+                            {log.module || "System"}
+                          </span>
+                        </div>
+                        <p className="text-[11px] font-medium text-[#1a2b4b] leading-snug">
+                          {log.details || "-"}
+                        </p>
+                        <p className="text-[9px] text-slate-500 mt-0.5">
+                          {log.user || "System"}{log.ip_address ? ` • ${log.ip_address}` : ""}
+                        </p>
+                      </div>
+                      <span className="text-[9px] text-slate-400 whitespace-nowrap shrink-0">
+                        {formatActivityTime(log.timestamp)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="text-center py-10 text-slate-500 text-sm">
-                <p>No payments recorded yet.</p>
+                <p>No activity recorded yet.</p>
               </div>
             )}
           </div>
