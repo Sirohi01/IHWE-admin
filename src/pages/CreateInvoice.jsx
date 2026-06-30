@@ -19,6 +19,7 @@ import {
     fetchLatestEstimateForClient,
     loadClientLikeProforma,
 } from '../utils/invoicePrefill';
+import { getCurrentUserName } from '../utils/currentUser';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 const newItem = () => ({
@@ -343,7 +344,8 @@ const CreateInvoice = () => {
             finalAmount: finalAmount,
             remarks: form.remarks,
             terms: form.terms,
-            added_by: 'Admin'
+            added_by: getCurrentUserName(),
+            updated_by: getCurrentUserName(),
         };
 
         try {

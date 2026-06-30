@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Download, Upload, Trash2, Plus, Save, Calendar, UserCheck, Utensils, Car, Info, AlertCircle, ShieldCheck, Loader2, CheckCircle } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api, { otpApi } from '../../lib/api';
+import { getCurrentUserName } from '../../utils/currentUser';
 
 const normalizeIndianMobile = (value = '') => {
     const digits = String(value).replace(/\D/g, '');
@@ -13,6 +14,7 @@ const normalizeIndianMobile = (value = '') => {
 
 const isValidIndianMobile = (value = '') => /^[6-9]\d{9}$/.test(normalizeIndianMobile(value));
 const isValidEmail = (value = '') => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value).trim());
+const shouldShowOtpControls = (rowIndex) => rowIndex < 2;
 
 const AddTeamMembersAdmin = () => {
     const { id } = useParams();
@@ -229,7 +231,9 @@ const AddTeamMembersAdmin = () => {
     };
 
     const handleSaveAll = async () => {
-        const validRows = rows.filter(r => r.name || r.email || r.mobile);
+        const validRows = rows
+            .map((row, rowIndex) => ({ row, rowIndex }))
+            .filter(({ row }) => row.name || row.email || row.mobile);
 
         if (validRows.length === 0) {
             Swal.fire('Warning', 'Please fill at least one row', 'warning');
@@ -237,22 +241,22 @@ const AddTeamMembersAdmin = () => {
         }
 
         for (let i = 0; i < validRows.length; i++) {
-            const r = validRows[i];
+            const { row: r, rowIndex } = validRows[i];
             const roleValue = r.useCustomRole ? r.roleAtExhibition?.trim() : r.roleAtExhibition;
             if (!r.name || !r.designation || !r.mobile || !r.email || !roleValue) {
-                Swal.fire('Error', `Please fill all mandatory fields (*) for Row ${i + 1}`, 'error');
+                Swal.fire('Error', `Please fill all mandatory fields (*) for Row ${rowIndex + 1}`, 'error');
                 return;
             }
             if (!isValidEmail(r.email)) {
-                Swal.fire('Error', `Please enter a valid email for Row ${i + 1}`, 'error');
+                Swal.fire('Error', `Please enter a valid email for Row ${rowIndex + 1}`, 'error');
                 return;
             }
             if (!isValidIndianMobile(r.mobile)) {
-                Swal.fire('Error', `Please enter a valid 10-digit Indian mobile for Row ${i + 1}`, 'error');
+                Swal.fire('Error', `Please enter a valid 10-digit Indian mobile for Row ${rowIndex + 1}`, 'error');
                 return;
             }
-            if (!r.emailVerified || !r.mobileVerified) {
-                Swal.fire('Error', `Please verify both email and mobile via OTP for Row ${i + 1}`, 'error');
+            if (shouldShowOtpControls(rowIndex) && (!r.emailVerified || !r.mobileVerified)) {
+                Swal.fire('Error', `Please verify both email and mobile via OTP for Row ${rowIndex + 1}`, 'error');
                 return;
             }
         }
@@ -260,9 +264,10 @@ const AddTeamMembersAdmin = () => {
         setIsSaving(true);
         try {
             const uploadedMembers = [];
-            for (const row of validRows) {
+            for (const { row, rowIndex } of validRows) {
                 let photoUrl = row.photoUrl || '';
                 let idProofUrl = row.idProofUrl || '';
+                const otpRequired = shouldShowOtpControls(rowIndex);
 
                 uploadedMembers.push({
                     name: row.name,
@@ -273,10 +278,10 @@ const AddTeamMembersAdmin = () => {
                     idProof: row.idProof,
                     idProofUrl: idProofUrl,
                     photoUrl: photoUrl,
-                    emailVerified: row.emailVerified,
-                    mobileVerified: row.mobileVerified,
-                    emailOtpVerifiedAt: row.emailOtpVerifiedAt,
-                    mobileOtpVerifiedAt: row.mobileOtpVerifiedAt,
+                    emailVerified: otpRequired ? row.emailVerified : true,
+                    mobileVerified: otpRequired ? row.mobileVerified : true,
+                    emailOtpVerifiedAt: otpRequired ? row.emailOtpVerifiedAt : null,
+                    mobileOtpVerifiedAt: otpRequired ? row.mobileOtpVerifiedAt : null,
                     passes: {
                         exhibitor: true, vehicle: true, service: true, visitor: false
                     },
@@ -295,7 +300,11 @@ const AddTeamMembersAdmin = () => {
 
             // Save back
             const updateRes = await api.put(`/api/client-contacts/${id}/contacts`, {
-                contacts: updatedTeam
+                contacts: updatedTeam,
+                contactOperation: "bulk-create",
+                contactName: uploadedMembers.map((member) => member.name || member.email || member.mobile).filter(Boolean).join(", "),
+                contactCount: uploadedMembers.length,
+                updated_by: getCurrentUserName()
             });
 
             if (updateRes.data.success) {
@@ -411,20 +420,22 @@ const AddTeamMembersAdmin = () => {
                                                     placeholder="10-digit Mobile Number"
                                                     className="w-full h-8 px-2 rounded-md border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700"
                                                 />
-                                                <div className="flex items-center gap-0 flex-wrap">
-                                                    <button type="button" onClick={() => handleOtpRequest(index, 'mobile')} className="px-2 py-0.5 rounded-md border border-blue-200 text-blue-700 text-[11px] font-semibold hover:bg-blue-50">Send OTP</button>
-                                                    <button type="button" onClick={() => handleOtpVerify(index, 'mobile')} className="px-2 py-0.5 rounded-md border border-slate-200 text-slate-700 text-[11px] font-semibold hover:bg-slate-50">Verify</button>
-                                                    {row.mobileOtpSent && !row.mobileVerified && (
-                                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold">
-                                                            <CheckCircle size={12} /> OTP Sent
-                                                        </span>
-                                                    )}
-                                                    {row.mobileVerified && (
-                                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold">
-                                                            <CheckCircle size={12} /> Verified
-                                                        </span>
-                                                    )}
-                                                </div>
+                                                {shouldShowOtpControls(index) && (
+                                                    <div className="flex items-center gap-0 flex-wrap">
+                                                        <button type="button" onClick={() => handleOtpRequest(index, 'mobile')} className="px-2 py-0.5 rounded-md border border-blue-200 text-blue-700 text-[11px] font-semibold hover:bg-blue-50">Send OTP</button>
+                                                        <button type="button" onClick={() => handleOtpVerify(index, 'mobile')} className="px-2 py-0.5 rounded-md border border-slate-200 text-slate-700 text-[11px] font-semibold hover:bg-slate-50">Verify</button>
+                                                        {row.mobileOtpSent && !row.mobileVerified && (
+                                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold">
+                                                                <CheckCircle size={12} /> OTP Sent
+                                                            </span>
+                                                        )}
+                                                        {row.mobileVerified && (
+                                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold">
+                                                                <CheckCircle size={12} /> Verified
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="p-1">
@@ -436,20 +447,22 @@ const AddTeamMembersAdmin = () => {
                                                     placeholder="Email ID"
                                                     className="w-full h-8 px-2 rounded-md border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700"
                                                 />
-                                                <div className="flex items-center gap-0 flex-wrap">
-                                                    <button type="button" onClick={() => handleOtpRequest(index, 'email')} className="px-2 py-0.5 rounded-md border border-blue-200 text-blue-700 text-[11px] font-semibold hover:bg-blue-50">Send OTP</button>
-                                                    <button type="button" onClick={() => handleOtpVerify(index, 'email')} className="px-2 py-0.5 rounded-md border border-slate-200 text-slate-700 text-[11px] font-semibold hover:bg-slate-50">Verify</button>
-                                                    {row.emailOtpSent && !row.emailVerified && (
-                                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold">
-                                                            <CheckCircle size={12} /> OTP Sent
-                                                        </span>
-                                                    )}
-                                                    {row.emailVerified && (
-                                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold">
-                                                            <CheckCircle size={12} /> Verified
-                                                        </span>
-                                                    )}
-                                                </div>
+                                                {shouldShowOtpControls(index) && (
+                                                    <div className="flex items-center gap-0 flex-wrap">
+                                                        <button type="button" onClick={() => handleOtpRequest(index, 'email')} className="px-2 py-0.5 rounded-md border border-blue-200 text-blue-700 text-[11px] font-semibold hover:bg-blue-50">Send OTP</button>
+                                                        <button type="button" onClick={() => handleOtpVerify(index, 'email')} className="px-2 py-0.5 rounded-md border border-slate-200 text-slate-700 text-[11px] font-semibold hover:bg-slate-50">Verify</button>
+                                                        {row.emailOtpSent && !row.emailVerified && (
+                                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold">
+                                                                <CheckCircle size={12} /> OTP Sent
+                                                            </span>
+                                                        )}
+                                                        {row.emailVerified && (
+                                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold">
+                                                                <CheckCircle size={12} /> Verified
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="p-1">

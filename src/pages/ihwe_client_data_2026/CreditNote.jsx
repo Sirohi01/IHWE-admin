@@ -52,7 +52,8 @@ const CreditNote = () => {
   } = useSelector((state) => state.creditnotes); // Credit Note Redux State
 
   const [matchedEstNo, setMatchedEstNo] = useState("");
-  console.log("creditNotes..", creditNotes);
+  const safeCreditNotes = Array.isArray(creditNotes) ? creditNotes : [];
+  const accountCreditNotes = safeCreditNotes.filter((note) => String(note.companyId) === String(id));
 
   const [rows, setRows] = useState([
     { estimate: "", item: "", qty: "", amount: "", remark: "" },
@@ -97,27 +98,31 @@ const CreditNote = () => {
   }, [cnSuccess, cnError, dispatch]);
 
   // --- Collect unique item descriptions ---
+  const accountEstimates = useMemo(
+    () => (Array.isArray(estimates) ? estimates : []).filter((est) => String(est.companyId) === String(id)),
+    [estimates, id]
+  );
+
   const uniqueItemDescriptions = useMemo(() => {
-    if (!estimates || estimates.length === 0) return [];
+    if (accountEstimates.length === 0) return [];
 
     const descriptions = new Set();
-    const companyEstimates = estimates.filter((est) => est.companyId === id);
 
-    companyEstimates.forEach((estimate) => {
-      estimate.items.forEach((item) => {
+    accountEstimates.forEach((estimate) => {
+      (estimate.items || []).forEach((item) => {
         if (item.description) {
           descriptions.add(item.description);
         }
       });
     });
     return Array.from(descriptions);
-  }, [estimates, id]);
+  }, [accountEstimates]);
   // ----------------------------------------------------
 
   // --- CORRECTED MATCHING LOGIC (Assuming 'id' is CompanyId) ---
   useEffect(() => {
-    if (id && estimates && estimates.length > 0) {
-      const matchedEstimate = estimates.find((est) => est.companyId === id);
+    if (id && accountEstimates.length > 0) {
+      const matchedEstimate = accountEstimates[0];
 
       if (matchedEstimate) {
         setMatchedEstNo(matchedEstimate.est_no);
@@ -125,7 +130,7 @@ const CreditNote = () => {
         setMatchedEstNo("");
       }
     }
-  }, [id, estimates]);
+  }, [id, accountEstimates]);
   // ------------------------------------------------------------------
 
   const buttonStyle =
@@ -164,7 +169,7 @@ const CreditNote = () => {
 
     const selectedEstimateId = rows.length > 0 ? rows[0].estimate : "";
 
-    const selectedEstimate = estimates.find(
+    const selectedEstimate = accountEstimates.find(
       (est) => est._id === selectedEstimateId
     );
     const estNoToSend = selectedEstimate ? selectedEstimate.est_no : "";
@@ -279,8 +284,7 @@ const CreditNote = () => {
                       className="border border-gray-300 px-2 text-xs h-8 focus:ring-1 focus:ring-blue-500 focus:border-transparent focus:outline-none font-medium"
                     >
                       <option value="">Select Here</option>
-                      {estimates
-                        .filter((est) => est.companyId === id)
+                      {accountEstimates
                         .map((est) => (
                           <option key={est._id} value={est._id}>
                             {est.est_no}
@@ -439,7 +443,7 @@ const CreditNote = () => {
               </thead>
               <tbody>
                 {/* ✅ Credit Notes Data Mapping */}
-                {creditNotes.length === 0 ? (
+                {accountCreditNotes.length === 0 ? (
                   <tr>
                     <td
                       className="border border-gray-300 px-2 py-3 text-center text-gray-500"
@@ -449,7 +453,7 @@ const CreditNote = () => {
                     </td>
                   </tr>
                 ) : (
-                  creditNotes.map((creditNote, i) => (
+                  accountCreditNotes.map((creditNote, i) => (
                     <tr key={creditNote._id || i}>
                       <td className="border border-gray-300 px-2 py-3 text-center text-gray-500">
                         {creditNote?.create_note_no}

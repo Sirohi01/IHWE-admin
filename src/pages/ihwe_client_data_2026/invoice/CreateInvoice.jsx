@@ -15,6 +15,7 @@ import { fetchCities } from "../../../features/city/citySlice";
 import { Upload, UserCheck, LayoutGrid } from "lucide-react";
 import { Link} from "react-router-dom";
 import api from "../../../lib/api";
+import { getCurrentUserName } from "../../../utils/currentUser";
 
 const CreateInvoice = () => {
   const dispatch = useDispatch();
@@ -191,7 +192,7 @@ const CreateInvoice = () => {
     }
 
     // ✅ 1. Get user_name from localStorage
-    const userName = localStorage.getItem("user_name") || "unknown_user";
+    const userName = getCurrentUserName("Admin");
 
     // Prepare the data payload, explicitly including the required IDs/names
     const invoicePayload = {
