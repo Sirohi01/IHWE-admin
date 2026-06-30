@@ -301,7 +301,7 @@ export default function MobilePassRequests() {
                       {Number(item.totalAmount || 0) > 0 ? `₹${Number(item.totalAmount).toLocaleString("en-IN")}` : "No charge"}
                     </p>
                   </td>
-                  <td className="whitespace-nowrap px-3 py-3 text-[10px] font-semibold text-slate-500">{formatDate(item.createdAt)}</td>
+                  <td className="whitespace-nowrap px-3 py-3 text-[10px] font-medium text-slate-500">{formatDate(item.createdAt)}</td>
                   <td className="px-3 py-3">
                     <span className={`inline-flex rounded-md border px-2 py-1 text-[9px] font-black uppercase ${STATUS_STYLES[item.status] || STATUS_STYLES.pending}`}>
                       {item.status}
