@@ -12,7 +12,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const DelegatePasses = () => {
   const [delegates, setDelegates] = useState([]);
   const [total, setTotal] = useState(0);
-  const [stats, setStats] = useState({ totalPaid: 0, totalPending: 0, totalRevenue: 0 });
+  const [stats, setStats] = useState({ totalPaid: 0, totalPending: 0, totalRevenue: 0, globalTotal: 0 });
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [loading, setLoading] = useState(false);
@@ -54,7 +54,8 @@ const DelegatePasses = () => {
         setStats({
           totalPaid: res.data.totalPaid || 0,
           totalPending: res.data.totalPending || 0,
-          totalRevenue: res.data.totalRevenue || 0
+          totalRevenue: res.data.totalRevenue || 0,
+          globalTotal: res.data.globalTotal || 0
         });
       }
     } catch (error) {
@@ -142,7 +143,7 @@ const DelegatePasses = () => {
             <p className="text-md font-medium text-slate-600 tracking-wide">Total Passes</p>
           </div>
           <div>
-            <h3 className="text-lg text-slate-800">{total}</h3>
+            <h3 className="text-lg text-slate-800">{stats.globalTotal}</h3>
             <p className="text-[9px] text-blue-600">All Time Registrations</p>
           </div>
         </div>
