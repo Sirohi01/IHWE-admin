@@ -113,9 +113,21 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
     const s = io(SERVER_URL, { transports: ["websocket", "polling"] });
     s.on("connect", () => s.emit("join_admin", { adminId, adminName: adminName2 }));
     s.on("room_updated", (data) => {
-      if (adminRole2 !== "IHWE–Super Administrator" && data.spokenWith && data.spokenWith.toLowerCase() !== adminName2.toLowerCase()) return;
-      if (data.lastSenderType === "exhibitor" && !window.location.pathname.includes("exhibitor-chat")) {
+      console.log("Navbar received room_updated!", data);
+      
+      // Absolute minimum check: if not admin, show popup. 
+      if (data.lastSenderType !== "admin") {
         setChatUnread(prev => prev + 1);
+        
+        // Show chat notification banner
+        setLatestDocument({ 
+            type: 'chat', 
+            roomId: data.roomId,
+            exhibitorName: data.exhibitorName || data.buyerName || 'Unknown Company', 
+            message: data.lastMessage 
+        });
+        setHasUnreadTaskAlert(true);
+        setShowDemoAlert(true);
       }
     });
 
@@ -133,6 +145,27 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
         setShowDemoAlert(true);
         setHasUnreadTaskAlert(true);
       }
+    });
+
+    s.on("profile_updated", (data) => {
+      // Persist to localStorage so TaskAndAlerts widget shows it even when page re-mounts
+      try {
+        const existing = JSON.parse(localStorage.getItem('admin_profile_notifications') || '[]');
+        const newNotif = {
+          id: Date.now() + Math.random(),
+          title: `Updated ${data.action}`,
+          companyName: data.companyName,
+          time: new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          type: "warning",
+          clientId: data.clientId
+        };
+        const updated = [newNotif, ...existing].slice(0, 15);
+        localStorage.setItem('admin_profile_notifications', JSON.stringify(updated));
+      } catch {}
+      
+      setLatestDocument({ type: 'profile', ...data });
+      setShowDemoAlert(true);
+      setHasUnreadTaskAlert(true);
     });
 
     return () => { s.disconnect(); };
@@ -378,8 +411,14 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
                     {latestDocument ? (
                       <>
                         <span className="font-bold text-blue-700">{(() => {
+                          if (latestDocument.type === 'chat') {
+                              return latestDocument.exhibitorName;
+                          }
                           if (latestDocument.type === 'accessory') {
                               return latestDocument.exhibitorName || 'A client';
+                          }
+                          if (latestDocument.type === 'profile') {
+                              return latestDocument.companyName;
                           }
                           let compName = latestDocument.companyName;
                           if (!compName || compName === 'Unknown Client') {
@@ -391,7 +430,7 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
                               compName = c ? c.companyName : 'A client';
                           }
                           return compName;
-                        })()}</span> {latestDocument.type === 'accessory' ? 'has placed a new material/service request.' : 'has uploaded a new document.'}
+                        })()}</span> {latestDocument.type === 'chat' ? 'has sent a new live chat message.' : latestDocument.type === 'accessory' ? 'has placed a new material/service request.' : latestDocument.type === 'profile' ? 'has updated their profile.' : 'has uploaded a new document.'}
                       </>
                     ) : (
                       <>You have <span className="font-bold text-red-700">pending tasks</span> that need your attention.</>
@@ -399,7 +438,7 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
                   </p>
                   {latestDocument && (
                     <p className="text-[10px] text-red-800 font-bold uppercase tracking-wider">
-                        {latestDocument.type === 'accessory' ? `Order: ${latestDocument.orderNo}` : latestDocument.document_name}
+                        {latestDocument.type === 'chat' ? `Message: "${latestDocument.message || '...'}"` : latestDocument.type === 'accessory' ? `Order: ${latestDocument.orderNo}` : latestDocument.type === 'profile' ? `Updated: ${latestDocument.action}` : latestDocument.document_name}
                     </p>
                   )}
                 </div>
@@ -408,10 +447,13 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
               {/* Right Side: Button & Close */}
               <div className="flex items-center gap-4">
                 <button
-                  onClick={() => { setShowDemoAlert(false); navigate("/task-alerts"); }}
+                  onClick={() => { 
+                      setShowDemoAlert(false); 
+                      navigate("/task-alerts"); 
+                  }}
                   className="px-4 py-1.5 bg-white border border-red-200 rounded-[6px] text-[12px] font-bold text-red-700 hover:bg-red-50 transition-colors shadow-sm whitespace-nowrap"
                 >
-                  View Tasks
+                  {latestDocument?.type === 'chat' ? 'View Dashboard' : latestDocument?.type === 'profile' ? 'View Notifications' : 'View Tasks'}
                 </button>
                 <button
                   onClick={() => setShowDemoAlert(false)}

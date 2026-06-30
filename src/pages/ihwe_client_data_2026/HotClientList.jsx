@@ -4,17 +4,12 @@ import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
 import useDashboardStats from "../../hooks/useDashboardStats";
 import BaseLeadPage from "../../layout/BaseLeadPage";
+import { motion } from "framer-motion";
 import {
   Search, Download, Plus, Upload, MessageCircle, Phone, Mail, MoreVertical,
   Calendar, CalendarDays, ArrowRight, RefreshCw, Flame, MessageSquare, Send, CheckCircle2, Filter, ChevronDown
 } from "lucide-react";
 import { FaStar, FaRegStar, FaWhatsapp } from 'react-icons/fa';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-} from "recharts";
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
@@ -100,6 +95,28 @@ const HotClientList = () => {
   const { totalLeads: hookTotal, statusStats } = useDashboardStats();
 
   const totalLeads = pagination?.total || allCompanies.length;
+
+  const circumference = 2 * Math.PI * 32;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setTimeout(() => setMounted(true), 250);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    
+    const element = document.getElementById('hot-donut-chart-container');
+    if (element) {
+      observer.observe(element);
+    }
+    
+    return () => observer.disconnect();
+  }, []);
 
   const isAllSelected = allCompanies.length > 0 && selectedIds.length === allCompanies.length;
   const onSelectAll = (e) => {
@@ -293,7 +310,7 @@ const HotClientList = () => {
       <th className="px-2 py-2 font-medium">Lead Score</th>
       <th className="px-2 py-2 font-medium text-center">Status</th>
       <th className="px-2 py-2 font-medium">Last Conversation</th>
-      <th className="px-2 py-2 w-28 text-right">Action</th>
+      <th className="px-2 py-2 w-28 text-center">Action</th>
     </>
   );
 
@@ -329,7 +346,7 @@ const HotClientList = () => {
               </div>
             </td>
             <td className="px-2 py-2">
-              <span className={`px-1.5 py-0.5 rounded font-semibold text-[9px] ${getSourceStyle(source)}`}>
+              <span className={`px-1.5 py-0.5 rounded font-bold text-[9px] ${getSourceStyle(source)}`} style={{ color: '#443199' }}>
                 @{toTitleCase(source)}
               </span>
             </td>
@@ -366,18 +383,18 @@ const HotClientList = () => {
                 <span className="text-[9px] font-bold" style={{ color: '#0D530E' }}>(WhatsApp)</span>
               </div>
             </td>
-            <td className="px-2 py-2 text-right">
+            <td className="px-2 py-2 text-center">
               {row.exhibitorRegistrationId ? (
                 <button
                   disabled
-                  className="text-[10px] font-bold bg-slate-100 text-slate-400 px-2 py-1 rounded-md shadow-sm mr-2 cursor-not-allowed" style={{ fontFamily: 'Inter, sans-serif' }}
+                  className="text-[9px] font-bold bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded shadow-sm cursor-not-allowed" style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   Stand Booked
                 </button>
               ) : (
                 <button
                   onClick={() => navigate(`/book-a-stand/${row._id}`)}
-                  className="text-[10px] font-bold bg-[#124170] hover:bg-[#0A2643] text-white px-2 py-1 rounded-md shadow-sm mr-2 transition-all" style={{ fontFamily: 'Inter, sans-serif' }}
+                  className="text-[9px] font-bold bg-[#124170] hover:bg-[#0A2643] text-white px-1.5 py-0.5 rounded shadow-sm transition-all" style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   Book Stand
                 </button>
@@ -392,59 +409,97 @@ const HotClientList = () => {
   const rightSidebar = (
     <>
       {/* Hot Leads Overview */}
-      <div className="bg-white rounded-xl border border-gray-100 p-3">
-        <h3 className="text-[13px] font-semibold text-[#0F172A] mb-2">Hot Leads Overview</h3>
-        <div className="flex items-center justify-between gap-2">
-          <div className="relative w-[70px] h-[70px] shrink-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={overviewData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={22}
-                  outerRadius={32}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {overviewData.map((entry, index) => (
-                    <Cell key={index} fill={entry.color} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <h3 className="text-[14px] font-bold text-[#0F172A] leading-none">{totalLeads}</h3>
-              <p className="text-[9px] text-gray-500">Total</p>
+      <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+        <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+          <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Hot Leads Overview</h3>
+          <span className="text-[10px] font-bold text-slate-500">
+            Total: <strong className="font-bold text-[#15173D]">{totalLeads}</strong>
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-1 my-2">
+          {/* Pure SVG Donut Chart (Left) */}
+          <div id="hot-donut-chart-container" className="relative flex-shrink-0 flex items-center justify-center" style={{ width: '85px', height: '85px' }}>
+            <svg viewBox="0 0 85 85" width="85" height="85" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'rotate(-90deg)' }}>
+              {/* Background track */}
+              <circle cx="42.5" cy="42.5" r="32" fill="none" stroke="#f1f5f9" strokeWidth="14" />
+              {/* Segments */}
+              {(() => {
+                if (validTotal === 0) {
+                  return <circle cx="42.5" cy="42.5" r="32" fill="none" stroke="#e2e8f0" strokeWidth="14" />;
+                }
+                const gap = 0;
+                let cumulativeAngle = 0;
+                return overviewData.filter(d => d.value > 0).map((d, i) => {
+                  const segLen = (d.value / validTotal) * circumference - gap;
+                  const duration = (d.value / validTotal) * 2.0; 
+                  const delay = (cumulativeAngle / 360) * 2.0;
+                  const currentAngle = cumulativeAngle;
+                  
+                  cumulativeAngle += (d.value / validTotal) * 360;
+                  
+                  return (
+                    <g key={i} style={{ transform: `rotate(${currentAngle}deg)`, transformOrigin: 'center' }}>
+                      <circle
+                        cx="42.5" cy="42.5" r="32"
+                        fill="none"
+                        stroke={d.color}
+                        strokeWidth="14"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={mounted ? circumference - Math.max(segLen, 0) : circumference}
+                        strokeLinecap="butt"
+                        style={{ 
+                          transition: `stroke-dashoffset ${duration}s linear ${delay}s` 
+                        }}
+                      />
+                    </g>
+                  );
+                });
+              })()}
+            </svg>
+            <div className="absolute text-center mt-0.5">
+              <p className="text-base font-bold text-[#15173D] tracking-tight leading-none mb-0.5">{totalLeads}</p>
+              <span className="text-[10px] font-bold text-[#15173D] tracking-tight leading-none block">Total</span>
             </div>
           </div>
-          <div className="flex flex-col gap-1.5 flex-grow">
-            {overviewData.map((item) => (
-              <div key={item.name} className="flex items-center justify-between text-[11px]">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: item.color }} />
-                  <span className="font-medium text-[#0F172A] truncate">{item.name}</span>
+
+          {/* Legend (Right) */}
+          <div className="flex-1 space-y-2 text-[11px] font-semibold text-slate-600 pl-0 min-w-0">
+            {overviewData.map((d, i) => (
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, x: 10 }}
+                animate={mounted ? { opacity: 1, x: 0 } : { opacity: 0, x: 10 }}
+                transition={{ delay: 0.1 + (i * 0.1), duration: 0.3 }}
+                className="flex items-center gap-1.5 min-w-0"
+              >
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
+                <div className="flex items-center justify-between w-full min-w-0 gap-0.5">
+                  <span className="text-[#15173D] font-bold whitespace-nowrap text-[9px]">{d.name}</span>
+                  <span className="text-[#093C5D] font-bold flex-shrink-0 text-[9px]">
+                    {d.value} <span style={{ color: d.color }}>({d.pct})</span>
+                  </span>
                 </div>
-                <span className="font-semibold text-[#0F172A] shrink-0 ml-1">{item.value} <span className="text-gray-400 font-normal">({item.pct})</span></span>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </div>
 
       {/* Lead Score Distribution */}
-      <div className="bg-white rounded-xl border border-gray-100 p-3">
-        <h3 className="text-[14px] font-semibold text-[#0F172A] mb-2">Lead Score Distribution</h3>
+      <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+        <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+          <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Lead Score Distribution</h3>
+        </div>
         <div className="flex flex-col gap-1.5">
           {scoreDist.map((s, i) => (
-            <div key={i} className="flex items-center justify-between text-[11px]">
-              <span className="text-slate-700 w-12 font-medium">{s.label}</span>
+            <div key={i} className="flex items-center text-[10px]">
+              <span className="w-[48px] shrink-0 font-bold whitespace-nowrap" style={{ color: '#5E0006' }}>{s.label}</span>
               <div className="flex-grow mx-2 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                 <div className={`h-full ${s.color} rounded-full`} style={{ width: s.pct }}></div>
               </div>
-              <div className="flex items-center gap-1 w-10 justify-end">
-                <span className="font-semibold text-slate-800">{s.count}</span>
-                <span className="text-slate-400">({s.pct})</span>
+              <div className="w-[36px] shrink-0 flex items-center justify-end gap-0.5 whitespace-nowrap">
+                <span className="font-bold" style={{ color: '#15173D' }}>{s.count}</span>
+                <span className="font-bold text-[9px]" style={{ color: '#093C5D' }}>({s.pct})</span>
               </div>
             </div>
           ))}
@@ -452,9 +507,9 @@ const HotClientList = () => {
       </div>
 
       {/* Top Hot Leads by Score */}
-      <div className="bg-white rounded-xl border border-gray-100 p-3">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-[14px] font-semibold text-[#0F172A]">Top Hot Leads by Score</h3>
+      <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+        <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+          <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Top Hot Leads by Score</h3>
         </div>
         <div className="flex flex-col gap-2">
           {topHotLeads.map((l, i) => (
@@ -463,7 +518,7 @@ const HotClientList = () => {
                 <div className="w-5 h-5 rounded-full bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
                   {l.icon}
                 </div>
-                <span className="font-medium text-[#0F172A] text-[11px] truncate">{l.name}</span>
+                <span className="font-bold text-[#093C5D] text-[10px] truncate">{l.name}</span>
               </div>
               <span className="shrink-0 h-4 px-1.5 rounded bg-rose-50 text-rose-600 text-[9px] font-bold flex items-center justify-center ml-2">
                 {l.score}/100
@@ -471,7 +526,7 @@ const HotClientList = () => {
             </div>
           ))}
           <div className="mt-1 pt-2 border-t border-gray-100">
-            <button className="w-full flex items-center justify-center gap-1 text-[10px] font-semibold text-slate-600 hover:text-slate-800 transition-all">
+            <button className="w-full flex items-center justify-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline transition-all">
               <span>View All Hot Leads</span>
               <ArrowRight size={10} />
             </button>
@@ -480,24 +535,26 @@ const HotClientList = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl border border-gray-100 p-3">
-        <h3 className="text-[14px] font-semibold text-[#0F172A] mb-2">Quick Actions</h3>
+      <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+        <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+          <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Quick Actions</h3>
+        </div>
         <div className="grid grid-cols-2 gap-2">
           <button className="h-[34px] rounded-lg bg-[#EEF9F2] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
             <FaWhatsapp size={12} className="text-green-600 shrink-0" />
-            <span className="text-[9px] font-bold text-green-700 leading-tight">Send Bulk WhatsApp</span>
+            <span className="text-[9px] font-bold text-[#15173D] leading-tight text-left">Send Bulk<br/>WhatsApp</span>
           </button>
           <button onClick={() => navigate("/ihweClientData2026/warmClientsList")} className="h-[34px] rounded-lg bg-[#FFF3E0] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
             <CalendarDays size={12} className="text-orange-600 shrink-0" />
-            <span className="text-[9px] font-bold text-orange-700 leading-tight">Schedule Follow-Up</span>
+            <span className="text-[9px] font-bold text-[#15173D] leading-tight text-left">Schedule<br/>Follow-Up</span>
           </button>
           <button className="h-[34px] rounded-lg bg-[#F3E8FF] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
             <Mail size={12} className="text-purple-600 shrink-0" />
-            <span className="text-[9px] font-bold text-purple-700 leading-tight">Send Email</span>
+            <span className="text-[9px] font-bold text-[#15173D] leading-tight text-left">Send Email</span>
           </button>
           <button className="h-[34px] rounded-lg bg-[#E0F2FE] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
             <Phone size={12} className="text-blue-600 shrink-0" />
-            <span className="text-[9px] font-bold text-blue-700 leading-tight">Make a Call</span>
+            <span className="text-[9px] font-bold text-[#15173D] leading-tight text-left">Make a Call</span>
           </button>
         </div>
       </div>

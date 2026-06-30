@@ -432,7 +432,7 @@ const ClientDocuments = () => {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-xl mb-4 flex flex-col max-h-[420px]" style={{ boxShadow: 'rgba(9, 30, 66, 0.25) 0px 1px 1px, rgba(9, 30, 66, 0.13) 0px 0px 1px 1px' }}>
+                        <div className="bg-white rounded-xl mb-4 flex flex-col min-h-[385px] max-h-[385px]" style={{ boxShadow: 'rgba(9, 30, 66, 0.25) 0px 1px 1px, rgba(9, 30, 66, 0.13) 0px 0px 1px 1px' }}>
                             <div className="p-3 flex-1 overflow-y-auto">
                                 {/* MSME Section */}
                                 {(activeTab === "All Documents" || activeTab === "MSME Related") && msmeDocs.length > 0 && (

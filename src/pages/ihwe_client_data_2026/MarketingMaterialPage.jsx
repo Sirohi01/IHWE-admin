@@ -17,14 +17,14 @@ const categoriesDef = [
   { name: "Poster", sub: "Promotional posters", icon: FaImage, color: "text-orange-500", bg: "bg-orange-50" },
   { name: "Testimonials", sub: "Client feedback & stories", icon: FaComments, color: "text-green-500", bg: "bg-green-50" },
   { name: "Videos", sub: "Event promo videos", icon: FaVideo, color: "text-purple-500", bg: "bg-purple-50" },
-  { name: "Website Links", sub: "Important web links", icon: FaGlobe, color: "text-blue-500", bg: "bg-blue-50" },
-  { name: "Office Location", sub: "Our office address", icon: FaMapMarkerAlt, color: "text-orange-500", bg: "bg-orange-50" },
-  { name: "Venue Location", sub: "Expo venue location", icon: FaMap, color: "text-green-500", bg: "bg-green-50" },
-  { name: "Marketing PPT", sub: "Complete presentation", icon: FaFilePowerpoint, color: "text-orange-500", bg: "bg-orange-50" },
-  { name: "Social Media Posts", sub: "Post templates", icon: FaHashtag, color: "text-purple-500", bg: "bg-purple-50" },
-  { name: "Sponsorship Proposal", sub: "Brand partnership proposal", icon: FaHandshake, color: "text-blue-500", bg: "bg-blue-50" },
-  { name: "Marketing Proposal", sub: "Collaboration proposal", icon: FaFileAlt, color: "text-purple-500", bg: "bg-purple-50" },
-  { name: "Booking Form", sub: "Exhibitor booking form", icon: FaClipboardList, color: "text-pink-500", bg: "bg-pink-50" }
+  { name: "Website Links", sub: "Important web links", icon: FaGlobe, color: "text-cyan-500", bg: "bg-cyan-50" },
+  { name: "Office Location", sub: "Our office address", icon: FaMapMarkerAlt, color: "text-red-500", bg: "bg-red-50" },
+  { name: "Venue Location", sub: "Expo venue location", icon: FaMap, color: "text-teal-500", bg: "bg-teal-50" },
+  { name: "Marketing PPT", sub: "Complete presentation", icon: FaFilePowerpoint, color: "text-amber-500", bg: "bg-amber-50" },
+  { name: "Social Media Posts", sub: "Post templates", icon: FaHashtag, color: "text-pink-500", bg: "bg-pink-50" },
+  { name: "Sponsorship Proposal", sub: "Brand partnership proposal", icon: FaHandshake, color: "text-indigo-500", bg: "bg-indigo-50" },
+  { name: "Marketing Proposal", sub: "Collaboration proposal", icon: FaFileAlt, color: "text-rose-500", bg: "bg-rose-50" },
+  { name: "Booking Form", sub: "Exhibitor booking form", icon: FaClipboardList, color: "text-emerald-500", bg: "bg-emerald-50" }
 ];
 
 const getMapEmbedUrl = (url, title) => {
@@ -399,46 +399,46 @@ const MarketingMaterialPage = () => {
               {filteredCategories.map((cat, idx) => (
                 <div
                   key={idx}
-                  className={`border border-gray-100 rounded-xl hover:shadow-md transition-shadow bg-white relative cursor-pointer ${viewMode === "grid" ? "p-2 flex flex-col items-center justify-between text-center" : "p-2 px-3 flex flex-row items-center justify-between"}`}
+                  className={`group cursor-pointer relative bg-gradient-to-br from-white from-50% to-${cat.color.split('-')[1]}-50 p-3 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden ${viewMode === "grid" ? "flex flex-col items-center justify-between text-center" : "flex flex-row items-center justify-between"}`}
                   onClick={() => handleCategoryClick(cat.name)}
                 >
                   {viewMode === "grid" ? (
-                    <>
-                      <div className={`w-10 h-10 ${cat.bg} ${cat.color} rounded-xl flex items-center justify-center text-xl mb-1 shadow-sm`}>
-                        <cat.icon />
+                    <div className="relative z-10 w-full flex flex-col items-center">
+                      <div className={`w-10 h-10 ${cat.bg} rounded-full flex items-center justify-center text-xl mb-3 shrink-0`}>
+                        <cat.icon className={`${cat.color}`} strokeWidth={2.5} />
                       </div>
-                      <h3 className="font-semibold text-[12px] text-[#1e234c] leading-tight mb-0.5">{cat.name}</h3>
-                      <p className="text-[10px] text-gray-500 mb-1 leading-tight">{cat.sub}</p>
+                      <h3 className="font-semibold text-[12px] text-slate-900 leading-none mb-1.5">{cat.name}</h3>
+                      <p className="text-[9px] font-semibold text-slate-700 leading-tight mb-3">{cat.sub}</p>
 
-                      <div className="flex items-center justify-center gap-4 text-[10px] font-bold w-full border-t border-gray-50 pt-1.5 mt-auto">
-                        <button className="text-blue-700 flex items-center gap-1 hover:text-blue-800" onClick={(e) => { e.stopPropagation(); handleCategoryClick(cat.name, true); }}>
+                      <div className="flex items-center justify-center gap-4 text-[10px] font-bold w-full border-t border-slate-100 pt-2 mt-auto">
+                        <button className="text-blue-600 flex items-center gap-1 hover:text-blue-800 transition-colors" onClick={(e) => { e.stopPropagation(); handleCategoryClick(cat.name, true); }}>
                           <FaEye /> Preview
                         </button>
-                        <button className="text-[#1da935] flex items-center gap-1 hover:text-[#158828]" onClick={(e) => { e.stopPropagation(); handleCategoryClick(cat.name, true); }}>
+                        <button className="text-emerald-600 flex items-center gap-1 hover:text-emerald-800 transition-colors" onClick={(e) => { e.stopPropagation(); handleCategoryClick(cat.name, true); }}>
                           <FaPaperPlane /> Send
                         </button>
                       </div>
-                    </>
+                    </div>
                   ) : (
-                    <>
+                    <div className="relative z-10 w-full flex items-center justify-between">
                       <div className="flex items-center gap-3 flex-1 overflow-hidden">
-                        <div className={`w-10 h-10 ${cat.bg} ${cat.color} rounded-lg flex items-center justify-center text-xl flex-shrink-0`}>
-                          <cat.icon />
+                        <div className={`w-10 h-10 ${cat.bg} rounded-full flex items-center justify-center text-xl shrink-0`}>
+                          <cat.icon className={`${cat.color}`} strokeWidth={2.5} />
                         </div>
                         <div className="flex flex-col text-left overflow-hidden">
-                          <h3 className="font-semibold text-[12px] text-[#1e234c] leading-tight mb-0.5 truncate">{cat.name}</h3>
-                          <p className="text-[13px] text-gray-500 truncate">{cat.sub}</p>
+                          <h3 className="font-semibold text-[12px] text-slate-900 leading-none mb-1 truncate">{cat.name}</h3>
+                          <p className="text-[9px] font-semibold text-slate-700 leading-tight truncate">{cat.sub}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4 text-xs font-bold border-l border-gray-100 pl-4 ml-2 flex-shrink-0">
-                        <button className="text-blue-700 flex items-center gap-1 hover:text-blue-800" onClick={(e) => { e.stopPropagation(); handleCategoryClick(cat.name, true); }}>
+                      <div className="flex items-center gap-4 text-[10px] font-bold border-l border-slate-200 pl-4 ml-2 shrink-0">
+                        <button className="text-blue-600 flex items-center gap-1 hover:text-blue-800 transition-colors" onClick={(e) => { e.stopPropagation(); handleCategoryClick(cat.name, true); }}>
                           <FaEye /> Preview
                         </button>
-                        <button className="text-[#1da935] flex items-center gap-1 hover:text-[#158828]" onClick={(e) => { e.stopPropagation(); handleCategoryClick(cat.name, true); }}>
+                        <button className="text-emerald-600 flex items-center gap-1 hover:text-emerald-800 transition-colors" onClick={(e) => { e.stopPropagation(); handleCategoryClick(cat.name, true); }}>
                           <FaPaperPlane /> Send
                         </button>
                       </div>
-                    </>
+                    </div>
                   )}
                 </div>
               ))}

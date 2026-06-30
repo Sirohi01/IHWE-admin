@@ -4,16 +4,11 @@ import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
 import useDashboardStats from "../../hooks/useDashboardStats";
 import BaseLeadPage from "../../layout/BaseLeadPage";
+import { motion } from "framer-motion";
 import {
   Search, Plus, Upload, MessageCircle, CalendarDays, Clock3, Filter, ChevronDown, MoreVertical, ArrowRight, Bell, Phone, Mail
 } from "lucide-react";
 import { FaWhatsapp, FaStar, FaRegStar } from 'react-icons/fa';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-} from "recharts";
 
 // Hook: animate number from 0 to target when element enters viewport
 function useCountUp(target, duration = 1200) {
@@ -95,6 +90,30 @@ const WarmClientList = () => {
     totalLeads: hookTotal, pendingFollowUpsCount, thisWeekLeads, thisMonthLeads,
     overviewData, overdueLeads
   } = useDashboardStats('Follow');
+
+  const circumference = 2 * Math.PI * 32;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setTimeout(() => setMounted(true), 250);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    
+    const element = document.getElementById('followup-donut-chart-container');
+    if (element) {
+      observer.observe(element);
+    }
+    
+    return () => observer.disconnect();
+  }, []);
+
+  const overviewTotal = overviewData?.reduce((acc, curr) => acc + curr.value, 0) || 0;
 
   const totalLeads = pagination?.total || allCompanies.length;
   const isAllSelected = allCompanies.length > 0 && selectedIds.length === allCompanies.length;
@@ -295,7 +314,7 @@ const WarmClientList = () => {
                 </div>
               </td>
               <td className="px-2 py-2">
-                <span className={`px-1.5 py-0.5 rounded font-semibold text-[9px] ${getSourceStyle(source)}`}>
+                <span className={`px-1.5 py-0.5 rounded font-bold text-[9px] ${getSourceStyle(source)}`} style={{ color: '#443199' }}>
                   @{toTitleCase(source)}
                 </span>
               </td>
@@ -352,118 +371,165 @@ const WarmClientList = () => {
 
   const rightSidebar = (
     <>
-      <div className="bg-white rounded-xl border border-gray-100 p-3">
-        <h3 className="text-[14px] font-semibold text-[#0F172A] mb-3">Follow-Up Overview</h3>
-        <div className="flex flex-row items-center gap-4">
-          <div className="relative w-[90px] h-[90px] shrink-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={overviewData} cx="50%" cy="50%" innerRadius={28} outerRadius={40} dataKey="value" stroke="none">
-                  {overviewData?.map((entry, index) => (
-                    <Cell key={index} fill={entry.color} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <h3 className="text-[16px] font-bold text-[#0F172A] leading-none">{overviewData?.reduce((acc, curr) => acc + curr.value, 0)}</h3>
-              <p className="text-[9px] text-gray-500">Total</p>
+      {/* Follow-Up Overview */}
+      <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+        <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+          <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Follow-Up Overview</h3>
+          <span className="text-[10px] font-bold text-slate-500">
+            Total: <strong className="font-bold text-[#15173D]">{overviewTotal}</strong>
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-2 my-2">
+          {/* Pure SVG Donut Chart (Left) */}
+          <div id="followup-donut-chart-container" className="relative flex-shrink-0 flex items-center justify-center" style={{ width: '85px', height: '85px' }}>
+            <svg viewBox="0 0 85 85" width="85" height="85" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'rotate(-90deg)' }}>
+              {/* Background track */}
+              <circle cx="42.5" cy="42.5" r="32" fill="none" stroke="#f1f5f9" strokeWidth="14" />
+              {/* Segments */}
+              {(() => {
+                if (overviewTotal === 0) {
+                  return <circle cx="42.5" cy="42.5" r="32" fill="none" stroke="#e2e8f0" strokeWidth="14" />;
+                }
+                const gap = 0;
+                let cumulativeAngle = 0;
+                return overviewData?.filter(d => d.value > 0).map((d, i) => {
+                  const segLen = (d.value / overviewTotal) * circumference - gap;
+                  const duration = (d.value / overviewTotal) * 2.0; 
+                  const delay = (cumulativeAngle / 360) * 2.0;
+                  const currentAngle = cumulativeAngle;
+                  
+                  cumulativeAngle += (d.value / overviewTotal) * 360;
+                  
+                  return (
+                    <g key={i} style={{ transform: `rotate(${currentAngle}deg)`, transformOrigin: 'center' }}>
+                      <circle
+                        cx="42.5" cy="42.5" r="32"
+                        fill="none"
+                        stroke={d.color}
+                        strokeWidth="14"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={mounted ? circumference - Math.max(segLen, 0) : circumference}
+                        strokeLinecap="butt"
+                        style={{ 
+                          transition: `stroke-dashoffset ${duration}s linear ${delay}s` 
+                        }}
+                      />
+                    </g>
+                  );
+                });
+              })()}
+            </svg>
+            <div className="absolute text-center mt-0.5">
+              <p className="text-base font-bold text-[#15173D] tracking-tight leading-none mb-0.5">{overviewTotal}</p>
+              <span className="text-[10px] font-bold text-[#15173D] tracking-tight leading-none block">Total</span>
             </div>
           </div>
-          <div className="flex-1 space-y-2">
-            {overviewData?.map((item) => (
-              <div key={item.name} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full" style={{ background: item.color }} />
-                  <span className="text-[10px] font-medium text-[#0F172A] leading-none">{item.name}</span>
+
+          {/* Legend (Right) */}
+          <div className="flex-1 space-y-2 text-[11px] font-semibold text-slate-600 pl-1 min-w-0">
+            {overviewData?.map((d, i) => (
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, x: 10 }}
+                animate={mounted ? { opacity: 1, x: 0 } : { opacity: 0, x: 10 }}
+                transition={{ delay: 0.1 + (i * 0.1), duration: 0.3 }}
+                className="flex items-center gap-1.5 min-w-0"
+              >
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
+                <div className="flex items-center justify-between w-full min-w-0 gap-0.5">
+                  <span className="text-[#15173D] font-bold whitespace-nowrap text-[9px]">{d.name}</span>
+                  <span className="text-[#093C5D] font-bold flex-shrink-0 text-[9px]">
+                    {d.value} <span style={{ color: d.color }}>({d.percentage})</span>
+                  </span>
                 </div>
-                <span className="text-[10px] font-semibold text-[#0F172A] leading-none">
-                  {item.value} <span className="text-gray-400 font-normal">({item.percentage})</span>
-                </span>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 p-3">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-[14px] font-semibold text-[#0F172A]">Overdue Follow-Ups</h3>
-          <button className="text-[10px] text-[#2563EB] font-medium hover:underline">View All</button>
+      <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+        <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+          <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Overdue Follow-Ups</h3>
+          <button className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline">View All</button>
         </div>
         <div className="space-y-3">
           {overdueLeads?.length === 0 ? <p className="text-xs text-slate-400">No overdue follow-ups.</p> : overdueLeads?.map((lead, index) => (
-            <div key={index} className={`flex items-center justify-between pb-3 ${index !== overdueLeads.length - 1 ? "border-b border-gray-100" : ""}`}>
+            <div key={index} className={`flex items-start justify-between pb-3 ${index !== overdueLeads.length - 1 ? "border-b border-gray-100" : ""}`}>
               <div>
-                <h4 className="text-[11px] font-semibold text-[#0F172A] leading-tight">{lead.company}</h4>
-                <p className="text-[9px] text-gray-500 mt-0.5 leading-none">Due: {lead.date}</p>
+                <h4 className="text-[10px] font-bold leading-tight mb-0.5" style={{ color: '#5E0006' }}>{lead.company}</h4>
+                <p className="text-[10px] font-bold" style={{ color: '#093C5D' }}>Due: <span style={{ color: '#15173D' }}>{lead.date}</span></p>
               </div>
-              <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-[10px] font-semibold flex items-center justify-center text-center leading-tight">
+              <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-[9px] font-bold uppercase tracking-wider flex items-center justify-center text-center leading-tight">
                 {lead.days}
               </span>
             </div>
           ))}
           {overdueLeads?.length > 0 && (
-            <button className="w-full flex items-center justify-between text-[10px] font-medium text-[#2563EB] hover:text-[#1D4ED8] transition-all pt-1">
+            <button className="w-full flex items-center justify-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline transition-all pt-1">
               <span>View All Overdue ({overdueLeads.length})</span>
-              <ArrowRight size={12} />
+              <ArrowRight size={10} />
             </button>
           )}
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 p-3">
-        <h3 className="text-[14px] font-semibold text-[#0F172A] mb-3">Quick Actions</h3>
+      <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+        <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+          <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Quick Actions</h3>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <button className="h-[40px] rounded-lg bg-[#F8F1FF] flex items-center justify-center gap-1.5 hover:opacity-90 px-2">
             <CalendarDays size={14} className="text-purple-600 shrink-0" />
-            <span className="text-[10px] font-medium text-[#0F172A] leading-tight text-left">Schedule<br />Follow-Up</span>
+            <span className="text-[10px] font-bold text-[#15173D] leading-tight text-left">Schedule<br />Follow-Up</span>
           </button>
           <button className="h-[40px] rounded-lg bg-[#EEF9F2] flex items-center justify-center gap-1.5 hover:opacity-90 px-2">
             <Phone size={14} className="text-green-600 shrink-0" />
-            <span className="text-[10px] font-medium text-[#0F172A] leading-tight text-left">Log Call</span>
+            <span className="text-[10px] font-bold text-[#15173D] leading-tight text-left">Log Call</span>
           </button>
           <button className="h-[40px] rounded-lg bg-[#EEF9F2] flex items-center justify-center gap-1.5 hover:opacity-90 px-2">
             <MessageCircle size={14} className="text-green-600 shrink-0" />
-            <span className="text-[10px] font-medium text-[#0F172A] leading-tight text-left">Send<br />WhatsApp</span>
+            <span className="text-[10px] font-bold text-[#15173D] leading-tight text-left">Send<br />WhatsApp</span>
           </button>
           <button className="h-[40px] rounded-lg bg-[#F4F7FF] flex items-center justify-center gap-1.5 hover:opacity-90 px-2">
             <Mail size={14} className="text-blue-600 shrink-0" />
-            <span className="text-[10px] font-medium text-[#0F172A] leading-tight text-left">Send Email</span>
+            <span className="text-[10px] font-bold text-[#15173D] leading-tight text-left">Send Email</span>
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 p-3">
+      <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+        <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+          <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Reminder Settings</h3>
+        </div>
         <div className="flex items-start gap-2 mb-3">
-          <Bell size={16} className="text-[#0F172A] mt-0.5 shrink-0" />
+          <Bell size={16} className="text-[#15173D] mt-0.5 shrink-0" />
           <div>
-            <h3 className="text-[13px] font-semibold text-[#0F172A] leading-tight">Reminder Settings</h3>
-            <p className="text-[9px] text-gray-500 mt-0.5 leading-none">Get reminded before follow-up is due</p>
+            <p className="text-[10px] font-bold text-slate-500 mt-0.5 leading-none">Get reminded before follow-up is due</p>
           </div>
         </div>
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] font-medium text-[#0F172A]">Enable Reminders</span>
+          <span className="text-[10px] font-bold text-[#15173D]">Enable Reminders</span>
           <label className="relative inline-flex cursor-pointer">
             <input type="checkbox" defaultChecked className="sr-only peer" />
             <div className="w-8 h-4 bg-gray-200 rounded-full peer peer-checked:bg-green-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:w-3 after:h-3 after:rounded-full after:transition-all peer-checked:after:translate-x-4" />
           </label>
         </div>
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] font-medium text-[#0F172A]">Remind me</span>
-          <select className="border border-gray-200 rounded-lg px-2 py-1 text-[10px] outline-none">
+          <span className="text-[10px] font-bold text-[#15173D]">Remind me</span>
+          <select className="border border-gray-200 rounded-lg px-2 py-1 text-[10px] font-bold outline-none">
             <option>1 Hour Before</option>
             <option>2 Hours Before</option>
             <option>1 Day Before</option>
           </select>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-medium text-[#0F172A]">Send via</span>
+          <span className="text-[10px] font-bold text-[#15173D]">Send via</span>
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-1.5 text-[10px] cursor-pointer">
+            <label className="flex items-center gap-1.5 text-[10px] font-bold cursor-pointer">
               <input type="checkbox" defaultChecked className="accent-blue-600 w-3 h-3" /> WhatsApp
             </label>
-            <label className="flex items-center gap-1.5 text-[10px] cursor-pointer">
+            <label className="flex items-center gap-1.5 text-[10px] font-bold cursor-pointer">
               <input type="checkbox" defaultChecked className="accent-blue-600 w-3 h-3" /> Email
             </label>
           </div>

@@ -337,7 +337,7 @@ const NewLeadList = () => {
                 </div>
               </td>
               <td className="px-2 py-2">
-                <span className={`px-1.5 py-0.5 rounded font-semibold text-[9px] ${getSourceStyle(source)}`}>
+                <span className={`px-1.5 py-0.5 rounded font-bold text-[9px] ${getSourceStyle(source)}`} style={{ color: '#443199' }}>
                   @{toTitleCase(source)}
                 </span>
               </td>
@@ -395,8 +395,10 @@ const NewLeadList = () => {
   const rightSidebarContent = (
     <>
       {!isSuperAdmin && (
-        <div className="bg-white rounded-xl p-1.5 px-2" style={{ fontFamily: 'Inter, sans-serif', boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
-          <h3 className="text-[11px] font-semibold text-slate-800 mb-1">Follow-Ups Due <span className="text-[8px] text-red-500 font-semibold ml-1">(Next 7 Days)</span></h3>
+        <div className="bg-white rounded-lg p-2.5" style={{ fontFamily: 'Inter, sans-serif', boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+          <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+            <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Follow-Ups Due <span className="text-[10px] text-red-500 font-bold ml-1 tracking-normal">(Next 7 Days)</span></h3>
+          </div>
           <div className="flex flex-col gap-1">
             {followUps.length === 0 ? <p className="text-xs text-slate-400">No follow-ups due.</p> : followUps.map((fu, idx) => (
               <div key={idx} className="flex items-start gap-2">
@@ -431,8 +433,10 @@ const NewLeadList = () => {
       )}
 
       {/* Leads by Source (Donut Chart) */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
-        <h3 className="text-[11px] font-bold text-slate-800 mb-1">{isSuperAdmin ? "Leads by Source (This Week)" : "Leads by Source"}</h3>
+      <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+        <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+          <h3 className="text-sm font-bold text-[#15173D] tracking-tight">{isSuperAdmin ? "Leads by Source (This Week)" : "Leads by Source"}</h3>
+        </div>
         <div className="flex items-center justify-between gap-2">
           {/* CSS Donut Chart */}
           <div className="relative w-12 h-12 rounded-full shrink-0 shadow-sm" style={{ background: `conic-gradient(#0ea5e9 0% 33%, #8b5cf6 33% 58%, #10b981 58% 79%, #f59e0b 79% 92%, #94a3b8 92% 100%)` }}>
@@ -458,8 +462,10 @@ const NewLeadList = () => {
       </div>
 
       {isSuperAdmin && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
-          <h3 className="text-[11px] font-bold text-slate-800 mb-1.5">Lead Status Overview</h3>
+        <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+          <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+            <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Lead Status Overview</h3>
+          </div>
           <div className="flex flex-col gap-1.5">
             {statusChartData.length === 0 ? <p className="text-xs text-slate-400">No data</p> : statusChartData.map((s, i) => (
               <div key={i} className="flex items-center justify-between text-[8px]">
@@ -478,8 +484,10 @@ const NewLeadList = () => {
       )}
 
       {!isSuperAdmin && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
-          <h3 className="text-[11px] font-bold text-slate-800 mb-1">Recent Activities</h3>
+        <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+          <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+            <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Recent Activities</h3>
+          </div>
           <div className="flex flex-col gap-1.5 relative">
             <div className="absolute left-[9px] top-2 bottom-2 w-px bg-slate-100"></div>
             {recentActivities.length === 0 ? <p className="text-xs text-slate-400 mt-2 ml-4">No recent activity.</p> : recentActivities.map((act, i) => (
@@ -488,8 +496,8 @@ const NewLeadList = () => {
                   <Mail size={8} className="text-emerald-600" />
                 </div>
                 <div>
-                  <div className="text-[9px] font-medium text-slate-700 leading-tight">{act.text}</div>
-                  <div className="text-[8px] text-slate-400 mt-0.5">{act.date}</div>
+                  <div className="text-[10px] font-bold leading-tight mb-0.5" style={{ color: '#5E0006' }}>{act.text}</div>
+                  <div className="text-[9px] font-bold" style={{ color: '#15173D' }}>{act.date}</div>
                 </div>
               </div>
             ))}
@@ -501,8 +509,10 @@ const NewLeadList = () => {
       )}
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
-        <h3 className="text-[11px] font-bold text-slate-800 mb-1">Quick Actions</h3>
+      <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+        <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+          <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Quick Actions</h3>
+        </div>
         <div className="grid grid-cols-2 gap-1.5">
           <button onClick={() => navigate("/ihweClientData2026/addNewClients")} className="flex items-center gap-1.5 p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded transition-colors border border-emerald-100">
             <Plus size={12} />
@@ -525,8 +535,10 @@ const NewLeadList = () => {
 
       {/* Top Assigned Executives (Super Admin Only) */}
       {isSuperAdmin && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 px-2">
-          <h3 className="text-[11px] font-bold text-slate-800 mb-1.5">Top Assigned Executives</h3>
+        <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+          <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+            <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Top Assigned Executives</h3>
+          </div>
           <div className="flex flex-col gap-1.5">
             {topExecutives.length === 0 ? <p className="text-xs text-slate-400">No assignments</p> : topExecutives.map((exec, i) => (
               <div key={i} className="flex items-center justify-between text-[9px]">

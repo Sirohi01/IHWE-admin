@@ -55,24 +55,24 @@ const CommunicationPanel = ({ company, reviews, onSendEntry, onWhatsApp, onEmail
 
   return (
     <>
-      <div className="bg-white rounded-2xl border border-gray-300 p-4 flex flex-col h-full">
+      <div className="bg-white rounded-lg p-2.5 flex flex-col h-full" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-[#0f172a]">CHAT & COMMUNICATION</h2>
+        <div className="flex items-center justify-between -mx-2.5 -mt-2.5 mb-3 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+          <h2 className="text-[12px] font-bold text-[#15173D] tracking-tight">CHAT & COMMUNICATION</h2>
         </div>
 
         {/* Action Buttons */}
 
         {/* Tabs */}
-        <div className="flex flex-nowrap gap-1.5 mb-3">
+        <div className="flex flex-nowrap gap-1.5 mb-3 px-1">
           {TABS.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`h-7 px-3 rounded-xl border text-[11px] font-semibold whitespace-nowrap transition-colors ${
+              className={`h-7 px-3 rounded text-[10px] font-bold whitespace-nowrap transition-colors shadow-sm ${
                 activeTab === tab
-                  ? "bg-green-600 text-white border-green-600"
-                  : "bg-white text-gray-600 hover:bg-gray-50"
+                  ? "bg-[#15173D] text-white"
+                  : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
               }`}
             >
               {tab}
@@ -81,11 +81,11 @@ const CommunicationPanel = ({ company, reviews, onSendEntry, onWhatsApp, onEmail
         </div>
 
         {/* Feed */}
-        <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-2">
+        <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-2 px-1">
           {displayed.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+            <div className="flex flex-col items-center justify-center h-full text-slate-400">
               <MessageCircleMore size={36} className="mb-2 opacity-30" />
-              <p className="text-sm">No communication records yet.</p>
+              <p className="text-[11px] font-bold">No communication records yet.</p>
             </div>
           ) : (
             displayed.map((item, idx) => {
@@ -103,28 +103,28 @@ const CommunicationPanel = ({ company, reviews, onSendEntry, onWhatsApp, onEmail
               }
 
               return (
-                <div key={idx} className="flex gap-2">
-                  <div className={`w-7 h-7 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                    <Icon size={13} className={cfg.color} />
+                <div key={idx} className="flex gap-2 group">
+                  <div className={`w-7 h-7 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0 mt-0.5 border border-white group-hover:border-slate-200 transition-colors`}>
+                    <Icon size={12} className={cfg.color} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className={`rounded-xl px-2.5 py-2 ${cfg.bg}`}>
+                    <div className={`rounded-lg px-2.5 py-2 ${cfg.bg} border border-transparent group-hover:border-slate-200 transition-colors`}>
                       <div className="flex items-center justify-between gap-2 mb-0.5">
-                        <span className={`text-[10px] font-bold uppercase ${cfg.color} flex-shrink-0`}>{label}</span>
-                        <span className="text-[10px] text-gray-400 flex-shrink-0">{formatDateTime(item.createdAt)}</span>
+                        <span className={`text-[10px] font-bold uppercase ${cfg.color} flex-shrink-0 tracking-wider`}>{label}</span>
+                        <span className="text-[9px] font-bold text-slate-400 flex-shrink-0">{formatDateTime(item.createdAt)}</span>
                       </div>
                       {(item.status_short || item.email_subject || text) && (
-                        <p className="text-[11px] text-gray-700 truncate mt-0.5 leading-relaxed">
+                        <p className="text-[10px] font-bold text-[#15173D] truncate mt-0.5 leading-relaxed">
                           {item.status_short && (
                             <span className="inline-block px-1.5 py-[1px] rounded bg-orange-100 text-orange-600 text-[9px] font-bold uppercase tracking-wider mr-1.5 align-middle">
                               {item.status_short}
                             </span>
                           )}
-                          {item.email_subject && <span className="font-semibold mr-1 text-gray-800 align-middle">📧 {item.email_subject}</span>}
-                          {item.email_subject && text && <span className="text-gray-400 mx-1 align-middle">|</span>}
+                          {item.email_subject && <span className="mr-1 text-slate-700 align-middle">📧 {item.email_subject}</span>}
+                          {item.email_subject && text && <span className="text-slate-300 mx-1 align-middle">|</span>}
                           {text && <span className="align-middle">{text.replace(/\n/g, ' - ').split(/(' to ')/g).map((part, i) => 
                             part === "' to '" 
-                              ? <span key={i}>' <span className="font-extrabold text-blue-600 mx-0.5">TO</span> '</span> 
+                              ? <span key={i}>' <span className="text-[#093C5D] mx-0.5">TO</span> '</span> 
                               : part
                           )}</span>}
                         </p>
@@ -137,13 +137,13 @@ const CommunicationPanel = ({ company, reviews, onSendEntry, onWhatsApp, onEmail
         </div>
 
         {/* Footer */}
-        <div className="mt-3">
+        <div className="mt-3 px-1 pb-1">
           <button
             onClick={() => {
               if (onOpenFullHistory) onOpenFullHistory();
               setShowHistory(true);
             }}
-            className="w-full h-9 border border-green-300 text-green-600 rounded-2xl font-semibold text-sm hover:bg-green-50 transition-colors"
+            className="w-full h-8 bg-slate-100 hover:bg-slate-200 text-[#15173D] rounded font-bold text-[10px] transition-colors shadow-sm"
           >
             View Full Communication History
           </button>

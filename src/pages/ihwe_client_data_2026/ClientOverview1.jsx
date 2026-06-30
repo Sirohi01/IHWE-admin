@@ -181,7 +181,7 @@ const ClientOverview1 = () => {
           try {
             const resContacts = await api.get(`/api/client-contacts/${id}`);
             data.contacts = resContacts.data?.data || [];
-          } catch(e) { console.log(e); }
+          } catch (e) { console.log(e); }
 
           setCompany(data);
           return;
@@ -197,7 +197,7 @@ const ClientOverview1 = () => {
         try {
           const resContacts = await api.get(`/api/client-contacts/${id}`);
           data.contacts = resContacts.data?.data || [];
-        } catch(e) { console.log(e); }
+        } catch (e) { console.log(e); }
         setCompany(data);
       } catch (err) {
         // If 404 from companies, try exhibitor-registration
@@ -208,7 +208,7 @@ const ClientOverview1 = () => {
           try {
             const resContacts = await api.get(`/api/client-contacts/${id}`);
             data.contacts = resContacts.data?.data || [];
-          } catch(e) { console.log(e); }
+          } catch (e) { console.log(e); }
           setCompany(data);
         } else {
           throw err;
@@ -786,41 +786,36 @@ const ClientOverview1 = () => {
       <div className="flex items-center justify-between mb-1">
 
         <div>
-          <h1 className="text-[22px] font-md text-[#0f172a]">
+          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-3">
             CLIENT PROFILE
           </h1>
 
-          <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1 font-medium">
             <span>Dashboard</span>
-            <ChevronRight size={14} />
+            <ChevronRight size={12} />
             <span>Client Profile</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-
-          <button onClick={() => navigate("/ihweClientData2026/addNewClients")} className="h-9 px-5 rounded-xl border bg-white hover:bg-gray-50 text-sm font-semibold">
+        <div className="flex flex-wrap items-center gap-1.5" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <button onClick={() => navigate("/ihweClientData2026/addNewClients")} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm">
             Add Client
           </button>
-
-          <button onClick={() => navigate("/ihweClientData2026/masterData")} className="h-9 px-5 rounded-xl border bg-white hover:bg-gray-50 text-sm font-semibold">
+          <button onClick={() => navigate("/ihweClientData2026/masterData")} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm">
             Master List
           </button>
-
-          <button disabled className="h-9 px-5 rounded-xl border border-violet-300 text-violet-300 bg-white text-sm font-semibold cursor-not-allowed opacity-70">
+          <button disabled className="px-2.5 py-1.5 bg-slate-100 text-slate-400 rounded-md text-[10px] font-bold cursor-not-allowed shadow-sm border border-slate-200">
             Add MSME Details
           </button>
-
-          <button onClick={() => setShowWhatsAppModal(true)} className="h-9 px-5 rounded-xl border border-green-300 text-green-600 bg-white hover:bg-green-50 text-sm font-semibold flex items-center gap-2">
-            <FaWhatsapp />
-            Send WhatsApp
+          <button onClick={() => setShowWhatsAppModal(true)} className="px-2.5 py-1.5 bg-[#0D530E] text-white rounded-md text-[10px] font-bold hover:bg-[#093a0a] transition-all shadow-sm flex items-center gap-1">
+            <FaWhatsapp size={12} /> Send WhatsApp
           </button>
         </div>
       </div>
 
       {/* MAIN LAYOUT */}
 
-      <div className="grid grid-cols-1 min-[1300px]:grid-cols-[1fr_360px] gap-1 items-stretch">
+      <div className="grid grid-cols-1 min-[1300px]:grid-cols-[1fr_360px] gap-1.5 items-stretch" style={{ fontFamily: 'Inter, sans-serif' }}>
 
         {/* LEFT SECTION */}
 
@@ -828,9 +823,9 @@ const ClientOverview1 = () => {
 
           {/* PROFILE CARD */}
 
-          <div className="bg-white rounded-2xl border border-gray-300 p-3 py-4 overflow-hidden">
+          <div className="bg-white rounded-lg p-2.5 overflow-hidden" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
 
-            <div className="flex flex-wrap gap-4 items-start">
+            <div className="flex flex-wrap gap-4 items-start p-1">
 
               {/* LOGO */}
 
@@ -854,17 +849,17 @@ const ClientOverview1 = () => {
 
               <div className="flex-1 min-w-[200px]">
                 <div className="flex items-center gap-1 w-full">
-                  <h2 className="text-[14px] font-semibold text-[#0f172a] whitespace-nowrap">
+                  <h2 className="text-[16px] font-semibold text-[#093C5D] whitespace-nowrap">
                     {isExhibitor ? company.exhibitorName : company.companyName}
                   </h2>
-                  <button onClick={handleOpenEditProfile} className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors flex-shrink-0" title="Edit Profile">
-                    <Pencil size={16} />
+                  <button onClick={handleOpenEditProfile} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors flex-shrink-0" title="Edit Profile">
+                    <Pencil size={14} />
                   </button>
                 </div>
 
-                <div className="mt-1 flex flex-col gap-0.5 text-gray-600 text-[11px] font-medium">
+                <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[#0D530E] text-[10px] font-bold">
                   <span>{isExhibitor ? (company.eventId?.name || "No Event") : (company.eventName || "No Event")}</span>
-                  <span>
+                  <span className="text-[10px] leading-tight" style={{ color: '#4B1426' }}>
                     {company.previousExhibition?.name
                       ? `Existing Exhibitor | ${company.previousExhibition.name} ${company.previousExhibition.year ? '| ' + company.previousExhibition.year : ''}`
                       : `New Lead${(company.referredBy || company.dataSource) ? ` From ${(company.referredBy || company.dataSource) === 'Referral' && company.referralName
@@ -877,45 +872,45 @@ const ClientOverview1 = () => {
                   </span>
                 </div>
 
-                <div className="mt-2 space-y-2">
+                <div className="mt-2 space-y-1.5">
 
                   <div className="flex items-center gap-2 text-[11px]">
-                    <UserCircle className="text-[#4338ca] flex-shrink-0" size={16} />
-                    <span className="font-medium text-gray-700">
+                    <UserCircle className="text-emerald-600 flex-shrink-0" size={14} />
+                    <span className="font-semibold text-[#000000]">
                       {company.contacts?.[0]?.firstName
                         ? `${company?.contacts[0]?.firstName} ${isExhibitor ? (company?.contacts[0]?.lastName || "") : (company?.contacts[0]?.surname || "")}`.trim()
                         : (isExhibitor ? company?.exhibitorName : company?.companyName)}
                     </span>
                     {company?.contacts?.[0]?.designation && (
                       <>
-                        <span className="text-gray-400">/</span>
-                        <span className="font-medium text-gray-700">
+                        <span className="text-slate-400 font-bold">/</span>
+                        <span className="font-semibold text-[#5E0006]">
                           {company.contacts[0].designation}
                         </span>
                       </>
                     )}
                     {displayPhone && (
-                      <span className="text-gray-400">-</span>
+                      <span className="text-slate-400 font-bold">-</span>
                     )}
-                    <a href={`tel:${displayPhone}`} className="text-[#4338ca] hover:underline font-medium">
+                    <a href={`tel:${displayPhone}`} className="text-[#093C5D] hover:underline font-bold">
                       {displayPhone || "-"}
                     </a>
                   </div>
 
                   <div className="flex items-center gap-2 text-[11px]">
-                    <Mail className="text-[#4338ca] flex-shrink-0" size={16} />
-                    <a href={`mailto:${displayEmail}`} className="text-[#4338ca] hover:underline">
+                    <Mail className="text-purple-600 flex-shrink-0" size={14} />
+                    <a href={`mailto:${displayEmail}`} className="text-[#443199] hover:underline font-semibold">
                       {displayEmail || "-"}
                     </a>
                   </div>
 
                   <div className="flex items-center gap-2 text-[11px]">
-                    <Globe className="text-[#4338ca] flex-shrink-0" size={16} />
+                    <Globe className="text-blue-600 flex-shrink-0" size={14} />
                     <a
                       href={company?.website?.startsWith('http') ? company?.website : `https://${company.website}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hover:underline text-gray-700"
+                      className="hover:underline text-blue-700 font-bold"
                     >
                       {company?.website}
                     </a>
@@ -924,11 +919,11 @@ const ClientOverview1 = () => {
               </div>
 
               {/* DESCRIPTION */}
-              <div className="border-l-[3px] border-gray-600 pl-2 text-gray-700 leading-5 text-[10px] w-[260px] flex-shrink-0">
-                <p className="text-md font-semibold text-gray-900 uppercase tracking-wider mb-1">About Company</p>
-                <p className="break-words whitespace-normal">
+              <div className="border-l-[3px] border-emerald-500 pl-2.5 text-[#15173D] leading-[1.4] text-[10px] font-medium w-[260px] flex-shrink-0">
+                <p className="text-[11px] font-semibold text-[#0f172a] tracking-tight mb-1">About Company</p>
+                <p className="break-words whitespace-normal font-semibold text-[#0A2947]">
                   {company?.companyDescription || company?.aboutCompany ||
-                    <span className="text-red-600 text-[12px] leading-5">Tell buyers, visitors, and business partners about your company, products, services, and expertise. A well-written company profile helps increase visibility and generate more business opportunities.</span>}
+                    <span className="text-[#0A2947] text-[10px] leading-4">Tell buyers, visitors, and business partners about your company, products, services, and expertise. A well-written company profile helps increase visibility and generate more business opportunities.</span>}
                 </p>
               </div>
             </div>
@@ -936,34 +931,29 @@ const ClientOverview1 = () => {
 
           {/* INFO CARDS */}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-1.5">
 
-            <div className="bg-white rounded-2xl border border-gray-300 px-2 py-1.5 flex items-center gap-2 min-w-0">
-
-              <div className="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
-                <Building2 className="text-green-600" size={14} />
+            <div className="bg-white rounded-lg p-2 flex items-center gap-2.5 min-w-0" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+              <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+                <Building2 className="text-green-600" size={16} />
               </div>
-
               <div className="min-w-0 flex-1">
-                <p className="text-gray-500 text-[10px] whitespace-nowrap">Industry / Sector</p>
-                <h3 className="font-semibold text-[10px] mt-0.5 truncate">
-                  {company?.category}
+                <p className="text-slate-900 text-[9px] font-semibold whitespace-nowrap uppercase tracking-wider">Industry / Sector</p>
+                <h3 className="font-bold text-[10px] mt-0.5 truncate text-[#5E0006]">
+                  {company?.category || "-"}
                 </h3>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-300 px-2 py-1.5 flex items-center gap-2 min-w-0">
-
-              <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                <Calendar className="text-blue-600" size={14} />
+            <div className="bg-white rounded-lg p-2 flex items-center gap-2.5 min-w-0" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <Calendar className="text-blue-600" size={16} />
               </div>
-
               <div>
-                <p className="text-gray-500 text-[10px] whitespace-nowrap">
+                <p className="text-slate-900 text-[9px] font-semibold whitespace-nowrap uppercase tracking-wider">
                   Lead Generation Date
                 </p>
-
-                <h3 className="font-semibold text-[10px] mt-0.5 truncate">
+                <h3 className="font-bold text-[10px] mt-0.5 truncate text-[#15173D]">
                   {company.createdAt
                     ? new Date(company.createdAt).toLocaleString("en-IN", {
                       day: "2-digit",
@@ -978,15 +968,13 @@ const ClientOverview1 = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-300 px-2 py-1.5 flex items-center gap-2 min-w-0">
-
-              <div className="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
-                <Shield className="text-green-600" />
+            <div className="bg-white rounded-lg p-2 flex items-center gap-2.5 min-w-0" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+              <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+                <Shield className="text-green-600" size={16} />
               </div>
-
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <p className="text-gray-500 text-[10px] whitespace-nowrap">Exhibitor Category</p>
+                  <p className="text-slate-900 text-[9px] font-semibold whitespace-nowrap uppercase tracking-wider">Exhibitor Category</p>
                   <button
                     onClick={() => {
                       setMsmeData({
@@ -994,30 +982,27 @@ const ClientOverview1 = () => {
                       });
                       setIsMsmeEditOpen(true);
                     }}
-                    className="p-1 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors"
+                    className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors"
                     title="Edit Exhibitor Category"
                   >
-                    <Pencil size={13} />
+                    <Pencil size={12} />
                   </button>
                 </div>
-                <h3 className="font-semibold text-[10px] mt-0.5 truncate text-green-600">
+                <h3 className="font-bold text-[11px] mt-0.5 truncate text-[#0D530E]">
                   {company?.exhibitorCategory || "-"}
                 </h3>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-300 px-2 py-1.5 flex items-center gap-2 min-w-0">
-
-              <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
-                <BadgeCheck className="text-orange-500" size={14} />
+            <div className="bg-white rounded-lg p-2 flex items-center gap-2.5 min-w-0" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+              <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
+                <BadgeCheck className="text-orange-500" size={16} />
               </div>
-
               <div>
-                <p className="text-gray-500 text-[10px] whitespace-nowrap">
+                <p className="text-slate-900 text-[9px] font-semibold whitespace-nowrap uppercase tracking-wider">
                   Client Status
                 </p>
-
-                <h3 className="font-semibold text-[10px] mt-0.5 truncate text-orange-500">
+                <h3 className="font-bold text-[11px] mt-0.5 truncate text-orange-600">
                   {company?.companyStatus === 'Closed - Won' && company?.participation?.stallSize
                     ? `${company.participation.stallSize} sqm Stall Booked`
                     : company?.companyStatus}
@@ -1028,9 +1013,9 @@ const ClientOverview1 = () => {
 
           {/* ACTION CARDS */}
 
-          <div className="bg-white rounded-sm border border-gray-300 p-2">
+          <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-1.5">
 
               {[
                 {
@@ -1093,18 +1078,16 @@ const ClientOverview1 = () => {
                 <div
                   key={index}
                   onClick={!item.disabled ? item.onClick || undefined : undefined}
-                  className={`h-[40px] rounded-2xl border px-3 flex items-center justify-between transition-all ${item.disabled
-                    ? "border-gray-200 bg-gray-50 cursor-not-allowed opacity-80"
-                    : "border-gray-300 cursor-pointer hover:shadow-md hover:bg-orange-50 hover:border-orange-300 group"
+                  className={`h-[40px] rounded-lg border px-3 flex items-center justify-between transition-all ${item.disabled
+                    ? "border-slate-200 bg-slate-50 cursor-not-allowed opacity-80"
+                    : "border-slate-200 cursor-pointer hover:shadow-sm hover:bg-slate-50 group"
                     }`}
                 >
-                  <div className="flex items-center gap-4">
-
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${item.disabled ? "bg-gray-100" : "bg-gray-100 group-hover:bg-orange-100"}`}>
-                      <item.icon size={22} className={`text-${item.color}`} />
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${item.disabled ? "bg-slate-100" : "bg-slate-100 group-hover:bg-white"}`}>
+                      <item.icon size={16} className={`text-${item.color}`} />
                     </div>
-
-                    <span className={`text-[11px] transition-colors ${item.disabled ? "text-gray-400" : "text-[#0f172a] group-hover:text-orange-600"}`}>
+                    <span className={`text-[10px] font-bold transition-colors ${item.disabled ? "text-slate-400" : "text-[#15173D]"}`}>
                       {item.title}
                     </span>
                   </div>
@@ -1115,18 +1098,19 @@ const ClientOverview1 = () => {
 
           {/* STATUS UPDATE */}
 
-          <div className="bg-white rounded-2xl border border-gray-300 p-3">
+          <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+            <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-3 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+              <h2 className="text-[12px] font-bold text-[#15173D] tracking-tight">
+                Lead Status Updates
+              </h2>
+            </div>
 
-            <h2 className="text-xl font-md text-[#0f172a] mb-1">
-              Lead Status Updates
-            </h2>
-
-            <form onSubmit={handleAddReview}>
+            <form onSubmit={handleAddReview} className="px-1 pb-1">
 
               <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 items-end">
 
                 <div>
-                  <label className="text-xs font-semibold mb-1 block">Status Update</label>
+                  <label className="text-[10px] font-bold text-slate-700 mb-1 block">Status Update</label>
                   <SearchableDropdown
                     id="status_short"
                     options={statusOptions?.map((item) => ({ label: item.name, value: item.name })) || []}
@@ -1137,7 +1121,7 @@ const ClientOverview1 = () => {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold mb-1 block">Next Action</label>
+                  <label className="text-[10px] font-bold text-slate-700 mb-1 block">Next Action</label>
                   <SearchableDropdown
                     options={nextActions?.filter(n => n.status === 'active').map((n) => ({ label: n.name, value: n.name })) || []}
                     value={reviewData.forward_to}
@@ -1148,7 +1132,7 @@ const ClientOverview1 = () => {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold mb-1 block">Forward To</label>
+                  <label className="text-[10px] font-bold text-slate-700 mb-1 block">Forward To</label>
                   <SearchableDropdown
                     id="forward_to"
                     options={users?.map((u) => ({ label: u.fullName || u.username, value: u.username })) || []}
@@ -1161,33 +1145,33 @@ const ClientOverview1 = () => {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold mb-1 block">Follow Up Date</label>
+                  <label className="text-[10px] font-bold text-slate-700 mb-1 block">Follow Up Date</label>
                   <input
                     type="datetime-local"
                     value={reviewData.follow_up_date}
                     onChange={(e) => setReviewData(prev => ({ ...prev, follow_up_date: e.target.value }))}
-                    className={`w-full h-10 border border-[#dbe1ea] px-3 outline-none text-sm ${typeof reviewData.status_short === 'string' && reviewData.status_short.toLowerCase() === "not interested" ? 'bg-gray-100 cursor-not-allowed opacity-70' : ''}`}
+                    className={`w-full h-[32px] rounded border border-slate-200 px-2 outline-none text-[11px] font-bold text-[#15173D] focus:border-emerald-500 ${typeof reviewData.status_short === 'string' && reviewData.status_short.toLowerCase() === "not interested" ? 'bg-slate-100 cursor-not-allowed opacity-70' : 'bg-white'}`}
                     disabled={typeof reviewData.status_short === 'string' && reviewData.status_short.toLowerCase() === "not interested"}
                   />
                 </div>
 
                 <div className="col-span-2 xl:col-span-4 flex items-center gap-3">
                   <div className="flex-1">
-                    <label className="text-xs font-semibold mb-1 block">Remark</label>
+                    <label className="text-[10px] font-bold text-slate-700 mb-1 block">Remark</label>
                     <textarea
                       id="Remark"
                       value={reviewData.re_msg}
                       onChange={handleChange}
-                      className="w-full h-[40px] rounded-xl border border-[#dbe1ea] p-3 outline-none resize-none text-sm"
+                      className="w-full h-[36px] rounded border border-slate-200 p-2 outline-none resize-none text-[11px] font-bold text-[#15173D] focus:border-emerald-500"
                       placeholder="Write your remark here..."
                     />
                   </div>
                   <button
                     type="submit"
-                    className="h-10 px-6 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold flex items-center gap-2 text-sm flex-shrink-0"
+                    className="h-[36px] px-5 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-1.5 text-[11px] flex-shrink-0 transition-colors shadow-sm"
                   >
                     Update Status
-                    <Send size={16} />
+                    <Send size={14} />
                   </button>
                 </div>
               </div>
@@ -1195,28 +1179,28 @@ const ClientOverview1 = () => {
           </div>
 
           {/* CONTACT DETAILS */}
-          <div className="bg-white rounded-2xl border border-gray-300 p-4">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-base font-bold text-[#0f172a]">CONTACT DETAILS</h2>
+          <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+            <div className="flex items-center justify-between -mx-2.5 -mt-2.5 mb-3 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+              <h2 className="text-[12px] font-bold text-[#15173D] tracking-tight">CONTACT DETAILS</h2>
               <div className="flex gap-2">
-                <button onClick={() => navigate(`/client-contacts/${company?.clientId || company?._id || id}`)} className="h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold flex items-center gap-2">
+                <button onClick={() => navigate(`/client-contacts/${company?.clientId || company?._id || id}`)} className="h-6 px-3 rounded bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-[10px] font-bold flex items-center gap-2 shadow-sm">
                   View All
                 </button>
-                <button onClick={() => navigate(`/add-team-members/${company?.clientId || company?._id || id}`)} className="h-10 px-4 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-bold flex items-center gap-2">
+                <button onClick={() => navigate(`/add-team-members/${company?.clientId || company?._id || id}`)} className="h-6 px-3 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold flex items-center gap-1.5 shadow-sm">
                   + Add Team Members
                 </button>
               </div>
             </div>
 
             {company.contacts && company.contacts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-3 min-[1100px]:grid-cols-3 gap-1">
+              <div className="grid grid-cols-1 sm:grid-cols-3 min-[1100px]:grid-cols-3 gap-1.5 px-1 pb-1">
                 {company.contacts.slice(0, 3).map((contact, idx) => (
-                  <div key={idx} className="flex flex-row items-center gap-2 p-2.5 rounded-xl border border-gray-200 bg-gray-50 w-full relative pr-6">
-                    <button onClick={() => navigate(`/client-contacts/${company?.clientId || company?._id || id}`)} className="absolute top-2 right-2 p-1 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
+                  <div key={idx} className="flex flex-row items-center gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50 w-full relative pr-6 hover:bg-white hover:border-emerald-200 transition-colors group">
+                    <button onClick={() => navigate(`/client-contacts/${company?.clientId || company?._id || id}`)} className="absolute top-1.5 right-1.5 p-1 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-emerald-600 rounded transition-all">
                       <Pencil size={12} />
                     </button>
                     {/* Avatar */}
-                    <div className="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 text-indigo-600 font-bold text-lg overflow-hidden">
+                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 text-indigo-600 font-bold text-sm overflow-hidden border border-indigo-200">
                       {(contact.photoUrl || contact.photo) ? (
                         <SecureImage
                           src={contact.photoUrl || contact.photo}
@@ -1229,13 +1213,13 @@ const ClientOverview1 = () => {
                     </div>
                     {/* Info */}
                     <div className="min-w-0 flex-1 text-left">
-                      <p className="text-[12px] font-bold text-gray-800 truncate">
-                        {contact.name || [contact.title, contact.firstName, isExhibitor ? contact.lastName : contact.surname].filter(Boolean).join(" ") || "-"} / {contact.designation || "-"}
+                      <p className="text-[11px] font-bold text-[#15173D] truncate">
+                        {contact.name || [contact.title, contact.firstName, isExhibitor ? contact.lastName : contact.surname].filter(Boolean).join(" ") || "-"} / <span className="text-[#5E0006]">{contact.designation || "-"}</span>
                       </p>
-                      <a href={`tel:${contact.mobile}`} className="flex items-center justify-start gap-1 text-[11px] text-blue-600 hover:underline">
+                      <a href={`tel:${contact.mobile}`} className="flex items-center justify-start gap-1 text-[9px] text-[#093C5D] font-bold hover:underline">
                         <Phone size={10} className="flex-shrink-0" /> <span className="truncate">{contact.mobile || "-"}{(isExhibitor ? contact.alternateNo : contact.alternate) ? ` / ${isExhibitor ? contact.alternateNo : contact.alternate}` : ""}</span>
                       </a>
-                      <a href={`mailto:${contact.email}`} className="flex items-center justify-start gap-1 text-[11px] text-blue-600 hover:underline mt-0.5">
+                      <a href={`mailto:${contact.email}`} className="flex items-center justify-start gap-1 text-[9px] text-[#443199] font-bold hover:underline mt-0.5">
                         <Mail size={10} className="flex-shrink-0" />
                         <span className="truncate">{contact.email || "-"}</span>
                       </a>
@@ -1244,7 +1228,7 @@ const ClientOverview1 = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-400 italic">No contact details available.</p>
+              <p className="text-[10px] font-bold text-slate-400 italic px-2">No contact details available.</p>
             )}
           </div>
         </div>

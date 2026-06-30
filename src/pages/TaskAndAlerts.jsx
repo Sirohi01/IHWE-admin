@@ -10,6 +10,8 @@ import { useState, useEffect, useRef } from 'react';
 import api from '../lib/api';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchCompanies } from '../features/company/companySlice';
+import { io } from "socket.io-client";
+import { SERVER_URL } from '../lib/api';
 
 const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
   return Array.isArray(sliceState)
@@ -90,6 +92,43 @@ const TaskAndAlerts = () => {
     
     const DOCS_PER_PAGE = 5;
     
+    const [recentChats, setRecentChats] = useState([]);
+    const [isLoadingChats, setIsLoadingChats] = useState(true);
+    const [chatPage, setChatPage] = useState(1);
+    const CHAT_PER_PAGE = 5;
+    
+    const FALLBACK_NOTIFS = [];
+    
+    const [generalNotifications, setGeneralNotifications] = useState(() => {
+        try {
+            const saved = localStorage.getItem('admin_profile_notifications');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                // Filter out old static mock data (those with clientId: null AND old static titles)
+                const staticTitles = new Set([
+                    'GST certificate uploaded', 'Logo artwork uploaded',
+                    'Electricity request submitted', 'Payment received',
+                    'Stall upgrade request', 'Fascia Name Updated'
+                ]);
+                const filtered = parsed.filter(n => n.clientId !== null || !staticTitles.has(n.title));
+                if (filtered.length !== parsed.length) {
+                    localStorage.setItem('admin_profile_notifications', JSON.stringify(filtered));
+                }
+                return filtered;
+            }
+        } catch {}
+        return FALLBACK_NOTIFS;
+    });
+    const [notifPage, setNotifPage] = useState(1);
+    const NOTIFS_PER_PAGE = 5;
+    
+    // Persist notifications to localStorage whenever they change
+    useEffect(() => {
+        try {
+            localStorage.setItem('admin_profile_notifications', JSON.stringify(generalNotifications));
+        } catch {}
+    }, [generalNotifications]);
+    
     useEffect(() => {
         dispatch(fetchCompanies());
         
@@ -117,16 +156,100 @@ const TaskAndAlerts = () => {
                 console.error("Error fetching accessory orders:", err);
                 setIsLoadingAcc(false);
             });
+
+        const adminInfo2 = JSON.parse(localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo") || "{}");
+        const adminRole2 = adminInfo2.role || "Admin";
+        const adminName2 = adminInfo2.fullName || adminInfo2.username || "Admin";
+
+        // Fetch recent chats
+        setIsLoadingChats(true);
+        api.get(`/api/chat/rooms?adminUsername=${encodeURIComponent(adminName2)}&adminRole=${encodeURIComponent(adminRole2)}`)
+            .then(res => {
+                if (res.data && res.data.success) {
+                    const activeChats = (res.data.data || [])
+                        .filter(r => !r.noMessages && r.unreadAdmin > 0)
+                        .slice(0, 5);
+                    setRecentChats(activeChats);
+                }
+                setIsLoadingChats(false);
+            })
+            .catch(err => {
+                console.error("Error fetching chats:", err);
+                setIsLoadingChats(false);
+            });
+
+        // Setup real-time updates
+        const adminId = adminInfo2._id || adminInfo2.id || "admin";
+
+        const s = io(SERVER_URL, { transports: ["websocket", "polling"] });
+        s.on("connect", () => s.emit("join_admin", { adminId, adminName: adminName2 }));
+        
+        s.on("accessory_order_placed", (data) => {
+            setAccOrders(prev => {
+                // Prepend new order if not already in list
+                if (!prev.find(o => o.orderNo === data.orderNo)) {
+                    return [{
+                        _id: Math.random().toString(), // temporary id until refresh
+                        exhibitorName: data.exhibitorName,
+                        orderNo: data.orderNo,
+                        grandTotal: data.grandTotal,
+                        items: [{ name: "New Accessories Request" }]
+                    }, ...prev];
+                }
+                return prev;
+            });
+        });
+
+        s.on("document_uploaded", (data) => {
+            setPendingDocs(prev => {
+                return [{
+                    _id: Math.random().toString(),
+                    client_id: data.client_id,
+                    companyName: data.companyName,
+                    document_name: data.document_name,
+                    status: "Pending"
+                }, ...prev];
+            });
+        });
+
+        s.on("room_updated", (data) => {
+            if (data.lastSenderType === 'exhibitor' || data.lastSenderType === 'buyer') {
+                setRecentChats(prev => {
+                    const existingIdx = prev.findIndex(r => String(r._id) === String(data.roomId));
+                    const newChat = {
+                        _id: data.roomId,
+                        exhibitorName: data.exhibitorName || data.buyerName || 'Unknown',
+                        lastMessage: data.lastMessage,
+                        lastMessageAt: data.lastMessageAt || new Date().toISOString()
+                    };
+                    let updated = [...prev];
+                    if (existingIdx >= 0) {
+                        updated.splice(existingIdx, 1);
+                    }
+                    updated.unshift(newChat);
+                    return updated.slice(0, 5);
+                });
+            }
+        });
+
+        s.on("profile_updated", (data) => {
+            setGeneralNotifications(prev => {
+                const newNotif = {
+                    id: Math.random(),
+                    title: `Updated ${data.action}`,
+                    companyName: data.companyName,
+                    time: new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    type: "warning",
+                    clientId: data.clientId
+                };
+                return [newNotif, ...prev].slice(0, 15);
+            });
+        });
+
+        return () => { s.disconnect(); };
     }, [dispatch]);
 
-    // Mock Data based on screenshot
-    const notifications = [
-        { title: "GST certificate uploaded by ABC Pharma", time: "10:30 AM", type: "warning" },
-        { title: "Logo artwork uploaded by City Dental", time: "10:10 AM", type: "warning" },
-        { title: "Electricity request submitted by Herbal Care", time: "09:55 AM", type: "warning" },
-        { title: "Payment received from Happy Miles", time: "09:20 AM", type: "warning" },
-        { title: "Stall upgrade request by ABC Pharma", time: "09:10 AM", type: "warning" }
-    ];
+    // Used state `generalNotifications` instead of mock Data
 
     const documents = pendingDocs.length > 0 ? pendingDocs.map(doc => {
         // Fallback: If backend didn't attach companyName, try finding it
@@ -372,20 +495,46 @@ const TaskAndAlerts = () => {
                 {/* 1. Notifications */}
                 <div className="bg-white rounded-2xl p-5 border border-gray-100 flex flex-col justify-between" style={{ boxShadow: "rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em" }}>
                     <div>
-                        <CardHeader icon={Bell} title="Notifications" colorClass="text-orange-500" />
-                        <div className="space-y-4">
-                            {notifications.map((n, i) => (
-                                <div key={i} className="flex justify-between items-start gap-4">
-                                    <div className="flex gap-2 items-start">
-                                        <div className="w-2 h-2 rounded-full bg-orange-400 mt-1.5 shrink-0"></div>
-                                        <p className="text-[11px] font-bold text-gray-700">{n.title}</p>
+                        <CardHeader 
+                            icon={Bell} 
+                            title="Notifications" 
+                            colorClass="text-orange-600" 
+                            currentPage={notifPage}
+                            totalPages={Math.ceil(generalNotifications.length / NOTIFS_PER_PAGE) || 1}
+                            onPrev={() => setNotifPage(p => Math.max(1, p - 1))}
+                            onNext={() => setNotifPage(p => Math.min(Math.ceil(generalNotifications.length / NOTIFS_PER_PAGE), p + 1))}
+                        />
+                        <div className="space-y-3.5 min-h-[160px]">
+                            {generalNotifications.slice((notifPage - 1) * NOTIFS_PER_PAGE, notifPage * NOTIFS_PER_PAGE).map((n, i) => (
+                                <div 
+                                    key={n.id || i} 
+                                    className={`flex justify-between items-center p-1 -mx-1 rounded transition-colors ${n.clientId ? 'cursor-pointer hover:bg-orange-50/50' : 'hover:bg-gray-50/50'}`}
+                                    onClick={() => {
+                                        if (n.clientId) {
+                                            // Remove notification from list
+                                            setGeneralNotifications(prev => prev.filter(x => x.id !== n.id));
+                                            // Adjust page if last item on current page
+                                            const newTotal = generalNotifications.length - 1;
+                                            const newMaxPage = Math.ceil(newTotal / NOTIFS_PER_PAGE) || 1;
+                                            if (notifPage > newMaxPage) setNotifPage(newMaxPage);
+                                            navigate(`/client-overview/${n.clientId}`);
+                                        }
+                                    }}
+                                >
+                                    <div className="flex-[0.85] overflow-hidden pr-2">
+                                        <p className="text-[11px] font-medium text-[#0055DA] hover:underline cursor-pointer truncate">{n.companyName}</p>
                                     </div>
-                                    <span className="text-[10px] font-semibold text-blue-500 shrink-0">{n.time}</span>
+                                    <div className="flex-[1.15] overflow-hidden pr-2">
+                                        <p className="text-[10px] font-semibold text-[#124170] truncate">{n.title}</p>
+                                    </div>
+                                    <div className="shrink-0">
+                                        <p className="text-[9px] font-bold text-orange-500 whitespace-nowrap">{n.time}</p>
+                                    </div>
                                 </div>
                             ))}
                         </div>
                     </div>
-                    <CardFooter label="Total Unread" count="12" colorClass="text-gray-600" badgeColor="bg-orange-500" />
+                    <CardFooter label="Total Unread" count={12} colorClass="text-gray-600" badgeColor="bg-orange-500" />
                 </div>
 
                 {/* 2. Document Verification */}
@@ -619,24 +768,50 @@ const TaskAndAlerts = () => {
                 {/* 9. Communication History */}
                 <div className="bg-white rounded-2xl p-5 border border-gray-100 flex flex-col justify-between" style={{ boxShadow: "rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em" }}>
                     <div>
-                        <CardHeader icon={Mail} title="Communication History" colorClass="text-blue-600" />
+                        <CardHeader 
+                            icon={Mail} 
+                            title="Communication History" 
+                            colorClass="text-blue-600" 
+                            currentPage={chatPage}
+                            totalPages={Math.ceil(recentChats.length / CHAT_PER_PAGE) || 1}
+                            onPrev={() => setChatPage(p => Math.max(1, p - 1))}
+                            onNext={() => setChatPage(p => Math.min(Math.ceil(recentChats.length / CHAT_PER_PAGE), p + 1))}
+                        />
                         <div className="space-y-4">
-                            {communications.map((c, i) => (
-                                <div key={i} className="flex justify-between items-center gap-2">
-                                    <div className="flex-[2] overflow-hidden">
-                                        <p className="text-[11px] font-bold text-gray-700 truncate">{c.type}</p>
+                            {isLoadingChats ? (
+                                Array(5).fill(0).map((_, idx) => (
+                                    <div key={idx} className="flex justify-between items-center gap-2 animate-pulse">
+                                        <div className="flex-[1.5]"><div className="h-3 bg-gray-200 rounded w-20"></div></div>
+                                        <div className="flex-[2]"><div className="h-3 bg-gray-200 rounded w-full"></div></div>
+                                        <div className="flex-[0.5] text-right"><div className="h-3 bg-gray-200 rounded w-10 ml-auto"></div></div>
                                     </div>
-                                    <div className="flex-[1.5] overflow-hidden">
-                                        <p className="text-[10px] font-semibold text-gray-500 truncate">{c.subject}</p>
+                                ))
+                            ) : recentChats.length > 0 ? (
+                                recentChats.slice((chatPage - 1) * CHAT_PER_PAGE, chatPage * CHAT_PER_PAGE).map((c, i) => (
+                                    <div 
+                                        key={i} 
+                                        onClick={() => navigate(`/exhibitor-chat?roomId=${c._id}`)}
+                                        className="flex justify-between items-center hover:bg-blue-50/50 p-1 -mx-1 rounded transition-colors cursor-pointer"
+                                    >
+                                        <div className="flex-1 overflow-hidden pr-2">
+                                            <p className="text-[11px] font-medium text-[#0055DA] hover:underline truncate">
+                                                {c.exhibitorName || c.buyerName || 'Unknown Company'}
+                                            </p>
+                                        </div>
+                                        <div className="flex-1 overflow-hidden">
+                                            <p className="text-[10px] font-bold text-[#4B1426] truncate">{c.lastMessage}</p>
+                                        </div>
+                                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-50 text-green-600 border border-green-100 whitespace-nowrap shrink-0">
+                                            {new Date(c.lastMessageAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
                                     </div>
-                                    <div className="flex-1 text-right">
-                                        <span className="text-[10px] font-semibold text-blue-500">{c.time}</span>
-                                    </div>
-                                </div>
-                            ))}
+                                ))
+                            ) : (
+                                <div className="text-center text-xs text-gray-400 py-4">No recent chats</div>
+                            )}
                         </div>
                     </div>
-                    <CardFooter label="Total Communications" count="36" colorClass="text-gray-600" badgeColor="bg-blue-600" />
+                    <CardFooter label="Total Active Chats" count={recentChats.length} colorClass="text-gray-600" badgeColor="bg-blue-600" />
                 </div>
 
             </div>

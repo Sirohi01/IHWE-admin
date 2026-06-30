@@ -508,7 +508,7 @@ const ConfirmClientList = () => {
               })()}
             </td>
             <td className="px-2 py-2 text-center">
-              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-semibold text-[9px] ${getSourceStyle(source)}`}>
+              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-bold text-[9px] ${getSourceStyle(source)}`} style={{ color: '#443199' }}>
                 @{toTitleCase(source)}
               </span>
             </td>
