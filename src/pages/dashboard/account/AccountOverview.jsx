@@ -195,6 +195,7 @@ const AccountOverview = () => {
                   let statusBg = 'bg-gray-100 text-gray-600';
                   if (doc.status === 'Paid' || doc.status === 'Accepted') statusBg = 'bg-[#e6f7ec] text-[#00a86b]';
                   else if (doc.status === 'Unpaid' || doc.status === 'Pending') statusBg = 'bg-[#ffebee] text-[#ff4d4f]';
+                  else if (doc.status === 'Cancelled') statusBg = 'bg-red-50 text-red-600';
                   else if (doc.status === 'Sent' || doc.status === 'Converted') statusBg = 'bg-[#e6f0fa] text-[#194090]';
 
                   const viewPath = getDocViewPath(doc);
