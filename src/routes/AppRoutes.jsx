@@ -129,6 +129,7 @@ const PaymentDelayWarnings = lazy(() => import("../pages/PaymentDelayWarnings"))
 const TravelAccommodationManage = lazy(() => import("../pages/TravelAccommodationManage"));
 const AdminBSM = lazy(() => import("../pages/AdminBSM"));
 const ActivityLogs = lazy(() => import("../pages/ActivityLogs"));
+const ExhibitorActivityLogs = lazy(() => import("../pages/ExhibitorActivityLogs"));
 const RoleManagement = lazy(() => import("../pages/RoleManagement"));
 const DepartmentManagement = lazy(() => import("../pages/DepartmentManagement"));
 const RolePermissions = lazy(() => import("../pages/RolePermissions"));
@@ -732,6 +733,7 @@ export default function AppRoutes() {
             <Route path="/notification" element={<Notification />} />
             <Route path="/task-alerts" element={<TaskAndAlerts />} />
             <Route path="/activity-log" element={<ActivityLog />} />
+            <Route path="/exhibitor-activity-logs" element={<ExhibitorActivityLogs />} />
             <Route path="/floating-video-management" element={<FloatingVideoManagement />} />
             <Route path="/referral-members" element={<ReferralMembers />} />
             <Route path="/expo-support-enquiries" element={<ExpoSupportEnquiries />} />

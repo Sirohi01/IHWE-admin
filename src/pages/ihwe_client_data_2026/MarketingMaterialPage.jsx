@@ -395,7 +395,7 @@ const MarketingMaterialPage = () => {
               </div>
             </div>
 
-            <div className={`overflow-y-auto thin-scrollbar pr-1 h-[250px] xl:h-[280px] custom-library-height 2xl:h-[310px] ${viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5" : "flex flex-col gap-1.5"}`}>
+            <div className={`overflow-y-auto thin-scrollbar pr-1 h-[280px] xl:h-[320px] custom-library-height 2xl:h-[360px] ${viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5 content-start auto-rows-min" : "flex flex-col gap-1.5"}`}>
               {filteredCategories.map((cat, idx) => (
                 <div
                   key={idx}
@@ -403,12 +403,14 @@ const MarketingMaterialPage = () => {
                   onClick={() => handleCategoryClick(cat.name)}
                 >
                   {viewMode === "grid" ? (
-                    <div className="relative z-10 w-full flex flex-col items-center">
-                      <div className={`w-10 h-10 ${cat.bg} rounded-full flex items-center justify-center text-xl mb-3 shrink-0`}>
-                        <cat.icon className={`${cat.color}`} strokeWidth={2.5} />
+                    <div className="relative z-10 w-full flex-1 flex flex-col justify-between items-center h-full">
+                      <div className="flex flex-col items-center">
+                        <div className={`w-10 h-10 ${cat.bg} rounded-full flex items-center justify-center text-xl mb-3 shrink-0`}>
+                          <cat.icon className={`${cat.color}`} strokeWidth={2.5} />
+                        </div>
+                        <h3 className="font-semibold text-[12px] text-slate-900 leading-none mb-1.5">{cat.name}</h3>
+                        <p className="text-[9px] font-semibold text-slate-700 leading-tight mb-3">{cat.sub}</p>
                       </div>
-                      <h3 className="font-semibold text-[12px] text-slate-900 leading-none mb-1.5">{cat.name}</h3>
-                      <p className="text-[9px] font-semibold text-slate-700 leading-tight mb-3">{cat.sub}</p>
 
                       <div className="flex items-center justify-center gap-4 text-[10px] font-bold w-full border-t border-slate-100 pt-2 mt-auto">
                         <button className="text-blue-600 flex items-center gap-1 hover:text-blue-800 transition-colors" onClick={(e) => { e.stopPropagation(); handleCategoryClick(cat.name, true); }}>

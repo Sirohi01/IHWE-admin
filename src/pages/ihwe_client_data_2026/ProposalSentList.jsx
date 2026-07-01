@@ -292,7 +292,7 @@ const ProposalSentList = () => {
       <th className="px-2 py-2 font-medium">Company Name</th>
       <th className="px-2 py-2 font-medium">Contact Details</th>
       <th className="px-2 py-2 font-medium text-center">Sent Via</th>
-      <th className="px-2 py-2 font-medium">Material Sent</th>
+      <th className="px-2 py-2 font-medium">Documents</th>
       <th className="px-2 py-2 font-medium">Updated Details</th>
       <th className="px-2 py-2 w-10 text-center">Action</th>
     </>
