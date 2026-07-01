@@ -97,6 +97,15 @@ const CreateInvoice = () => {
     const [selectedPi, setSelectedPi] = useState('');
     const [isEditMode, setIsEditMode] = useState(false);
 
+    const addEstimateOption = (estimate) => {
+        if (!estimate?.est_no) return;
+        setEstimates((prev) => (
+            prev.some((item) => item.est_no === estimate.est_no)
+                ? prev
+                : [estimate, ...prev]
+        ));
+    };
+
     const fetchEstimates = async () => {
         try {
             const [estRes, invRes] = await Promise.all([
@@ -171,6 +180,7 @@ const CreateInvoice = () => {
                     if (client) {
                         const latestEstimate = await fetchLatestEstimateForClient(id, client);
                         if (latestEstimate) {
+                            addEstimateOption(latestEstimate);
                             setSelectedPi(latestEstimate.est_no || '');
                             setForm(f => estimateToInvoiceForm(latestEstimate, client, f));
                             if (latestEstimate.items && latestEstimate.items.length > 0) {
@@ -227,6 +237,8 @@ const CreateInvoice = () => {
 
     const [items, setItems] = useState([newItem()]);
     const [showPreview, setShowPreview] = useState(false);
+    const returnListId = form.companyId || (!isEditMode ? id : '');
+    const listRoute = returnListId ? `/invoice-list/${returnListId}` : '/invoice-list';
 
     // ── handlers ────────────────────────────────────────────────────────────────
     const handlePiSelect = (estNo) => {
@@ -354,13 +366,13 @@ const CreateInvoice = () => {
                 res = await api.put(`/api/invoices/${id}`, payload);
                 if (res.status === 200 || res.status === 201) {
                     alert('Invoice updated successfully!');
-                    navigate('/invoice-list');
+                    navigate(payload.companyId ? `/invoice-list/${payload.companyId}` : '/invoice-list');
                 }
             } else {
                 res = await api.post('/api/invoices', payload);
                 if (res.status === 201 || res.status === 200) {
                     alert('Invoice generated successfully!');
-                    navigate(`/dashboard/account/${payload.companyId}`);
+                    navigate(payload.companyId ? `/invoice-list/${payload.companyId}` : '/invoice-list');
                 }
             }
         } catch (err) {
@@ -448,8 +460,8 @@ const CreateInvoice = () => {
                         <FileText className="w-5 h-5" />
                     </div>
                     <div>
-                        <h1 className="text-lg font-bold text-gray-900 leading-tight">{id ? "Edit Invoice" : "Create Invoice"}</h1>
-                        <p className="text-xs text-gray-500 mt-0.5">{id ? "Update details for this invoice" : "Generate a new invoice for your client"}</p>
+                        <h1 className="text-lg font-bold text-gray-900 leading-tight">Create Invoice</h1>
+                        <p className="text-xs text-gray-500 mt-0.5">Generate a new invoice for your client</p>
                     </div>
                 </div>
                 {/* <button
@@ -461,7 +473,7 @@ const CreateInvoice = () => {
                 </button> */}
                 <button
                     type="button"
-                    onClick={() => navigate('/invoice-list')}
+                    onClick={() => navigate(listRoute)}
                     className="flex items-center gap-1.5 border border-gray-200 rounded-md px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition shadow-sm"
                 >
                     <ChevronLeft className="w-4 h-4" />
@@ -487,7 +499,7 @@ const CreateInvoice = () => {
                                         <User className="w-4 h-4" />
                                     </button>
                                 </div> */}
-                                {id ? (
+                                {isEditMode ? (
                                     <Input value={selectedPi || 'No PI / Estimate'} disabled />
                                 ) : (
                                     <SearchableDropdown

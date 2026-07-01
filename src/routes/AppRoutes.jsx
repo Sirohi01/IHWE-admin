@@ -448,6 +448,10 @@ export default function AppRoutes() {
               element={<InvoiceList />}
             />
             <Route
+              path="/invoice-list/:id"
+              element={<InvoiceList />}
+            />
+            <Route
               path="/payments/invoiceDetails/:id"
               element={<InvoiceNumberDetails />}
             />
