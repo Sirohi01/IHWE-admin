@@ -78,7 +78,7 @@ const CompanyLogo = ({ logo, name }) => {
 const BreakdownList = ({ items, emptyText, isRemaining = false }) => {
   if (!items || items.length === 0) return <div className="text-[10px] text-gray-400 p-2 text-center">{emptyText || "No data available"}</div>;
   return (
-    <div className="max-h-40 overflow-y-auto w-full p-2 space-y-1.5 scrollbar-thin scrollbar-thumb-gray-200">
+    <div className="max-h-40 overflow-y-auto w-full p-2 space-y-1.5 thin-scrollbar">
       {items.map((item, idx) => (
         <div key={idx} className="flex justify-between items-center text-[10px] border-b border-gray-50 pb-1 last:border-0 last:pb-0">
           <div className="flex flex-col gap-0.5">
