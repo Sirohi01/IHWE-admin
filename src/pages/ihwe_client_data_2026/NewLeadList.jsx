@@ -364,20 +364,22 @@ const NewLeadList = () => {
                 </div>
               </td>
               <td className="px-2 py-1.5">
-                <div className="flex items-center gap-1.5 whitespace-nowrap">
-                  <div className="shrink-0 p-1 bg-slate-100 rounded-full">
+                <div className="flex items-start gap-1.5">
+                  <div className="shrink-0 p-1 bg-slate-100 rounded-full mt-0.5">
                     {getConvIcon("WhatsApp")}
                   </div>
-                  <span className="text-[10px] font-medium whitespace-nowrap">
-                    {row.updatedAt ? (
-                      <>
-                        <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt))}</span>
-                        <span className="text-slate-400">, </span>
-                        <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt))}</span>
-                      </>
-                    ) : "-"}
-                  </span>
-                  <span className="text-[9px] font-bold" style={{ color: '#0D530E' }}>(WhatsApp)</span>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-medium whitespace-nowrap">
+                      {row.updatedAt ? (
+                        <>
+                          <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt))}</span>
+                          <span className="text-slate-400">, </span>
+                          <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt))}</span>
+                        </>
+                      ) : "-"}
+                    </span>
+                    <span className="text-[9px] font-bold mt-0.5" style={{ color: '#0D530E' }}>(WhatsApp)</span>
+                  </div>
                 </div>
               </td>
               <td className="px-2 py-1.5 text-right">

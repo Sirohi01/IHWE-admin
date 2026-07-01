@@ -307,9 +307,9 @@ const HotClientList = () => {
       <th className="px-2 py-2 font-medium">Company Name</th>
       <th className="px-2 py-2 font-medium">Source</th>
       <th className="px-2 py-2 font-medium">Industry</th>
-      <th className="px-2 py-2 font-medium">Lead Score</th>
       <th className="px-2 py-2 font-medium text-center">Status</th>
-      <th className="px-2 py-2 font-medium">Last Conversation</th>
+      <th className="px-2 py-2 font-medium">Lead Score</th>
+      <th className="px-2 py-2 font-medium">Last Conversation / Handled By</th>
       <th className="px-2 py-2 w-28 text-center">Action</th>
     </>
   );
@@ -351,6 +351,12 @@ const HotClientList = () => {
               </span>
             </td>
             <td className="px-2 py-2 text-[9px] font-bold" style={{ color: '#5E0006' }}>{toTitleCase(row.businessNature) || "-"}</td>
+            <td className="px-2 py-2 text-center">
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${statusBg} ${statusText} border-transparent`}>
+                <span className={`w-1 h-1 rounded-full ${statusDot}`}></span>
+                {toTitleCase(row.companyStatus || "Est./PI Sent")}
+              </span>
+            </td>
             <td className="px-2 py-1.5">
               <div className="flex items-center gap-0.5 text-rose-500 text-[9px]">
                 {Array.from({ length: 5 }).map((_, starIdx) => {
@@ -360,27 +366,23 @@ const HotClientList = () => {
                 <span className="ml-1 font-semibold text-slate-700">{row.leadScore || 85}/100</span>
               </div>
             </td>
-            <td className="px-2 py-2 text-center">
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${statusBg} ${statusText} border-transparent`}>
-                <span className={`w-1 h-1 rounded-full ${statusDot}`}></span>
-                {toTitleCase(row.companyStatus || "Est./PI Sent")}
-              </span>
-            </td>
             <td className="px-2 py-1.5">
-              <div className="flex items-center gap-1.5 whitespace-nowrap">
-                <div className="shrink-0 p-1 bg-slate-100 rounded-full">
+              <div className="flex items-start gap-1.5">
+                <div className="shrink-0 p-1 bg-slate-100 rounded-full mt-0.5">
                   <MessageCircle size={12} className="text-emerald-500" />
                 </div>
-                <span className="text-[10px] font-medium whitespace-nowrap">
-                  {row.updatedAt ? (
-                    <>
-                      <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt))}</span>
-                      <span className="text-slate-400">, </span>
-                      <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt))}</span>
-                    </>
-                  ) : "-"}
-                </span>
-                <span className="text-[9px] font-bold" style={{ color: '#0D530E' }}>(WhatsApp)</span>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-medium whitespace-nowrap">
+                    {row.updatedAt ? (
+                      <>
+                        <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt))}</span>
+                        <span className="text-slate-400">, </span>
+                        <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt))}</span>
+                      </>
+                    ) : "-"}
+                  </span>
+                  <span className="text-[9px] font-bold mt-0.5" style={{ color: '#0D530E' }}>(WhatsApp)</span>
+                </div>
               </div>
             </td>
             <td className="px-2 py-2 text-center">
