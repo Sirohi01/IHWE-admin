@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import api from '../lib/api';
 import {
     ChevronLeft, Settings, User, Calendar, Plus, Trash2, FileText,
@@ -90,12 +90,19 @@ const QuickAction = ({ icon: Icon, label, colorClass = "text-[#3b82f6]", onClick
 // ══════════════════════════════════════════════════════════════════════════════
 const CreateInvoice = () => {
     const navigate = useNavigate();
-    const { id } = useParams();
+    const location = useLocation();
+    const { id, piNo } = useParams();
+    const navigationState = location.state || {};
+    const selectedPiFromUrl = navigationState.selectedPiNo || (piNo ? decodeURIComponent(piNo) : '');
+    const sourceEstimateId = navigationState.sourceEstimateId || '';
     const fileInputRef = useRef(null);
     const [attachedFile, setAttachedFile] = useState(null);
     const [estimates, setEstimates] = useState([]);
     const [selectedPi, setSelectedPi] = useState('');
     const [isEditMode, setIsEditMode] = useState(false);
+    const [editingInvoiceId, setEditingInvoiceId] = useState('');
+    const [isProformaEditMode, setIsProformaEditMode] = useState(false);
+    const [editingProformaId, setEditingProformaId] = useState('');
 
     const addEstimateOption = (estimate) => {
         if (!estimate?.est_no) return;
@@ -118,7 +125,7 @@ const CreateInvoice = () => {
 
             // Filter out estimates that already have an invoice generated
             const availableEstimates = fetchedEstimates.filter(est => {
-                return !fetchedInvoices.some(inv => inv.estimate_no === est.est_no);
+                return !fetchedInvoices.some(inv => inv.estimate_no === est.est_no && String(inv.status || '').toLowerCase() !== 'cancelled');
             });
 
             setEstimates(availableEstimates);
@@ -133,62 +140,128 @@ const CreateInvoice = () => {
     useEffect(() => {
         if (id) {
             const fetchInvoice = async () => {
+                const applyInvoiceToForm = (inv) => {
+                    setIsEditMode(true);
+                    setIsProformaEditMode(false);
+                    setEditingProformaId('');
+                    setEditingInvoiceId(inv._id || '');
+                    setSelectedPi(inv.estimate_no || selectedPiFromUrl || '');
+                    setForm(f => ({
+                        ...f,
+                        companyId: inv.companyId || f.companyId,
+                        clientName: inv.consignee_name || f.clientName,
+                        gstin: inv.gst_no || f.gstin,
+                        invoiceType: inv.type_of_invoice || 'Standard',
+                        invoiceNo: inv.invoice_no || 'Auto-generated on save',
+                        invoiceDate: inv.invoice_date ? new Date(inv.invoice_date).toISOString().split('T')[0] : f.invoiceDate,
+                        dueDate: inv.due_date ? new Date(inv.due_date).toISOString().split('T')[0] : f.dueDate,
+                        poNo: inv.po_no || f.poNo,
+                        currency: inv.currency || f.currency,
+                        billingAddress: inv.billing_address || f.billingAddress,
+                        shippingAddress: inv.consignee_addr || f.shippingAddress,
+                        company_name: inv.company_name || inv.consignee_name || f.company_name,
+                        company_addr: inv.company_addr || inv.billing_address || f.company_addr,
+                        event_name: inv.event_name || inv.consignee_name || f.event_name,
+                        consignee_name: inv.consignee_name || f.consignee_name,
+                        consignee_addr: inv.consignee_addr || f.consignee_addr,
+                        billingState: inv.billing_state || f.billingState,
+                        billingPin: inv.billing_pincode || f.billingPin,
+                        country: inv.country || f.country,
+                        state: inv.state || f.state,
+                        city: inv.city || f.city,
+                        placeOfSupply: inv.place_of_supply ? (inv.place_of_supply.toLowerCase().includes('delhi') ? 'Delhi (07)' : inv.place_of_supply.toLowerCase().includes('maharashtra') ? 'Maharashtra (27)' : inv.place_of_supply.toLowerCase().includes('uttar') ? 'Uttar Pradesh (09)' : inv.place_of_supply.toLowerCase().includes('haryana') ? 'Haryana (06)' : inv.place_of_supply) : f.placeOfSupply,
+                        remarks: inv.remarks || f.remarks,
+                        terms: inv.terms || f.terms
+                    }));
+                    if (inv.items && inv.items.length > 0) {
+                        setItems(estimateItemsToInvoiceItems(inv.items || []));
+                    }
+                };
+
+                if (selectedPiFromUrl) {
+                    setSelectedPi(selectedPiFromUrl);
+                    try {
+                        const invRes = await api.get('/api/invoices');
+                        const fetchedInvoices = Array.isArray(invRes.data) ? invRes.data : (invRes.data?.data || []);
+                        const existingInvoice = fetchedInvoices.find((inv) => inv.estimate_no === selectedPiFromUrl && String(inv.status || '').toLowerCase() !== 'cancelled');
+                        if (existingInvoice?._id) {
+                            applyInvoiceToForm(existingInvoice);
+                            return;
+                        }
+                    } catch (err) {
+                        console.error("Failed to check existing invoice for PI", err);
+                    }
+
+                    setIsEditMode(false);
+                    setEditingInvoiceId('');
+                    setIsProformaEditMode(false);
+                    setEditingProformaId('');
+
+                    if (sourceEstimateId) {
+                        try {
+                            const estRes = await api.get(`/api/estimates/${sourceEstimateId}`);
+                            const estimate = estRes.data?.data || estRes.data;
+                            if (estimate?._id) {
+                                setSelectedPi(selectedPiFromUrl);
+                                addEstimateOption({ ...estimate, est_no: selectedPiFromUrl });
+                                setForm(f => ({
+                                    ...estimateToInvoiceForm(estimate, estimate.exhibitor || {}, f),
+                                    invoiceNo: 'Auto-generated on save',
+                                    invoiceDate: f.invoiceDate,
+                                    gstin: estimate.company_gst_no || estimate.gst_no || f.gstin,
+                                    invoiceType: estimate.est_type || f.invoiceType,
+                                }));
+                                if (estimate.items && estimate.items.length > 0) {
+                                    setItems(estimateItemsToInvoiceItems(estimate.items || []));
+                                }
+                                return;
+                            }
+                        } catch (estimateErr) {
+                            console.error("Failed to load source proforma for invoice", estimateErr);
+                        }
+                    }
+                }
+
                 try {
                     const res = await api.get(`/api/invoices/${id}`);
                     const inv = res.data?.data || res.data;
                     if (inv && inv._id) {
-                        setIsEditMode(true);
-                        setSelectedPi(inv.estimate_no || '');
-                        setForm(f => ({
-                            ...f,
-                            companyId: inv.companyId || f.companyId,
-                            clientName: inv.consignee_name || f.clientName,
-                            gstin: inv.gst_no || f.gstin,
-                            invoiceType: inv.type_of_invoice || 'Standard',
-                            invoiceNo: inv.invoice_no || 'Auto-generated on save',
-                            invoiceDate: inv.invoice_date ? new Date(inv.invoice_date).toISOString().split('T')[0] : f.invoiceDate,
-                            dueDate: inv.due_date ? new Date(inv.due_date).toISOString().split('T')[0] : f.dueDate,
-                            poNo: inv.po_no || f.poNo,
-                            currency: inv.currency || f.currency,
-                            billingAddress: inv.billing_address || f.billingAddress,
-                            shippingAddress: inv.consignee_addr || f.shippingAddress,
-                            company_name: inv.company_name || inv.consignee_name || f.company_name,
-                            company_addr: inv.company_addr || inv.billing_address || f.company_addr,
-                            event_name: inv.event_name || inv.consignee_name || f.event_name,
-                            consignee_name: inv.consignee_name || f.consignee_name,
-                            consignee_addr: inv.consignee_addr || f.consignee_addr,
-                            billingState: inv.billing_state || f.billingState,
-                            billingPin: inv.billing_pincode || f.billingPin,
-                            country: inv.country || f.country,
-                            state: inv.state || f.state,
-                            city: inv.city || f.city,
-                            placeOfSupply: inv.place_of_supply ? (inv.place_of_supply.toLowerCase().includes('delhi') ? 'Delhi (07)' : inv.place_of_supply.toLowerCase().includes('maharashtra') ? 'Maharashtra (27)' : inv.place_of_supply.toLowerCase().includes('uttar') ? 'Uttar Pradesh (09)' : inv.place_of_supply.toLowerCase().includes('haryana') ? 'Haryana (06)' : inv.place_of_supply) : f.placeOfSupply,
-                            remarks: inv.remarks || f.remarks,
-                            terms: inv.terms || f.terms
-                        }));
-                        if (inv.items && inv.items.length > 0) {
-                            setItems(estimateItemsToInvoiceItems(inv.items || []));
-                        }
+                        applyInvoiceToForm(inv);
                         return;
                     }
                 } catch (err) {
                 }
 
                 setIsEditMode(false);
+                setEditingInvoiceId('');
+                try {
+                    const estRes = await api.get(`/api/estimates/${id}`);
+                    const estimate = estRes.data?.data || estRes.data;
+                    if (estimate?._id) {
+                        setIsProformaEditMode(true);
+                        setEditingProformaId(estimate._id);
+                        setSelectedPi(estimate.est_no || '');
+                        addEstimateOption(estimate);
+                        setForm(f => ({
+                            ...estimateToInvoiceForm(estimate, estimate.exhibitor || {}, f),
+                            invoiceNo: estimate.est_no || f.invoiceNo,
+                            invoiceDate: estimate.supply_date ? new Date(estimate.supply_date).toISOString().split('T')[0] : f.invoiceDate,
+                            gstin: estimate.company_gst_no || estimate.gst_no || f.gstin,
+                            invoiceType: estimate.est_type || f.invoiceType,
+                        }));
+                        if (estimate.items && estimate.items.length > 0) {
+                            setItems(estimateItemsToInvoiceItems(estimate.items || []));
+                        }
+                        return;
+                    }
+                } catch (estimateErr) {
+                }
+
+                setIsProformaEditMode(false);
+                setEditingProformaId('');
                 try {
                     const client = await loadClientLikeProforma(id);
                     if (client) {
-                        const latestEstimate = await fetchLatestEstimateForClient(id, client);
-                        if (latestEstimate) {
-                            addEstimateOption(latestEstimate);
-                            setSelectedPi(latestEstimate.est_no || '');
-                            setForm(f => estimateToInvoiceForm(latestEstimate, client, f));
-                            if (latestEstimate.items && latestEstimate.items.length > 0) {
-                                setItems(estimateItemsToInvoiceItems(latestEstimate.items));
-                            }
-                            return;
-                        }
-
                         setSelectedPi('');
                         setForm(f => clientToInvoiceForm(client, id, f));
                     }
@@ -198,7 +271,7 @@ const CreateInvoice = () => {
             };
             fetchInvoice();
         }
-    }, [id]);
+    }, [id, selectedPiFromUrl, sourceEstimateId]);
 
     const handleFileChange = (e) => {
         if (e.target.files && e.target.files[0]) {
@@ -237,8 +310,14 @@ const CreateInvoice = () => {
 
     const [items, setItems] = useState([newItem()]);
     const [showPreview, setShowPreview] = useState(false);
-    const returnListId = form.companyId || (!isEditMode ? id : '');
-    const listRoute = returnListId ? `/invoice-list/${returnListId}` : '/invoice-list';
+    const returnListId = form.companyId || (!isEditMode && !isProformaEditMode ? id : '');
+    const listRoute = isProformaEditMode
+        ? -1
+        : (returnListId ? `/invoice-list/${returnListId}` : '/invoice-list');
+    const postSaveRoute = navigationState.returnTo || listRoute;
+    const dropdownEstimates = selectedPiFromUrl && !estimates.some((estimate) => estimate.est_no === selectedPiFromUrl)
+        ? [{ est_no: selectedPiFromUrl }, ...estimates]
+        : estimates;
 
     // ── handlers ────────────────────────────────────────────────────────────────
     const handlePiSelect = (estNo) => {
@@ -250,10 +329,10 @@ const CreateInvoice = () => {
             setForm(f => ({
                 ...f,
                 companyId: est.companyId || f.companyId,
-                clientName: est.consignee_name || f.clientName,
-                gstin: est.gst_no || f.gstin,
-                billingAddress: est.consignee_addr || f.billingAddress,
-                shippingAddress: est.consignee_addr || f.shippingAddress,
+                clientName: est.company_name || est.consignee_name || f.clientName,
+                gstin: est.company_gst_no || est.gst_no || f.gstin,
+                billingAddress: est.company_addr || est.consignee_addr || f.billingAddress,
+                shippingAddress: est.consignee_addr || est.company_addr || f.shippingAddress,
                 country: est.country || f.country,
                 state: est.state || f.state,
                 billingState: est.state || f.billingState,
@@ -265,7 +344,7 @@ const CreateInvoice = () => {
                 company_name: est.company_name || f.company_name,
                 company_addr: est.company_addr || f.company_addr,
                 event_name: est.event_name || f.event_name,
-                consignee_name: est.consignee_name || f.consignee_name,
+                consignee_name: est.event_name || est.consignee_name || f.consignee_name,
                 consignee_addr: est.consignee_addr || f.consignee_addr,
             }));
 
@@ -318,8 +397,76 @@ const CreateInvoice = () => {
 
         let finalAmount = items.reduce((acc, item) => acc + (Number(item.total) || 0), 0);
 
+        if (isProformaEditMode) {
+            const isIntrastate = form.invoiceType === 'Intrastate';
+            const transformedItems = items.map((item) => {
+                const taxableValue = Number(item.taxableValue) || 0;
+                const totalGstRate = parseFloat(item.gstPct) || 0;
+                const gstAmount = taxableValue * (totalGstRate / 100);
+
+                return {
+                    description: item.description,
+                    hsn: item.hsn,
+                    qty: Number(item.qty),
+                    size: item.size,
+                    area: item.area,
+                    unit: item.unit,
+                    rate: Number(item.rate),
+                    amount: Number(item.amount).toFixed(2),
+                    disc: String(Number(item.discountPct) || 0),
+                    tax: taxableValue.toFixed(2),
+                    gstRate: String(totalGstRate),
+                    gstPct: item.gstPct,
+                    gstAmount: gstAmount.toFixed(2),
+                    finalAmount: Number(item.total || 0).toFixed(2),
+                    total: Number(item.total || 0),
+                    cgst: isIntrastate ? (gstAmount / 2).toFixed(2) : gstAmount.toFixed(2),
+                    cgst_per: isIntrastate ? (totalGstRate / 2).toFixed(0) : '0',
+                    igst_per: isIntrastate ? '0' : totalGstRate.toFixed(0),
+                    remarks: item.remarks || '',
+                };
+            });
+
+            const proformaPayload = {
+                companyId: form.companyId || id,
+                est_no: selectedPi,
+                est_type: form.invoiceType,
+                gst_no: form.gstin,
+                company_gst_no: form.gstin,
+                supply_date: form.invoiceDate,
+                company_name: form.company_name || form.clientName,
+                company_addr: form.company_addr || form.billingAddress,
+                event_name: form.event_name || form.consignee_name,
+                event_place_of_supply: form.consignee_addr || form.shippingAddress,
+                consignee_name: form.consignee_name || form.event_name || form.clientName,
+                consignee_addr: form.sameAsBilling ? form.company_addr : (form.consignee_addr || form.shippingAddress),
+                country: form.country,
+                state: form.state,
+                city: form.city,
+                pincode: form.billingPin,
+                remarks: form.remarks,
+                terms: form.terms,
+                finalAmount,
+                items: transformedItems,
+                updated_by: getCurrentUserName(),
+            };
+
+            try {
+                const res = await api.put(`/api/estimates/${editingProformaId || id}`, proformaPayload);
+                if (res.status === 200 || res.status === 201) {
+                    alert('Proforma invoice updated successfully!');
+                    navigate(-1);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Failed to update proforma invoice: ' + (err.response?.data?.message || err.message));
+            }
+            return;
+        }
+
         const payload = {
             companyId: form.companyId || id,
+            source_estimate_id: sourceEstimateId || '',
             estimate_no: selectedPi || '',
             type_of_invoice: form.invoiceType,
             invoice_date: form.invoiceDate,
@@ -327,10 +474,15 @@ const CreateInvoice = () => {
             po_no: form.poNo,
             currency: form.currency,
             gst_no: form.gstin,
+            company_name: form.company_name || form.clientName,
+            company_addr: form.company_addr || form.billingAddress,
+            company_gst_no: form.gstin,
+            event_name: form.event_name || form.consignee_name,
+            event_place_of_supply: form.consignee_addr || form.shippingAddress,
             supply_date: form.invoiceDate,
-            consignee_name: form.clientName,
-            consignee_addr: form.shippingAddress,
-            billing_address: form.billingAddress,
+            consignee_name: form.consignee_name || form.event_name || form.clientName,
+            consignee_addr: form.sameAsBilling ? form.company_addr : (form.consignee_addr || form.shippingAddress),
+            billing_address: form.company_addr || form.billingAddress,
             billing_state: form.billingState,
             billing_pincode: form.billingPin,
             country: form.country,
@@ -363,20 +515,38 @@ const CreateInvoice = () => {
         try {
             let res;
             if (isEditMode) {
-                res = await api.put(`/api/invoices/${id}`, payload);
+                res = await api.put(`/api/invoices/${editingInvoiceId || id}`, payload);
                 if (res.status === 200 || res.status === 201) {
                     alert('Invoice updated successfully!');
-                    navigate(payload.companyId ? `/invoice-list/${payload.companyId}` : '/invoice-list');
+                    navigate(postSaveRoute);
                 }
             } else {
                 res = await api.post('/api/invoices', payload);
                 if (res.status === 201 || res.status === 200) {
                     alert('Invoice generated successfully!');
-                    navigate(payload.companyId ? `/invoice-list/${payload.companyId}` : '/invoice-list');
+                    navigate(postSaveRoute);
                 }
             }
         } catch (err) {
             console.error(err);
+            const existingInvoice = err.response?.data?.data;
+            if (isEditMode && err.response?.status === 409 && existingInvoice?._id) {
+                try {
+                    const retryRes = await api.put(`/api/invoices/${existingInvoice._id}`, payload);
+                    if (retryRes.status === 200 || retryRes.status === 201) {
+                        alert('Invoice updated successfully!');
+                        navigate(postSaveRoute);
+                        return;
+                    }
+                } catch (retryErr) {
+                    console.error(retryErr);
+                }
+            }
+            if (!isEditMode && err.response?.status === 409 && existingInvoice?._id) {
+                alert('Invoice already exists against this PI. Opening it for update.');
+                navigate(`/page-create-invoice/${existingInvoice._id}`);
+                return;
+            }
             alert(`Failed to ${isEditMode ? 'update' : 'generate'} invoice: ` + (err.response?.data?.message || err.message));
         }
     };
@@ -460,8 +630,8 @@ const CreateInvoice = () => {
                         <FileText className="w-5 h-5" />
                     </div>
                     <div>
-                        <h1 className="text-lg font-bold text-gray-900 leading-tight">Create Invoice</h1>
-                        <p className="text-xs text-gray-500 mt-0.5">Generate a new invoice for your client</p>
+                        <h1 className="text-lg font-bold text-gray-900 leading-tight">{isProformaEditMode ? 'Edit Proforma Invoice' : 'Create Invoice'}</h1>
+                        <p className="text-xs text-gray-500 mt-0.5">{isProformaEditMode ? 'Update proforma invoice details' : 'Generate a new invoice for your client'}</p>
                     </div>
                 </div>
                 {/* <button
@@ -499,7 +669,7 @@ const CreateInvoice = () => {
                                         <User className="w-4 h-4" />
                                     </button>
                                 </div> */}
-                                {isEditMode ? (
+                                {(isEditMode || isProformaEditMode) ? (
                                     <Input value={selectedPi || 'No PI / Estimate'} disabled />
                                 ) : (
                                     <SearchableDropdown
@@ -507,7 +677,7 @@ const CreateInvoice = () => {
                                         onChange={(e) => handlePiSelect(e.target.value)}
                                         options={[
                                             { label: 'Select Existing PI / Estimate', value: '' },
-                                            ...estimates.map(e => ({ label: e.est_no, value: e.est_no }))
+                                            ...dropdownEstimates.map(e => ({ label: e.est_no, value: e.est_no }))
                                         ]}
                                     />
                                 )}
@@ -793,10 +963,10 @@ const CreateInvoice = () => {
                                 <FileText className="w-4 h-4" /> Save as Draft
                             </button>
                             <button type="button" onClick={() => setShowPreview(true)} className="flex items-center gap-2 border border-green-200 bg-green-50 text-green-700 rounded-lg px-5 py-2.5 text-sm font-bold hover:bg-green-100 transition shadow-sm">
-                                <Eye className="w-4 h-4" /> Preview Invoice
+                                <Eye className="w-4 h-4" /> {isProformaEditMode ? 'Preview Proforma' : 'Preview Invoice'}
                             </button>
                             <button type="submit" className="flex items-center gap-2 bg-[#00A859] hover:bg-[#00904C] text-white rounded-lg px-6 py-2.5 text-sm font-medium transition shadow-sm">
-                                <FileText className="w-4 h-4" /> {id ? "Update Invoice" : "Generate Invoice"}
+                                <FileText className="w-4 h-4" /> {isProformaEditMode ? "Update Proforma Invoice" : (isEditMode ? "Update Invoice" : "Generate Invoice")}
                             </button>
                         </div>
                     </div>

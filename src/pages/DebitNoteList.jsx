@@ -35,7 +35,7 @@ const DebitNoteList = () => {
             const linkedIds = await resolveLinkedIds(id);
             setNotes(allNotes.filter((note) => linkedIds.includes(String(note.companyId))));
         } catch (err) {
-            console.error('Failed to load debit notes', err);
+            console.error('Failed to load credit notes', err);
             setNotes([]);
         } finally {
             setLoading(false);
@@ -63,11 +63,11 @@ const DebitNoteList = () => {
         <div className="min-h-screen bg-gray-50 pl-4 pr-4">
             <div className="bg-white border border-gray-200 rounded-lg p-4 mb-1 shadow-sm flex items-center justify-between">
                 <div>
-                    <h1 className="text-xl font-bold text-gray-900">DEBIT NOTE</h1>
+                    <h1 className="text-xl font-bold text-gray-900">CREDIT NOTE</h1>
                     <div className="flex items-center gap-1 mt-1 text-sm text-gray-500">
                         <span className="hover:text-blue-600 cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span>
                         <ChevronRight className="w-4 h-4" />
-                        <span className="text-gray-700 font-medium">All Debit Notes List</span>
+                        <span className="text-gray-700 font-medium">All Credit Notes List</span>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -77,7 +77,7 @@ const DebitNoteList = () => {
                             className="flex items-center gap-2 bg-purple-700 hover:bg-purple-800 text-white px-4 py-2 rounded-md font-semibold transition"
                         >
                             <Plus className="w-4 h-4" />
-                            Create Debit Note
+                            Create Credit Note
                         </button>
                     )}
                     <button
@@ -97,7 +97,7 @@ const DebitNoteList = () => {
                         <input
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Search debit notes..."
+                            placeholder="Search credit notes..."
                             className="w-full border border-gray-300 rounded-md pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-purple-500"
                         />
                     </div>
@@ -113,7 +113,7 @@ const DebitNoteList = () => {
                 <table className="min-w-full border-collapse bg-white rounded-lg overflow-hidden shadow-sm">
                     <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
-                            {['S.No.', 'Debit Note Details', 'Client / Company', 'Against', 'Reason', 'Amount', 'Status', 'Action'].map((head) => (
+                            {['S.No.', 'Credit Note Details', 'Client / Company', 'Against', 'Reason', 'Amount', 'Status', 'Action'].map((head) => (
                                 <th key={head} className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50">
                                     {head}
                                 </th>
@@ -124,14 +124,14 @@ const DebitNoteList = () => {
                         {loading && (
                             <tr>
                                 <td colSpan={8} className="py-10 text-center text-sm text-gray-500">
-                                    Loading debit notes...
+                                    Loading credit notes...
                                 </td>
                             </tr>
                         )}
                         {!loading && filteredNotes.length === 0 && (
                             <tr>
                                 <td colSpan={8} className="py-10 text-center text-sm text-gray-500">
-                                    No debit notes found.
+                                    No credit notes found.
                                 </td>
                             </tr>
                         )}
@@ -165,7 +165,7 @@ const DebitNoteList = () => {
                                     <button
                                         onClick={() => navigate(`/debit-note-view/${note._id}`)}
                                         className="inline-flex items-center gap-1 text-purple-700 hover:text-purple-900 text-sm font-semibold"
-                                        title="View debit note list"
+                                        title="View credit note"
                                     >
                                         <Eye className="w-4 h-4" />
                                         View

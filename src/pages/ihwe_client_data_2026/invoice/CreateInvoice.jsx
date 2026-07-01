@@ -55,6 +55,8 @@ const CreateInvoice = () => {
   const [foundEventName, setFoundEventName] = useState("");
   const [companyIdForSubmission, setCompanyIdForSubmission] = useState("");
   console.log("companyIdForSubmission", companyIdForSubmission);
+  const location = useLocation();
+  const editInvoiceId = location.state?.editInvoiceId;
   useEffect(() => {
     dispatch(fetchCompanies());
     dispatch(fetchEvents());
@@ -81,7 +83,34 @@ const CreateInvoice = () => {
   // --- LOGIC 2: Pre-fill form from Estimate data & STORE companyId ---
   useEffect(() => {
     const loadAndFillEstimateData = async () => {
-      if (!id) return;
+      if (!id && !editInvoiceId) return;
+
+      if (editInvoiceId) {
+        try {
+          const response = await api.get(`/api/invoices/${editInvoiceId}`);
+          const invoice = response.data?.data || response.data;
+          if (invoice) {
+            setCompanyIdForSubmission(invoice.companyId || "");
+            setFormData((prev) => ({
+              ...prev,
+              estimate_no: invoice.estimate_no || "",
+              type_of_invoice: invoice.type_of_invoice || "",
+              gst_no: invoice.gst_no || "",
+              supply_date: invoice.supply_date ? invoice.supply_date.split("T")[0] : "",
+              consignee_name: invoice.consignee_name || prev.consignee_name,
+              consignee_addr: invoice.consignee_addr || invoice.billing_address || prev.consignee_addr,
+              country: invoice.country || prev.country,
+              state: invoice.state || prev.state,
+              city: invoice.city || prev.city,
+              pincode: String(invoice.pincode || prev.pincode || ""),
+              stateCode: invoice.stateCode || prev.stateCode || "",
+            }));
+            return;
+          }
+        } catch (error) {
+          console.error("Failed to load invoice for editing:", error);
+        }
+      }
 
       let matchedEstimate = estimates.find((est) => est._id === id);
 
@@ -197,9 +226,22 @@ const CreateInvoice = () => {
     // Prepare the data payload, explicitly including the required IDs/names
     const invoicePayload = {
       ...formData,
-      companyId: id, // URL parameter 'id' for companyId
+      companyId: companyIdForSubmission || id, // Use invoice/company source id
       added_by: userName, // ✅ 2. Include added_by from localStorage
     };
+
+    if (editInvoiceId) {
+      api.put(`/api/invoices/${editInvoiceId}`, invoicePayload)
+        .then(() => {
+          showSuccess("Invoice updated successfully!");
+          dispatch(fetchInvoices());
+          navigate(-1);
+        })
+        .catch((error) => {
+          showError(error.response?.data?.message || "Failed to update invoice");
+        });
+      return;
+    }
 
     // Submit the form data to the server
     dispatch(createInvoice(invoicePayload));
@@ -220,11 +262,10 @@ const CreateInvoice = () => {
     "w-full px-2 py-1.5 text-xs border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-transparent focus:outline-none"
 
   // heading logic 
-  const location = useLocation();
   const { Id, heading } = location.state || {};
 
-  const pageHeading = heading || (Id ? "Update Invoice" : "Create Invoice");
-  const buttonName = heading || (Id ? "Update Invoice" : "Create Invoice");
+  const pageHeading = heading || (editInvoiceId || Id ? "Update Invoice" : "Create Invoice");
+  const buttonName = heading || (editInvoiceId || Id ? "Update Invoice" : "Create Invoice");
 
   const stateOptions = states?.data || states || [];
   const cityOptions = cities?.data || cities || [];

@@ -354,6 +354,7 @@ export default function AppRoutes() {
             <Route path="create-debit-note/:id" element={<CreateDebitNote />} />
             <Route path="page-create-invoice" element={<CreateInvoicePage />} />
             <Route path="page-create-invoice/:id" element={<CreateInvoicePage />} />
+            <Route path="page-create-invoice/:id/:piNo" element={<CreateInvoicePage />} />
             <Route path="e-promotion-manage" element={<EPromotionManage />} />
             <Route path="why-visit-manage" element={<WhyVisitManagement />} />
             <Route path="marquee-text" element={<MarqueeManage />} />

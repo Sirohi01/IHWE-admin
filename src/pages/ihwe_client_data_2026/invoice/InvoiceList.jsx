@@ -178,7 +178,8 @@ const InvoiceList = () => {
                                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
                                         <Link
-                                            to={`/page-create-invoice/${inv._id}`}
+                                            to="/page-create-invoice"
+                                            state={{ editInvoiceId: inv._id }}
                                             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 rounded-md font-medium text-xs transition-colors"
                                         >
                                             <Edit className="w-3.5 h-3.5" />

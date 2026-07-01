@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import mainpic from '../../../assets/header.png';
 import { fetchCompanies } from '../../../features/company/companySlice';
-import { useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import api from '../../../lib/api';
 
@@ -28,12 +28,16 @@ function toWords(n) {
 
 const EstimateFormDetail = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const routeState = location.state || {};
     const dispatch = useDispatch();
     const [matchedEstimate, setMatchedEstimate] = useState(null);
     const [company, setCompany] = useState(null);
     const [fetchingEstimate, setFetchingEstimate] = useState(true);
     const [bankDetails, setBankDetails] = useState(null);
     const [settings, setSettings] = useState(null);
+    const [relatedInvoiceStatus, setRelatedInvoiceStatus] = useState({ hasCancelled: false, hasActive: false });
 
     const { companies, loading: companiesLoading } = useSelector((state) => state.companies);
 
@@ -79,8 +83,30 @@ const EstimateFormDetail = () => {
                     }
                 }
                 setMatchedEstimate(foundEstimate || null);
+                if (foundEstimate?._id) {
+                    try {
+                        const invRes = await api.get('/api/invoices');
+                        const invoices = invRes.data?.data || invRes.data || [];
+                        const relatedInvoices = Array.isArray(invoices)
+                            ? invoices.filter((inv) => {
+                                const sameEstimateId = inv?.source_estimate_id && String(inv.source_estimate_id) === String(foundEstimate._id);
+                                const sameEstimateNo = inv?.estimate_no && inv.estimate_no === foundEstimate.est_no;
+                                return sameEstimateId || sameEstimateNo;
+                            })
+                            : [];
+                        setRelatedInvoiceStatus({
+                            hasCancelled: relatedInvoices.some((inv) => String(inv?.status || '').toLowerCase() === 'cancelled'),
+                            hasActive: relatedInvoices.some((inv) => String(inv?.status || '').toLowerCase() !== 'cancelled'),
+                        });
+                    } catch (invoiceErr) {
+                        setRelatedInvoiceStatus({ hasCancelled: false, hasActive: false });
+                    }
+                } else {
+                    setRelatedInvoiceStatus({ hasCancelled: false, hasActive: false });
+                }
             } catch (error) {
                 setMatchedEstimate(null);
+                setRelatedInvoiceStatus({ hasCancelled: false, hasActive: false });
             } finally {
                 setFetchingEstimate(false);
             }
@@ -106,7 +132,7 @@ const EstimateFormDetail = () => {
     const cur = '₹';
     const fmtNum = (n) => Math.round(Number(n || 0)).toLocaleString('en-IN');
 
-    const invoiceNo = matchedEstimate?.est_no || '';
+    const invoiceNo = routeState.displayEstNo || matchedEstimate?.est_no || '';
     const invoiceDate = matchedEstimate?.supply_date ? new Date(matchedEstimate.supply_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
 
     const createdDateTime = matchedEstimate?.added ? (() => {
@@ -137,9 +163,47 @@ const EstimateFormDetail = () => {
     const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
     const sigUrl = settings?.authorizedSignature ? (settings.authorizedSignature.startsWith('http') ? settings.authorizedSignature : `${BASE_URL}${settings.authorizedSignature}`) : null;
     const stampUrl = settings?.companyStamp ? (settings.companyStamp.startsWith('http') ? settings.companyStamp : `${BASE_URL}${settings.companyStamp}`) : null;
+    const selectedStatus = String(routeState.documentStatus || routeState.invoiceStatus || '').toLowerCase();
+    const cancelled = selectedStatus
+        ? selectedStatus === 'cancelled'
+        : String(matchedEstimate?.status || '').toLowerCase() === 'cancelled' ||
+        (relatedInvoiceStatus.hasCancelled && !relatedInvoiceStatus.hasActive);
 
     return (
-        <div className="bg-white border border-slate-300 p-10 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', maxWidth: '1000px', margin: '0 auto' }}>
+        <>
+        <div className="max-w-[1000px] mx-auto mb-3 flex justify-end gap-2">
+            {!cancelled && (
+                <button
+                    type="button"
+                    onClick={() => navigate(`/performa-invoice/${matchedEstimate.companyId}`, {
+                        state: { editEstimateId: matchedEstimate._id },
+                    })}
+                    className="rounded border border-blue-300 bg-white px-4 py-2 text-xs font-bold uppercase text-blue-600 shadow-sm hover:bg-blue-50"
+                >
+                    Edit
+                </button>
+            )}
+        </div>
+        <div className="bg-white border border-slate-300 p-10 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', maxWidth: '1000px', margin: '0 auto', position: 'relative' }}>
+            {cancelled && (
+                <div style={{
+                    position: 'absolute',
+                    top: '44%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%) rotate(-18deg)',
+                    border: '6px solid rgba(220, 38, 38, 0.7)',
+                    color: 'rgba(220, 38, 38, 0.75)',
+                    fontSize: 54,
+                    fontWeight: 900,
+                    letterSpacing: 4,
+                    padding: '10px 28px',
+                    textTransform: 'uppercase',
+                    zIndex: 5,
+                    pointerEvents: 'none',
+                }}>
+                    Cancelled
+                </div>
+            )}
 
             <div style={{ marginBottom: 8, textAlign: 'center' }}>
                 <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
@@ -448,6 +512,7 @@ const EstimateFormDetail = () => {
             </div>
 
         </div>
+        </>
     );
 };
 

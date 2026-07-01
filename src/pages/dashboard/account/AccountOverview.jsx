@@ -147,13 +147,13 @@ const AccountOverview = () => {
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
 
-        <button onClick={() => navigate(`/create-debit-note/${id}`)} className="flex items-center gap-2 p-2 bg-[#faf5ff] hover:bg-[#f3e8ff] border border-[#ecd9fb] rounded-lg transition-colors text-left group">
+        <button onClick={() => navigate(`/debit-note-list/${id}`)} className="flex items-center gap-2 p-2 bg-[#faf5ff] hover:bg-[#f3e8ff] border border-[#ecd9fb] rounded-lg transition-colors text-left group">
           <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
             <FileMinus size={16} className="text-[#7e22ce]" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Create Debit Note</h4>
-            <p className="text-[10.5px] text-slate-500 leading-tight truncate">Raise additional charges</p>
+            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Create Credit Note</h4>
+            <p className="text-[10.5px] text-slate-500 leading-tight truncate">View and create credit notes</p>
           </div>
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
