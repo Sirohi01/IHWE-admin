@@ -1029,7 +1029,7 @@ const ClientOverview1 = () => {
                   icon: Receipt,
                   title: "Proforma Invoice",
                   color: "orange-600",
-                  onClick: () => navigate(`/performa-invoice/${id}`),
+                  onClick: () => navigate(`/performa-invoice-list/${company?.clientId || company?._id || id}`),
                   disabled: false,
                 },
                 {

@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useParams } from 'react-router-dom';
 import { ChevronRight, ArrowLeft, Edit } from 'lucide-react';
 import api from '../../../lib/api';
 
 const InvoiceList = () => {
     const navigate = useNavigate();
+    const { id = 'all' } = useParams();
+    const isAllList = id === 'all';
     const [invoices, setInvoices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [accountName, setAccountName] = useState('');
     const itemsPerPage = 10;
 
     useEffect(() => {
@@ -25,6 +28,30 @@ const InvoiceList = () => {
         fetchInvoices();
     }, []);
 
+    useEffect(() => {
+        if (isAllList) {
+            setAccountName('');
+            return;
+        }
+
+        let cancelled = false;
+        const fetchAccountName = async () => {
+            try {
+                const res = await api.get(`/api/account-overview/${id}`);
+                if (!cancelled && res.data?.success) {
+                    setAccountName(res.data.data?.companyInfo?.name || '');
+                }
+            } catch (err) {
+                if (!cancelled) setAccountName('');
+            }
+        };
+
+        fetchAccountName();
+        return () => {
+            cancelled = true;
+        };
+    }, [id, isAllList]);
+
     const formatDate = (dateString) => {
         if (!dateString) return "N/A";
         const dateObj = new Date(dateString);
@@ -36,6 +63,7 @@ const InvoiceList = () => {
     };
 
     const filteredInvoices = invoices.filter(inv => {
+        if (!isAllList && String(inv.companyId || '') !== String(id)) return false;
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();
         return (
@@ -66,7 +94,9 @@ const InvoiceList = () => {
                     <div className="flex items-center gap-1 mt-1 text-sm text-gray-500">
                         <span className="hover:text-blue-600 cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span>
                         <ChevronRight className="w-4 h-4" />
-                        <span className="text-gray-700 font-medium">All Invoices</span>
+                        <span className="text-gray-700 font-medium">
+                            {isAllList ? 'All Invoices' : `${accountName || 'Company'} Invoices`}
+                        </span>
                     </div>
                 </div>
                 <div className="flex gap-2 items-center">
@@ -81,13 +111,13 @@ const InvoiceList = () => {
                         className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#3598dc]"
                     />
                     <button
-                        onClick={() => navigate('/page-create-invoice')}
+	                        onClick={() => navigate(isAllList ? '/page-create-invoice' : `/page-create-invoice/${id}`)}
                         className="flex items-center gap-2 bg-[#00A859] hover:bg-[#00904C] text-white px-4 py-2 rounded-md font-semibold transition text-sm"
                     >
                         Create Invoice
                     </button>
                     <button
-                        onClick={() => navigate('/page-create-invoice')}
+	                        onClick={() => navigate(-1)}
                         className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-semibold transition text-sm"
                     >
                         <ArrowLeft className="w-4 h-4" />

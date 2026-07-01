@@ -36,7 +36,6 @@ const EstimateTable = ({ clientId }) => {
   const { invoices } = useSelector((state) => state.invoice);
   // console.log("estimates..", estimates);
   // console.log("invoices..", invoices);
-  console.log("perInvoices..", perInvoices);
 
   useEffect(() => {
     if (estimates.length > 0 && id) {
@@ -335,12 +334,12 @@ const EstimateTable = ({ clientId }) => {
                     {/* Display Create PI button only if no PI is created and not loading */}
                     {!isPiCreated && !isPiCreating && (
                       <div className="flex items-center justify-center">
-                        <button
-                          className={stylebutton}
-                          onClick={() => handleCreatePI(estimate, totalFinalAmount)}
-                          disabled={isPiCreating}
-                        >
-                          Create PI
+	                        <button
+	                          className={stylebutton}
+	                          onClick={() => navigate(`/page-create-invoice/${estimate.companyId}`)}
+	                          disabled={isPiCreating}
+	                        >
+	                          Create Invoice
                         </button>
                       </div>
                     )}

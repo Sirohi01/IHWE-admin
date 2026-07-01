@@ -504,7 +504,7 @@ export const PerformaInvoices = () => {
                         timer: 2000,
                         showConfirmButton: false
                     });
-                    navigate('/performa-invoice-list/all');
+                    navigate(`/performa-invoice-list/${actualCompanyId}`);
                 }
             } else {
                 const res = await api.post('/api/estimates', payload);
@@ -516,7 +516,7 @@ export const PerformaInvoices = () => {
                         timer: 2000,
                         showConfirmButton: false
                     });
-                    navigate('/performa-invoice-list/all');
+                    navigate(`/performa-invoice-list/${actualCompanyId}`);
                 }
             }
         } catch (error) {
