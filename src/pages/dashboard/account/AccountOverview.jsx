@@ -174,10 +174,10 @@ const AccountOverview = () => {
       </div>
 
       {/* 3 Column Grid (Recent Docs, Payment Schedule, Activity Logs) */}
-      <div className="grid grid-cols-1 xl:grid-cols-[max-content_minmax(300px,0.9fr)_minmax(320px,1fr)] gap-2 mb-2 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_280px] gap-2 mb-2 items-start">
 
         {/* Recent Documents */}
-        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-[380px] overflow-hidden self-start w-fit max-w-full">
+        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-[380px] overflow-hidden self-start w-full max-w-full">
           <div className="flex justify-between items-center mb-1.5">
             <h2 className="text-[13px] font-medium text-[#1a2b4b] tracking-tight">Recent Documents</h2>
           </div>
@@ -301,7 +301,7 @@ const AccountOverview = () => {
         </div>
 
         {/* Activity Logs */}
-        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-[380px] overflow-hidden self-start">
+        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-[380px] overflow-hidden self-start xl:w-[280px] xl:justify-self-end">
           <div className="flex items-center justify-between mb-1.5">
             <h2 className="text-[13px] font-medium text-[#1a2b4b] tracking-tight">Activity Logs</h2>
             <div className="flex items-center gap-1 text-[9px] font-semibold text-[#194090] bg-[#e6f0fa] px-1.5 py-0.5 rounded-full">
