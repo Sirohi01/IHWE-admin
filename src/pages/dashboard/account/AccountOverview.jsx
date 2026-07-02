@@ -159,24 +159,24 @@ const AccountOverview = () => {
         </button>
       </div>
 
-      {/* 3 Column Grid (Recent Docs, Payment Schedule, Last Payment) */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-2 mb-2 items-start">
+      {/* 3 Column Grid (Recent Docs, Payment Schedule, Activity Logs) */}
+      <div className="grid grid-cols-1 xl:grid-cols-[max-content_minmax(300px,0.9fr)_minmax(320px,1fr)] gap-2 mb-2 items-start">
 
         {/* Recent Documents */}
-        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-[380px] overflow-hidden self-start">
+        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-[380px] overflow-hidden self-start w-fit max-w-full">
           <div className="flex justify-between items-center mb-1.5">
             <h2 className="text-[13px] font-medium text-[#1a2b4b] tracking-tight">Recent Documents</h2>
           </div>
           <div className="overflow-x-auto flex-1 table-scroll-wrapper">
-            <table className="w-full text-left border-collapse">
+            <table className="w-max text-center border-collapse">
               <thead>
-                <tr className="text-[9px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
-                  <th className="pb-2 pr-2">Document Type</th>
-                  <th className="pb-2 pr-2">Document No.</th>
-                  <th className="pb-2 pr-2">Date</th>
-                  <th className="pb-2 pr-2">Amount</th>
-                  <th className="pb-2 pr-2">Status</th>
-                  <th className="pb-2">Action</th>
+                <tr className="text-[11px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
+                  <th className="pb-2 pr-3 text-left whitespace-nowrap">Document</th>
+                  <th className="pb-2 pr-3 whitespace-nowrap">Document No.</th>
+                  <th className="pb-2 pr-3 whitespace-nowrap">Date</th>
+                  <th className="pb-2 pr-3 whitespace-nowrap">Amount</th>
+                  <th className="pb-2 pr-3 whitespace-nowrap">Status</th>
+                  <th className="pb-2 whitespace-nowrap">Action</th>
                 </tr>
               </thead>
               <tbody className="text-[11px] text-slate-700">
@@ -201,22 +201,22 @@ const AccountOverview = () => {
                   const viewPath = getDocViewPath(doc);
 
                   return (
-                    <tr key={idx} className="border-b border-gray-50 last:border-0 hover:bg-slate-50/50">
-                      <td className="py-1 pr-2">
-                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${docTypeBg}`}>
+                    <tr key={idx} className="border-b border-gray-50 last:border-0 hover:bg-slate-50/50 leading-tight">
+                      <td className="py-0.5 pr-3 text-left whitespace-nowrap">
+                        <span className={`px-1.5 py-[1px] rounded text-[11px] font-medium whitespace-nowrap ${docTypeBg}`}>
                           {doc.documentType}
                         </span>
                       </td>
-                      <td className="py-1 pr-2 font-medium text-[#1a2b4b]">{doc.documentNo}</td>
-                      <td className="py-1 pr-2">{doc.date ? new Date(doc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</td>
-                      <td className="py-1 pr-2 font-medium text-[12px] text-[#1a2b4b]">{formatCurrency(doc.amount)}</td>
-                      <td className="py-1 pr-2">
-                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${statusBg}`}>
+                      <td className="py-0.5 pr-3 text-center font-medium text-[#1a2b4b] whitespace-nowrap">{doc.documentNo}</td>
+                      <td className="py-0.5 pr-3 text-center whitespace-nowrap">{doc.date ? new Date(doc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'}</td>
+                      <td className="py-0.5 pr-3 text-center font-medium text-[#1a2b4b] whitespace-nowrap">{formatCurrency(doc.amount)}</td>
+                      <td className="py-0.5 pr-3 text-center whitespace-nowrap">
+                        <span className={`px-1.5 py-[1px] rounded text-[11px] font-medium whitespace-nowrap ${statusBg}`}>
                           {doc.status}
                         </span>
                       </td>
-                      <td className="py-1">
-                        <div className="flex items-center gap-2 text-[#194090]">
+                      <td className="py-0.5 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-2 text-[#194090]">
                           <button
                             disabled={!viewPath}
                             onClick={() => viewPath && navigate(viewPath)}
