@@ -33,7 +33,11 @@ const CommunicationModal = ({ isOpen, onClose, type, docType, docId, refreshData
     const fetchPreviewData = async () => {
         setLoading(true);
         try {
-            const apiBase = docType === 'proforma' ? '/api/estimates' : '/api/invoices';
+            const apiBase = docType === 'proforma'
+                ? '/api/estimates'
+                : docType === 'challan'
+                    ? '/api/delivery-challans'
+                    : '/api/invoices';
             const endpoint = type === 'whatsapp' ? 'preview-whatsapp' : 'preview-email';
             
             const response = await api.get(`${apiBase}/${docId}/${endpoint}`);
@@ -58,7 +62,11 @@ const CommunicationModal = ({ isOpen, onClose, type, docType, docId, refreshData
     const handleSend = async () => {
         setSending(true);
         try {
-            const apiBase = docType === 'proforma' ? '/api/estimates' : '/api/invoices';
+            const apiBase = docType === 'proforma'
+                ? '/api/estimates'
+                : docType === 'challan'
+                    ? '/api/delivery-challans'
+                    : '/api/invoices';
             const endpoint = type === 'whatsapp' ? 'send-whatsapp' : 'send-email';
             
             const payload = {};
@@ -107,7 +115,7 @@ const CommunicationModal = ({ isOpen, onClose, type, docType, docId, refreshData
                 <div className="flex justify-between items-center p-4 border-b">
                     <h2 className="text-xl font-semibold text-gray-800">
                         {type === 'whatsapp' ? 'Preview & Send WhatsApp' : 'Preview & Send Email'} 
-                        {' '} ({docType === 'proforma' ? 'Proforma Invoice' : 'Tax Invoice'})
+                        {' '} ({docType === 'proforma' ? 'Proforma Invoice' : docType === 'challan' ? 'Delivery Challan' : 'Tax Invoice'})
                     </h2>
                     <button 
                         onClick={onClose}

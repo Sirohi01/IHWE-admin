@@ -10,6 +10,7 @@ import {
   RefreshCw, ChevronRight,
   User, ArrowRight, FilePlus, CreditCard, Activity,
   FileMinus,
+  Truck,
 } from "lucide-react";
 
 const AccountOverview = () => {
@@ -51,6 +52,7 @@ const AccountOverview = () => {
   const getDocViewPath = (doc) => {
     if (doc.documentType === "Invoice") return `/payments/invoiceDetails/${doc.id}`;
     if (doc.documentType === "Proforma Invoice") return `/payments/estimateDetails/${doc.id}`;
+    if (doc.documentType === "Delivery Challan") return `/dashboard/account/${id}/delivery-challans`;
     return null;
   };
 
@@ -113,7 +115,7 @@ const AccountOverview = () => {
       <CompanyAccountSummary companyInfo={companyInfo} financials={financials} />
 
       {/* Action Buttons Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mb-1">
         <button onClick={() => navigate(`/performa-invoice-list/${id}`)} className="flex items-center gap-2 p-2 bg-[#f0f5ff] hover:bg-[#e6edfa] border border-[#dbe6fa] rounded-lg transition-colors text-left group">
           <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
             <FilePlus size={16} className="text-[#2563eb]" />
@@ -121,6 +123,17 @@ const AccountOverview = () => {
           <div className="flex-1 min-w-0">
             <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Create Proforma Invoice</h4>
             <p className="text-[10.5px] text-slate-500 leading-tight truncate">Create a proforma invoice</p>
+          </div>
+          <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
+        </button>
+
+        <button onClick={() => navigate(`/dashboard/account/${id}/delivery-challans`)} className="flex items-center gap-2 p-2 bg-[#f0fdfa] hover:bg-[#ccfbf1] border border-[#ccfbf1] rounded-lg transition-colors text-left group">
+          <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
+            <Truck size={16} className="text-[#0f766e]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Delivery Challan</h4>
+            <p className="text-[10.5px] text-slate-500 leading-tight truncate">Create and track challans</p>
           </div>
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
@@ -157,6 +170,7 @@ const AccountOverview = () => {
           </div>
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
+
       </div>
 
       {/* 3 Column Grid (Recent Docs, Payment Schedule, Activity Logs) */}
@@ -191,6 +205,7 @@ const AccountOverview = () => {
                   else if (doc.documentType === 'Proforma Invoice') docTypeBg = 'bg-[#e6f0fa] text-[#194090]';
                   else if (doc.documentType === 'Debit Note') docTypeBg = 'bg-[#faf5ff] text-[#7e22ce]';
                   else if (doc.documentType === 'Credit Note') docTypeBg = 'bg-[#fff1f2] text-[#e11d48]';
+                  else if (doc.documentType === 'Delivery Challan') docTypeBg = 'bg-teal-50 text-teal-700';
 
                   let statusBg = 'bg-gray-100 text-gray-600';
                   if (doc.status === 'Paid' || doc.status === 'Accepted') statusBg = 'bg-[#e6f7ec] text-[#00a86b]';
@@ -200,6 +215,7 @@ const AccountOverview = () => {
                   else if (doc.status === 'W-Sent') statusBg = 'bg-emerald-50 text-emerald-600';
                   else if (doc.status === 'E/W-Sent') statusBg = 'bg-teal-50 text-teal-700';
                   else if (doc.status === 'Sent' || doc.status === 'Converted') statusBg = 'bg-[#e6f0fa] text-[#194090]';
+                  else if (['Issued', 'Delivered', 'Acknowledged', 'Draft'].includes(doc.status)) statusBg = 'bg-teal-50 text-teal-700';
 
                   const viewPath = getDocViewPath(doc);
 

@@ -174,16 +174,16 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
             </span>
           </div>
           <div className="mt-auto pt-2 flex justify-end relative z-10">
-            <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-500">
-              <FileText size={15} />
+            <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+              <FileText size={20} />
             </div>
           </div>
 
           <div className="absolute top-[100%] left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[60]">
-             <div className="px-3 py-2 border-b border-gray-100 bg-gray-50 rounded-t-lg">
-                <span className="text-[10px] font-bold text-slate-600 uppercase">Amount Breakdown</span>
-             </div>
-             <BreakdownList items={financials?.dueBreakdown} emptyText="No invoices found" />
+            <div className="px-3 py-2 border-b border-gray-100 bg-gray-50 rounded-t-lg">
+              <span className="text-[10px] font-bold text-slate-600 uppercase">Amount Breakdown</span>
+            </div>
+            <BreakdownList items={financials?.dueBreakdown} emptyText="No invoices found" />
           </div>
         </div>
 
@@ -201,16 +201,16 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
             </span>
           </div>
           <div className="mt-auto pt-2 flex justify-end relative z-10">
-            <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500">
-              <Receipt size={15} />
+            <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500">
+              <Receipt size={20} />
             </div>
           </div>
 
           <div className="absolute top-[100%] left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[60]">
-             <div className="px-3 py-2 border-b border-gray-100 bg-gray-50 rounded-t-lg">
-                <span className="text-[10px] font-bold text-slate-600 uppercase">Payment Breakdown</span>
-             </div>
-             <BreakdownList items={financials?.paidBreakdown} emptyText="No payments found" />
+            <div className="px-3 py-2 border-b border-gray-100 bg-gray-50 rounded-t-lg">
+              <span className="text-[10px] font-bold text-slate-600 uppercase">Payment Breakdown</span>
+            </div>
+            <BreakdownList items={financials?.paidBreakdown} emptyText="No payments found" />
           </div>
         </div>
 
@@ -228,16 +228,16 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
             </span>
           </div>
           <div className="mt-auto pt-2 flex justify-end relative z-10">
-            <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500">
-              <Wallet size={15} />
+            <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500">
+              <Wallet size={20} />
             </div>
           </div>
 
           <div className="absolute top-[100%] right-0 min-w-[200px] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[60]">
-             <div className="px-3 py-2 border-b border-gray-100 bg-gray-50 rounded-t-lg">
-                <span className="text-[10px] font-bold text-slate-600 uppercase">Remaining Breakdown</span>
-             </div>
-             <BreakdownList items={financials?.remainingBreakdown} emptyText="No remaining balance" isRemaining={true} />
+            <div className="px-3 py-2 border-b border-gray-100 bg-gray-50 rounded-t-lg">
+              <span className="text-[10px] font-bold text-slate-600 uppercase">Remaining Breakdown</span>
+            </div>
+            <BreakdownList items={financials?.remainingBreakdown} emptyText="No remaining balance" isRemaining={true} />
           </div>
         </div>
       </div>

@@ -245,6 +245,7 @@ const InvoiceList = lazy(() => import("../pages/ihwe_client_data_2026/invoice/In
 const Payments = lazy(() => import("../pages/ihwe_client_data_2026/payments/Payment"));
 const AddPayment = lazy(() => import("../pages/dashboard/account/AddPayment"));
 const AccountOverview = lazy(() => import("../pages/dashboard/account/AccountOverview"));
+const DeliveryChallanManager = lazy(() => import("../pages/dashboard/account/DeliveryChallanManager"));
 const AgendaManagement = lazy(() => import("../pages/AgendaManagement"));
 const SpeakerRegistrationList = lazy(() => import("../pages/SpeakerRegistrationList"));
 const SpeakerRegistrationDetail = lazy(() => import("../pages/SpeakerRegistrationDetail"));
@@ -305,6 +306,7 @@ export default function AppRoutes() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="dashboard/add-payment" element={<AddPayment />} />
             <Route path="dashboard/account/AddPayment/:id" element={<AddPayment />} />
+            <Route path="dashboard/account/:id/delivery-challans" element={<DeliveryChallanManager />} />
             <Route path="dashboard-banners" element={<BannerManagement />} />
             <Route path="click-analytics" element={<ClickAnalytics />} />
             <Route path="about-us" element={<About />} />
