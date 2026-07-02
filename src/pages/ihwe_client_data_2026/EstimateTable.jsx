@@ -9,7 +9,8 @@ import {
 import { fetchInvoices } from "../../features/invoice/invoiceSlice";
 import api from "../../lib/api";
 import Swal from "sweetalert2";
-import { MessageCircleMore, Mail } from "lucide-react";
+import { MessageCircleMore, Mail, Ban } from "lucide-react";
+import CommunicationModal from "../../components/CommunicationModal";
 
 const stylebutton =
   "w-fit text-[#3598dc] cursor-pointer border border-[#3598dc] hover:bg-[#3598dc] hover:text-white font-medium flex  items-center gap-1 px-1";
@@ -115,37 +116,22 @@ const EstimateTable = ({ clientId }) => {
     },
     [dispatch]
   );
+  
+  const [commModal, setCommModal] = useState({
+    isOpen: false,
+    type: 'whatsapp',
+    docType: 'proforma',
+    docId: null
+  });
 
   const [actionLoaders, setActionLoaders] = useState({});
 
-  const handleSendWhatsApp = async (estimateId) => {
-    try {
-      setActionLoaders(prev => ({ ...prev, [`${estimateId}_wa`]: true }));
-      const res = await api.post(`/api/estimates/${estimateId}/send-whatsapp`, {});
-      if (res.status === 200) {
-        Swal.fire('Success', 'WhatsApp message sent successfully', 'success');
-      }
-    } catch (error) {
-      console.error("Error sending WhatsApp:", error);
-      Swal.fire('Error', error.response?.data?.message || 'Failed to send WhatsApp message', 'error');
-    } finally {
-      setActionLoaders(prev => ({ ...prev, [`${estimateId}_wa`]: false }));
-    }
+  const handleSendWhatsApp = (estimateId) => {
+    setCommModal({ isOpen: true, type: 'whatsapp', docType: 'proforma', docId: estimateId });
   };
 
-  const handleSendEmail = async (estimateId) => {
-    try {
-      setActionLoaders(prev => ({ ...prev, [`${estimateId}_email`]: true }));
-      const res = await api.post(`/api/estimates/${estimateId}/send-email`, {});
-      if (res.status === 200) {
-        Swal.fire('Success', 'Email sent successfully', 'success');
-      }
-    } catch (error) {
-      console.error("Error sending Email:", error);
-      Swal.fire('Error', error.response?.data?.message || 'Failed to send Email', 'error');
-    } finally {
-      setActionLoaders(prev => ({ ...prev, [`${estimateId}_email`]: false }));
-    }
+  const handleSendEmail = (estimateId) => {
+    setCommModal({ isOpen: true, type: 'email', docType: 'proforma', docId: estimateId });
   };
 
   // New function to handle navigation for Print/Copy buttons
@@ -218,9 +204,6 @@ const EstimateTable = ({ clientId }) => {
       })
       .replace(/\//g, " ");
   };
-  // const handleCreateINV = () => {
-  //   navigate(`/payments/createInvoice/${estimates?.est_no}`);
-  // };
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -234,14 +217,6 @@ const EstimateTable = ({ clientId }) => {
     const aTime = new Date(a?.added || a?.updated || 0).getTime();
     const bTime = new Date(b?.added || b?.updated || 0).getTime();
     return bTime - aTime;
-  };
-  const incrementDocumentNo = (docNo) => {
-    const parts = String(docNo || "").split("/");
-    const lastPart = parts[parts.length - 1];
-    const nextNum = parseInt(lastPart, 10);
-    if (Number.isNaN(nextNum)) return docNo;
-    parts[parts.length - 1] = String(nextNum + 1).padStart(lastPart.length, "0");
-    return parts.join("/");
   };
   const getDocumentSeq = (docNo) => {
     const lastPart = String(docNo || "").split("/").pop();
@@ -324,7 +299,7 @@ const EstimateTable = ({ clientId }) => {
       }
       rows.push({
         estimate,
-        displayEstNo: nextEstimateNo || incrementDocumentNo(estimate.est_no),
+        displayEstNo: nextEstimateNo || estimate.est_no,
         piData: null,
         invoiceData: null,
         rowType: "active",
@@ -341,67 +316,20 @@ const EstimateTable = ({ clientId }) => {
       <table className="min-w-full border-collapse bg-white rounded-lg overflow-hidden shadow-sm">
         <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
-            <th
-              scope="col"
-              className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
-            >
-              S.No.
-            </th>
-            <th
-              scope="col"
-              className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
-            >
-              Proforma Invoice
-            </th>
+            <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50">S.No.</th>
+            <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50">Proforma Invoice</th>
             {(clientId === 'all' || id === 'all') && (
-              <th
-                scope="col"
-                className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
-              >
-                Company / Client
-              </th>
+              <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50">Company / Client</th>
             )}
             {(clientId !== 'all' && id !== 'all') && (
-              <th
-                scope="col"
-                className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
-              >
-                Invoice
-              </th>
+              <th scope="col" className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300">Invoice</th>
             )}
-            {/* <th
-              scope="col"
-              className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
-            >
-              Invoice Details
-            </th> */}
-            {/* <th
-              scope="col"
-              className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300"
-            >
-              Print
-            </th> */}
-            <th
-              scope="col"
-              className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
-            >
-              Updated Details
-            </th>
+            <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50">Updated Details</th>
             {(clientId !== 'all' && id !== 'all') && (
-              <th
-                scope="col"
-                className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
-              >
-                Status
-              </th>
+              <th scope="col" className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50">Status</th>
             )}
             {(clientId !== 'all' && id !== 'all') && (
-              <th
-                scope="col"
-                className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50"
-              >
-                Action
-              </th>
+              <th scope="col" className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50">Action</th>
             )}
           </tr>
         </thead>
@@ -409,34 +337,20 @@ const EstimateTable = ({ clientId }) => {
         <tbody className="bg-white divide-y divide-gray-200">
           {displayRows.map((row, index) => {
             const { estimate, piData, invoiceData, rowType, displayEstNo } = row;
-            // 💰 Calculate Amount
             const totalFinalAmount = estimate?.items?.reduce((total, item) => {
               return total + (parseFloat(item.finalAmount) || 0);
             }, 0);
             const displayAmount = totalFinalAmount?.toFixed(2) || "0.00";
 
-            // 📅 Format Dates
             let formattedDate = "N/A";
             if (estimate?.supply_date) {
               const dateObj = new Date(estimate.supply_date);
-              formattedDate = dateObj
-                .toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "2-digit",
-                })
-                .replace(/\//g, " ");
+              formattedDate = dateObj.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" }).replace(/\//g, " ");
             }
             let formattedUpdatedDate = "N/A";
             if (estimate?.updated) {
               const dateObj = new Date(estimate.updated);
-              formattedUpdatedDate = dateObj
-                .toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "2-digit",
-                })
-                .replace(/\//g, " ");
+              formattedUpdatedDate = dateObj.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" }).replace(/\//g, " ");
             }
 
             const localPiState = perInvoiceState[estimate._id];
@@ -444,212 +358,73 @@ const EstimateTable = ({ clientId }) => {
             const isPiCreated = !!piDataToDisplay;
             const isPiCreating = localPiState?.isCreating;
             const piError = localPiState?.error;
-            const invId = invoiceData?._id || null;
-            const companyClientName =
-              estimate?.company_name ||
-              (!looksLikeEventName(estimate?.consignee_name) ? estimate?.consignee_name : "") ||
-              "Unknown";
+            const companyClientName = estimate?.company_name || (!looksLikeEventName(estimate?.consignee_name) ? estimate?.consignee_name : "") || "Unknown";
 
             return (
               <tr key={`${estimate._id}-${displayEstNo}-${rowType}`} className="hover:bg-gray-50 transition-colors border-b border-gray-200">
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
-                  {indexOfFirstItem + index + 1}
-                </td>
-
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">{indexOfFirstItem + index + 1}</td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
                   <div className="flex items-center justify-start gap-2">
-                    {/* <Link to={`/payments/estimateDetails/${estimate?.est_no}`}> */}
-                    <Link
-                      to={`/payments/estimateDetails/${estimate?._id}`}
-                      state={{
-                        displayEstNo: displayEstNo || estimate?.est_no,
-                        documentStatus: rowType === "cancelled" ? "cancelled" : "active",
-                        invoiceStatus: invoiceData?.status || "",
-                      }}
-                    >
-                      <button className="text-[#3598dc] cursor-pointer hover:text-[#566e7d] font-medium px-1">
-                        {displayEstNo || estimate?.est_no}
-                      </button>
+                    <Link to={`/payments/estimateDetails/${estimate?._id}`} state={{ displayEstNo: displayEstNo || estimate?.est_no, documentStatus: rowType === "cancelled" ? "cancelled" : "active", invoiceStatus: invoiceData?.status || "" }}>
+                      <button className="text-[#3598dc] cursor-pointer hover:text-[#566e7d] font-medium px-1">{displayEstNo || estimate?.est_no}</button>
                     </Link>
                     <span>| {formattedDate} | {displayAmount}</span>
                   </div>
                 </td>
-
                 {(clientId === 'all' || id === 'all') && (
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
-                    <span className="font-semibold text-gray-800">
-                      {companyClientName}
-                    </span>
+                    <span className="font-semibold text-gray-800">{companyClientName}</span>
                   </td>
                 )}
-
-                {/* 🚀 PROFORMA Invoice CELL LOGIC 🚀 */}
                 {(clientId !== 'all' && id !== 'all') && (
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
-                    {/* Display PI Data if it exists or is being created */}
                     {isPiCreated && (
                       <div className="flex items-center justify-center gap-1">
                         <Link to={`/payments/performanceInvoiceDetails/${piDataToDisplay._id}`}>
-                          <button className="text-[#3598dc] cursor-pointer hover:text-[#566e7d] font-medium px-1">
-                            {piDataToDisplay.pi_no}
-                          </button>
+                          <button className="text-[#3598dc] cursor-pointer hover:text-[#566e7d] font-medium px-1">{piDataToDisplay.pi_no}</button>
                         </Link>
                         <span>| {formatPiDate(piDataToDisplay.updated) || "N/A"} | {piDataToDisplay.finalAmount?.toFixed(2) || "0.00"}</span>
                       </div>
                     )}
-
                     {invoiceData ? (
                       <div className="flex items-center justify-center gap-1 mt-1 text-sm">
-                        <button
-                          className="text-[#3598dc] cursor-pointer hover:text-[#566e7d] font-medium px-1"
-                          onClick={() => navigate(`/payments/estimateDetails/${estimate._id}`, {
-                            state: {
-                              displayEstNo: displayEstNo || estimate?.est_no,
-                              documentStatus: rowType === "cancelled" ? "cancelled" : "active",
-                              invoiceStatus: invoiceData?.status || "",
-                            },
-                          })}
-                          title="Open estimate overview"
-                        >
-                          {invoiceData.invoice_no}
-                        </button>
-                        <span>
-                          | {formatInvoiceDate(invoiceData.invoice_date || invoiceData.supply_date || invoiceData.updated)} | {Number(invoiceData.finalAmount || 0).toFixed(2)}
-                        </span>
+                        <button className="text-[#3598dc] cursor-pointer hover:text-[#566e7d] font-medium px-1" onClick={() => navigate(`/payments/estimateDetails/${estimate._id}`, { state: { displayEstNo: displayEstNo || estimate?.est_no, documentStatus: rowType === "cancelled" ? "cancelled" : "active", invoiceStatus: invoiceData?.status || "" } })} title="Open estimate overview">{invoiceData.invoice_no}</button>
+                        <span>| {formatInvoiceDate(invoiceData.invoice_date || invoiceData.supply_date || invoiceData.updated)} | {Number(invoiceData.finalAmount || 0).toFixed(2)}</span>
                       </div>
                     ) : null}
-
                     {!invoiceData && !isPiCreating && rowType !== "cancelled" && !isCancelled(estimate) && (
                       <div className="flex items-center justify-center">
-	                        <button
-	                          className={stylebutton}
-	                          onClick={() => navigate(`/page-create-invoice/${estimate.companyId}/${encodeURIComponent(displayEstNo || estimate.est_no)}`, {
-                              state: {
-                                sourceEstimateId: estimate._id,
-                                sourceEstimateNo: estimate.est_no,
-                                selectedPiNo: displayEstNo || estimate.est_no,
-                                returnTo: `/performa-invoice-list/${estimate.companyId}`,
-                              },
-                            })}
-	                          disabled={isPiCreating}
-	                        >
-	                          Create Invoice
-                        </button>
+                        <button className={stylebutton} onClick={() => navigate(`/page-create-invoice/${estimate.companyId}/${encodeURIComponent(displayEstNo || estimate.est_no)}`, { state: { sourceEstimateId: estimate._id, sourceEstimateNo: estimate.est_no, selectedPiNo: displayEstNo || estimate.est_no, returnTo: `/performa-invoice-list/${estimate.companyId}` } })} disabled={isPiCreating}>Create Invoice</button>
                       </div>
                     )}
-
-                    {/* Display Loading state */}
-                    {isPiCreating && (
-                      <span className="text-[#3598dc] font-medium">
-                        Creating...
-                      </span>
-                    )}
-
-                    {/* Display Error state */}
-                    {piError && (
-                      <span className="text-red-500 font-medium">{piError}</span>
-                    )}
+                    {isPiCreating && <span className="text-[#3598dc] font-medium">Creating...</span>}
+                    {piError && <span className="text-red-500 font-medium">{piError}</span>}
                   </td>
                 )}
-
-                {/* ... Invoice Details Cell ... */}
-                {/* <td className="border border-gray-300 px-4 justify-items-center whitespace-nowrap text-xs text-black text-center">
-                  {(() => {
-
-                    const matchingInvoice = invoices.find(
-                      (inv) => inv.estimate_no === estimate.est_no
-                    );
-
-                    const formatInvoiceDate = (dateString) => {
-                      if (!dateString) return "N/A";
-                      const dateObj = new Date(dateString);
-                      return dateObj
-                        .toLocaleDateString("en-GB", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "2-digit",
-                        })
-                        .replace(/\//g, " ");
-                    };
-
-                    if (matchingInvoice) {
-                      const displayInvAmount =
-                        matchingInvoice.finalAmount?.toFixed(2) || "0.00";
-                      const invId = matchingInvoice._id;
-                      return (
-                        <button className="text-gray-700  font-medium">
-                          {`${matchingInvoice.invoice_no} | ${formatInvoiceDate(
-                            matchingInvoice.supply_date
-                          )} | ${piDataToDisplay?.finalAmount?.toFixed(2) || "0.00"
-                            }`}
-                        </button>
-                      );
-                    } else {
-                      return (
-                        <Link
-                          to={`/payments/createInvoice/${estimate?._id}`}
-                          className={stylebutton}
-                        >
-                          Create INV
-                        </Link>
-                      );
-                    }
-                  })()}
-                </td> */}
-
-                {/* ... Print, Updated Details, Action cells ... */}
-                {/* <td className="border border-gray-300 px-2 py-2 whitespace-nowrap text-xs text-black text-center ">
-                  <div className="flex justify-between gap-1">
-                    <button
-                      onClick={() =>
-                        handlePrintCopyNavigation("Original Copy", invId)
-                      }
-                      className={stylebutton}
-                    >
-                      O
-                    </button>
-                    <button
-                      onClick={() =>
-                        handlePrintCopyNavigation("Duplicate Copy", invId)
-                      }
-                      className={stylebutton}
-                    >
-                      D
-                    </button>
-                    <button
-                      onClick={() =>
-                        handlePrintCopyNavigation("Triplicate Copy", invId)
-                      }
-                      className={stylebutton}
-                    >
-                      T
-                    </button>
-                  </div>
-                </td> */}
-
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
                   <span className="text-gray-500">{formattedUpdatedDate}</span> <span className="text-gray-300 mx-1">|</span> <span className="font-medium capitalize">{estimate?.added_by}</span>
                 </td>
-
                 {(clientId !== 'all' && id !== 'all') && (
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
                     <StatusBadge status={rowType === "cancelled" ? "cancelled" : "active"} />
                   </td>
                 )}
-
                 {(clientId !== 'all' && id !== 'all') && (
                   <td className="px-7 py-3 whitespace-nowrap text-sm font-medium items-center gap-2 text-center">
                     {rowType === "cancelled" ? (
                       <span className="text-gray-400">—</span>
                     ) : (
-                      <button
-                        type="button"
-                        disabled={actionLoaders[`${estimate._id}_cancel`]}
-                        onClick={() => handleCancelDocuments(estimate, invoiceData)}
-                        className="border border-red-300 text-red-600 hover:text-white hover:bg-red-500 px-3 py-1 rounded items-center cursor-pointer transition-colors disabled:opacity-60"
-                      >
-                        {actionLoaders[`${estimate._id}_cancel`] ? "Cancelling..." : "Cancel"}
-                      </button>
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        <button type="button" onClick={() => handleSendWhatsApp(estimate._id)} className="border border-green-500 text-green-600 hover:text-white hover:bg-green-500 p-1.5 rounded flex items-center justify-center cursor-pointer transition-colors" title="Send WhatsApp">
+                          <MessageCircleMore size={16} />
+                        </button>
+                        <button type="button" onClick={() => handleSendEmail(estimate._id)} className="border border-blue-500 text-blue-600 hover:text-white hover:bg-blue-500 p-1.5 rounded flex items-center justify-center cursor-pointer transition-colors" title="Send Email">
+                          <Mail size={16} />
+                        </button>
+                        <button type="button" disabled={actionLoaders[`${estimate._id}_cancel`]} onClick={() => handleCancelDocuments(estimate, invoiceData)} className="border border-red-500 text-red-600 hover:text-white hover:bg-red-500 p-1.5 rounded flex items-center justify-center cursor-pointer transition-colors disabled:opacity-60" title="Cancel Document">
+                          {actionLoaders[`${estimate._id}_cancel`] ? <span className="animate-spin text-xs">↻</span> : <Ban size={16} />}
+                        </button>
+                      </div>
                     )}
                   </td>
                 )}
@@ -658,50 +433,34 @@ const EstimateTable = ({ clientId }) => {
           })}
         </tbody>
       </table>
-      {/* Pagination Controls */}
       {totalPages > 1 && (
         <div className="flex justify-between items-center py-3 px-4 bg-white border-t border-gray-200">
-          <span className="text-sm text-gray-700">
-            Showing <span className="font-semibold">{indexOfFirstItem + 1}</span> to <span className="font-semibold">{Math.min(indexOfLastItem, estimates.length)}</span> of <span className="font-semibold">{estimates.length}</span> entries
-          </span>
+          <span className="text-sm text-gray-700">Showing <span className="font-semibold">{indexOfFirstItem + 1}</span> to <span className="font-semibold">{Math.min(indexOfLastItem, estimates.length)}</span> of <span className="font-semibold">{estimates.length}</span> entries</span>
           <div className="flex gap-1">
-            <button
-              onClick={() => paginate(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`px-3 py-1 text-sm rounded border ${currentPage === 1 ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
-            >
-              Previous
-            </button>
+            <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} className={`px-3 py-1 text-sm rounded border ${currentPage === 1 ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}>Previous</button>
             <div className="flex gap-1 overflow-x-auto max-w-[200px] md:max-w-none">
               {[...Array(totalPages)].map((_, i) => {
                 const pageNum = i + 1;
                 if (pageNum === 1 || pageNum === totalPages || (pageNum >= currentPage - 2 && pageNum <= currentPage + 2)) {
                   return (
-                    <button
-                      key={pageNum}
-                      onClick={() => paginate(pageNum)}
-                      className={`px-3 py-1 text-sm rounded border ${currentPage === pageNum ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}`}
-                    >
-                      {pageNum}
-                    </button>
+                    <button key={pageNum} onClick={() => paginate(pageNum)} className={`px-3 py-1 text-sm rounded border ${currentPage === pageNum ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}`}>{pageNum}</button>
                   );
                 }
-                if (pageNum === currentPage - 3 || pageNum === currentPage + 3) {
-                  return <span key={pageNum} className="px-2 py-1">...</span>;
-                }
+                if (pageNum === currentPage - 3 || pageNum === currentPage + 3) return <span key={pageNum} className="px-2 py-1">...</span>;
                 return null;
               })}
             </div>
-            <button
-              onClick={() => paginate(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className={`px-3 py-1 text-sm rounded border ${currentPage === totalPages ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}
-            >
-              Next
-            </button>
+            <button onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages} className={`px-3 py-1 text-sm rounded border ${currentPage === totalPages ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-blue-600 border-blue-300 hover:bg-blue-50'}`}>Next</button>
           </div>
         </div>
       )}
+      <CommunicationModal 
+        isOpen={commModal.isOpen} 
+        onClose={() => setCommModal({ ...commModal, isOpen: false, docId: null })} 
+        type={commModal.type} 
+        docType={commModal.docType} 
+        docId={commModal.docId} 
+      />
     </div>
   );
 };

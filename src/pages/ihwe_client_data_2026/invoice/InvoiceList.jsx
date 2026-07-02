@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
-import { ChevronRight, ArrowLeft, Edit } from 'lucide-react';
+import { ChevronRight, ArrowLeft, Edit, MessageCircleMore, Mail } from 'lucide-react';
 import api from '../../../lib/api';
+import Swal from 'sweetalert2';
+import CommunicationModal from '../../../components/CommunicationModal';
 
 const InvoiceList = () => {
     const navigate = useNavigate();
@@ -12,6 +14,7 @@ const InvoiceList = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [accountName, setAccountName] = useState('');
+    const [actionLoaders, setActionLoaders] = useState({});
     const itemsPerPage = 10;
 
     useEffect(() => {
@@ -72,6 +75,21 @@ const InvoiceList = () => {
             (inv.company_name || '').toLowerCase().includes(q)
         );
     });
+
+    const [commModal, setCommModal] = useState({
+        isOpen: false,
+        type: 'whatsapp',
+        docType: 'invoice',
+        docId: null
+    });
+
+    const handleSendWhatsApp = (invoiceId) => {
+        setCommModal({ isOpen: true, type: 'whatsapp', docType: 'invoice', docId: invoiceId });
+    };
+
+    const handleSendEmail = (invoiceId) => {
+        setCommModal({ isOpen: true, type: 'email', docType: 'invoice', docId: invoiceId });
+    };
 
     const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
     const paginatedInvoices = filteredInvoices.slice(
@@ -177,14 +195,34 @@ const InvoiceList = () => {
                                         {inv.added_by || "Unknown"}
                                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
-                                        <Link
-                                            to="/page-create-invoice"
-                                            state={{ editInvoiceId: inv._id }}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 rounded-md font-medium text-xs transition-colors"
-                                        >
-                                            <Edit className="w-3.5 h-3.5" />
-                                            Edit
-                                        </Link>
+                                        <div className="flex gap-2 justify-center">
+                                            <button
+                                                type="button"
+                                                disabled={actionLoaders[`${inv._id}_wa`]}
+                                                onClick={() => handleSendWhatsApp(inv._id)}
+                                                className="border border-green-500 text-green-600 hover:text-white hover:bg-green-500 p-1.5 rounded flex items-center justify-center cursor-pointer transition-colors disabled:opacity-60"
+                                                title="Send WhatsApp"
+                                            >
+                                                {actionLoaders[`${inv._id}_wa`] ? <span className="animate-spin text-xs">↻</span> : <MessageCircleMore size={16} />}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                disabled={actionLoaders[`${inv._id}_email`]}
+                                                onClick={() => handleSendEmail(inv._id)}
+                                                className="border border-blue-500 text-blue-600 hover:text-white hover:bg-blue-500 p-1.5 rounded flex items-center justify-center cursor-pointer transition-colors disabled:opacity-60"
+                                                title="Send Email"
+                                            >
+                                                {actionLoaders[`${inv._id}_email`] ? <span className="animate-spin text-xs">↻</span> : <Mail size={16} />}
+                                            </button>
+                                            <Link
+                                                to="/page-create-invoice"
+                                                state={{ editInvoiceId: inv._id }}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 rounded-md font-medium text-xs transition-colors"
+                                            >
+                                                <Edit className="w-3.5 h-3.5" />
+                                                Edit
+                                            </Link>
+                                        </div>
                                     </td>
                                 </tr>
                             ))
@@ -226,6 +264,14 @@ const InvoiceList = () => {
                     </div>
                 </div>
             )}
+
+            <CommunicationModal 
+                isOpen={commModal.isOpen} 
+                onClose={() => setCommModal({ ...commModal, isOpen: false, docId: null })} 
+                type={commModal.type} 
+                docType={commModal.docType} 
+                docId={commModal.docId} 
+            />
         </div>
     );
 };
