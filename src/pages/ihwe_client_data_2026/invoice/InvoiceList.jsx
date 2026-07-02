@@ -301,7 +301,7 @@ const InvoiceList = () => {
                                                 type="button"
                                                 disabled={actionLoaders[`${inv._id}_wa`]}
                                                 onClick={() => handleSendWhatsApp(inv._id)}
-                                                className="rounded border border-slate-200 p-1.5 text-emerald-600 hover:bg-slate-100 transition-colors disabled:opacity-60"
+                                                className="rounded border border-slate-200 p-1.5 text-emerald-600 hover:bg-slate-100 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                                                 title="Send WhatsApp"
                                             >
                                                 {actionLoaders[`${inv._id}_wa`] ? <span className="animate-spin text-[10px] inline-block">↻</span> : <MessageCircleMore size={13} />}
@@ -310,7 +310,7 @@ const InvoiceList = () => {
                                                 type="button"
                                                 disabled={actionLoaders[`${inv._id}_email`]}
                                                 onClick={() => handleSendEmail(inv._id)}
-                                                className="rounded border border-slate-200 p-1.5 text-blue-600 hover:bg-slate-100 transition-colors disabled:opacity-60"
+                                                className="rounded border border-slate-200 p-1.5 text-blue-600 hover:bg-slate-100 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                                                 title="Send Email"
                                             >
                                                 {actionLoaders[`${inv._id}_email`] ? <span className="animate-spin text-[10px] inline-block">↻</span> : <Mail size={13} />}
@@ -318,7 +318,7 @@ const InvoiceList = () => {
                                             <Link
                                                 to="/page-create-invoice"
                                                 state={{ editInvoiceId: inv._id }}
-                                                className="rounded border border-slate-200 p-1.5 text-indigo-600 hover:bg-slate-100 transition-colors inline-block"
+                                                className="rounded border border-slate-200 p-1.5 text-indigo-600 hover:bg-slate-100 transition-colors cursor-pointer disabled:cursor-not-allowed inline-block"
                                                 title="Edit"
                                             >
                                                 <Edit size={13} />

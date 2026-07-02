@@ -593,13 +593,13 @@ const EstimateTable = ({ clientId }) => {
                       <span className="text-slate-400 font-bold block text-center">—</span>
                     ) : (
                       <div className="flex flex-wrap gap-1.5 justify-center">
-                        <button type="button" onClick={() => handleSendWhatsApp(estimate._id)} className="rounded border border-slate-200 p-1.5 text-emerald-600 hover:bg-slate-100 transition-colors" title="Send WhatsApp">
+                        <button type="button" onClick={() => handleSendWhatsApp(estimate._id)} className="rounded border border-slate-200 p-1.5 text-emerald-600 hover:bg-slate-100 transition-colors cursor-pointer disabled:cursor-not-allowed" title="Send WhatsApp">
                           <MessageCircleMore size={13} />
                         </button>
-                        <button type="button" onClick={() => handleSendEmail(estimate._id)} className="rounded border border-slate-200 p-1.5 text-blue-600 hover:bg-slate-100 transition-colors" title="Send Email">
+                        <button type="button" onClick={() => handleSendEmail(estimate._id)} className="rounded border border-slate-200 p-1.5 text-blue-600 hover:bg-slate-100 transition-colors cursor-pointer disabled:cursor-not-allowed" title="Send Email">
                           <Mail size={13} />
                         </button>
-                        <button type="button" disabled={actionLoaders[`${estimate._id}_cancel`]} onClick={() => handleCancelDocuments(estimate, invoiceData)} className="rounded border border-slate-200 p-1.5 text-red-600 hover:bg-slate-100 transition-colors disabled:opacity-60" title="Cancel Document">
+                        <button type="button" disabled={actionLoaders[`${estimate._id}_cancel`]} onClick={() => handleCancelDocuments(estimate, invoiceData)} className="rounded border border-slate-200 p-1.5 text-red-600 hover:bg-slate-100 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60" title="Cancel Document">
                           {actionLoaders[`${estimate._id}_cancel`] ? <span className="animate-spin text-xs inline-block">↻</span> : <Ban size={13} />}
                         </button>
                       </div>

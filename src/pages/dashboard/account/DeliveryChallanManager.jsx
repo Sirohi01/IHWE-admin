@@ -545,11 +545,11 @@ const DeliveryChallanManager = () => {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1.5 justify-start">
-                      <button title="View / Print" onClick={() => view(challan)} className="rounded border border-slate-200 p-1.5 text-[#194090] hover:bg-slate-100 transition-colors"><Eye size={13} /></button>
-                      <button disabled={challan.status === "cancelled"} title="Edit" onClick={() => edit(challan)} className="rounded border border-slate-200 p-1.5 text-amber-600 hover:bg-slate-100 transition-colors disabled:opacity-30"><Pencil size={13} /></button>
-                      <button disabled={challan.status === "cancelled"} title="Send WhatsApp" onClick={() => setCommModal({ isOpen: true, type: "whatsapp", docId: challan._id })} className="rounded border border-slate-200 p-1.5 text-emerald-600 hover:bg-slate-100 transition-colors disabled:opacity-30"><MessageCircleMore size={13} /></button>
-                      <button disabled={challan.status === "cancelled"} title="Send Email" onClick={() => setCommModal({ isOpen: true, type: "email", docId: challan._id })} className="rounded border border-slate-200 p-1.5 text-blue-600 hover:bg-slate-100 transition-colors disabled:opacity-30"><Mail size={13} /></button>
-                      <button disabled={challan.status === "cancelled"} title="Cancel Challan" onClick={() => updateStatus(challan, "cancelled")} className="rounded border border-slate-200 p-1.5 text-red-600 hover:bg-slate-100 transition-colors disabled:opacity-30"><Ban size={13} /></button>
+                      <button title="View / Print" onClick={() => view(challan)} className="rounded border border-slate-200 p-1.5 text-[#194090] hover:bg-slate-100 transition-colors cursor-pointer disabled:cursor-not-allowed"><Eye size={13} /></button>
+                      <button disabled={challan.status === "cancelled"} title="Edit" onClick={() => edit(challan)} className="rounded border border-slate-200 p-1.5 text-amber-600 hover:bg-slate-100 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"><Pencil size={13} /></button>
+                      <button disabled={challan.status === "cancelled"} title="Send WhatsApp" onClick={() => setCommModal({ isOpen: true, type: "whatsapp", docId: challan._id })} className="rounded border border-slate-200 p-1.5 text-emerald-600 hover:bg-slate-100 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"><MessageCircleMore size={13} /></button>
+                      <button disabled={challan.status === "cancelled"} title="Send Email" onClick={() => setCommModal({ isOpen: true, type: "email", docId: challan._id })} className="rounded border border-slate-200 p-1.5 text-blue-600 hover:bg-slate-100 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"><Mail size={13} /></button>
+                      <button disabled={challan.status === "cancelled"} title="Cancel Challan" onClick={() => updateStatus(challan, "cancelled")} className="rounded border border-slate-200 p-1.5 text-red-600 hover:bg-slate-100 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"><Ban size={13} /></button>
                     </div>
                   </td>
                 </tr>

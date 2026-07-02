@@ -265,7 +265,7 @@ const DebitNoteList = () => {
                                 <td className="px-4 py-3">
                                     <button
                                         onClick={() => navigate(`/debit-note-view/${note._id}`)}
-                                        className="rounded border border-slate-200 p-1.5 text-[#194090] hover:bg-slate-100 transition-colors"
+                                        className="rounded border border-slate-200 p-1.5 text-[#194090] hover:bg-slate-100 transition-colors cursor-pointer disabled:cursor-not-allowed"
                                         title="View credit note"
                                     >
                                         <Eye size={13} />
