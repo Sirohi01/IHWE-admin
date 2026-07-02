@@ -764,9 +764,11 @@ const ClientOverview1 = () => {
     || "";
 
   const displayPhone =
-    company?.landlineNo
+    company?.contacts?.[0]?.mobile
+    || company?.mobile
+    || company?.mobileNo
+    || company?.landlineNo
     || company?.landline
-    || company?.contacts?.[0]?.mobile
     || "";
 
   if (!company) {
@@ -877,15 +879,19 @@ const ClientOverview1 = () => {
                   <div className="flex items-center gap-2 text-[11px]">
                     <UserCircle className="text-emerald-600 flex-shrink-0" size={14} />
                     <span className="font-semibold text-[#000000]">
-                      {company.contacts?.[0]?.firstName
-                        ? `${company?.contacts[0]?.firstName} ${isExhibitor ? (company?.contacts[0]?.lastName || "") : (company?.contacts[0]?.surname || "")}`.trim()
-                        : (isExhibitor ? company?.exhibitorName : company?.companyName)}
+                      {company?.contacts?.[0]?.name
+                        ? company.contacts[0].name
+                        : company?.contactPerson
+                          ? company.contactPerson
+                          : company?.contacts?.[0]?.firstName
+                            ? `${company.contacts[0].firstName} ${isExhibitor ? (company.contacts[0].lastName || "") : (company.contacts[0].surname || "")}`.trim()
+                            : (isExhibitor ? company?.exhibitorName : company?.companyName)}
                     </span>
-                    {company?.contacts?.[0]?.designation && (
+                    {(company?.designation || company?.contacts?.[0]?.designation) && (
                       <>
                         <span className="text-slate-400 font-bold">/</span>
                         <span className="font-semibold text-[#5E0006]">
-                          {company.contacts[0].designation}
+                          {company.designation || company?.contacts[0]?.designation}
                         </span>
                       </>
                     )}
