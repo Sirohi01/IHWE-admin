@@ -196,6 +196,9 @@ const AccountOverview = () => {
                   if (doc.status === 'Paid' || doc.status === 'Accepted') statusBg = 'bg-[#e6f7ec] text-[#00a86b]';
                   else if (doc.status === 'Unpaid' || doc.status === 'Pending') statusBg = 'bg-[#ffebee] text-[#ff4d4f]';
                   else if (doc.status === 'Cancelled') statusBg = 'bg-red-50 text-red-600';
+                  else if (doc.status === 'E-Sent') statusBg = 'bg-blue-50 text-blue-600';
+                  else if (doc.status === 'W-Sent') statusBg = 'bg-emerald-50 text-emerald-600';
+                  else if (doc.status === 'E/W-Sent') statusBg = 'bg-teal-50 text-teal-700';
                   else if (doc.status === 'Sent' || doc.status === 'Converted') statusBg = 'bg-[#e6f0fa] text-[#194090]';
 
                   const viewPath = getDocViewPath(doc);

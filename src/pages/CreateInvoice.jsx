@@ -41,6 +41,37 @@ const newItem = () => ({
 
 const GST_OPTIONS = ['0%', '5%', '12%', '18%', '28%'];
 const UNITS = ['Nos', 'Sqm', 'Sqft', 'Mtrs', 'Kgs', 'Ltrs', 'Pcs'];
+const normalizeItemValue = (value) => String(value ?? '').trim().toLowerCase();
+const getItemKey = (item = {}) => [
+    normalizeItemValue(item.description),
+    normalizeItemValue(item.hsn),
+    normalizeItemValue(item.unit),
+    normalizeItemValue(item.size),
+    normalizeItemValue(item.area),
+    Number(item.rate || 0).toFixed(2),
+].join('|');
+const isCancelledDoc = (doc) => String(doc?.status || '').trim().toLowerCase() === 'cancelled';
+const recalculateItemForQty = (item, qty) => {
+    const nextQty = Number(qty) || 0;
+    const rate = Number(item.rate) || 0;
+    const area = Number(item.area) || 0;
+    const sizeAsNumber = Number(item.size);
+    const multiplier = area > 0 ? area : (Number.isFinite(sizeAsNumber) && sizeAsNumber > 0 ? sizeAsNumber : 1);
+    const amount = rate * nextQty * multiplier;
+    const discountPct = Number(item.discountPct) || 0;
+    const taxableValue = amount - (amount * discountPct) / 100;
+    const gstRate = parseFloat(item.gstPct) || 0;
+    const gstAmount = taxableValue * (gstRate / 100);
+
+    return {
+        ...item,
+        qty: nextQty,
+        amount,
+        taxableValue,
+        gstAmount,
+        total: taxableValue + gstAmount,
+    };
+};
 
 // ── Section heading ──────────────────────────────────────────────────────────
 const SectionHead = ({ num, label }) => (
@@ -98,6 +129,7 @@ const CreateInvoice = () => {
     const fileInputRef = useRef(null);
     const [attachedFile, setAttachedFile] = useState(null);
     const [estimates, setEstimates] = useState([]);
+    const [existingInvoices, setExistingInvoices] = useState([]);
     const [selectedPi, setSelectedPi] = useState('');
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingInvoiceId, setEditingInvoiceId] = useState('');
@@ -124,6 +156,7 @@ const CreateInvoice = () => {
             const fetchedInvoices = Array.isArray(invRes.data) ? invRes.data : (invRes.data?.data || []);
 
             setEstimates(fetchedEstimates);
+            setExistingInvoices(fetchedInvoices);
         } catch (err) {
             console.error("Failed to fetch estimates and invoices", err);
         }
@@ -195,7 +228,7 @@ const CreateInvoice = () => {
                                     invoiceType: estimate.est_type || f.invoiceType,
                                 }));
                                 if (estimate.items && estimate.items.length > 0) {
-                                    setItems(estimateItemsToInvoiceItems(estimate.items || []));
+                                    await applyEstimateItemsForNewInvoice(estimate);
                                 }
                                 return;
                             }
@@ -302,8 +335,58 @@ const CreateInvoice = () => {
         ? [{ est_no: selectedPiFromUrl }, ...estimates]
         : estimates;
 
+    const getInvoicesForSplit = useCallback(async () => {
+        if (existingInvoices.length > 0) return existingInvoices;
+        try {
+            const invRes = await api.get('/api/invoices');
+            const fetchedInvoices = Array.isArray(invRes.data) ? invRes.data : (invRes.data?.data || []);
+            setExistingInvoices(fetchedInvoices);
+            return fetchedInvoices;
+        } catch (error) {
+            console.error("Failed to fetch invoices for split billing", error);
+            return [];
+        }
+    }, [existingInvoices]);
+
+    const buildRemainingInvoiceItems = useCallback(async (estimate) => {
+        const invoiceList = await getInvoicesForSplit();
+        const usedQtyByKey = new Map();
+        invoiceList
+            .filter((invoice) => {
+                if (isCancelledDoc(invoice)) return false;
+                if (invoice.companyId && estimate.companyId && String(invoice.companyId) !== String(estimate.companyId)) return false;
+                return invoice.estimate_no === estimate.est_no || String(invoice.source_estimate_id || '') === String(estimate._id || '');
+            })
+            .forEach((invoice) => {
+                (invoice.items || []).forEach((item) => {
+                    const key = getItemKey(item);
+                    usedQtyByKey.set(key, (usedQtyByKey.get(key) || 0) + (Number(item.qty) || 0));
+                });
+            });
+
+        return estimateItemsToInvoiceItems(estimate.items || [])
+            .map((item) => {
+                const remainingQty = Math.max(0, (Number(item.qty) || 0) - (usedQtyByKey.get(getItemKey(item)) || 0));
+                return {
+                    ...recalculateItemForQty(item, remainingQty),
+                    maxQty: remainingQty,
+                };
+            })
+            .filter((item) => Number(item.qty) > 0);
+    }, [getInvoicesForSplit]);
+
+    const applyEstimateItemsForNewInvoice = useCallback(async (estimate) => {
+        const remainingItems = await buildRemainingInvoiceItems(estimate);
+        if (remainingItems.length > 0) {
+            setItems(remainingItems);
+            return;
+        }
+        setItems([newItem()]);
+        Swal.fire('Fully Invoiced', 'All items from this proforma invoice are already invoiced.', 'info');
+    }, [buildRemainingInvoiceItems]);
+
     // ── handlers ────────────────────────────────────────────────────────────────
-    const handlePiSelect = (estNo) => {
+    const handlePiSelect = async (estNo) => {
         setSelectedPi(estNo);
         if (!estNo) return;
 
@@ -332,7 +415,7 @@ const CreateInvoice = () => {
             }));
 
             if (est.items && est.items.length > 0) {
-                setItems(estimateItemsToInvoiceItems(est.items || []));
+                await applyEstimateItemsForNewInvoice(est);
             }
         }
     };
@@ -352,7 +435,9 @@ const CreateInvoice = () => {
                 }
 
                 const rate = Number(field === 'rate' ? val : updated.rate) || 0;
-                const qty = Number(field === 'qty' ? val : updated.qty) || 0;
+                const rawQty = Number(field === 'qty' ? val : updated.qty) || 0;
+                const qty = Number(updated.maxQty) > 0 ? Math.min(rawQty, Number(updated.maxQty)) : rawQty;
+                updated.qty = qty;
                 const area = Number(field === 'area' ? val : updated.area) || 0;
                 const discountPct = Number(field === 'discountPct' ? val : updated.discountPct) || 0;
 
@@ -795,7 +880,10 @@ const CreateInvoice = () => {
                                                 <input className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-center" value={item.hsn} onChange={(e) => updateItem(item.id, 'hsn', e.target.value)} />
                                             </td>
                                             <td className="px-1 py-1.5">
-                                                <input required type="number" min={1} className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-center" value={item.qty} onChange={(e) => updateItem(item.id, 'qty', e.target.value)} />
+                                                <input required type="number" min={1} max={item.maxQty || undefined} className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-center" value={item.qty} onChange={(e) => updateItem(item.id, 'qty', e.target.value)} />
+                                                {item.maxQty ? (
+                                                    <p className="mt-0.5 text-[9px] text-slate-400 text-center whitespace-nowrap">Left: {item.maxQty}</p>
+                                                ) : null}
                                             </td>
                                             <td className="px-1 py-1.5">
                                                 <input className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-center" value={item.area} onChange={(e) => updateItem(item.id, 'area', e.target.value)} placeholder="Area" />

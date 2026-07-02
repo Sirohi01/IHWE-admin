@@ -29,16 +29,34 @@ const CancelledMark = () => (
 );
 
 const StatusBadge = ({ status }) => {
-  const cancelled = String(status || "").toLowerCase() === "cancelled";
-  if (!cancelled) {
+  const normalized = String(status || "").toLowerCase();
+  const styles = {
+    cancelled: "border-red-300 bg-red-50 text-red-600",
+    "e-sent": "border-blue-300 bg-blue-50 text-blue-600",
+    "w-sent": "border-emerald-300 bg-emerald-50 text-emerald-600",
+    "e/w-sent": "border-teal-300 bg-teal-50 text-teal-700",
+    sent: "border-slate-300 bg-slate-50 text-slate-600",
+  };
+
+  if (!normalized || normalized === "active") {
     return <span className="text-gray-400">—</span>;
   }
 
   return (
-    <span className="inline-flex items-center rounded border border-red-300 bg-red-50 px-2 py-1 text-[10px] font-bold uppercase text-red-600">
-      Cancelled
+    <span className={`inline-flex items-center rounded border px-2 py-1 text-[10px] font-bold uppercase ${styles[normalized] || styles.sent}`}>
+      {status}
     </span>
   );
+};
+
+const getEstimateStatus = (estimate) => {
+  if (isCancelled(estimate)) return "Cancelled";
+  const emailSent = Boolean(estimate?.emailSent || estimate?.emailSentAt);
+  const whatsappSent = Boolean(estimate?.whatsappSent || estimate?.whatsappSentAt);
+  if (emailSent && whatsappSent) return "E/W-Sent";
+  if (emailSent) return "E-Sent";
+  if (whatsappSent) return "W-Sent";
+  return "Sent";
 };
 
 const EstimateTable = ({ clientId }) => {
@@ -133,6 +151,15 @@ const EstimateTable = ({ clientId }) => {
   const handleSendEmail = (estimateId) => {
     setCommModal({ isOpen: true, type: 'email', docType: 'proforma', docId: estimateId });
   };
+
+  const refreshEstimateRows = useCallback(() => {
+    if (clientId === 'all') {
+      dispatch(fetchAllGlobalEstimates());
+    } else if (clientId || id) {
+      dispatch(fetchEstimates(clientId || id));
+    }
+    dispatch(fetchInvoices());
+  }, [clientId, dispatch, id]);
 
   // New function to handle navigation for Print/Copy buttons
   const handlePrintCopyNavigation = (copyType, invId) => {
@@ -294,7 +321,12 @@ const EstimateTable = ({ clientId }) => {
       });
     }
 
-    return rows;
+    return rows.map((row, rowIndex) => ({
+      ...row,
+      rowInstanceKey: `${estimate._id}-${row.displayEstNo}-${row.invoiceData?._id || row.rowType}-${rowIndex}`,
+      isFirstForEstimate: rowIndex === 0,
+      estimateRowSpan: rows.length,
+    }));
   });
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -324,7 +356,7 @@ const EstimateTable = ({ clientId }) => {
 
         <tbody className="bg-white divide-y divide-gray-200">
           {displayRows.map((row, index) => {
-            const { estimate, piData, invoiceData, rowType, displayEstNo } = row;
+            const { estimate, piData, invoiceData, rowType, displayEstNo, isFirstForEstimate, estimateRowSpan, rowInstanceKey } = row;
             const totalFinalAmount = estimate?.items?.reduce((total, item) => {
               return total + (parseFloat(item.finalAmount) || 0);
             }, 0);
@@ -349,20 +381,26 @@ const EstimateTable = ({ clientId }) => {
             const companyClientName = estimate?.company_name || (!looksLikeEventName(estimate?.consignee_name) ? estimate?.consignee_name : "") || "Unknown";
 
             return (
-              <tr key={`${estimate._id}-${displayEstNo}-${rowType}`} className="hover:bg-gray-50 transition-colors border-b border-gray-200">
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">{indexOfFirstItem + index + 1}</td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
-                  <div className="flex items-center justify-start gap-2">
-                    <Link to={`/payments/estimateDetails/${estimate?._id}`} state={{ displayEstNo: displayEstNo || estimate?.est_no, documentStatus: rowType === "cancelled" ? "cancelled" : "active", invoiceStatus: invoiceData?.status || "" }}>
-                      <button className="text-[#3598dc] cursor-pointer hover:text-[#566e7d] font-medium px-1">{displayEstNo || estimate?.est_no}</button>
-                    </Link>
-                    <span>| {formattedDate} | {displayAmount}</span>
-                  </div>
-                </td>
+              <tr key={rowInstanceKey} className="hover:bg-gray-50 transition-colors border-b border-gray-200">
+                {isFirstForEstimate && (
+                  <>
+                    <td rowSpan={estimateRowSpan} className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left align-top">{indexOfFirstItem + currentEstimates.findIndex((item) => item._id === estimate._id) + 1}</td>
+                    <td rowSpan={estimateRowSpan} className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left align-top">
+                      <div className="flex items-center justify-start gap-2">
+                        <Link to={`/payments/estimateDetails/${estimate?._id}`} state={{ displayEstNo: estimate?.est_no, documentStatus: isCancelled(estimate) ? "cancelled" : "active", invoiceStatus: "" }}>
+                          <button className="text-[#3598dc] cursor-pointer hover:text-[#566e7d] font-medium px-1">{estimate?.est_no}</button>
+                        </Link>
+                        <span>| {formattedDate} | {displayAmount}</span>
+                      </div>
+                    </td>
+                  </>
+                )}
                 {(clientId === 'all' || id === 'all') && (
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
-                    <span className="font-semibold text-gray-800">{companyClientName}</span>
-                  </td>
+                  isFirstForEstimate && (
+                    <td rowSpan={estimateRowSpan} className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left align-top">
+                      <span className="font-semibold text-gray-800">{companyClientName}</span>
+                    </td>
+                  )
                 )}
                 {(clientId !== 'all' && id !== 'all') && (
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
@@ -394,7 +432,7 @@ const EstimateTable = ({ clientId }) => {
                 </td>
                 {(clientId !== 'all' && id !== 'all') && (
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
-                    <StatusBadge status={rowType === "cancelled" ? "cancelled" : "active"} />
+                    <StatusBadge status={rowType === "cancelled" ? "Cancelled" : getEstimateStatus(estimate)} />
                   </td>
                 )}
                 {(clientId !== 'all' && id !== 'all') && (
@@ -448,6 +486,7 @@ const EstimateTable = ({ clientId }) => {
         type={commModal.type}
         docType={commModal.docType}
         docId={commModal.docId}
+        refreshData={refreshEstimateRows}
       />
     </div>
   );
