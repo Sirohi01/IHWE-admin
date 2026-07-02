@@ -914,16 +914,6 @@ const ConferenceDayManagement = () => {
             </button>
           </div>
           <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-6 border-b border-gray-100">
-              <div>
-                <label className="block text-[11px] font-black text-gray-400 uppercase mb-1.5">Section Title</label>
-                <input type="text" value={content.healthcareHighlights?.title || ""} onChange={(e) => handleHealthcareHighlightsChange('title', e.target.value)} className="w-full px-4 py-2 border-2 border-gray-100 focus:border-[#4E9F3D] outline-none rounded-md" placeholder="e.g. Healthcare Highlights" />
-              </div>
-              <div>
-                <label className="block text-[11px] font-black text-gray-400 uppercase mb-1.5">Section Subtitle</label>
-                <input type="text" value={content.healthcareHighlights?.subtitle || ""} onChange={(e) => handleHealthcareHighlightsChange('subtitle', e.target.value)} className="w-full px-4 py-2 border-2 border-gray-100 focus:border-[#4E9F3D] outline-none rounded-md" placeholder="Optional subtitle" />
-              </div>
-            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {(content.healthcareHighlights?.features || []).map((feature, idx) => (
