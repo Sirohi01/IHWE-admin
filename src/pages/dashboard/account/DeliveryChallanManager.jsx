@@ -471,7 +471,7 @@ const DeliveryChallanManager = () => {
   );
 
   const totalChallans = challans.length;
-  const totalItemsDelivered = challans.reduce((sum, ch) => sum + ch.items.reduce((acc, it) => acc + Number(it.qty || 0), 0), 0);
+  const totalItemsDelivered = challans.reduce((sum, ch) => sum + (ch.items || []).reduce((acc, it) => acc + Number(it.qty || 0), 0), 0);
   const totalAck = challans.filter(ch => ch.status === 'acknowledged').length;
   const totalPending = challans.filter(ch => ch.status === 'issued' || ch.status === 'draft').length;
 
@@ -536,8 +536,8 @@ const DeliveryChallanManager = () => {
                   <td className="px-4 py-3 text-[10px] text-slate-600 font-medium">{formatDate(challan.challan_date)}</td>
                   <td className="px-4 py-3 text-[10px] font-bold text-slate-700">{challan.estimate_no}</td>
                   <td className="px-4 py-3 text-[10px] text-slate-600">{challan.purpose}</td>
-                  <td className="px-4 py-3 text-[10px] font-bold text-slate-700">{challan.items.length}</td>
-                  <td className="px-4 py-3 text-[10px] font-bold text-emerald-600">{challan.items.reduce((sum, item) => sum + Number(item.qty || 0), 0)}</td>
+                  <td className="px-4 py-3 text-[10px] font-bold text-slate-700">{(challan.items || []).length}</td>
+                  <td className="px-4 py-3 text-[10px] font-bold text-emerald-600">{(challan.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0)}</td>
                   <td className="px-4 py-3">
                     <select disabled={challan.status === "cancelled"} value={challan.status} onChange={(event) => updateStatus(challan, event.target.value)} className={`rounded-full border-0 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider outline-none ${statusClass(challan.status)}`}>
                       {["draft", "issued", "delivered", "acknowledged", ...(challan.status === "cancelled" ? ["cancelled"] : [])].map((status) => <option key={status}>{status}</option>)}
