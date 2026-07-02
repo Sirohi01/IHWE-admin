@@ -432,9 +432,23 @@ const EstimateTable = ({ clientId }) => {
                         <div className="h-full rounded-full bg-teal-600" style={{ width: `${proformaQty ? Math.min(100, (challanQty / proformaQty) * 100) : 0}%` }} />
                       </div>
                       <p className="mt-1 text-[10px] text-slate-500">{remainingChallanQty} quantity remaining</p>
+                      
+                      {activeChallans.length > 0 && (
+                        <div className="mt-2 flex flex-col gap-1 border-t border-teal-100 pt-2">
+                          {activeChallans.map((challan, idx) => (
+                            <div key={challan._id || idx} className="flex items-center justify-between text-[10px]">
+                              <span className="text-[#3598dc] font-medium cursor-pointer hover:text-[#566e7d]" onClick={() => navigate(`/dashboard/account/${estimate.companyId}/delivery-challans`, { state: { viewChallanId: challan._id, sourceEstimateId: estimate._id } })} title="View Challan">
+                                {challan.challan_no}
+                              </span>
+                              <span className="text-slate-500">{formatPiDate(challan.challan_date || challan.createdAt)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
                       <div className="mt-2 flex gap-1.5">
-                        <button type="button" onClick={() => navigate(`/dashboard/account/${clientId}/delivery-challans`, { state: { sourceEstimateId: estimate._id } })} disabled={isCancelled(estimate) || remainingChallanQty <= 0} className="flex items-center gap-1 rounded border border-teal-600 bg-teal-600 px-2 py-1 text-[10px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"><Plus size={12} /> Create</button>
-                        {estimateChallans.length > 0 && <button type="button" onClick={() => navigate(`/dashboard/account/${clientId}/delivery-challans`)} className="rounded border border-teal-600 bg-white px-2 py-1 text-[10px] font-bold text-teal-700">View All</button>}
+                        <button type="button" onClick={() => navigate(`/dashboard/account/${estimate.companyId}/delivery-challans`, { state: { sourceEstimateId: estimate._id } })} disabled={isCancelled(estimate) || remainingChallanQty <= 0} className="flex items-center gap-1 rounded border border-teal-600 bg-teal-600 px-2 py-1 text-[10px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"><Plus size={12} /> Create</button>
+                        {estimateChallans.length > 0 && <button type="button" onClick={() => navigate(`/dashboard/account/${estimate.companyId}/delivery-challans`)} className="rounded border border-teal-600 bg-white px-2 py-1 text-[10px] font-bold text-teal-700">View All</button>}
                       </div>
                     </div>
                   </td>

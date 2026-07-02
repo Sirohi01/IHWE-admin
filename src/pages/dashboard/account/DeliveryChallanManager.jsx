@@ -221,8 +221,22 @@ const DeliveryChallanManager = () => {
   };
 
   useEffect(() => {
+    if (directCreateHandled.current) return;
+
+    const viewChallanId = location.state?.viewChallanId;
+    if (viewChallanId && challans.length > 0) {
+      const matchingChallan = challans.find((c) => String(c._id) === String(viewChallanId));
+      if (matchingChallan) {
+        directCreateHandled.current = true;
+        setForm(matchingChallan);
+        setMode("view");
+        navigate(location.pathname, { replace: true, state: {} });
+        return;
+      }
+    }
+
     const sourceEstimateId = location.state?.sourceEstimateId;
-    if (!sourceEstimateId || directCreateHandled.current || !proformas.length) return;
+    if (!sourceEstimateId || !proformas.length) return;
     const matchingEstimate = proformas.find((estimate) => String(estimate._id) === String(sourceEstimateId));
     if (!matchingEstimate) return;
     directCreateHandled.current = true;
@@ -231,7 +245,7 @@ const DeliveryChallanManager = () => {
     setMode("form");
     selectProforma(matchingEstimate._id);
     navigate(location.pathname, { replace: true, state: {} });
-  }, [location.pathname, location.state, navigate, proformas]);
+  }, [location.pathname, location.state, navigate, proformas, challans]);
 
   const updateItem = (index, field, value) => {
     setForm((previous) => ({
