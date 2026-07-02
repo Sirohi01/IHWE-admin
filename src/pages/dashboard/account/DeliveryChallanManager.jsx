@@ -355,9 +355,9 @@ const DeliveryChallanManager = () => {
             <p className="text-xs text-slate-500">One proforma can have multiple challans. Only remaining quantities can be delivered.</p>
           </div>
         </div>
-        <form onSubmit={save} className="space-y-4">
+        <form onSubmit={save} className="space-y-2">
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="grid gap-x-5 gap-y-4 md:grid-cols-12">
+            <div className="grid gap-3 md:grid-cols-12">
               <div className="md:col-span-4"><label className={labelClass}>Source Proforma Invoice *</label><select disabled={Boolean(editingId)} className={inputClass} value={form.source_estimate_id} onChange={(event) => selectProforma(event.target.value)}><option value="">Select Proforma Invoice</option>{proformas.map((estimate) => { const availableItems = estimate.items.filter((item) => item.remainingQty > 0); const availableQty = availableItems.reduce((sum, item) => sum + item.remainingQty, 0); return <option key={estimate._id} value={estimate._id}>{estimate.est_no} — {availableItems.length} item(s), {availableQty} qty available</option>; })}</select></div>
               <div className="md:col-span-4"><label className={labelClass}>Challan Date *</label><input required type="date" className={inputClass} value={form.challan_date} onChange={(event) => setForm({ ...form, challan_date: event.target.value })} /></div>
               <div className="md:col-span-4"><label className={labelClass}>Purpose</label><select className={inputClass} value={form.purpose} onChange={(event) => setForm({ ...form, purpose: event.target.value })}>{["Event/Stall Material", "Job Work", "Returnable Material", "Non-returnable Material", "Other"].map((value) => <option key={value}>{value}</option>)}</select></div>
@@ -369,7 +369,7 @@ const DeliveryChallanManager = () => {
           </section>
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <h2 className="mb-4 border-b border-slate-100 pb-3 text-sm font-black uppercase text-[#1a2b4b]">Client &amp; Delivery Details</h2>
-            <div className="grid gap-x-5 gap-y-4 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-3">
               <div><label className={labelClass}>Company Name</label><input className={inputClass} value={form.company_name} onChange={(event) => setForm({ ...form, company_name: event.target.value })} /></div>
               <div><label className={labelClass}>GSTIN</label><input className={inputClass} value={form.company_gst_no} onChange={(event) => setForm({ ...form, company_gst_no: event.target.value })} /></div>
               <div><label className={labelClass}>Contact Person</label><input className={inputClass} value={form.contact_person} onChange={(event) => setForm({ ...form, contact_person: event.target.value })} /></div>
