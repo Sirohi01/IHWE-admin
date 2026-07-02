@@ -181,7 +181,7 @@ const AccountOverview = () => {
           <div className="flex justify-between items-center mb-1.5">
             <h2 className="text-[13px] font-medium text-[#1a2b4b] tracking-tight">Recent Documents</h2>
           </div>
-          <div className="overflow-x-auto flex-1 table-scroll-wrapper">
+          <div className="overflow-auto flex-1 table-scroll-wrapper thin-scrollbar">
             <table className="w-max text-left border-collapse">
               <thead>
                 <tr className="text-[11px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
@@ -259,7 +259,7 @@ const AccountOverview = () => {
           <div className="flex justify-between items-center mb-1.5">
             <h2 className="text-[13px] font-medium text-[#1a2b4b] tracking-tight">Payment Schedule</h2>
           </div>
-          <div className="overflow-x-auto flex-1">
+          <div className="overflow-auto flex-1 thin-scrollbar">
             <table className="w-full text-left border-collapse mb-1">
               <thead>
                 <tr className="text-[11px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
