@@ -532,7 +532,7 @@ const DeliveryChallanManager = () => {
               {!challans.length && <tr><td colSpan={8} className="p-10 text-center text-slate-400 font-bold">No delivery challans created yet.</td></tr>}
               {challans.map((challan) => (
                 <tr key={challan._id} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
-                  <td className="px-4 py-3 text-[11px] font-bold text-[#194090]">{challan.challan_no}</td>
+                  <td className="px-4 py-3 text-[11px] font-bold text-[#194090] cursor-pointer hover:underline" onClick={() => view(challan)}>{challan.challan_no}</td>
                   <td className="px-4 py-3 text-[10px] text-slate-600 font-medium">{formatDate(challan.challan_date)}</td>
                   <td className="px-4 py-3 text-[10px] font-bold text-slate-700">{challan.estimate_no}</td>
                   <td className="px-4 py-3 text-[10px] text-slate-600">{challan.purpose}</td>
