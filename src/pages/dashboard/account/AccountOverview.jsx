@@ -182,15 +182,15 @@ const AccountOverview = () => {
             <h2 className="text-[13px] font-medium text-[#1a2b4b] tracking-tight">Recent Documents</h2>
           </div>
           <div className="overflow-x-auto flex-1 table-scroll-wrapper">
-            <table className="w-max text-center border-collapse">
+            <table className="w-max text-left border-collapse">
               <thead>
                 <tr className="text-[11px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
                   <th className="pb-2 pr-3 text-left whitespace-nowrap">Document</th>
-                  <th className="pb-2 pr-3 whitespace-nowrap">Document No.</th>
-                  <th className="pb-2 pr-3 whitespace-nowrap">Date</th>
-                  <th className="pb-2 pr-3 whitespace-nowrap">Amount</th>
-                  <th className="pb-2 pr-3 whitespace-nowrap">Status</th>
-                  <th className="pb-2 whitespace-nowrap">Action</th>
+                  <th className="pb-2 pr-3 text-left whitespace-nowrap">Document No.</th>
+                  <th className="pb-2 pr-3 text-left whitespace-nowrap">Date</th>
+                  <th className="pb-2 pr-3 text-left whitespace-nowrap">Amount</th>
+                  <th className="pb-2 pr-3 text-left whitespace-nowrap">Status</th>
+                  <th className="pb-2 text-center whitespace-nowrap">Action</th>
                 </tr>
               </thead>
               <tbody className="text-[11px] text-slate-700">
@@ -226,10 +226,10 @@ const AccountOverview = () => {
                           {doc.documentType}
                         </span>
                       </td>
-                      <td className="py-0.5 pr-3 text-center font-medium text-[#1a2b4b] whitespace-nowrap">{doc.documentNo}</td>
-                      <td className="py-0.5 pr-3 text-center whitespace-nowrap">{doc.date ? new Date(doc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'}</td>
-                      <td className="py-0.5 pr-3 text-center font-medium text-[#1a2b4b] whitespace-nowrap">{formatCurrency(doc.amount)}</td>
-                      <td className="py-0.5 pr-3 text-center whitespace-nowrap">
+                      <td className="py-0.5 pr-3 text-left font-medium text-[#1a2b4b] whitespace-nowrap">{doc.documentNo}</td>
+                      <td className="py-0.5 pr-3 text-left font-medium text-[#1a2b4b] whitespace-nowrap">{doc.date ? new Date(doc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'}</td>
+                      <td className="py-0.5 pr-3 text-left font-medium text-[#1a2b4b] whitespace-nowrap">{formatCurrency(doc.amount)}</td>
+                      <td className="py-0.5 pr-3 text-left whitespace-nowrap">
                         <span className={`px-1.5 py-[1px] rounded text-[11px] font-medium whitespace-nowrap ${statusBg}`}>
                           {doc.status}
                         </span>
@@ -280,7 +280,7 @@ const AccountOverview = () => {
                   <tr key={schedule.id} className="border-b border-gray-50 hover:bg-slate-50/50">
                     <td className="py-1 pr-1 text-slate-400 font-medium">{idx + 1}</td>
                     <td className="py-1 pr-2 font-medium text-[#1a2b4b]">{schedule.scheduleType}</td>
-                    <td className="py-1 pr-2">{schedule.dueDate}</td>
+                    <td className="py-1 pr-2 font-medium text-[#1a2b4b]">{schedule.dueDate ? new Date(schedule.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : '-'}</td>
                     <td className="py-1 pr-2">{formatCurrency(schedule.dueAmount)}</td>
                     <td className="py-1">
                       <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${schedule.status === 'Paid' ? 'bg-[#e6f7ec] text-[#00a86b]' : 'bg-[#fff1f2] text-[#ea580c]'}`}>
