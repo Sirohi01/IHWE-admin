@@ -199,10 +199,10 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
               <Receipt size={16} />
             </div>
           </div>
-          <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-50 ml-1 relative z-10">
-            <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap">{invoiceCount} Invoices</span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-600 whitespace-nowrap">
-              {paidPct}%
+          <div className="pt-2 border-t border-gray-50 ml-1 relative z-10 flex flex-col gap-1">
+            <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap">Total Invoices</span>
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-600 whitespace-nowrap w-fit">
+              {invoiceCount} Invoices • {paidPct}%
             </span>
           </div>
 
@@ -226,9 +226,9 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
               <Wallet size={16} />
             </div>
           </div>
-          <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-50 ml-1 relative z-10">
-            <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap">Pending</span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 whitespace-nowrap">
+          <div className="pt-2 border-t border-gray-50 ml-1 relative z-10 flex flex-col gap-1">
+            <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap">Total Pending</span>
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 whitespace-nowrap w-fit">
               {balPct}%
             </span>
           </div>
