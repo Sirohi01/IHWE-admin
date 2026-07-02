@@ -4,7 +4,7 @@ import {
   Save, Calendar, Image as ImageIcon, Users, List,
   Plus, Trash2, Edit2, Loader2, Layout, Info, Rocket,
   Clock, FileText, Globe, Tag, ChevronDown, ChevronUp,
-  Upload
+  Upload, Handshake, Sparkles
 } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
 import PageHeader from '../components/PageHeader';
@@ -14,7 +14,7 @@ const ConferenceDayManagement = () => {
   const [days, setDays] = useState([1, 2, 3]);
   const [loading, setLoading] = useState(false);
   const [content, setContent] = useState(null);
-  const [uploading, setUploading] = useState({ hero: false, speakers: {} });
+  const [uploading, setUploading] = useState({ hero: false, speakers: {}, associates: {} });
 
   useEffect(() => {
     fetchAllDays();
@@ -50,6 +50,17 @@ const ConferenceDayManagement = () => {
         const data = response.data.data;
         if (!data.agenda) data.agenda = { title: "", subtitle: "", sessions: [] };
         if (!data.agenda.sessions) data.agenda.sessions = [];
+        // Ensure hero features exists (backward-compat for older saved docs)
+        if (!data.hero) data.hero = { title: "", subtitle: "", date: "", category: "", description: "", backgroundImage: "", stats: [], features: [] };
+        if (!data.hero.stats) data.hero.stats = [];
+        if (!data.hero.features) data.hero.features = [];
+        if (!data.ourSpeakers) data.ourSpeakers = [];
+        // Ensure cards & associates exist (backward-compat for older saved docs)
+        if (!data.cards) data.cards = [];
+        if (!data.associates) data.associates = [];
+        // Ensure healthcare highlights exist (backward-compat for older saved docs)
+        if (!data.healthcareHighlights) data.healthcareHighlights = { title: "", subtitle: "", features: [] };
+        if (!data.healthcareHighlights.features) data.healthcareHighlights.features = [];
         setContent(data);
       } else {
         setContent(getDefaultContent(day));
@@ -64,10 +75,14 @@ const ConferenceDayManagement = () => {
 
   const getDefaultContent = (day) => ({
     dayNumber: day,
-    hero: { title: "", subtitle: "", date: "", category: `Day ${day}`, description: "", backgroundImage: "", stats: [] },
+    hero: { title: "", subtitle: "", date: "", category: `Day ${day}`, description: "", backgroundImage: "", stats: [], features: [] },
     about: { title: "", description: "", descriptionSecondary: "", focusAreas: [] },
     agenda: { title: "", subtitle: "", sessions: [] },
     featuredSpeakers: [],
+    ourSpeakers: [],
+    cards: [],
+    associates: [],
+    healthcareHighlights: { title: "", subtitle: "", features: [] },
     cta: {
       bePartTitle: "", bePartDescription: "",
       delegatePass: { title: "", description: "" },
@@ -114,6 +129,19 @@ const ConferenceDayManagement = () => {
     setContent({ ...content, hero: { ...content.hero, stats: newStats } });
   };
 
+  const handleAddFeature = () => {
+    setContent({
+      ...content,
+      hero: { ...content.hero, features: [...(content.hero.features || []), { title: "", subTitle: "" }] }
+    });
+  };
+
+  const handleRemoveFeature = (index) => {
+    const newFeatures = [...(content.hero.features || [])];
+    newFeatures.splice(index, 1);
+    setContent({ ...content, hero: { ...content.hero, features: newFeatures } });
+  };
+
   const handleAddFocusArea = () => {
     setContent({
       ...content,
@@ -140,6 +168,19 @@ const ConferenceDayManagement = () => {
     setContent({ ...content, featuredSpeakers: newSpeakers });
   };
 
+  const handleAddOurSpeaker = () => {
+    setContent({
+      ...content,
+      ourSpeakers: [...(content.ourSpeakers || []), { name: "", role: "", company: "", category: "", image: "" }]
+    });
+  };
+
+  const handleRemoveOurSpeaker = (index) => {
+    const newSpeakers = [...(content.ourSpeakers || [])];
+    newSpeakers.splice(index, 1);
+    setContent({ ...content, ourSpeakers: newSpeakers });
+  };
+
   const handleAddSession = () => {
     setContent({
       ...content,
@@ -156,6 +197,70 @@ const ConferenceDayManagement = () => {
     setContent({ ...content, agenda: { ...content.agenda, sessions: newSessions } });
   };
 
+  // ---------- Participation Cards (Paper Presentation / Poster Presentation / Abstract Submission etc.) ----------
+  const handleAddCard = () => {
+    setContent({
+      ...content,
+      cards: [...(content.cards || []), { title: "", text: "", link: "" }]
+    });
+  };
+
+  const handleRemoveCard = (index) => {
+    const newCards = [...(content.cards || [])];
+    newCards.splice(index, 1);
+    setContent({ ...content, cards: newCards });
+  };
+
+  const handleCardChange = (index, field, value) => {
+    const newCards = [...(content.cards || [])];
+    newCards[index] = { ...newCards[index], [field]: value };
+    setContent({ ...content, cards: newCards });
+  };
+
+  // ---------- Partners & Associates (logo grid) ----------
+  const handleAddAssociate = () => {
+    setContent({
+      ...content,
+      associates: [...(content.associates || []), ""]
+    });
+  };
+
+  const handleRemoveAssociate = (index) => {
+    const newAssociates = [...(content.associates || [])];
+    newAssociates.splice(index, 1);
+    setContent({ ...content, associates: newAssociates });
+  };
+
+  // ---------- Healthcare Highlights (feature strip: Network / Discover / etc.) ----------
+  const handleHealthcareHighlightsChange = (field, value) => {
+    setContent({
+      ...content,
+      healthcareHighlights: { ...content.healthcareHighlights, [field]: value }
+    });
+  };
+
+  const handleAddHighlightFeature = () => {
+    setContent({
+      ...content,
+      healthcareHighlights: {
+        ...content.healthcareHighlights,
+        features: [...(content.healthcareHighlights.features || []), { title: "", description: "" }]
+      }
+    });
+  };
+
+  const handleRemoveHighlightFeature = (index) => {
+    const newFeatures = [...(content.healthcareHighlights.features || [])];
+    newFeatures.splice(index, 1);
+    setContent({ ...content, healthcareHighlights: { ...content.healthcareHighlights, features: newFeatures } });
+  };
+
+  const handleHighlightFeatureChange = (index, field, value) => {
+    const newFeatures = [...(content.healthcareHighlights.features || [])];
+    newFeatures[index] = { ...newFeatures[index], [field]: value };
+    setContent({ ...content, healthcareHighlights: { ...content.healthcareHighlights, features: newFeatures } });
+  };
+
   const handleImageUpload = async (file, type, index = null) => {
     if (!file) return;
 
@@ -164,7 +269,9 @@ const ConferenceDayManagement = () => {
 
     if (type === 'hero') setUploading({ ...uploading, hero: true });
     else if (type === 'speaker') setUploading({ ...uploading, speakers: { ...uploading.speakers, [index]: true } });
+    else if (type === 'ourSpeaker') setUploading({ ...uploading, ourSpeakers: { ...uploading.ourSpeakers, [index]: true } });
     else if (type === 'agendaSpeaker') setUploading({ ...uploading, agendaSpeakers: { ...uploading.agendaSpeakers, [index]: true } });
+    else if (type === 'associate') setUploading({ ...uploading, associates: { ...uploading.associates, [index]: true } });
 
     try {
       const response = await api.post("/api/conference-days/upload", formData, {
@@ -179,10 +286,18 @@ const ConferenceDayManagement = () => {
           const newSpeakers = [...content.featuredSpeakers];
           newSpeakers[index].image = imageUrl;
           setContent({ ...content, featuredSpeakers: newSpeakers });
+        } else if (type === 'ourSpeaker') {
+          const newSpeakers = [...(content.ourSpeakers || [])];
+          newSpeakers[index].image = imageUrl;
+          setContent({ ...content, ourSpeakers: newSpeakers });
         } else if (type === 'agendaSpeaker') {
           const newSessions = [...content.agenda.sessions];
           newSessions[index].speaker.image = imageUrl;
           setContent({ ...content, agenda: { ...content.agenda, sessions: newSessions } });
+        } else if (type === 'associate') {
+          const newAssociates = [...(content.associates || [])];
+          newAssociates[index] = imageUrl;
+          setContent({ ...content, associates: newAssociates });
         }
         Swal.fire({ icon: 'success', title: 'Image Uploaded', timer: 1000, showConfirmButton: false });
       }
@@ -192,7 +307,9 @@ const ConferenceDayManagement = () => {
     } finally {
       if (type === 'hero') setUploading({ ...uploading, hero: false });
       else if (type === 'speaker') setUploading({ ...uploading, speakers: { ...uploading.speakers, [index]: false } });
+      else if (type === 'ourSpeaker') setUploading({ ...uploading, ourSpeakers: { ...uploading.ourSpeakers, [index]: false } });
       else if (type === 'agendaSpeaker') setUploading({ ...uploading, agendaSpeakers: { ...uploading.agendaSpeakers, [index]: false } });
+      else if (type === 'associate') setUploading({ ...uploading, associates: { ...uploading.associates, [index]: false } });
     }
   };
 
@@ -313,6 +430,32 @@ const ConferenceDayManagement = () => {
               <div>
                 <label className="block text-[11px] font-black text-gray-400 uppercase mb-1.5">Description Text</label>
                 <textarea value={content.hero.description} onChange={(e) => handleHeroChange('description', e.target.value)} className="w-full px-4 py-2 border-2 border-gray-100 focus:border-[#4E9F3D] outline-none rounded-md min-h-[80px]" placeholder="Brief slogan or text under heading" />
+              </div>
+
+              {/* Hero Features */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-[11px] font-black text-gray-400 uppercase">Hero Features</label>
+                  <button type="button" onClick={handleAddFeature} className="text-[10px] font-black text-[#4E9F3D] hover:underline flex items-center gap-1 uppercase tracking-widest">+ Add Feature</button>
+                </div>
+                <div className="space-y-2 p-2 border-2 border-gray-50 rounded-lg">
+                  {(content.hero.features || []).map((feature, idx) => (
+                    <div key={idx} className="flex gap-2 items-center bg-gray-50 p-2 rounded">
+                      <input type="text" value={feature.title} onChange={(e) => {
+                        const newFeatures = [...content.hero.features];
+                        newFeatures[idx].title = e.target.value;
+                        setContent({ ...content, hero: { ...content.hero, features: newFeatures } });
+                      }} className="w-1/2 px-2 py-1 text-xs border rounded" placeholder="Title" />
+                      <input type="text" value={feature.subTitle} onChange={(e) => {
+                        const newFeatures = [...content.hero.features];
+                        newFeatures[idx].subTitle = e.target.value;
+                        setContent({ ...content, hero: { ...content.hero, features: newFeatures } });
+                      }} className="w-1/2 px-2 py-1 text-xs border rounded" placeholder="Sub Title" />
+                      <button type="button" onClick={() => handleRemoveFeature(idx)} className="text-red-400 hover:text-red-600"><Trash2 size={14} /></button>
+                    </div>
+                  ))}
+                  {(!content.hero.features || content.hero.features.length === 0) && <p className="text-center py-4 text-[11px] text-gray-400 italic">No features added yet.</p>}
+                </div>
               </div>
             </div>
 
@@ -624,6 +767,169 @@ const ConferenceDayManagement = () => {
                 </div>
               ))}
               {content.featuredSpeakers.length === 0 && <div className="col-span-full py-12 text-center text-gray-400 italic bg-gray-50 rounded-xl border-2 border-dashed border-gray-100">No speakers added for this day yet.</div>}
+            </div>
+          </div>
+        </div>
+
+        {/* Our Speakers Section */}
+        <div className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden shadow-sm">
+          <div className="bg-[#0B2C66] px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Users className="text-[#4E9F3D] w-5 h-5" />
+              <h3 className="text-white font-black uppercase tracking-wider text-sm">Our Speakers</h3>
+            </div>
+            <button type="button" onClick={handleAddOurSpeaker} className="px-4 py-1.5 bg-[#4E9F3D] text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-green-700 transition-colors flex items-center gap-2">
+              <Plus size={14} /> Add Speaker
+            </button>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {(content.ourSpeakers || []).map((speaker, idx) => (
+                <div key={idx} className="p-4 bg-gray-50 border-2 border-gray-100 rounded-xl relative group flex flex-col gap-3">
+                  <button type="button" onClick={() => handleRemoveOurSpeaker(idx)} className="absolute top-2 right-2 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity z-10"><Trash2 size={16} /></button>
+
+                  <div className="relative aspect-square w-24 mx-auto rounded-full overflow-hidden border-4 border-white shadow-md group/img">
+                    {speaker.image ? (
+                      <img src={speaker.image.startsWith('http') ? speaker.image : `${SERVER_URL}${speaker.image}`} alt="Speaker" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300"><Users size={32} /></div>
+                    )}
+                    <label className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
+                      <Upload className="text-white w-6 h-6" />
+                      <input type="file" className="hidden" onChange={(e) => handleImageUpload(e.target.files[0], 'ourSpeaker', idx)} />
+                    </label>
+                  </div>
+
+                  <div className="space-y-2">
+                    <input type="text" value={speaker.name} onChange={(e) => {
+                      const newSpeakers = [...content.ourSpeakers];
+                      newSpeakers[idx].name = e.target.value;
+                      setContent({ ...content, ourSpeakers: newSpeakers });
+                    }} className="w-full px-3 py-1.5 text-xs font-bold border rounded text-center" placeholder="Speaker Name" />
+                    <input type="text" value={speaker.role} onChange={(e) => {
+                      const newSpeakers = [...content.ourSpeakers];
+                      newSpeakers[idx].role = e.target.value;
+                      setContent({ ...content, ourSpeakers: newSpeakers });
+                    }} className="w-full px-3 py-1.5 text-[10px] border rounded text-center" placeholder="Role/Designation" />
+                    <input type="text" value={speaker.company} onChange={(e) => {
+                      const newSpeakers = [...content.ourSpeakers];
+                      newSpeakers[idx].company = e.target.value;
+                      setContent({ ...content, ourSpeakers: newSpeakers });
+                    }} className="w-full px-3 py-1.5 text-[10px] border rounded text-center" placeholder="Company/Org" />
+                    <select value={speaker.category} onChange={(e) => {
+                      const newSpeakers = [...content.ourSpeakers];
+                      newSpeakers[idx].category = e.target.value;
+                      setContent({ ...content, ourSpeakers: newSpeakers });
+                    }} className="w-full px-3 py-1.5 text-[10px] border rounded bg-white text-[#4E9F3D] font-black uppercase text-center">
+                      <option value="KEYNOTE SPEAKER">KEYNOTE SPEAKER</option>
+                      <option value="PANELIST">PANELIST</option>
+                      <option value="MODERATOR">MODERATOR</option>
+                      <option value="GUEST SPEAKER">GUEST SPEAKER</option>
+                    </select>
+                  </div>
+                </div>
+              ))}
+              {(!content.ourSpeakers || content.ourSpeakers.length === 0) && <div className="col-span-full py-12 text-center text-gray-400 italic bg-gray-50 rounded-xl border-2 border-dashed border-gray-100">No speakers added for this day yet.</div>}
+            </div>
+          </div>
+        </div>
+
+        {/* Participation Options (Cards) Section */}
+        <div className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden shadow-sm">
+          <div className="bg-[#0B2C66] px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Layout className="text-[#4E9F3D] w-5 h-5" />
+              <h3 className="text-white font-black uppercase tracking-wider text-sm">Participation Options (Cards)</h3>
+            </div>
+            <button type="button" onClick={handleAddCard} className="px-4 py-1.5 bg-[#4E9F3D] text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-green-700 transition-colors flex items-center gap-2">
+              <Plus size={14} /> Add Card
+            </button>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {(content.cards || []).map((card, idx) => (
+                <div key={idx} className="p-4 bg-gray-50 border-2 border-gray-100 rounded-xl relative group flex flex-col gap-3">
+                  <button type="button" onClick={() => handleRemoveCard(idx)} className="absolute top-2 right-2 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity z-10"><Trash2 size={16} /></button>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Title</label>
+                    <input type="text" value={card.title} onChange={(e) => handleCardChange(idx, 'title', e.target.value)} className="w-full px-3 py-1.5 text-xs font-bold border rounded" placeholder="e.g. Paper Presentation" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Text</label>
+                    <textarea value={card.text} onChange={(e) => handleCardChange(idx, 'text', e.target.value)} className="w-full px-3 py-1.5 text-xs border rounded min-h-[70px]" placeholder="Short description..." />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Link</label>
+                    <input type="text" value={card.link} onChange={(e) => handleCardChange(idx, 'link', e.target.value)} className="w-full px-3 py-1.5 text-xs border rounded" placeholder="/conference/paper-presentation" />
+                  </div>
+                </div>
+              ))}
+              {(!content.cards || content.cards.length === 0) && <div className="col-span-full py-12 text-center text-gray-400 italic bg-gray-50 rounded-xl border-2 border-dashed border-gray-100">No cards added yet.</div>}
+            </div>
+          </div>
+        </div>
+
+        {/* Partners & Associates Section */}
+        <div className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden shadow-sm">
+          <div className="bg-[#0B2C66] px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Handshake className="text-[#4E9F3D] w-5 h-5" />
+              <h3 className="text-white font-black uppercase tracking-wider text-sm">Partners & Associates</h3>
+            </div>
+            <button type="button" onClick={handleAddAssociate} className="px-4 py-1.5 bg-[#4E9F3D] text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-green-700 transition-colors flex items-center gap-2">
+              <Plus size={14} /> Add Logo
+            </button>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {(content.associates || []).map((logo, idx) => (
+                <div key={idx} className="relative group aspect-square bg-gray-50 border-2 border-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
+                  <button type="button" onClick={() => handleRemoveAssociate(idx)} className="absolute top-1 right-1 z-10 text-red-400 bg-white/90 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={12} /></button>
+                  {logo ? (
+                    <img src={logo.startsWith('http') ? logo : `${SERVER_URL}${logo}`} alt={`Associate ${idx + 1}`} className="w-full h-full object-contain p-3" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-300"><ImageIcon size={28} /></div>
+                  )}
+                  <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
+                    <Upload className="text-white w-5 h-5" />
+                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e.target.files[0], 'associate', idx)} />
+                  </label>
+                  {uploading.associates?.[idx] && <div className="absolute inset-0 bg-white/80 flex items-center justify-center"><Loader2 className="animate-spin text-[#4E9F3D]" size={18} /></div>}
+                </div>
+              ))}
+              {(!content.associates || content.associates.length === 0) && <div className="col-span-full py-12 text-center text-gray-400 italic bg-gray-50 rounded-xl border-2 border-dashed border-gray-100">No partner logos added yet.</div>}
+            </div>
+          </div>
+        </div>
+
+        {/* Healthcare Highlights Section */}
+        <div className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden shadow-sm">
+          <div className="bg-[#0B2C66] px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Sparkles className="text-[#4E9F3D] w-5 h-5" />
+              <h3 className="text-white font-black uppercase tracking-wider text-sm">Healthcare Highlights</h3>
+            </div>
+            <button type="button" onClick={handleAddHighlightFeature} className="px-4 py-1.5 bg-[#4E9F3D] text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-green-700 transition-colors flex items-center gap-2">
+              <Plus size={14} /> Add Highlight
+            </button>
+          </div>
+          <div className="p-6 space-y-6">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {(content.healthcareHighlights?.features || []).map((feature, idx) => (
+                <div key={idx} className="p-4 bg-gray-50 border-2 border-gray-100 rounded-xl relative group space-y-2">
+                  <button type="button" onClick={() => handleRemoveHighlightFeature(idx)} className="absolute top-2 right-2 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity z-10"><Trash2 size={16} /></button>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Title</label>
+                    <input type="text" value={feature.title} onChange={(e) => handleHighlightFeatureChange(idx, 'title', e.target.value)} className="w-full px-3 py-1.5 text-xs font-bold border rounded" placeholder="e.g. Network" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1">Description</label>
+                    <input type="text" value={feature.description} onChange={(e) => handleHighlightFeatureChange(idx, 'description', e.target.value)} className="w-full px-3 py-1.5 text-xs border rounded" placeholder="e.g. with global experts & industry leaders" />
+                  </div>
+                </div>
+              ))}
+              {(!content.healthcareHighlights?.features || content.healthcareHighlights.features.length === 0) && <div className="col-span-full py-12 text-center text-gray-400 italic bg-gray-50 rounded-xl border-2 border-dashed border-gray-100">No highlights added yet.</div>}
             </div>
           </div>
         </div>
