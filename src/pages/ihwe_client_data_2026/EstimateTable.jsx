@@ -353,10 +353,10 @@ const EstimateTable = ({ clientId }) => {
               <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50">Company / Client</th>
             )}
             {(clientId !== 'all' && id !== 'all') && (
-              <th scope="col" className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300">Invoice</th>
+              <th scope="col" className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50">Delivery Challan</th>
             )}
             {(clientId !== 'all' && id !== 'all') && (
-              <th scope="col" className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50">Delivery Challan</th>
+              <th scope="col" className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300">Invoice</th>
             )}
             <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50">Updated Details</th>
             {(clientId !== 'all' && id !== 'all') && (
@@ -421,6 +421,24 @@ const EstimateTable = ({ clientId }) => {
                     </td>
                   )
                 )}
+                {(clientId !== 'all' && id !== 'all') && isFirstForEstimate && (
+                  <td rowSpan={estimateRowSpan} className="px-4 py-3 align-top">
+                    <div className="min-w-[190px] rounded-lg border border-teal-100 bg-teal-50/60 p-2.5">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="flex items-center gap-1.5 text-xs font-bold text-teal-800"><Truck size={14} /> {activeChallans.length} Challan{activeChallans.length === 1 ? "" : "s"}</span>
+                        <span className="text-[10px] font-bold text-slate-500">{challanQty}/{proformaQty} qty</span>
+                      </div>
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-teal-100">
+                        <div className="h-full rounded-full bg-teal-600" style={{ width: `${proformaQty ? Math.min(100, (challanQty / proformaQty) * 100) : 0}%` }} />
+                      </div>
+                      <p className="mt-1 text-[10px] text-slate-500">{remainingChallanQty} quantity remaining</p>
+                      <div className="mt-2 flex gap-1.5">
+                        <button type="button" onClick={() => navigate(`/dashboard/account/${clientId}/delivery-challans`, { state: { sourceEstimateId: estimate._id } })} disabled={isCancelled(estimate) || remainingChallanQty <= 0} className="flex items-center gap-1 rounded border border-teal-600 bg-teal-600 px-2 py-1 text-[10px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"><Plus size={12} /> Create</button>
+                        {estimateChallans.length > 0 && <button type="button" onClick={() => navigate(`/dashboard/account/${clientId}/delivery-challans`)} className="rounded border border-teal-600 bg-white px-2 py-1 text-[10px] font-bold text-teal-700">View All</button>}
+                      </div>
+                    </div>
+                  </td>
+                )}
                 {(clientId !== 'all' && id !== 'all') && (
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
                     {isPiCreated && (
@@ -444,24 +462,6 @@ const EstimateTable = ({ clientId }) => {
                     )}
                     {isPiCreating && <span className="text-[#3598dc] font-medium">Creating...</span>}
                     {piError && <span className="text-red-500 font-medium">{piError}</span>}
-                  </td>
-                )}
-                {(clientId !== 'all' && id !== 'all') && isFirstForEstimate && (
-                  <td rowSpan={estimateRowSpan} className="px-4 py-3 align-top">
-                    <div className="min-w-[190px] rounded-lg border border-teal-100 bg-teal-50/60 p-2.5">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="flex items-center gap-1.5 text-xs font-bold text-teal-800"><Truck size={14} /> {activeChallans.length} Challan{activeChallans.length === 1 ? "" : "s"}</span>
-                        <span className="text-[10px] font-bold text-slate-500">{challanQty}/{proformaQty} qty</span>
-                      </div>
-                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-teal-100">
-                        <div className="h-full rounded-full bg-teal-600" style={{ width: `${proformaQty ? Math.min(100, (challanQty / proformaQty) * 100) : 0}%` }} />
-                      </div>
-                      <p className="mt-1 text-[10px] text-slate-500">{remainingChallanQty} quantity remaining</p>
-                      <div className="mt-2 flex gap-1.5">
-                        <button type="button" onClick={() => navigate(`/dashboard/account/${clientId}/delivery-challans`, { state: { sourceEstimateId: estimate._id } })} disabled={isCancelled(estimate) || remainingChallanQty <= 0} className="flex items-center gap-1 rounded border border-teal-600 bg-teal-600 px-2 py-1 text-[10px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"><Plus size={12} /> Create</button>
-                        {estimateChallans.length > 0 && <button type="button" onClick={() => navigate(`/dashboard/account/${clientId}/delivery-challans`)} className="rounded border border-teal-600 bg-white px-2 py-1 text-[10px] font-bold text-teal-700">View All</button>}
-                      </div>
-                    </div>
                   </td>
                 )}
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
