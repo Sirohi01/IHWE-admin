@@ -97,6 +97,8 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
   const paidPct = (((financials?.paidAmount || 0) / total) * 100).toFixed(2);
   const balPct = (((financials?.remainingBalance || 0) / total) * 100).toFixed(2);
   const statusClass = STATUS_COLORS[companyInfo?.statusColor] || STATUS_COLORS.gray;
+  const invoiceCount = financials?.invoiceCount || 0;
+  const proformaInvoiceCount = financials?.proformaInvoiceCount || 0;
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-2 mb-1">
@@ -158,48 +160,48 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
 
       {/* Financial Cards - stretched to match the company card's height */}
       <div className="xl:col-span-5 grid grid-cols-1 md:grid-cols-3 gap-3">
-        {/* Card 1: Total Due */}
-        <div className="group relative bg-white rounded-xl shadow-sm border border-gray-200/60 hover:shadow-md hover:border-red-200 transition-all duration-300 p-3.5 flex flex-col justify-between">
+        {/* Card 1: Total Amount */}
+        <div className="group relative bg-white rounded-xl shadow-sm border border-gray-200/60 hover:shadow-md hover:border-red-200 transition-all duration-300 p-3.5 flex flex-col justify-center">
           <div className="absolute left-0 top-0 w-1 h-full bg-red-500 rounded-l-xl" />
-          <div className="flex justify-between items-start mb-3 ml-1 relative z-10">
+          <div className="flex justify-between items-center mb-2 ml-1 relative z-10">
             <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Due</p>
-              <h3 className="text-[18px] font-bold text-[#1a2b4b] tracking-tight leading-none">{formatCurrency(financials?.totalDue)}</h3>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Amount</p>
+              <h3 className="text-[20px] font-bold text-[#1a2b4b] tracking-tight leading-none">{formatCurrency(financials?.totalDue)}</h3>
             </div>
             <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-500 group-hover:bg-red-500 group-hover:text-white transition-colors duration-300 shadow-sm cursor-pointer">
               <FileText size={14} />
             </div>
           </div>
-          <div className="flex items-center justify-between pt-2.5 border-t border-gray-50 ml-1 relative z-10">
-            <span className="text-[11px] font-medium text-slate-500">Status</span>
-            <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold ${financials?.remainingBalance > 0 ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}`}>
-              {financials?.remainingBalance > 0 ? "● Overdue" : "● Fully Billed"}
+          <div className="flex items-center justify-between pt-1.5 border-t border-gray-50 ml-1 relative z-10">
+            <span className="text-[12px] font-medium text-slate-500">Overview Amount</span>
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-bold bg-red-50 text-red-600">
+              {formatCurrency(financials?.totalDue)} • {proformaInvoiceCount} PI
             </span>
           </div>
 
           <div className="absolute top-[100%] left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[60]">
              <div className="px-3 py-2 border-b border-gray-100 bg-gray-50 rounded-t-lg">
-                <span className="text-[10px] font-bold text-slate-600 uppercase">Due Breakdown</span>
+                <span className="text-[10px] font-bold text-slate-600 uppercase">Amount Breakdown</span>
              </div>
              <BreakdownList items={financials?.dueBreakdown} emptyText="No invoices found" />
           </div>
         </div>
 
-        {/* Card 2: Paid Amount */}
-        <div className="group relative bg-white rounded-xl shadow-sm border border-gray-200/60 hover:shadow-md hover:border-emerald-200 transition-all duration-300 p-3.5 flex flex-col justify-between">
+        {/* Card 2: Received Amount */}
+        <div className="group relative bg-white rounded-xl shadow-sm border border-gray-200/60 hover:shadow-md hover:border-emerald-200 transition-all duration-300 p-3.5 flex flex-col justify-center">
           <div className="absolute left-0 top-0 w-1 h-full bg-emerald-500 rounded-l-xl" />
-          <div className="flex justify-between items-start mb-3 ml-1 relative z-10">
+          <div className="flex justify-between items-center mb-2 ml-1 relative z-10">
             <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Paid Amount</p>
-              <h3 className="text-[18px] font-bold text-[#1a2b4b] tracking-tight leading-none">{formatCurrency(financials?.paidAmount)}</h3>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Received Amount</p>
+              <h3 className="text-[20px] font-bold text-[#1a2b4b] tracking-tight leading-none">{formatCurrency(financials?.paidAmount)}</h3>
             </div>
             <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-300 shadow-sm cursor-pointer">
               <Receipt size={14} />
             </div>
           </div>
-          <div className="flex items-center justify-between pt-2.5 border-t border-gray-50 ml-1 relative z-10">
-            <span className="text-[11px] font-medium text-slate-500">Received</span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-600">
+          <div className="flex items-center justify-between pt-1.5 border-t border-gray-50 ml-1 relative z-10">
+            <span className="text-[12px] font-medium text-slate-500">{invoiceCount} Invoices</span>
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-600">
               {paidPct}%
             </span>
           </div>
@@ -212,21 +214,21 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
           </div>
         </div>
 
-        {/* Card 3: Remaining Balance */}
-        <div className="group relative bg-white rounded-xl shadow-sm border border-gray-200/60 hover:shadow-md hover:border-indigo-200 transition-all duration-300 p-3.5 flex flex-col justify-between">
+        {/* Card 3: Pending Amount */}
+        <div className="group relative bg-white rounded-xl shadow-sm border border-gray-200/60 hover:shadow-md hover:border-indigo-200 transition-all duration-300 p-3.5 flex flex-col justify-center">
           <div className="absolute left-0 top-0 w-1 h-full bg-indigo-500 rounded-l-xl" />
-          <div className="flex justify-between items-start mb-3 ml-1 relative z-10">
+          <div className="flex justify-between items-center mb-2 ml-1 relative z-10">
             <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Remaining</p>
-              <h3 className="text-[18px] font-bold text-[#1a2b4b] tracking-tight leading-none">{formatCurrency(financials?.remainingBalance)}</h3>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Pending Amount</p>
+              <h3 className="text-[20px] font-bold text-[#1a2b4b] tracking-tight leading-none">{formatCurrency(financials?.remainingBalance)}</h3>
             </div>
             <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-500 group-hover:text-white transition-colors duration-300 shadow-sm cursor-pointer">
               <Wallet size={14} />
             </div>
           </div>
-          <div className="flex items-center justify-between pt-2.5 border-t border-gray-50 ml-1 relative z-10">
-            <span className="text-[11px] font-medium text-slate-500">Balance</span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-600">
+          <div className="flex items-center justify-between pt-1.5 border-t border-gray-50 ml-1 relative z-10">
+            <span className="text-[12px] font-medium text-slate-500">Pending</span>
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-600">
               {balPct}%
             </span>
           </div>

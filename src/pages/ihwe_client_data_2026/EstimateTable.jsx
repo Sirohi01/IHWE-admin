@@ -116,7 +116,7 @@ const EstimateTable = ({ clientId }) => {
     },
     [dispatch]
   );
-  
+
   const [commModal, setCommModal] = useState({
     isOpen: false,
     type: 'whatsapp',
@@ -259,47 +259,35 @@ const EstimateTable = ({ clientId }) => {
 
     const rows = versionNos.flatMap((versionNo) => {
       const versionInvoices = matchingInvoices.filter((inv) => inv.estimate_no === versionNo);
-      const activeInvoice = versionInvoices.find((inv) => !isCancelled(inv)) || null;
-      const cancelledInvoice = versionInvoices.find((inv) => isCancelled(inv)) || null;
       const piForVersion = versionNo === estimate.est_no
         ? matchingPerformaInvoices.find((pi) => isCancelled(pi) === isCancelled(estimate)) || matchingPerformaInvoices[0] || null
         : null;
 
-      if (cancelledInvoice || (versionNo === estimate.est_no && isCancelled(estimate))) {
-        return [{
+      const invoiceRows = versionInvoices.map((invoice) => ({
+        estimate,
+        displayEstNo: versionNo,
+        piData: piForVersion,
+        invoiceData: invoice,
+        rowType: isCancelled(invoice) ? "cancelled" : "active",
+      }));
+
+      if (versionNo === estimate.est_no && isCancelled(estimate) && !invoiceRows.some((row) => row.rowType === "cancelled")) {
+        invoiceRows.push({
           estimate,
           displayEstNo: versionNo,
           piData: piForVersion,
-          invoiceData: cancelledInvoice || null,
+          invoiceData: null,
           rowType: "cancelled",
-        }];
+        });
       }
 
-      if (activeInvoice) {
-        return [{
-          estimate,
-          displayEstNo: versionNo,
-          piData: piForVersion,
-          invoiceData: activeInvoice,
-          rowType: "active",
-        }];
-      }
-
-      return [];
+      return invoiceRows;
     });
 
-    const hasActiveInvoice = rows.some((row) => row.rowType === "active" && row.invoiceData);
-    if (!isCancelled(estimate) && !hasActiveInvoice) {
-      const maxSeq = Math.max(...versionNos.map(getDocumentSeq).filter((seq) => seq !== null));
-      const nextEstimateNo = rows.some((row) => row.rowType === "cancelled")
-        ? buildDocumentNoWithSeq(estimate.est_no, maxSeq + 1)
-        : estimate.est_no;
-      if (currentEstimateNos.has(nextEstimateNo) && nextEstimateNo !== estimate.est_no) {
-        return rows;
-      }
+    if (!isCancelled(estimate)) {
       rows.push({
         estimate,
-        displayEstNo: nextEstimateNo || estimate.est_no,
+        displayEstNo: estimate.est_no,
         piData: null,
         invoiceData: null,
         rowType: "active",
@@ -454,12 +442,12 @@ const EstimateTable = ({ clientId }) => {
           </div>
         </div>
       )}
-      <CommunicationModal 
-        isOpen={commModal.isOpen} 
-        onClose={() => setCommModal({ ...commModal, isOpen: false, docId: null })} 
-        type={commModal.type} 
-        docType={commModal.docType} 
-        docId={commModal.docId} 
+      <CommunicationModal
+        isOpen={commModal.isOpen}
+        onClose={() => setCommModal({ ...commModal, isOpen: false, docId: null })}
+        type={commModal.type}
+        docType={commModal.docType}
+        docId={commModal.docId}
       />
     </div>
   );

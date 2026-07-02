@@ -123,12 +123,7 @@ const CreateInvoice = () => {
             const fetchedEstimates = Array.isArray(estRes.data) ? estRes.data : (estRes.data?.data || []);
             const fetchedInvoices = Array.isArray(invRes.data) ? invRes.data : (invRes.data?.data || []);
 
-            // Filter out estimates that already have an invoice generated
-            const availableEstimates = fetchedEstimates.filter(est => {
-                return !fetchedInvoices.some(inv => inv.estimate_no === est.est_no && String(inv.status || '').toLowerCase() !== 'cancelled');
-            });
-
-            setEstimates(availableEstimates);
+            setEstimates(fetchedEstimates);
         } catch (err) {
             console.error("Failed to fetch estimates and invoices", err);
         }
@@ -180,18 +175,6 @@ const CreateInvoice = () => {
 
                 if (selectedPiFromUrl) {
                     setSelectedPi(selectedPiFromUrl);
-                    try {
-                        const invRes = await api.get('/api/invoices');
-                        const fetchedInvoices = Array.isArray(invRes.data) ? invRes.data : (invRes.data?.data || []);
-                        const existingInvoice = fetchedInvoices.find((inv) => inv.estimate_no === selectedPiFromUrl && String(inv.status || '').toLowerCase() !== 'cancelled');
-                        if (existingInvoice?._id) {
-                            applyInvoiceToForm(existingInvoice);
-                            return;
-                        }
-                    } catch (err) {
-                        console.error("Failed to check existing invoice for PI", err);
-                    }
-
                     setIsEditMode(false);
                     setEditingInvoiceId('');
                     setIsProformaEditMode(false);
@@ -529,24 +512,6 @@ const CreateInvoice = () => {
             }
         } catch (err) {
             console.error(err);
-            const existingInvoice = err.response?.data?.data;
-            if (isEditMode && err.response?.status === 409 && existingInvoice?._id) {
-                try {
-                    const retryRes = await api.put(`/api/invoices/${existingInvoice._id}`, payload);
-                    if (retryRes.status === 200 || retryRes.status === 201) {
-                        alert('Invoice updated successfully!');
-                        navigate(postSaveRoute);
-                        return;
-                    }
-                } catch (retryErr) {
-                    console.error(retryErr);
-                }
-            }
-            if (!isEditMode && err.response?.status === 409 && existingInvoice?._id) {
-                alert('Invoice already exists against this PI. Opening it for update.');
-                navigate(`/page-create-invoice/${existingInvoice._id}`);
-                return;
-            }
             alert(`Failed to ${isEditMode ? 'update' : 'generate'} invoice: ` + (err.response?.data?.message || err.message));
         }
     };
