@@ -262,12 +262,12 @@ const AccountOverview = () => {
           <div className="overflow-x-auto flex-1">
             <table className="w-full text-left border-collapse mb-1">
               <thead>
-                <tr className="text-[9px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
-                  <th className="pb-1 pr-1">#</th>
-                  <th className="pb-1 pr-2">Schedule Type</th>
-                  <th className="pb-1 pr-2">Due Date</th>
-                  <th className="pb-1 pr-2">Due Amount</th>
-                  <th className="pb-1">Status</th>
+                <tr className="text-[11px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
+                  <th className="pb-2 pr-3 text-left whitespace-nowrap">#</th>
+                  <th className="pb-2 pr-3 text-left whitespace-nowrap">Schedule Type</th>
+                  <th className="pb-2 pr-3 text-left whitespace-nowrap">Due Date</th>
+                  <th className="pb-2 pr-3 text-left whitespace-nowrap">Due Amount</th>
+                  <th className="pb-2 text-left whitespace-nowrap">Status</th>
                 </tr>
               </thead>
               <tbody className="text-[11px] text-slate-700">
@@ -277,13 +277,13 @@ const AccountOverview = () => {
                   </tr>
                 )}
                 {paymentSchedule.map((schedule, idx) => (
-                  <tr key={schedule.id} className="border-b border-gray-50 hover:bg-slate-50/50">
-                    <td className="py-1 pr-1 text-slate-400 font-medium">{idx + 1}</td>
-                    <td className="py-1 pr-2 font-medium text-[#1a2b4b]">{schedule.scheduleType}</td>
-                    <td className="py-1 pr-2 font-medium text-[#1a2b4b]">{schedule.dueDate ? new Date(schedule.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : '-'}</td>
-                    <td className="py-1 pr-2">{formatCurrency(schedule.dueAmount)}</td>
-                    <td className="py-1">
-                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${schedule.status === 'Paid' ? 'bg-[#e6f7ec] text-[#00a86b]' : 'bg-[#fff1f2] text-[#ea580c]'}`}>
+                  <tr key={schedule.id} className="border-b border-gray-50 last:border-0 hover:bg-slate-50/50 leading-tight">
+                    <td className="py-0.5 pr-3 text-left text-slate-400 font-medium whitespace-nowrap">{idx + 1}</td>
+                    <td className="py-0.5 pr-3 text-left font-medium text-[#1a2b4b] whitespace-nowrap">{schedule.scheduleType}</td>
+                    <td className="py-0.5 pr-3 text-left font-medium text-[#1a2b4b] whitespace-nowrap">{schedule.dueDate ? new Date(schedule.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'}</td>
+                    <td className="py-0.5 pr-3 text-left font-medium text-[#1a2b4b] whitespace-nowrap">{formatCurrency(schedule.dueAmount)}</td>
+                    <td className="py-0.5 text-left whitespace-nowrap">
+                      <span className={`px-1.5 py-[1px] rounded text-[11px] font-medium whitespace-nowrap ${schedule.status === 'Paid' ? 'bg-[#e6f7ec] text-[#00a86b]' : 'bg-[#fff1f2] text-[#ea580c]'}`}>
                         {schedule.status}
                       </span>
                     </td>

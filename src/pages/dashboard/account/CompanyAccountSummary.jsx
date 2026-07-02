@@ -159,23 +159,30 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
       </div>
 
       {/* Financial Cards */}
-      <div className="xl:col-span-5 grid grid-cols-1 md:grid-cols-3 gap-2 self-center">
+      <div className="xl:col-span-5 grid grid-cols-1 md:grid-cols-3 gap-2">
         {/* Card 1: Total Amount */}
-        <div className="group relative bg-white rounded-xl shadow-sm border border-gray-200/60 hover:shadow-md hover:border-red-200 transition-all duration-300 p-3 flex flex-col">
+        <div className="group relative bg-white rounded-xl shadow-sm border border-gray-200/60 hover:shadow-md hover:border-red-200 transition-all duration-300 p-3.5 flex flex-col justify-between h-full">
           <div className="absolute left-0 top-0 w-1 h-full bg-red-500 rounded-l-xl" />
+          
           <div className="flex justify-between items-start ml-1 relative z-10 mb-2">
             <div>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Total Amount</p>
-              <h3 className="text-[17px] font-bold text-[#1a2b4b] tracking-tight leading-none whitespace-nowrap mt-1">{formatCurrency(financials?.totalDue)}</h3>
+              <h3 className="text-[18px] font-bold text-[#1a2b4b] tracking-tight leading-none whitespace-nowrap mt-1">{formatCurrency(financials?.totalDue)}</h3>
             </div>
             <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-red-500 shrink-0">
               <FileText size={16} />
             </div>
           </div>
-          <div className="pt-2 border-t border-gray-50 ml-1 relative z-10 flex flex-col gap-1">
+
+          <div className="ml-1 relative z-10 my-auto">
+            <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap">Proforma Invoices</span>
+            <p className="text-[13px] font-bold text-[#1a2b4b] mt-0.5">{proformaInvoiceCount} Invoices</p>
+          </div>
+
+          <div className="pt-2 border-t border-gray-50 ml-1 relative z-10 flex items-center justify-between">
             <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap">Overdue Amount</span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 whitespace-nowrap w-fit">
-              {formatCurrency(financials?.remainingBalance)} • {proformaInvoiceCount} PI
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 whitespace-nowrap">
+              {formatCurrency(financials?.remainingBalance)}
             </span>
           </div>
 
@@ -188,21 +195,28 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
         </div>
 
         {/* Card 2: Received Amount */}
-        <div className="group relative bg-white rounded-xl shadow-sm border border-gray-200/60 hover:shadow-md hover:border-emerald-200 transition-all duration-300 p-3 flex flex-col">
+        <div className="group relative bg-white rounded-xl shadow-sm border border-gray-200/60 hover:shadow-md hover:border-emerald-200 transition-all duration-300 p-3.5 flex flex-col justify-between h-full">
           <div className="absolute left-0 top-0 w-1 h-full bg-emerald-500 rounded-l-xl" />
+          
           <div className="flex justify-between items-start ml-1 relative z-10 mb-2">
             <div>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Received Amount</p>
-              <h3 className="text-[17px] font-bold text-[#1a2b4b] tracking-tight leading-none whitespace-nowrap mt-1">{formatCurrency(financials?.paidAmount)}</h3>
+              <h3 className="text-[18px] font-bold text-[#1a2b4b] tracking-tight leading-none whitespace-nowrap mt-1">{formatCurrency(financials?.paidAmount)}</h3>
             </div>
             <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-500 shrink-0">
               <Receipt size={16} />
             </div>
           </div>
-          <div className="pt-2 border-t border-gray-50 ml-1 relative z-10 flex flex-col gap-1">
+
+          <div className="ml-1 relative z-10 my-auto">
             <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap">Total Invoices</span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-600 whitespace-nowrap w-fit">
-              {invoiceCount} Invoices • {paidPct}%
+            <p className="text-[13px] font-bold text-[#1a2b4b] mt-0.5">{invoiceCount} Invoices</p>
+          </div>
+
+          <div className="pt-2 border-t border-gray-50 ml-1 relative z-10 flex items-center justify-between">
+            <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap">Received %</span>
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-600 whitespace-nowrap">
+              {paidPct}%
             </span>
           </div>
 
@@ -215,21 +229,28 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
         </div>
 
         {/* Card 3: Pending Amount */}
-        <div className="group relative bg-white rounded-xl shadow-sm border border-gray-200/60 hover:shadow-md hover:border-indigo-200 transition-all duration-300 p-3 flex flex-col">
+        <div className="group relative bg-white rounded-xl shadow-sm border border-gray-200/60 hover:shadow-md hover:border-indigo-200 transition-all duration-300 p-3.5 flex flex-col justify-between h-full">
           <div className="absolute left-0 top-0 w-1 h-full bg-indigo-500 rounded-l-xl" />
+          
           <div className="flex justify-between items-start ml-1 relative z-10 mb-2">
             <div>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Pending Amount</p>
-              <h3 className="text-[17px] font-bold text-[#1a2b4b] tracking-tight leading-none whitespace-nowrap mt-1">{formatCurrency(financials?.remainingBalance)}</h3>
+              <h3 className="text-[18px] font-bold text-[#1a2b4b] tracking-tight leading-none whitespace-nowrap mt-1">{formatCurrency(financials?.remainingBalance)}</h3>
             </div>
             <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500 shrink-0">
               <Wallet size={16} />
             </div>
           </div>
-          <div className="pt-2 border-t border-gray-50 ml-1 relative z-10 flex flex-col gap-1">
-            <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap">Total Pending</span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 whitespace-nowrap w-fit">
-              {balPct}%
+
+          <div className="ml-1 relative z-10 my-auto">
+             <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap">Pending %</span>
+             <p className="text-[13px] font-bold text-[#1a2b4b] mt-0.5">{balPct}%</p>
+          </div>
+
+          <div className="pt-2 border-t border-gray-50 ml-1 relative z-10 flex items-center justify-between">
+            <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap">Total Amount</span>
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 whitespace-nowrap">
+              {formatCurrency(financials?.totalDue)}
             </span>
           </div>
 
