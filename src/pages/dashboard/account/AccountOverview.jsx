@@ -114,7 +114,7 @@ const AccountOverview = () => {
 
       {/* Action Buttons Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-1">
-        <button onClick={() => navigate(`/performa-invoice/${id}`)} className="flex items-center gap-2 p-2 bg-[#f0f5ff] hover:bg-[#e6edfa] border border-[#dbe6fa] rounded-lg transition-colors text-left group">
+        <button onClick={() => navigate(`/performa-invoice-list/${id}`)} className="flex items-center gap-2 p-2 bg-[#f0f5ff] hover:bg-[#e6edfa] border border-[#dbe6fa] rounded-lg transition-colors text-left group">
           <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
             <FilePlus size={16} className="text-[#2563eb]" />
           </div>
@@ -125,7 +125,7 @@ const AccountOverview = () => {
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
 
-        <button onClick={() => navigate(`/page-create-invoice/${id}`)} className="flex items-center gap-2 p-2 bg-[#f0fdf4] hover:bg-[#e6f7ec] border border-[#d6f0df] rounded-lg transition-colors text-left group">
+        <button onClick={() => navigate(`/invoice-list/${id}`)} className="flex items-center gap-2 p-2 bg-[#f0fdf4] hover:bg-[#e6f7ec] border border-[#d6f0df] rounded-lg transition-colors text-left group">
           <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
             <FilePlus size={16} className="text-[#16a34a]" />
           </div>
@@ -147,13 +147,13 @@ const AccountOverview = () => {
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
 
-        <button onClick={() => navigate(`/create-debit-note/${id}`)} className="flex items-center gap-2 p-2 bg-[#faf5ff] hover:bg-[#f3e8ff] border border-[#ecd9fb] rounded-lg transition-colors text-left group">
+        <button onClick={() => navigate(`/debit-note-list/${id}`)} className="flex items-center gap-2 p-2 bg-[#faf5ff] hover:bg-[#f3e8ff] border border-[#ecd9fb] rounded-lg transition-colors text-left group">
           <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
             <FileMinus size={16} className="text-[#7e22ce]" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Create Debit Note</h4>
-            <p className="text-[10.5px] text-slate-500 leading-tight truncate">Raise additional charges</p>
+            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Create Credit Note</h4>
+            <p className="text-[10.5px] text-slate-500 leading-tight truncate">View and create credit notes</p>
           </div>
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
@@ -195,6 +195,7 @@ const AccountOverview = () => {
                   let statusBg = 'bg-gray-100 text-gray-600';
                   if (doc.status === 'Paid' || doc.status === 'Accepted') statusBg = 'bg-[#e6f7ec] text-[#00a86b]';
                   else if (doc.status === 'Unpaid' || doc.status === 'Pending') statusBg = 'bg-[#ffebee] text-[#ff4d4f]';
+                  else if (doc.status === 'Cancelled') statusBg = 'bg-red-50 text-red-600';
                   else if (doc.status === 'Sent' || doc.status === 'Converted') statusBg = 'bg-[#e6f0fa] text-[#194090]';
 
                   const viewPath = getDocViewPath(doc);

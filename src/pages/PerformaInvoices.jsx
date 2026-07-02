@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api from '../lib/api';
 import {
@@ -109,7 +109,9 @@ const QuickAction = ({ icon: Icon, color, label, sub, onClick, disabled }) => (
 // ══════════════════════════════════════════════════════════════════════════════
 export const PerformaInvoices = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { id } = useParams();
+    const editEstimateId = location.state?.editEstimateId;
     const [companyData, setCompanyData] = useState(null);
     const [existingEstimateId, setExistingEstimateId] = useState(null);
 
@@ -209,32 +211,47 @@ export const PerformaInvoices = () => {
                 }
                 const actualCompanyId = companyInfo?.clientId || companyInfo?._id || id;
 
-                // Fetch existing estimates
+                // Fetch the clicked proforma first when coming from the list edit action.
                 let existingEstimate = null;
+                let templateEstimate = null;
+                if (editEstimateId) {
+                    try {
+                        const estRes = await api.get(`/api/estimates/${editEstimateId}`);
+                        existingEstimate = estRes.data?.data || estRes.data || null;
+                    } catch (e) {
+                        console.error("Error fetching selected estimate:", e);
+                    }
+                }
+
+                // Fetch existing estimates
                 try {
-                    let estRes = await api.get(`/api/estimates/grouped/${actualCompanyId}`);
-                    if (estRes.data?.success && estRes.data?.count > 0) {
-                        existingEstimate = estRes.data.data[0]; // Get the latest one
-                    } else if (companyInfo && actualCompanyId !== companyInfo._id) {
-                        estRes = await api.get(`/api/estimates/grouped/${companyInfo._id}`);
+                    if (!existingEstimate) {
+                        let estRes = await api.get(`/api/estimates/grouped/${actualCompanyId}`);
                         if (estRes.data?.success && estRes.data?.count > 0) {
-                            existingEstimate = estRes.data.data[0]; // Get the latest one
-                        }
-                    } else if (companyInfo && actualCompanyId !== id) {
-                        estRes = await api.get(`/api/estimates/grouped/${id}`);
-                        if (estRes.data?.success && estRes.data?.count > 0) {
-                            existingEstimate = estRes.data.data[0]; // Get the latest one
+                            templateEstimate = estRes.data.data[0]; // Get the latest one for prefill only
+                        } else if (companyInfo && actualCompanyId !== companyInfo._id) {
+                            estRes = await api.get(`/api/estimates/grouped/${companyInfo._id}`);
+                            if (estRes.data?.success && estRes.data?.count > 0) {
+                                templateEstimate = estRes.data.data[0]; // Get the latest one for prefill only
+                            }
+                        } else if (companyInfo && actualCompanyId !== id) {
+                            estRes = await api.get(`/api/estimates/grouped/${id}`);
+                            if (estRes.data?.success && estRes.data?.count > 0) {
+                                templateEstimate = estRes.data.data[0]; // Get the latest one for prefill only
+                            }
                         }
                     }
                 } catch (e) {
                     console.error("Error fetching existing estimates:", e);
                 }
 
-                if (existingEstimate) {
-                    setCompanyData(companyInfo);
-                    setExistingEstimateId(existingEstimate._id);
+                const estimateForPrefill = existingEstimate || templateEstimate;
 
-                    const formattedItems = (existingEstimate.items || []).map((item, index) => {
+                if (estimateForPrefill) {
+                    setCompanyData(companyInfo);
+                    setExistingEstimateId(existingEstimate?._id || null);
+
+                    const formattedItems = (estimateForPrefill.items || []).map((item, index) => {
                         let desc = item.description || '';
                         let subDesc = '';
                         if (desc.includes('\n')) {
@@ -271,21 +288,32 @@ export const PerformaInvoices = () => {
 
                     setForm(prev => ({
                         ...prev,
-                        estimateNo: existingEstimate.est_no,
-                        supplyDate: existingEstimate.supply_date || new Date().toISOString().split('T')[0],
-                        consigneeName: existingEstimate.company_name || (existingEstimate.consignee_name !== PROFORMA_EVENT_NAME ? existingEstimate.consignee_name : '') || companyInfo?.companyName || companyInfo?.exhibitorName || '',
-                        consigneeAddress: existingEstimate.company_addr || (existingEstimate.consignee_addr !== PROFORMA_PLACE_OF_SUPPLY ? existingEstimate.consignee_addr : '') || companyInfo?.address || companyInfo?.companyAddress || '',
-                        consigneePerson: existingEstimate.consignee_person || companyInfo?.contactPerson || (companyInfo?.contacts && companyInfo.contacts[0] ? [companyInfo.contacts[0].firstName, companyInfo.contacts[0].surname].filter(Boolean).join(' ') : '') || '',
-                        consigneePhone: existingEstimate.consignee_phone || companyInfo?.mobile || (companyInfo?.contacts && companyInfo.contacts[0] ? companyInfo.contacts[0].mobile : '') || '',
-                        consigneeEventName: existingEstimate.event_name || PROFORMA_EVENT_NAME,
-                        consigneeEventAddress: existingEstimate.event_place_of_supply || PROFORMA_PLACE_OF_SUPPLY,
-                        consigneeGstin: existingEstimate.event_gst_no || PROFORMA_EVENT_GST_NO,
-                        gstin: existingEstimate.company_gst_no || existingEstimate.gst_no || companyInfo?.gst || companyInfo?.gstNo || '',
-                        country: existingEstimate.country || companyInfo?.country || '',
-                        state: existingEstimate.state || companyInfo?.state || '',
-                        city: existingEstimate.city || companyInfo?.city || '',
-                        pinCode: existingEstimate.pincode || companyInfo?.pinCode || companyInfo?.pincode || '',
+                        estimateNo: existingEstimate ? estimateForPrefill.est_no : prev.estimateNo,
+                        supplyDate: estimateForPrefill.supply_date || new Date().toISOString().split('T')[0],
+                        consigneeName: estimateForPrefill.company_name || (estimateForPrefill.consignee_name !== PROFORMA_EVENT_NAME ? estimateForPrefill.consignee_name : '') || companyInfo?.companyName || companyInfo?.exhibitorName || '',
+                        consigneeAddress: estimateForPrefill.company_addr || (estimateForPrefill.consignee_addr !== PROFORMA_PLACE_OF_SUPPLY ? estimateForPrefill.consignee_addr : '') || companyInfo?.address || companyInfo?.companyAddress || '',
+                        consigneePerson: estimateForPrefill.consignee_person || companyInfo?.contactPerson || (companyInfo?.contacts && companyInfo.contacts[0] ? [companyInfo.contacts[0].firstName, companyInfo.contacts[0].surname].filter(Boolean).join(' ') : '') || '',
+                        consigneePhone: estimateForPrefill.consignee_phone || companyInfo?.mobile || (companyInfo?.contacts && companyInfo.contacts[0] ? companyInfo.contacts[0].mobile : '') || '',
+                        consigneeEventName: estimateForPrefill.event_name || PROFORMA_EVENT_NAME,
+                        consigneeEventAddress: estimateForPrefill.event_place_of_supply || PROFORMA_PLACE_OF_SUPPLY,
+                        consigneeGstin: estimateForPrefill.event_gst_no || PROFORMA_EVENT_GST_NO,
+                        gstin: estimateForPrefill.company_gst_no || estimateForPrefill.gst_no || companyInfo?.gst || companyInfo?.gstNo || '',
+                        country: estimateForPrefill.country || companyInfo?.country || '',
+                        state: estimateForPrefill.state || companyInfo?.state || '',
+                        city: estimateForPrefill.city || companyInfo?.city || '',
+                        pinCode: estimateForPrefill.pincode || companyInfo?.pinCode || companyInfo?.pincode || '',
                     }));
+
+                    if (!existingEstimate) {
+                        try {
+                            const res = await api.get('/api/estimates/next-number');
+                            if (res.data?.est_no) {
+                                setForm(prev => ({ ...prev, estimateNo: res.data.est_no }));
+                            }
+                        } catch (error) {
+                            console.error("Error fetching next estimate no:", error);
+                        }
+                    }
                 } else if (companyInfo) {
                     // Pre-fill with just company info
                     setCompanyData(companyInfo);
@@ -321,7 +349,7 @@ export const PerformaInvoices = () => {
         };
 
         fetchCompanyDetails();
-    }, [id]);
+    }, [id, editEstimateId]);
 
     // ── computed ─────────────────────────────────────────────────────────────────
     const subTotal = roundAmount(items.reduce((s, i) => s + Number(i.amount || 0), 0));
@@ -504,7 +532,7 @@ export const PerformaInvoices = () => {
                         timer: 2000,
                         showConfirmButton: false
                     });
-                    navigate('/performa-invoice-list/all');
+                    navigate(`/performa-invoice-list/${actualCompanyId}`);
                 }
             } else {
                 const res = await api.post('/api/estimates', payload);
@@ -516,7 +544,7 @@ export const PerformaInvoices = () => {
                         timer: 2000,
                         showConfirmButton: false
                     });
-                    navigate('/performa-invoice-list/all');
+                    navigate(`/performa-invoice-list/${actualCompanyId}`);
                 }
             }
         } catch (error) {
@@ -589,7 +617,7 @@ export const PerformaInvoices = () => {
                                 />
                             </div>
                             <div>
-                                <Label required>Estimate No.</Label>
+                                <Label required>Proforma Invoice No.</Label>
                                 <Input value={form.estimateNo} onChange={(e) => setField('estimateNo', e.target.value)} />
                             </div>
                             <div>

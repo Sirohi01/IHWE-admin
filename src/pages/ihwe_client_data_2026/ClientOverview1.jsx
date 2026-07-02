@@ -1025,13 +1025,13 @@ const ClientOverview1 = () => {
                   onClick: () => navigate(`/client-data/${company?.clientId || company?._id || id}/marketing-materials`),
                   disabled: false,
                 },
-                {
-                  icon: Receipt,
-                  title: "Proforma Invoice",
-                  color: "orange-600",
-                  onClick: () => navigate(`/performa-invoice/${id}`),
-                  disabled: false,
-                },
+                // {
+                //   icon: Receipt,
+                //   title: "Proforma Invoice",
+                //   color: "orange-600",
+                //   onClick: () => navigate(`/performa-invoice-list/${company?.clientId || company?._id || id}`),
+                //   disabled: false,
+                // },
                 {
                   icon: Folder,
                   title: "Documentation",

@@ -135,9 +135,29 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
     const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
     const sigUrl = settings?.authorizedSignature ? (settings.authorizedSignature.startsWith('http') ? settings.authorizedSignature : `${BASE_URL}${settings.authorizedSignature}`) : null;
     const stampUrl = settings?.companyStamp ? (settings.companyStamp.startsWith('http') ? settings.companyStamp : `${BASE_URL}${settings.companyStamp}`) : null;
+    const cancelled = String(matchedInvoice?.status || form?.status || '').toLowerCase() === 'cancelled';
 
     return (
-        <div className="bg-white border border-slate-300 p-10 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', maxWidth: '1000px', margin: '0 auto' }}>
+        <div className="bg-white border border-slate-300 p-10 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', maxWidth: '1000px', margin: '0 auto', position: 'relative' }}>
+            {cancelled && (
+                <div style={{
+                    position: 'absolute',
+                    top: '44%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%) rotate(-18deg)',
+                    border: '6px solid rgba(220, 38, 38, 0.7)',
+                    color: 'rgba(220, 38, 38, 0.75)',
+                    fontSize: 54,
+                    fontWeight: 900,
+                    letterSpacing: 4,
+                    padding: '10px 28px',
+                    textTransform: 'uppercase',
+                    zIndex: 5,
+                    pointerEvents: 'none',
+                }}>
+                    Cancelled
+                </div>
+            )}
 
             <div style={{ marginBottom: 8, textAlign: 'center' }}>
                 <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />

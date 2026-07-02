@@ -51,7 +51,16 @@ const getDetails = (item) => {
     .map((person) => `${person.name || "Unnamed"}${person.designation ? ` · ${person.designation}` : ""}`)
     .join(", ");
 
-  return people || `${item.quantity || 0} ${PASS_LABELS[item.passType] || item.passType} requested`;
+  const aadhaarSummary = item.passType === "service"
+    ? (item.personnel || [])
+        .map((person) => String(person.aadhaarNumber || "").replace(/\D/g, ""))
+        .filter(Boolean)
+        .map((digits) => `Aadhaar **** ${digits.slice(-4)}`)
+        .join(", ")
+    : "";
+
+  return [people, aadhaarSummary].filter(Boolean).join(" | ")
+    || `${item.quantity || 0} ${PASS_LABELS[item.passType] || item.passType} requested`;
 };
 
 const getParticipationLabel = (participation) => {

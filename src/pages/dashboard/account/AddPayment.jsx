@@ -15,6 +15,7 @@ const TDS_RATE_OPTIONS = ["1", "2", "5", "10"];
 const TDS_SECTION_OPTIONS = ["194C", "194J", "194Q", "194I", "Other"];
 
 const today = () => new Date().toISOString().split("T")[0];
+const isCancelled = (doc) => String(doc?.status || "").toLowerCase() === "cancelled";
 
 const AddPayment = () => {
   const { id } = useParams();
@@ -65,8 +66,8 @@ const AddPayment = () => {
         const allEstimates = Array.isArray(estRes.data) ? estRes.data : estRes.data?.data || [];
         const allPayments = Array.isArray(payRes.data) ? payRes.data : payRes.data?.data || [];
 
-        setInvoices(allInvoices.filter((inv) => linkedIds.includes(inv.companyId)));
-        setProformas(allEstimates.filter((est) => linkedIds.includes(est.companyId)));
+        setInvoices(allInvoices.filter((inv) => linkedIds.includes(inv.companyId) && !isCancelled(inv)));
+        setProformas(allEstimates.filter((est) => linkedIds.includes(est.companyId) && !isCancelled(est)));
         setPayments(allPayments);
       } catch (err) {
         console.error(err);
@@ -117,6 +118,10 @@ const AddPayment = () => {
 
     if (!selectedDoc) {
       toast.error("Please select a document to record payment against.");
+      return;
+    }
+    if (isCancelled(selectedDoc)) {
+      toast.error("Payment cannot be recorded against a cancelled document.");
       return;
     }
     const received = parseFloat(amountReceived);

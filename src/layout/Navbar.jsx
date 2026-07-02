@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
-import { LogOut, Menu, X, Key } from "lucide-react";
+import { LogOut, Menu, X, Key, FileText, MessageSquare, ShoppingBag, UserCog2, ChevronRight, CheckCircle2, Clock3 } from "lucide-react";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { FaUserAstronaut } from "react-icons/fa";
 import { BiSupport } from "react-icons/bi";
 import { RiListCheck2, RiAlarmWarningLine, RiUserAddLine } from "react-icons/ri";
-import { IoNotificationsOutline } from "react-icons/io5";
 import { io } from "socket.io-client";
 import Swal from "sweetalert2";
 import api, { SERVER_URL } from "../lib/api";
@@ -22,6 +22,66 @@ const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
     return sliceState[fallbackKey];
   }
   return [];
+};
+
+// Central config for each notification type — keeps the modal markup clean
+// and makes it trivial to add a new alert type later.
+const NOTIF_CONFIG = {
+  chat: {
+    title: "New Message Received!",
+    label: "New chat message",
+    icon: MessageSquare,
+    accent: "#2563eb",      // blue
+    accentSoft: "#eff6ff",
+    accentBorder: "#bfdbfe",
+    verb: "has sent a new message.",
+    cta: "Open Chat",
+    lottie: "https://lottie.host/0d08f7aa-8331-4d41-8033-fe1e45ac838a/gMPH70MOwq.lottie",
+  },
+  accessory: {
+    title: "New Order Placed!",
+    label: "Service order placed",
+    icon: ShoppingBag,
+    accent: "#d97706",      // amber
+    accentSoft: "#fffbeb",
+    accentBorder: "#fde68a",
+    verb: "has placed a new order.",
+    cta: "View Tasks",
+    lottie: "https://lottie.host/8c0057e1-a13c-45f4-9d98-488f88c5a54d/scNuDcI2zN.lottie",
+  },
+  profile: {
+    title: "Profile Updated!",
+    label: "Exhibitor profile change",
+    icon: UserCog2,
+    accent: "#7c3aed",      // violet
+    accentSoft: "#f5f3ff",
+    accentBorder: "#ddd6fe",
+    verb: "has modified their exhibitor profile.",
+    cta: "View Alerts",
+    lottie: "https://lottie.host/3a567c32-7db4-4c69-a5ba-8d98f61651e7/pcrOllBheV.lottie",
+  },
+  document: {
+    title: "Document Uploaded Successfully!",
+    label: "Document type uploaded",
+    icon: FileText,
+    accent: "#dc2626",      // red
+    accentSoft: "#fef2f2",
+    accentBorder: "#fecaca",
+    verb: "has uploaded a new document.",
+    cta: "View Tasks",
+    lottie: "https://lottie.host/b27241eb-b226-4c8e-aa75-f2c06013ccfd/Uh3ShCyEDG.lottie",
+  },
+  activity: {
+    title: "New Activity Logged!",
+    label: "Exhibitor activity",
+    icon: FileText,
+    accent: "#059669",      // emerald
+    accentSoft: "#ecfdf5",
+    accentBorder: "#a7f3d0",
+    verb: "has performed a new action.",
+    cta: "View Activity Logs",
+    lottie: "https://lottie.host/8c0057e1-a13c-45f4-9d98-488f88c5a54d/scNuDcI2zN.lottie", // fallback to accessory animation, can be changed later
+  },
 };
 
 export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen }) {
@@ -76,8 +136,6 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
   const [hasUnreadTaskAlert, setHasUnreadTaskAlert] = useState(false);
   const [latestDocument, setLatestDocument] = useState(null);
 
-  // We rely on the real socket event for showing alerts now.
-
   // Stop blinking when user visits task-alerts
   useEffect(() => {
     if (location.pathname === "/task-alerts") {
@@ -114,17 +172,18 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
     s.on("connect", () => s.emit("join_admin", { adminId, adminName: adminName2 }));
     s.on("room_updated", (data) => {
       console.log("Navbar received room_updated!", data);
-      
-      // Absolute minimum check: if not admin, show popup. 
+
+      // Absolute minimum check: if not admin, show popup.
       if (data.lastSenderType !== "admin") {
         setChatUnread(prev => prev + 1);
-        
+
         // Show chat notification banner
-        setLatestDocument({ 
-            type: 'chat', 
-            roomId: data.roomId,
-            exhibitorName: data.exhibitorName || data.buyerName || 'Unknown Company', 
-            message: data.lastMessage 
+        setLatestDocument({
+          type: 'chat',
+          roomId: data.roomId,
+          exhibitorName: data.exhibitorName || data.buyerName || 'Unknown Company',
+          message: data.lastMessage,
+          notifTime: Date.now(),
         });
         setHasUnreadTaskAlert(true);
         setShowDemoAlert(true);
@@ -133,15 +192,15 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
 
     s.on("document_uploaded", (data) => {
       if (window.location.pathname !== "/task-alerts") {
-        setLatestDocument({ type: 'document', ...data });
+        setLatestDocument({ type: 'document', notifTime: Date.now(), ...data });
         setShowDemoAlert(true);
         setHasUnreadTaskAlert(true);
       }
     });
-    
+
     s.on("accessory_order_placed", (data) => {
       if (window.location.pathname !== "/task-alerts") {
-        setLatestDocument({ type: 'accessory', ...data });
+        setLatestDocument({ type: 'accessory', notifTime: Date.now(), ...data });
         setShowDemoAlert(true);
         setHasUnreadTaskAlert(true);
       }
@@ -161,11 +220,19 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
         };
         const updated = [newNotif, ...existing].slice(0, 15);
         localStorage.setItem('admin_profile_notifications', JSON.stringify(updated));
-      } catch {}
-      
-      setLatestDocument({ type: 'profile', ...data });
+      } catch { }
+
+      setLatestDocument({ type: 'profile', notifTime: data.timestamp ? new Date(data.timestamp).getTime() : Date.now(), ...data });
       setShowDemoAlert(true);
       setHasUnreadTaskAlert(true);
+    });
+
+    s.on("new_exhibitor_activity_log", (data) => {
+      if (window.location.pathname !== "/exhibitor-activity-logs") {
+        setLatestDocument({ type: 'activity', notifTime: data.createdAt ? new Date(data.createdAt).getTime() : Date.now(), ...data });
+        setShowDemoAlert(true);
+        setHasUnreadTaskAlert(true);
+      }
     });
 
     return () => { s.disconnect(); };
@@ -212,6 +279,38 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
       logout();
     }
   };
+
+  // Resolve display name for the current notification, falling back to
+  // matching against the companies list when needed.
+  const notifCompanyName = useMemo(() => {
+    if (!latestDocument) return "";
+    if (latestDocument.type === 'chat') return latestDocument.exhibitorName;
+    if (latestDocument.type === 'accessory') return latestDocument.exhibitorName || 'A client';
+    if (latestDocument.type === 'profile') return latestDocument.companyName;
+    if (latestDocument.type === 'activity') return latestDocument.companyName;
+
+    let compName = latestDocument.companyName;
+    if (!compName || compName === 'Unknown Client') {
+      const c = companiesArray.find(co =>
+        String(co._id) === String(latestDocument.client_id) ||
+        String(co.id) === String(latestDocument.client_id) ||
+        String(co.clientId) === String(latestDocument.client_id)
+      );
+      compName = c ? c.companyName : 'A client';
+    }
+    return compName;
+  }, [latestDocument, companiesArray]);
+
+  const notifConfig = latestDocument ? NOTIF_CONFIG[latestDocument.type] : null;
+  const NotifIcon = notifConfig?.icon || FileText;
+
+  // "Uploaded on: 1 July 2026, 10:45 AM" style formatting
+  const notifTimeLabel = useMemo(() => {
+    if (!latestDocument?.notifTime) return "";
+    return new Date(latestDocument.notifTime).toLocaleString('en-GB', {
+      day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true,
+    });
+  }, [latestDocument]);
 
   return (
     <div className={`fixed top-0 right-0 z-[100] h-[42px] bg-gradient-to-r from-[#051c47] via-[#082b6b] to-[#051c47] border-b border-blue-900/50 shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center justify-between px-6 print:hidden transition-all duration-300 left-0 ${sidebarOpen ? 'lg:left-[240px]' : 'lg:left-[70px]'}`}>
@@ -390,80 +489,122 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
 
       </div>
 
-      {/* Bottom Banner Notification (Real-time Document Upload) */}
+      {/* ============================================================ */}
+      {/* Professional light-theme success-style notification (centered) */}
+      {/* ============================================================ */}
       <AnimatePresence>
-        {showDemoAlert && (
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[999] pointer-events-none w-full max-w-[650px] px-4">
+        {showDemoAlert && notifConfig && (
+          <>
+            {/* Soft backdrop */}
             <motion.div
-              initial={{ opacity: 0, y: 50, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 30, scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              className="pointer-events-auto w-full bg-red-50 border border-red-200 rounded-xl shadow-[0_10px_40px_rgba(239,68,68,0.2)] py-2.5 px-4 flex items-center justify-between gap-4"
-            >
-              {/* Left Side: Icon & Text */}
-              <div className="flex items-center gap-3.5">
-                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 shadow-sm border border-red-200">
-                  <IoNotificationsOutline size={18} className="text-red-600 animate-pulse" />
-                </div>
-                <div className="flex flex-col">
-                  <p className="text-[13px] text-red-950 font-medium tracking-tight">
-                    {latestDocument ? (
-                      <>
-                        <span className="font-bold text-blue-700">{(() => {
-                          if (latestDocument.type === 'chat') {
-                              return latestDocument.exhibitorName;
-                          }
-                          if (latestDocument.type === 'accessory') {
-                              return latestDocument.exhibitorName || 'A client';
-                          }
-                          if (latestDocument.type === 'profile') {
-                              return latestDocument.companyName;
-                          }
-                          let compName = latestDocument.companyName;
-                          if (!compName || compName === 'Unknown Client') {
-                              const c = companiesArray.find(co => 
-                                  String(co._id) === String(latestDocument.client_id) || 
-                                  String(co.id) === String(latestDocument.client_id) ||
-                                  String(co.clientId) === String(latestDocument.client_id)
-                              );
-                              compName = c ? c.companyName : 'A client';
-                          }
-                          return compName;
-                        })()}</span> {latestDocument.type === 'chat' ? 'has sent a new live chat message.' : latestDocument.type === 'accessory' ? 'has placed a new material/service request.' : latestDocument.type === 'profile' ? 'has updated their profile.' : 'has uploaded a new document.'}
-                      </>
-                    ) : (
-                      <>You have <span className="font-bold text-red-700">pending tasks</span> that need your attention.</>
-                    )}
-                  </p>
-                  {latestDocument && (
-                    <p className="text-[10px] text-red-800 font-bold uppercase tracking-wider">
-                        {latestDocument.type === 'chat' ? `Message: "${latestDocument.message || '...'}"` : latestDocument.type === 'accessory' ? `Order: ${latestDocument.orderNo}` : latestDocument.type === 'profile' ? `Updated: ${latestDocument.action}` : latestDocument.document_name}
-                    </p>
-                  )}
-                </div>
-              </div>
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDemoAlert(false)}
+              className="fixed inset-0 z-[998] bg-slate-900/30 backdrop-blur-[2px]"
+            />
 
-              {/* Right Side: Button & Close */}
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => { 
-                      setShowDemoAlert(false); 
-                      navigate("/task-alerts"); 
-                  }}
-                  className="px-4 py-1.5 bg-white border border-red-200 rounded-[6px] text-[12px] font-bold text-red-700 hover:bg-red-50 transition-colors shadow-sm whitespace-nowrap"
-                >
-                  {latestDocument?.type === 'chat' ? 'View Dashboard' : latestDocument?.type === 'profile' ? 'View Notifications' : 'View Tasks'}
-                </button>
+            <div className="fixed inset-0 z-[999] flex items-center justify-center px-4 pointer-events-none">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.85, y: 24, rotate: -1.5 }}
+                animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
+                exit={{ opacity: 0, scale: 0.92, y: 10 }}
+                transition={{ type: "spring", stiffness: 260, damping: 22 }}
+                className="pointer-events-auto w-full max-w-[400px] bg-white rounded-2xl shadow-[0_20px_60px_rgba(15,23,42,0.25)] border border-slate-100 px-6 py-4 flex flex-col items-center text-center relative"
+                style={{ fontFamily: 'Inter, sans-serif' }}
+              >
+                {/* Close */}
                 <button
                   onClick={() => setShowDemoAlert(false)}
-                  className="text-red-400 hover:text-red-700 transition-colors"
+                  className="absolute top-3.5 right-3.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors p-1.5 rounded-full"
                 >
                   <X size={16} />
                 </button>
-              </div>
-            </motion.div>
-          </div>
+
+                {/* Bell animation */}
+                <div className="relative w-38 h-38 flex items-center justify-center -mt-6 -mb-6">
+                  {/* Bell Lottie animation */}
+                  <div className="relative w-full h-full">
+                    <DotLottieReact
+                      src={notifConfig.lottie}
+                      loop
+                      autoplay
+                    />
+                  </div>
+
+                 
+                </div>
+
+                {/* Title + subtitle */}
+                <h3 className="text-[16px] font-semibold text-[#007979] tracking-tight">
+                  {notifConfig.title}
+                </h3>
+                <p className="text-[13px] text-slate-900 mt-1 leading-relaxed">
+                  <span className="font-bold text-blue-600">
+                    {notifCompanyName}
+                  </span>{" "}
+                  {notifConfig.verb}
+                </p>
+
+                {/* Detail card */}
+                <div
+                  className="w-full mt-3 rounded-xl border px-4 py-2.5 flex items-center gap-3 text-left"
+                  style={{ backgroundColor: notifConfig.accentSoft, borderColor: notifConfig.accentBorder }}
+                >
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-white"
+                  >
+                    <CheckCircle2 size={16} style={{ color: notifConfig.accent }} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[12.5px] font-bold text-slate-800 truncate uppercase tracking-wide">
+                      {latestDocument.type === 'chat' && `"${latestDocument.message || '...'}"`}
+                      {latestDocument.type === 'accessory' && `Order #${latestDocument.orderNo || ''}`}
+                      {latestDocument.type === 'profile' && `Action: ${latestDocument.action || ''}`}
+                      {latestDocument.type === 'document' && (latestDocument.document_name || 'Document')}
+                      {latestDocument.type === 'activity' && (latestDocument.action || 'Activity Logged')}
+                    </p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{notifConfig.label}</p>
+                  </div>
+                </div>
+
+                {/* Timestamp */}
+                {notifTimeLabel && (
+                  <div className="flex items-center gap-1.5 text-[11.5px] text-[#7F2020] mt-2">
+                    <Clock3 size={12.5} />
+                    <span>Uploaded on: {notifTimeLabel}</span>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex items-center gap-3 w-full mt-4">
+                  <button
+                    onClick={() => setShowDemoAlert(false)}
+                    className="flex-1 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg text-[12.5px] font-semibold transition-all"
+                  >
+                    Dismiss
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDemoAlert(false);
+                      if (latestDocument?.type === 'chat') {
+                        navigate("/exhibitor-chat");
+                      } else if (latestDocument?.type === 'activity') {
+                        navigate("/exhibitor-activity-logs");
+                      } else {
+                        navigate("/task-alerts");
+                      }
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 text-white rounded-lg text-[12.5px] font-semibold transition-all shadow-sm"
+                    style={{ backgroundColor: notifConfig.accent }}
+                  >
+                    {notifConfig.cta}
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          </>
         )}
       </AnimatePresence>
 
@@ -474,4 +615,3 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
     </div>
   );
 }
-

@@ -93,6 +93,7 @@ const CreateDebitNote = () => {
     const [payments, setPayments] = useState([]);
     const [submitting, setSubmitting] = useState(false);
     const [attachmentFile, setAttachmentFile] = useState(null);
+    const [nextCreditNoteNo, setNextCreditNoteNo] = useState('');
 
     const [form, setForm] = useState({
         sourceKey: '',
@@ -105,6 +106,26 @@ const CreateDebitNote = () => {
     });
 
     const [items, setItems] = useState([newItem()]);
+
+    useEffect(() => {
+        let cancelled = false;
+        const loadNextCreditNoteNo = async () => {
+            try {
+                const res = await api.get('/api/debitnotes/next-number');
+                if (!cancelled) {
+                    setNextCreditNoteNo(res.data?.debit_note_no || res.data?.data?.debit_note_no || '');
+                }
+            } catch (err) {
+                console.error('Failed to load next credit note number', err);
+                if (!cancelled) setNextCreditNoteNo('');
+            }
+        };
+
+        loadNextCreditNoteNo();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     useEffect(() => {
         if (!id) return;
@@ -130,12 +151,14 @@ const CreateDebitNote = () => {
                             estimates.push(latestEstimate);
                         }
                     } catch (estimateErr) {
-                        console.error('Failed to load fallback proforma for debit note', estimateErr);
+                        console.error('Failed to load fallback proforma for credit note', estimateErr);
                     }
                 }
 
                 const allPayments = Array.isArray(payRes.data) ? payRes.data : payRes.data?.data || [];
                 setPayments(allPayments);
+
+                const getClientName = (doc) => doc.company_name || doc.clientName || doc.consignee_name || doc.consignee || '';
 
                 const docs = [
                     ...invoices.map((inv) => ({
@@ -143,10 +166,10 @@ const CreateDebitNote = () => {
                         type: 'Invoice',
                         id: inv._id,
                         companyId: inv.companyId,
-                        label: `${inv.invoice_no} - ${inv.consignee_name || ''}`,
+                        label: `${inv.invoice_no} - ${getClientName(inv)}`,
                         date: inv.invoice_date,
                         amount: inv.finalAmount,
-                        consignee: inv.consignee_name,
+                        consignee: getClientName(inv),
                         state: inv.state,
                         docNo: inv.invoice_no,
                         items: inv.items || [],
@@ -156,28 +179,23 @@ const CreateDebitNote = () => {
                         type: 'Proforma Invoice',
                         id: est._id,
                         companyId: est.companyId,
-                        label: `${est.est_no} - ${est.consignee_name || ''}`,
+                        label: `${est.est_no} - ${getClientName(est)}`,
                         date: est.supply_date,
                         amount: est.finalAmount,
-                        consignee: est.consignee_name,
+                        consignee: getClientName(est),
                         state: est.state,
                         docNo: est.est_no,
                         items: estimateItemsToDebitNoteItems(est.items || []),
                     })),
                 ];
                 setSourceDocs(docs);
-                if (docs.length > 0) {
-                    setForm((f) => {
-                        if (f.sourceKey && docs.some((doc) => doc.key === f.sourceKey)) return f;
-                        return {
-                            ...f,
-                            sourceKey: docs[0].key,
-                            clientState: docs[0].state || f.clientState,
-                        };
-                    });
-                }
+                setForm((f) => (
+                    f.sourceKey && docs.some((doc) => doc.key === f.sourceKey)
+                        ? f
+                        : { ...f, sourceKey: '', clientState: '' }
+                ));
             } catch (err) {
-                console.error('Failed to load invoices/estimates for debit note', err);
+                console.error('Failed to load invoices/estimates for credit note', err);
             }
         };
         loadSourceData();
@@ -264,11 +282,11 @@ const CreateDebitNote = () => {
 
     const handleSubmit = async () => {
         if (!selectedDoc) {
-            toast.error('Please select the invoice/estimate this debit note is raised against.');
+            toast.error('Please select the invoice/estimate this credit note is raised against.');
             return;
         }
         if (form.reason === 'Select Reason') {
-            toast.error('Please select a reason for this debit note.');
+            toast.error('Please select a reason for this credit note.');
             return;
         }
         if (items.every((it) => !it.description)) {
@@ -313,12 +331,12 @@ const CreateDebitNote = () => {
                 headers: { 'Content-Type': 'application/json' },
             });
 
-            toast.success('Debit Note generated successfully!');
+            toast.success('Credit Note generated successfully!');
             navigate(`/debit-note-list/${id || 'all'}`);
         } catch (err) {
             console.error(err);
             const serverMessage = err.response?.data?.error || err.response?.data?.message;
-            toast.error(serverMessage || 'Failed to generate debit note.');
+            toast.error(serverMessage || 'Failed to generate credit note.');
         } finally {
             setSubmitting(false);
         }
@@ -345,8 +363,8 @@ const CreateDebitNote = () => {
                         <FileText size={20} />
                     </div>
                     <div>
-                        <h1 className="text-[18px] font-bold text-[#1a2b4b] leading-tight">Create Debit Note</h1>
-                        <p className="text-[12px] text-slate-500 mt-0.5">Raise debit note for additional charges, expenses or adjustments</p>
+                        <h1 className="text-[18px] font-bold text-[#1a2b4b] leading-tight">Create Credit Note</h1>
+                        <p className="text-[12px] text-slate-500 mt-0.5">Raise credit note for adjustments against an invoice or estimate</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -355,7 +373,7 @@ const CreateDebitNote = () => {
                         className="flex items-center gap-1.5 border border-[#e9d5ff] bg-[#f3e8ff] rounded-lg px-4 py-2 text-[13px] font-semibold text-[#7e22ce] hover:bg-[#e9d5ff] transition shadow-sm"
                     >
                         <List size={16} />
-                        All Debit Notes
+                        All Credit Notes
                     </button>
                     <button
                         onClick={() => navigate(id ? `/dashboard/account/${id}` : -1)}
@@ -373,7 +391,7 @@ const CreateDebitNote = () => {
 
                     {/* SECTION 1 - Source */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <SectionHead num="1" label="Debit Note Source" />
+                        <SectionHead num="1" label="Credit Note Source" />
 
                         <div className="grid grid-cols-5 gap-6">
                             <div className="col-span-2">
@@ -422,21 +440,21 @@ const CreateDebitNote = () => {
 
                         <div className="mt-5 bg-[#eff6ff] border border-[#bfdbfe] rounded-lg p-3 flex items-start gap-2.5 text-[#1e40af]">
                             <Info size={16} className="mt-0.5 flex-shrink-0" />
-                            <span className="text-[12px] font-medium leading-relaxed">Debit note will be created against the selected invoice. You can add additional charges or adjustments below.</span>
+                            <span className="text-[12px] font-medium leading-relaxed">Credit note will be created against the selected invoice or estimate. Select the source document, then add adjustment details below.</span>
                         </div>
                     </div>
 
                     {/* SECTION 2 - Details */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <SectionHead num="2" label="Debit Note Details" />
+                        <SectionHead num="2" label="Credit Note Details" />
 
                         <div className="grid grid-cols-4 gap-6 mb-4">
                             <div>
-                                <Label>Debit Note No.</Label>
-                                <Input value="Auto-generated on save" readOnly className="bg-gray-50 text-slate-500 font-medium italic" />
+                                <Label>Credit Note No.</Label>
+                                <Input value={nextCreditNoteNo || 'Auto-generating...'} readOnly className="bg-gray-50 text-slate-500 font-medium" />
                             </div>
                             <div>
-                                <Label required>Debit Note Date</Label>
+                                <Label required>Credit Note Date</Label>
                                 <Input type="date" value={form.debitNoteDate} onChange={(e) => setField('debitNoteDate', e.target.value)} />
                             </div>
                             <div>
@@ -449,7 +467,7 @@ const CreateDebitNote = () => {
                             </div>
                         </div>
 
-                        <Label required>Debit Note Type</Label>
+                        <Label required>Credit Note Type</Label>
                         <div className="grid grid-cols-4 gap-4 mt-2">
                             <TypeCard
                                 selected={form.type === 'additional_charges'}
@@ -476,7 +494,7 @@ const CreateDebitNote = () => {
                                 selected={form.type === 'other_adjustment'}
                                 icon={SlidersHorizontal}
                                 title="Other Adjustment"
-                                desc="Any other debit adjustment"
+                                desc="Any other credit adjustment"
                                 onClick={() => setField('type', 'other_adjustment')}
                             />
                         </div>
@@ -628,7 +646,7 @@ const CreateDebitNote = () => {
                             disabled={submitting}
                             className="flex items-center gap-2 bg-[#00A859] hover:bg-[#00904C] text-white rounded-lg px-8 py-2.5 text-[14px] font-bold transition shadow-sm disabled:opacity-60"
                         >
-                            <FileText size={16} /> {submitting ? 'Saving...' : 'Generate Debit Note'}
+                            <FileText size={16} /> {submitting ? 'Saving...' : 'Generate Credit Note'}
                         </button>
                     </div>
                 </div>
@@ -643,7 +661,7 @@ const CreateDebitNote = () => {
                             <div className="w-6 h-6 rounded flex items-center justify-center bg-[#f3e8ff] text-[#7e22ce]">
                                 <FileText size={14} />
                             </div>
-                            <h3 className="text-[14px] font-medium text-[#1a2b4b]">Debit Note Summary</h3>
+                            <h3 className="text-[14px] font-medium text-[#1a2b4b]">Credit Note Summary</h3>
                         </div>
 
                         <div className="space-y-3 text-[13px]">
@@ -652,7 +670,7 @@ const CreateDebitNote = () => {
                                 <span className="font-medium text-[#1a2b4b]">₹ {Number(selectedDoc?.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                             </div>
                             <div className="flex justify-between text-slate-500">
-                                <span className="font-medium text-slate-500">Debit Total</span>
+                                <span className="font-medium text-slate-500">Credit Total</span>
                                 <span className="font-semibold text-[#7e22ce]">₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                             </div>
                             
