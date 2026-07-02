@@ -1,9 +1,66 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
-import { ChevronRight, ArrowLeft, Edit, MessageCircleMore, Mail } from 'lucide-react';
+import { ChevronRight, ArrowLeft, Edit, MessageCircleMore, Mail, FileText, CheckCircle2, Clock, Users, DollarSign, Package } from 'lucide-react';
 import api from '../../../lib/api';
 import Swal from 'sweetalert2';
 import CommunicationModal from '../../../components/CommunicationModal';
+
+// Hook: animate number from 0 to target when element enters viewport
+function useCountUp(target, duration = 1200) {
+  const [count, setCount] = useState(0);
+  const [started, setStarted] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting && !started) setStarted(true); },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [started]);
+
+  useEffect(() => {
+    if (!started) return;
+    const numTarget = parseFloat(target) || 0;
+    if (numTarget === 0) { setCount(0); return; }
+    const startTime = performance.now();
+    const tick = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      setCount(ease * numTarget);
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [started, target, duration]);
+
+  return { ref, count };
+}
+
+function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, label, subLabel, subColor }) {
+  const { ref, count } = useCountUp(rawValue);
+  return (
+    <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white ${gradientTo} p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}>
+      <div className="relative z-10">
+        <div className="flex items-center gap-3 mb-4">
+          <div className={`w-10 h-10 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
+            {icon}
+          </div>
+          <div className="flex flex-col">
+            <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>
+              {displayValue(count)}
+            </span>
+            <span style={{ fontSize: '9px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif' }}>{label}</span>
+          </div>
+        </div>
+        <div style={{ fontSize: '10px', fontWeight: 700, color: subColor, textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>{subLabel}</div>
+      </div>
+    </div>
+  );
+}
 
 const InvoiceList = () => {
     const navigate = useNavigate();
@@ -103,6 +160,48 @@ const InvoiceList = () => {
         }
     };
 
+    const totalInvoices = filteredInvoices.length;
+    const totalValue = filteredInvoices.reduce((sum, inv) => sum + (parseFloat(inv.finalAmount) || 0), 0);
+    const avgValue = totalInvoices > 0 ? totalValue / totalInvoices : 0;
+    const totalClients = new Set(filteredInvoices.map(inv => inv.company_name).filter(Boolean)).size;
+
+    const statCards = (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <AnimatedStatCard
+          icon={<FileText className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
+          gradientTo="to-blue-50" iconBg="bg-blue-100"
+          rawValue={totalInvoices}
+          displayValue={(c) => Math.round(c)}
+          label="TOTAL INVOICES"
+          subLabel="Created" subColor="#2563eb"
+        />
+        <AnimatedStatCard
+          icon={<DollarSign className="w-5 h-5 text-indigo-600" strokeWidth={2.5} />}
+          gradientTo="to-indigo-50" iconBg="bg-indigo-100"
+          rawValue={totalValue / 100000}
+          displayValue={(c) => `₹ ${c.toFixed(1)}L`}
+          label="TOTAL VALUE"
+          subLabel="Amount" subColor="#4f46e5"
+        />
+        <AnimatedStatCard
+          icon={<DollarSign className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
+          gradientTo="to-emerald-50" iconBg="bg-emerald-100"
+          rawValue={avgValue / 1000}
+          displayValue={(c) => `₹ ${c.toFixed(1)}k`}
+          label="AVG VALUE"
+          subLabel="Per Invoice" subColor="#059669"
+        />
+        <AnimatedStatCard
+          icon={<Users className="w-5 h-5 text-rose-600" strokeWidth={2.5} />}
+          gradientTo="to-rose-50" iconBg="bg-rose-100"
+          rawValue={totalClients}
+          displayValue={(c) => Math.round(c)}
+          label="TOTAL CLIENTS"
+          subLabel="Billed" subColor="#e11d48"
+        />
+      </div>
+    );
+
     return (
         <div className="min-h-screen bg-gray-50 pl-4 pr-4">
             {/* ── Header ── */}
@@ -130,7 +229,7 @@ const InvoiceList = () => {
                     />
                     <button
 	                        onClick={() => navigate(isAllList ? '/page-create-invoice' : `/page-create-invoice/${id}`)}
-                        className="flex items-center gap-2 bg-[#00A859] hover:bg-[#00904C] text-white px-4 py-2 rounded-md font-semibold transition text-sm"
+                        className="flex items-center gap-2 bg-[#194090] hover:bg-[#112f6b] text-white px-4 py-2 rounded-md font-semibold transition text-sm"
                     >
                         Create Invoice
                     </button>
@@ -144,19 +243,21 @@ const InvoiceList = () => {
                 </div>
             </div>
 
+            {statCards}
+
             {/* ── Table Container ── */}
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-x-auto">
+                <table className="min-w-full text-left text-xs whitespace-nowrap" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    <thead className="bg-slate-50 uppercase tracking-wide text-slate-500 border-b border-slate-200">
                         <tr>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">S.No.</th>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Invoice No.</th>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">PI No.</th>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Company / Client</th>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Date</th>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Amount (₹)</th>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Added By</th>
-                            <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Action</th>
+                            <th className="px-4 py-3 font-bold">S.No.</th>
+                            <th className="px-4 py-3 font-bold">Invoice No.</th>
+                            <th className="px-4 py-3 font-bold">PI No.</th>
+                            <th className="px-4 py-3 font-bold">Company / Client</th>
+                            <th className="px-4 py-3 font-bold">Date</th>
+                            <th className="px-4 py-3 font-bold">Amount (₹)</th>
+                            <th className="px-4 py-3 font-bold">Added By</th>
+                            <th className="px-4 py-3 font-bold text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -170,57 +271,57 @@ const InvoiceList = () => {
                             </tr>
                         ) : (
                             paginatedInvoices.map((inv, idx) => (
-                                <tr key={inv._id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                <tr key={inv._id} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
+                                    <td className="px-4 py-3 font-bold text-[11px]" style={{ color: '#093C5D' }}>
                                         {(currentPage - 1) * itemsPerPage + idx + 1}
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                                        <Link to={`/payments/invoiceDetails/${inv._id}`} className="text-[#3598dc] font-medium hover:underline">
+                                    <td className="px-4 py-3 text-[10px]">
+                                        <Link to={`/payments/invoiceDetails/${inv._id}`} className="text-[#194090] font-bold hover:text-blue-700">
                                             {inv.invoice_no}
                                         </Link>
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                    <td className="px-4 py-3 text-[10px] font-bold text-slate-700">
                                         {inv.estimate_no || "—"}
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">
+                                    <td className="px-4 py-3 text-[10px] font-bold text-slate-800">
                                         {inv.company_name}
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-4 py-3 text-[10px] font-medium text-slate-500">
                                         {formatDate(inv.invoice_date || inv.added)}
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                                    <td className="px-4 py-3 text-[10px] font-bold text-emerald-600">
                                         {inv.finalAmount?.toFixed(2) || "0.00"}
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 capitalize">
+                                    <td className="px-4 py-3 text-[10px] font-bold text-slate-700 capitalize">
                                         {inv.added_by || "Unknown"}
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
-                                        <div className="flex gap-2 justify-center">
+                                    <td className="px-4 py-3">
+                                        <div className="flex gap-1.5 justify-center">
                                             <button
                                                 type="button"
                                                 disabled={actionLoaders[`${inv._id}_wa`]}
                                                 onClick={() => handleSendWhatsApp(inv._id)}
-                                                className="border border-green-500 text-green-600 hover:text-white hover:bg-green-500 p-1.5 rounded flex items-center justify-center cursor-pointer transition-colors disabled:opacity-60"
+                                                className="rounded border border-slate-200 p-1.5 text-emerald-600 hover:bg-slate-100 transition-colors disabled:opacity-60"
                                                 title="Send WhatsApp"
                                             >
-                                                {actionLoaders[`${inv._id}_wa`] ? <span className="animate-spin text-xs">↻</span> : <MessageCircleMore size={16} />}
+                                                {actionLoaders[`${inv._id}_wa`] ? <span className="animate-spin text-[10px] inline-block">↻</span> : <MessageCircleMore size={13} />}
                                             </button>
                                             <button
                                                 type="button"
                                                 disabled={actionLoaders[`${inv._id}_email`]}
                                                 onClick={() => handleSendEmail(inv._id)}
-                                                className="border border-blue-500 text-blue-600 hover:text-white hover:bg-blue-500 p-1.5 rounded flex items-center justify-center cursor-pointer transition-colors disabled:opacity-60"
+                                                className="rounded border border-slate-200 p-1.5 text-blue-600 hover:bg-slate-100 transition-colors disabled:opacity-60"
                                                 title="Send Email"
                                             >
-                                                {actionLoaders[`${inv._id}_email`] ? <span className="animate-spin text-xs">↻</span> : <Mail size={16} />}
+                                                {actionLoaders[`${inv._id}_email`] ? <span className="animate-spin text-[10px] inline-block">↻</span> : <Mail size={13} />}
                                             </button>
                                             <Link
                                                 to="/page-create-invoice"
                                                 state={{ editInvoiceId: inv._id }}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 rounded-md font-medium text-xs transition-colors"
+                                                className="rounded border border-slate-200 p-1.5 text-indigo-600 hover:bg-slate-100 transition-colors inline-block"
+                                                title="Edit"
                                             >
-                                                <Edit className="w-3.5 h-3.5" />
-                                                Edit
+                                                <Edit size={13} />
                                             </Link>
                                         </div>
                                     </td>

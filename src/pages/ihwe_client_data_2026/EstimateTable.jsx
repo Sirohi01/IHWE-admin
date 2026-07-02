@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchEstimates, fetchAllGlobalEstimates } from "../../features/estimates/estimateSlice";
@@ -9,8 +9,65 @@ import {
 import { fetchInvoices } from "../../features/invoice/invoiceSlice";
 import api from "../../lib/api";
 import Swal from "sweetalert2";
-import { MessageCircleMore, Mail, Ban, Truck, Plus } from "lucide-react";
+import { MessageCircleMore, Mail, Ban, Truck, Plus, FileText, CheckCircle2, Clock, Users, DollarSign, Package } from "lucide-react";
 import CommunicationModal from "../../components/CommunicationModal";
+
+// Hook: animate number from 0 to target when element enters viewport
+function useCountUp(target, duration = 1200) {
+  const [count, setCount] = useState(0);
+  const [started, setStarted] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting && !started) setStarted(true); },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [started]);
+
+  useEffect(() => {
+    if (!started) return;
+    const numTarget = parseFloat(target) || 0;
+    if (numTarget === 0) { setCount(0); return; }
+    const startTime = performance.now();
+    const tick = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      setCount(ease * numTarget);
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [started, target, duration]);
+
+  return { ref, count };
+}
+
+function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, label, subLabel, subColor }) {
+  const { ref, count } = useCountUp(rawValue);
+  return (
+    <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white ${gradientTo} p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}>
+      <div className="relative z-10">
+        <div className="flex items-center gap-3 mb-4">
+          <div className={`w-10 h-10 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
+            {icon}
+          </div>
+          <div className="flex flex-col">
+            <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>
+              {displayValue(count)}
+            </span>
+            <span style={{ fontSize: '9px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif' }}>{label}</span>
+          </div>
+        </div>
+        <div style={{ fontSize: '10px', fontWeight: 700, color: subColor, textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>{subLabel}</div>
+      </div>
+    </div>
+  );
+}
 
 const stylebutton =
   "w-fit text-[#3598dc] cursor-pointer border border-[#3598dc] hover:bg-[#3598dc] hover:text-white font-medium flex  items-center gap-1 px-1";
@@ -342,31 +399,75 @@ const EstimateTable = ({ clientId }) => {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+  const totalProformas = estimates?.length || 0;
+  const totalValue = (estimates || []).reduce((sum, est) => sum + (est.items || []).reduce((s, i) => s + (parseFloat(i.finalAmount) || 0), 0), 0);
+  const activeProformas = (estimates || []).filter(est => !isCancelled(est)).length;
+  const cancelledProformas = (estimates || []).filter(est => isCancelled(est)).length;
+
+  const statCards = (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 mt-2">
+      <AnimatedStatCard
+        icon={<FileText className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
+        gradientTo="to-blue-50" iconBg="bg-blue-100"
+        rawValue={totalProformas}
+        displayValue={(c) => Math.round(c)}
+        label="TOTAL PROFORMAS"
+        subLabel="Created" subColor="#2563eb"
+      />
+      <AnimatedStatCard
+        icon={<DollarSign className="w-5 h-5 text-indigo-600" strokeWidth={2.5} />}
+        gradientTo="to-indigo-50" iconBg="bg-indigo-100"
+        rawValue={totalValue / 100000}
+        displayValue={(c) => `₹ ${c.toFixed(1)}L`}
+        label="TOTAL VALUE"
+        subLabel="Amount" subColor="#4f46e5"
+      />
+      <AnimatedStatCard
+        icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
+        gradientTo="to-emerald-50" iconBg="bg-emerald-100"
+        rawValue={activeProformas}
+        displayValue={(c) => Math.round(c)}
+        label="ACTIVE PROFORMAS"
+        subLabel="Valid" subColor="#059669"
+      />
+      <AnimatedStatCard
+        icon={<Ban className="w-5 h-5 text-rose-600" strokeWidth={2.5} />}
+        gradientTo="to-rose-50" iconBg="bg-rose-100"
+        rawValue={cancelledProformas}
+        displayValue={(c) => Math.round(c)}
+        label="CANCELLED"
+        subLabel="Invalid" subColor="#e11d48"
+      />
+    </div>
+  );
+
   return (
     <div className="overflow-x-auto p-1">
-      <table className="min-w-full border-collapse bg-white rounded-lg overflow-hidden shadow-sm">
-        <thead className="bg-gray-50 border-b border-gray-200">
-          <tr>
-            <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50">S.No.</th>
-            <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50">Proforma Invoice</th>
-            {(clientId === 'all' || id === 'all') && (
-              <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50">Company / Client</th>
-            )}
-            {(clientId !== 'all' && id !== 'all') && (
-              <th scope="col" className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50">Delivery Challan</th>
-            )}
-            {(clientId !== 'all' && id !== 'all') && (
-              <th scope="col" className="px-4 py-2 text-center text-xs font-medium text-black uppercase tracking-wider border border-gray-300">Invoice</th>
-            )}
-            <th scope="col" className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50">Updated Details</th>
-            {(clientId !== 'all' && id !== 'all') && (
-              <th scope="col" className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50">Status</th>
-            )}
-            {(clientId !== 'all' && id !== 'all') && (
-              <th scope="col" className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-300 bg-gray-50">Action</th>
-            )}
-          </tr>
-        </thead>
+      {statCards}
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <table className="min-w-full text-left text-xs whitespace-nowrap" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <thead className="bg-slate-50 uppercase tracking-wide text-slate-500 border-b border-slate-200">
+            <tr>
+              <th scope="col" className="px-4 py-3 font-bold">S.No.</th>
+              <th scope="col" className="px-4 py-3 font-bold">Proforma Invoice</th>
+              {(clientId === 'all' || id === 'all') && (
+                <th scope="col" className="px-4 py-3 font-bold">Company / Client</th>
+              )}
+              {(clientId !== 'all' && id !== 'all') && (
+                <th scope="col" className="px-4 py-3 font-bold text-center">Delivery Challan</th>
+              )}
+              {(clientId !== 'all' && id !== 'all') && (
+                <th scope="col" className="px-4 py-3 font-bold text-center">Invoice</th>
+              )}
+              <th scope="col" className="px-4 py-3 font-bold">Updated Details</th>
+              {(clientId !== 'all' && id !== 'all') && (
+                <th scope="col" className="px-4 py-3 font-bold text-center">Status</th>
+              )}
+              {(clientId !== 'all' && id !== 'all') && (
+                <th scope="col" className="px-4 py-3 font-bold text-center">Action</th>
+              )}
+            </tr>
+          </thead>
 
         <tbody className="bg-white divide-y divide-gray-200">
           {displayRows.map((row, index) => {
@@ -400,24 +501,24 @@ const EstimateTable = ({ clientId }) => {
             const remainingChallanQty = Math.max(0, proformaQty - challanQty);
 
             return (
-              <tr key={rowInstanceKey} className="hover:bg-gray-50 transition-colors border-b border-gray-200">
+              <tr key={rowInstanceKey} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
                 {isFirstForEstimate && (
                   <>
-                    <td rowSpan={estimateRowSpan} className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left align-top">{indexOfFirstItem + currentEstimates.findIndex((item) => item._id === estimate._id) + 1}</td>
-                    <td rowSpan={estimateRowSpan} className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left align-top">
+                    <td rowSpan={estimateRowSpan} className="px-4 py-3 align-top font-bold text-[11px]" style={{ color: '#093C5D' }}>{indexOfFirstItem + currentEstimates.findIndex((item) => item._id === estimate._id) + 1}</td>
+                    <td rowSpan={estimateRowSpan} className="px-4 py-3 align-top text-[10px] text-slate-700">
                       <div className="flex items-center justify-start gap-2">
                         <Link to={`/payments/estimateDetails/${estimate?._id}`} state={{ displayEstNo: estimate?.est_no, documentStatus: isCancelled(estimate) ? "cancelled" : "active", invoiceStatus: "" }}>
-                          <button className="text-[#3598dc] cursor-pointer hover:text-[#566e7d] font-medium px-1">{estimate?.est_no}</button>
+                          <button className="text-[#194090] cursor-pointer hover:text-blue-700 font-bold px-1 text-[11px]">{estimate?.est_no}</button>
                         </Link>
-                        <span>| {formattedDate} | {displayAmount}</span>
+                        <span className="font-medium text-slate-500">| {formattedDate} | <span className="font-bold text-emerald-600">{displayAmount}</span></span>
                       </div>
                     </td>
                   </>
                 )}
                 {(clientId === 'all' || id === 'all') && (
                   isFirstForEstimate && (
-                    <td rowSpan={estimateRowSpan} className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left align-top">
-                      <span className="font-semibold text-gray-800">{companyClientName}</span>
+                    <td rowSpan={estimateRowSpan} className="px-4 py-3 align-top text-[10px]">
+                      <span className="font-bold text-slate-800">{companyClientName}</span>
                     </td>
                   )
                 )}
@@ -454,52 +555,52 @@ const EstimateTable = ({ clientId }) => {
                   </td>
                 )}
                 {(clientId !== 'all' && id !== 'all') && (
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
+                  <td className="px-4 py-3 align-top text-[10px]">
                     {isPiCreated && (
                       <div className="flex items-center justify-center gap-1">
                         <Link to={`/payments/performanceInvoiceDetails/${piDataToDisplay._id}`}>
-                          <button className="text-[#3598dc] cursor-pointer hover:text-[#566e7d] font-medium px-1">{piDataToDisplay.pi_no}</button>
+                          <button className="text-[#194090] cursor-pointer hover:text-blue-700 font-bold px-1">{piDataToDisplay.pi_no}</button>
                         </Link>
-                        <span>| {formatPiDate(piDataToDisplay.updated) || "N/A"} | {piDataToDisplay.finalAmount?.toFixed(2) || "0.00"}</span>
+                        <span className="font-medium text-slate-500">| {formatPiDate(piDataToDisplay.updated) || "N/A"} | <span className="font-bold text-emerald-600">{piDataToDisplay.finalAmount?.toFixed(2) || "0.00"}</span></span>
                       </div>
                     )}
                     {invoiceData ? (
-                      <div className="flex items-center justify-center gap-1 mt-1 text-sm">
-                        <button className="text-[#3598dc] cursor-pointer hover:text-[#566e7d] font-medium px-1" onClick={() => navigate(`/payments/estimateDetails/${estimate._id}`, { state: { displayEstNo: displayEstNo || estimate?.est_no, documentStatus: rowType === "cancelled" ? "cancelled" : "active", invoiceStatus: invoiceData?.status || "" } })} title="Open estimate overview">{invoiceData.invoice_no}</button>
-                        <span>| {formatInvoiceDate(invoiceData.invoice_date || invoiceData.supply_date || invoiceData.updated)} | {Number(invoiceData.finalAmount || 0).toFixed(2)}</span>
+                      <div className="flex items-center justify-center gap-1 mt-1">
+                        <button className="text-[#194090] cursor-pointer hover:text-blue-700 font-bold px-1" onClick={() => navigate(`/payments/estimateDetails/${estimate._id}`, { state: { displayEstNo: displayEstNo || estimate?.est_no, documentStatus: rowType === "cancelled" ? "cancelled" : "active", invoiceStatus: invoiceData?.status || "" } })} title="Open estimate overview">{invoiceData.invoice_no}</button>
+                        <span className="font-medium text-slate-500">| {formatInvoiceDate(invoiceData.invoice_date || invoiceData.supply_date || invoiceData.updated)} | <span className="font-bold text-emerald-600">{Number(invoiceData.finalAmount || 0).toFixed(2)}</span></span>
                       </div>
                     ) : null}
                     {!invoiceData && !isPiCreating && rowType !== "cancelled" && !isCancelled(estimate) && (
-                      <div className="flex items-center justify-center">
-                        <button className={stylebutton} onClick={() => navigate(`/page-create-invoice/${estimate.companyId}/${encodeURIComponent(displayEstNo || estimate.est_no)}`, { state: { sourceEstimateId: estimate._id, sourceEstimateNo: estimate.est_no, selectedPiNo: displayEstNo || estimate.est_no, returnTo: `/performa-invoice-list/${estimate.companyId}` } })} disabled={isPiCreating}>Create Invoice</button>
+                      <div className="flex items-center justify-center mt-1">
+                        <button className="rounded border border-[#194090] px-2 py-0.5 text-[10px] font-bold text-[#194090] hover:bg-[#194090] hover:text-white transition-colors" onClick={() => navigate(`/page-create-invoice/${estimate.companyId}/${encodeURIComponent(displayEstNo || estimate.est_no)}`, { state: { sourceEstimateId: estimate._id, sourceEstimateNo: estimate.est_no, selectedPiNo: displayEstNo || estimate.est_no, returnTo: `/performa-invoice-list/${estimate.companyId}` } })} disabled={isPiCreating}>Create Invoice</button>
                       </div>
                     )}
-                    {isPiCreating && <span className="text-[#3598dc] font-medium">Creating...</span>}
-                    {piError && <span className="text-red-500 font-medium">{piError}</span>}
+                    {isPiCreating && <span className="text-[#194090] font-bold text-center block mt-1">Creating...</span>}
+                    {piError && <span className="text-red-500 font-bold text-center block mt-1">{piError}</span>}
                   </td>
                 )}
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-left">
-                  <span className="text-gray-500">{formattedUpdatedDate}</span> <span className="text-gray-300 mx-1">|</span> <span className="font-medium capitalize">{estimate?.added_by}</span>
+                <td className="px-4 py-3 align-top text-[10px]">
+                  <span className="text-slate-500">{formattedUpdatedDate}</span> <span className="text-slate-300 mx-1">|</span> <span className="font-bold text-slate-700 capitalize">{estimate?.added_by}</span>
                 </td>
                 {(clientId !== 'all' && id !== 'all') && (
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
+                  <td className="px-4 py-3 align-top text-center">
                     <StatusBadge status={rowType === "cancelled" ? "Cancelled" : getEstimateStatus(estimate)} />
                   </td>
                 )}
                 {(clientId !== 'all' && id !== 'all') && (
-                  <td className="px-7 py-3 whitespace-nowrap text-sm font-medium items-center gap-2 text-center">
+                  <td className="px-4 py-3 align-top">
                     {rowType === "cancelled" ? (
-                      <span className="text-gray-400">—</span>
+                      <span className="text-slate-400 font-bold block text-center">—</span>
                     ) : (
-                      <div className="flex flex-wrap gap-2 justify-center">
-                        <button type="button" onClick={() => handleSendWhatsApp(estimate._id)} className="border border-green-500 text-green-600 hover:text-white hover:bg-green-500 p-1.5 rounded flex items-center justify-center cursor-pointer transition-colors" title="Send WhatsApp">
-                          <MessageCircleMore size={16} />
+                      <div className="flex flex-wrap gap-1.5 justify-center">
+                        <button type="button" onClick={() => handleSendWhatsApp(estimate._id)} className="rounded border border-slate-200 p-1.5 text-emerald-600 hover:bg-slate-100 transition-colors" title="Send WhatsApp">
+                          <MessageCircleMore size={13} />
                         </button>
-                        <button type="button" onClick={() => handleSendEmail(estimate._id)} className="border border-blue-500 text-blue-600 hover:text-white hover:bg-blue-500 p-1.5 rounded flex items-center justify-center cursor-pointer transition-colors" title="Send Email">
-                          <Mail size={16} />
+                        <button type="button" onClick={() => handleSendEmail(estimate._id)} className="rounded border border-slate-200 p-1.5 text-blue-600 hover:bg-slate-100 transition-colors" title="Send Email">
+                          <Mail size={13} />
                         </button>
-                        <button type="button" disabled={actionLoaders[`${estimate._id}_cancel`]} onClick={() => handleCancelDocuments(estimate, invoiceData)} className="border border-red-500 text-red-600 hover:text-white hover:bg-red-500 p-1.5 rounded flex items-center justify-center cursor-pointer transition-colors disabled:opacity-60" title="Cancel Document">
-                          {actionLoaders[`${estimate._id}_cancel`] ? <span className="animate-spin text-xs">↻</span> : <Ban size={16} />}
+                        <button type="button" disabled={actionLoaders[`${estimate._id}_cancel`]} onClick={() => handleCancelDocuments(estimate, invoiceData)} className="rounded border border-slate-200 p-1.5 text-red-600 hover:bg-slate-100 transition-colors disabled:opacity-60" title="Cancel Document">
+                          {actionLoaders[`${estimate._id}_cancel`] ? <span className="animate-spin text-xs inline-block">↻</span> : <Ban size={13} />}
                         </button>
                       </div>
                     )}
@@ -510,6 +611,7 @@ const EstimateTable = ({ clientId }) => {
           })}
         </tbody>
       </table>
+      </div>
       {totalPages > 1 && (
         <div className="flex justify-between items-center py-3 px-4 bg-white border-t border-gray-200">
           <span className="text-sm text-gray-700">Showing <span className="font-semibold">{indexOfFirstItem + 1}</span> to <span className="font-semibold">{Math.min(indexOfLastItem, estimates.length)}</span> of <span className="font-semibold">{estimates.length}</span> entries</span>

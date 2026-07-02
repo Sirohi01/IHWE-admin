@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Ban, Eye, FilePlus2, Mail, MessageCircleMore, Pencil, Printer, RefreshCw, FileText, Calendar, Tag, Truck, User, FileBadge, Users, Building, CreditCard, Phone, MapPin, Package, MessageSquare, ShieldCheck, Send, RotateCcw } from "lucide-react";
+import { ArrowLeft, Ban, Eye, FilePlus2, Mail, MessageCircleMore, Pencil, Printer, RefreshCw, FileText, Calendar, Tag, Truck, User, FileBadge, Users, Building, CreditCard, Phone, MapPin, Package, MessageSquare, ShieldCheck, Send, RotateCcw, DollarSign, CheckCircle2, Clock } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
@@ -8,10 +8,68 @@ import { getCurrentUserName } from "../../../utils/currentUser";
 import CommunicationModal from "../../../components/CommunicationModal";
 import invoiceHeader from "../../../assets/header.png";
 
+// Hook: animate number from 0 to target when element enters viewport
+function useCountUp(target, duration = 1200) {
+  const [count, setCount] = useState(0);
+  const [started, setStarted] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting && !started) setStarted(true); },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [started]);
+
+  useEffect(() => {
+    if (!started) return;
+    const numTarget = parseFloat(target) || 0;
+    if (numTarget === 0) { setCount(0); return; }
+    const startTime = performance.now();
+    const tick = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      setCount(ease * numTarget);
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [started, target, duration]);
+
+  return { ref, count };
+}
+
+function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, label, subLabel, subColor }) {
+  const { ref, count } = useCountUp(rawValue);
+  return (
+    <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white ${gradientTo} p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}>
+      <div className="relative z-10">
+        <div className="flex items-center gap-3 mb-4">
+          <div className={`w-10 h-10 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
+            {icon}
+          </div>
+          <div className="flex flex-col">
+            <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>
+              {displayValue(count)}
+            </span>
+            <span style={{ fontSize: '9px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif' }}>{label}</span>
+          </div>
+        </div>
+        <div style={{ fontSize: '10px', fontWeight: 700, color: subColor, textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>{subLabel}</div>
+      </div>
+    </div>
+  );
+}
+
 const emptyForm = {
   challan_date: new Date().toISOString().slice(0, 10),
   source_estimate_id: "",
   company_name: "",
+
   company_address: "",
   company_gst_no: "",
   contact_person: "",
@@ -55,85 +113,85 @@ const DeliveryChallanPrint = ({ challan, settings }) => {
     return `${SERVER_URL}/${relativePath}`;
   };
   return (
-  <div className="challan-print mx-auto max-w-[900px] bg-white p-8 text-[12px] text-slate-900">
-    <div className="relative border-2 border-slate-900">
-      {challan.status === "cancelled" && <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 -rotate-12 border-[6px] border-red-600/70 px-8 py-3 text-5xl font-black uppercase tracking-widest text-red-600/70">Cancelled</div>}
-      <div className="border-b-2 border-slate-900 p-5 text-center">
-        <img src={invoiceHeader} alt="Namo Gange Wellness" className="mb-2 w-full object-contain" />
-        <h2 className="mt-3 text-xl font-bold uppercase">Delivery Challan</h2>
-        <p className="font-bold text-red-600">NOT FOR PAYMENT</p>
-      </div>
-      <div className="grid grid-cols-2 border-b border-slate-900">
-        <div className="border-r border-slate-900 p-4">
-          <p className="text-[10px] font-bold uppercase text-slate-500">Delivered To</p>
-          <p className="mt-1 font-bold uppercase">{challan.company_name || "-"}</p>
-          <p className="whitespace-pre-wrap">{challan.company_address || "-"}</p>
-          <p className="mt-2"><b>GSTIN:</b> {challan.company_gst_no || "-"}</p>
-          <p><b>Contact:</b> {challan.contact_person || "-"} {challan.contact_phone ? `(${challan.contact_phone})` : ""}</p>
+    <div className="challan-print mx-auto max-w-[900px] bg-white p-8 text-[12px] text-slate-900">
+      <div className="relative border-2 border-slate-900">
+        {challan.status === "cancelled" && <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 -rotate-12 border-[6px] border-red-600/70 px-8 py-3 text-5xl font-black uppercase tracking-widest text-red-600/70">Cancelled</div>}
+        <div className="border-b-2 border-slate-900 p-5 text-center">
+          <img src={invoiceHeader} alt="Namo Gange Wellness" className="mb-2 w-full object-contain" />
+          <h2 className="mt-3 text-xl font-bold uppercase">Delivery Challan</h2>
+          <p className="font-bold text-red-600">NOT FOR PAYMENT</p>
         </div>
-        <div className="p-4">
-          <div className="grid grid-cols-[130px_1fr] gap-y-1">
-            <b>Challan No.</b><span>{challan.challan_no || "Auto-generated on save"}</span>
-            <b>Challan Date</b><span>{formatDate(challan.challan_date)}</span>
-            <b>Proforma No.</b><span>{challan.estimate_no || "-"}</span>
-            <b>Purpose</b><span>{challan.purpose}</span>
-            <b>Vehicle No.</b><span>{challan.vehicle_no || "-"}</span>
-            <b>Transporter</b><span>{challan.transporter_name || "-"}</span>
+        <div className="grid grid-cols-2 border-b border-slate-900">
+          <div className="border-r border-slate-900 p-4">
+            <p className="text-[10px] font-bold uppercase text-slate-500">Delivered To</p>
+            <p className="mt-1 font-bold uppercase">{challan.company_name || "-"}</p>
+            <p className="whitespace-pre-wrap">{challan.company_address || "-"}</p>
+            <p className="mt-2"><b>GSTIN:</b> {challan.company_gst_no || "-"}</p>
+            <p><b>Contact:</b> {challan.contact_person || "-"} {challan.contact_phone ? `(${challan.contact_phone})` : ""}</p>
+          </div>
+          <div className="p-4">
+            <div className="grid grid-cols-[130px_1fr] gap-y-1">
+              <b>Challan No.</b><span>{challan.challan_no || "Auto-generated on save"}</span>
+              <b>Challan Date</b><span>{formatDate(challan.challan_date)}</span>
+              <b>Proforma No.</b><span>{challan.estimate_no || "-"}</span>
+              <b>Purpose</b><span>{challan.purpose}</span>
+              <b>Vehicle No.</b><span>{challan.vehicle_no || "-"}</span>
+              <b>Transporter</b><span>{challan.transporter_name || "-"}</span>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="border-b border-slate-900 p-4">
-        <p><b>Event:</b> {challan.event_name || "-"}</p>
-        <p><b>Delivery Address:</b> {challan.delivery_address || "-"}</p>
-      </div>
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-[#0d1f3c] text-white">
-            {["S.No.", "Description", "HSN/SAC", "Size", "Area", "Qty.", "Unit", "Remarks"].map((heading) => (
-              <th key={heading} className="border border-slate-900 px-2 py-2 text-center">{heading}</th>
+        <div className="border-b border-slate-900 p-4">
+          <p><b>Event:</b> {challan.event_name || "-"}</p>
+          <p><b>Delivery Address:</b> {challan.delivery_address || "-"}</p>
+        </div>
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-[#0d1f3c] text-white">
+              {["S.No.", "Description", "HSN/SAC", "Size", "Area", "Qty.", "Unit", "Remarks"].map((heading) => (
+                <th key={heading} className="border border-slate-900 px-2 py-2 text-center">{heading}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {(challan.items || []).map((item, index) => (
+              <tr key={`${item.sourceItemKey}-${index}`}>
+                <td className="border border-slate-900 p-2 text-center">{index + 1}</td>
+                <td className="border border-slate-900 p-2 font-semibold">{item.description}</td>
+                <td className="border border-slate-900 p-2 text-center">{item.hsn || "-"}</td>
+                <td className="border border-slate-900 p-2 text-center">{item.size || "-"}</td>
+                <td className="border border-slate-900 p-2 text-center">{item.area || "-"}</td>
+                <td className="border border-slate-900 p-2 text-center font-bold">{item.qty}</td>
+                <td className="border border-slate-900 p-2 text-center">{item.unit || "-"}</td>
+                <td className="border border-slate-900 p-2">{item.remarks || "-"}</td>
+              </tr>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {(challan.items || []).map((item, index) => (
-            <tr key={`${item.sourceItemKey}-${index}`}>
-              <td className="border border-slate-900 p-2 text-center">{index + 1}</td>
-              <td className="border border-slate-900 p-2 font-semibold">{item.description}</td>
-              <td className="border border-slate-900 p-2 text-center">{item.hsn || "-"}</td>
-              <td className="border border-slate-900 p-2 text-center">{item.size || "-"}</td>
-              <td className="border border-slate-900 p-2 text-center">{item.area || "-"}</td>
-              <td className="border border-slate-900 p-2 text-center font-bold">{item.qty}</td>
-              <td className="border border-slate-900 p-2 text-center">{item.unit || "-"}</td>
-              <td className="border border-slate-900 p-2">{item.remarks || "-"}</td>
-            </tr>
-          ))}
-          {Array.from({ length: Math.max(0, 5 - (challan.items?.length || 0)) }).map((_, index) => (
-            <tr key={`blank-${index}`} className="h-10">
-              {Array.from({ length: 8 }).map((__, cell) => <td key={cell} className="border border-slate-900" />)}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="grid min-h-32 grid-cols-2 border-t border-slate-900">
-        <div className="border-r border-slate-900 p-4">
-          <p><b>Remarks:</b> {challan.remarks || "-"}</p>
-          <p className="mt-2"><b>Terms:</b> {challan.terms || "-"}</p>
+            {Array.from({ length: Math.max(0, 5 - (challan.items?.length || 0)) }).map((_, index) => (
+              <tr key={`blank-${index}`} className="h-10">
+                {Array.from({ length: 8 }).map((__, cell) => <td key={cell} className="border border-slate-900" />)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="grid min-h-32 grid-cols-2 border-t border-slate-900">
+          <div className="border-r border-slate-900 p-4">
+            <p><b>Remarks:</b> {challan.remarks || "-"}</p>
+            <p className="mt-2"><b>Terms:</b> {challan.terms || "-"}</p>
+          </div>
+          <div className="flex min-h-36 flex-col p-4 text-right">
+            <p>For <b>Namo Gange Wellness Pvt. Ltd.</b></p>
+            {(settings?.companyStamp || settings?.authorizedSignature) && <div className="mt-2 flex h-20 items-center justify-end gap-4 overflow-hidden">
+              {settings?.companyStamp && <img src={mediaUrl(settings.companyStamp)} alt="" onError={(event) => { event.currentTarget.style.display = "none"; }} className="h-20 w-24 shrink-0 object-contain" />}
+              {settings?.authorizedSignature && <img src={mediaUrl(settings.authorizedSignature)} alt="" onError={(event) => { event.currentTarget.style.display = "none"; }} className="h-16 w-28 shrink-0 object-contain" />}
+            </div>}
+            <p className="mt-auto font-bold">Authorized Signatory</p>
+          </div>
         </div>
-        <div className="flex min-h-36 flex-col p-4 text-right">
-          <p>For <b>Namo Gange Wellness Pvt. Ltd.</b></p>
-          {(settings?.companyStamp || settings?.authorizedSignature) && <div className="mt-2 flex h-20 items-center justify-end gap-4 overflow-hidden">
-            {settings?.companyStamp && <img src={mediaUrl(settings.companyStamp)} alt="" onError={(event) => { event.currentTarget.style.display = "none"; }} className="h-20 w-24 shrink-0 object-contain" />}
-            {settings?.authorizedSignature && <img src={mediaUrl(settings.authorizedSignature)} alt="" onError={(event) => { event.currentTarget.style.display = "none"; }} className="h-16 w-28 shrink-0 object-contain" />}
-          </div>}
-          <p className="mt-auto font-bold">Authorized Signatory</p>
+        <div className="grid grid-cols-2 border-t border-slate-900">
+          <div className="p-4">Receiver Name &amp; Signature: ____________________</div>
+          <div className="p-4 text-right">Received Date: ____________________</div>
         </div>
-      </div>
-      <div className="grid grid-cols-2 border-t border-slate-900">
-        <div className="p-4">Receiver Name &amp; Signature: ____________________</div>
-        <div className="p-4 text-right">Received Date: ____________________</div>
       </div>
     </div>
-  </div>
   );
 };
 
@@ -412,20 +470,90 @@ const DeliveryChallanManager = () => {
     </div>
   );
 
+  const totalChallans = challans.length;
+  const totalItemsDelivered = challans.reduce((sum, ch) => sum + ch.items.reduce((acc, it) => acc + Number(it.qty || 0), 0), 0);
+  const totalAck = challans.filter(ch => ch.status === 'acknowledged').length;
+  const totalPending = challans.filter(ch => ch.status === 'issued' || ch.status === 'draft').length;
+
+  const statCards = (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 mt-2">
+      <AnimatedStatCard
+        icon={<Truck className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
+        gradientTo="to-blue-50" iconBg="bg-blue-100"
+        rawValue={totalChallans}
+        displayValue={(c) => Math.round(c)}
+        label="TOTAL CHALLANS"
+        subLabel="Created" subColor="#2563eb"
+      />
+      <AnimatedStatCard
+        icon={<Package className="w-5 h-5 text-indigo-600" strokeWidth={2.5} />}
+        gradientTo="to-indigo-50" iconBg="bg-indigo-100"
+        rawValue={totalItemsDelivered}
+        displayValue={(c) => Math.round(c)}
+        label="TOTAL ITEMS"
+        subLabel="Dispatched" subColor="#4f46e5"
+      />
+      <AnimatedStatCard
+        icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
+        gradientTo="to-emerald-50" iconBg="bg-emerald-100"
+        rawValue={totalAck}
+        displayValue={(c) => Math.round(c)}
+        label="ACKNOWLEDGED"
+        subLabel="Completed" subColor="#059669"
+      />
+      <AnimatedStatCard
+        icon={<Clock className="w-5 h-5 text-amber-600" strokeWidth={2.5} />}
+        gradientTo="to-amber-50" iconBg="bg-amber-100"
+        rawValue={totalPending}
+        displayValue={(c) => Math.round(c)}
+        label="PENDING"
+        subLabel="In Transit" subColor="#d97706"
+      />
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#f8f9fc] p-4">
       <div className="w-full">
         <button onClick={() => navigate(`/dashboard/account/${id}`)} className="mb-2 flex items-center gap-1 text-sm font-bold text-[#194090]"><ArrowLeft size={15} /> Account Overview</button>
         <div className="mb-4 flex items-center justify-between rounded-xl border bg-white p-4 shadow-sm">
           <div><h1 className="text-xl font-black text-[#1a2b4b]">Delivery Challans</h1><p className="text-xs text-slate-500">Create multiple partial-delivery challans against a proforma invoice.</p></div>
-          <button onClick={startCreate} className="flex items-center gap-2 rounded-md bg-[#194090] px-4 py-2 text-sm font-bold text-white"><FilePlus2 size={17} /> Create Challan</button>
+          <button onClick={startCreate} className="flex items-center gap-2 rounded-md bg-[#194090] px-4 py-2 text-[13px] font-bold text-white"><FilePlus2 size={17} /> Create Challan</button>
         </div>
-        <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
-          <table className="w-full min-w-[900px] text-left text-xs">
-            <thead className="bg-slate-50 uppercase text-slate-500"><tr>{["Challan No.", "Date", "Proforma No.", "Purpose", "Items", "Quantity", "Status", "Actions"].map((heading) => <th key={heading} className="px-4 py-3">{heading}</th>)}</tr></thead>
-            <tbody>
-              {!challans.length && <tr><td colSpan={8} className="p-10 text-center text-slate-400">No delivery challans created yet.</td></tr>}
-              {challans.map((challan) => <tr key={challan._id} className="border-t hover:bg-slate-50"><td className="px-4 py-3 font-bold text-[#194090]">{challan.challan_no}</td><td className="px-4 py-3">{formatDate(challan.challan_date)}</td><td className="px-4 py-3">{challan.estimate_no}</td><td className="px-4 py-3">{challan.purpose}</td><td className="px-4 py-3">{challan.items.length}</td><td className="px-4 py-3 font-bold">{challan.items.reduce((sum, item) => sum + Number(item.qty || 0), 0)}</td><td className="px-4 py-3"><select disabled={challan.status === "cancelled"} value={challan.status} onChange={(event) => updateStatus(challan, event.target.value)} className={`rounded-full border-0 px-2 py-1 text-[10px] font-bold uppercase ${statusClass(challan.status)}`}>{["draft", "issued", "delivered", "acknowledged", ...(challan.status === "cancelled" ? ["cancelled"] : [])].map((status) => <option key={status}>{status}</option>)}</select></td><td className="px-4 py-3"><div className="flex gap-1.5"><button title="View / Print" onClick={() => view(challan)} className="rounded border p-1.5 text-[#194090]"><Eye size={15} /></button><button disabled={challan.status === "cancelled"} title="Edit" onClick={() => edit(challan)} className="rounded border p-1.5 text-amber-600 disabled:opacity-30"><Pencil size={15} /></button><button disabled={challan.status === "cancelled"} title="Send WhatsApp" onClick={() => setCommModal({ isOpen: true, type: "whatsapp", docId: challan._id })} className="rounded border p-1.5 text-emerald-600 disabled:opacity-30"><MessageCircleMore size={15} /></button><button disabled={challan.status === "cancelled"} title="Send Email" onClick={() => setCommModal({ isOpen: true, type: "email", docId: challan._id })} className="rounded border p-1.5 text-blue-600 disabled:opacity-30"><Mail size={15} /></button><button disabled={challan.status === "cancelled"} title="Cancel Challan" onClick={() => updateStatus(challan, "cancelled")} className="rounded border p-1.5 text-red-600 disabled:opacity-30"><Ban size={15} /></button></div></td></tr>)}
+        
+        {statCards}
+
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <table className="w-full min-w-[900px] text-left text-xs whitespace-nowrap" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <thead className="bg-slate-50 uppercase text-slate-500 border-b border-slate-200">
+              <tr>{["Challan No.", "Date", "Proforma No.", "Purpose", "Items", "Quantity", "Status", "Actions"].map((heading) => <th key={heading} className="px-4 py-3 font-bold">{heading}</th>)}</tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {!challans.length && <tr><td colSpan={8} className="p-10 text-center text-slate-400 font-bold">No delivery challans created yet.</td></tr>}
+              {challans.map((challan) => (
+                <tr key={challan._id} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
+                  <td className="px-4 py-3 text-[11px] font-bold text-[#194090]">{challan.challan_no}</td>
+                  <td className="px-4 py-3 text-[10px] text-slate-600 font-medium">{formatDate(challan.challan_date)}</td>
+                  <td className="px-4 py-3 text-[10px] font-bold text-slate-700">{challan.estimate_no}</td>
+                  <td className="px-4 py-3 text-[10px] text-slate-600">{challan.purpose}</td>
+                  <td className="px-4 py-3 text-[10px] font-bold text-slate-700">{challan.items.length}</td>
+                  <td className="px-4 py-3 text-[10px] font-bold text-emerald-600">{challan.items.reduce((sum, item) => sum + Number(item.qty || 0), 0)}</td>
+                  <td className="px-4 py-3">
+                    <select disabled={challan.status === "cancelled"} value={challan.status} onChange={(event) => updateStatus(challan, event.target.value)} className={`rounded-full border-0 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider outline-none ${statusClass(challan.status)}`}>
+                      {["draft", "issued", "delivered", "acknowledged", ...(challan.status === "cancelled" ? ["cancelled"] : [])].map((status) => <option key={status}>{status}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-1.5 justify-start">
+                      <button title="View / Print" onClick={() => view(challan)} className="rounded border border-slate-200 p-1.5 text-[#194090] hover:bg-slate-100 transition-colors"><Eye size={13} /></button>
+                      <button disabled={challan.status === "cancelled"} title="Edit" onClick={() => edit(challan)} className="rounded border border-slate-200 p-1.5 text-amber-600 hover:bg-slate-100 transition-colors disabled:opacity-30"><Pencil size={13} /></button>
+                      <button disabled={challan.status === "cancelled"} title="Send WhatsApp" onClick={() => setCommModal({ isOpen: true, type: "whatsapp", docId: challan._id })} className="rounded border border-slate-200 p-1.5 text-emerald-600 hover:bg-slate-100 transition-colors disabled:opacity-30"><MessageCircleMore size={13} /></button>
+                      <button disabled={challan.status === "cancelled"} title="Send Email" onClick={() => setCommModal({ isOpen: true, type: "email", docId: challan._id })} className="rounded border border-slate-200 p-1.5 text-blue-600 hover:bg-slate-100 transition-colors disabled:opacity-30"><Mail size={13} /></button>
+                      <button disabled={challan.status === "cancelled"} title="Cancel Challan" onClick={() => updateStatus(challan, "cancelled")} className="rounded border border-slate-200 p-1.5 text-red-600 hover:bg-slate-100 transition-colors disabled:opacity-30"><Ban size={13} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
