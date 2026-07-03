@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Ban, Eye, FilePlus2, Mail, MessageCircleMore, Pencil, Printer, RefreshCw, FileText, Calendar, Tag, Truck, User, FileBadge, Users, Building, CreditCard, Phone, MapPin, Package, MessageSquare, ShieldCheck, Send, RotateCcw, DollarSign, CheckCircle2, Clock } from "lucide-react";
+import { ChevronRight, ArrowLeft, Ban, Eye, FilePlus2, Mail, MessageCircleMore, Pencil, Printer, RefreshCw, FileText, Calendar, Tag, Truck, User, FileBadge, Users, Building, CreditCard, Phone, MapPin, Package, MessageSquare, ShieldCheck, Send, RotateCcw, DollarSign, CheckCircle2, Clock } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
@@ -7,8 +7,6 @@ import api, { SERVER_URL } from "../../../lib/api";
 import { getCurrentUserName } from "../../../utils/currentUser";
 import CommunicationModal from "../../../components/CommunicationModal";
 import invoiceHeader from "../../../assets/header.png";
-
-// Hook: animate number from 0 to target when element enters viewport
 function useCountUp(target, duration = 1200) {
   const [count, setCount] = useState(0);
   const [started, setStarted] = useState(false);
@@ -209,6 +207,7 @@ const DeliveryChallanManager = () => {
   const [mode, setMode] = useState("list");
   const [settings, setSettings] = useState(null);
   const [commModal, setCommModal] = useState({ isOpen: false, type: "whatsapp", docId: "" });
+  const [accountName, setAccountName] = useState("");
 
   const selectedProforma = useMemo(
     () => proformas.find((item) => item._id === form.source_estimate_id),
@@ -226,14 +225,16 @@ const DeliveryChallanManager = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [challanRes, proformaRes, settingsRes] = await Promise.all([
+      const [challanRes, proformaRes, settingsRes, accountRes] = await Promise.all([
         api.get(`/api/delivery-challans?companyId=${id}`),
         api.get(`/api/delivery-challans/proformas/${id}`),
         api.get("/api/settings"),
+        api.get(`/api/account-overview/${id}`).catch(() => ({ data: {} }))
       ]);
       setChallans(Array.isArray(challanRes.data) ? challanRes.data : []);
       setProformas(Array.isArray(proformaRes.data) ? proformaRes.data : []);
       setSettings(settingsRes.data?.data || settingsRes.data || null);
+      if (accountRes.data?.success) setAccountName(accountRes.data.data?.companyInfo?.name || "");
     } catch (error) {
       toast.error(error.response?.data?.message || "Unable to load delivery challans");
     } finally {
@@ -515,12 +516,22 @@ const DeliveryChallanManager = () => {
   return (
     <div className="min-h-screen bg-[#f8f9fc] p-4">
       <div className="w-full">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 text-sm text-[#194090] font-semibold mb-1">
+          <span>Exhibitors</span>
+          <ChevronRight size={14} className="text-gray-400" />
+          <span className="text-slate-800">{accountName || "Company"}</span>
+          <ChevronRight size={14} className="text-gray-400" />
+          <span className="text-slate-500 font-normal">Accounts</span>
+          <ChevronRight size={14} className="text-gray-400" />
+          <span className="text-slate-500 font-normal">Delivery Challan</span>
+        </div>
         <button onClick={() => navigate(`/dashboard/account/${id}`)} className="mb-2 flex items-center gap-1 text-sm font-bold text-[#194090]"><ArrowLeft size={15} /> Account Overview</button>
         <div className="mb-4 flex items-center justify-between rounded-xl border bg-white p-4 shadow-sm">
           <div><h1 className="text-xl font-black text-[#1a2b4b]">Delivery Challans</h1><p className="text-xs text-slate-500">Create multiple partial-delivery challans against a proforma invoice.</p></div>
           <button onClick={startCreate} className="flex items-center gap-2 rounded-md bg-[#194090] px-4 py-2 text-[13px] font-bold text-white"><FilePlus2 size={17} /> Create Challan</button>
         </div>
-        
+
         {statCards}
 
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">

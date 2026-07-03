@@ -201,15 +201,14 @@ const AddPayment = () => {
 
   return (
     <div className="min-h-screen bg-[#f8f9fc] p-4 lg:p-6 lg:pr-20">
-      {/* Breadcrumb (hidden visually in mockup, but good to keep for UX, or we can remove it. Mockup doesn't show it, so let's keep it minimal or remove it. I'll keep it as it's standard) */}
-      <div className="flex items-center gap-2 text-sm text-[#194090] font-semibold mb-4">
+      <div className="flex items-center gap-2 text-sm text-[#194090] font-semibold mb-1">
         <span>Exhibitors</span>
         <ChevronRight size={14} className="text-gray-400" />
-        <span>{companyInfo?.name}</span>
+        <span className="text-slate-800">{companyInfo?.name || "Company"}</span>
         <ChevronRight size={14} className="text-gray-400" />
         <span className="text-slate-500 font-normal">Accounts</span>
         <ChevronRight size={14} className="text-gray-400" />
-        <span className="text-slate-800">Add Payment</span>
+        <span className="text-slate-500 font-normal">Add Payment</span>
       </div>
 
       <CompanyAccountSummary companyInfo={companyInfo} financials={financials} />

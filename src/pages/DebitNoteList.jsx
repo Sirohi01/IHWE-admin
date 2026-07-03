@@ -77,6 +77,27 @@ const DebitNoteList = () => {
     const [notes, setNotes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [accountName, setAccountName] = useState('');
+
+    useEffect(() => {
+        if (id === 'all') {
+            setAccountName('');
+            return;
+        }
+        let cancelled = false;
+        api.get(`/api/account-overview/${id}`)
+            .then(res => {
+                if (!cancelled && res.data?.success) {
+                    setAccountName(res.data.data?.companyInfo?.name || '');
+                }
+            })
+            .catch(() => {
+                if (!cancelled) setAccountName('');
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [id]);
 
     const loadDebitNotes = async () => {
         try {
@@ -163,11 +184,23 @@ const DebitNoteList = () => {
             <div className="bg-white border border-gray-200 rounded-lg p-4 mb-1 shadow-sm flex items-center justify-between">
                 <div>
                     <h1 className="text-xl font-bold text-gray-900">CREDIT NOTE</h1>
-                    <div className="flex items-center gap-1 mt-1 text-sm text-gray-500">
-                        <span className="hover:text-blue-600 cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span>
-                        <ChevronRight className="w-4 h-4" />
-                        <span className="text-gray-700 font-medium">All Credit Notes List</span>
-                    </div>
+                    {id === 'all' ? (
+                        <div className="flex items-center gap-1 mt-1 text-sm text-gray-500">
+                            <span className="hover:text-blue-600 cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span>
+                            <ChevronRight className="w-4 h-4" />
+                            <span className="text-gray-700 font-medium">All Credit Notes List</span>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2 text-sm text-[#194090] font-semibold mb-1 mt-1">
+                            <span>Exhibitors</span>
+                            <ChevronRight size={14} className="text-gray-400" />
+                            <span className="text-slate-800">{accountName || 'Company'}</span>
+                            <ChevronRight size={14} className="text-gray-400" />
+                            <span className="text-slate-500 font-normal">Accounts</span>
+                            <ChevronRight size={14} className="text-gray-400" />
+                            <span className="text-slate-500 font-normal">Credit Note</span>
+                        </div>
+                    )}
                 </div>
                 <div className="flex items-center gap-2">
                     {id !== 'all' && (

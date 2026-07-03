@@ -208,13 +208,23 @@ const InvoiceList = () => {
             <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm flex items-center justify-between">
                 <div>
                     <h1 className="text-xl font-bold text-gray-900">Invoices</h1>
-                    <div className="flex items-center gap-1 mt-1 text-sm text-gray-500">
-                        <span className="hover:text-blue-600 cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span>
-                        <ChevronRight className="w-4 h-4" />
-                        <span className="text-gray-700 font-medium">
-                            {isAllList ? 'All Invoices' : `${accountName || 'Company'} Invoices`}
-                        </span>
-                    </div>
+                    {isAllList ? (
+                        <div className="flex items-center gap-1 mt-1 text-sm text-gray-500">
+                            <span className="hover:text-blue-600 cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span>
+                            <ChevronRight className="w-4 h-4" />
+                            <span className="text-gray-700 font-medium">All Invoices</span>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2 text-sm text-[#194090] font-semibold mb-1 mt-1">
+                            <span>Exhibitors</span>
+                            <ChevronRight size={14} className="text-gray-400" />
+                            <span className="text-slate-800">{accountName || 'Company'}</span>
+                            <ChevronRight size={14} className="text-gray-400" />
+                            <span className="text-slate-500 font-normal">Accounts</span>
+                            <ChevronRight size={14} className="text-gray-400" />
+                            <span className="text-slate-500 font-normal">Invoice</span>
+                        </div>
+                    )}
                 </div>
                 <div className="flex gap-2 items-center">
                     <input
