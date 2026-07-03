@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
-import { ChevronRight, ArrowLeft, Edit, MessageCircleMore, Mail, FileText, CheckCircle2, Clock, Users, DollarSign, Package, CreditCard } from 'lucide-react';
+import { ChevronRight, ArrowLeft, Edit, MessageCircleMore, Mail, FileText, CheckCircle2, Clock, Users, DollarSign, Package, CreditCard, Send, Loader2 } from 'lucide-react';
 import api from '../../../lib/api';
 import Swal from 'sweetalert2';
+import toast from 'react-hot-toast';
 import AccountNavigation from '../../../components/AccountNavigation';
 
 // Hook: animate number from 0 to target when element enters viewport
@@ -66,11 +67,14 @@ const PaymentList = () => {
     const navigate = useNavigate();
     const { id = 'all' } = useParams();
     const isAllList = id === 'all';
-    const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [payments, setPayments] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [accountName, setAccountName] = useState('Account');
+    const [sendingReceipt, setSendingReceipt] = useState({});
+
+    // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
-    const [accountName, setAccountName] = useState('');
     const itemsPerPage = 10;
 
     useEffect(() => {
@@ -160,6 +164,23 @@ const PaymentList = () => {
     const totalTds = filteredPayments.reduce((sum, pmt) => sum + (parseFloat(pmt.tds_text) || 0), 0);
     const totalClients = new Set(filteredPayments.map(pmt => pmt.companyId).filter(Boolean)).size;
 
+    const handleSendReceipt = async (pmtId, type) => {
+        setSendingReceipt(prev => ({ ...prev, [`${pmtId}-${type}`]: true }));
+        try {
+            const res = await api.post(`/api/payments/${pmtId}/send-receipt?type=${type}`);
+            if (res.data?.success) {
+                toast.success(`Receipt sent successfully via ${type === 'whatsapp' ? 'WhatsApp' : 'Email'}!`);
+            } else {
+                toast.error(res.data?.message || `Failed to send ${type} receipt`);
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error(err.response?.data?.message || `Error sending ${type} receipt`);
+        } finally {
+            setSendingReceipt(prev => ({ ...prev, [`${pmtId}-${type}`]: false }));
+        }
+    };
+
     const statCards = (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <AnimatedStatCard
@@ -242,12 +263,13 @@ const PaymentList = () => {
                 <table className="w-full text-left border-collapse min-w-[800px]">
                     <thead>
                         <tr className="bg-gray-100 border-b border-gray-200 text-xs font-semibold text-gray-700">
-                            <th className="py-2.5 px-4 font-bold">#</th>
+                            <th className="py-2.5 px-4 font-bold">S.No.</th>
                             <th className="py-2.5 px-4 font-bold">Invoice Details</th>
-                            <th className="py-2.5 px-4 font-bold">Received (?)</th>
-                            <th className="py-2.5 px-4 font-bold">TDS (?)</th>
+                            <th className="py-2.5 px-4 font-bold">Received (₹)</th>
+                            <th className="py-2.5 px-4 font-bold">TDS (₹)</th>
                             <th className="py-2.5 px-4 font-bold">Payment Details</th>
                             <th className="py-2.5 px-4 font-bold">Added On / By</th>
+                            <th className="py-2.5 px-4 font-bold text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -292,6 +314,26 @@ const PaymentList = () => {
                                             <div className="font-medium text-gray-800">{formatDateTime(pmt.added)}</div>
                                             <div className="text-[12px] text-gray-500 mt-0.5">By: <span className="font-medium text-[#194090]">{pmt.added_by || 'Admin'}</span></div>
                                         </td>
+                                        <td className="py-3 px-4 text-center">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button
+                                                    onClick={() => handleSendReceipt(pmt._id, 'whatsapp')}
+                                                    disabled={sendingReceipt[`${pmt._id}-whatsapp`]}
+                                                    title="Send WhatsApp Receipt"
+                                                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-50 text-green-600 hover:bg-green-100 transition-colors disabled:opacity-50"
+                                                >
+                                                    {sendingReceipt[`${pmt._id}-whatsapp`] ? <Loader2 size={16} className="animate-spin" /> : <MessageCircleMore size={16} />}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleSendReceipt(pmt._id, 'email')}
+                                                    disabled={sendingReceipt[`${pmt._id}-email`]}
+                                                    title="Send Email Receipt"
+                                                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors disabled:opacity-50"
+                                                >
+                                                    {sendingReceipt[`${pmt._id}-email`] ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
                                 );
                             })
@@ -314,12 +356,12 @@ const PaymentList = () => {
                         >
                             Prev
                         </button>
-                        
+
                         {Array.from({ length: totalPages }).map((_, idx) => {
                             const pageNum = idx + 1;
                             if (
-                                pageNum === 1 || 
-                                pageNum === totalPages || 
+                                pageNum === 1 ||
+                                pageNum === totalPages ||
                                 (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
                             ) {
                                 return (

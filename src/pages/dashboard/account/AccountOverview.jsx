@@ -155,8 +155,8 @@ const AccountOverview = () => {
             <CreditCard size={16} className="text-[#ea580c]" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Payment</h4>
-            <p className="text-[10.5px] text-slate-500 leading-tight truncate">Record a payment</p>
+            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Payments</h4>
+            <p className="text-[10.5px] text-slate-500 leading-tight truncate">Record a payments</p>
           </div>
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
