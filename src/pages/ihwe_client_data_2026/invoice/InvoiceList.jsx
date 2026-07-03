@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
-import { ChevronRight, ArrowLeft, Edit, MessageCircleMore, Mail, FileText, CheckCircle2, Clock, Users, DollarSign, Package } from 'lucide-react';
+import { ChevronRight, ArrowLeft, MessageCircleMore, Mail, FileText, CheckCircle2, Clock, Users, DollarSign, Package } from 'lucide-react';
 import api from '../../../lib/api';
 import Swal from 'sweetalert2';
 import CommunicationModal from '../../../components/CommunicationModal';
@@ -321,14 +321,6 @@ const InvoiceList = () => {
                                             >
                                                 {actionLoaders[`${inv._id}_email`] ? <span className="animate-spin text-[10px] inline-block">↻</span> : <Mail size={13} />}
                                             </button>
-                                            <Link
-                                                to="/page-create-invoice"
-                                                state={{ editInvoiceId: inv._id }}
-                                                className="rounded border border-slate-200 p-1.5 text-indigo-600 hover:bg-slate-100 transition-colors cursor-pointer disabled:cursor-not-allowed inline-block"
-                                                title="Edit"
-                                            >
-                                                <Edit size={13} />
-                                            </Link>
                                         </div>
                                     </td>
                                 </tr>

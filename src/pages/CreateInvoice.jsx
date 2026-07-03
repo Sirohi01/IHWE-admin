@@ -614,12 +614,22 @@ const CreateInvoice = () => {
             try {
                 const res = await api.put(`/api/estimates/${editingProformaId || id}`, proformaPayload);
                 if (res.status === 200 || res.status === 201) {
-                    alert('Proforma invoice updated successfully!');
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Updated!',
+                        text: 'Proforma invoice updated successfully.',
+                        confirmButtonColor: '#194090',
+                    });
                     navigate(-1);
                 }
             } catch (err) {
                 console.error(err);
-                alert('Failed to update proforma invoice: ' + (err.response?.data?.message || err.message));
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Update Failed',
+                    text: err.response?.data?.message || err.message || 'Failed to update proforma invoice.',
+                    confirmButtonColor: '#194090',
+                });
             }
             return;
         }
@@ -678,19 +688,35 @@ const CreateInvoice = () => {
             if (isEditMode) {
                 res = await api.put(`/api/invoices/${editingInvoiceId || id}`, payload);
                 if (res.status === 200 || res.status === 201) {
-                    alert('Invoice updated successfully!');
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Updated!',
+                        text: 'Invoice updated successfully.',
+                        confirmButtonColor: '#194090',
+                    });
                     navigate(postSaveRoute);
                 }
             } else {
                 res = await api.post('/api/invoices', payload);
                 if (res.status === 201 || res.status === 200) {
-                    alert('Invoice generated successfully!');
-                    navigate(postSaveRoute);
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Invoice Generated!',
+                        text: 'Invoice generated successfully.',
+                        confirmButtonColor: '#194090',
+                    });
+                    const createdInvoiceId = res.data?.data?._id || res.data?._id;
+                    navigate(createdInvoiceId ? `/payments/invoiceDetails/${createdInvoiceId}` : postSaveRoute);
                 }
             }
         } catch (err) {
             console.error(err);
-            alert(`Failed to ${isEditMode ? 'update' : 'generate'} invoice: ` + (err.response?.data?.message || err.message));
+            await Swal.fire({
+                icon: 'error',
+                title: isEditMode ? 'Update Failed' : 'Generation Failed',
+                text: err.response?.data?.message || err.message || `Failed to ${isEditMode ? 'update' : 'generate'} invoice.`,
+                confirmButtonColor: '#194090',
+            });
         }
     };
 
@@ -1261,7 +1287,12 @@ const CreateInvoice = () => {
                             <QuickAction icon={MessageCircleMore} label={isWhatsAppLoading ? "Sending WhatsApp..." : "Send Invoice via WhatsApp"} colorClass="text-emerald-600" onClick={handleSendWhatsApp} disabled={isWhatsAppLoading} />
                             <QuickAction icon={File} label="Download PDF" colorClass="text-red-500" onClick={handlePrint} />
                             <QuickAction icon={Printer} label="Print Invoice" colorClass="text-indigo-600" onClick={handlePrint} />
-                            <QuickAction icon={Bookmark} label="Save as Template" colorClass="text-amber-500" onClick={() => alert("Save as Template functionality coming soon!")} />
+                            <QuickAction icon={Bookmark} label="Save as Template" colorClass="text-amber-500" onClick={() => Swal.fire({
+                                icon: 'info',
+                                title: 'Coming Soon',
+                                text: 'Save as Template functionality is coming soon!',
+                                confirmButtonColor: '#194090',
+                            })} />
                         </div>
                     </div>
 

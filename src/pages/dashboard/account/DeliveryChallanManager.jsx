@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronRight, ArrowLeft, Ban, Eye, FilePlus2, Mail, MessageCircleMore, Pencil, Printer, RefreshCw, FileText, Calendar, Tag, Truck, User, FileBadge, Users, Building, CreditCard, Phone, MapPin, Package, MessageSquare, ShieldCheck, Send, RotateCcw, DollarSign, CheckCircle2, Clock } from "lucide-react";
+import { ChevronRight, ArrowLeft, Ban, FilePlus2, Mail, MessageCircleMore, Pencil, Printer, RefreshCw, FileText, Calendar, Tag, Truck, User, FileBadge, Users, Building, CreditCard, Phone, MapPin, Package, MessageSquare, ShieldCheck, Send, RotateCcw, DollarSign, CheckCircle2, Clock } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
@@ -352,13 +352,19 @@ const DeliveryChallanManager = () => {
         added_by: getCurrentUserName("Admin"),
         items: selectedItems.map(({ remainingQty, sourceQty, deliveredQty, selected, ...item }) => ({ ...item, qty: Number(item.qty) })),
       };
-      const response = editingId
+      const wasEditing = Boolean(editingId);
+      const response = wasEditing
         ? await api.put(`/api/delivery-challans/${editingId}`, payload)
         : await api.post("/api/delivery-challans", payload);
       toast.success(response.data?.message || "Delivery challan saved");
-      setMode("list");
       setEditingId("");
       await loadData();
+      if (wasEditing) {
+        setMode("list");
+      } else {
+        setForm(response.data?.data || payload);
+        setMode("view");
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || "Unable to save delivery challan");
     } finally {
@@ -572,7 +578,6 @@ const DeliveryChallanManager = () => {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1.5 justify-start">
-                      <button title="View / Print" onClick={() => view(challan)} className="rounded border border-slate-200 p-1.5 text-[#194090] hover:bg-slate-100 transition-colors cursor-pointer disabled:cursor-not-allowed"><Eye size={13} /></button>
                       <button disabled={challan.status === "cancelled"} title="Edit" onClick={() => edit(challan)} className="rounded border border-slate-200 p-1.5 text-amber-600 hover:bg-slate-100 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"><Pencil size={13} /></button>
                       <button disabled={challan.status === "cancelled"} title="Send WhatsApp" onClick={() => setCommModal({ isOpen: true, type: "whatsapp", docId: challan._id })} className="rounded border border-slate-200 p-1.5 text-emerald-600 hover:bg-slate-100 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"><MessageCircleMore size={13} /></button>
                       <button disabled={challan.status === "cancelled"} title="Send Email" onClick={() => setCommModal({ isOpen: true, type: "email", docId: challan._id })} className="rounded border border-slate-200 p-1.5 text-blue-600 hover:bg-slate-100 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"><Mail size={13} /></button>
