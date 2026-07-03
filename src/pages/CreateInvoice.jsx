@@ -6,7 +6,9 @@ import {
     Download, Mail, MessageCircleMore, Printer, Eye, Upload, Bookmark,
     XIcon,
     File,
-    List
+    List,
+    Package,
+    Truck
 } from 'lucide-react';
 import SearchableDropdown from '../components/SearchableDropdown';
 import InvoicePreviewTemplate from './ihwe_client_data_2026/invoice/InvoicePreviewTemplate';
@@ -126,6 +128,7 @@ const CreateInvoice = () => {
     const navigationState = location.state || {};
     const selectedPiFromUrl = navigationState.selectedPiNo || (piNo ? decodeURIComponent(piNo) : '');
     const sourceEstimateId = navigationState.sourceEstimateId || '';
+    const [resolvedSourceEstimateId, setResolvedSourceEstimateId] = useState(sourceEstimateId);
     const fileInputRef = useRef(null);
     const [attachedFile, setAttachedFile] = useState(null);
     const [estimates, setEstimates] = useState([]);
@@ -135,6 +138,11 @@ const CreateInvoice = () => {
     const [editingInvoiceId, setEditingInvoiceId] = useState('');
     const [isProformaEditMode, setIsProformaEditMode] = useState(false);
     const [editingProformaId, setEditingProformaId] = useState('');
+    const [includeDeliveryChallans, setIncludeDeliveryChallans] = useState(false);
+    const [deliveryChallans, setDeliveryChallans] = useState([]);
+    const [selectedChallanIds, setSelectedChallanIds] = useState([]);
+    const [challansLoading, setChallansLoading] = useState(false);
+    const [challansError, setChallansError] = useState('');
 
     const addEstimateOption = (estimate) => {
         if (!estimate?.est_no) return;
@@ -174,6 +182,12 @@ const CreateInvoice = () => {
                     setEditingProformaId('');
                     setEditingInvoiceId(inv._id || '');
                     setSelectedPi(inv.estimate_no || selectedPiFromUrl || '');
+                    setResolvedSourceEstimateId(inv.source_estimate_id || '');
+                    const linkedChallanIds = Array.isArray(inv.delivery_challan_ids)
+                        ? inv.delivery_challan_ids.map(String)
+                        : [];
+                    setSelectedChallanIds(linkedChallanIds);
+                    setIncludeDeliveryChallans(linkedChallanIds.length > 0);
                     setForm(f => ({
                         ...f,
                         companyId: inv.companyId || f.companyId,
@@ -218,6 +232,7 @@ const CreateInvoice = () => {
                             const estRes = await api.get(`/api/estimates/${sourceEstimateId}`);
                             const estimate = estRes.data?.data || estRes.data;
                             if (estimate?._id) {
+                                setResolvedSourceEstimateId(estimate._id);
                                 setSelectedPi(selectedPiFromUrl);
                                 addEstimateOption({ ...estimate, est_no: selectedPiFromUrl });
                                 setForm(f => ({
@@ -254,6 +269,7 @@ const CreateInvoice = () => {
                     const estRes = await api.get(`/api/estimates/${id}`);
                     const estimate = estRes.data?.data || estRes.data;
                     if (estimate?._id) {
+                        setResolvedSourceEstimateId(estimate._id);
                         setIsProformaEditMode(true);
                         setEditingProformaId(estimate._id);
                         setSelectedPi(estimate.est_no || '');
@@ -326,6 +342,48 @@ const CreateInvoice = () => {
 
     const [items, setItems] = useState([newItem()]);
     const [showPreview, setShowPreview] = useState(false);
+    useEffect(() => {
+        if (!includeDeliveryChallans || !form.companyId || !resolvedSourceEstimateId) {
+            setDeliveryChallans([]);
+            setChallansError('');
+            return;
+        }
+
+        let cancelled = false;
+        const loadChallans = async () => {
+            setChallansLoading(true);
+            setChallansError('');
+            try {
+                const response = await api.get('/api/delivery-challans', {
+                    params: {
+                        companyId: form.companyId,
+                        estimateId: resolvedSourceEstimateId,
+                    },
+                });
+                if (cancelled) return;
+                const eligible = (Array.isArray(response.data) ? response.data : [])
+                    .filter((challan) => !isCancelledDoc(challan));
+                setDeliveryChallans(eligible);
+                setSelectedChallanIds((current) =>
+                    current.filter((challanId) =>
+                        eligible.some((challan) => String(challan._id) === String(challanId))
+                    )
+                );
+            } catch (error) {
+                if (!cancelled) {
+                    setDeliveryChallans([]);
+                    setChallansError(error.response?.data?.message || 'Unable to load delivery challans.');
+                }
+            } finally {
+                if (!cancelled) setChallansLoading(false);
+            }
+        };
+        loadChallans();
+        return () => {
+            cancelled = true;
+        };
+    }, [includeDeliveryChallans, form.companyId, resolvedSourceEstimateId]);
+
     const returnListId = form.companyId || (!isEditMode && !isProformaEditMode ? id : '');
     const listRoute = isProformaEditMode
         ? -1
@@ -334,6 +392,21 @@ const CreateInvoice = () => {
     const dropdownEstimates = selectedPiFromUrl && !estimates.some((estimate) => estimate.est_no === selectedPiFromUrl)
         ? [{ est_no: selectedPiFromUrl }, ...estimates]
         : estimates;
+    const selectedDeliveryChallans = deliveryChallans.filter((challan) =>
+        selectedChallanIds.includes(String(challan._id))
+    );
+    const previewDeliveryChallans = selectedDeliveryChallans.map((challan) => ({
+        delivery_challan_id: String(challan._id),
+        challan_no: challan.challan_no,
+        challan_date: challan.challan_date,
+        status: challan.status,
+        delivery_address: challan.delivery_address,
+        transporter_name: challan.transporter_name,
+        vehicle_no: challan.vehicle_no,
+        eway_bill: challan.eway_bill,
+        bilty_no: challan.bilty_no,
+        items: challan.items || [],
+    }));
 
     const getInvoicesForSplit = useCallback(async () => {
         if (existingInvoices.length > 0) return existingInvoices;
@@ -388,10 +461,16 @@ const CreateInvoice = () => {
     // ── handlers ────────────────────────────────────────────────────────────────
     const handlePiSelect = async (estNo) => {
         setSelectedPi(estNo);
-        if (!estNo) return;
+        setSelectedChallanIds([]);
+        setIncludeDeliveryChallans(false);
+        if (!estNo) {
+            setResolvedSourceEstimateId('');
+            return;
+        }
 
         const est = estimates.find(e => e.est_no === estNo);
         if (est) {
+            setResolvedSourceEstimateId(est._id || '');
             setForm(f => ({
                 ...f,
                 companyId: est.companyId || f.companyId,
@@ -459,9 +538,22 @@ const CreateInvoice = () => {
     const addItem = () => setItems((p) => [...p, newItem()]);
     const removeItem = (id) => setItems((p) => p.filter((i) => i.id !== id));
     const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+    const toggleDeliveryChallan = (challanId) => {
+        const value = String(challanId);
+        setSelectedChallanIds((current) =>
+            current.includes(value)
+                ? current.filter((idValue) => idValue !== value)
+                : [...current, value]
+        );
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!isProformaEditMode && includeDeliveryChallans && selectedChallanIds.length === 0) {
+            Swal.fire('Delivery Challan Required', 'Select at least one delivery challan or choose No.', 'warning');
+            return;
+        }
 
         let finalAmount = items.reduce((acc, item) => acc + (Number(item.total) || 0), 0);
 
@@ -522,20 +614,31 @@ const CreateInvoice = () => {
             try {
                 const res = await api.put(`/api/estimates/${editingProformaId || id}`, proformaPayload);
                 if (res.status === 200 || res.status === 201) {
-                    alert('Proforma invoice updated successfully!');
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Updated!',
+                        text: 'Proforma invoice updated successfully.',
+                        confirmButtonColor: '#194090',
+                    });
                     navigate(-1);
                 }
             } catch (err) {
                 console.error(err);
-                alert('Failed to update proforma invoice: ' + (err.response?.data?.message || err.message));
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Update Failed',
+                    text: err.response?.data?.message || err.message || 'Failed to update proforma invoice.',
+                    confirmButtonColor: '#194090',
+                });
             }
             return;
         }
 
         const payload = {
             companyId: form.companyId || id,
-            source_estimate_id: sourceEstimateId || '',
+            source_estimate_id: resolvedSourceEstimateId || sourceEstimateId || '',
             estimate_no: selectedPi || '',
+            delivery_challan_ids: includeDeliveryChallans ? selectedChallanIds : [],
             type_of_invoice: form.invoiceType,
             invoice_date: form.invoiceDate,
             due_date: form.dueDate,
@@ -585,19 +688,35 @@ const CreateInvoice = () => {
             if (isEditMode) {
                 res = await api.put(`/api/invoices/${editingInvoiceId || id}`, payload);
                 if (res.status === 200 || res.status === 201) {
-                    alert('Invoice updated successfully!');
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Updated!',
+                        text: 'Invoice updated successfully.',
+                        confirmButtonColor: '#194090',
+                    });
                     navigate(postSaveRoute);
                 }
             } else {
                 res = await api.post('/api/invoices', payload);
                 if (res.status === 201 || res.status === 200) {
-                    alert('Invoice generated successfully!');
-                    navigate(postSaveRoute);
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Invoice Generated!',
+                        text: 'Invoice generated successfully.',
+                        confirmButtonColor: '#194090',
+                    });
+                    const createdInvoiceId = res.data?.data?._id || res.data?._id;
+                    navigate(createdInvoiceId ? `/payments/invoiceDetails/${createdInvoiceId}` : postSaveRoute);
                 }
             }
         } catch (err) {
             console.error(err);
-            alert(`Failed to ${isEditMode ? 'update' : 'generate'} invoice: ` + (err.response?.data?.message || err.message));
+            await Swal.fire({
+                icon: 'error',
+                title: isEditMode ? 'Update Failed' : 'Generation Failed',
+                text: err.response?.data?.message || err.message || `Failed to ${isEditMode ? 'update' : 'generate'} invoice.`,
+                confirmButtonColor: '#194090',
+            });
         }
     };
 
@@ -948,8 +1067,81 @@ const CreateInvoice = () => {
                     </div>
 
                     {/* SECTION 4 – Additional Info */}
+                    {!isProformaEditMode && (
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-3 mt-4">
+                            <SectionHead num="4" label="Delivery Challan" />
+                            <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <h4 className="flex items-center gap-2 text-[13px] font-bold text-[#1a2b4b]">
+                                        <Truck size={16} className="text-[#194090]" />
+                                        Do you want to add delivery challan details?
+                                    </h4>
+                                    <p className="mt-1 text-[11px] text-slate-500">This adds delivery references to the PDF without changing invoice totals.</p>
+                                </div>
+                                <div className="flex overflow-hidden rounded-lg border border-slate-300 bg-white text-xs">
+                                    {[{ label: 'No', value: false }, { label: 'Yes', value: true }].map((option) => (
+                                        <button key={option.label} type="button" onClick={() => {
+                                            setIncludeDeliveryChallans(option.value);
+                                            if (!option.value) setSelectedChallanIds([]);
+                                        }} className={`px-6 py-2 font-bold transition ${includeDeliveryChallans === option.value ? 'bg-[#194090] text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
+                                            {option.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {includeDeliveryChallans && (
+                                <div className="mt-4">
+                                    {!resolvedSourceEstimateId ? (
+                                        <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">Please select an existing PI / Estimate first.</p>
+                                    ) : challansLoading ? (
+                                        <p className="p-4 text-center text-xs text-slate-500">Loading delivery challans...</p>
+                                    ) : challansError ? (
+                                        <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{challansError}</p>
+                                    ) : deliveryChallans.length === 0 ? (
+                                        <p className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500">No active delivery challans found for this PI.</p>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            <p className="text-[11px] font-semibold text-slate-600">Choose challans ({selectedChallanIds.length} selected)</p>
+                                            {deliveryChallans.map((challan) => {
+                                                const selected = selectedChallanIds.includes(String(challan._id));
+                                                return (
+                                                    <label key={challan._id} className={`block cursor-pointer rounded-lg border p-3 transition ${selected ? 'border-blue-400 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                                                        <div className="flex items-start gap-3">
+                                                            <input type="checkbox" checked={selected} onChange={() => toggleDeliveryChallan(challan._id)} className="mt-1 h-4 w-4 accent-[#194090]" />
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-xs font-bold text-[#194090]">{challan.challan_no}</span>
+                                                                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold uppercase text-emerald-700">{challan.status || 'issued'}</span>
+                                                                    </div>
+                                                                    <span className="text-[10px] text-slate-500">{challan.challan_date ? new Date(challan.challan_date).toLocaleDateString('en-IN') : 'No date'}</span>
+                                                                </div>
+                                                                <div className="mt-2 grid gap-1 text-[10px] text-slate-600 sm:grid-cols-2">
+                                                                    <span><b>Delivery:</b> {challan.delivery_address || '—'}</span>
+                                                                    <span><b>Transport:</b> {[challan.transporter_name, challan.vehicle_no].filter(Boolean).join(' / ') || '—'}</span>
+                                                                </div>
+                                                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                                                    {(challan.items || []).map((item, itemIndex) => (
+                                                                        <span key={`${challan._id}-${itemIndex}`} className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[9px] text-slate-600">
+                                                                            <Package size={10} /> {item.description}: <b>{item.qty} {item.unit}</b>
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-3 mt-4">
-                        <SectionHead num="4" label="Additional Information" />
+                        <SectionHead num={isProformaEditMode ? "4" : "5"} label="Additional Information" />
 
                         <div className="grid grid-cols-2 gap-6 mb-2">
                             <div>
@@ -1033,7 +1225,7 @@ const CreateInvoice = () => {
                                 <XIcon size={24} />
                             </button>
                             <div className="pt-8">
-                                <InvoicePreviewTemplate form={form} items={items} />
+                                <InvoicePreviewTemplate form={{ ...form, delivery_challans: previewDeliveryChallans }} items={items} />
                             </div>
                         </div>
                     </div>
@@ -1095,7 +1287,12 @@ const CreateInvoice = () => {
                             <QuickAction icon={MessageCircleMore} label={isWhatsAppLoading ? "Sending WhatsApp..." : "Send Invoice via WhatsApp"} colorClass="text-emerald-600" onClick={handleSendWhatsApp} disabled={isWhatsAppLoading} />
                             <QuickAction icon={File} label="Download PDF" colorClass="text-red-500" onClick={handlePrint} />
                             <QuickAction icon={Printer} label="Print Invoice" colorClass="text-indigo-600" onClick={handlePrint} />
-                            <QuickAction icon={Bookmark} label="Save as Template" colorClass="text-amber-500" onClick={() => alert("Save as Template functionality coming soon!")} />
+                            <QuickAction icon={Bookmark} label="Save as Template" colorClass="text-amber-500" onClick={() => Swal.fire({
+                                icon: 'info',
+                                title: 'Coming Soon',
+                                text: 'Save as Template functionality is coming soon!',
+                                confirmButtonColor: '#194090',
+                            })} />
                         </div>
                     </div>
 
@@ -1160,7 +1357,7 @@ const CreateInvoice = () => {
             {/* Hidden printable component */}
             <div style={{ display: 'none' }}>
                 <div ref={printRef}>
-                    <InvoicePreviewTemplate form={form} items={items} />
+                    <InvoicePreviewTemplate form={{ ...form, delivery_challans: previewDeliveryChallans }} items={items} />
                 </div>
             </div>
 

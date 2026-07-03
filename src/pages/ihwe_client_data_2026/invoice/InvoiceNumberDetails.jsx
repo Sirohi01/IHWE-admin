@@ -98,17 +98,6 @@ const InvoiceNumberDetails = () => {
         >
           <FaPrint size={18} />
         </button>
-        {String(matchedInvoice?.status || "").toLowerCase() !== "cancelled" && (
-          <button
-            onClick={() => navigate('/page-create-invoice', {
-              state: { editInvoiceId: matchedInvoice._id },
-            })}
-            className="bg-white rounded px-4 py-2 text-xs font-bold uppercase text-blue-600 hover:bg-blue-50 shadow-sm border border-blue-200 transition flex items-center justify-center"
-            title="Edit Invoice"
-          >
-            Edit
-          </button>
-        )}
       </div>
       <div ref={sameRef}>
         <InvoicePreviewTemplate matchedInvoice={matchedInvoice} heading={heading} />

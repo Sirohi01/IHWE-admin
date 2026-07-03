@@ -279,6 +279,68 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
                 </tbody>
             </table>
 
+            {(matchedInvoice?.delivery_challans || form?.delivery_challans || []).length > 0 && (
+                <div style={{ marginBottom: 8, pageBreakInside: 'auto' }}>
+                    <div style={{
+                        background: '#0d1f3c',
+                        color: '#fff',
+                        border: '1px solid #0d1f3c',
+                        padding: '4px 6px',
+                        textAlign: 'center',
+                        textTransform: 'uppercase',
+                        fontSize: 10,
+                        fontWeight: 'bold',
+                    }}>
+                        Delivery Challan Details
+                    </div>
+                    {(matchedInvoice?.delivery_challans || form?.delivery_challans || []).map((challan, challanIndex) => (
+                        <div
+                            key={challan.delivery_challan_id || `${challan.challan_no}-${challanIndex}`}
+                            style={{ border: '1px solid #ccc', borderTop: 0, padding: 6, pageBreakInside: 'avoid' }}
+                        >
+                            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 5 }}>
+                                <tbody>
+                                    <tr>
+                                        <td style={{ width: '25%', padding: '2px 5px' }}><b>Challan No.:</b> {challan.challan_no || '—'}</td>
+                                        <td style={{ width: '20%', padding: '2px 5px' }}><b>Date:</b> {challan.challan_date ? new Date(challan.challan_date).toLocaleDateString('en-IN') : '—'}</td>
+                                        <td style={{ width: '15%', padding: '2px 5px', textTransform: 'capitalize' }}><b>Status:</b> {challan.status || '—'}</td>
+                                        <td style={{ width: '40%', padding: '2px 5px' }}><b>Delivery:</b> {challan.delivery_address || '—'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ padding: '2px 5px' }}><b>Transporter:</b> {challan.transporter_name || '—'}</td>
+                                        <td style={{ padding: '2px 5px' }}><b>Vehicle:</b> {challan.vehicle_no || '—'}</td>
+                                        <td style={{ padding: '2px 5px' }}><b>E-way Bill:</b> {challan.eway_bill || '—'}</td>
+                                        <td style={{ padding: '2px 5px' }}><b>Bilty No.:</b> {challan.bilty_no || '—'}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead>
+                                    <tr style={{ background: '#eef2f7' }}>
+                                        <th style={{ border: '1px solid #ccc', padding: 3, width: '5%' }}>#</th>
+                                        <th style={{ border: '1px solid #ccc', padding: 3, textAlign: 'left' }}>Delivered Item</th>
+                                        <th style={{ border: '1px solid #ccc', padding: 3, width: '15%' }}>HSN</th>
+                                        <th style={{ border: '1px solid #ccc', padding: 3, width: '12%' }}>Qty.</th>
+                                        <th style={{ border: '1px solid #ccc', padding: 3, width: '12%' }}>Unit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(challan.items || []).map((item, itemIndex) => (
+                                        <tr key={`${challan.challan_no}-${itemIndex}`}>
+                                            <td style={{ border: '1px solid #ccc', padding: 3, textAlign: 'center' }}>{itemIndex + 1}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: 3 }}>{item.description || '—'}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: 3, textAlign: 'center' }}>{item.hsn || '—'}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: 3, textAlign: 'center' }}>{item.qty ?? '—'}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: 3, textAlign: 'center' }}>{item.unit || '—'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ))}
+                </div>
+            )}
+
             <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
                 <thead>
                     <tr style={{ background: '#0d1f3c', color: '#fff', textTransform: 'uppercase' }}>
