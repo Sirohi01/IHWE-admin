@@ -212,7 +212,7 @@ const PaymentList = () => {
                 gradientTo="to-rose-50" iconBg="bg-rose-100"
                 rawValue={totalClients}
                 displayValue={(c) => Math.round(c)}
-                label="TOTAL CLIENTS"
+                label="CLIENT"
                 subLabel="Paid" subColor="#e11d48"
             />
         </div>
