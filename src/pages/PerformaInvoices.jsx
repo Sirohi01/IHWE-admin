@@ -532,7 +532,7 @@ export const PerformaInvoices = () => {
                         timer: 2000,
                         showConfirmButton: false
                     });
-                    navigate(`/performa-invoice-list/${actualCompanyId}`);
+                    navigate(`/payments/estimateDetails/${existingEstimateId}`);
                 }
             } else {
                 const res = await api.post('/api/estimates', payload);
@@ -544,7 +544,8 @@ export const PerformaInvoices = () => {
                         timer: 2000,
                         showConfirmButton: false
                     });
-                    navigate(`/performa-invoice-list/${actualCompanyId}`);
+                    const newEstimateId = res.data.data?._id || res.data._id;
+                    navigate(`/payments/estimateDetails/${newEstimateId}`);
                 }
             }
         } catch (error) {

@@ -79,6 +79,7 @@ const emptyForm = {
   purpose: "Event/Stall Material",
   vehicle_no: "",
   transporter_name: "",
+  eway_bill: "",
   po_no: "",
   remarks: "",
   terms: "Goods/material received in good condition.",
@@ -137,6 +138,7 @@ const DeliveryChallanPrint = ({ challan, settings }) => {
               <b>Purpose</b><span>{challan.purpose}</span>
               <b>Vehicle No.</b><span>{challan.vehicle_no || "-"}</span>
               <b>Transporter</b><span>{challan.transporter_name || "-"}</span>
+              <b>E-way Bill No.</b><span>{challan.eway_bill || "-"}</span>
             </div>
           </div>
         </div>
@@ -416,12 +418,12 @@ const DeliveryChallanManager = () => {
         <form onSubmit={save} className="space-y-2">
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="grid gap-3 md:grid-cols-12">
-              <div className="md:col-span-4"><label className={labelClass}><FileText size={14} className="text-blue-500" /> Source Proforma Invoice *</label><select disabled={Boolean(editingId)} className={inputClass} value={form.source_estimate_id} onChange={(event) => selectProforma(event.target.value)}><option value="">Select Proforma Invoice</option>{proformas.map((estimate) => { const availableItems = estimate.items.filter((item) => item.remainingQty > 0); const availableQty = availableItems.reduce((sum, item) => sum + item.remainingQty, 0); return <option key={estimate._id} value={estimate._id}>{estimate.est_no} — {availableItems.length} item(s), {availableQty} qty available</option>; })}</select></div>
-              <div className="md:col-span-4"><label className={labelClass}><Calendar size={14} className="text-blue-500" /> Challan Date *</label><input required type="date" className={inputClass} value={form.challan_date} onChange={(event) => setForm({ ...form, challan_date: event.target.value })} /></div>
-              <div className="md:col-span-4"><label className={labelClass}><Tag size={14} className="text-blue-500" /> Purpose</label><select className={inputClass} value={form.purpose} onChange={(event) => setForm({ ...form, purpose: event.target.value })}>{["Event/Stall Material", "Job Work", "Returnable Material", "Non-returnable Material", "Other"].map((value) => <option key={value}>{value}</option>)}</select></div>
-              <div className="col-span-full my-1 h-px bg-slate-100"></div>
+              <div className="md:col-span-3"><label className={labelClass}><FileText size={14} className="text-blue-500" /> Source Proforma Invoice *</label><select disabled={Boolean(editingId)} className={inputClass} value={form.source_estimate_id} onChange={(event) => selectProforma(event.target.value)}><option value="">Select Proforma Invoice</option>{proformas.map((estimate) => { const availableItems = estimate.items.filter((item) => item.remainingQty > 0); const availableQty = availableItems.reduce((sum, item) => sum + item.remainingQty, 0); return <option key={estimate._id} value={estimate._id}>{estimate.est_no} — {availableItems.length} item(s), {availableQty} qty available</option>; })}</select></div>
+              <div className="md:col-span-3"><label className={labelClass}><Calendar size={14} className="text-blue-500" /> Challan Date *</label><input required type="date" className={inputClass} value={form.challan_date} onChange={(event) => setForm({ ...form, challan_date: event.target.value })} /></div>
+              <div className="md:col-span-3"><label className={labelClass}><Tag size={14} className="text-blue-500" /> Purpose</label><select className={inputClass} value={form.purpose} onChange={(event) => setForm({ ...form, purpose: event.target.value })}>{["Event/Stall Material", "Job Work", "Returnable Material", "Non-returnable Material", "Other"].map((value) => <option key={value}>{value}</option>)}</select></div>
               <div className="md:col-span-3"><label className={labelClass}><Truck size={14} className="text-blue-500" /> Vehicle No.</label><input className={inputClass} value={form.vehicle_no} onChange={(event) => setForm({ ...form, vehicle_no: event.target.value })} placeholder="Enter vehicle number" /></div>
               <div className="md:col-span-3"><label className={labelClass}><User size={14} className="text-blue-500" /> Transporter</label><input className={inputClass} value={form.transporter_name} onChange={(event) => setForm({ ...form, transporter_name: event.target.value })} placeholder="Transporter name" /></div>
+              <div className="md:col-span-3"><label className={labelClass}><FileText size={14} className="text-blue-500" /> E-way Bill No.</label><input className={inputClass} value={form.eway_bill || ""} onChange={(event) => setForm({ ...form, eway_bill: event.target.value })} placeholder="Enter E-way Bill No." /></div>
               <div className="md:col-span-3"><label className={labelClass}><Calendar size={14} className="text-blue-500" /> Event Name</label><input className={inputClass} value={form.event_name} onChange={(event) => setForm({ ...form, event_name: event.target.value })} placeholder="Enter event name" /></div>
               <div className="md:col-span-3"><label className={labelClass}><FileBadge size={14} className="text-blue-500" /> PO / Reference No.</label><input className={inputClass} value={form.po_no} onChange={(event) => setForm({ ...form, po_no: event.target.value })} placeholder="Enter reference number" /></div>
             </div>

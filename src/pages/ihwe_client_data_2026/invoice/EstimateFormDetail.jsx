@@ -172,6 +172,13 @@ const EstimateFormDetail = () => {
     return (
         <>
         <div className="max-w-[1000px] mx-auto mb-3 flex justify-end gap-2">
+            <button
+                type="button"
+                onClick={() => navigate(`/performa-invoice-list/${matchedEstimate.companyId}`)}
+                className="rounded border border-gray-300 bg-white px-4 py-2 text-xs font-bold uppercase text-gray-700 shadow-sm hover:bg-gray-50"
+            >
+                Proforma Invoice List
+            </button>
             {!cancelled && (
                 <button
                     type="button"
