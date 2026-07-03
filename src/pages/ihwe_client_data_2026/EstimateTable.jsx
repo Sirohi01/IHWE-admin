@@ -503,11 +503,14 @@ const EstimateTable = ({ clientId }) => {
                   <>
                     <td rowSpan={estimateRowSpan} className="px-4 py-3 align-top font-bold text-[11px]" style={{ color: '#093C5D' }}>{indexOfFirstItem + currentEstimates.findIndex((item) => item._id === estimate._id) + 1}</td>
                     <td rowSpan={estimateRowSpan} className="px-4 py-3 align-top text-[10px] text-slate-700">
-                      <div className="flex items-center justify-start gap-2">
-                        <Link to={`/payments/estimateDetails/${estimate?._id}`} state={{ displayEstNo: estimate?.est_no, documentStatus: isCancelled(estimate) ? "cancelled" : "active", invoiceStatus: "" }}>
-                          <button className="text-[#194090] cursor-pointer hover:text-blue-700 font-bold px-1 text-[11px]">{estimate?.est_no}</button>
-                        </Link>
-                        <span className="font-medium text-slate-500">| {formattedDate} | <span className="font-bold text-emerald-600">{displayAmount}</span></span>
+                      <div className="flex flex-col gap-0.5 items-start justify-center">
+                        <div className="flex items-center gap-1">
+                          <Link to={`/payments/estimateDetails/${estimate?._id}`} state={{ displayEstNo: estimate?.est_no, documentStatus: isCancelled(estimate) ? "cancelled" : "active", invoiceStatus: "" }}>
+                            <button className="text-[#194090] cursor-pointer hover:text-blue-700 font-bold px-1 text-[11px]">{estimate?.est_no}</button>
+                          </Link>
+                          <span className="font-bold text-emerald-600">| {displayAmount}</span>
+                        </div>
+                        <span className="text-slate-500 text-left">{formattedDate}</span>
                       </div>
                     </td>
                   </>
@@ -534,11 +537,11 @@ const EstimateTable = ({ clientId }) => {
                       {activeChallans.length > 0 && (
                         <div className="mt-2 flex flex-col gap-1 border-t border-teal-100 pt-2">
                           {activeChallans.map((challan, idx) => (
-                            <div key={challan._id || idx} className="flex items-center justify-between text-[10px]">
-                              <span className="text-[#3598dc] font-medium cursor-pointer hover:text-[#566e7d]" onClick={() => navigate(`/dashboard/account/${estimate.companyId}/delivery-challans`, { state: { viewChallanId: challan._id, sourceEstimateId: estimate._id } })} title="View Challan">
+                            <div key={challan._id || idx} className="flex items-center justify-between text-[10px] gap-2">
+                              <span className="text-[#3598dc] font-medium cursor-pointer hover:text-[#566e7d] truncate" onClick={() => navigate(`/dashboard/account/${estimate.companyId}/delivery-challans`, { state: { viewChallanId: challan._id, sourceEstimateId: estimate._id } })} title={challan.challan_no}>
                                 {challan.challan_no}
                               </span>
-                              <span className="text-slate-500">{formatPiDate(challan.challan_date || challan.createdAt)}</span>
+                              <span className="text-slate-500 shrink-0 text-right">{formatPiDate(challan.challan_date || challan.createdAt)}</span>
                             </div>
                           ))}
                         </div>
@@ -553,18 +556,24 @@ const EstimateTable = ({ clientId }) => {
                 )}
                 {(clientId !== 'all' && id !== 'all') && (
                   <td className="px-4 py-3 align-top text-[10px]">
-                    {isPiCreated && (
-                      <div className="flex items-center justify-center gap-1">
-                        <Link to={`/payments/performanceInvoiceDetails/${piDataToDisplay._id}`}>
-                          <button className="text-[#194090] cursor-pointer hover:text-blue-700 font-bold px-1">{piDataToDisplay.pi_no}</button>
-                        </Link>
-                        <span className="font-medium text-slate-500">| {formatPiDate(piDataToDisplay.updated) || "N/A"} | <span className="font-bold text-emerald-600">{piDataToDisplay.finalAmount?.toFixed(2) || "0.00"}</span></span>
-                      </div>
-                    )}
+                    {piDataToDisplay && !isPiCreating ? (
+                        <div className="flex flex-col gap-0.5 items-start justify-center mt-1">
+                          <div className="flex items-center gap-1">
+                            <Link to={`/payments/performanceInvoiceDetails/${piDataToDisplay._id}`}>
+                              <button className="text-[#194090] cursor-pointer hover:text-blue-700 font-bold px-1">{piDataToDisplay.pi_no}</button>
+                            </Link>
+                            <span className="font-bold text-emerald-600">| {piDataToDisplay.finalAmount?.toFixed(2) || "0.00"}</span>
+                          </div>
+                          <span className="text-slate-500 text-left pl-1">{formatPiDate(piDataToDisplay.updated) || "N/A"}</span>
+                        </div>
+                      ) : null}
                     {invoiceData ? (
-                      <div className="flex items-center justify-center gap-1 mt-1">
-                        <button className="text-[#194090] cursor-pointer hover:text-blue-700 font-bold px-1" onClick={() => navigate(`/payments/estimateDetails/${estimate._id}`, { state: { displayEstNo: displayEstNo || estimate?.est_no, documentStatus: rowType === "cancelled" ? "cancelled" : "active", invoiceStatus: invoiceData?.status || "" } })} title="Open estimate overview">{invoiceData.invoice_no}</button>
-                        <span className="font-medium text-slate-500">| {formatInvoiceDate(invoiceData.invoice_date || invoiceData.supply_date || invoiceData.updated)} | <span className="font-bold text-emerald-600">{Number(invoiceData.finalAmount || 0).toFixed(2)}</span></span>
+                      <div className="flex flex-col gap-0.5 items-start justify-center mt-1">
+                        <div className="flex items-center gap-1">
+                          <button className="text-[#194090] cursor-pointer hover:text-blue-700 font-bold px-1" onClick={() => navigate(`/payments/estimateDetails/${estimate._id}`, { state: { displayEstNo: displayEstNo || estimate?.est_no, documentStatus: rowType === "cancelled" ? "cancelled" : "active", invoiceStatus: invoiceData?.status || "" } })} title="Open estimate overview">{invoiceData.invoice_no}</button>
+                          <span className="font-bold text-emerald-600">| {Number(invoiceData.finalAmount || 0).toFixed(2)}</span>
+                        </div>
+                        <span className="text-slate-500 text-left pl-1">{formatInvoiceDate(invoiceData.invoice_date || invoiceData.supply_date || invoiceData.updated)}</span>
                       </div>
                     ) : null}
                     {!invoiceData && !isPiCreating && rowType !== "cancelled" && !isCancelled(estimate) && (
@@ -577,7 +586,10 @@ const EstimateTable = ({ clientId }) => {
                   </td>
                 )}
                 <td className="px-4 py-3 align-top text-[10px]">
-                  <span className="text-slate-500">{formattedUpdatedDate}</span> <span className="text-slate-300 mx-1">|</span> <span className="font-bold text-slate-700 capitalize">{estimate?.added_by}</span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-bold text-slate-700 capitalize">{estimate?.added_by}</span>
+                    <span className="text-slate-500">{formattedUpdatedDate}</span>
+                  </div>
                 </td>
                 {(clientId !== 'all' && id !== 'all') && (
                   <td className="px-4 py-3 align-top text-center">
