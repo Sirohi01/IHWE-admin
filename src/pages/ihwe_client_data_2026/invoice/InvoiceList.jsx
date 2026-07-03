@@ -290,7 +290,7 @@ const InvoiceList = () => {
                                         {inv.estimate_no || "—"}
                                     </td>
                                     <td className="px-4 py-3 text-[10px] font-bold text-slate-800">
-                                        {inv.company_name}
+                                        {(!isAllList && accountName) ? accountName : (inv.company_name || 'Unknown')}
                                     </td>
                                     <td className="px-4 py-3 text-[10px] font-medium text-slate-500">
                                         {formatDate(inv.invoice_date || inv.added)}
