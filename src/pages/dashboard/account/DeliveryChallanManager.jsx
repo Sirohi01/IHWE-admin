@@ -95,15 +95,15 @@ const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-1 text-[13p
 const labelClass = "flex items-center gap-1.5 text-[12px] font-medium text-[#1a2b4b] mb-1";
 
 const formatDate = (value) => {
-    if (!value) return "-";
-    const d = new Date(value);
-    if (isNaN(d.getTime())) return "-";
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = d.toLocaleString('en-US', { month: 'short' });
-    const year = String(d.getFullYear()).slice(-2);
-    const time = d.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    return `${day} ${month} ${year}, ${time}`;
-  };
+  if (!value) return "-";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "-";
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = d.toLocaleString('en-US', { month: 'short' });
+  const year = String(d.getFullYear()).slice(-2);
+  const time = d.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  return `${day} ${month} ${year}, ${time}`;
+};
 
 const statusClass = (status) => ({
   draft: "bg-slate-100 text-slate-600",
@@ -113,7 +113,23 @@ const statusClass = (status) => ({
   cancelled: "bg-red-50 text-red-700",
 }[status] || "bg-slate-100 text-slate-600");
 
-const DeliveryChallanPrint = ({ challan, settings }) => {
+const DeliveryChallanPrint = ({ challan, settings, bankDetails }) => {
+  const fmtNum = (value, decimals = 0) => {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return decimals ? "0.00" : "0";
+    return number.toLocaleString("en-IN", {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+  };
+
+  const fmtDateOnly = (value) => {
+    if (!value) return "-";
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return "-";
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  };
+
   const mediaUrl = (value) => {
     if (!value) return "";
     if (/^https?:\/\//i.test(value)) return value;
@@ -122,91 +138,272 @@ const DeliveryChallanPrint = ({ challan, settings }) => {
     const relativePath = uploadsIndex >= 0 ? normalized.slice(uploadsIndex) : normalized.replace(/^\/+/, "");
     return `${SERVER_URL}/${relativePath}`;
   };
+
+  const items = challan.items || [];
+  const getGstRate = (item) => {
+    const directRate = Number(item.gstRate ?? item.gst_per ?? item.gstPct);
+    if (Number.isFinite(directRate) && directRate) return directRate;
+    const igstRate = Number(item.igst_per);
+    if (Number.isFinite(igstRate) && igstRate) return igstRate;
+    const cgstRate = Number(item.cgst_per);
+    return Number.isFinite(cgstRate) && cgstRate ? cgstRate * 2 : 0;
+  };
+  const lineValue = (item, key) => {
+    const qty = Number(item.qty || 0);
+    const sourceQty = Number(item.sourceQty || item.piQty || item.originalQty || 0);
+    const ratio = sourceQty > 0 ? qty / sourceQty : 1;
+    const amount = Number(item.amount || 0);
+    const rateAmount = Number(item.rate || 0) * qty;
+    const discount = Number(item.discountAmount ?? item.discount ?? 0) * ratio;
+    const discountPercent = Number(item.disc ?? item.discountPct ?? 0);
+    const computedDiscount = discount || ((amount || rateAmount) * ratio * discountPercent) / 100;
+    const taxable = Number(item.taxable ?? item.tax ?? item.taxableValue ?? 0);
+    const gstAmount = Number(item.gstAmount ?? 0);
+    const finalAmount = Number(item.finalAmount ?? item.total ?? 0);
+    if (key === "amount" && Number(item.amount)) return Number(item.amount) * ratio;
+    if (key === "discount") return computedDiscount;
+    if (key === "taxable" && taxable) return taxable * ratio;
+    if (key === "gstAmount" && gstAmount) return gstAmount * ratio;
+    if (key === "amount") return rateAmount;
+    if (key === "taxable") return Math.max(0, rateAmount - computedDiscount);
+    if (key === "gstAmount") return (lineValue(item, "taxable") * getGstRate(item)) / 100;
+    if (key === "finalAmount") return lineValue(item, "taxable") + lineValue(item, "gstAmount");
+    return 0;
+  };
+  const totalQty = items.reduce((sum, it) => sum + Number(it.qty || 0), 0);
+  const totalTaxable = items.reduce((sum, it) => sum + lineValue(it, "taxable"), 0);
+  const totalGst = items.reduce((sum, it) => sum + lineValue(it, "gstAmount"), 0);
+  const grandTotal = totalTaxable + totalGst;
+  const hsnRows = Object.values(items.reduce((acc, item) => {
+    const hsn = item.hsn || "-";
+    if (!acc[hsn]) acc[hsn] = { hsn, qty: 0, taxable: 0, gstRate: getGstRate(item), gst: 0 };
+    acc[hsn].qty += Number(item.qty || 0);
+    acc[hsn].taxable += lineValue(item, "taxable");
+    acc[hsn].gst += lineValue(item, "gstAmount");
+    return acc;
+  }, {}));
+  const companyName = settings?.companyName || "Namo Gange Wellness Pvt. Ltd.";
+  const companyGst = settings?.companyGst || settings?.companyGstin || "09AAFCN9238F1Z6";
+  const bank = bankDetails || {};
+  const bankName = bank.bankname || bank.bankName || settings?.bankName || "-";
+  const accountName = bank.accountname || bank.accountName || settings?.accountName || companyName;
+  const accountNo = bank.accountno || bank.accountNo || settings?.accountNo || "-";
+  const ifscCode = bank.ifsccode || bank.ifscCode || settings?.ifscCode || "-";
+  const bankBranch = bank.bankbranch || bank.branch || settings?.bankBranch || "-";
+
+  const th = { border: "1px solid #111", background: "#8b8b8b", color: "#111", padding: "2px 3px", fontSize: 10, lineHeight: 1.1, fontWeight: 700, textAlign: "center" };
+  const td = { border: "1px solid #111", padding: "2px 3px", fontSize: 10, lineHeight: 1.15, verticalAlign: "top" };
+  const topTh = { ...th, fontSize: 10, lineHeight: 1.1 };
+  const topTd = { ...td, fontSize: 10, lineHeight: 1.15 };
+  const topInfoLine = { margin: 0, padding: 0, fontSize: 10, lineHeight: 1.15 };
+  const labelCell = { ...topTd, padding: "1px 2px", fontSize: 10, fontWeight: 700, width: "47%", lineHeight: 1.1 };
+  const valueCell = { ...topTd, padding: "1px 2px", fontSize: 10, fontWeight: 600, lineHeight: 1.1 };
+
   return (
-    <div className="challan-print mx-auto max-w-[900px] bg-white p-8 text-[12px] text-slate-900">
-      <div className="relative border-2 border-slate-900">
-        {challan.status === "cancelled" && <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 -rotate-12 border-[6px] border-red-600/70 px-8 py-3 text-5xl font-black uppercase tracking-widest text-red-600/70">Cancelled</div>}
-        <div className="border-b-2 border-slate-900 p-5 text-center">
-          <img src={invoiceHeader} alt="Namo Gange Wellness" className="mb-2 w-full object-contain" />
-          <h2 className="mt-3 text-xl font-bold uppercase">Delivery Challan</h2>
-          <p className="font-bold text-red-600">NOT FOR PAYMENT</p>
-        </div>
-        <div className="grid grid-cols-2 border-b border-slate-900">
-          <div className="border-r border-slate-900 p-4">
-            <p className="text-[10px] font-bold uppercase text-slate-500">Delivered To</p>
-            <p className="mt-1 font-bold uppercase">{challan.company_name || "-"}</p>
-            <p className="whitespace-pre-wrap">{challan.company_address || "-"}</p>
-            <p className="mt-2"><b>GSTIN:</b> {challan.company_gst_no || "-"}</p>
-            <p><b>Contact:</b> {challan.contact_person || "-"} {challan.contact_phone ? `(${challan.contact_phone})` : ""}</p>
-          </div>
-          <div className="p-4">
-            <div className="grid grid-cols-[130px_1fr] gap-y-1">
-              <b>Challan No.</b><span>{challan.challan_no || "Auto-generated on save"}</span>
-              <b>Challan Date</b><span>{formatDate(challan.challan_date)}</span>
-              <b>Proforma No.</b><span>{challan.estimate_no || "-"}</span>
-              <b>Challan Type</b><span>{challan.challan_type || "Outward"}</span>
-              <b>Purpose</b><span>{challan.purpose}</span>
-              <b>Type of Sale</b><span>{challan.type_of_sale || "-"}</span>
-              <b>Shipped To</b><span>{challan.shipped_to || "-"}</span>
-              <b>State Code</b><span>{challan.state_code || "-"}</span>
-              <b>Vehicle No.</b><span>{challan.vehicle_no || "-"}</span>
-              <b>Transporter</b><span>{challan.transporter_name || "-"}</span>
-              <b>E-way Bill No.</b><span>{challan.eway_bill || "-"}</span>
-              <b>Bilty No.</b><span>{challan.bilty_no || "-"}</span>
-              <b>PO No.</b><span>{challan.po_no || "-"}</span>
-            </div>
-          </div>
-        </div>
-        <div className="border-b border-slate-900 p-4">
-          <p><b>Event:</b> {challan.event_name || "-"}</p>
-          <p><b>Delivery Address:</b> {challan.delivery_address || "-"}</p>
-        </div>
-        <table className="w-full border-collapse">
+    <div className="challan-print mx-auto bg-white text-black" style={{ width: 794, padding: "8px 12px", fontFamily: "Arial, Helvetica, sans-serif", fontSize: 10 }}>
+      <div style={{ position: "relative" }}>
+        {challan.status === "cancelled" && <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 -rotate-12 border-[5px] border-red-600/70 px-7 py-2 text-4xl font-black uppercase tracking-widest text-red-600/70">Cancelled</div>}
+
+        <img src={invoiceHeader} alt="Namo Gange Design House" style={{ width: "100%", height: "auto", display: "block", margin: "0 0 1px" }} />
+
+        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 0 }}>
+          <tbody>
+            <tr>
+              <td style={{ ...topTd, borderRight: 0, textAlign: "center", fontWeight: 700 }}></td>
+              <td style={{ ...topTd, borderLeft: 0, borderRight: 0, textAlign: "center", fontWeight: 800 }}>Delivery Challan</td>
+              <td style={{ ...topTd, borderLeft: 0, textAlign: "right", fontWeight: 800 }}>Original For Recipient</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 0 }}>
           <thead>
-            <tr className="bg-[#0d1f3c] text-white">
-              {["S.No.", "Description", "HSN/SAC", "Size", "Area", "Qty.", "Unit", "Remarks"].map((heading) => (
-                <th key={heading} className="border border-slate-900 px-2 py-2 text-center">{heading}</th>
+            <tr>
+              <th style={{ ...topTh, width: "37%" }}>Buyer's Name &amp; Address</th>
+              <th style={{ ...topTh, width: "35%" }}>Shipment Details</th>
+              <th style={{ ...topTh, width: "28%" }}>Sale Invoice Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style={{ ...topTd }}>
+                <div style={{ ...topInfoLine, fontWeight: 800, textTransform: "uppercase", marginBottom: 1 }}>{challan.company_name || "-"}</div>
+                <div style={{ ...topInfoLine, whiteSpace: "pre-wrap" }}>{challan.company_address || "-"}</div>
+                <div style={{ ...topInfoLine, marginTop: 2 }}><b>GSTIN/PAN:</b> {challan.company_gst_no || "-"}</div>
+                <div style={topInfoLine}><b>Contact Person:</b> {challan.contact_person || "-"}</div>
+                <div style={topInfoLine}><b>Contact No.:</b> {challan.contact_phone || "-"}</div>
+              </td>
+              <td style={{ ...topTd }}>
+                <div style={{ ...topInfoLine, fontWeight: 800, textTransform: "uppercase", marginBottom: 1 }}>{challan.event_name || "9TH EDITION OF INTERNATIONAL HEALTH & WELLNESS EXPO"}</div>
+                <div style={{ ...topInfoLine, whiteSpace: "pre-wrap" }}>{challan.delivery_address || challan.company_address || "-"}</div>
+                <div style={{ ...topInfoLine, marginTop: 2 }}><b>Place of Supply:</b> {challan.shipped_to || "-"}</div>
+                <div style={topInfoLine}><b>State Code:</b> {challan.state_code || "-"}</div>
+                <div style={topInfoLine}><b>GSTIN:</b> {companyGst}</div>
+              </td>
+              <td style={{ ...topTd, padding: 0 }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+                  <tbody>
+                    {[
+                      ["Delivery Challan No.", challan.challan_no || "-"],
+                      ["Delivery Challan Date", fmtDateOnly(challan.challan_date)],
+                      ["Delivery Challan Type", challan.challan_type || "Outward"],
+                      ["Type of Sale", challan.type_of_sale || "-"],
+                      ["PO No.", challan.po_no || "-"],
+                      ["Bilty No.", challan.bilty_no || "-"],
+                      ["Vehicle No.", challan.vehicle_no || "-"],
+                      ["Transporter", challan.transporter_name || "-"],
+                      ["E-Way Bill No.", challan.eway_bill || "-"],
+                      ["Proforma No.", challan.estimate_no || "-"],
+                    ].map(([label, value]) => (
+                      <tr key={label} style={{ height: 16 }}>
+                        <td style={{ ...labelCell, borderLeft: 0, borderTop: 0 }}>{label}</td>
+                        <td style={{ ...valueCell, borderRight: 0, borderTop: 0, textAlign: "right" }}>{value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 4 }}>
+          <thead>
+            <tr>
+              {[
+                ["S.No.", "4%"],
+                ["Item Description", "38%"],
+                ["HSN Code", "8%"],
+                ["Qty.", "5%"],
+                ["Area", "6%"],
+                ["Size", "6%"],
+                ["Unit", "5%"],
+                ["Rate", "7%"],
+                ["Discount", "7%"],
+                ["Amount", "8%"],
+              ].map(([label, width]) => <th key={label} style={{ ...th, width }}>{label}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, index) => (
+              <tr key={`${item.sourceItemKey}-${index}`}>
+                <td style={{ ...td, textAlign: "center" }}>{index + 1}</td>
+                <td style={{ ...td, minHeight: 34 }}>
+                  <div style={{ fontWeight: 800, textTransform: "uppercase" }}>{challan.event_name || "9TH EDITION OF INTERNATIONAL HEALTH & WELLNESS EXPO"}</div>
+                  <div style={{ whiteSpace: "pre-wrap" }}>{item.description || "-"}</div>
+                  {item.remarks && <div style={{ whiteSpace: "pre-wrap" }}>{item.remarks}</div>}
+                </td>
+                <td style={{ ...td, textAlign: "center" }}>{item.hsn || "-"}</td>
+                <td style={{ ...td, textAlign: "center" }}>{fmtNum(item.qty)}</td>
+                <td style={{ ...td, textAlign: "center" }}>{item.area || "-"}</td>
+                <td style={{ ...td, textAlign: "center" }}>{item.size || "-"}</td>
+                <td style={{ ...td, textAlign: "center" }}>{item.unit || "-"}</td>
+                <td style={{ ...td, textAlign: "right" }}>{fmtNum(item.rate || 0)}</td>
+                <td style={{ ...td, textAlign: "right" }}>{fmtNum(lineValue(item, "discount"))}</td>
+                <td style={{ ...td, textAlign: "right", fontWeight: 700 }}>{fmtNum(lineValue(item, "taxable"))}</td>
+              </tr>
+            ))}
+            {Array.from({ length: Math.max(0, 12 - items.length) }).map((_, row) => (
+              <tr key={`blank-${row}`} style={{ height: 22 }}>
+                {Array.from({ length: 10 }).map((__, cell) => <td key={cell} style={td}></td>)}
+              </tr>
+            ))}
+            <tr>
+              <td colSpan={9} style={{ ...td, textAlign: "right", fontWeight: 800, background: "#f3f3f3" }}>Taxable Value</td>
+              <td style={{ ...td, textAlign: "right", fontWeight: 800 }}>{fmtNum(totalTaxable)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 4 }}>
+          <thead>
+            <tr>
+              {["S.No.", "HSN/SAC No.", "Item Value", "Qty.", "CGST(%)", "Amount", "SGST(%)", "Amount", "IGST(%)", "Amount", "Total Tax"].map((head) => (
+                <th key={head} style={th}>{head}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {(challan.items || []).map((item, index) => (
-              <tr key={`${item.sourceItemKey}-${index}`}>
-                <td className="border border-slate-900 p-2 text-center">{index + 1}</td>
-                <td className="border border-slate-900 p-2 font-semibold">{item.description}</td>
-                <td className="border border-slate-900 p-2 text-center">{item.hsn || "-"}</td>
-                <td className="border border-slate-900 p-2 text-center">{item.size || "-"}</td>
-                <td className="border border-slate-900 p-2 text-center">{item.area || "-"}</td>
-                <td className="border border-slate-900 p-2 text-center font-bold">{item.qty}</td>
-                <td className="border border-slate-900 p-2 text-center">{item.unit || "-"}</td>
-                <td className="border border-slate-900 p-2">{item.remarks || "-"}</td>
-              </tr>
-            ))}
-            {Array.from({ length: Math.max(0, 5 - (challan.items?.length || 0)) }).map((_, index) => (
-              <tr key={`blank-${index}`} className="h-10">
-                {Array.from({ length: 8 }).map((__, cell) => <td key={cell} className="border border-slate-900" />)}
-              </tr>
-            ))}
+            {hsnRows.map((row, index) => {
+              const isIgst = String(challan.type_of_sale || "").toLowerCase().includes("inter");
+              const halfRate = row.gstRate / 2;
+              const halfGst = row.gst / 2;
+              return (
+                <tr key={row.hsn}>
+                  <td style={{ ...td, textAlign: "center" }}>{index + 1}</td>
+                  <td style={{ ...td, textAlign: "center" }}>{row.hsn}</td>
+                  <td style={{ ...td, textAlign: "right" }}>{fmtNum(row.taxable)}</td>
+                  <td style={{ ...td, textAlign: "center" }}>{fmtNum(row.qty)}</td>
+                  <td style={{ ...td, textAlign: "center" }}>{isIgst ? "-" : `${fmtNum(halfRate)}%`}</td>
+                  <td style={{ ...td, textAlign: "right" }}>{isIgst ? "-" : fmtNum(halfGst)}</td>
+                  <td style={{ ...td, textAlign: "center" }}>{isIgst ? "-" : `${fmtNum(halfRate)}%`}</td>
+                  <td style={{ ...td, textAlign: "right" }}>{isIgst ? "-" : fmtNum(halfGst)}</td>
+                  <td style={{ ...td, textAlign: "center" }}>{isIgst ? `${fmtNum(row.gstRate)}%` : "-"}</td>
+                  <td style={{ ...td, textAlign: "right" }}>{isIgst ? fmtNum(row.gst) : "-"}</td>
+                  <td style={{ ...td, textAlign: "right", fontWeight: 700 }}>{fmtNum(row.gst)}</td>
+                </tr>
+              );
+            })}
+            <tr>
+              <td colSpan={3} style={{ ...td, fontWeight: 800, background: "#f3f3f3" }}>GST Amount in Words</td>
+              <td colSpan={6} style={td}>-</td>
+              <td style={{ ...td, fontWeight: 800, background: "#f3f3f3" }}>Total GST Amount</td>
+              <td style={{ ...td, textAlign: "right", fontWeight: 800 }}>{fmtNum(totalGst)}</td>
+            </tr>
+            <tr>
+              <td colSpan={9} style={{ ...td, textAlign: "right", fontWeight: 800, background: "#f3f3f3" }}>Total Value</td>
+              <td style={{ ...td, textAlign: "center", fontWeight: 800 }}>{fmtNum(totalQty)}</td>
+              <td style={{ ...td, textAlign: "right", fontWeight: 800 }}>{fmtNum(grandTotal)}</td>
+            </tr>
           </tbody>
         </table>
-        <div className="grid min-h-32 grid-cols-2 border-t border-slate-900">
-          <div className="border-r border-slate-900 p-4">
-            <p><b>Remarks:</b> {challan.remarks || "-"}</p>
-            <p className="mt-2"><b>Terms:</b> {challan.terms || "-"}</p>
-          </div>
-          <div className="flex min-h-36 flex-col p-4 text-right">
-            <p>For <b>Namo Gange Wellness Pvt. Ltd.</b></p>
-            {(settings?.companyStamp || settings?.authorizedSignature) && <div className="mt-2 flex h-20 items-center justify-end gap-4 overflow-hidden">
-              {settings?.companyStamp && <img src={mediaUrl(settings.companyStamp)} alt="" onError={(event) => { event.currentTarget.style.display = "none"; }} className="h-20 w-24 shrink-0 object-contain" />}
-              {settings?.authorizedSignature && <img src={mediaUrl(settings.authorizedSignature)} alt="" onError={(event) => { event.currentTarget.style.display = "none"; }} className="h-16 w-28 shrink-0 object-contain" />}
-            </div>}
-            <p className="mt-auto font-bold">Authorized Signatory</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 border-t border-slate-900">
-          <div className="p-4">Receiver Name &amp; Signature: ____________________</div>
-          <div className="p-4 text-right">Received Date: ____________________</div>
-        </div>
+
+        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 4 }}>
+          <tbody>
+            <tr>
+              <td style={{ ...td, fontWeight: 800, width: "16%" }}>Special Remark:</td>
+              <td style={{ ...td, height: 24 }}>{challan.remarks || "-"}</td>
+            </tr>
+            <tr>
+              <td style={{ ...td, fontWeight: 800 }}>Terms and Conditions:</td>
+              <td style={{ ...td }}>{challan.terms || "Goods/material received in good condition. All disputes are subject to Delhi jurisdiction."}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 4 }}>
+          <thead>
+            <tr>
+              <th style={{ ...th, width: "33%" }}>NGWPL Bank Details</th>
+              <th style={{ ...th, width: "33%" }}>Client Signature</th>
+              <th style={{ ...th, width: "34%" }}>For {companyName}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ height: 70 }}>
+              <td style={td}>
+                <div><b>Bank Name:</b> {bankName}</div>
+                <div><b>Account Name:</b> {accountName}</div>
+                <div><b>Account No.:</b> {accountNo}</div>
+                <div><b>IFSC Code:</b> {ifscCode}</div>
+                <div><b>Branch:</b> {bankBranch}</div>
+              </td>
+              <td style={{ ...td, textAlign: "center", verticalAlign: "bottom" }}>Client Signature</td>
+              <td style={{ ...td, textAlign: "center", verticalAlign: "bottom" }}>
+                {(settings?.companyStamp || settings?.authorizedSignature) && (
+                  <div style={{ height: 34, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, overflow: "hidden", marginBottom: 3 }}>
+                    {settings?.companyStamp && <img src={mediaUrl(settings.companyStamp)} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} style={{ maxHeight: 34, maxWidth: 58, objectFit: "contain" }} />}
+                    {settings?.authorizedSignature && <img src={mediaUrl(settings.authorizedSignature)} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} style={{ maxHeight: 30, maxWidth: 72, objectFit: "contain" }} />}
+                  </div>
+                )}
+                Authorised Signatory
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style={{ textAlign: "center", fontSize: 10, marginTop: 4 }}>This is a Computer Generated Document</div>
+        <div style={{ textAlign: "center", fontSize: 10, marginTop: 2 }}>© {new Date().getFullYear()} International Health &amp; Wellness Expo | {companyName} | All Rights Reserved.</div>
       </div>
     </div>
   );
@@ -225,6 +422,7 @@ const DeliveryChallanManager = () => {
   const [editingId, setEditingId] = useState("");
   const [mode, setMode] = useState("list");
   const [settings, setSettings] = useState(null);
+  const [banks, setBanks] = useState([]);
   const [commModal, setCommModal] = useState({ isOpen: false, type: "whatsapp", docId: "" });
   const [accountName, setAccountName] = useState("");
 
@@ -244,15 +442,17 @@ const DeliveryChallanManager = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [challanRes, proformaRes, settingsRes, accountRes] = await Promise.all([
+      const [challanRes, proformaRes, settingsRes, accountRes, bankRes] = await Promise.all([
         api.get(`/api/delivery-challans?companyId=${id}`),
         api.get(`/api/delivery-challans/proformas/${id}`),
         api.get("/api/settings"),
-        api.get(`/api/account-overview/${id}`).catch(() => ({ data: {} }))
+        api.get(`/api/account-overview/${id}`).catch(() => ({ data: {} })),
+        api.get("/api/banks").catch(() => ({ data: [] })),
       ]);
       setChallans(Array.isArray(challanRes.data) ? challanRes.data : []);
       setProformas(Array.isArray(proformaRes.data) ? proformaRes.data : []);
       setSettings(settingsRes.data?.data || settingsRes.data || null);
+      setBanks(Array.isArray(bankRes.data) ? bankRes.data : []);
       if (accountRes.data?.success) setAccountName(accountRes.data.data?.companyInfo?.name || "");
     } catch (error) {
       toast.error(error.response?.data?.message || "Unable to load delivery challans");
@@ -281,6 +481,8 @@ const DeliveryChallanManager = () => {
       contact_phone: estimate?.contact_phone || previous.contact_phone,
       event_name: estimate?.event_name || previous.event_name,
       delivery_address: estimate?.delivery_address || previous.delivery_address,
+      remarks: estimate?.remarks || previous.remarks,
+      terms: estimate?.terms || previous.terms,
       items: (estimate?.items || []).filter((item) => item.remainingQty > 0).map((item) => ({
         sourceItemKey: item.sourceItemKey,
         description: item.description,
@@ -289,6 +491,13 @@ const DeliveryChallanManager = () => {
         size: item.size,
         area: item.area,
         remarks: item.remarks || "",
+        rate: item.rate || 0,
+        discount: item.discount || 0,
+        amount: item.amount || 0,
+        taxable: item.taxable || 0,
+        gstRate: item.gstRate || 0,
+        gstAmount: item.gstAmount || 0,
+        finalAmount: item.finalAmount || 0,
         qty: item.remainingQty,
         remainingQty: item.remainingQty,
         sourceQty: item.sourceQty,
@@ -350,7 +559,7 @@ const DeliveryChallanManager = () => {
         companyId: selectedProforma?.companyId || form.companyId || id,
         account_ref_id: id,
         added_by: getCurrentUserName("Admin"),
-        items: selectedItems.map(({ remainingQty, sourceQty, deliveredQty, selected, ...item }) => ({ ...item, qty: Number(item.qty) })),
+        items: selectedItems.map(({ remainingQty, deliveredQty, selected, ...item }) => ({ ...item, qty: Number(item.qty) })),
       };
       const response = editingId
         ? await api.put(`/api/delivery-challans/${editingId}`, payload)
@@ -413,13 +622,17 @@ const DeliveryChallanManager = () => {
   if (loading) return <div className="flex min-h-[60vh] items-center justify-center gap-2 text-slate-600"><RefreshCw className="animate-spin" /> Loading challans...</div>;
 
   if (mode === "view") return (
-    <div className="min-h-screen bg-slate-100 p-4">
+    <div className="challan-view-page min-h-screen bg-slate-100 p-4">
       <div className="no-print mx-auto mb-3 flex max-w-[900px] justify-between">
         <button onClick={() => setMode("list")} className="flex items-center gap-2 rounded-md border bg-white px-4 py-2 text-sm font-bold"><ArrowLeft size={16} /> Back</button>
         <button onClick={() => window.print()} className="flex items-center gap-2 rounded-md bg-[#194090] px-4 py-2 text-sm font-bold text-white"><Printer size={16} /> Print / Save PDF</button>
       </div>
-      <DeliveryChallanPrint challan={form} settings={settings} />
-      <style>{`@media print { body * { visibility:hidden } .challan-print,.challan-print * { visibility:visible } .challan-print { position:absolute;left:0;top:0;width:100%;max-width:none;padding:0 } .no-print { display:none!important } }`}</style>
+      <DeliveryChallanPrint
+        challan={form}
+        settings={settings}
+        bankDetails={banks.find((bank) => String(bank.status || "").toLowerCase() === "active") || banks[0]}
+      />
+      <style>{`body:has(.challan-view-page) footer { display:none!important } @media print { body * { visibility:hidden } .challan-print,.challan-print * { visibility:visible } .challan-print { position:absolute;left:0;top:0;width:100%;max-width:none;padding:0 } .no-print, footer { display:none!important } }`}</style>
     </div>
   );
 
