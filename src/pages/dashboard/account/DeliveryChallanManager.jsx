@@ -7,6 +7,7 @@ import api, { SERVER_URL } from "../../../lib/api";
 import { getCurrentUserName } from "../../../utils/currentUser";
 import CommunicationModal from "../../../components/CommunicationModal";
 import invoiceHeader from "../../../assets/header.png";
+import AccountNavigation from '../../../components/AccountNavigation';
 function useCountUp(target, duration = 1200) {
   const [count, setCount] = useState(0);
   const [started, setStarted] = useState(false);
@@ -516,20 +517,11 @@ const DeliveryChallanManager = () => {
   return (
     <div className="min-h-screen bg-[#f8f9fc] p-4">
       <div className="w-full">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-[#194090] font-semibold mb-1">
-          <span>Exhibitors</span>
-          <ChevronRight size={14} className="text-gray-400" />
-          <span className="text-slate-800">{accountName || "Company"}</span>
-          <ChevronRight size={14} className="text-gray-400" />
-          <span className="text-slate-500 font-normal">Accounts</span>
-          <ChevronRight size={14} className="text-gray-400" />
-          <span className="text-slate-500 font-normal">Delivery Challan</span>
-        </div>
-        <button onClick={() => navigate(`/dashboard/account/${id}`)} className="mb-2 flex items-center gap-1 text-sm font-bold text-[#194090]"><ArrowLeft size={15} /> Account Overview</button>
-        <div className="mb-4 flex items-center justify-between rounded-xl border bg-white p-4 shadow-sm">
-          <div><h1 className="text-xl font-black text-[#1a2b4b]">Delivery Challans</h1><p className="text-xs text-slate-500">Create multiple partial-delivery challans against a proforma invoice.</p></div>
-          <button onClick={startCreate} className="flex items-center gap-2 rounded-md bg-[#194090] px-4 py-2 text-[13px] font-bold text-white"><FilePlus2 size={17} /> Create Challan</button>
+        <AccountNavigation id={id} accountName={accountName} pageName="Delivery Challan" />
+
+        <div className="mb-3 mt-1 flex items-center justify-between px-1">
+          <div><h1 className="text-lg font-black text-[#1a2b4b]">Delivery Challans</h1></div>
+          <button onClick={startCreate} className="flex items-center gap-1.5 rounded-md bg-[#194090] px-3 py-1.5 text-[13px] font-bold text-white transition-colors hover:bg-blue-800"><FilePlus2 size={16} /> Create Challan</button>
         </div>
 
         {statCards}

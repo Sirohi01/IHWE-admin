@@ -8,6 +8,7 @@ import api from "../../../lib/api";
 import { resolveLinkedIds } from "../../../utils/resolveLinkedIds";
 import { getCurrentUserName } from "../../../utils/currentUser";
 import CompanyAccountSummary, { formatCurrency } from "./CompanyAccountSummary";
+import AccountNavigation from '../../../components/AccountNavigation';
 
 const PAYMENT_FOR_OPTIONS = ["Advance Payment", "Running Payment", "Final Payment", "Part Payment", "Balance Payment"];
 const PAYMENT_MODE_OPTIONS = ["NEFT", "RTGS", "UPI", "Cash", "Cheque", "Card", "Wallet", "Bank Transfer", "Other"];
@@ -201,15 +202,7 @@ const AddPayment = () => {
 
   return (
     <div className="min-h-screen bg-[#f8f9fc] p-4 lg:p-6 lg:pr-20">
-      <div className="flex items-center gap-2 text-sm text-[#194090] font-semibold mb-1">
-        <span>Exhibitors</span>
-        <ChevronRight size={14} className="text-gray-400" />
-        <span className="text-slate-800">{companyInfo?.name || "Company"}</span>
-        <ChevronRight size={14} className="text-gray-400" />
-        <span className="text-slate-500 font-normal">Accounts</span>
-        <ChevronRight size={14} className="text-gray-400" />
-        <span className="text-slate-500 font-normal">Add Payment</span>
-      </div>
+      <AccountNavigation id={id} accountName={companyInfo?.name} pageName="Payments" />
 
       <CompanyAccountSummary companyInfo={companyInfo} financials={financials} />
 
