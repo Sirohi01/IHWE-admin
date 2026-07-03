@@ -67,9 +67,13 @@ const formatCurrency = (value) =>
 
 const formatDate = (date) => {
     if (!date) return '-';
-    const parsed = new Date(date);
-    if (Number.isNaN(parsed.getTime())) return '-';
-    return parsed.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "-";
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = d.toLocaleString('en-US', { month: 'short' });
+    const year = String(d.getFullYear()).slice(-2);
+    const time = d.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    return `${day} ${month} ${year}, ${time}`;
 };
 
 const DebitNoteList = () => {

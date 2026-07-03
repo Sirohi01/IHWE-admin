@@ -115,12 +115,13 @@ const InvoiceList = () => {
 
     const formatDate = (dateString) => {
         if (!dateString) return "N/A";
-        const dateObj = new Date(dateString);
-        return dateObj.toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-        }).replace(/\//g, " ");
+        const d = new Date(dateString);
+        if (isNaN(d.getTime())) return "N/A";
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = d.toLocaleString('en-US', { month: 'short' });
+        const year = String(d.getFullYear()).slice(-2);
+        const time = d.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        return `${day} ${month} ${year}, ${time}`;
     };
 
     const filteredInvoices = invoices.filter(inv => {

@@ -240,17 +240,16 @@ const EstimateTable = ({ clientId }) => {
     });
   };
 
-  // 📝 Helper function to format the PI date
+  // 🕒 Helper function to format the PI date
   const formatPiDate = (dateString) => {
     if (!dateString) return "N/A";
-    const dateObj = new Date(dateString);
-    return dateObj
-      .toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "2-digit",
-      })
-      .replace(/\//g, " ");
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return "N/A";
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = d.toLocaleString('en-US', { month: 'short' });
+    const year = String(d.getFullYear()).slice(-2);
+    const time = d.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    return `${day} ${month} ${year}, ${time}`;
   };
 
   const handleCancelDocuments = async (estimate, matchingInvoice) => {
@@ -290,14 +289,13 @@ const EstimateTable = ({ clientId }) => {
   };
   const formatInvoiceDate = (dateString) => {
     if (!dateString) return "N/A";
-    const dateObj = new Date(dateString);
-    return dateObj
-      .toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "2-digit",
-      })
-      .replace(/\//g, " ");
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return "N/A";
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = d.toLocaleString('en-US', { month: 'short' });
+    const year = String(d.getFullYear()).slice(-2);
+    const time = d.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    return `${day} ${month} ${year}, ${time}`;
   };
 
   // Pagination
@@ -480,13 +478,11 @@ const EstimateTable = ({ clientId }) => {
 
             let formattedDate = "N/A";
             if (estimate?.supply_date) {
-              const dateObj = new Date(estimate.supply_date);
-              formattedDate = dateObj.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" }).replace(/\//g, " ");
+              formattedDate = formatPiDate(estimate.supply_date);
             }
             let formattedUpdatedDate = "N/A";
             if (estimate?.updated) {
-              const dateObj = new Date(estimate.updated);
-              formattedUpdatedDate = dateObj.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" }).replace(/\//g, " ");
+              formattedUpdatedDate = formatPiDate(estimate.updated);
             }
 
             const localPiState = perInvoiceState[estimate._id];

@@ -90,10 +90,15 @@ const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-1 text-[13p
 const labelClass = "flex items-center gap-1.5 text-[12px] font-medium text-[#1a2b4b] mb-1";
 
 const formatDate = (value) => {
-  if (!value) return "-";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString("en-GB");
-};
+    if (!value) return "-";
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return "-";
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = d.toLocaleString('en-US', { month: 'short' });
+    const year = String(d.getFullYear()).slice(-2);
+    const time = d.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    return `${day} ${month} ${year}, ${time}`;
+  };
 
 const statusClass = (status) => ({
   draft: "bg-slate-100 text-slate-600",
