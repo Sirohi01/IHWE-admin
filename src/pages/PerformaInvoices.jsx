@@ -23,6 +23,71 @@ const fmt = (n) =>
 
 const roundAmount = (value) => Math.round(Number(value || 0));
 
+const escapeHtml = (value) => String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+
+const buildImpactPreviewHtml = (preview) => {
+    const changes = preview?.changedFields || [];
+    const itemChanges = preview?.itemChanges || {};
+    const dependencies = preview?.dependencies || {};
+    const dependencyRows = [
+        ['Invoices', dependencies.invoices, 'invoice_no'],
+        ['Delivery Challans', dependencies.deliveryChallans, 'challan_no'],
+        ['Payments', dependencies.payments, 'ex_no'],
+        ['Credit Notes', dependencies.creditNotes, 'create_note_no'],
+        ['Debit Notes', dependencies.debitNotes, 'debit_note_no'],
+    ].filter(([, records]) => records?.length);
+
+    const changeRows = changes.length
+        ? changes.map((change) => `
+            <tr>
+                <td style="padding:6px;border-bottom:1px solid #e5e7eb;font-weight:600">${escapeHtml(change.label)}</td>
+                <td style="padding:6px;border-bottom:1px solid #e5e7eb;color:#64748b">${escapeHtml(change.before || '—')}</td>
+                <td style="padding:6px;border-bottom:1px solid #e5e7eb;color:#166534">${escapeHtml(change.after || '—')}</td>
+            </tr>`).join('')
+        : '<tr><td colspan="3" style="padding:7px;color:#64748b">No header/detail field changed.</td></tr>';
+
+    const itemSummary = [
+        itemChanges.added ? `${itemChanges.added} added` : '',
+        itemChanges.removed ? `${itemChanges.removed} removed` : '',
+        itemChanges.modified ? `${itemChanges.modified} modified` : '',
+    ].filter(Boolean).join(', ') || 'No item changes';
+
+    const dependencyHtml = dependencyRows.length
+        ? dependencyRows.map(([label, records, numberField]) => `
+            <div style="padding:7px 9px;margin-top:6px;background:#fff7ed;border:1px solid #fed7aa;border-radius:6px">
+                <b>${escapeHtml(label)} (${records.length})</b>
+                <div style="font-size:11px;color:#7c2d12;margin-top:2px">
+                    ${escapeHtml(records.map((record) => record[numberField] || record._id).join(', '))}
+                </div>
+            </div>`).join('')
+        : '<div style="padding:8px;background:#f0fdf4;color:#166534;border-radius:6px">No linked downstream documents found.</div>';
+
+    return `
+        <div style="text-align:left;font-size:12px">
+            <p style="margin:0 0 8px;color:#475569">
+                PI will be updated, but already-created Invoice, Delivery Challan, Payment or Notes will remain unchanged.
+            </p>
+            <div style="max-height:210px;overflow:auto;border:1px solid #e5e7eb;border-radius:6px">
+                <table style="width:100%;border-collapse:collapse">
+                    <thead><tr style="background:#f8fafc">
+                        <th style="padding:6px;text-align:left">Field</th>
+                        <th style="padding:6px;text-align:left">Old</th>
+                        <th style="padding:6px;text-align:left">New</th>
+                    </tr></thead>
+                    <tbody>${changeRows}</tbody>
+                </table>
+            </div>
+            <p style="margin:8px 0"><b>Items:</b> ${escapeHtml(itemSummary)}</p>
+            <p style="margin:10px 0 4px"><b>Linked document impact:</b></p>
+            ${dependencyHtml}
+        </div>`;
+};
+
 const newItem = () => ({
     id: Date.now(),
     description: '',
@@ -523,6 +588,34 @@ export const PerformaInvoices = () => {
 
         try {
             if (existingEstimateId) {
+                const previewResponse = await api.post(
+                    `/api/estimates/${existingEstimateId}/impact-preview`,
+                    payload
+                );
+                const preview = previewResponse.data;
+
+                if (!preview?.hasChanges) {
+                    await Swal.fire({
+                        icon: 'info',
+                        title: 'No changes found',
+                        text: 'Proforma Invoice data is already up to date.',
+                    });
+                    return;
+                }
+
+                const confirmation = await Swal.fire({
+                    icon: preview?.hasImpact ? 'warning' : 'question',
+                    title: 'Review PI Changes',
+                    html: buildImpactPreviewHtml(preview),
+                    width: 720,
+                    showCancelButton: true,
+                    confirmButtonText: 'Save PI Changes',
+                    cancelButtonText: 'Review Again',
+                    confirmButtonColor: '#166534',
+                    reverseButtons: true,
+                });
+                if (!confirmation.isConfirmed) return;
+
                 const res = await api.put(`/api/estimates/${existingEstimateId}`, payload);
                 if (res.data?.message) {
                     Swal.fire({

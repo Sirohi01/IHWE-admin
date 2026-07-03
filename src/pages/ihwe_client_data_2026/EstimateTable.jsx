@@ -570,7 +570,13 @@ const EstimateTable = ({ clientId }) => {
                     {invoiceData ? (
                       <div className="flex flex-col gap-0.5 items-start justify-center mt-1">
                         <div className="flex items-center gap-1">
-                          <button className="text-[#194090] cursor-pointer hover:text-blue-700 font-bold px-1" onClick={() => navigate(`/payments/estimateDetails/${estimate._id}`, { state: { displayEstNo: displayEstNo || estimate?.est_no, documentStatus: rowType === "cancelled" ? "cancelled" : "active", invoiceStatus: invoiceData?.status || "" } })} title="Open estimate overview">{invoiceData.invoice_no}</button>
+                          <button
+                            className="text-[#194090] cursor-pointer hover:text-blue-700 font-bold px-1"
+                            onClick={() => navigate(`/payments/invoiceDetails/${invoiceData._id}`)}
+                            title="Open invoice"
+                          >
+                            {invoiceData.invoice_no}
+                          </button>
                           <span className="font-bold text-emerald-600">| {Number(invoiceData.finalAmount || 0).toFixed(2)}</span>
                         </div>
                         <span className="text-slate-500 text-left pl-1">{formatInvoiceDate(invoiceData.invoice_date || invoiceData.supply_date || invoiceData.updated)}</span>

@@ -245,6 +245,13 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{invoiceNo}</td>
                                     </tr>
+                                    {Number(matchedInvoice?.revision_no || 0) > 0 && (
+                                        <tr>
+                                            <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Revision</td>
+                                            <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                            <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>Rev {matchedInvoice.revision_no}</td>
+                                        </tr>
+                                    )}
                                     <tr>
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Invoice Date</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>

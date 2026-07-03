@@ -8,8 +8,14 @@ import { fetchEstimates } from "../../../features/estimates/estimateSlice";
 import { fetchCompanies } from "../../../features/company/companySlice";
 import { useSelector, useDispatch } from "react-redux";
 import { FaPrint } from "react-icons/fa";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
+import Swal from "sweetalert2";
+import api from "../../../lib/api";
 import InvoicePreviewTemplate from "./InvoicePreviewTemplate";
+
+const escapeHtml = (value) => String(value ?? "")
+  .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+  .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 
 const InvoiceNumberDetails = () => {
   const { id } = useParams();
@@ -21,6 +27,7 @@ const InvoiceNumberDetails = () => {
   const [matchedInvoice, setMatchedInvoice] = useState(null);
   const [company, setCompany] = useState(null);
   const [matchedEstimate, setMatchedEstimate] = useState(null);
+  const [isRevising, setIsRevising] = useState(false);
 
   // redux logic
   const { invoices } = useSelector((state) => state.invoice);
@@ -77,6 +84,71 @@ const InvoiceNumberDetails = () => {
     documentTitle: "invoice",
   });
 
+  const handleRevise = async () => {
+    try {
+      setIsRevising(true);
+      const { data: preview } = await api.get(`/api/invoices/${id}/revision-preview`);
+      if (!preview?.hasChanges) {
+        await Swal.fire("No changes found", "Invoice already matches the latest Proforma Invoice.", "info");
+        return;
+      }
+      const dependencyRows = [
+        ["Payments", preview.dependencies?.payments],
+        ["Credit Notes", preview.dependencies?.creditNotes],
+        ["Debit Notes", preview.dependencies?.debitNotes],
+        ["Delivery Challans", preview.deliveryChallans],
+      ].filter(([, records]) => records?.length);
+      const changedRows = (preview.changedFields || []).map((change) => `
+        <tr>
+          <td style="padding:5px;border-bottom:1px solid #e5e7eb;font-weight:600">${escapeHtml(change.label)}</td>
+          <td style="padding:5px;border-bottom:1px solid #e5e7eb;color:#64748b">${escapeHtml(change.before || "—")}</td>
+          <td style="padding:5px;border-bottom:1px solid #e5e7eb;color:#166534">${escapeHtml(change.after || "—")}</td>
+        </tr>`).join("");
+      const items = preview.itemChanges || {};
+      const result = await Swal.fire({
+        icon: dependencyRows.length ? "warning" : "question",
+        title: `Revise ${escapeHtml(preview.invoice_no)} → Rev ${preview.next_revision}`,
+        width: 720,
+        html: `
+          <div style="text-align:left;font-size:12px">
+            <p><b>Invoice number same rahega.</b> Current copy revision history mein save hogi.</p>
+            <div style="max-height:190px;overflow:auto;border:1px solid #e5e7eb;border-radius:6px">
+              <table style="width:100%;border-collapse:collapse">
+                <thead><tr style="background:#f8fafc"><th style="padding:5px;text-align:left">Field</th><th>Old</th><th>New</th></tr></thead>
+                <tbody>${changedRows || '<tr><td colspan="3" style="padding:6px">Only items changed.</td></tr>'}</tbody>
+              </table>
+            </div>
+            <p><b>Items:</b> ${items.added || 0} added, ${items.removed || 0} removed, ${items.modified || 0} modified</p>
+            ${dependencyRows.map(([label, records]) => `<p style="margin:4px 0;color:#9a3412"><b>${label}:</b> ${records.length} linked — these records will not auto-change.</p>`).join("")}
+            <input id="revision-reason" class="swal2-input" style="width:100%;margin:10px 0 0" placeholder="Revision reason (recommended)" />
+          </div>`,
+        showCancelButton: true,
+        confirmButtonText: "Revise Same Invoice",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#b45309",
+        preConfirm: () => document.getElementById("revision-reason")?.value?.trim() || "",
+      });
+      if (!result.isConfirmed) return;
+
+      const revisedBy = localStorage.getItem("user_name") || sessionStorage.getItem("user_name") || "";
+      const response = await api.post(`/api/invoices/${id}/revise-from-estimate`, {
+        reason: result.value,
+        revised_by: revisedBy,
+      });
+      setMatchedInvoice(response.data?.data);
+      dispatch(fetchInvoices());
+      await Swal.fire({
+        icon: "success",
+        title: `Invoice Revised — Rev ${response.data?.data?.revision_no}`,
+        text: `Invoice number ${response.data?.data?.invoice_no} remains unchanged.`,
+      });
+    } catch (error) {
+      await Swal.fire("Revision Failed", error.response?.data?.message || "Unable to revise invoice.", "error");
+    } finally {
+      setIsRevising(false);
+    }
+  };
+
   if (!matchedInvoice) {
     return <div className="text-center p-10">Loading invoice details...</div>;
   }
@@ -84,6 +156,23 @@ const InvoiceNumberDetails = () => {
   return (
     <div className="bg-gray-100 p-6 min-h-screen ">
       <div className="max-w-[1000px] mx-auto flex justify-end mb-2">
+        {(matchedInvoice.source_estimate_id || matchedInvoice.estimate_no)
+          && String(matchedInvoice.status || "").toLowerCase() !== "cancelled" && (
+          <button
+            onClick={handleRevise}
+            disabled={isRevising}
+            className="mr-auto bg-amber-600 rounded px-3 py-2 text-white hover:bg-amber-700 shadow-sm transition flex items-center gap-2 disabled:opacity-50"
+            title="Update this invoice from latest Proforma Invoice while keeping the same invoice number"
+          >
+            <RefreshCw size={16} className={isRevising ? "animate-spin" : ""} />
+            {isRevising ? "Checking..." : "Revise from PI"}
+          </button>
+        )}
+        {Number(matchedInvoice.revision_no || 0) > 0 && (
+          <span className="mr-2 rounded bg-amber-100 px-3 py-2 text-xs font-bold text-amber-800">
+            Rev {matchedInvoice.revision_no}
+          </span>
+        )}
         <button
           onClick={() => navigate('/invoice-list')}
           className="bg-white rounded p-2 text-gray-500 hover:text-blue-500 shadow-sm border transition flex items-center justify-center"
