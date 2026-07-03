@@ -9,11 +9,11 @@ const AccountNavigation = ({ id, accountName, pageName }) => {
   if (!id || id === 'all') return null;
 
   const navItems = [
-    { label: 'Proforma Invoices', path: `/performa-invoice-list/${id}`, icon: <FileText size={14} /> },
-    { label: 'Delivery Challans', path: `/dashboard/account/${id}/delivery-challans`, icon: <Truck size={14} /> },
-    { label: 'Invoices', path: `/invoice-list/${id}`, icon: <FileSpreadsheet size={14} /> },
-    { label: 'Payments', path: `/payment-list/${id}`, icon: <CreditCard size={14} /> },
-    { label: 'Credit Notes', path: `/debit-note-list/${id}`, icon: <FileMinus size={14} /> },
+    { label: 'Proforma Invoices', path: `/performa-invoice-list/${id}`, icon: <FileText size={12} /> },
+    { label: 'Delivery Challans', path: `/dashboard/account/${id}/delivery-challans`, icon: <Truck size={12} /> },
+    { label: 'Invoices', path: `/invoice-list/${id}`, icon: <FileSpreadsheet size={12} /> },
+    { label: 'Payments', path: `/payment-list/${id}`, icon: <CreditCard size={12} /> },
+    { label: 'Credit Notes', path: `/debit-note-list/${id}`, icon: <FileMinus size={12} /> },
   ];
 
   return (
@@ -33,9 +33,9 @@ const AccountNavigation = ({ id, accountName, pageName }) => {
       <div className="flex items-center gap-1 overflow-x-auto hide-scrollbar w-full lg:w-auto">
         <button
           onClick={() => navigate(`/dashboard/account/${id}`)}
-          className="flex shrink-0 items-center gap-1.5 px-2.5 py-1 text-[13px] font-bold text-[#194090] bg-[#f0f5ff] hover:bg-[#e0ecff] rounded-md transition-colors border border-[#d6e4ff] mr-1"
+          className="flex shrink-0 items-center gap-1 px-1.5 py-0.5 text-[11px] font-bold text-[#194090] bg-[#f0f5ff] hover:bg-[#e0ecff] rounded transition-colors border border-[#d6e4ff] mr-1"
         >
-          <ArrowLeft size={14} strokeWidth={2.5} />
+          <ArrowLeft size={12} strokeWidth={2.5} />
           Overview
         </button>
 
@@ -45,7 +45,7 @@ const AccountNavigation = ({ id, accountName, pageName }) => {
             <button
               key={idx}
               onClick={() => navigate(item.path)}
-              className={`flex shrink-0 items-center gap-1.5 px-2.5 py-1 text-[13px] font-semibold rounded-md transition-all duration-200 ${
+              className={`flex shrink-0 items-center gap-1 px-1.5 py-0.5 text-[11px] font-semibold rounded transition-all duration-200 ${
                 isActive
                   ? 'bg-[#194090] text-white shadow-sm'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-[#194090] border border-transparent hover:border-gray-200'
