@@ -179,9 +179,9 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
             <p className="text-[13px] font-bold text-[#1a2b4b] mt-0.5">{proformaInvoiceCount} Invoices</p>
           </div>
 
-          <div className="pt-2 border-t border-gray-50 ml-1 relative z-10 flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap">Overdue Amount</span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 whitespace-nowrap">
+          <div className="pt-2 border-t border-gray-50 ml-1 relative z-10 flex flex-col gap-1">
+            <span className="text-[11px] font-medium text-slate-500">Overdue Amount</span>
+            <span className="inline-flex items-center px-2 py-1 rounded text-[12px] font-bold bg-red-50 text-red-600 w-fit tracking-tight">
               {formatCurrency(financials?.remainingBalance)}
             </span>
           </div>
@@ -213,9 +213,9 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
             <p className="text-[13px] font-bold text-[#1a2b4b] mt-0.5">{invoiceCount} Invoices</p>
           </div>
 
-          <div className="pt-2 border-t border-gray-50 ml-1 relative z-10 flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap">Received %</span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-600 whitespace-nowrap">
+          <div className="pt-2 border-t border-gray-50 ml-1 relative z-10 flex flex-col gap-1">
+            <span className="text-[11px] font-medium text-slate-500">Received %</span>
+            <span className="inline-flex items-center px-2 py-1 rounded text-[12px] font-bold bg-emerald-50 text-emerald-600 w-fit tracking-tight">
               {paidPct}%
             </span>
           </div>
@@ -247,9 +247,9 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
              <p className="text-[13px] font-bold text-[#1a2b4b] mt-0.5">{balPct}%</p>
           </div>
 
-          <div className="pt-2 border-t border-gray-50 ml-1 relative z-10 flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap">Total Amount</span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 whitespace-nowrap">
+          <div className="pt-2 border-t border-gray-50 ml-1 relative z-10 flex flex-col gap-1">
+            <span className="text-[11px] font-medium text-slate-500">Total Amount</span>
+            <span className="inline-flex items-center px-2 py-1 rounded text-[12px] font-bold bg-indigo-50 text-indigo-600 w-fit tracking-tight">
               {formatCurrency(financials?.totalDue)}
             </span>
           </div>

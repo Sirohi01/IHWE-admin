@@ -79,6 +79,11 @@ const emptyForm = {
   vehicle_no: "",
   transporter_name: "",
   eway_bill: "",
+  challan_type: "Outward",
+  type_of_sale: "",
+  shipped_to: "",
+  state_code: "",
+  bilty_no: "",
   po_no: "",
   remarks: "",
   terms: "Goods/material received in good condition.",
@@ -139,10 +144,16 @@ const DeliveryChallanPrint = ({ challan, settings }) => {
               <b>Challan No.</b><span>{challan.challan_no || "Auto-generated on save"}</span>
               <b>Challan Date</b><span>{formatDate(challan.challan_date)}</span>
               <b>Proforma No.</b><span>{challan.estimate_no || "-"}</span>
+              <b>Challan Type</b><span>{challan.challan_type || "Outward"}</span>
               <b>Purpose</b><span>{challan.purpose}</span>
+              <b>Type of Sale</b><span>{challan.type_of_sale || "-"}</span>
+              <b>Shipped To</b><span>{challan.shipped_to || "-"}</span>
+              <b>State Code</b><span>{challan.state_code || "-"}</span>
               <b>Vehicle No.</b><span>{challan.vehicle_no || "-"}</span>
               <b>Transporter</b><span>{challan.transporter_name || "-"}</span>
               <b>E-way Bill No.</b><span>{challan.eway_bill || "-"}</span>
+              <b>Bilty No.</b><span>{challan.bilty_no || "-"}</span>
+              <b>PO No.</b><span>{challan.po_no || "-"}</span>
             </div>
           </div>
         </div>
@@ -427,12 +438,17 @@ const DeliveryChallanManager = () => {
             <div className="grid gap-3 md:grid-cols-12">
               <div className="md:col-span-3"><label className={labelClass}><FileText size={14} className="text-blue-500" /> Source Proforma Invoice *</label><select disabled={Boolean(editingId)} className={inputClass} value={form.source_estimate_id} onChange={(event) => selectProforma(event.target.value)}><option value="">Select Proforma Invoice</option>{proformas.map((estimate) => { const availableItems = estimate.items.filter((item) => item.remainingQty > 0); const availableQty = availableItems.reduce((sum, item) => sum + item.remainingQty, 0); return <option key={estimate._id} value={estimate._id}>{estimate.est_no} — {availableItems.length} item(s), {availableQty} qty available</option>; })}</select></div>
               <div className="md:col-span-3"><label className={labelClass}><Calendar size={14} className="text-blue-500" /> Challan Date *</label><input required type="date" className={inputClass} value={form.challan_date} onChange={(event) => setForm({ ...form, challan_date: event.target.value })} /></div>
+              <div className="md:col-span-3"><label className={labelClass}><Tag size={14} className="text-blue-500" /> Challan Type</label><select className={inputClass} value={form.challan_type || "Outward"} onChange={(event) => setForm({ ...form, challan_type: event.target.value })}>{["Outward", "Inward", "Return", "Gate Pass"].map((value) => <option key={value}>{value}</option>)}</select></div>
               <div className="md:col-span-3"><label className={labelClass}><Tag size={14} className="text-blue-500" /> Purpose</label><select className={inputClass} value={form.purpose} onChange={(event) => setForm({ ...form, purpose: event.target.value })}>{["Event/Stall Material", "Job Work", "Returnable Material", "Non-returnable Material", "Other"].map((value) => <option key={value}>{value}</option>)}</select></div>
               <div className="md:col-span-3"><label className={labelClass}><Truck size={14} className="text-blue-500" /> Vehicle No.</label><input className={inputClass} value={form.vehicle_no} onChange={(event) => setForm({ ...form, vehicle_no: event.target.value })} placeholder="Enter vehicle number" /></div>
               <div className="md:col-span-3"><label className={labelClass}><User size={14} className="text-blue-500" /> Transporter</label><input className={inputClass} value={form.transporter_name} onChange={(event) => setForm({ ...form, transporter_name: event.target.value })} placeholder="Transporter name" /></div>
               <div className="md:col-span-3"><label className={labelClass}><FileText size={14} className="text-blue-500" /> E-way Bill No.</label><input className={inputClass} value={form.eway_bill || ""} onChange={(event) => setForm({ ...form, eway_bill: event.target.value })} placeholder="Enter E-way Bill No." /></div>
               <div className="md:col-span-3"><label className={labelClass}><Calendar size={14} className="text-blue-500" /> Event Name</label><input className={inputClass} value={form.event_name} onChange={(event) => setForm({ ...form, event_name: event.target.value })} placeholder="Enter event name" /></div>
               <div className="md:col-span-3"><label className={labelClass}><FileBadge size={14} className="text-blue-500" /> PO / Reference No.</label><input className={inputClass} value={form.po_no} onChange={(event) => setForm({ ...form, po_no: event.target.value })} placeholder="Enter reference number" /></div>
+              <div className="md:col-span-3"><label className={labelClass}><Tag size={14} className="text-blue-500" /> Type of Sale</label><select className={inputClass} value={form.type_of_sale || ""} onChange={(event) => setForm({ ...form, type_of_sale: event.target.value })}><option value="">Select Type</option>{["Local", "Inter-State", "Export", "Import", "Other"].map((v) => <option key={v}>{v}</option>)}</select></div>
+              <div className="md:col-span-3"><label className={labelClass}><MapPin size={14} className="text-blue-500" /> Shipped To</label><input className={inputClass} value={form.shipped_to || ""} onChange={(event) => setForm({ ...form, shipped_to: event.target.value })} placeholder="Enter shipped to" /></div>
+              <div className="md:col-span-3"><label className={labelClass}><MapPin size={14} className="text-blue-500" /> State Code</label><input className={inputClass} value={form.state_code || ""} onChange={(event) => setForm({ ...form, state_code: event.target.value })} placeholder="e.g. 07 (Delhi)" /></div>
+              <div className="md:col-span-3"><label className={labelClass}><FileBadge size={14} className="text-blue-500" /> Bilty No.</label><input className={inputClass} value={form.bilty_no || ""} onChange={(event) => setForm({ ...form, bilty_no: event.target.value })} placeholder="Enter bilty number" /></div>
             </div>
           </section>
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -536,14 +552,15 @@ const DeliveryChallanManager = () => {
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <table className="w-full min-w-[900px] text-left text-xs whitespace-nowrap" style={{ fontFamily: 'Inter, sans-serif' }}>
             <thead className="bg-slate-50 uppercase text-slate-500 border-b border-slate-200">
-              <tr>{["Challan No.", "Date", "Proforma No.", "Purpose", "Items", "Quantity", "Status", "Actions"].map((heading) => <th key={heading} className="px-4 py-3 font-bold">{heading}</th>)}</tr>
+              <tr>{["Challan No.", "Date", "Type", "Proforma No.", "Purpose", "Items", "Quantity", "Status", "Actions"].map((heading) => <th key={heading} className="px-4 py-3 font-bold">{heading}</th>)}</tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {!challans.length && <tr><td colSpan={8} className="p-10 text-center text-slate-400 font-bold">No delivery challans created yet.</td></tr>}
+              {!challans.length && <tr><td colSpan={9} className="p-10 text-center text-slate-400 font-bold">No delivery challans created yet.</td></tr>}
               {challans.map((challan) => (
                 <tr key={challan._id} className="border-t border-slate-100 hover:bg-slate-50 transition-colors">
                   <td className="px-4 py-3 text-[11px] font-bold text-[#194090] cursor-pointer hover:underline" onClick={() => view(challan)}>{challan.challan_no}</td>
                   <td className="px-4 py-3 text-[10px] text-slate-600 font-medium">{formatDate(challan.challan_date)}</td>
+                  <td className="px-4 py-3 text-[10px] font-bold text-slate-700">{challan.challan_type || "Outward"}</td>
                   <td className="px-4 py-3 text-[10px] font-bold text-slate-700">{challan.estimate_no}</td>
                   <td className="px-4 py-3 text-[10px] text-slate-600">{challan.purpose}</td>
                   <td className="px-4 py-3 text-[10px] font-bold text-slate-700">{(challan.items || []).length}</td>
