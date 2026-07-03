@@ -90,6 +90,17 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
   const location = useLocation();
 
   const getPageNameFromMenu = (pathname) => {
+    if (pathname.includes('/dashboard/account/')) {
+      if (pathname.includes('/delivery-challans')) return { page: 'Delivery Challans', section: 'Accounts' };
+      if (pathname.includes('/AddPayment')) return { page: 'Payments', section: 'Accounts' };
+      return { page: 'Account Overview', section: 'Accounts' };
+    }
+    if (pathname.startsWith('/performa-invoice-list')) return { page: 'Proforma Invoice', section: 'Accounts' };
+    if (pathname.startsWith('/invoice-list')) return { page: 'Invoice', section: 'Accounts' };
+    if (pathname.startsWith('/debit-note-list')) return { page: 'Credit Note', section: 'Accounts' };
+    if (pathname.startsWith('/debit-note-view')) return { page: 'Credit Note View', section: 'Accounts' };
+    if (pathname.startsWith('/create-debit-note')) return { page: 'Create Credit Note', section: 'Accounts' };
+
     let foundLabel = null;
     let foundParentLabel = null;
     let bestMatchLength = 0;
@@ -117,7 +128,8 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
 
     const pathSegments = pathname.split('/').filter(Boolean);
     const pageNameRaw = pathSegments.length > 0 ? pathSegments[0] : 'Dashboard';
-    return { page: pageNameRaw.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), section: null };
+    const formattedPageName = pageNameRaw.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    return { page: formattedPageName.replace(/Debit/gi, 'Credit'), section: null };
   };
 
   const { page: pageName, section: sectionName } = getPageNameFromMenu(location.pathname);
@@ -532,7 +544,7 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
                     />
                   </div>
 
-                 
+
                 </div>
 
                 {/* Title + subtitle */}

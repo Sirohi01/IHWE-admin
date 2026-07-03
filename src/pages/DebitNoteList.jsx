@@ -2,63 +2,64 @@ import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, Eye, FileMinus, Plus, RefreshCw, Search, FileText, CheckCircle2, Clock, Users, DollarSign, Package } from 'lucide-react';
 import api from '../lib/api';
+import AccountNavigation from '../components/AccountNavigation';
 import { resolveLinkedIds } from '../utils/resolveLinkedIds';
 
 // Hook: animate number from 0 to target when element enters viewport
 function useCountUp(target, duration = 1200) {
-  const [count, setCount] = useState(0);
-  const [started, setStarted] = useState(false);
-  const ref = useRef(null);
+    const [count, setCount] = useState(0);
+    const [started, setStarted] = useState(false);
+    const ref = useRef(null);
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting && !started) setStarted(true); },
-      { threshold: 0.3 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [started]);
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => { if (entry.isIntersecting && !started) setStarted(true); },
+            { threshold: 0.3 }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [started]);
 
-  useEffect(() => {
-    if (!started) return;
-    const numTarget = parseFloat(target) || 0;
-    if (numTarget === 0) { setCount(0); return; }
-    const startTime = performance.now();
-    const tick = (now) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const ease = 1 - Math.pow(1 - progress, 3);
-      setCount(ease * numTarget);
-      if (progress < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  }, [started, target, duration]);
+    useEffect(() => {
+        if (!started) return;
+        const numTarget = parseFloat(target) || 0;
+        if (numTarget === 0) { setCount(0); return; }
+        const startTime = performance.now();
+        const tick = (now) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const ease = 1 - Math.pow(1 - progress, 3);
+            setCount(ease * numTarget);
+            if (progress < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+    }, [started, target, duration]);
 
-  return { ref, count };
+    return { ref, count };
 }
 
 function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, label, subLabel, subColor }) {
-  const { ref, count } = useCountUp(rawValue);
-  return (
-    <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white ${gradientTo} p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}>
-      <div className="relative z-10">
-        <div className="flex items-center gap-3 mb-4">
-          <div className={`w-10 h-10 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
-            {icon}
-          </div>
-          <div className="flex flex-col">
-            <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>
-              {displayValue(count)}
-            </span>
-            <span style={{ fontSize: '9px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif' }}>{label}</span>
-          </div>
+    const { ref, count } = useCountUp(rawValue);
+    return (
+        <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white ${gradientTo} p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}>
+            <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className={`w-10 h-10 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
+                        {icon}
+                    </div>
+                    <div className="flex flex-col">
+                        <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>
+                            {displayValue(count)}
+                        </span>
+                        <span style={{ fontSize: '9px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif' }}>{label}</span>
+                    </div>
+                </div>
+                <div style={{ fontSize: '10px', fontWeight: 700, color: subColor, textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>{subLabel}</div>
+            </div>
         </div>
-        <div style={{ fontSize: '10px', fontWeight: 700, color: subColor, textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>{subLabel}</div>
-      </div>
-    </div>
-  );
+    );
 }
 
 const formatCurrency = (value) =>
@@ -77,6 +78,27 @@ const DebitNoteList = () => {
     const [notes, setNotes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [accountName, setAccountName] = useState('');
+
+    useEffect(() => {
+        if (id === 'all') {
+            setAccountName('');
+            return;
+        }
+        let cancelled = false;
+        api.get(`/api/account-overview/${id}`)
+            .then(res => {
+                if (!cancelled && res.data?.success) {
+                    setAccountName(res.data.data?.companyInfo?.name || '');
+                }
+            })
+            .catch(() => {
+                if (!cancelled) setAccountName('');
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [id]);
 
     const loadDebitNotes = async () => {
         try {
@@ -122,70 +144,76 @@ const DebitNoteList = () => {
     const totalClients = new Set(filteredNotes.map(n => n.clientName).filter(Boolean)).size;
 
     const statCards = (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 mt-2">
-        <AnimatedStatCard
-          icon={<FileMinus className="w-5 h-5 text-purple-600" strokeWidth={2.5} />}
-          gradientTo="to-purple-50" iconBg="bg-purple-100"
-          rawValue={totalNotes}
-          displayValue={(c) => Math.round(c)}
-          label="TOTAL CREDIT NOTES"
-          subLabel="Issued" subColor="#7e22ce"
-        />
-        <AnimatedStatCard
-          icon={<DollarSign className="w-5 h-5 text-indigo-600" strokeWidth={2.5} />}
-          gradientTo="to-indigo-50" iconBg="bg-indigo-100"
-          rawValue={totalValue / 100000}
-          displayValue={(c) => `₹ ${c.toFixed(1)}L`}
-          label="TOTAL VALUE"
-          subLabel="Amount" subColor="#4f46e5"
-        />
-        <AnimatedStatCard
-          icon={<DollarSign className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
-          gradientTo="to-emerald-50" iconBg="bg-emerald-100"
-          rawValue={avgValue / 1000}
-          displayValue={(c) => `₹ ${c.toFixed(1)}k`}
-          label="AVG VALUE"
-          subLabel="Per Note" subColor="#059669"
-        />
-        <AnimatedStatCard
-          icon={<Users className="w-5 h-5 text-rose-600" strokeWidth={2.5} />}
-          gradientTo="to-rose-50" iconBg="bg-rose-100"
-          rawValue={totalClients}
-          displayValue={(c) => Math.round(c)}
-          label="TOTAL CLIENTS"
-          subLabel="Credited" subColor="#e11d48"
-        />
-      </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 mt-2">
+            <AnimatedStatCard
+                icon={<FileMinus className="w-5 h-5 text-purple-600" strokeWidth={2.5} />}
+                gradientTo="to-purple-50" iconBg="bg-purple-100"
+                rawValue={totalNotes}
+                displayValue={(c) => Math.round(c)}
+                label="TOTAL CREDIT NOTES"
+                subLabel="Issued" subColor="#7e22ce"
+            />
+            <AnimatedStatCard
+                icon={<DollarSign className="w-5 h-5 text-indigo-600" strokeWidth={2.5} />}
+                gradientTo="to-indigo-50" iconBg="bg-indigo-100"
+                rawValue={totalValue / 100000}
+                displayValue={(c) => `₹ ${c.toFixed(1)}L`}
+                label="TOTAL VALUE"
+                subLabel="Amount" subColor="#4f46e5"
+            />
+            <AnimatedStatCard
+                icon={<DollarSign className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
+                gradientTo="to-emerald-50" iconBg="bg-emerald-100"
+                rawValue={avgValue / 1000}
+                displayValue={(c) => `₹ ${c.toFixed(1)}k`}
+                label="AVG VALUE"
+                subLabel="Per Note" subColor="#059669"
+            />
+            <AnimatedStatCard
+                icon={<Users className="w-5 h-5 text-rose-600" strokeWidth={2.5} />}
+                gradientTo="to-rose-50" iconBg="bg-rose-100"
+                rawValue={totalClients}
+                displayValue={(c) => Math.round(c)}
+                label="TOTAL CLIENTS"
+                subLabel="Credited" subColor="#e11d48"
+            />
+        </div>
     );
 
     return (
-        <div className="min-h-screen bg-gray-50 pl-4 pr-4">
-            <div className="bg-white border border-gray-200 rounded-lg p-4 mb-1 shadow-sm flex items-center justify-between">
+        <div className="min-h-screen bg-gray-50 p-4">
+            {/* Sub-Navigation for Account pages */}
+            {id !== 'all' && <AccountNavigation id={id} accountName={accountName} pageName="Credit Notes" />}
+
+            {/* ── Header ── */}
+            <div className="flex items-center justify-between mb-3 px-1 mt-1">
                 <div>
-                    <h1 className="text-xl font-bold text-gray-900">CREDIT NOTE</h1>
-                    <div className="flex items-center gap-1 mt-1 text-sm text-gray-500">
-                        <span className="hover:text-blue-600 cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span>
-                        <ChevronRight className="w-4 h-4" />
-                        <span className="text-gray-700 font-medium">All Credit Notes List</span>
-                    </div>
+                    <h1 className="text-lg font-bold text-gray-900">CREDIT NOTE</h1>
+                    {id === 'all' && (
+                        <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                            <span className="hover:text-blue-600 cursor-pointer transition-colors" onClick={() => navigate('/dashboard')}>Home</span>
+                            <ChevronRight className="w-3 h-3" />
+                            <span className="text-gray-700 font-medium">All Credit Notes List</span>
+                        </div>
+                    )}
                 </div>
                 <div className="flex items-center gap-2">
                     {id !== 'all' && (
                         <button
                             onClick={() => navigate(`/create-debit-note/${id}`)}
-                            className="flex items-center gap-2 bg-[#194090] hover:bg-[#112f6b] text-white px-4 py-2 rounded-md font-semibold transition text-[13px]"
+                            className="flex items-center gap-1.5 rounded-md bg-[#194090] px-3 py-1.5 text-[13px] font-bold text-white transition-colors hover:bg-[#112f6b]"
                         >
-                            <Plus className="w-4 h-4" />
+                            <Plus size={16} />
                             Create Credit Note
                         </button>
                     )}
-                    <button
+                    {/* <button
                         onClick={() => navigate(-1)}
                         className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-semibold transition text-[13px]"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Back
-                    </button>
+                    </button> */}
                 </div>
             </div>
 

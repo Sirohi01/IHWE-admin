@@ -49,10 +49,11 @@ const AccountOverview = () => {
   };
 
 
-  const getDocViewPath = (doc) => {
+  const getDocumentLink = (doc) => {
     if (doc.documentType === "Invoice") return `/payments/invoiceDetails/${doc.id}`;
     if (doc.documentType === "Proforma Invoice") return `/payments/estimateDetails/${doc.id}`;
     if (doc.documentType === "Delivery Challan") return `/dashboard/account/${id}/delivery-challans`;
+    if (doc.documentType === "Payment") return `/payment-list/${id}`;
     return null;
   };
 
@@ -149,7 +150,7 @@ const AccountOverview = () => {
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
 
-        <button onClick={() => navigate(`/dashboard/account/AddPayment/${id}`)} className="flex items-center gap-2 p-2 bg-[#fff7ed] hover:bg-[#ffedd5] border border-[#fbe3c4] rounded-lg transition-colors text-left group">
+        <button onClick={() => navigate(`/payment-list/${id}`)} className="flex items-center gap-2 p-2 bg-[#fff7ed] hover:bg-[#ffedd5] border border-[#fbe3c4] rounded-lg transition-colors text-left group">
           <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
             <CreditCard size={16} className="text-[#ea580c]" />
           </div>
@@ -206,9 +207,10 @@ const AccountOverview = () => {
                   else if (doc.documentType === 'Debit Note') docTypeBg = 'bg-[#faf5ff] text-[#7e22ce]';
                   else if (doc.documentType === 'Credit Note') docTypeBg = 'bg-[#fff1f2] text-[#e11d48]';
                   else if (doc.documentType === 'Delivery Challan') docTypeBg = 'bg-teal-50 text-teal-700';
+                  else if (doc.documentType === 'Payment') docTypeBg = 'bg-amber-50 text-amber-600';
 
                   let statusBg = 'bg-gray-100 text-gray-600';
-                  if (doc.status === 'Paid' || doc.status === 'Accepted') statusBg = 'bg-[#e6f7ec] text-[#00a86b]';
+                  if (doc.status === 'Paid' || doc.status === 'Accepted' || doc.status === 'Received') statusBg = 'bg-[#e6f7ec] text-[#00a86b]';
                   else if (doc.status === 'Unpaid' || doc.status === 'Pending') statusBg = 'bg-[#ffebee] text-[#ff4d4f]';
                   else if (doc.status === 'Cancelled') statusBg = 'bg-red-50 text-red-600';
                   else if (doc.status === 'E-Sent') statusBg = 'bg-blue-50 text-blue-600';
@@ -217,7 +219,7 @@ const AccountOverview = () => {
                   else if (doc.status === 'Sent' || doc.status === 'Converted') statusBg = 'bg-[#e6f0fa] text-[#194090]';
                   else if (['Issued', 'Delivered', 'Acknowledged', 'Draft'].includes(doc.status)) statusBg = 'bg-teal-50 text-teal-700';
 
-                  const viewPath = getDocViewPath(doc);
+                  const viewPath = getDocumentLink(doc);
 
                   return (
                     <tr key={idx} className="border-b border-gray-50 last:border-0 hover:bg-slate-50/50 leading-tight">

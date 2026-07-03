@@ -4,62 +4,63 @@ import { ChevronRight, ArrowLeft, Edit, MessageCircleMore, Mail, FileText, Check
 import api from '../../../lib/api';
 import Swal from 'sweetalert2';
 import CommunicationModal from '../../../components/CommunicationModal';
+import AccountNavigation from '../../../components/AccountNavigation';
 
 // Hook: animate number from 0 to target when element enters viewport
 function useCountUp(target, duration = 1200) {
-  const [count, setCount] = useState(0);
-  const [started, setStarted] = useState(false);
-  const ref = useRef(null);
+    const [count, setCount] = useState(0);
+    const [started, setStarted] = useState(false);
+    const ref = useRef(null);
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting && !started) setStarted(true); },
-      { threshold: 0.3 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [started]);
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => { if (entry.isIntersecting && !started) setStarted(true); },
+            { threshold: 0.3 }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [started]);
 
-  useEffect(() => {
-    if (!started) return;
-    const numTarget = parseFloat(target) || 0;
-    if (numTarget === 0) { setCount(0); return; }
-    const startTime = performance.now();
-    const tick = (now) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const ease = 1 - Math.pow(1 - progress, 3);
-      setCount(ease * numTarget);
-      if (progress < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  }, [started, target, duration]);
+    useEffect(() => {
+        if (!started) return;
+        const numTarget = parseFloat(target) || 0;
+        if (numTarget === 0) { setCount(0); return; }
+        const startTime = performance.now();
+        const tick = (now) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const ease = 1 - Math.pow(1 - progress, 3);
+            setCount(ease * numTarget);
+            if (progress < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+    }, [started, target, duration]);
 
-  return { ref, count };
+    return { ref, count };
 }
 
 function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, label, subLabel, subColor }) {
-  const { ref, count } = useCountUp(rawValue);
-  return (
-    <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white ${gradientTo} p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}>
-      <div className="relative z-10">
-        <div className="flex items-center gap-3 mb-4">
-          <div className={`w-10 h-10 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
-            {icon}
-          </div>
-          <div className="flex flex-col">
-            <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>
-              {displayValue(count)}
-            </span>
-            <span style={{ fontSize: '9px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif' }}>{label}</span>
-          </div>
+    const { ref, count } = useCountUp(rawValue);
+    return (
+        <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white ${gradientTo} p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}>
+            <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className={`w-10 h-10 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
+                        {icon}
+                    </div>
+                    <div className="flex flex-col">
+                        <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>
+                            {displayValue(count)}
+                        </span>
+                        <span style={{ fontSize: '9px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif' }}>{label}</span>
+                    </div>
+                </div>
+                <div style={{ fontSize: '10px', fontWeight: 700, color: subColor, textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>{subLabel}</div>
+            </div>
         </div>
-        <div style={{ fontSize: '10px', fontWeight: 700, color: subColor, textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>{subLabel}</div>
-      </div>
-    </div>
-  );
+    );
 }
 
 const InvoiceList = () => {
@@ -166,55 +167,59 @@ const InvoiceList = () => {
     const totalClients = new Set(filteredInvoices.map(inv => inv.company_name).filter(Boolean)).size;
 
     const statCards = (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        <AnimatedStatCard
-          icon={<FileText className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
-          gradientTo="to-blue-50" iconBg="bg-blue-100"
-          rawValue={totalInvoices}
-          displayValue={(c) => Math.round(c)}
-          label="TOTAL INVOICES"
-          subLabel="Created" subColor="#2563eb"
-        />
-        <AnimatedStatCard
-          icon={<DollarSign className="w-5 h-5 text-indigo-600" strokeWidth={2.5} />}
-          gradientTo="to-indigo-50" iconBg="bg-indigo-100"
-          rawValue={totalValue / 100000}
-          displayValue={(c) => `₹ ${c.toFixed(1)}L`}
-          label="TOTAL VALUE"
-          subLabel="Amount" subColor="#4f46e5"
-        />
-        <AnimatedStatCard
-          icon={<DollarSign className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
-          gradientTo="to-emerald-50" iconBg="bg-emerald-100"
-          rawValue={avgValue / 1000}
-          displayValue={(c) => `₹ ${c.toFixed(1)}k`}
-          label="AVG VALUE"
-          subLabel="Per Invoice" subColor="#059669"
-        />
-        <AnimatedStatCard
-          icon={<Users className="w-5 h-5 text-rose-600" strokeWidth={2.5} />}
-          gradientTo="to-rose-50" iconBg="bg-rose-100"
-          rawValue={totalClients}
-          displayValue={(c) => Math.round(c)}
-          label="TOTAL CLIENTS"
-          subLabel="Billed" subColor="#e11d48"
-        />
-      </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <AnimatedStatCard
+                icon={<FileText className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
+                gradientTo="to-blue-50" iconBg="bg-blue-100"
+                rawValue={totalInvoices}
+                displayValue={(c) => Math.round(c)}
+                label="TOTAL INVOICES"
+                subLabel="Created" subColor="#2563eb"
+            />
+            <AnimatedStatCard
+                icon={<DollarSign className="w-5 h-5 text-indigo-600" strokeWidth={2.5} />}
+                gradientTo="to-indigo-50" iconBg="bg-indigo-100"
+                rawValue={totalValue / 100000}
+                displayValue={(c) => `₹ ${c.toFixed(1)}L`}
+                label="TOTAL VALUE"
+                subLabel="Amount" subColor="#4f46e5"
+            />
+            <AnimatedStatCard
+                icon={<DollarSign className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
+                gradientTo="to-emerald-50" iconBg="bg-emerald-100"
+                rawValue={avgValue / 1000}
+                displayValue={(c) => `₹ ${c.toFixed(1)}k`}
+                label="AVG VALUE"
+                subLabel="Per Invoice" subColor="#059669"
+            />
+            <AnimatedStatCard
+                icon={<Users className="w-5 h-5 text-rose-600" strokeWidth={2.5} />}
+                gradientTo="to-rose-50" iconBg="bg-rose-100"
+                rawValue={totalClients}
+                displayValue={(c) => Math.round(c)}
+                label="TOTAL CLIENTS"
+                subLabel="Billed" subColor="#e11d48"
+            />
+        </div>
     );
 
     return (
-        <div className="min-h-screen bg-gray-50 pl-4 pr-4">
+        <div className="min-h-screen bg-gray-50 pl-4 pr-4 py-4">
+            {/* Sub-Navigation for Account pages */}
+            {!isAllList && <AccountNavigation id={id} accountName={accountName} pageName="Invoices" />}
+
             {/* ── Header ── */}
-            <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm flex items-center justify-between">
+            {/* ── Header ── */}
+            <div className="flex items-center justify-between mb-3 px-1 mt-1">
                 <div>
-                    <h1 className="text-xl font-bold text-gray-900">Invoices</h1>
-                    <div className="flex items-center gap-1 mt-1 text-sm text-gray-500">
-                        <span className="hover:text-blue-600 cursor-pointer" onClick={() => navigate('/dashboard')}>Home</span>
-                        <ChevronRight className="w-4 h-4" />
-                        <span className="text-gray-700 font-medium">
-                            {isAllList ? 'All Invoices' : `${accountName || 'Company'} Invoices`}
-                        </span>
-                    </div>
+                    <h1 className="text-lg font-bold text-gray-900">Invoices</h1>
+                    {isAllList && (
+                        <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                            <span className="hover:text-blue-600 cursor-pointer transition-colors" onClick={() => navigate('/dashboard')}>Home</span>
+                            <ChevronRight className="w-3 h-3" />
+                            <span className="text-gray-700 font-medium">All Invoices</span>
+                        </div>
+                    )}
                 </div>
                 <div className="flex gap-2 items-center">
                     <input
@@ -225,21 +230,21 @@ const InvoiceList = () => {
                             setSearchQuery(e.target.value);
                             setCurrentPage(1);
                         }}
-                        className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#3598dc]"
+                        className="border border-gray-300 rounded-md px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-[#3598dc]"
                     />
                     <button
-	                        onClick={() => navigate(isAllList ? '/page-create-invoice' : `/page-create-invoice/${id}`)}
-                        className="flex items-center gap-2 bg-[#194090] hover:bg-[#112f6b] text-white px-4 py-2 rounded-md font-semibold transition text-sm"
+                        onClick={() => navigate(isAllList ? '/page-create-invoice' : `/page-create-invoice/${id}`)}
+                        className="flex items-center gap-1.5 bg-[#194090] hover:bg-[#112f6b] text-white px-3 py-1.5 rounded-md font-bold transition text-[13px]"
                     >
                         Create Invoice
                     </button>
-                    <button
+                    {/* <button
 	                        onClick={() => navigate(-1)}
                         className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-semibold transition text-sm"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Back
-                    </button>
+                    </button> */}
                 </div>
             </div>
 
@@ -366,12 +371,12 @@ const InvoiceList = () => {
                 </div>
             )}
 
-            <CommunicationModal 
-                isOpen={commModal.isOpen} 
-                onClose={() => setCommModal({ ...commModal, isOpen: false, docId: null })} 
-                type={commModal.type} 
-                docType={commModal.docType} 
-                docId={commModal.docId} 
+            <CommunicationModal
+                isOpen={commModal.isOpen}
+                onClose={() => setCommModal({ ...commModal, isOpen: false, docId: null })}
+                type={commModal.type}
+                docType={commModal.docType}
+                docId={commModal.docId}
             />
         </div>
     );
