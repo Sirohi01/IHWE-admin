@@ -138,6 +138,7 @@ const PolicyManager = lazy(() => import("../pages/PolicyManager"));
 const Settings = lazy(() => import("../pages/Settings"));
 const ConferenceTestimonialsManage = lazy(() => import("../pages/ConferenceTestimonialsManage"));
 const SidebarCustomize = lazy(() => import("../pages/SidebarCustomize"));
+const PaymentList = lazy(() => import("../pages/dashboard/account/PaymentList"));
 import ProtectedRoute from "./ProtectedRoute";
 const AddNewClients = lazy(() => import("../pages/ihwe_client_data_2026/AddNewClients"));
 const DelegateConfig = lazy(() => import("../pages/admin_management/DelegateConfig"));
@@ -453,6 +454,14 @@ export default function AppRoutes() {
             <Route
               path="/invoice-list/:id"
               element={<InvoiceList />}
+            />
+            <Route
+              path="/payment-list"
+              element={<PaymentList />}
+            />
+            <Route
+              path="/payment-list/:id"
+              element={<PaymentList />}
             />
             <Route
               path="/payments/invoiceDetails/:id"

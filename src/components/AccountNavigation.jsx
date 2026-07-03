@@ -12,7 +12,7 @@ const AccountNavigation = ({ id, accountName, pageName }) => {
     { label: 'Proforma Invoices', path: `/performa-invoice-list/${id}`, icon: <FileText size={14} /> },
     { label: 'Delivery Challans', path: `/dashboard/account/${id}/delivery-challans`, icon: <Truck size={14} /> },
     { label: 'Invoices', path: `/invoice-list/${id}`, icon: <FileSpreadsheet size={14} /> },
-    { label: 'Payments', path: `/dashboard/account/AddPayment/${id}`, icon: <CreditCard size={14} /> },
+    { label: 'Payments', path: `/payment-list/${id}`, icon: <CreditCard size={14} /> },
     { label: 'Credit Notes', path: `/debit-note-list/${id}`, icon: <FileMinus size={14} /> },
   ];
 
@@ -40,7 +40,7 @@ const AccountNavigation = ({ id, accountName, pageName }) => {
         </button>
 
         {navItems.map((item, idx) => {
-          const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
+          const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/') || (item.label === 'Payments' && location.pathname.includes('/AddPayment/'));
           return (
             <button
               key={idx}

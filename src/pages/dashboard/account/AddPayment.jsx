@@ -206,6 +206,18 @@ const AddPayment = () => {
 
       <CompanyAccountSummary companyInfo={companyInfo} financials={financials} />
 
+      <div className="flex items-center justify-between mb-3 px-1 mt-3">
+        <div>
+          <h1 className="text-lg font-bold text-gray-900">Add Payment</h1>
+        </div>
+        <button
+          onClick={() => navigate(`/payment-list/${id}`)}
+          className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md font-bold transition text-[13px]"
+        >
+          Back to List
+        </button>
+      </div>
+
       <form onSubmit={handleSubmit} className="grid grid-cols-1 xl:grid-cols-12 gap-4 mt-2">
         {/* LEFT: Payment Details */}
         <div className="xl:col-span-8 bg-white rounded-xl shadow-sm border border-gray-100 p-2 md:p-4">
