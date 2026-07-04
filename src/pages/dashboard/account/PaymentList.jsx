@@ -150,6 +150,8 @@ const PaymentList = () => {
         if (pmt.cheque_no) lines.push(`Cheque: ${pmt.cheque_no}`);
         if (pmt.card_transaction_no) lines.push(`Card Txn: ${pmt.card_transaction_no}`);
         if (pmt.wallet_transaction_no) lines.push(`Wallet Txn: ${pmt.wallet_transaction_no}`);
+        const txnDate = pmt.cheque_date || pmt.card_date || pmt.neft_date;
+        if (txnDate) lines.push(`Txn Date: ${formatDateTime(txnDate)}`);
         return lines.length ? lines : ['N/A'];
     };
 
