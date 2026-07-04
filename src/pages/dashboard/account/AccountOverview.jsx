@@ -103,7 +103,7 @@ const AccountOverview = () => {
     <div className="bg-[#f8f9fc] p-4">
 
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-[#194090] font-semibold mb-1">
+      <div className="flex items-center gap-2 text-sm text-[#194090] font-normal mb-1">
         <span>Exhibitors</span>
         <ChevronRight size={14} className="text-gray-400" />
         <span className="text-slate-800">{companyInfo?.name}</span>
@@ -122,7 +122,7 @@ const AccountOverview = () => {
             <FilePlus size={16} className="text-[#2563eb]" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Proforma Invoice</h4>
+            <h4 className="text-[13px] font-normal text-[#1a2b4b] leading-tight truncate">Proforma Invoice</h4>
             <p className="text-[10.5px] text-slate-500 leading-tight truncate">Create a proforma invoice</p>
           </div>
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
@@ -133,7 +133,7 @@ const AccountOverview = () => {
             <Truck size={16} className="text-[#0f766e]" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Delivery Challan</h4>
+            <h4 className="text-[13px] font-normal text-[#1a2b4b] leading-tight truncate">Delivery Challan</h4>
             <p className="text-[10.5px] text-slate-500 leading-tight truncate">Create and track challans</p>
           </div>
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
@@ -144,7 +144,7 @@ const AccountOverview = () => {
             <FilePlus size={16} className="text-[#16a34a]" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Invoice</h4>
+            <h4 className="text-[13px] font-normal text-[#1a2b4b] leading-tight truncate">Invoice</h4>
             <p className="text-[10.5px] text-slate-500 leading-tight truncate">Create a new invoice</p>
           </div>
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
@@ -155,7 +155,7 @@ const AccountOverview = () => {
             <CreditCard size={16} className="text-[#ea580c]" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Payments</h4>
+            <h4 className="text-[13px] font-normal text-[#1a2b4b] leading-tight truncate">Payments</h4>
             <p className="text-[10.5px] text-slate-500 leading-tight truncate">Record a payments</p>
           </div>
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
@@ -166,7 +166,7 @@ const AccountOverview = () => {
             <FileMinus size={16} className="text-[#7e22ce]" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Credit Note</h4>
+            <h4 className="text-[13px] font-normal text-[#1a2b4b] leading-tight truncate">Credit Note</h4>
             <p className="text-[10.5px] text-slate-500 leading-tight truncate">View and create credit notes</p>
           </div>
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
@@ -180,12 +180,12 @@ const AccountOverview = () => {
         {/* Recent Documents */}
         <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-[380px] overflow-hidden self-start w-full max-w-full">
           <div className="flex justify-between items-center mb-1.5">
-            <h2 className="text-[13px] font-medium text-[#1a2b4b] tracking-tight">Recent Documents</h2>
+            <h2 className="text-[13px] font-normal text-[#1a2b4b] tracking-tight">Recent Documents</h2>
           </div>
           <div className="overflow-auto flex-1 table-scroll-wrapper thin-scrollbar">
             <table className="w-max text-left border-collapse">
               <thead>
-                <tr className="text-[11px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
+                <tr className="text-[11px] font-normal text-slate-500 uppercase tracking-wide border-b border-gray-100">
                   <th className="pb-2 pr-3 text-left whitespace-nowrap">Document</th>
                   <th className="pb-2 pr-3 text-left whitespace-nowrap">Document No.</th>
                   <th className="pb-2 pr-3 text-left whitespace-nowrap">Date</th>
@@ -224,15 +224,15 @@ const AccountOverview = () => {
                   return (
                     <tr key={idx} className="border-b border-gray-50 last:border-0 hover:bg-slate-50/50 leading-tight">
                       <td className="py-0.5 pr-3 text-left whitespace-nowrap">
-                        <span className={`px-1.5 py-[1px] rounded text-[11px] font-medium whitespace-nowrap ${docTypeBg}`}>
+                        <span className={`px-1.5 py-[1px] rounded text-[11px] font-normal whitespace-nowrap ${docTypeBg}`}>
                           {doc.documentType}
                         </span>
                       </td>
-                      <td className="py-0.5 pr-3 text-left font-medium text-[#1a2b4b] whitespace-nowrap">{doc.documentNo}</td>
-                      <td className="py-0.5 pr-3 text-left font-medium text-[#1a2b4b] whitespace-nowrap">{doc.date ? new Date(doc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'}</td>
-                      <td className="py-0.5 pr-3 text-left font-medium text-[#1a2b4b] whitespace-nowrap">{formatCurrency(doc.amount)}</td>
+                      <td className="py-0.5 pr-3 text-left font-normal text-[#1a2b4b] whitespace-nowrap">{doc.documentNo}</td>
+                      <td className="py-0.5 pr-3 text-left font-normal text-[#1a2b4b] whitespace-nowrap">{doc.date ? new Date(doc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'}</td>
+                      <td className="py-0.5 pr-3 text-left font-normal text-[#1a2b4b] whitespace-nowrap">{formatCurrency(doc.amount)}</td>
                       <td className="py-0.5 pr-3 text-left whitespace-nowrap">
-                        <span className={`px-1.5 py-[1px] rounded text-[11px] font-medium whitespace-nowrap ${statusBg}`}>
+                        <span className={`px-1.5 py-[1px] rounded text-[11px] font-normal whitespace-nowrap ${statusBg}`}>
                           {doc.status}
                         </span>
                       </td>
@@ -259,12 +259,12 @@ const AccountOverview = () => {
         {/* Payment Schedule */}
         <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-[380px] overflow-hidden self-start">
           <div className="flex justify-between items-center mb-1.5">
-            <h2 className="text-[13px] font-medium text-[#1a2b4b] tracking-tight">Payment Schedule</h2>
+            <h2 className="text-[13px] font-normal text-[#1a2b4b] tracking-tight">Payment Schedule</h2>
           </div>
           <div className="overflow-auto flex-1 thin-scrollbar">
             <table className="w-full text-left border-collapse mb-1">
               <thead>
-                <tr className="text-[11px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
+                <tr className="text-[11px] font-normal text-slate-500 uppercase tracking-wide border-b border-gray-100">
                   <th className="pb-2 pr-3 text-left whitespace-nowrap">#</th>
                   <th className="pb-2 pr-3 text-left whitespace-nowrap">Schedule Type</th>
                   <th className="pb-2 pr-3 text-left whitespace-nowrap">Due Date</th>
@@ -280,12 +280,12 @@ const AccountOverview = () => {
                 )}
                 {paymentSchedule.map((schedule, idx) => (
                   <tr key={schedule.id} className="border-b border-gray-50 last:border-0 hover:bg-slate-50/50 leading-tight">
-                    <td className="py-0.5 pr-3 text-left text-slate-400 font-medium whitespace-nowrap">{idx + 1}</td>
-                    <td className="py-0.5 pr-3 text-left font-medium text-[#1a2b4b] whitespace-nowrap">{schedule.scheduleType}</td>
-                    <td className="py-0.5 pr-3 text-left font-medium text-[#1a2b4b] whitespace-nowrap">{schedule.dueDate ? new Date(schedule.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'}</td>
-                    <td className="py-0.5 pr-3 text-left font-medium text-[#1a2b4b] whitespace-nowrap">{formatCurrency(schedule.dueAmount)}</td>
+                    <td className="py-0.5 pr-3 text-left text-slate-400 font-normal whitespace-nowrap">{idx + 1}</td>
+                    <td className="py-0.5 pr-3 text-left font-normal text-[#1a2b4b] whitespace-nowrap">{schedule.scheduleType}</td>
+                    <td className="py-0.5 pr-3 text-left font-normal text-[#1a2b4b] whitespace-nowrap">{schedule.dueDate ? new Date(schedule.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'}</td>
+                    <td className="py-0.5 pr-3 text-left font-normal text-[#1a2b4b] whitespace-nowrap">{formatCurrency(schedule.dueAmount)}</td>
                     <td className="py-0.5 text-left whitespace-nowrap">
-                      <span className={`px-1.5 py-[1px] rounded text-[11px] font-medium whitespace-nowrap ${schedule.status === 'Paid' ? 'bg-[#e6f7ec] text-[#00a86b]' : 'bg-[#fff1f2] text-[#ea580c]'}`}>
+                      <span className={`px-1.5 py-[1px] rounded text-[11px] font-normal whitespace-nowrap ${schedule.status === 'Paid' ? 'bg-[#e6f7ec] text-[#00a86b]' : 'bg-[#fff1f2] text-[#ea580c]'}`}>
                         {schedule.status}
                       </span>
                     </td>
@@ -296,8 +296,8 @@ const AccountOverview = () => {
 
             {/* Total Row */}
             <div className="mt-1 p-2 bg-[#f8f9fc] rounded-lg flex justify-between items-center">
-              <span className="font-medium text-[#1a2b4b]">Total</span>
-              <span className="text-[15px] font-medium text-[#194090]">{formatCurrency(financials.totalDue)}</span>
+              <span className="font-normal text-[#1a2b4b]">Total</span>
+              <span className="text-[15px] font-normal text-[#194090]">{formatCurrency(financials.totalDue)}</span>
             </div>
           </div>
         </div>
@@ -305,8 +305,8 @@ const AccountOverview = () => {
         {/* Activity Logs */}
         <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-[380px] overflow-hidden self-start xl:w-[280px] xl:justify-self-end">
           <div className="flex items-center justify-between mb-1.5">
-            <h2 className="text-[13px] font-medium text-[#1a2b4b] tracking-tight">Activity Logs</h2>
-            <div className="flex items-center gap-1 text-[9px] font-semibold text-[#194090] bg-[#e6f0fa] px-1.5 py-0.5 rounded-full">
+            <h2 className="text-[13px] font-normal text-[#1a2b4b] tracking-tight">Activity Logs</h2>
+            <div className="flex items-center gap-1 text-[9px] font-normal text-[#194090] bg-[#e6f0fa] px-1.5 py-0.5 rounded-full">
               <Activity size={11} />
               <span>{activityLogs.length} Recent</span>
             </div>
@@ -319,14 +319,14 @@ const AccountOverview = () => {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${getActionBadgeClass(log.action)}`}>
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-normal ${getActionBadgeClass(log.action)}`}>
                             {log.action || "Activity"}
                           </span>
-                          <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wide">
+                          <span className="text-[9px] font-normal text-slate-400 uppercase tracking-wide">
                             {log.module || "System"}
                           </span>
                         </div>
-                        <p className="text-[11px] font-medium text-[#1a2b4b] leading-snug">
+                        <p className="text-[11px] font-normal text-[#1a2b4b] leading-snug">
                           {log.details || "-"}
                         </p>
                         <p className="text-[9px] text-slate-500 mt-0.5">
@@ -352,12 +352,12 @@ const AccountOverview = () => {
 
       {/* Footer / Exhibitor Contact */}
       <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-4 flex flex-col md:flex-row items-center gap-1 justify-between">
-        <h2 className="text-[12px] font-medium text-[#1a2b4b] tracking-tight shrink-0">Exhibitor Contact</h2>
+        <h2 className="text-[12px] font-normal text-[#1a2b4b] tracking-tight shrink-0">Exhibitor Contact</h2>
 
         <div className="flex-1 flex flex-wrap justify-between items-center gap-1 w-full text-[10px] text-slate-700">
           <div className="flex items-center gap-1">
             <User size={15} className="text-[#194090] shrink-0" />
-            <span className="font-medium whitespace-nowrap">{companyInfo?.contactPerson}</span>
+            <span className="font-normal whitespace-nowrap">{companyInfo?.contactPerson}</span>
           </div>
           <div className="flex items-center gap-1">
             <Mail size={15} className="text-[#194090] shrink-0" />
