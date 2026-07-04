@@ -504,6 +504,8 @@ export const menuItems = [
       { label: "Conference Days Content", path: "/conference-days-manage" },
       { label: "Conference Tracks", path: "/conference-tracks-manage" },
       { label: "Paper Presentation", path: "/paper-presentation-manage" },
+      { label: "Poster Presentation", path: "/poster-presentation-manage" },
+      { label: "Abstract Submission", path: "/abstract-submission-manage" },
       { label: "Speaker Nomination", path: "/speaker-registration-list" },
       { label: "Approved Speakers", path: "/approved-speakers-list" },
       { label: "Distinguished Speakers", path: "/distinguished-speakers-manage" },

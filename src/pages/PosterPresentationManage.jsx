@@ -10,7 +10,7 @@ const IconPreview = ({ iconName }) => {
     return <IconComponent size={20} className="text-slate-500" />;
 };
 
-const PaperPresentationManage = () => {
+const PosterPresentationManage = () => {
     const [data, setData] = useState({
         guidelines: [],
         topics: [],
@@ -25,12 +25,12 @@ const PaperPresentationManage = () => {
 
     const fetchData = async () => {
         try {
-            const res = await axios.get(`${API_URL}/paper-presentation`);
+            const res = await axios.get(`${API_URL}/poster-presentation`);
             if (res.data.success) {
                 setData(res.data.data);
             }
         } catch (error) {
-            console.error('Error fetching paper presentation data:', error);
+            console.error('Error fetching poster presentation data:', error);
             toast.error('Failed to fetch data');
         } finally {
             setLoading(false);
@@ -40,11 +40,11 @@ const PaperPresentationManage = () => {
     const handleSave = async () => {
         try {
             const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
-            const res = await axios.put(`${API_URL}/paper-presentation`, data, {
+            const res = await axios.put(`${API_URL}/poster-presentation`, data, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.data.success) {
-                toast.success('Paper presentation data saved successfully!');
+                toast.success('Poster presentation data saved successfully!');
             }
         } catch (error) {
             console.error('Error saving data:', error);
@@ -107,7 +107,7 @@ const PaperPresentationManage = () => {
         <div className="p-6 w-full bg-slate-50 min-h-screen">
             <div className="space-y-4 pr-8">
                 <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-slate-800">Manage Paper Presentation</h1>
+                    <h1 className="text-2xl font-bold text-slate-800">Manage Poster Presentation</h1>
                     <button onClick={handleSave} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700">
                         <Save size={18} /> Save Changes
                     </button>
@@ -122,7 +122,7 @@ const PaperPresentationManage = () => {
                                     <FileText className="text-blue-600" size={20} />
                                     Submission Guidelines
                                 </h2>
-                                <p className="text-sm text-slate-500 mt-1">Rules and guidelines for paper submission.</p>
+                                <p className="text-sm text-slate-500 mt-1">Rules and guidelines for poster submission.</p>
                             </div>
                             <button onClick={() => addStringItem('guidelines')} className="text-sm flex items-center gap-1.5 text-blue-600 font-medium px-3 py-1.5 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
                                 <Plus size={16} /> Add Guideline
@@ -200,7 +200,7 @@ const PaperPresentationManage = () => {
                                     <Icons.Lightbulb className="text-amber-500" size={20} />
                                     Presentation Topics
                                 </h2>
-                                <p className="text-sm text-slate-500 mt-1">Define categories for paper submissions.</p>
+                                <p className="text-sm text-slate-500 mt-1">Define categories for poster submissions.</p>
                             </div>
                             <button onClick={addTopic} className="text-sm flex items-center gap-1.5 text-blue-600 font-medium px-3 py-1.5 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
                                 <Plus size={16} /> Add Topic
@@ -310,4 +310,4 @@ const PaperPresentationManage = () => {
     );
 };
 
-export default PaperPresentationManage;
+export default PosterPresentationManage;

@@ -249,6 +249,8 @@ const AccountOverview = lazy(() => import("../pages/dashboard/account/AccountOve
 const DeliveryChallanManager = lazy(() => import("../pages/dashboard/account/DeliveryChallanManager"));
 const AgendaManagement = lazy(() => import("../pages/AgendaManagement"));
 const PaperPresentationManage = lazy(() => import("../pages/PaperPresentationManage"));
+const PosterPresentationManage = lazy(() => import("../pages/PosterPresentationManage"));
+const AbstractPresentationManage = lazy(() => import("../pages/AbstractPresentationManage"));
 const SpeakerRegistrationList = lazy(() => import("../pages/SpeakerRegistrationList"));
 const SpeakerRegistrationDetail = lazy(() => import("../pages/SpeakerRegistrationDetail"));
 const SpeakerNominationsList = lazy(() => import("../pages/SpeakerNominationsList"));
@@ -342,6 +344,8 @@ export default function AppRoutes() {
             <Route path="/conference-days-manage" element={<ConferenceDayManagement />} />
             <Route path="/conference-tracks-manage" element={<ConferenceTrackManage />} />
             <Route path="/paper-presentation-manage" element={<PaperPresentationManage />} />
+            <Route path="/poster-presentation-manage" element={<PosterPresentationManage />} />
+            <Route path="/abstract-submission-manage" element={<AbstractPresentationManage />} />
             <Route path="/speaker-registration-list" element={<SpeakerNominationsList />} />
             <Route path="/approved-speakers-list" element={<ApprovedSpeakersList />} />
             <Route path="/distinguished-speakers-manage" element={<DistinguishedSpeakersManage />} />
