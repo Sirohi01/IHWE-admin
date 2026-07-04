@@ -16,6 +16,11 @@ const TDS_RATE_OPTIONS = ["1", "2", "5", "10"];
 const TDS_SECTION_OPTIONS = ["194C", "194J", "194Q", "194I", "Other"];
 
 const today = () => new Date().toISOString().split("T")[0];
+const nowLocalDateTime = () => {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
 const isCancelled = (doc) => String(doc?.status || "").toLowerCase() === "cancelled";
 
 const AddPayment = () => {
@@ -32,7 +37,7 @@ const AddPayment = () => {
   const [docType, setDocType] = useState("Invoice");
   const [selectedDocId, setSelectedDocId] = useState("");
   const [paymentFor, setPaymentFor] = useState(PAYMENT_FOR_OPTIONS[0]);
-  const [paymentDate, setPaymentDate] = useState(today());
+  const [paymentDate, setPaymentDate] = useState(nowLocalDateTime());
   const [amountReceived, setAmountReceived] = useState("");
   const [paymentMode, setPaymentMode] = useState(PAYMENT_MODE_OPTIONS[0]);
   const [referenceNo, setReferenceNo] = useState("");
@@ -322,9 +327,9 @@ const AddPayment = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-[12px] font-medium text-[#1a2b4b] mb-1">Payment Date <span className="text-red-500">*</span></label>
+                <label className="block text-[12px] font-medium text-[#1a2b4b] mb-1">Payment Date & Time <span className="text-red-500">*</span></label>
                 <input
-                  type="date"
+                  type="datetime-local"
                   value={paymentDate}
                   onChange={(e) => setPaymentDate(e.target.value)}
                   required

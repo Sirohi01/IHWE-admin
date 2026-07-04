@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
-import { ChevronRight, ArrowLeft, Edit, MessageCircleMore, Mail, FileText, CheckCircle2, Clock, Users, DollarSign, Package, CreditCard, Send, Loader2 } from 'lucide-react';
-import api from '../../../lib/api';
+import { ChevronRight, MessageCircleMore, Mail, FileText, Users, DollarSign, CreditCard, Loader2 } from 'lucide-react';
+import api, { SERVER_URL } from '../../../lib/api';
 import Swal from 'sweetalert2';
 import toast from 'react-hot-toast';
 import AccountNavigation from '../../../components/AccountNavigation';
@@ -136,6 +136,27 @@ const PaymentList = () => {
         return `${day} ${month} ${year}, ${time}`;
     };
 
+    const formatCurrency = (value) => {
+        const amount = Number(value || 0);
+        return `₹ ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+
+    const getPaymentDetailLines = (pmt) => {
+        const lines = [];
+        if (pmt.payment_mode) lines.push(pmt.payment_mode);
+        if (pmt.bankId) lines.push(`Bank: ${pmt.bankId}`);
+        if (pmt.utr_no) lines.push(`UTR: ${pmt.utr_no}`);
+        if (pmt.cash_receipt_no) lines.push(`Cash Receipt: ${pmt.cash_receipt_no}`);
+        if (pmt.cheque_no) lines.push(`Cheque: ${pmt.cheque_no}`);
+        if (pmt.card_transaction_no) lines.push(`Card Txn: ${pmt.card_transaction_no}`);
+        if (pmt.wallet_transaction_no) lines.push(`Wallet Txn: ${pmt.wallet_transaction_no}`);
+        return lines.length ? lines : ['N/A'];
+    };
+
+    const openReceipt = (pmt) => {
+        window.open(`${SERVER_URL}/api/payments/${pmt._id}/receipt`, '_blank', 'noopener,noreferrer');
+    };
+
     const filteredPayments = payments.filter(pmt => {
         // filter by company if not all list
         if (!isAllList && String(pmt.companyId || '') !== String(id)) return false;
@@ -144,12 +165,34 @@ const PaymentList = () => {
         return (
             (pmt.invoice_no || pmt.invoice_id || '').toLowerCase().includes(q) ||
             (pmt.payment_mode || '').toLowerCase().includes(q) ||
-            (pmt.status_short || '').toLowerCase().includes(q)
+            (pmt.status_short || '').toLowerCase().includes(q) ||
+            (pmt.added_by || '').toLowerCase().includes(q)
         );
     });
 
-    const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
-    const paginatedPayments = filteredPayments.slice(
+    const groupedPayments = Object.values(filteredPayments.reduce((acc, pmt) => {
+        const invoiceKey = String(pmt.invoice_id || pmt.invoice_no || 'no-invoice');
+        if (!acc[invoiceKey]) {
+            acc[invoiceKey] = {
+                key: invoiceKey,
+                invoiceNo: pmt.invoice_no || pmt.invoice_id || 'N/A',
+                invoiceDate: pmt.invoice_date || pmt.added,
+                invoiceAmount: Number(pmt.invoice_amount || pmt.f_amount || 0),
+                payments: [],
+                receivedTotal: 0,
+                tdsTotal: 0,
+            };
+        }
+
+        acc[invoiceKey].payments.push(pmt);
+        acc[invoiceKey].receivedTotal += Number(pmt.amount_text || 0);
+        acc[invoiceKey].tdsTotal += Number(pmt.tds_text || 0);
+        acc[invoiceKey].invoiceAmount = Math.max(acc[invoiceKey].invoiceAmount, Number(pmt.invoice_amount || pmt.f_amount || 0));
+        return acc;
+    }, {}));
+
+    const totalPages = Math.ceil(groupedPayments.length / itemsPerPage);
+    const paginatedGroups = groupedPayments.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
@@ -161,6 +204,7 @@ const PaymentList = () => {
     };
 
     const totalPayments = filteredPayments.length;
+    const totalInvoices = groupedPayments.length;
     const totalReceived = filteredPayments.reduce((sum, pmt) => sum + (parseFloat(pmt.amount_text) || 0), 0);
     const totalTds = filteredPayments.reduce((sum, pmt) => sum + (parseFloat(pmt.tds_text) || 0), 0);
     const totalClients = new Set(filteredPayments.map(pmt => pmt.companyId).filter(Boolean)).size;
@@ -190,7 +234,7 @@ const PaymentList = () => {
                 rawValue={totalPayments}
                 displayValue={(c) => Math.round(c)}
                 label="TOTAL PAYMENTS"
-                subLabel="Received" subColor="#2563eb"
+                subLabel={`${totalInvoices} Invoice${totalInvoices === 1 ? '' : 's'}`} subColor="#2563eb"
             />
             <AnimatedStatCard
                 icon={<DollarSign className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
@@ -260,86 +304,146 @@ const PaymentList = () => {
             {statCards}
 
             {/* -- Table Container -- */}
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-1 overflow-x-auto">
-                <table className="w-full text-left border-collapse min-w-[800px]">
+            <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+                <table className="w-full min-w-[1120px] border-collapse text-left text-[11px] leading-tight">
                     <thead>
-                        <tr className="bg-gray-100 border-b border-gray-200 text-xs font-semibold text-gray-700">
-                            <th className="py-2.5 px-4 font-bold">S.No.</th>
-                            <th className="py-2.5 px-4 font-bold">Invoice Details</th>
-                            <th className="py-2.5 px-4 font-bold">Received (₹)</th>
-                            <th className="py-2.5 px-4 font-bold">TDS (₹)</th>
-                            <th className="py-2.5 px-4 font-bold">Payment Details</th>
-                            <th className="py-2.5 px-4 font-bold">Added On / By</th>
-                            <th className="py-2.5 px-4 font-bold text-center">Action</th>
+                        <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase tracking-[0.02em] text-slate-700">
+                            <th className="w-[48px] px-3 py-2">S.No.</th>
+                            <th className="min-w-[195px] px-3 py-2">Invoice Details</th>
+                            <th className="min-w-[120px] px-3 py-2">Received</th>
+                            <th className="min-w-[90px] px-3 py-2">TDS</th>
+                            <th className="min-w-[180px] px-3 py-2">Payment Details</th>
+                            <th className="min-w-[120px] px-3 py-2">Payment Date</th>
+                            <th className="min-w-[115px] px-3 py-2">Created By</th>
+                            <th className="min-w-[112px] px-3 py-2 text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan="6" className="py-8 text-center text-gray-500">
+                                <td colSpan="8" className="py-8 text-center text-gray-500">
                                     <div className="flex justify-center items-center gap-2">
                                         <div className="w-4 h-4 border-2 border-[#3598dc] border-t-transparent rounded-full animate-spin"></div>
                                         <span>Loading payments...</span>
                                     </div>
                                 </td>
                             </tr>
-                        ) : paginatedPayments.length === 0 ? (
+                        ) : paginatedGroups.length === 0 ? (
                             <tr>
-                                <td colSpan="6" className="py-8 text-center text-gray-500 text-sm">
+                                <td colSpan="8" className="py-8 text-center text-gray-500 text-[12px]">
                                     No payments found.
                                 </td>
                             </tr>
                         ) : (
-                            paginatedPayments.map((pmt, idx) => {
+                            paginatedGroups.map((group, idx) => {
                                 const rowIdx = (currentPage - 1) * itemsPerPage + idx + 1;
                                 return (
-                                    <tr key={pmt._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors text-sm">
-                                        <td className="py-3 px-4 font-medium text-gray-700">{rowIdx}</td>
-                                        <td className="py-3 px-4">
-                                            <div className="font-semibold text-gray-900">{pmt.invoice_no || pmt.invoice_id || 'N/A'}</div>
-                                            <div className="text-xs text-gray-500 mt-0.5">Inv. Amount: ₹ {parseFloat(pmt.f_amount || 0).toFixed(2)}</div>
+                                    <tr key={group.key} className="border-b border-slate-100 text-[11px] text-slate-600 transition-colors hover:bg-blue-50/30">
+                                        <td className="px-3 py-2 font-bold text-slate-700">{rowIdx}</td>
+                                        <td className="px-3 py-2">
+                                            <div className="font-bold text-slate-950">{group.invoiceNo}</div>
+                                            <div className="mt-0.5 text-slate-500">Date: <span className="font-semibold text-slate-700">{formatDate(group.invoiceDate)}</span></div>
+                                            <div className="mt-0.5 text-slate-500">Invoice Total: <span className="font-semibold text-slate-800">{formatCurrency(group.invoiceAmount)}</span></div>
+                                            <div className="mt-1 inline-flex rounded-full bg-blue-50 px-1.5 py-[1px] text-[10px] font-bold text-blue-700">
+                                                {group.payments.length} Payment{group.payments.length === 1 ? '' : 's'}
+                                            </div>
                                         </td>
-                                        <td className="py-3 px-4 font-medium text-emerald-600">
-                                            {parseFloat(pmt.amount_text || 0).toFixed(2)}
-                                        </td>
-                                        <td className="py-3 px-4 text-orange-600 font-medium">
-                                            {parseFloat(pmt.tds_text || 0).toFixed(2)}
-                                        </td>
-                                        <td className="py-3 px-4 text-[13px] text-gray-600">
-                                            <div><span className="font-medium text-gray-800">{pmt.payment_mode || 'N/A'}</span> - {pmt.status === 1 ? 'Received' : 'Pending'}</div>
-                                            {(pmt.bankId || pmt.utr_no) && (
-                                                <div className="text-xs text-gray-400 mt-0.5">{pmt.bankId} {pmt.utr_no ? `| Ref: ${pmt.utr_no}` : ''}</div>
+                                        <td className="whitespace-nowrap px-3 py-2 text-emerald-700">
+                                            {group.payments.map((pmt, paymentIndex) => (
+                                                <div key={`${pmt._id}-received`} className={paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}>
+                                                    <div className="font-bold">{formatCurrency(pmt.amount_text)}</div>
+                                                </div>
+                                            ))}
+                                            {group.payments.length > 1 && (
+                                                <div className="mt-1 border-t border-emerald-100 pt-1 text-[10px] font-bold uppercase text-emerald-800">
+                                                    Total: {formatCurrency(group.receivedTotal)}
+                                                </div>
                                             )}
                                         </td>
-                                        <td className="py-3 px-4 text-[13px] text-gray-600 whitespace-nowrap">
-                                            <div className="font-medium text-gray-800">{formatDateTime(pmt.added)}</div>
-                                            <div className="text-[12px] text-gray-500 mt-0.5">By: <span className="font-medium text-[#194090]">{pmt.added_by || 'Admin'}</span></div>
+                                        <td className="whitespace-nowrap px-3 py-2 text-orange-600">
+                                            {group.payments.map((pmt, paymentIndex) => (
+                                                <div key={`${pmt._id}-tds`} className={paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}>
+                                                    <div className="font-bold">{formatCurrency(pmt.tds_text)}</div>
+                                                </div>
+                                            ))}
+                                            {group.payments.length > 1 && (
+                                                <div className="mt-1 border-t border-orange-100 pt-1 text-[10px] font-bold uppercase text-orange-700">
+                                                    Total: {formatCurrency(group.tdsTotal)}
+                                                </div>
+                                            )}
                                         </td>
-                                        <td className="py-3 px-4 text-center">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <button
-                                                    onClick={() => handleSendReceipt(pmt._id, 'whatsapp')}
-                                                    disabled={sendingReceipt[`${pmt._id}-whatsapp`]}
-                                                    title="Send WhatsApp Receipt"
-                                                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-50 text-green-600 hover:bg-green-100 transition-colors disabled:opacity-50"
-                                                >
-                                                    {sendingReceipt[`${pmt._id}-whatsapp`] ? <Loader2 size={16} className="animate-spin" /> : <MessageCircleMore size={16} />}
-                                                </button>
-                                                <button
-                                                    onClick={() => handleSendReceipt(pmt._id, 'email')}
-                                                    disabled={sendingReceipt[`${pmt._id}-email`]}
-                                                    title="Send Email Receipt"
-                                                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors disabled:opacity-50"
-                                                >
-                                                    {sendingReceipt[`${pmt._id}-email`] ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
-                                                </button>
-                                            </div>
+                                        <td className="px-3 py-1.5 text-slate-600 leading-[1.15]">
+                                            {group.payments.map((pmt, paymentIndex) => (
+                                                <div key={pmt._id} className={paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}>
+                                                    {getPaymentDetailLines(pmt).map((line, lineIndex) => (
+                                                        <div key={`${pmt._id}-${lineIndex}`} className={lineIndex === 0 ? 'font-bold text-slate-900' : 'mt-[1px] text-slate-500'}>
+                                                            {line}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ))}
+                                        </td>
+                                        <td className="whitespace-nowrap px-3 py-2 text-slate-600">
+                                            {group.payments.map((pmt, paymentIndex) => (
+                                                <div key={`${pmt._id}-date`} className={paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}>
+                                                    <div className="font-bold text-slate-900">{formatDateTime(pmt.payment_date)}</div>
+                                                </div>
+                                            ))}
+                                        </td>
+                                        <td className="px-3 py-2">
+                                            {group.payments.map((pmt, paymentIndex) => (
+                                                <div key={`${pmt._id}-created`} className={paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}>
+                                                    <div className="font-bold text-[#194090]">{pmt.added_by || 'Admin'}</div>
+                                                    <div className="mt-0.5 text-slate-500">{formatDateTime(pmt.added)}</div>
+                                                </div>
+                                            ))}
+                                        </td>
+                                        <td className="px-3 py-2 text-center">
+                                            {group.payments.map((pmt, paymentIndex) => (
+                                                <div key={`${pmt._id}-actions`} className={`flex items-center justify-center gap-1.5 ${paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}`}>
+                                                    <button
+                                                        onClick={() => openReceipt(pmt)}
+                                                        title="Open Payment Receipt"
+                                                        className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-50 text-slate-700 transition-colors hover:bg-slate-100"
+                                                    >
+                                                        <FileText size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleSendReceipt(pmt._id, 'whatsapp')}
+                                                        disabled={sendingReceipt[`${pmt._id}-whatsapp`]}
+                                                        title="Send WhatsApp Receipt"
+                                                        className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-green-50 text-green-600 transition-colors hover:bg-green-100 disabled:opacity-50"
+                                                    >
+                                                        {sendingReceipt[`${pmt._id}-whatsapp`] ? <Loader2 size={14} className="animate-spin" /> : <MessageCircleMore size={14} />}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleSendReceipt(pmt._id, 'email')}
+                                                        disabled={sendingReceipt[`${pmt._id}-email`]}
+                                                        title="Send Email Receipt with PDF"
+                                                        className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100 disabled:opacity-50"
+                                                    >
+                                                        {sendingReceipt[`${pmt._id}-email`] ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
+                                                    </button>
+                                                </div>
+                                            ))}
                                         </td>
                                     </tr>
                                 );
                             })
                         )}
                     </tbody>
+                    {!loading && groupedPayments.length > 0 && (
+                        <tfoot>
+                            <tr className="bg-slate-50 text-[11px] font-bold uppercase text-slate-800">
+                                <td className="px-3 py-2" colSpan="2">Total</td>
+                                <td className="whitespace-nowrap px-3 py-2 text-emerald-700">{formatCurrency(totalReceived)}</td>
+                                <td className="whitespace-nowrap px-3 py-2 text-orange-700">{formatCurrency(totalTds)}</td>
+                                <td className="px-3 py-2 text-slate-600" colSpan="4">
+                                    {totalPayments} payment{totalPayments === 1 ? '' : 's'} against {totalInvoices} invoice{totalInvoices === 1 ? '' : 's'}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    )}
                 </table>
             </div>
 
@@ -347,7 +451,7 @@ const PaymentList = () => {
             {totalPages > 1 && (
                 <div className="flex justify-between items-center mt-4 px-2">
                     <span className="text-sm text-gray-500 font-medium">
-                        Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredPayments.length)} of {filteredPayments.length} entries
+                        Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, groupedPayments.length)} of {groupedPayments.length} invoice entries
                     </span>
                     <div className="flex gap-1 bg-white border border-gray-200 rounded-md shadow-sm p-1">
                         <button
