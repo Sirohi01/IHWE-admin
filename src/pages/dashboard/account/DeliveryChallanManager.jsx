@@ -212,9 +212,10 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, copyLabel = DEFA
       <div style={{ position: "relative" }}>
         {challan.status === "cancelled" && <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 -rotate-12 border-[5px] border-red-600/70 px-7 py-2 text-4xl font-black uppercase tracking-widest text-red-600/70">Cancelled</div>}
 
-        <div style={{ marginBottom: 8, textAlign: "center" }}>
+        <div className="challan-page-header" style={{ marginBottom: 8, textAlign: "center" }}>
           <img src={invoiceHeader} alt="Namo Gange Design House" style={{ width: "100%", maxWidth: "100%", display: "block" }} />
         </div>
+        <div className="challan-page-body">
 
         <div className="invoice-title-bar" style={{ position: "relative", textAlign: "center", marginBottom: 4, paddingTop: 2, paddingBottom: 1 }}>
           <div style={{ fontWeight: 400, fontSize: 18, color: "#0d1f3c", marginBottom: 0 }}>DELIVERY CHALLAN</div>
@@ -457,8 +458,10 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, copyLabel = DEFA
         <div style={{ fontSize: 11, textAlign: "center", color: "#999", marginTop: 4 }}>
           This is a computer generated document and does not require a physical signature.
         </div>
+        </div>{/* end challan-page-body */}
       </div>
     </div>
+
   );
 };
 
@@ -846,7 +849,38 @@ const DeliveryChallanManager = () => {
           copyLabel={challanCopy}
         />
       </div>
-      <style>{`body:has(.challan-view-page) footer { display:none!important } @media print { body * { visibility:hidden } .challan-print,.challan-print * { visibility:visible } .challan-print { position:absolute;left:0;right:0;top:0;width:100%;max-width:1000px;margin:0 auto;padding:40px } .no-print, footer { display:none!important } }`}</style>
+      <style>{`
+        body:has(.challan-view-page) footer { display:none!important }
+        @media print {
+          @page { margin: 0; }
+          body * { visibility: hidden; }
+          .challan-print, .challan-print * { visibility: visible; }
+          .challan-print {
+            position: absolute;
+            left: 0; right: 0; top: 0;
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0;
+          }
+          .challan-page-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            background: white;
+            z-index: 9999;
+            margin-bottom: 0 !important;
+          }
+          .challan-page-header img { width: 100%; display: block; }
+          .challan-page-body {
+            margin-top: 100px;
+            padding: 12px 40px 40px 40px;
+          }
+          .no-print, footer { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 

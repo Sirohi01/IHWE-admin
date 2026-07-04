@@ -193,7 +193,11 @@ const EstimateFormDetail = ({ piCopy = 'ORIGINAL PROFORMA INVOICE', onMetaChange
         <>
         <div className="bg-white border border-slate-300 p-10 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', maxWidth: '1000px', margin: '0 auto', position: 'relative' }}>
             <style>{`
+                .pi-page-number {
+                    display: none;
+                }
                 @media print {
+                    @page { size: A4 portrait; margin: 8mm; }
                     .pi-summary-table { table-layout: fixed !important; }
                     .pi-client-column { width: 32% !important; }
                     .pi-shipment-column { width: 36% !important; }
@@ -201,6 +205,35 @@ const EstimateFormDetail = ({ piCopy = 'ORIGINAL PROFORMA INVOICE', onMetaChange
                     .pi-details-content td {
                         white-space: nowrap !important;
                         font-size: 10px !important;
+                    }
+                    .pi-document-header {
+                        position: fixed;
+                        top: 8mm;
+                        left: 8mm;
+                        right: 8mm;
+                        z-index: 20;
+                        background: white;
+                    }
+                    .pi-document-content {
+                        margin-top: 75mm;
+                        padding-bottom: 12mm;
+                    }
+                    .pi-page-number {
+                        display: block !important;
+                        position: fixed;
+                        left: 0;
+                        right: 0;
+                        bottom: 5mm;
+                        text-align: center;
+                        font-size: 10px;
+                        color: #555;
+                    }
+                    .pi-page-number::after {
+                        content: "Page " counter(page) " of " counter(pages);
+                    }
+                    table, tr {
+                        break-inside: avoid;
+                        page-break-inside: avoid;
                     }
                 }
             `}</style>
@@ -224,6 +257,7 @@ const EstimateFormDetail = ({ piCopy = 'ORIGINAL PROFORMA INVOICE', onMetaChange
                 </div>
             )}
 
+            <div className="pi-document-header">
             <div style={{ marginBottom: 8, textAlign: 'center' }}>
                 <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
             </div>
@@ -347,7 +381,9 @@ const EstimateFormDetail = ({ piCopy = 'ORIGINAL PROFORMA INVOICE', onMetaChange
                     </tr>
                 </tbody>
             </table>
+            </div>
 
+            <div className="pi-document-content">
             <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
                 <thead>
                     <tr style={{ background: '#0d1f3c', color: '#fff', textTransform: 'uppercase' }}>
@@ -542,6 +578,8 @@ const EstimateFormDetail = ({ piCopy = 'ORIGINAL PROFORMA INVOICE', onMetaChange
             </div>
             <div style={{ fontSize: 11, textAlign: 'center', color: '#999', marginTop: 4 }}>
                 This is a computer generated document and does not require a physical signature.
+            </div>
+            <div className="pi-page-number" aria-hidden="true"></div>
             </div>
 
         </div>
