@@ -191,37 +191,39 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails }) => {
   const ifscCode = bank.ifsccode || bank.ifscCode || settings?.ifscCode || "-";
   const bankBranch = bank.bankbranch || bank.branch || settings?.bankBranch || "-";
 
-  const th = { border: "1px solid #111", background: "#8b8b8b", color: "#111", padding: "2px 3px", fontSize: 10, lineHeight: 1.1, fontWeight: 700, textAlign: "center" };
-  const td = { border: "1px solid #111", padding: "2px 3px", fontSize: 10, lineHeight: 1.15, verticalAlign: "top" };
-  const topTh = { ...th, fontSize: 10, lineHeight: 1.1 };
-  const topTd = { ...td, fontSize: 10, lineHeight: 1.15 };
-  const topInfoLine = { margin: 0, padding: 0, fontSize: 10, lineHeight: 1.15 };
-  const labelCell = { ...topTd, padding: "1px 2px", fontSize: 10, fontWeight: 700, width: "47%", lineHeight: 1.1 };
-  const valueCell = { ...topTd, padding: "1px 2px", fontSize: 10, fontWeight: 600, lineHeight: 1.1 };
+  const th = { border: "1px solid #0d1f3c", background: "#0d1f3c", color: "#fff", padding: "3px 2px", fontSize: 10, lineHeight: 1.1, fontWeight: 700, textAlign: "center", textTransform: "uppercase" };
+  const td = { border: "1px solid #ccc", padding: "6px", fontSize: 11, lineHeight: 1.2, verticalAlign: "top" };
+  const topTh = { ...th };
+  const topTd = { ...td, padding: "4px 7px" };
+  const topInfoLine = { margin: 0, padding: 0, fontSize: 11, lineHeight: 1.2 };
+  const labelCell = { border: "none", padding: "1px 3px 1px 0", fontSize: 11, fontWeight: 700, width: "1%", whiteSpace: "nowrap", lineHeight: 1.3 };
+  const colonCell = { border: "none", padding: "1px 3px 1px 0", fontSize: 11, fontWeight: 700, width: "1%", lineHeight: 1.3 };
+  const valueCell = { border: "none", padding: "1px 0", fontSize: 11, lineHeight: 1.3 };
+  const detailLabelCell = { ...labelCell, fontSize: 10.5 };
+  const detailColonCell = { ...colonCell, fontSize: 10.5 };
+  const detailValueCell = { ...valueCell, fontSize: 10.5 };
+  const mutedCell = { ...td, background: "#f8fafc", fontWeight: 700, textTransform: "uppercase" };
 
   return (
-    <div className="challan-print mx-auto bg-white text-black" style={{ width: 794, padding: "8px 12px", fontFamily: "Arial, Helvetica, sans-serif", fontSize: 10 }}>
+    <div className="challan-print bg-white border border-slate-300 p-10 text-[11px] font-sans text-black" style={{ fontFamily: "Calibri, Arial, sans-serif", maxWidth: "1000px", margin: "0 auto", position: "relative" }}>
       <div style={{ position: "relative" }}>
         {challan.status === "cancelled" && <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 -rotate-12 border-[5px] border-red-600/70 px-7 py-2 text-4xl font-black uppercase tracking-widest text-red-600/70">Cancelled</div>}
 
-        <img src={invoiceHeader} alt="Namo Gange Design House" style={{ width: "100%", height: "auto", display: "block", margin: "0 0 1px" }} />
+        <div style={{ marginBottom: 8, textAlign: "center" }}>
+          <img src={invoiceHeader} alt="Namo Gange Design House" style={{ width: "100%", maxWidth: "100%", display: "block" }} />
+        </div>
 
-        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 0 }}>
-          <tbody>
-            <tr>
-              <td style={{ ...topTd, borderRight: 0, textAlign: "center", fontWeight: 700 }}></td>
-              <td style={{ ...topTd, borderLeft: 0, borderRight: 0, textAlign: "center", fontWeight: 800 }}>Delivery Challan</td>
-              <td style={{ ...topTd, borderLeft: 0, textAlign: "right", fontWeight: 800 }}>Original For Recipient</td>
-            </tr>
-          </tbody>
-        </table>
+        <div className="invoice-title-bar" style={{ textAlign: "center", marginBottom: 4, paddingTop: 2, paddingBottom: 1 }}>
+          <div style={{ fontWeight: 400, fontSize: 18, color: "#0d1f3c", marginBottom: 0 }}>DELIVERY CHALLAN</div>
+          <div style={{ fontWeight: 700, fontSize: 10, color: "#0d1f3c", textTransform: "uppercase", textAlign: "right" }}>Original For Recipient</div>
+        </div>
 
-        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 0 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 8 }}>
           <thead>
             <tr>
-              <th style={{ ...topTh, width: "37%" }}>Buyer's Name &amp; Address</th>
-              <th style={{ ...topTh, width: "35%" }}>Shipment Details</th>
-              <th style={{ ...topTh, width: "28%" }}>Sale Invoice Details</th>
+              <th style={{ ...topTh, width: "35%" }}>Buyer's Name &amp; Address</th>
+              <th style={{ ...topTh, width: "34%" }}>Shipment Details</th>
+              <th style={{ ...topTh, width: "31%" }}>Delivery Challan Details</th>
             </tr>
           </thead>
           <tbody>
@@ -229,19 +231,43 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails }) => {
               <td style={{ ...topTd }}>
                 <div style={{ ...topInfoLine, fontWeight: 800, textTransform: "uppercase", marginBottom: 1 }}>{challan.company_name || "-"}</div>
                 <div style={{ ...topInfoLine, whiteSpace: "pre-wrap" }}>{challan.company_address || "-"}</div>
-                <div style={{ ...topInfoLine, marginTop: 2 }}><b>GSTIN/PAN:</b> {challan.company_gst_no || "-"}</div>
-                <div style={topInfoLine}><b>Contact Person:</b> {challan.contact_person || "-"}</div>
-                <div style={topInfoLine}><b>Contact No.:</b> {challan.contact_phone || "-"}</div>
+                <table style={{ borderCollapse: "collapse", border: "none", lineHeight: 1.3, width: "100%", marginTop: 4 }}>
+                  <tbody>
+                    {[
+                      ["GSTIN/PAN", challan.company_gst_no || "-"],
+                      ["Contact Person", challan.contact_person || "-"],
+                      ["Contact No.", challan.contact_phone || "-"],
+                    ].map(([label, value]) => (
+                      <tr key={label}>
+                        <td style={labelCell}>{label}</td>
+                        <td style={colonCell}>:</td>
+                        <td style={valueCell}>{value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </td>
               <td style={{ ...topTd }}>
                 <div style={{ ...topInfoLine, fontWeight: 800, textTransform: "uppercase", marginBottom: 1 }}>{challan.event_name || "9TH EDITION OF INTERNATIONAL HEALTH & WELLNESS EXPO"}</div>
-                <div style={{ ...topInfoLine, whiteSpace: "pre-wrap" }}>{challan.delivery_address || challan.company_address || "-"}</div>
-                <div style={{ ...topInfoLine, marginTop: 2 }}><b>Place of Supply:</b> {challan.shipped_to || "-"}</div>
-                <div style={topInfoLine}><b>State Code:</b> {challan.state_code || "-"}</div>
-                <div style={topInfoLine}><b>GSTIN:</b> {companyGst}</div>
+                <div style={{ ...topInfoLine, fontSize: 10.5, whiteSpace: "nowrap" }}>{challan.delivery_address || challan.company_address || "-"}</div>
+                <table style={{ borderCollapse: "collapse", border: "none", lineHeight: 1.3, width: "100%", marginTop: 4 }}>
+                  <tbody>
+                    {[
+                      ["Place of Supply", challan.shipped_to || "-"],
+                      ["State Code", challan.state_code || "-"],
+                      ["GSTIN", companyGst],
+                    ].map(([label, value]) => (
+                      <tr key={label}>
+                        <td style={labelCell}>{label}</td>
+                        <td style={colonCell}>:</td>
+                        <td style={valueCell}>{value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </td>
-              <td style={{ ...topTd, padding: 0 }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+              <td style={{ ...topTd }}>
+                <table style={{ borderCollapse: "collapse", border: "none", lineHeight: 1.3, width: "100%" }}>
                   <tbody>
                     {[
                       ["Delivery Challan No.", challan.challan_no || "-"],
@@ -255,9 +281,10 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails }) => {
                       ["E-Way Bill No.", challan.eway_bill || "-"],
                       ["Proforma No.", challan.estimate_no || "-"],
                     ].map(([label, value]) => (
-                      <tr key={label} style={{ height: 16 }}>
-                        <td style={{ ...labelCell, borderLeft: 0, borderTop: 0 }}>{label}</td>
-                        <td style={{ ...valueCell, borderRight: 0, borderTop: 0, textAlign: "right" }}>{value}</td>
+                      <tr key={label}>
+                        <td style={detailLabelCell}>{label}</td>
+                        <td style={detailColonCell}>:</td>
+                        <td style={{ ...detailValueCell, textAlign: "right", whiteSpace: "nowrap" }}>{value}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -267,7 +294,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails }) => {
           </tbody>
         </table>
 
-        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 4 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 8 }}>
           <thead>
             <tr>
               {[
@@ -303,19 +330,19 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails }) => {
                 <td style={{ ...td, textAlign: "right", fontWeight: 700 }}>{fmtNum(lineValue(item, "taxable"))}</td>
               </tr>
             ))}
-            {Array.from({ length: Math.max(0, 12 - items.length) }).map((_, row) => (
-              <tr key={`blank-${row}`} style={{ height: 22 }}>
+            {Array.from({ length: Math.max(0, 7 - items.length) }).map((_, row) => (
+              <tr key={`blank-${row}`} style={{ height: 24 }}>
                 {Array.from({ length: 10 }).map((__, cell) => <td key={cell} style={td}></td>)}
               </tr>
             ))}
             <tr>
-              <td colSpan={9} style={{ ...td, textAlign: "right", fontWeight: 800, background: "#f3f3f3" }}>Taxable Value</td>
+              <td colSpan={9} style={{ ...mutedCell, textAlign: "right" }}>Taxable Value</td>
               <td style={{ ...td, textAlign: "right", fontWeight: 800 }}>{fmtNum(totalTaxable)}</td>
             </tr>
           </tbody>
         </table>
 
-        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 4 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 8 }}>
           <thead>
             <tr>
               {["S.No.", "HSN/SAC No.", "Item Value", "Qty.", "CGST(%)", "Amount", "SGST(%)", "Amount", "IGST(%)", "Amount", "Total Tax"].map((head) => (
@@ -345,33 +372,35 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails }) => {
               );
             })}
             <tr>
-              <td colSpan={3} style={{ ...td, fontWeight: 800, background: "#f3f3f3" }}>GST Amount in Words</td>
+              <td colSpan={3} style={mutedCell}>GST Amount in Words</td>
               <td colSpan={6} style={td}>-</td>
-              <td style={{ ...td, fontWeight: 800, background: "#f3f3f3" }}>Total GST Amount</td>
+              <td style={mutedCell}>Total GST Amount</td>
               <td style={{ ...td, textAlign: "right", fontWeight: 800 }}>{fmtNum(totalGst)}</td>
             </tr>
+            <tr style={{ height: 8 }}>
+              {Array(11).fill(0).map((_, cell) => <td key={cell} style={{ border: "none", padding: 0 }}></td>)}
+            </tr>
             <tr>
-              <td colSpan={9} style={{ ...td, textAlign: "right", fontWeight: 800, background: "#f3f3f3" }}>Total Value</td>
-              <td style={{ ...td, textAlign: "center", fontWeight: 800 }}>{fmtNum(totalQty)}</td>
+              <td colSpan={10} style={{ ...mutedCell, textAlign: "right" }}>Total Value</td>
               <td style={{ ...td, textAlign: "right", fontWeight: 800 }}>{fmtNum(grandTotal)}</td>
             </tr>
           </tbody>
         </table>
 
-        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 4 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 8 }}>
           <tbody>
             <tr>
-              <td style={{ ...td, fontWeight: 800, width: "16%" }}>Special Remark:</td>
+              <td style={{ ...td, fontWeight: 800, width: "16%", background: "#fafafa" }}>Special Remark:</td>
               <td style={{ ...td, height: 24 }}>{challan.remarks || "-"}</td>
             </tr>
             <tr>
-              <td style={{ ...td, fontWeight: 800 }}>Terms and Conditions:</td>
+              <td style={{ ...td, fontWeight: 800, background: "#fafafa" }}>Terms and Conditions:</td>
               <td style={{ ...td }}>{challan.terms || "Goods/material received in good condition. All disputes are subject to Delhi jurisdiction."}</td>
             </tr>
           </tbody>
         </table>
 
-        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 4 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 8 }}>
           <thead>
             <tr>
               <th style={{ ...th, width: "33%" }}>NGWPL Bank Details</th>
@@ -380,30 +409,51 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails }) => {
             </tr>
           </thead>
           <tbody>
-            <tr style={{ height: 70 }}>
+            <tr>
               <td style={td}>
-                <div><b>Bank Name:</b> {bankName}</div>
-                <div><b>Account Name:</b> {accountName}</div>
-                <div><b>Account No.:</b> {accountNo}</div>
-                <div><b>IFSC Code:</b> {ifscCode}</div>
-                <div><b>Branch:</b> {bankBranch}</div>
+                <table style={{ borderCollapse: "collapse", border: "none", lineHeight: 1.3, width: "auto" }}>
+                  <tbody>
+                    {[
+                      ["Bank Name", bankName],
+                      ["Account Name", accountName],
+                      ["Account No.", accountNo],
+                      ["IFSC Code", ifscCode],
+                      ["Branch", bankBranch],
+                    ].map(([label, value]) => (
+                      <tr key={label}>
+                        <td style={labelCell}>{label}</td>
+                        <td style={colonCell}>:</td>
+                        <td style={{ ...valueCell, whiteSpace: "nowrap" }}>{value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </td>
-              <td style={{ ...td, textAlign: "center", verticalAlign: "bottom" }}>Client Signature</td>
               <td style={{ ...td, textAlign: "center", verticalAlign: "bottom" }}>
-                {(settings?.companyStamp || settings?.authorizedSignature) && (
-                  <div style={{ height: 34, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, overflow: "hidden", marginBottom: 3 }}>
-                    {settings?.companyStamp && <img src={mediaUrl(settings.companyStamp)} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} style={{ maxHeight: 34, maxWidth: 58, objectFit: "contain" }} />}
-                    {settings?.authorizedSignature && <img src={mediaUrl(settings.authorizedSignature)} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} style={{ maxHeight: 30, maxWidth: 72, objectFit: "contain" }} />}
+                <div style={{ height: 80 }}></div>
+                <div style={{ borderTop: "1px solid #ccc", paddingTop: 4, fontWeight: 700, width: "60%", margin: "0 auto" }}>Client Signature</div>
+              </td>
+              <td style={{ ...td, textAlign: "center", verticalAlign: "bottom" }}>
+                {(settings?.companyStamp || settings?.authorizedSignature) ? (
+                  <div style={{ height: 60, display: "flex", alignItems: "center", justifyContent: "center", gap: 16, overflow: "hidden" }}>
+                    {settings?.authorizedSignature && <img src={mediaUrl(settings.authorizedSignature)} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} style={{ maxHeight: 60, maxWidth: 130, objectFit: "contain" }} />}
+                    {settings?.companyStamp && <img src={mediaUrl(settings.companyStamp)} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} style={{ maxHeight: 60, maxWidth: 60, objectFit: "contain" }} />}
                   </div>
+                ) : (
+                  <div style={{ height: 60 }}></div>
                 )}
-                Authorised Signatory
+                <div style={{ borderTop: "1px solid #ccc", paddingTop: 4, fontWeight: 700, width: "60%", margin: "0 auto" }}>Authorised Signatory</div>
               </td>
             </tr>
           </tbody>
         </table>
 
-        <div style={{ textAlign: "center", fontSize: 10, marginTop: 4 }}>This is a Computer Generated Document</div>
-        <div style={{ textAlign: "center", fontSize: 10, marginTop: 2 }}>© {new Date().getFullYear()} International Health &amp; Wellness Expo | {companyName} | All Rights Reserved.</div>
+        <div style={{ fontSize: 12, textAlign: "center", color: "#666", marginTop: 8, paddingTop: 6 }}>
+          <b>Registered Address:</b> First Floor, E-1, Opposite KFC, Kalkaji Main Market, South Delhi-110019, Delhi, India
+        </div>
+        <div style={{ fontSize: 11, textAlign: "center", color: "#999", marginTop: 4 }}>
+          This is a computer generated document and does not require a physical signature.
+        </div>
       </div>
     </div>
   );
@@ -628,17 +678,37 @@ const DeliveryChallanManager = () => {
   if (loading) return <div className="flex min-h-[60vh] items-center justify-center gap-2 text-slate-600"><RefreshCw className="animate-spin" /> Loading challans...</div>;
 
   if (mode === "view") return (
-    <div className="challan-view-page min-h-screen bg-slate-100 p-4">
-      <div className="no-print mx-auto mb-3 flex max-w-[900px] justify-between">
-        <button onClick={() => setMode("list")} className="flex items-center gap-2 rounded-md border bg-white px-4 py-2 text-sm font-bold"><ArrowLeft size={16} /> Back</button>
-        <button onClick={() => window.print()} className="flex items-center gap-2 rounded-md bg-[#194090] px-4 py-2 text-sm font-bold text-white"><Printer size={16} /> Print / Save PDF</button>
+    <div className="challan-view-page bg-white shadow-md mt-1 p-6 min-h-screen font-inter animate-fadeIn">
+      <div className="no-print flex flex-col lg:flex-row justify-between items-center pb-4 border-b border-gray-300 gap-4">
+        <div className="flex flex-col items-center lg:items-start gap-1">
+          <h1 className="text-xl font-semibold text-slate-600 uppercase tracking-tight leading-none text-center lg:text-left">
+            Delivery Challan | Sales Management Section
+          </h1>
+        </div>
+        <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
+          <button
+            onClick={() => setMode("list")}
+            className="flex items-center gap-1 border border-gray-300 bg-white px-3 py-1 text-[12px] font-bold uppercase text-gray-700 hover:bg-gray-50"
+          >
+            <ArrowLeft size={14} /> Back
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="w-fit h-fit border border-[#3598dc] text-[#3598dc] text-[12px] hover:text-white hover:bg-[#3598dc] px-2 py-1 cursor-pointer"
+            title="Print / Save PDF"
+          >
+            <Printer size={16} />
+          </button>
+        </div>
       </div>
-      <DeliveryChallanPrint
-        challan={form}
-        settings={settings}
-        bankDetails={banks.find((bank) => String(bank.status || "").toLowerCase() === "active") || banks[0]}
-      />
-      <style>{`body:has(.challan-view-page) footer { display:none!important } @media print { body * { visibility:hidden } .challan-print,.challan-print * { visibility:visible } .challan-print { position:absolute;left:0;top:0;width:100%;max-width:none;padding:0 } .no-print, footer { display:none!important } }`}</style>
+      <div className="pt-3">
+        <DeliveryChallanPrint
+          challan={form}
+          settings={settings}
+          bankDetails={banks.find((bank) => String(bank.status || "").toLowerCase() === "active") || banks[0]}
+        />
+      </div>
+      <style>{`body:has(.challan-view-page) footer { display:none!important } @media print { body * { visibility:hidden } .challan-print,.challan-print * { visibility:visible } .challan-print { position:absolute;left:0;right:0;top:0;width:100%;max-width:1000px;margin:0 auto;padding:40px } .no-print, footer { display:none!important } }`}</style>
     </div>
   );
 
