@@ -3,7 +3,7 @@ import mainpic from '../../../assets/header.png';
 import { fetchCompanies } from '../../../features/company/companySlice';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import api from '../../../lib/api';
+import api, { SERVER_URL } from '../../../lib/api';
 
 const PROFORMA_EVENT_NAME = '9th Edition of International Health & Wellness Expo (IHWE Global Edition)';
 const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, Bharat';
@@ -26,7 +26,7 @@ function toWords(n) {
     return convert(intPart) + ' Rupees Only.';
 }
 
-const EstimateFormDetail = () => {
+const EstimateFormDetail = ({ piCopy = 'ORIGINAL PROFORMA INVOICE', onMetaChange }) => {
     const { id } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
@@ -121,6 +121,27 @@ const EstimateFormDetail = () => {
         }
     }, [matchedEstimate, companies]);
 
+    useEffect(() => {
+        const currentStatus = String(routeState.documentStatus || routeState.invoiceStatus || '').toLowerCase();
+        const isCancelled = currentStatus
+            ? currentStatus === 'cancelled'
+            : String(matchedEstimate?.status || '').toLowerCase() === 'cancelled' ||
+            (relatedInvoiceStatus.hasCancelled && !relatedInvoiceStatus.hasActive);
+
+        onMetaChange?.({
+            companyId: matchedEstimate?.companyId || '',
+            cancelled: isCancelled,
+        });
+    }, [
+        matchedEstimate?.companyId,
+        matchedEstimate?.status,
+        onMetaChange,
+        relatedInvoiceStatus.hasActive,
+        relatedInvoiceStatus.hasCancelled,
+        routeState.documentStatus,
+        routeState.invoiceStatus,
+    ]);
+
     if (fetchingEstimate || companiesLoading) {
         return <div className="text-center p-10">Loading estimate details...</div>;
     }
@@ -160,9 +181,8 @@ const EstimateFormDetail = () => {
 
     const isIgst = matchedEstimate?.state && matchedEstimate.state.toLowerCase() !== 'delhi';
 
-    const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-    const sigUrl = settings?.authorizedSignature ? (settings.authorizedSignature.startsWith('http') ? settings.authorizedSignature : `${BASE_URL}${settings.authorizedSignature}`) : null;
-    const stampUrl = settings?.companyStamp ? (settings.companyStamp.startsWith('http') ? settings.companyStamp : `${BASE_URL}${settings.companyStamp}`) : null;
+    const sigUrl = settings?.authorizedSignature ? (settings.authorizedSignature.startsWith('http') ? settings.authorizedSignature : `${SERVER_URL}${settings.authorizedSignature}`) : null;
+    const stampUrl = settings?.companyStamp ? (settings.companyStamp.startsWith('http') ? settings.companyStamp : `${SERVER_URL}${settings.companyStamp}`) : null;
     const selectedStatus = String(routeState.documentStatus || routeState.invoiceStatus || '').toLowerCase();
     const cancelled = selectedStatus
         ? selectedStatus === 'cancelled'
@@ -171,27 +191,19 @@ const EstimateFormDetail = () => {
 
     return (
         <>
-        <div className="max-w-[1000px] mx-auto mb-3 flex justify-end gap-2">
-            <button
-                type="button"
-                onClick={() => navigate(`/performa-invoice-list/${matchedEstimate.companyId}`)}
-                className="rounded border border-gray-300 bg-white px-4 py-2 text-xs font-bold uppercase text-gray-700 shadow-sm hover:bg-gray-50"
-            >
-                Proforma Invoice List
-            </button>
-            {!cancelled && (
-                <button
-                    type="button"
-                    onClick={() => navigate(`/performa-invoice/${matchedEstimate.companyId}`, {
-                        state: { editEstimateId: matchedEstimate._id },
-                    })}
-                    className="rounded border border-blue-300 bg-white px-4 py-2 text-xs font-bold uppercase text-blue-600 shadow-sm hover:bg-blue-50"
-                >
-                    Edit
-                </button>
-            )}
-        </div>
         <div className="bg-white border border-slate-300 p-10 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', maxWidth: '1000px', margin: '0 auto', position: 'relative' }}>
+            <style>{`
+                @media print {
+                    .pi-summary-table { table-layout: fixed !important; }
+                    .pi-client-column { width: 32% !important; }
+                    .pi-shipment-column { width: 36% !important; }
+                    .pi-details-column { width: 32% !important; }
+                    .pi-details-content td {
+                        white-space: nowrap !important;
+                        font-size: 10px !important;
+                    }
+                }
+            `}</style>
             {cancelled && (
                 <div style={{
                     position: 'absolute',
@@ -216,16 +228,30 @@ const EstimateFormDetail = () => {
                 <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
             </div>
 
-            <div className="invoice-title-bar" style={{ textAlign: 'center', marginBottom: 4, paddingTop: 2, paddingBottom: 2 }}>
-                <div style={{ fontWeight: 400, fontSize: 18, color: '#0d1f3c', marginBottom: 0 }}>PROFORMA INVOICE</div>
+            <div
+                className="invoice-title-bar"
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr auto 1fr',
+                    alignItems: 'center',
+                    marginBottom: 4,
+                    paddingTop: 2,
+                    paddingBottom: 2,
+                    color: '#0d1f3c',
+                    textTransform: 'uppercase',
+                }}
+            >
+                <span aria-hidden="true" />
+                <div style={{ fontWeight: 400, fontSize: 18 }}>PROFORMA INVOICE</div>
+                <div style={{ justifySelf: 'end', fontWeight: 700, fontSize: 11 }}>{piCopy}</div>
             </div>
 
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
+            <table className="pi-summary-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
                 <thead>
                     <tr>
-                        <th style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Client Name &amp; Address</th>
-                        <th style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Shipment Details</th>
-                        <th style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '24%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}> Proforma Invoice Details</th>
+                        <th className="pi-client-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Client Name &amp; Address</th>
+                        <th className="pi-shipment-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Shipment Details</th>
+                        <th className="pi-details-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '24%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}> Proforma Invoice Details</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -290,7 +316,7 @@ const EstimateFormDetail = () => {
                                 </tbody>
                             </table>
                         </td>
-                        <td style={{ border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 11 }}>
+                        <td className="pi-details-content" style={{ border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 11 }}>
                             <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%' }}>
                                 <tbody>
                                     <tr>

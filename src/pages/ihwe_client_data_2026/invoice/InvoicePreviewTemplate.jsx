@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchCompanies } from '../../../features/company/companySlice';
 import mainpic from '../../../assets/header.png';
-import api from '../../../lib/api';
+import api, { SERVER_URL } from '../../../lib/api';
 
 function toWords(n) {
     const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
@@ -21,7 +21,7 @@ function toWords(n) {
     return 'RUPEES ' + convert(intPart) + ' Only.';
 }
 
-const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
+const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceCopy = 'ORIGINAL INVOICE' }) => {
     const dispatch = useDispatch();
     const { companies } = useSelector((state) => state.companies);
     const [company, setCompany] = useState(null);
@@ -132,13 +132,19 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
         currName = currAbbr === 'USD' ? 'US Dollars' : currAbbr === 'EUR' ? 'Euros' : 'RUPEES';
     }
 
-    const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-    const sigUrl = settings?.authorizedSignature ? (settings.authorizedSignature.startsWith('http') ? settings.authorizedSignature : `${BASE_URL}${settings.authorizedSignature}`) : null;
-    const stampUrl = settings?.companyStamp ? (settings.companyStamp.startsWith('http') ? settings.companyStamp : `${BASE_URL}${settings.companyStamp}`) : null;
+    const sigUrl = settings?.authorizedSignature ? (settings.authorizedSignature.startsWith('http') ? settings.authorizedSignature : `${SERVER_URL}${settings.authorizedSignature}`) : null;
+    const stampUrl = settings?.companyStamp ? (settings.companyStamp.startsWith('http') ? settings.companyStamp : `${SERVER_URL}${settings.companyStamp}`) : null;
     const cancelled = String(matchedInvoice?.status || form?.status || '').toLowerCase() === 'cancelled';
 
     return (
         <div className="bg-white border border-slate-300 p-10 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', maxWidth: '1000px', margin: '0 auto', position: 'relative' }}>
+            <style>{`
+                @media print {
+                    .invoice-client-column { width: 36% !important; }
+                    .invoice-shipment-column { width: 38% !important; }
+                    .invoice-details-column { width: 26% !important; }
+                }
+            `}</style>
             {cancelled && (
                 <div style={{
                     position: 'absolute',
@@ -163,16 +169,30 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
                 <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
             </div>
 
-            <div className="invoice-title-bar" style={{ textAlign: 'center', marginBottom: 4, paddingTop: 2, paddingBottom: 2 }}>
-                <div style={{ fontWeight: 400, fontSize: 18, color: '#0d1f3c', marginBottom: 0, textTransform: 'uppercase' }}>{heading || 'TAX INVOICE'}</div>
+            <div
+                className="invoice-title-bar"
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr auto 1fr',
+                    alignItems: 'center',
+                    marginBottom: 4,
+                    paddingTop: 2,
+                    paddingBottom: 2,
+                    color: '#0d1f3c',
+                    textTransform: 'uppercase',
+                }}
+            >
+                <span aria-hidden="true" />
+                <div style={{ fontWeight: 400, fontSize: 18 }}>{heading || 'TAX INVOICE'}</div>
+                <div style={{ justifySelf: 'end', fontWeight: 700, fontSize: 11 }}>{invoiceCopy}</div>
             </div>
 
             <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
                 <thead>
                     <tr>
-                        <th style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Client Name &amp; Address</th>
-                        <th style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Shipment Details</th>
-                        <th style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '24%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}> Invoice Details</th>
+                        <th className="invoice-client-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Client Name &amp; Address</th>
+                        <th className="invoice-shipment-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Shipment Details</th>
+                        <th className="invoice-details-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '24%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}> Invoice Details</th>
                     </tr>
                 </thead>
                 <tbody>
