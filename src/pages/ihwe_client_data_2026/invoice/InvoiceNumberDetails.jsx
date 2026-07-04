@@ -28,6 +28,8 @@ const InvoiceNumberDetails = () => {
   const [company, setCompany] = useState(null);
   const [matchedEstimate, setMatchedEstimate] = useState(null);
   const [isRevising, setIsRevising] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [isCheckingChanges, setIsCheckingChanges] = useState(true);
 
   // redux logic
   const { invoices } = useSelector((state) => state.invoice);
@@ -78,6 +80,31 @@ const InvoiceNumberDetails = () => {
       setCompany(matchedCompany || null);
     }
   }, [matchedInvoice, companies]);
+
+  useEffect(() => {
+    const checkChanges = async () => {
+      if (
+        matchedInvoice &&
+        (matchedInvoice.source_estimate_id || matchedInvoice.estimate_no) &&
+        String(matchedInvoice.status || "").toLowerCase() !== "cancelled"
+      ) {
+        try {
+          setIsCheckingChanges(true);
+          const { data: preview } = await api.get(`/api/invoices/${id}/revision-preview`);
+          setHasChanges(preview?.hasChanges || false);
+        } catch (error) {
+          console.error("Error checking revisions:", error);
+          setHasChanges(false);
+        } finally {
+          setIsCheckingChanges(false);
+        }
+      } else {
+        setIsCheckingChanges(false);
+        setHasChanges(false);
+      }
+    };
+    checkChanges();
+  }, [matchedInvoice, id]);
 
   const handleprint = useReactToPrint({
     contentRef: sameRef,
@@ -160,12 +187,14 @@ const InvoiceNumberDetails = () => {
           && String(matchedInvoice.status || "").toLowerCase() !== "cancelled" && (
           <button
             onClick={handleRevise}
-            disabled={isRevising}
-            className="mr-auto bg-amber-600 rounded px-3 py-2 text-white hover:bg-amber-700 shadow-sm transition flex items-center gap-2 disabled:opacity-50"
-            title="Update this invoice from latest Proforma Invoice while keeping the same invoice number"
+            disabled={isRevising || isCheckingChanges || !hasChanges}
+            className={`mr-auto rounded px-3 py-2 text-white shadow-sm transition flex items-center gap-2 ${
+              isCheckingChanges || !hasChanges ? "bg-gray-400 cursor-not-allowed" : "bg-amber-600 hover:bg-amber-700"
+            }`}
+            title={!hasChanges ? "No changes found" : "Update this invoice from latest Proforma Invoice while keeping the same invoice number"}
           >
-            <RefreshCw size={16} className={isRevising ? "animate-spin" : ""} />
-            {isRevising ? "Checking..." : "Revise from PI"}
+            <RefreshCw size={16} className={isRevising || isCheckingChanges ? "animate-spin" : ""} />
+            {isRevising ? "Checking..." : isCheckingChanges ? "Checking changes..." : "Revise from PI"}
           </button>
         )}
         {Number(matchedInvoice.revision_no || 0) > 0 && (
@@ -182,8 +211,11 @@ const InvoiceNumberDetails = () => {
         </button>
         <button
           onClick={handleprint}
-          className="bg-white rounded p-2 text-gray-500 hover:text-blue-500 shadow-sm border transition flex items-center justify-center"
-          title="Print Invoice"
+          disabled={hasChanges}
+          className={`ml-2 rounded p-2 shadow-sm border transition flex items-center justify-center ${
+            hasChanges ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white text-gray-500 hover:text-blue-500"
+          }`}
+          title={hasChanges ? "Please revise the invoice before printing" : "Print Invoice"}
         >
           <FaPrint size={18} />
         </button>
