@@ -245,6 +245,7 @@ const Payments = lazy(() => import("../pages/ihwe_client_data_2026/payments/Paym
 const AddPayment = lazy(() => import("../pages/dashboard/account/AddPayment"));
 const AccountOverview = lazy(() => import("../pages/dashboard/account/AccountOverview"));
 const AgendaManagement = lazy(() => import("../pages/AgendaManagement"));
+const PaperPresentationManage = lazy(() => import("../pages/PaperPresentationManage"));
 const SpeakerRegistrationList = lazy(() => import("../pages/SpeakerRegistrationList"));
 const SpeakerRegistrationDetail = lazy(() => import("../pages/SpeakerRegistrationDetail"));
 const SpeakerNominationsList = lazy(() => import("../pages/SpeakerNominationsList"));
@@ -336,7 +337,7 @@ export default function AppRoutes() {
             <Route path="/agenda-management" element={<AgendaManagement />} />
             <Route path="/conference-days-manage" element={<ConferenceDayManagement />} />
             <Route path="/conference-tracks-manage" element={<ConferenceTrackManage />} />
-            <Route path="/conference-testimonials-manage" element={<ConferenceTestimonialsManage />} />
+            <Route path="/paper-presentation-manage" element={<PaperPresentationManage />} />
             <Route path="/speaker-registration-list" element={<SpeakerNominationsList />} />
             <Route path="/approved-speakers-list" element={<ApprovedSpeakersList />} />
             <Route path="/distinguished-speakers-manage" element={<DistinguishedSpeakersManage />} />
