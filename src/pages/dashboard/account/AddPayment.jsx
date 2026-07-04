@@ -15,7 +15,11 @@ const PAYMENT_MODE_OPTIONS = ["NEFT", "RTGS", "UPI", "Cash", "Cheque", "Card", "
 const TDS_RATE_OPTIONS = ["1", "2", "5", "10"];
 const TDS_SECTION_OPTIONS = ["194C", "194J", "194Q", "194I", "Other"];
 
-const today = () => new Date().toISOString().split("T")[0];
+const nowLocalDateTime = () => {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
 const isCancelled = (doc) => String(doc?.status || "").toLowerCase() === "cancelled";
 
 const AddPayment = () => {
@@ -32,12 +36,12 @@ const AddPayment = () => {
   const [docType, setDocType] = useState("Invoice");
   const [selectedDocId, setSelectedDocId] = useState("");
   const [paymentFor, setPaymentFor] = useState(PAYMENT_FOR_OPTIONS[0]);
-  const [paymentDate, setPaymentDate] = useState(today());
+  const [paymentDate, setPaymentDate] = useState(nowLocalDateTime());
   const [amountReceived, setAmountReceived] = useState("");
   const [paymentMode, setPaymentMode] = useState(PAYMENT_MODE_OPTIONS[0]);
   const [referenceNo, setReferenceNo] = useState("");
   const [bankName, setBankName] = useState("");
-  const [txnDate, setTxnDate] = useState(today());
+  const [txnDate, setTxnDate] = useState(nowLocalDateTime());
   const [deductTds, setDeductTds] = useState(false);
   const [tdsRate, setTdsRate] = useState(TDS_RATE_OPTIONS[3]);
   const [tdsSection, setTdsSection] = useState(TDS_SECTION_OPTIONS[0]);
@@ -80,10 +84,17 @@ const AddPayment = () => {
     load();
   }, [id]);
 
-  const documentOptions = useMemo(
-    () => (docType === "Invoice" ? invoices : proformas),
-    [docType, invoices, proformas]
-  );
+  const documentOptions = useMemo(() => {
+    const list = docType === "Invoice" ? invoices : proformas;
+    return list.filter((doc) => {
+      const amount = doc.finalAmount || 0;
+      if (amount <= 0) return true;
+      const docPaid = payments
+        .filter((p) => p.invoice_id === doc._id)
+        .reduce((sum, p) => sum + (parseFloat(p.amount_text) || 0), 0);
+      return docPaid < amount;
+    });
+  }, [docType, invoices, proformas, payments]);
 
   const selectedDoc = useMemo(
     () => documentOptions.find((d) => d._id === selectedDocId) || null,
@@ -164,7 +175,7 @@ const AddPayment = () => {
       });
 
       toast.success("Payment recorded successfully!");
-      navigate(`/dashboard/account/${id}`);
+      navigate(`/payment-list/${id}`);
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.message || "Failed to record payment.");
@@ -322,9 +333,9 @@ const AddPayment = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-[12px] font-medium text-[#1a2b4b] mb-1">Payment Date <span className="text-red-500">*</span></label>
+                <label className="block text-[12px] font-medium text-[#1a2b4b] mb-1">Payment Date & Time <span className="text-red-500">*</span></label>
                 <input
-                  type="date"
+                  type="datetime-local"
                   value={paymentDate}
                   onChange={(e) => setPaymentDate(e.target.value)}
                   required
@@ -395,7 +406,7 @@ const AddPayment = () => {
               <div>
                 <label className="block text-[12px] font-medium text-[#1a2b4b] mb-1">Transaction / Cheque Date</label>
                 <input
-                  type="date"
+                  type="datetime-local"
                   value={txnDate}
                   onChange={(e) => setTxnDate(e.target.value)}
                   className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-1 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/10 transition-all h-[32px]"

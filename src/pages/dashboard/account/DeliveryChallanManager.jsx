@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronRight, ArrowLeft, Ban, FilePlus2, Mail, MessageCircleMore, Pencil, Printer, RefreshCw, FileText, Calendar, Tag, Truck, User, FileBadge, Users, Building, CreditCard, Phone, MapPin, Package, MessageSquare, ShieldCheck, Send, RotateCcw, DollarSign, CheckCircle2, Clock } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useReactToPrint } from "react-to-print";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import api, { SERVER_URL } from "../../../lib/api";
@@ -113,7 +114,9 @@ const statusClass = (status) => ({
   cancelled: "bg-red-50 text-red-700",
 }[status] || "bg-slate-100 text-slate-600");
 
-const DeliveryChallanPrint = ({ challan, settings, bankDetails }) => {
+const DEFAULT_CHALLAN_COPY = "ORIGINAL DELIVERY CHALLAN";
+
+const DeliveryChallanPrint = ({ challan, settings, bankDetails, copyLabel = DEFAULT_CHALLAN_COPY }) => {
   const fmtNum = (value, decimals = 0) => {
     const number = Number(value);
     if (!Number.isFinite(number)) return decimals ? "0.00" : "0";
@@ -209,13 +212,14 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails }) => {
       <div style={{ position: "relative" }}>
         {challan.status === "cancelled" && <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 -rotate-12 border-[5px] border-red-600/70 px-7 py-2 text-4xl font-black uppercase tracking-widest text-red-600/70">Cancelled</div>}
 
-        <div style={{ marginBottom: 8, textAlign: "center" }}>
+        <div className="challan-page-header" style={{ marginBottom: 8, textAlign: "center" }}>
           <img src={invoiceHeader} alt="Namo Gange Design House" style={{ width: "100%", maxWidth: "100%", display: "block" }} />
         </div>
+        <div className="challan-page-body">
 
-        <div className="invoice-title-bar" style={{ textAlign: "center", marginBottom: 4, paddingTop: 2, paddingBottom: 1 }}>
+        <div className="invoice-title-bar" style={{ position: "relative", textAlign: "center", marginBottom: 4, paddingTop: 2, paddingBottom: 1 }}>
           <div style={{ fontWeight: 400, fontSize: 18, color: "#0d1f3c", marginBottom: 0 }}>DELIVERY CHALLAN</div>
-          <div style={{ fontWeight: 700, fontSize: 10, color: "#0d1f3c", textTransform: "uppercase", textAlign: "right" }}>Original For Recipient</div>
+          <div style={{ position: "absolute", right: 0, top: 5, fontWeight: 700, fontSize: 10, color: "#0d1f3c", textTransform: "uppercase", textAlign: "right", whiteSpace: "nowrap" }}>{copyLabel}</div>
         </div>
 
         <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 8 }}>
@@ -454,8 +458,10 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails }) => {
         <div style={{ fontSize: 11, textAlign: "center", color: "#999", marginTop: 4 }}>
           This is a computer generated document and does not require a physical signature.
         </div>
+        </div>{/* end challan-page-body */}
       </div>
     </div>
+
   );
 };
 
@@ -464,6 +470,7 @@ const DeliveryChallanManager = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const directCreateHandled = useRef(false);
+  const challanPrintRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [challans, setChallans] = useState([]);
@@ -475,6 +482,7 @@ const DeliveryChallanManager = () => {
   const [banks, setBanks] = useState([]);
   const [commModal, setCommModal] = useState({ isOpen: false, type: "whatsapp", docId: "" });
   const [accountName, setAccountName] = useState("");
+  const [challanCopy, setChallanCopy] = useState(DEFAULT_CHALLAN_COPY);
 
   const selectedProforma = useMemo(
     () => proformas.find((item) => item._id === form.source_estimate_id),
@@ -512,6 +520,12 @@ const DeliveryChallanManager = () => {
   };
 
   useEffect(() => { loadData(); }, [id]);
+
+  const printChallan = useReactToPrint({
+    contentRef: challanPrintRef,
+    documentTitle: "delivery-challan",
+    onAfterPrint: () => setChallanCopy(DEFAULT_CHALLAN_COPY),
+  });
 
   const startCreate = () => {
     setEditingId("");
@@ -672,7 +686,133 @@ const DeliveryChallanManager = () => {
 
   const view = async (challan) => {
     setForm(challan);
+    setChallanCopy(DEFAULT_CHALLAN_COPY);
     setMode("view");
+  };
+
+  const handlePrint = async () => {
+    const result = await Swal.fire({
+      title: "Choose Delivery Challan Copy",
+      width: 590,
+      html: `
+        <p style="margin:0 0 18px;color:#64748b;font-size:14px">
+          Select the copy required for this print.
+        </p>
+        <div class="challan-copy-options">
+          <label class="challan-copy-card">
+            <input type="radio" name="challan-copy" value="ORIGINAL DELIVERY CHALLAN" checked />
+            <span class="challan-copy-check">✓</span>
+            <span class="challan-copy-name">Original</span>
+            <span class="challan-copy-purpose">For Recipient</span>
+            <span class="challan-copy-help">Customer's official copy</span>
+          </label>
+          <label class="challan-copy-card">
+            <input type="radio" name="challan-copy" value="DUPLICATE DELIVERY CHALLAN" />
+            <span class="challan-copy-check">✓</span>
+            <span class="challan-copy-name">Duplicate</span>
+            <span class="challan-copy-purpose">For Supplier</span>
+            <span class="challan-copy-help">Office and accounts record</span>
+          </label>
+          <label class="challan-copy-card">
+            <input type="radio" name="challan-copy" value="TRIPLICATE DELIVERY CHALLAN" />
+            <span class="challan-copy-check">✓</span>
+            <span class="challan-copy-name">Triplicate</span>
+            <span class="challan-copy-purpose">For Transportation</span>
+            <span class="challan-copy-help">For movement of goods</span>
+          </label>
+        </div>
+        <style>
+          .challan-copy-options {
+            display:grid;
+            grid-template-columns:repeat(3, 1fr);
+            gap:9px;
+            text-align:left;
+          }
+          .challan-copy-card {
+            position:relative;
+            display:flex;
+            min-height:102px;
+            padding:13px 11px 10px;
+            flex-direction:column;
+            border:2px solid #e2e8f0;
+            border-radius:9px;
+            background:#fff;
+            cursor:pointer;
+            transition:all .18s ease;
+          }
+          .challan-copy-card:hover {
+            border-color:#94a3b8;
+            transform:translateY(-1px);
+          }
+          .challan-copy-card:has(input:checked) {
+            border-color:#0d1f3c;
+            background:#f1f5f9;
+            box-shadow:0 5px 16px rgba(13,31,60,.12);
+          }
+          .challan-copy-card input {
+            position:absolute;
+            opacity:0;
+            pointer-events:none;
+          }
+          .challan-copy-check {
+            position:absolute;
+            top:8px;
+            right:8px;
+            display:none;
+            width:18px;
+            height:18px;
+            align-items:center;
+            justify-content:center;
+            border-radius:50%;
+            background:#0d1f3c;
+            color:#fff;
+            font-size:11px;
+            font-weight:700;
+          }
+          .challan-copy-card:has(input:checked) .challan-copy-check { display:flex; }
+          .challan-copy-name {
+            color:#0d1f3c;
+            font-size:16px;
+            font-weight:700;
+          }
+          .challan-copy-purpose {
+            margin-top:4px;
+            color:#334155;
+            font-size:12px;
+            font-weight:600;
+          }
+          .challan-copy-help {
+            margin-top:auto;
+            padding-top:7px;
+            color:#64748b;
+            font-size:10px;
+            line-height:1.35;
+          }
+          @media (max-width:600px) {
+            .challan-copy-options { grid-template-columns:1fr; }
+            .challan-copy-card { min-height:90px; }
+          }
+        </style>
+      `,
+      showCancelButton: true,
+      confirmButtonText: "Print Selected Copy",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#0d1f3c",
+      focusConfirm: false,
+      preConfirm: () => {
+        const selected = document.querySelector('input[name="challan-copy"]:checked');
+        if (!selected) {
+          Swal.showValidationMessage("Please select a delivery challan copy");
+          return false;
+        }
+        return selected.value;
+      },
+    });
+
+    if (!result.isConfirmed) return;
+
+    setChallanCopy(result.value);
+    requestAnimationFrame(() => requestAnimationFrame(() => printChallan()));
   };
 
   if (loading) return <div className="flex min-h-[60vh] items-center justify-center gap-2 text-slate-600"><RefreshCw className="animate-spin" /> Loading challans...</div>;
@@ -693,7 +833,7 @@ const DeliveryChallanManager = () => {
             <ArrowLeft size={14} /> Back
           </button>
           <button
-            onClick={() => window.print()}
+            onClick={handlePrint}
             className="w-fit h-fit border border-[#3598dc] text-[#3598dc] text-[12px] hover:text-white hover:bg-[#3598dc] px-2 py-1 cursor-pointer"
             title="Print / Save PDF"
           >
@@ -701,14 +841,46 @@ const DeliveryChallanManager = () => {
           </button>
         </div>
       </div>
-      <div className="pt-3">
+      <div ref={challanPrintRef} className="pt-3">
         <DeliveryChallanPrint
           challan={form}
           settings={settings}
           bankDetails={banks.find((bank) => String(bank.status || "").toLowerCase() === "active") || banks[0]}
+          copyLabel={challanCopy}
         />
       </div>
-      <style>{`body:has(.challan-view-page) footer { display:none!important } @media print { body * { visibility:hidden } .challan-print,.challan-print * { visibility:visible } .challan-print { position:absolute;left:0;right:0;top:0;width:100%;max-width:1000px;margin:0 auto;padding:40px } .no-print, footer { display:none!important } }`}</style>
+      <style>{`
+        body:has(.challan-view-page) footer { display:none!important }
+        @media print {
+          @page { margin: 0; }
+          body * { visibility: hidden; }
+          .challan-print, .challan-print * { visibility: visible; }
+          .challan-print {
+            position: absolute;
+            left: 0; right: 0; top: 0;
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0;
+          }
+          .challan-page-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            background: white;
+            z-index: 9999;
+            margin-bottom: 0 !important;
+          }
+          .challan-page-header img { width: 100%; display: block; }
+          .challan-page-body {
+            margin-top: 100px;
+            padding: 12px 40px 40px 40px;
+          }
+          .no-print, footer { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 

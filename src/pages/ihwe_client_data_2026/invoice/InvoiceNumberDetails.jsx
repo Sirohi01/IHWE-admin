@@ -30,6 +30,7 @@ const InvoiceNumberDetails = () => {
   const [isRevising, setIsRevising] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [isCheckingChanges, setIsCheckingChanges] = useState(true);
+  const [invoiceCopy, setInvoiceCopy] = useState("ORIGINAL INVOICE");
 
   // redux logic
   const { invoices } = useSelector((state) => state.invoice);
@@ -106,10 +107,136 @@ const InvoiceNumberDetails = () => {
     checkChanges();
   }, [matchedInvoice, id]);
 
-  const handleprint = useReactToPrint({
+  const printInvoice = useReactToPrint({
     contentRef: sameRef,
     documentTitle: "invoice",
+    onAfterPrint: () => setInvoiceCopy("ORIGINAL INVOICE"),
   });
+
+  const handlePrint = async () => {
+    const result = await Swal.fire({
+      title: "Choose Invoice Copy",
+      width: 590,
+      html: `
+        <p style="margin:0 0 18px;color:#64748b;font-size:14px">
+          Select the copy required for this print.
+        </p>
+        <div class="invoice-copy-options">
+          <label class="invoice-copy-card">
+            <input type="radio" name="invoice-copy" value="ORIGINAL INVOICE" checked />
+            <span class="invoice-copy-check">✓</span>
+            <span class="invoice-copy-name">Original</span>
+            <span class="invoice-copy-purpose">For Recipient</span>
+            <span class="invoice-copy-help">Customer's official copy</span>
+          </label>
+          <label class="invoice-copy-card">
+            <input type="radio" name="invoice-copy" value="DUPLICATE INVOICE" />
+            <span class="invoice-copy-check">✓</span>
+            <span class="invoice-copy-name">Duplicate</span>
+            <span class="invoice-copy-purpose">For Supplier</span>
+            <span class="invoice-copy-help">Office and accounts record</span>
+          </label>
+          <label class="invoice-copy-card">
+            <input type="radio" name="invoice-copy" value="TRIPLICATE INVOICE" />
+            <span class="invoice-copy-check">✓</span>
+            <span class="invoice-copy-name">Triplicate</span>
+            <span class="invoice-copy-purpose">For Transportation</span>
+            <span class="invoice-copy-help">For movement of goods</span>
+          </label>
+        </div>
+        <style>
+          .invoice-copy-options {
+            display:grid;
+            grid-template-columns:repeat(3, 1fr);
+            gap:9px;
+            text-align:left;
+          }
+          .invoice-copy-card {
+            position:relative;
+            display:flex;
+            min-height:102px;
+            padding:13px 11px 10px;
+            flex-direction:column;
+            border:2px solid #e2e8f0;
+            border-radius:9px;
+            background:#fff;
+            cursor:pointer;
+            transition:all .18s ease;
+          }
+          .invoice-copy-card:hover {
+            border-color:#94a3b8;
+            transform:translateY(-1px);
+          }
+          .invoice-copy-card:has(input:checked) {
+            border-color:#0d1f3c;
+            background:#f1f5f9;
+            box-shadow:0 5px 16px rgba(13,31,60,.12);
+          }
+          .invoice-copy-card input {
+            position:absolute;
+            opacity:0;
+            pointer-events:none;
+          }
+          .invoice-copy-check {
+            position:absolute;
+            top:8px;
+            right:8px;
+            display:none;
+            width:18px;
+            height:18px;
+            align-items:center;
+            justify-content:center;
+            border-radius:50%;
+            background:#0d1f3c;
+            color:#fff;
+            font-size:11px;
+            font-weight:700;
+          }
+          .invoice-copy-card:has(input:checked) .invoice-copy-check { display:flex; }
+          .invoice-copy-name {
+            color:#0d1f3c;
+            font-size:16px;
+            font-weight:700;
+          }
+          .invoice-copy-purpose {
+            margin-top:4px;
+            color:#334155;
+            font-size:12px;
+            font-weight:600;
+          }
+          .invoice-copy-help {
+            margin-top:auto;
+            padding-top:7px;
+            color:#64748b;
+            font-size:10px;
+            line-height:1.35;
+          }
+          @media (max-width:600px) {
+            .invoice-copy-options { grid-template-columns:1fr; }
+            .invoice-copy-card { min-height:90px; }
+          }
+        </style>
+      `,
+      showCancelButton: true,
+      confirmButtonText: "Print Selected Copy",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#0d1f3c",
+      focusConfirm: false,
+      preConfirm: () => {
+        const selected = document.querySelector('input[name="invoice-copy"]:checked');
+        if (!selected) {
+          Swal.showValidationMessage("Please select an invoice copy");
+          return false;
+        }
+        return selected.value;
+      },
+    });
+
+    if (!result.isConfirmed) return;
+
+    setInvoiceCopy(result.value);
+    requestAnimationFrame(() => requestAnimationFrame(() => printInvoice()));
+  };
 
   const handleRevise = async () => {
     try {
@@ -185,18 +312,17 @@ const InvoiceNumberDetails = () => {
       <div className="max-w-[1000px] mx-auto flex justify-end mb-2">
         {(matchedInvoice.source_estimate_id || matchedInvoice.estimate_no)
           && String(matchedInvoice.status || "").toLowerCase() !== "cancelled" && (
-          <button
-            onClick={handleRevise}
-            disabled={isRevising || isCheckingChanges || !hasChanges}
-            className={`mr-auto rounded px-3 py-2 text-white shadow-sm transition flex items-center gap-2 ${
-              isCheckingChanges || !hasChanges ? "bg-gray-400 cursor-not-allowed" : "bg-amber-600 hover:bg-amber-700"
-            }`}
-            title={!hasChanges ? "No changes found" : "Update this invoice from latest Proforma Invoice while keeping the same invoice number"}
-          >
-            <RefreshCw size={16} className={isRevising || isCheckingChanges ? "animate-spin" : ""} />
-            {isRevising ? "Checking..." : isCheckingChanges ? "Checking changes..." : "Revise from PI"}
-          </button>
-        )}
+            <button
+              onClick={handleRevise}
+              disabled={isRevising || isCheckingChanges || !hasChanges}
+              className={`mr-auto rounded px-3 py-2 text-white shadow-sm transition flex items-center gap-2 ${isCheckingChanges || !hasChanges ? "bg-gray-400 cursor-not-allowed" : "bg-amber-600 hover:bg-amber-700"
+                }`}
+              title={!hasChanges ? "No changes found" : "Update this invoice from latest Proforma Invoice while keeping the same invoice number"}
+            >
+              <RefreshCw size={16} className={isRevising || isCheckingChanges ? "animate-spin" : ""} />
+              {isRevising ? "Checking..." : isCheckingChanges ? "Checking changes..." : "Revise from PI"}
+            </button>
+          )}
         {Number(matchedInvoice.revision_no || 0) > 0 && (
           <span className="mr-2 rounded bg-amber-100 px-3 py-2 text-xs font-bold text-amber-800">
             Rev {matchedInvoice.revision_no}
@@ -210,18 +336,21 @@ const InvoiceNumberDetails = () => {
           <ArrowLeft size={18} />
         </button>
         <button
-          onClick={handleprint}
+          onClick={handlePrint}
           disabled={hasChanges}
-          className={`ml-2 rounded p-2 shadow-sm border transition flex items-center justify-center ${
-            hasChanges ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white text-gray-500 hover:text-blue-500"
-          }`}
+          className={`ml-2 rounded p-2 shadow-sm border transition flex items-center justify-center ${hasChanges ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white text-gray-500 hover:text-blue-500"
+            }`}
           title={hasChanges ? "Please revise the invoice before printing" : "Print Invoice"}
         >
           <FaPrint size={18} />
         </button>
       </div>
       <div ref={sameRef}>
-        <InvoicePreviewTemplate matchedInvoice={matchedInvoice} heading={heading} />
+        <InvoicePreviewTemplate
+          matchedInvoice={matchedInvoice}
+          heading={heading}
+          invoiceCopy={invoiceCopy}
+        />
       </div>
     </div>
   );
