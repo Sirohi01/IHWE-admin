@@ -5,13 +5,21 @@ import { fetchCompanies } from "../../features/company/companySlice";
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import {
   Search, Download, Plus, Upload, RefreshCw, Calendar,
-  Users, Package, DollarSign, Banknote, Clock, TrendingUp, Phone, CalendarDays
+  Users, Package, DollarSign, Banknote, Clock, TrendingUp, Phone, CalendarDays,
+  MessageCircle, Mail
 } from "lucide-react";
 import { FaStar, FaRegStar } from "react-icons/fa";
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== "string") return str;
   return str.replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
+const getConvIcon = (type) => {
+  if (type === "WhatsApp") return <MessageCircle size={12} className="text-emerald-500" />;
+  if (type === "Call") return <Phone size={12} className="text-blue-500" />;
+  if (type === "Email") return <Mail size={12} className="text-blue-500" />;
+  return <Phone size={12} className="text-slate-400" />;
 };
 
 function useCountUp(target, duration = 1200) {
@@ -161,12 +169,13 @@ const AllLeadsList = () => {
   const tableHeaders = (
     <>
       <th className="px-2 py-2 font-medium">Company Name</th>
-      <th className="px-2 py-2 font-medium">Source</th>
       <th className="px-2 py-2 font-medium">Contact Details</th>
       <th className="px-2 py-2 font-medium">Location</th>
+      <th className="px-2 py-2 font-medium">Source</th>
       <th className="px-2 py-2 font-medium text-center">Status</th>
       {isSuperAdmin && <th className="px-2 py-2 font-medium">Assigned To</th>}
       <th className="px-2 py-2 font-medium">Lead Score</th>
+      <th className="px-2 py-2 font-medium">Last Conversation / Handled By</th>
       <th className="px-2 py-2 font-medium">Last Updated</th>
     </>
   );
@@ -179,17 +188,18 @@ const AllLeadsList = () => {
           <tr key={i} className="animate-pulse border-b border-slate-100 bg-white">
             <td className="px-2 py-3"><div className="w-3 h-3 bg-slate-200 rounded-sm mx-auto" /></td>
             <td className="px-2 py-3"><div className="h-3 w-32 bg-slate-200 rounded mb-1" /><div className="h-2 w-20 bg-slate-100 rounded" /></td>
-            <td className="px-2 py-3"><div className="h-4 w-16 bg-slate-200 rounded-full" /></td>
             <td className="px-2 py-3"><div className="h-3 w-20 bg-slate-200 rounded" /></td>
             <td className="px-2 py-3"><div className="h-3 w-16 bg-slate-200 rounded mx-auto" /></td>
+            <td className="px-2 py-3"><div className="h-4 w-16 bg-slate-200 rounded-full" /></td>
             <td className="px-2 py-3 text-center"><div className="h-4 w-16 bg-slate-200 rounded-full mx-auto" /></td>
             {isSuperAdmin && <td className="px-2 py-3"><div className="h-3 w-20 bg-slate-200 rounded" /></td>}
             <td className="px-2 py-3"><div className="h-3 w-16 bg-slate-200 rounded" /></td>
             <td className="px-2 py-3"><div className="h-3 w-24 bg-slate-200 rounded" /></td>
+            <td className="px-2 py-3"><div className="h-3 w-24 bg-slate-200 rounded" /></td>
           </tr>
         ))
       ) : filtered.length === 0 ? (
-        <tr><td colSpan={isSuperAdmin ? 10 : 9} className="text-center py-10 text-slate-500 text-xs">No leads found.</td></tr>
+        <tr><td colSpan={isSuperAdmin ? 11 : 10} className="text-center py-10 text-slate-500 text-xs">No leads found.</td></tr>
       ) : (
         filtered.map((row, i) => {
           const status = row.companyStatus || "New Lead";
@@ -209,9 +219,6 @@ const AllLeadsList = () => {
                   {toTitleCase(row.businessNature) || "—"}
                 </div>
               </td>
-              <td className="px-2 py-2">
-                <span className={`px-1.5 py-0.5 rounded font-bold text-[9px] ${getSourceStyle(source)}`} style={{ color: "#443199" }}>@{toTitleCase(source)}</span>
-              </td>
               <td className="px-2 py-2 text-[10px] font-medium">
                 <div className="font-bold text-[10px]" style={{ color: "#15173D" }}>
                   {toTitleCase(contactPerson)}
@@ -229,6 +236,9 @@ const AllLeadsList = () => {
                   {toTitleCase(row.state || row.address?.state || row.companyState || "—")}
                 </div>
               </td>
+              <td className="px-2 py-2">
+                <span className={`px-1.5 py-0.5 rounded font-bold text-[9px] ${getSourceStyle(source)}`} style={{ color: "#443199" }}>@{toTitleCase(source)}</span>
+              </td>
               <td className="px-2 py-2 text-center">
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${bg} ${text}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />{label}
@@ -239,6 +249,25 @@ const AllLeadsList = () => {
                 <div className="flex items-center gap-0.5 text-emerald-500 text-[9px]">
                   <FaStar /><FaStar /><FaStar /><FaRegStar className="text-slate-300" /><FaRegStar className="text-slate-300" />
                   <span className="ml-1 font-bold text-slate-700">{row.leadScore || 65}</span>
+                </div>
+              </td>
+              <td className="px-2 py-1.5">
+                <div className="flex items-start gap-1.5">
+                  <div className="shrink-0 p-1 bg-slate-100 rounded-full mt-0.5">
+                    {getConvIcon("WhatsApp")}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-medium whitespace-nowrap">
+                      {row.updatedAt ? (
+                        <>
+                          <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt))}</span>
+                          <span className="text-slate-400">, </span>
+                          <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt))}</span>
+                        </>
+                      ) : "—"}
+                    </span>
+                    <span className="text-[9px] font-bold mt-0.5" style={{ color: '#0D530E' }}>(WhatsApp)</span>
+                  </div>
                 </div>
               </td>
               <td className="px-2 py-2 text-[10px] font-medium" style={{ color: "#334155" }}>

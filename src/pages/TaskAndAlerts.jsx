@@ -96,6 +96,9 @@ const TaskAndAlerts = () => {
     const [isLoadingChats, setIsLoadingChats] = useState(true);
     const [chatPage, setChatPage] = useState(1);
     const CHAT_PER_PAGE = 5;
+
+    const [liveActivities, setLiveActivities] = useState([]);
+    const [totalActivities, setTotalActivities] = useState(0);
     
     const FALLBACK_NOTIFS = [];
     
@@ -161,7 +164,7 @@ const TaskAndAlerts = () => {
         const adminRole2 = adminInfo2.role || "Admin";
         const adminName2 = adminInfo2.fullName || adminInfo2.username || "Admin";
 
-        // Fetch recent chats
+        // Fetch chats
         setIsLoadingChats(true);
         api.get(`/api/chat/rooms?adminUsername=${encodeURIComponent(adminName2)}&adminRole=${encodeURIComponent(adminRole2)}`)
             .then(res => {
@@ -177,6 +180,16 @@ const TaskAndAlerts = () => {
                 console.error("Error fetching chats:", err);
                 setIsLoadingChats(false);
             });
+
+        // Fetch recent activities
+        api.get('/api/exhibitor-activity-logs?limit=5')
+            .then(res => {
+                if (res.data && res.data.success) {
+                    setLiveActivities(res.data.data || []);
+                    setTotalActivities(res.data.total || 0);
+                }
+            })
+            .catch(err => console.error("Error fetching activities:", err));
 
         // Setup real-time updates
         const adminId = adminInfo2._id || adminInfo2.id || "admin";
@@ -244,6 +257,15 @@ const TaskAndAlerts = () => {
                 };
                 return [newNotif, ...prev].slice(0, 15);
             });
+        });
+
+        s.on("new_exhibitor_activity_log", (newLog) => {
+            setLiveActivities(prev => {
+                const isDuplicate = prev.some(log => log._id === newLog._id);
+                if (isDuplicate) return prev;
+                return [newLog, ...prev].slice(0, 5);
+            });
+            setTotalActivities(prev => prev + 1);
         });
 
         return () => { s.disconnect(); };
@@ -673,24 +695,28 @@ const TaskAndAlerts = () => {
                 {/* 5. Activity Log */}
                 <div className="bg-white rounded-2xl p-5 border border-gray-100 flex flex-col justify-between" style={{ boxShadow: "rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em" }}>
                     <div>
-                        <CardHeader icon={ClipboardList} title="Activity Log" colorClass="text-teal-600" viewAllLink="/activity-log" />
+                        <CardHeader icon={ClipboardList} title="Activity Log" colorClass="text-teal-600" viewAllLink="/exhibitor-activity-logs" />
                         <div className="space-y-4">
-                            {activities.map((a, i) => (
-                                <div key={i} className="flex justify-between items-center gap-2">
+                            {liveActivities.length > 0 ? liveActivities.map((a, i) => (
+                                <div key={a._id || i} className="flex justify-between items-center gap-2">
                                     <div className="flex-[2] overflow-hidden">
-                                        <p className="text-[11px] font-bold text-gray-700 truncate">{a.action}</p>
+                                        <p className="text-[11px] font-bold text-gray-700 truncate" title={a.action}>{a.action}</p>
                                     </div>
                                     <div className="flex-[1.5] overflow-hidden">
-                                        <p className="text-[10px] font-semibold text-gray-500 truncate">{a.company}</p>
+                                        <p className="text-[10px] font-semibold text-gray-500 truncate" title={a.companyName}>{a.companyName}</p>
                                     </div>
                                     <div className="flex-1 text-right">
-                                        <span className="text-[10px] font-semibold text-blue-500">{a.time}</span>
+                                        <span className="text-[10px] font-semibold text-blue-500">
+                                            {new Date(a.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
                                     </div>
                                 </div>
-                            ))}
+                            )) : (
+                                <div className="text-center text-xs text-gray-400 py-4 flex items-center justify-center h-full">No recent activities</div>
+                            )}
                         </div>
                     </div>
-                    <CardFooter label="Total Activities" count="85" colorClass="text-teal-600" badgeColor="bg-teal-600" />
+                    <CardFooter label="Total Activities" count={totalActivities} colorClass="text-teal-600" badgeColor="bg-teal-600" />
                 </div>
 
                 {/* 6. Pending Approvals */}

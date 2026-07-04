@@ -12,7 +12,7 @@ import { fetchEvents } from "../../../features/crmEvent/crmEventSlice";
 import { fetchCountries } from "../../../features/add_by_admin/country/countrySlice";
 import { fetchStates } from "../../../features/state/stateSlice";
 import { fetchCities } from "../../../features/city/citySlice";
-import { Upload, UserCheck, LayoutGrid } from "lucide-react";
+import { Upload, UserCheck, LayoutGrid, Package, Truck } from "lucide-react";
 import { Link} from "react-router-dom";
 import api from "../../../lib/api";
 import { getCurrentUserName } from "../../../utils/currentUser";
@@ -54,8 +54,18 @@ const CreateInvoice = () => {
   // New state to hold the event name found from estimate/company
   const [foundEventName, setFoundEventName] = useState("");
   const [companyIdForSubmission, setCompanyIdForSubmission] = useState("");
+  const [sourceEstimateId, setSourceEstimateId] = useState("");
+  const [includeDeliveryChallans, setIncludeDeliveryChallans] = useState(false);
+  const [deliveryChallans, setDeliveryChallans] = useState([]);
+  const [selectedChallanIds, setSelectedChallanIds] = useState([]);
+  const [challansLoading, setChallansLoading] = useState(false);
+  const [challansError, setChallansError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   console.log("companyIdForSubmission", companyIdForSubmission);
+  const location = useLocation();
+  const editInvoiceId = location.state?.editInvoiceId;
   useEffect(() => {
+    dispatch(fetchEstimates());
     dispatch(fetchCompanies());
     dispatch(fetchEvents());
     dispatch(fetchStates());
@@ -81,7 +91,45 @@ const CreateInvoice = () => {
   // --- LOGIC 2: Pre-fill form from Estimate data & STORE companyId ---
   useEffect(() => {
     const loadAndFillEstimateData = async () => {
-      if (!id) return;
+      if (!id && !editInvoiceId) return;
+
+      if (editInvoiceId) {
+        try {
+          const response = await api.get(`/api/invoices/${editInvoiceId}`);
+          const invoice = response.data?.data || response.data;
+          if (invoice) {
+            setCompanyIdForSubmission(invoice.companyId || "");
+            const matchingEstimate = estimates.find(
+              (estimate) => estimate._id === invoice.source_estimate_id
+                || (estimate.est_no === invoice.estimate_no
+                  && String(estimate.companyId) === String(invoice.companyId))
+            );
+            setSourceEstimateId(invoice.source_estimate_id || matchingEstimate?._id || "");
+            const savedChallanIds = Array.isArray(invoice.delivery_challan_ids)
+              ? invoice.delivery_challan_ids.map(String)
+              : [];
+            setSelectedChallanIds(savedChallanIds);
+            setIncludeDeliveryChallans(savedChallanIds.length > 0);
+            setFormData((prev) => ({
+              ...prev,
+              estimate_no: invoice.estimate_no || "",
+              type_of_invoice: invoice.type_of_invoice || "",
+              gst_no: invoice.gst_no || "",
+              supply_date: invoice.supply_date ? invoice.supply_date.split("T")[0] : "",
+              consignee_name: invoice.consignee_name || prev.consignee_name,
+              consignee_addr: invoice.consignee_addr || invoice.billing_address || prev.consignee_addr,
+              country: invoice.country || prev.country,
+              state: invoice.state || prev.state,
+              city: invoice.city || prev.city,
+              pincode: String(invoice.pincode || prev.pincode || ""),
+              stateCode: invoice.stateCode || prev.stateCode || "",
+            }));
+            return;
+          }
+        } catch (error) {
+          console.error("Failed to load invoice for editing:", error);
+        }
+      }
 
       let matchedEstimate = estimates.find((est) => est._id === id);
 
@@ -110,6 +158,7 @@ const CreateInvoice = () => {
       if (matchedEstimate) {
         const estCompanyId = matchedEstimate.companyId;
         setCompanyIdForSubmission(estCompanyId);
+        setSourceEstimateId(matchedEstimate._id || "");
 
         console.log("✅ Estimate Matched. Company ID:", estCompanyId);
 
@@ -128,7 +177,46 @@ const CreateInvoice = () => {
       }
     };
     loadAndFillEstimateData();
-  }, [id, estimates]);
+  }, [id, editInvoiceId, estimates]);
+
+  useEffect(() => {
+    if (!includeDeliveryChallans || !companyIdForSubmission || !sourceEstimateId) {
+      setDeliveryChallans([]);
+      setChallansError("");
+      return;
+    }
+
+    let cancelled = false;
+    const loadDeliveryChallans = async () => {
+      setChallansLoading(true);
+      setChallansError("");
+      try {
+        const response = await api.get("/api/delivery-challans", {
+          params: { companyId: companyIdForSubmission, estimateId: sourceEstimateId },
+        });
+        if (cancelled) return;
+        const eligible = (Array.isArray(response.data) ? response.data : [])
+          .filter((challan) => String(challan.status || "").toLowerCase() !== "cancelled");
+        setDeliveryChallans(eligible);
+        setSelectedChallanIds((current) =>
+          current.filter((selectedId) =>
+            eligible.some((challan) => String(challan._id) === String(selectedId))
+          )
+        );
+      } catch (error) {
+        if (!cancelled) {
+          setDeliveryChallans([]);
+          setChallansError(error.response?.data?.message || "Unable to load delivery challans.");
+        }
+      } finally {
+        if (!cancelled) setChallansLoading(false);
+      }
+    };
+    loadDeliveryChallans();
+    return () => {
+      cancelled = true;
+    };
+  }, [includeDeliveryChallans, companyIdForSubmission, sourceEstimateId]);
   // ---------------------------------------------------------------------------------
   // --- LOGIC 3: Override Address details from 'events' state ---
   useEffect(() => {
@@ -181,13 +269,17 @@ const CreateInvoice = () => {
     "pincode",
   ];
 
-  const handleCreateInvoice = (e) => {
+  const handleCreateInvoice = async (e) => {
     if (e) e.preventDefault();
     const missingFields = requiredFields.filter((key) => !formData[key]);
 
     if (missingFields.length > 0) {
       showError("Please fill in all required fields (marked with *).");
       console.error("Missing required fields:", missingFields);
+      return;
+    }
+    if (includeDeliveryChallans && selectedChallanIds.length === 0) {
+      showError("Please select at least one delivery challan or choose No.");
       return;
     }
 
@@ -197,22 +289,41 @@ const CreateInvoice = () => {
     // Prepare the data payload, explicitly including the required IDs/names
     const invoicePayload = {
       ...formData,
-      companyId: id, // URL parameter 'id' for companyId
+      companyId: companyIdForSubmission || id, // Use invoice/company source id
+      source_estimate_id: sourceEstimateId,
+      delivery_challan_ids: includeDeliveryChallans ? selectedChallanIds : [],
       added_by: userName, // ✅ 2. Include added_by from localStorage
     };
 
-    // Submit the form data to the server
-    dispatch(createInvoice(invoicePayload));
-    showSuccess("Invoice created successfully!");
-    // Clear form data
-    setFormData({
-      type_of_invoice: "",
-      consignee_name: "",
-      state: "",
-      city: "",
-    });
-    console.log("Invoice Data submitted:", invoicePayload);
-    navigate(-1);
+    setSubmitting(true);
+    try {
+      if (editInvoiceId) {
+        await api.put(`/api/invoices/${editInvoiceId}`, invoicePayload);
+        showSuccess("Invoice updated successfully!");
+      } else {
+        await dispatch(createInvoice(invoicePayload)).unwrap();
+        showSuccess("Invoice created successfully!");
+      }
+      dispatch(fetchInvoices());
+      navigate(-1);
+    } catch (error) {
+      showError(
+        error?.response?.data?.message
+          || error?.message
+          || "Failed to save invoice"
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const toggleChallan = (challanId) => {
+    const idValue = String(challanId);
+    setSelectedChallanIds((current) =>
+      current.includes(idValue)
+        ? current.filter((id) => id !== idValue)
+        : [...current, idValue]
+    );
   };
 
   // Styles remain defined here for reusability
@@ -220,11 +331,10 @@ const CreateInvoice = () => {
     "w-full px-2 py-1.5 text-xs border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-transparent focus:outline-none"
 
   // heading logic 
-  const location = useLocation();
   const { Id, heading } = location.state || {};
 
-  const pageHeading = heading || (Id ? "Update Invoice" : "Create Invoice");
-  const buttonName = heading || (Id ? "Update Invoice" : "Create Invoice");
+  const pageHeading = heading || (editInvoiceId || Id ? "Update Invoice" : "Create Invoice");
+  const buttonName = heading || (editInvoiceId || Id ? "Update Invoice" : "Create Invoice");
 
   const stateOptions = states?.data || states || [];
   const cityOptions = cities?.data || cities || [];
@@ -462,13 +572,120 @@ const CreateInvoice = () => {
               </div>
             </div>
 
+            <section className="mb-4 border border-slate-200 bg-slate-50">
+              <div className="flex flex-col gap-3 border-b border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="flex items-center gap-2 text-sm font-bold text-slate-800">
+                    <Truck size={16} className="text-[#194090]" />
+                    Add Delivery Challan?
+                  </h2>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Selected challans will be shown on the invoice PDF without changing invoice items or totals.
+                  </p>
+                </div>
+                <div className="flex overflow-hidden rounded border border-slate-300 bg-white text-xs">
+                  {[
+                    { label: "No", value: false },
+                    { label: "Yes", value: true },
+                  ].map((option) => (
+                    <button
+                      key={option.label}
+                      type="button"
+                      onClick={() => {
+                        setIncludeDeliveryChallans(option.value);
+                        if (!option.value) setSelectedChallanIds([]);
+                      }}
+                      className={`px-5 py-2 font-bold transition ${
+                        includeDeliveryChallans === option.value
+                          ? "bg-[#194090] text-white"
+                          : "text-slate-600 hover:bg-slate-100"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {includeDeliveryChallans && (
+                <div className="p-4">
+                  {!sourceEstimateId ? (
+                    <p className="rounded border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
+                      Select a valid proforma invoice first to load its delivery challans.
+                    </p>
+                  ) : challansLoading ? (
+                    <p className="p-4 text-center text-xs text-slate-500">Loading delivery challans...</p>
+                  ) : challansError ? (
+                    <p className="rounded border border-red-200 bg-red-50 p-3 text-xs text-red-700">{challansError}</p>
+                  ) : deliveryChallans.length === 0 ? (
+                    <p className="rounded border border-slate-200 bg-white p-4 text-center text-xs text-slate-500">
+                      No active delivery challans are available for this proforma invoice.
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-[11px] font-semibold text-slate-600">
+                        Select one or more challans ({selectedChallanIds.length} selected)
+                      </p>
+                      {deliveryChallans.map((challan) => {
+                        const selected = selectedChallanIds.includes(String(challan._id));
+                        return (
+                          <label
+                            key={challan._id}
+                            className={`block cursor-pointer border p-3 transition ${
+                              selected ? "border-blue-400 bg-blue-50" : "border-slate-200 bg-white hover:border-slate-300"
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <input
+                                type="checkbox"
+                                checked={selected}
+                                onChange={() => toggleChallan(challan._id)}
+                                className="mt-1 h-4 w-4 accent-[#194090]"
+                              />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-[#194090]">{challan.challan_no}</span>
+                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold uppercase text-emerald-700">
+                                      {challan.status || "issued"}
+                                    </span>
+                                  </div>
+                                  <span className="text-[10px] text-slate-500">
+                                    {challan.challan_date
+                                      ? new Date(challan.challan_date).toLocaleDateString("en-IN")
+                                      : "No date"}
+                                  </span>
+                                </div>
+                                <div className="mt-2 grid gap-1 text-[10px] text-slate-600 sm:grid-cols-2">
+                                  <span><b>Delivery:</b> {challan.delivery_address || "—"}</span>
+                                  <span><b>Transport:</b> {[challan.transporter_name, challan.vehicle_no].filter(Boolean).join(" / ") || "—"}</span>
+                                </div>
+                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                  {(challan.items || []).map((item, index) => (
+                                    <span key={`${challan._id}-${index}`} className="inline-flex items-center gap-1 border border-slate-200 bg-white px-2 py-1 text-[9px] text-slate-600">
+                                      <Package size={10} /> {item.description}: <b>{item.qty} {item.unit}</b>
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
+
             {/* Action Buttons (unchanged) */}
             <div className="flex gap-2 mt-1 pt-3 border-t border-gray-200">
               <button
                 type="submit"
-                className="px-4 py-1.5 text-xs bg-[#337ab7] hover:bg-[#286090] text-white cursor-pointer "
+                disabled={submitting}
+                className="px-4 py-1.5 text-xs bg-[#337ab7] hover:bg-[#286090] text-white cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {buttonName}
+                {submitting ? "SAVING..." : buttonName}
               </button>
               <button
                 type="button"

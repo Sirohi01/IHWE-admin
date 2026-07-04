@@ -1,12 +1,14 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import api from '../lib/api';
 import {
     ChevronLeft, Settings, User, Calendar, Plus, Trash2, FileText,
     Download, Mail, MessageCircleMore, Printer, Eye, Upload, Bookmark,
     XIcon,
     File,
-    List
+    List,
+    Package,
+    Truck
 } from 'lucide-react';
 import SearchableDropdown from '../components/SearchableDropdown';
 import InvoicePreviewTemplate from './ihwe_client_data_2026/invoice/InvoicePreviewTemplate';
@@ -41,6 +43,37 @@ const newItem = () => ({
 
 const GST_OPTIONS = ['0%', '5%', '12%', '18%', '28%'];
 const UNITS = ['Nos', 'Sqm', 'Sqft', 'Mtrs', 'Kgs', 'Ltrs', 'Pcs'];
+const normalizeItemValue = (value) => String(value ?? '').trim().toLowerCase();
+const getItemKey = (item = {}) => [
+    normalizeItemValue(item.description),
+    normalizeItemValue(item.hsn),
+    normalizeItemValue(item.unit),
+    normalizeItemValue(item.size),
+    normalizeItemValue(item.area),
+    Number(item.rate || 0).toFixed(2),
+].join('|');
+const isCancelledDoc = (doc) => String(doc?.status || '').trim().toLowerCase() === 'cancelled';
+const recalculateItemForQty = (item, qty) => {
+    const nextQty = Number(qty) || 0;
+    const rate = Number(item.rate) || 0;
+    const area = Number(item.area) || 0;
+    const sizeAsNumber = Number(item.size);
+    const multiplier = area > 0 ? area : (Number.isFinite(sizeAsNumber) && sizeAsNumber > 0 ? sizeAsNumber : 1);
+    const amount = rate * nextQty * multiplier;
+    const discountPct = Number(item.discountPct) || 0;
+    const taxableValue = amount - (amount * discountPct) / 100;
+    const gstRate = parseFloat(item.gstPct) || 0;
+    const gstAmount = taxableValue * (gstRate / 100);
+
+    return {
+        ...item,
+        qty: nextQty,
+        amount,
+        taxableValue,
+        gstAmount,
+        total: taxableValue + gstAmount,
+    };
+};
 
 // ── Section heading ──────────────────────────────────────────────────────────
 const SectionHead = ({ num, label }) => (
@@ -90,12 +123,26 @@ const QuickAction = ({ icon: Icon, label, colorClass = "text-[#3b82f6]", onClick
 // ══════════════════════════════════════════════════════════════════════════════
 const CreateInvoice = () => {
     const navigate = useNavigate();
-    const { id } = useParams();
+    const location = useLocation();
+    const { id, piNo } = useParams();
+    const navigationState = location.state || {};
+    const selectedPiFromUrl = navigationState.selectedPiNo || (piNo ? decodeURIComponent(piNo) : '');
+    const sourceEstimateId = navigationState.sourceEstimateId || '';
+    const [resolvedSourceEstimateId, setResolvedSourceEstimateId] = useState(sourceEstimateId);
     const fileInputRef = useRef(null);
     const [attachedFile, setAttachedFile] = useState(null);
     const [estimates, setEstimates] = useState([]);
+    const [existingInvoices, setExistingInvoices] = useState([]);
     const [selectedPi, setSelectedPi] = useState('');
     const [isEditMode, setIsEditMode] = useState(false);
+    const [editingInvoiceId, setEditingInvoiceId] = useState('');
+    const [isProformaEditMode, setIsProformaEditMode] = useState(false);
+    const [editingProformaId, setEditingProformaId] = useState('');
+    const [includeDeliveryChallans, setIncludeDeliveryChallans] = useState(false);
+    const [deliveryChallans, setDeliveryChallans] = useState([]);
+    const [selectedChallanIds, setSelectedChallanIds] = useState([]);
+    const [challansLoading, setChallansLoading] = useState(false);
+    const [challansError, setChallansError] = useState('');
 
     const addEstimateOption = (estimate) => {
         if (!estimate?.est_no) return;
@@ -116,12 +163,8 @@ const CreateInvoice = () => {
             const fetchedEstimates = Array.isArray(estRes.data) ? estRes.data : (estRes.data?.data || []);
             const fetchedInvoices = Array.isArray(invRes.data) ? invRes.data : (invRes.data?.data || []);
 
-            // Filter out estimates that already have an invoice generated
-            const availableEstimates = fetchedEstimates.filter(est => {
-                return !fetchedInvoices.some(inv => inv.estimate_no === est.est_no);
-            });
-
-            setEstimates(availableEstimates);
+            setEstimates(fetchedEstimates);
+            setExistingInvoices(fetchedInvoices);
         } catch (err) {
             console.error("Failed to fetch estimates and invoices", err);
         }
@@ -133,62 +176,124 @@ const CreateInvoice = () => {
     useEffect(() => {
         if (id) {
             const fetchInvoice = async () => {
+                const applyInvoiceToForm = (inv) => {
+                    setIsEditMode(true);
+                    setIsProformaEditMode(false);
+                    setEditingProformaId('');
+                    setEditingInvoiceId(inv._id || '');
+                    setSelectedPi(inv.estimate_no || selectedPiFromUrl || '');
+                    setResolvedSourceEstimateId(inv.source_estimate_id || '');
+                    const linkedChallanIds = Array.isArray(inv.delivery_challan_ids)
+                        ? inv.delivery_challan_ids.map(String)
+                        : [];
+                    setSelectedChallanIds(linkedChallanIds);
+                    setIncludeDeliveryChallans(linkedChallanIds.length > 0);
+                    setForm(f => ({
+                        ...f,
+                        companyId: inv.companyId || f.companyId,
+                        clientName: inv.consignee_name || f.clientName,
+                        gstin: inv.gst_no || f.gstin,
+                        invoiceType: inv.type_of_invoice || 'Standard',
+                        invoiceNo: inv.invoice_no || 'Auto-generated on save',
+                        invoiceDate: inv.invoice_date ? new Date(inv.invoice_date).toISOString().split('T')[0] : f.invoiceDate,
+                        dueDate: inv.due_date ? new Date(inv.due_date).toISOString().split('T')[0] : f.dueDate,
+                        poNo: inv.po_no || f.poNo,
+                        currency: inv.currency || f.currency,
+                        billingAddress: inv.billing_address || f.billingAddress,
+                        shippingAddress: inv.consignee_addr || f.shippingAddress,
+                        company_name: inv.company_name || inv.consignee_name || f.company_name,
+                        company_addr: inv.company_addr || inv.billing_address || f.company_addr,
+                        event_name: inv.event_name || inv.consignee_name || f.event_name,
+                        consignee_name: inv.consignee_name || f.consignee_name,
+                        consignee_addr: inv.consignee_addr || f.consignee_addr,
+                        billingState: inv.billing_state || f.billingState,
+                        billingPin: inv.billing_pincode || f.billingPin,
+                        country: inv.country || f.country,
+                        state: inv.state || f.state,
+                        city: inv.city || f.city,
+                        placeOfSupply: inv.place_of_supply ? (inv.place_of_supply.toLowerCase().includes('delhi') ? 'Delhi (07)' : inv.place_of_supply.toLowerCase().includes('maharashtra') ? 'Maharashtra (27)' : inv.place_of_supply.toLowerCase().includes('uttar') ? 'Uttar Pradesh (09)' : inv.place_of_supply.toLowerCase().includes('haryana') ? 'Haryana (06)' : inv.place_of_supply) : f.placeOfSupply,
+                        remarks: inv.remarks || f.remarks,
+                        terms: inv.terms || f.terms
+                    }));
+                    if (inv.items && inv.items.length > 0) {
+                        setItems(estimateItemsToInvoiceItems(inv.items || []));
+                    }
+                };
+
+                if (selectedPiFromUrl) {
+                    setSelectedPi(selectedPiFromUrl);
+                    setIsEditMode(false);
+                    setEditingInvoiceId('');
+                    setIsProformaEditMode(false);
+                    setEditingProformaId('');
+
+                    if (sourceEstimateId) {
+                        try {
+                            const estRes = await api.get(`/api/estimates/${sourceEstimateId}`);
+                            const estimate = estRes.data?.data || estRes.data;
+                            if (estimate?._id) {
+                                setResolvedSourceEstimateId(estimate._id);
+                                setSelectedPi(selectedPiFromUrl);
+                                addEstimateOption({ ...estimate, est_no: selectedPiFromUrl });
+                                setForm(f => ({
+                                    ...estimateToInvoiceForm(estimate, estimate.exhibitor || {}, f),
+                                    invoiceNo: 'Auto-generated on save',
+                                    invoiceDate: f.invoiceDate,
+                                    gstin: estimate.company_gst_no || estimate.gst_no || f.gstin,
+                                    invoiceType: estimate.est_type || f.invoiceType,
+                                }));
+                                if (estimate.items && estimate.items.length > 0) {
+                                    await applyEstimateItemsForNewInvoice(estimate);
+                                }
+                                return;
+                            }
+                        } catch (estimateErr) {
+                            console.error("Failed to load source proforma for invoice", estimateErr);
+                        }
+                    }
+                }
+
                 try {
                     const res = await api.get(`/api/invoices/${id}`);
                     const inv = res.data?.data || res.data;
                     if (inv && inv._id) {
-                        setIsEditMode(true);
-                        setSelectedPi(inv.estimate_no || '');
-                        setForm(f => ({
-                            ...f,
-                            companyId: inv.companyId || f.companyId,
-                            clientName: inv.consignee_name || f.clientName,
-                            gstin: inv.gst_no || f.gstin,
-                            invoiceType: inv.type_of_invoice || 'Standard',
-                            invoiceNo: inv.invoice_no || 'Auto-generated on save',
-                            invoiceDate: inv.invoice_date ? new Date(inv.invoice_date).toISOString().split('T')[0] : f.invoiceDate,
-                            dueDate: inv.due_date ? new Date(inv.due_date).toISOString().split('T')[0] : f.dueDate,
-                            poNo: inv.po_no || f.poNo,
-                            currency: inv.currency || f.currency,
-                            billingAddress: inv.billing_address || f.billingAddress,
-                            shippingAddress: inv.consignee_addr || f.shippingAddress,
-                            company_name: inv.company_name || inv.consignee_name || f.company_name,
-                            company_addr: inv.company_addr || inv.billing_address || f.company_addr,
-                            event_name: inv.event_name || inv.consignee_name || f.event_name,
-                            consignee_name: inv.consignee_name || f.consignee_name,
-                            consignee_addr: inv.consignee_addr || f.consignee_addr,
-                            billingState: inv.billing_state || f.billingState,
-                            billingPin: inv.billing_pincode || f.billingPin,
-                            country: inv.country || f.country,
-                            state: inv.state || f.state,
-                            city: inv.city || f.city,
-                            placeOfSupply: inv.place_of_supply ? (inv.place_of_supply.toLowerCase().includes('delhi') ? 'Delhi (07)' : inv.place_of_supply.toLowerCase().includes('maharashtra') ? 'Maharashtra (27)' : inv.place_of_supply.toLowerCase().includes('uttar') ? 'Uttar Pradesh (09)' : inv.place_of_supply.toLowerCase().includes('haryana') ? 'Haryana (06)' : inv.place_of_supply) : f.placeOfSupply,
-                            remarks: inv.remarks || f.remarks,
-                            terms: inv.terms || f.terms
-                        }));
-                        if (inv.items && inv.items.length > 0) {
-                            setItems(estimateItemsToInvoiceItems(inv.items || []));
-                        }
+                        applyInvoiceToForm(inv);
                         return;
                     }
                 } catch (err) {
                 }
 
                 setIsEditMode(false);
+                setEditingInvoiceId('');
+                try {
+                    const estRes = await api.get(`/api/estimates/${id}`);
+                    const estimate = estRes.data?.data || estRes.data;
+                    if (estimate?._id) {
+                        setResolvedSourceEstimateId(estimate._id);
+                        setIsProformaEditMode(true);
+                        setEditingProformaId(estimate._id);
+                        setSelectedPi(estimate.est_no || '');
+                        addEstimateOption(estimate);
+                        setForm(f => ({
+                            ...estimateToInvoiceForm(estimate, estimate.exhibitor || {}, f),
+                            invoiceNo: estimate.est_no || f.invoiceNo,
+                            invoiceDate: estimate.supply_date ? new Date(estimate.supply_date).toISOString().split('T')[0] : f.invoiceDate,
+                            gstin: estimate.company_gst_no || estimate.gst_no || f.gstin,
+                            invoiceType: estimate.est_type || f.invoiceType,
+                        }));
+                        if (estimate.items && estimate.items.length > 0) {
+                            setItems(estimateItemsToInvoiceItems(estimate.items || []));
+                        }
+                        return;
+                    }
+                } catch (estimateErr) {
+                }
+
+                setIsProformaEditMode(false);
+                setEditingProformaId('');
                 try {
                     const client = await loadClientLikeProforma(id);
                     if (client) {
-                        const latestEstimate = await fetchLatestEstimateForClient(id, client);
-                        if (latestEstimate) {
-                            addEstimateOption(latestEstimate);
-                            setSelectedPi(latestEstimate.est_no || '');
-                            setForm(f => estimateToInvoiceForm(latestEstimate, client, f));
-                            if (latestEstimate.items && latestEstimate.items.length > 0) {
-                                setItems(estimateItemsToInvoiceItems(latestEstimate.items));
-                            }
-                            return;
-                        }
-
                         setSelectedPi('');
                         setForm(f => clientToInvoiceForm(client, id, f));
                     }
@@ -198,7 +303,7 @@ const CreateInvoice = () => {
             };
             fetchInvoice();
         }
-    }, [id]);
+    }, [id, selectedPiFromUrl, sourceEstimateId]);
 
     const handleFileChange = (e) => {
         if (e.target.files && e.target.files[0]) {
@@ -237,23 +342,142 @@ const CreateInvoice = () => {
 
     const [items, setItems] = useState([newItem()]);
     const [showPreview, setShowPreview] = useState(false);
-    const returnListId = form.companyId || (!isEditMode ? id : '');
-    const listRoute = returnListId ? `/invoice-list/${returnListId}` : '/invoice-list';
+    useEffect(() => {
+        if (!includeDeliveryChallans || !form.companyId || !resolvedSourceEstimateId) {
+            setDeliveryChallans([]);
+            setChallansError('');
+            return;
+        }
+
+        let cancelled = false;
+        const loadChallans = async () => {
+            setChallansLoading(true);
+            setChallansError('');
+            try {
+                const response = await api.get('/api/delivery-challans', {
+                    params: {
+                        companyId: form.companyId,
+                        estimateId: resolvedSourceEstimateId,
+                    },
+                });
+                if (cancelled) return;
+                const eligible = (Array.isArray(response.data) ? response.data : [])
+                    .filter((challan) => !isCancelledDoc(challan));
+                setDeliveryChallans(eligible);
+                setSelectedChallanIds((current) =>
+                    current.filter((challanId) =>
+                        eligible.some((challan) => String(challan._id) === String(challanId))
+                    )
+                );
+            } catch (error) {
+                if (!cancelled) {
+                    setDeliveryChallans([]);
+                    setChallansError(error.response?.data?.message || 'Unable to load delivery challans.');
+                }
+            } finally {
+                if (!cancelled) setChallansLoading(false);
+            }
+        };
+        loadChallans();
+        return () => {
+            cancelled = true;
+        };
+    }, [includeDeliveryChallans, form.companyId, resolvedSourceEstimateId]);
+
+    const returnListId = form.companyId || (!isEditMode && !isProformaEditMode ? id : '');
+    const listRoute = isProformaEditMode
+        ? -1
+        : (returnListId ? `/invoice-list/${returnListId}` : '/invoice-list');
+    const postSaveRoute = navigationState.returnTo || listRoute;
+    const dropdownEstimates = selectedPiFromUrl && !estimates.some((estimate) => estimate.est_no === selectedPiFromUrl)
+        ? [{ est_no: selectedPiFromUrl }, ...estimates]
+        : estimates;
+    const selectedDeliveryChallans = deliveryChallans.filter((challan) =>
+        selectedChallanIds.includes(String(challan._id))
+    );
+    const previewDeliveryChallans = selectedDeliveryChallans.map((challan) => ({
+        delivery_challan_id: String(challan._id),
+        challan_no: challan.challan_no,
+        challan_date: challan.challan_date,
+        status: challan.status,
+        delivery_address: challan.delivery_address,
+        transporter_name: challan.transporter_name,
+        vehicle_no: challan.vehicle_no,
+        eway_bill: challan.eway_bill,
+        bilty_no: challan.bilty_no,
+        items: challan.items || [],
+    }));
+
+    const getInvoicesForSplit = useCallback(async () => {
+        if (existingInvoices.length > 0) return existingInvoices;
+        try {
+            const invRes = await api.get('/api/invoices');
+            const fetchedInvoices = Array.isArray(invRes.data) ? invRes.data : (invRes.data?.data || []);
+            setExistingInvoices(fetchedInvoices);
+            return fetchedInvoices;
+        } catch (error) {
+            console.error("Failed to fetch invoices for split billing", error);
+            return [];
+        }
+    }, [existingInvoices]);
+
+    const buildRemainingInvoiceItems = useCallback(async (estimate) => {
+        const invoiceList = await getInvoicesForSplit();
+        const usedQtyByKey = new Map();
+        invoiceList
+            .filter((invoice) => {
+                if (isCancelledDoc(invoice)) return false;
+                if (invoice.companyId && estimate.companyId && String(invoice.companyId) !== String(estimate.companyId)) return false;
+                return invoice.estimate_no === estimate.est_no || String(invoice.source_estimate_id || '') === String(estimate._id || '');
+            })
+            .forEach((invoice) => {
+                (invoice.items || []).forEach((item) => {
+                    const key = getItemKey(item);
+                    usedQtyByKey.set(key, (usedQtyByKey.get(key) || 0) + (Number(item.qty) || 0));
+                });
+            });
+
+        return estimateItemsToInvoiceItems(estimate.items || [])
+            .map((item) => {
+                const remainingQty = Math.max(0, (Number(item.qty) || 0) - (usedQtyByKey.get(getItemKey(item)) || 0));
+                return {
+                    ...recalculateItemForQty(item, remainingQty),
+                    maxQty: remainingQty,
+                };
+            })
+            .filter((item) => Number(item.qty) > 0);
+    }, [getInvoicesForSplit]);
+
+    const applyEstimateItemsForNewInvoice = useCallback(async (estimate) => {
+        const remainingItems = await buildRemainingInvoiceItems(estimate);
+        if (remainingItems.length > 0) {
+            setItems(remainingItems);
+            return;
+        }
+        setItems([newItem()]);
+        Swal.fire('Fully Invoiced', 'All items from this proforma invoice are already invoiced.', 'info');
+    }, [buildRemainingInvoiceItems]);
 
     // ── handlers ────────────────────────────────────────────────────────────────
-    const handlePiSelect = (estNo) => {
+    const handlePiSelect = async (estNo) => {
         setSelectedPi(estNo);
-        if (!estNo) return;
+        setSelectedChallanIds([]);
+        setIncludeDeliveryChallans(false);
+        if (!estNo) {
+            setResolvedSourceEstimateId('');
+            return;
+        }
 
         const est = estimates.find(e => e.est_no === estNo);
         if (est) {
+            setResolvedSourceEstimateId(est._id || '');
             setForm(f => ({
                 ...f,
                 companyId: est.companyId || f.companyId,
-                clientName: est.consignee_name || f.clientName,
-                gstin: est.gst_no || f.gstin,
-                billingAddress: est.consignee_addr || f.billingAddress,
-                shippingAddress: est.consignee_addr || f.shippingAddress,
+                clientName: est.company_name || est.consignee_name || f.clientName,
+                gstin: est.company_gst_no || est.gst_no || f.gstin,
+                billingAddress: est.company_addr || est.consignee_addr || f.billingAddress,
+                shippingAddress: est.consignee_addr || est.company_addr || f.shippingAddress,
                 country: est.country || f.country,
                 state: est.state || f.state,
                 billingState: est.state || f.billingState,
@@ -265,12 +489,12 @@ const CreateInvoice = () => {
                 company_name: est.company_name || f.company_name,
                 company_addr: est.company_addr || f.company_addr,
                 event_name: est.event_name || f.event_name,
-                consignee_name: est.consignee_name || f.consignee_name,
+                consignee_name: est.event_name || est.consignee_name || f.consignee_name,
                 consignee_addr: est.consignee_addr || f.consignee_addr,
             }));
 
             if (est.items && est.items.length > 0) {
-                setItems(estimateItemsToInvoiceItems(est.items || []));
+                await applyEstimateItemsForNewInvoice(est);
             }
         }
     };
@@ -290,7 +514,9 @@ const CreateInvoice = () => {
                 }
 
                 const rate = Number(field === 'rate' ? val : updated.rate) || 0;
-                const qty = Number(field === 'qty' ? val : updated.qty) || 0;
+                const rawQty = Number(field === 'qty' ? val : updated.qty) || 0;
+                const qty = Number(updated.maxQty) > 0 ? Math.min(rawQty, Number(updated.maxQty)) : rawQty;
+                updated.qty = qty;
                 const area = Number(field === 'area' ? val : updated.area) || 0;
                 const discountPct = Number(field === 'discountPct' ? val : updated.discountPct) || 0;
 
@@ -312,25 +538,122 @@ const CreateInvoice = () => {
     const addItem = () => setItems((p) => [...p, newItem()]);
     const removeItem = (id) => setItems((p) => p.filter((i) => i.id !== id));
     const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+    const toggleDeliveryChallan = (challanId) => {
+        const value = String(challanId);
+        setSelectedChallanIds((current) =>
+            current.includes(value)
+                ? current.filter((idValue) => idValue !== value)
+                : [...current, value]
+        );
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        if (!isProformaEditMode && includeDeliveryChallans && selectedChallanIds.length === 0) {
+            Swal.fire('Delivery Challan Required', 'Select at least one delivery challan or choose No.', 'warning');
+            return;
+        }
+
         let finalAmount = items.reduce((acc, item) => acc + (Number(item.total) || 0), 0);
+
+        if (isProformaEditMode) {
+            const isIntrastate = form.invoiceType === 'Intrastate';
+            const transformedItems = items.map((item) => {
+                const taxableValue = Number(item.taxableValue) || 0;
+                const totalGstRate = parseFloat(item.gstPct) || 0;
+                const gstAmount = taxableValue * (totalGstRate / 100);
+
+                return {
+                    description: item.description,
+                    hsn: item.hsn,
+                    qty: Number(item.qty),
+                    size: item.size,
+                    area: item.area,
+                    unit: item.unit,
+                    rate: Number(item.rate),
+                    amount: Number(item.amount).toFixed(2),
+                    disc: String(Number(item.discountPct) || 0),
+                    tax: taxableValue.toFixed(2),
+                    gstRate: String(totalGstRate),
+                    gstPct: item.gstPct,
+                    gstAmount: gstAmount.toFixed(2),
+                    finalAmount: Number(item.total || 0).toFixed(2),
+                    total: Number(item.total || 0),
+                    cgst: isIntrastate ? (gstAmount / 2).toFixed(2) : gstAmount.toFixed(2),
+                    cgst_per: isIntrastate ? (totalGstRate / 2).toFixed(0) : '0',
+                    igst_per: isIntrastate ? '0' : totalGstRate.toFixed(0),
+                    remarks: item.remarks || '',
+                };
+            });
+
+            const proformaPayload = {
+                companyId: form.companyId || id,
+                est_no: selectedPi,
+                est_type: form.invoiceType,
+                gst_no: form.gstin,
+                company_gst_no: form.gstin,
+                supply_date: form.invoiceDate,
+                company_name: form.company_name || form.clientName,
+                company_addr: form.company_addr || form.billingAddress,
+                event_name: form.event_name || form.consignee_name,
+                event_place_of_supply: form.consignee_addr || form.shippingAddress,
+                consignee_name: form.consignee_name || form.event_name || form.clientName,
+                consignee_addr: form.sameAsBilling ? form.company_addr : (form.consignee_addr || form.shippingAddress),
+                country: form.country,
+                state: form.state,
+                city: form.city,
+                pincode: form.billingPin,
+                remarks: form.remarks,
+                terms: form.terms,
+                finalAmount,
+                items: transformedItems,
+                updated_by: getCurrentUserName(),
+            };
+
+            try {
+                const res = await api.put(`/api/estimates/${editingProformaId || id}`, proformaPayload);
+                if (res.status === 200 || res.status === 201) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Updated!',
+                        text: 'Proforma invoice updated successfully.',
+                        confirmButtonColor: '#194090',
+                    });
+                    navigate(-1);
+                }
+            } catch (err) {
+                console.error(err);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Update Failed',
+                    text: err.response?.data?.message || err.message || 'Failed to update proforma invoice.',
+                    confirmButtonColor: '#194090',
+                });
+            }
+            return;
+        }
 
         const payload = {
             companyId: form.companyId || id,
+            source_estimate_id: resolvedSourceEstimateId || sourceEstimateId || '',
             estimate_no: selectedPi || '',
+            delivery_challan_ids: includeDeliveryChallans ? selectedChallanIds : [],
             type_of_invoice: form.invoiceType,
             invoice_date: form.invoiceDate,
             due_date: form.dueDate,
             po_no: form.poNo,
             currency: form.currency,
             gst_no: form.gstin,
+            company_name: form.company_name || form.clientName,
+            company_addr: form.company_addr || form.billingAddress,
+            company_gst_no: form.gstin,
+            event_name: form.event_name || form.consignee_name,
+            event_place_of_supply: form.consignee_addr || form.shippingAddress,
             supply_date: form.invoiceDate,
-            consignee_name: form.clientName,
-            consignee_addr: form.shippingAddress,
-            billing_address: form.billingAddress,
+            consignee_name: form.consignee_name || form.event_name || form.clientName,
+            consignee_addr: form.sameAsBilling ? form.company_addr : (form.consignee_addr || form.shippingAddress),
+            billing_address: form.company_addr || form.billingAddress,
             billing_state: form.billingState,
             billing_pincode: form.billingPin,
             country: form.country,
@@ -363,21 +686,37 @@ const CreateInvoice = () => {
         try {
             let res;
             if (isEditMode) {
-                res = await api.put(`/api/invoices/${id}`, payload);
+                res = await api.put(`/api/invoices/${editingInvoiceId || id}`, payload);
                 if (res.status === 200 || res.status === 201) {
-                    alert('Invoice updated successfully!');
-                    navigate(payload.companyId ? `/invoice-list/${payload.companyId}` : '/invoice-list');
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Updated!',
+                        text: 'Invoice updated successfully.',
+                        confirmButtonColor: '#194090',
+                    });
+                    navigate(postSaveRoute);
                 }
             } else {
                 res = await api.post('/api/invoices', payload);
                 if (res.status === 201 || res.status === 200) {
-                    alert('Invoice generated successfully!');
-                    navigate(payload.companyId ? `/invoice-list/${payload.companyId}` : '/invoice-list');
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Invoice Generated!',
+                        text: 'Invoice generated successfully.',
+                        confirmButtonColor: '#194090',
+                    });
+                    const createdInvoiceId = res.data?.data?._id || res.data?._id;
+                    navigate(createdInvoiceId ? `/payments/invoiceDetails/${createdInvoiceId}` : postSaveRoute);
                 }
             }
         } catch (err) {
             console.error(err);
-            alert(`Failed to ${isEditMode ? 'update' : 'generate'} invoice: ` + (err.response?.data?.message || err.message));
+            await Swal.fire({
+                icon: 'error',
+                title: isEditMode ? 'Update Failed' : 'Generation Failed',
+                text: err.response?.data?.message || err.message || `Failed to ${isEditMode ? 'update' : 'generate'} invoice.`,
+                confirmButtonColor: '#194090',
+            });
         }
     };
 
@@ -460,8 +799,8 @@ const CreateInvoice = () => {
                         <FileText className="w-5 h-5" />
                     </div>
                     <div>
-                        <h1 className="text-lg font-bold text-gray-900 leading-tight">Create Invoice</h1>
-                        <p className="text-xs text-gray-500 mt-0.5">Generate a new invoice for your client</p>
+                        <h1 className="text-lg font-bold text-gray-900 leading-tight">{isProformaEditMode ? 'Edit Proforma Invoice' : 'Create Invoice'}</h1>
+                        <p className="text-xs text-gray-500 mt-0.5">{isProformaEditMode ? 'Update proforma invoice details' : 'Generate a new invoice for your client'}</p>
                     </div>
                 </div>
                 {/* <button
@@ -499,7 +838,7 @@ const CreateInvoice = () => {
                                         <User className="w-4 h-4" />
                                     </button>
                                 </div> */}
-                                {isEditMode ? (
+                                {(isEditMode || isProformaEditMode) ? (
                                     <Input value={selectedPi || 'No PI / Estimate'} disabled />
                                 ) : (
                                     <SearchableDropdown
@@ -507,7 +846,7 @@ const CreateInvoice = () => {
                                         onChange={(e) => handlePiSelect(e.target.value)}
                                         options={[
                                             { label: 'Select Existing PI / Estimate', value: '' },
-                                            ...estimates.map(e => ({ label: e.est_no, value: e.est_no }))
+                                            ...dropdownEstimates.map(e => ({ label: e.est_no, value: e.est_no }))
                                         ]}
                                     />
                                 )}
@@ -660,7 +999,10 @@ const CreateInvoice = () => {
                                                 <input className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-center" value={item.hsn} onChange={(e) => updateItem(item.id, 'hsn', e.target.value)} />
                                             </td>
                                             <td className="px-1 py-1.5">
-                                                <input required type="number" min={1} className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-center" value={item.qty} onChange={(e) => updateItem(item.id, 'qty', e.target.value)} />
+                                                <input required type="number" min={1} max={item.maxQty || undefined} className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-center" value={item.qty} onChange={(e) => updateItem(item.id, 'qty', e.target.value)} />
+                                                {item.maxQty ? (
+                                                    <p className="mt-0.5 text-[9px] text-slate-400 text-center whitespace-nowrap">Left: {item.maxQty}</p>
+                                                ) : null}
                                             </td>
                                             <td className="px-1 py-1.5">
                                                 <input className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-center" value={item.area} onChange={(e) => updateItem(item.id, 'area', e.target.value)} placeholder="Area" />
@@ -725,8 +1067,81 @@ const CreateInvoice = () => {
                     </div>
 
                     {/* SECTION 4 – Additional Info */}
+                    {!isProformaEditMode && (
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-3 mt-4">
+                            <SectionHead num="4" label="Delivery Challan" />
+                            <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <h4 className="flex items-center gap-2 text-[13px] font-bold text-[#1a2b4b]">
+                                        <Truck size={16} className="text-[#194090]" />
+                                        Do you want to add delivery challan details?
+                                    </h4>
+                                    <p className="mt-1 text-[11px] text-slate-500">This adds delivery references to the PDF without changing invoice totals.</p>
+                                </div>
+                                <div className="flex overflow-hidden rounded-lg border border-slate-300 bg-white text-xs">
+                                    {[{ label: 'No', value: false }, { label: 'Yes', value: true }].map((option) => (
+                                        <button key={option.label} type="button" onClick={() => {
+                                            setIncludeDeliveryChallans(option.value);
+                                            if (!option.value) setSelectedChallanIds([]);
+                                        }} className={`px-6 py-2 font-bold transition ${includeDeliveryChallans === option.value ? 'bg-[#194090] text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
+                                            {option.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {includeDeliveryChallans && (
+                                <div className="mt-4">
+                                    {!resolvedSourceEstimateId ? (
+                                        <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">Please select an existing PI / Estimate first.</p>
+                                    ) : challansLoading ? (
+                                        <p className="p-4 text-center text-xs text-slate-500">Loading delivery challans...</p>
+                                    ) : challansError ? (
+                                        <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{challansError}</p>
+                                    ) : deliveryChallans.length === 0 ? (
+                                        <p className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500">No active delivery challans found for this PI.</p>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            <p className="text-[11px] font-semibold text-slate-600">Choose challans ({selectedChallanIds.length} selected)</p>
+                                            {deliveryChallans.map((challan) => {
+                                                const selected = selectedChallanIds.includes(String(challan._id));
+                                                return (
+                                                    <label key={challan._id} className={`block cursor-pointer rounded-lg border p-3 transition ${selected ? 'border-blue-400 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                                                        <div className="flex items-start gap-3">
+                                                            <input type="checkbox" checked={selected} onChange={() => toggleDeliveryChallan(challan._id)} className="mt-1 h-4 w-4 accent-[#194090]" />
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-xs font-bold text-[#194090]">{challan.challan_no}</span>
+                                                                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold uppercase text-emerald-700">{challan.status || 'issued'}</span>
+                                                                    </div>
+                                                                    <span className="text-[10px] text-slate-500">{challan.challan_date ? new Date(challan.challan_date).toLocaleDateString('en-IN') : 'No date'}</span>
+                                                                </div>
+                                                                <div className="mt-2 grid gap-1 text-[10px] text-slate-600 sm:grid-cols-2">
+                                                                    <span><b>Delivery:</b> {challan.delivery_address || '—'}</span>
+                                                                    <span><b>Transport:</b> {[challan.transporter_name, challan.vehicle_no].filter(Boolean).join(' / ') || '—'}</span>
+                                                                </div>
+                                                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                                                    {(challan.items || []).map((item, itemIndex) => (
+                                                                        <span key={`${challan._id}-${itemIndex}`} className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[9px] text-slate-600">
+                                                                            <Package size={10} /> {item.description}: <b>{item.qty} {item.unit}</b>
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-3 mt-4">
-                        <SectionHead num="4" label="Additional Information" />
+                        <SectionHead num={isProformaEditMode ? "4" : "5"} label="Additional Information" />
 
                         <div className="grid grid-cols-2 gap-6 mb-2">
                             <div>
@@ -793,10 +1208,10 @@ const CreateInvoice = () => {
                                 <FileText className="w-4 h-4" /> Save as Draft
                             </button>
                             <button type="button" onClick={() => setShowPreview(true)} className="flex items-center gap-2 border border-green-200 bg-green-50 text-green-700 rounded-lg px-5 py-2.5 text-sm font-bold hover:bg-green-100 transition shadow-sm">
-                                <Eye className="w-4 h-4" /> Preview Invoice
+                                <Eye className="w-4 h-4" /> {isProformaEditMode ? 'Preview Proforma' : 'Preview Invoice'}
                             </button>
                             <button type="submit" className="flex items-center gap-2 bg-[#00A859] hover:bg-[#00904C] text-white rounded-lg px-6 py-2.5 text-sm font-medium transition shadow-sm">
-                                <FileText className="w-4 h-4" /> {id ? "Update Invoice" : "Generate Invoice"}
+                                <FileText className="w-4 h-4" /> {isProformaEditMode ? "Update Proforma Invoice" : (isEditMode ? "Update Invoice" : "Generate Invoice")}
                             </button>
                         </div>
                     </div>
@@ -810,7 +1225,7 @@ const CreateInvoice = () => {
                                 <XIcon size={24} />
                             </button>
                             <div className="pt-8">
-                                <InvoicePreviewTemplate form={form} items={items} />
+                                <InvoicePreviewTemplate form={{ ...form, delivery_challans: previewDeliveryChallans }} items={items} />
                             </div>
                         </div>
                     </div>
@@ -872,7 +1287,12 @@ const CreateInvoice = () => {
                             <QuickAction icon={MessageCircleMore} label={isWhatsAppLoading ? "Sending WhatsApp..." : "Send Invoice via WhatsApp"} colorClass="text-emerald-600" onClick={handleSendWhatsApp} disabled={isWhatsAppLoading} />
                             <QuickAction icon={File} label="Download PDF" colorClass="text-red-500" onClick={handlePrint} />
                             <QuickAction icon={Printer} label="Print Invoice" colorClass="text-indigo-600" onClick={handlePrint} />
-                            <QuickAction icon={Bookmark} label="Save as Template" colorClass="text-amber-500" onClick={() => alert("Save as Template functionality coming soon!")} />
+                            <QuickAction icon={Bookmark} label="Save as Template" colorClass="text-amber-500" onClick={() => Swal.fire({
+                                icon: 'info',
+                                title: 'Coming Soon',
+                                text: 'Save as Template functionality is coming soon!',
+                                confirmButtonColor: '#194090',
+                            })} />
                         </div>
                     </div>
 
@@ -937,7 +1357,7 @@ const CreateInvoice = () => {
             {/* Hidden printable component */}
             <div style={{ display: 'none' }}>
                 <div ref={printRef}>
-                    <InvoicePreviewTemplate form={form} items={items} />
+                    <InvoicePreviewTemplate form={{ ...form, delivery_challans: previewDeliveryChallans }} items={items} />
                 </div>
             </div>
 

@@ -135,9 +135,29 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
     const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
     const sigUrl = settings?.authorizedSignature ? (settings.authorizedSignature.startsWith('http') ? settings.authorizedSignature : `${BASE_URL}${settings.authorizedSignature}`) : null;
     const stampUrl = settings?.companyStamp ? (settings.companyStamp.startsWith('http') ? settings.companyStamp : `${BASE_URL}${settings.companyStamp}`) : null;
+    const cancelled = String(matchedInvoice?.status || form?.status || '').toLowerCase() === 'cancelled';
 
     return (
-        <div className="bg-white border border-slate-300 p-10 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', maxWidth: '1000px', margin: '0 auto' }}>
+        <div className="bg-white border border-slate-300 p-10 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', maxWidth: '1000px', margin: '0 auto', position: 'relative' }}>
+            {cancelled && (
+                <div style={{
+                    position: 'absolute',
+                    top: '44%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%) rotate(-18deg)',
+                    border: '6px solid rgba(220, 38, 38, 0.7)',
+                    color: 'rgba(220, 38, 38, 0.75)',
+                    fontSize: 54,
+                    fontWeight: 900,
+                    letterSpacing: 4,
+                    padding: '10px 28px',
+                    textTransform: 'uppercase',
+                    zIndex: 5,
+                    pointerEvents: 'none',
+                }}>
+                    Cancelled
+                </div>
+            )}
 
             <div style={{ marginBottom: 8, textAlign: 'center' }}>
                 <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
@@ -225,6 +245,13 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{invoiceNo}</td>
                                     </tr>
+                                    {Number(matchedInvoice?.revision_no || 0) > 0 && (
+                                        <tr>
+                                            <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Revision</td>
+                                            <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                            <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>Rev {matchedInvoice.revision_no}</td>
+                                        </tr>
+                                    )}
                                     <tr>
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Invoice Date</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
@@ -258,6 +285,68 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading }) => {
                     </tr>
                 </tbody>
             </table>
+
+            {(matchedInvoice?.delivery_challans || form?.delivery_challans || []).length > 0 && (
+                <div style={{ marginBottom: 8, pageBreakInside: 'auto' }}>
+                    <div style={{
+                        background: '#0d1f3c',
+                        color: '#fff',
+                        border: '1px solid #0d1f3c',
+                        padding: '4px 6px',
+                        textAlign: 'center',
+                        textTransform: 'uppercase',
+                        fontSize: 10,
+                        fontWeight: 'bold',
+                    }}>
+                        Delivery Challan Details
+                    </div>
+                    {(matchedInvoice?.delivery_challans || form?.delivery_challans || []).map((challan, challanIndex) => (
+                        <div
+                            key={challan.delivery_challan_id || `${challan.challan_no}-${challanIndex}`}
+                            style={{ border: '1px solid #ccc', borderTop: 0, padding: 6, pageBreakInside: 'avoid' }}
+                        >
+                            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 5 }}>
+                                <tbody>
+                                    <tr>
+                                        <td style={{ width: '25%', padding: '2px 5px' }}><b>Challan No.:</b> {challan.challan_no || '—'}</td>
+                                        <td style={{ width: '20%', padding: '2px 5px' }}><b>Date:</b> {challan.challan_date ? new Date(challan.challan_date).toLocaleDateString('en-IN') : '—'}</td>
+                                        <td style={{ width: '15%', padding: '2px 5px', textTransform: 'capitalize' }}><b>Status:</b> {challan.status || '—'}</td>
+                                        <td style={{ width: '40%', padding: '2px 5px' }}><b>Delivery:</b> {challan.delivery_address || '—'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ padding: '2px 5px' }}><b>Transporter:</b> {challan.transporter_name || '—'}</td>
+                                        <td style={{ padding: '2px 5px' }}><b>Vehicle:</b> {challan.vehicle_no || '—'}</td>
+                                        <td style={{ padding: '2px 5px' }}><b>E-way Bill:</b> {challan.eway_bill || '—'}</td>
+                                        <td style={{ padding: '2px 5px' }}><b>Bilty No.:</b> {challan.bilty_no || '—'}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead>
+                                    <tr style={{ background: '#eef2f7' }}>
+                                        <th style={{ border: '1px solid #ccc', padding: 3, width: '5%' }}>#</th>
+                                        <th style={{ border: '1px solid #ccc', padding: 3, textAlign: 'left' }}>Delivered Item</th>
+                                        <th style={{ border: '1px solid #ccc', padding: 3, width: '15%' }}>HSN</th>
+                                        <th style={{ border: '1px solid #ccc', padding: 3, width: '12%' }}>Qty.</th>
+                                        <th style={{ border: '1px solid #ccc', padding: 3, width: '12%' }}>Unit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(challan.items || []).map((item, itemIndex) => (
+                                        <tr key={`${challan.challan_no}-${itemIndex}`}>
+                                            <td style={{ border: '1px solid #ccc', padding: 3, textAlign: 'center' }}>{itemIndex + 1}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: 3 }}>{item.description || '—'}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: 3, textAlign: 'center' }}>{item.hsn || '—'}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: 3, textAlign: 'center' }}>{item.qty ?? '—'}</td>
+                                            <td style={{ border: '1px solid #ccc', padding: 3, textAlign: 'center' }}>{item.unit || '—'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
                 <thead>

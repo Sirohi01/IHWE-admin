@@ -8,6 +8,7 @@ import api from "../../../lib/api";
 import { resolveLinkedIds } from "../../../utils/resolveLinkedIds";
 import { getCurrentUserName } from "../../../utils/currentUser";
 import CompanyAccountSummary, { formatCurrency } from "./CompanyAccountSummary";
+import AccountNavigation from '../../../components/AccountNavigation';
 
 const PAYMENT_FOR_OPTIONS = ["Advance Payment", "Running Payment", "Final Payment", "Part Payment", "Balance Payment"];
 const PAYMENT_MODE_OPTIONS = ["NEFT", "RTGS", "UPI", "Cash", "Cheque", "Card", "Wallet", "Bank Transfer", "Other"];
@@ -15,6 +16,7 @@ const TDS_RATE_OPTIONS = ["1", "2", "5", "10"];
 const TDS_SECTION_OPTIONS = ["194C", "194J", "194Q", "194I", "Other"];
 
 const today = () => new Date().toISOString().split("T")[0];
+const isCancelled = (doc) => String(doc?.status || "").toLowerCase() === "cancelled";
 
 const AddPayment = () => {
   const { id } = useParams();
@@ -65,8 +67,8 @@ const AddPayment = () => {
         const allEstimates = Array.isArray(estRes.data) ? estRes.data : estRes.data?.data || [];
         const allPayments = Array.isArray(payRes.data) ? payRes.data : payRes.data?.data || [];
 
-        setInvoices(allInvoices.filter((inv) => linkedIds.includes(inv.companyId)));
-        setProformas(allEstimates.filter((est) => linkedIds.includes(est.companyId)));
+        setInvoices(allInvoices.filter((inv) => linkedIds.includes(inv.companyId) && !isCancelled(inv)));
+        setProformas(allEstimates.filter((est) => linkedIds.includes(est.companyId) && !isCancelled(est)));
         setPayments(allPayments);
       } catch (err) {
         console.error(err);
@@ -117,6 +119,10 @@ const AddPayment = () => {
 
     if (!selectedDoc) {
       toast.error("Please select a document to record payment against.");
+      return;
+    }
+    if (isCancelled(selectedDoc)) {
+      toast.error("Payment cannot be recorded against a cancelled document.");
       return;
     }
     const received = parseFloat(amountReceived);
@@ -196,18 +202,21 @@ const AddPayment = () => {
 
   return (
     <div className="min-h-screen bg-[#f8f9fc] p-4 lg:p-6 lg:pr-20">
-      {/* Breadcrumb (hidden visually in mockup, but good to keep for UX, or we can remove it. Mockup doesn't show it, so let's keep it minimal or remove it. I'll keep it as it's standard) */}
-      <div className="flex items-center gap-2 text-sm text-[#194090] font-semibold mb-4">
-        <span>Exhibitors</span>
-        <ChevronRight size={14} className="text-gray-400" />
-        <span>{companyInfo?.name}</span>
-        <ChevronRight size={14} className="text-gray-400" />
-        <span className="text-slate-500 font-normal">Accounts</span>
-        <ChevronRight size={14} className="text-gray-400" />
-        <span className="text-slate-800">Add Payment</span>
-      </div>
+      <AccountNavigation id={id} accountName={companyInfo?.name} pageName="Payments" />
 
       <CompanyAccountSummary companyInfo={companyInfo} financials={financials} />
+
+      <div className="flex items-center justify-between mb-3 px-1 mt-3">
+        <div>
+          <h1 className="text-lg font-bold text-gray-900">Add Payment</h1>
+        </div>
+        <button
+          onClick={() => navigate(`/payment-list/${id}`)}
+          className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md font-bold transition text-[13px]"
+        >
+          Back to List
+        </button>
+      </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 xl:grid-cols-12 gap-4 mt-2">
         {/* LEFT: Payment Details */}

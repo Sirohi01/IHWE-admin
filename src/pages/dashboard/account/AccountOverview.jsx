@@ -10,6 +10,7 @@ import {
   RefreshCw, ChevronRight,
   User, ArrowRight, FilePlus, CreditCard, Activity,
   FileMinus,
+  Truck,
 } from "lucide-react";
 
 const AccountOverview = () => {
@@ -48,9 +49,11 @@ const AccountOverview = () => {
   };
 
 
-  const getDocViewPath = (doc) => {
+  const getDocumentLink = (doc) => {
     if (doc.documentType === "Invoice") return `/payments/invoiceDetails/${doc.id}`;
     if (doc.documentType === "Proforma Invoice") return `/payments/estimateDetails/${doc.id}`;
+    if (doc.documentType === "Delivery Challan") return `/dashboard/account/${id}/delivery-challans`;
+    if (doc.documentType === "Payment") return `/payment-list/${id}`;
     return null;
   };
 
@@ -113,14 +116,25 @@ const AccountOverview = () => {
       <CompanyAccountSummary companyInfo={companyInfo} financials={financials} />
 
       {/* Action Buttons Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mb-1">
         <button onClick={() => navigate(`/performa-invoice-list/${id}`)} className="flex items-center gap-2 p-2 bg-[#f0f5ff] hover:bg-[#e6edfa] border border-[#dbe6fa] rounded-lg transition-colors text-left group">
           <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
             <FilePlus size={16} className="text-[#2563eb]" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Create Proforma Invoice</h4>
+            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Proforma Invoice</h4>
             <p className="text-[10.5px] text-slate-500 leading-tight truncate">Create a proforma invoice</p>
+          </div>
+          <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
+        </button>
+
+        <button onClick={() => navigate(`/dashboard/account/${id}/delivery-challans`)} className="flex items-center gap-2 p-2 bg-[#f0fdfa] hover:bg-[#ccfbf1] border border-[#ccfbf1] rounded-lg transition-colors text-left group">
+          <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
+            <Truck size={16} className="text-[#0f766e]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Delivery Challan</h4>
+            <p className="text-[10.5px] text-slate-500 leading-tight truncate">Create and track challans</p>
           </div>
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
@@ -130,53 +144,54 @@ const AccountOverview = () => {
             <FilePlus size={16} className="text-[#16a34a]" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Create Invoice</h4>
+            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Invoice</h4>
             <p className="text-[10.5px] text-slate-500 leading-tight truncate">Create a new invoice</p>
           </div>
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
 
-        <button onClick={() => navigate(`/dashboard/account/AddPayment/${id}`)} className="flex items-center gap-2 p-2 bg-[#fff7ed] hover:bg-[#ffedd5] border border-[#fbe3c4] rounded-lg transition-colors text-left group">
+        <button onClick={() => navigate(`/payment-list/${id}`)} className="flex items-center gap-2 p-2 bg-[#fff7ed] hover:bg-[#ffedd5] border border-[#fbe3c4] rounded-lg transition-colors text-left group">
           <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
             <CreditCard size={16} className="text-[#ea580c]" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Add Payment</h4>
-            <p className="text-[10.5px] text-slate-500 leading-tight truncate">Record a payment</p>
+            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Payments</h4>
+            <p className="text-[10.5px] text-slate-500 leading-tight truncate">Record a payments</p>
           </div>
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
 
-        <button onClick={() => navigate(`/create-debit-note/${id}`)} className="flex items-center gap-2 p-2 bg-[#faf5ff] hover:bg-[#f3e8ff] border border-[#ecd9fb] rounded-lg transition-colors text-left group">
+        <button onClick={() => navigate(`/debit-note-list/${id}`)} className="flex items-center gap-2 p-2 bg-[#faf5ff] hover:bg-[#f3e8ff] border border-[#ecd9fb] rounded-lg transition-colors text-left group">
           <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
             <FileMinus size={16} className="text-[#7e22ce]" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Create Debit Note</h4>
-            <p className="text-[10.5px] text-slate-500 leading-tight truncate">Raise additional charges</p>
+            <h4 className="text-[13px] font-bold text-[#1a2b4b] leading-tight truncate">Credit Note</h4>
+            <p className="text-[10.5px] text-slate-500 leading-tight truncate">View and create credit notes</p>
           </div>
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
+
       </div>
 
-      {/* 3 Column Grid (Recent Docs, Payment Schedule, Last Payment) */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-2 mb-2 items-start">
+      {/* 3 Column Grid (Recent Docs, Payment Schedule, Activity Logs) */}
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_280px] gap-2 mb-2 items-start">
 
         {/* Recent Documents */}
-        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-[380px] overflow-hidden self-start">
+        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-[380px] overflow-hidden self-start w-full max-w-full">
           <div className="flex justify-between items-center mb-1.5">
             <h2 className="text-[13px] font-medium text-[#1a2b4b] tracking-tight">Recent Documents</h2>
           </div>
-          <div className="overflow-x-auto flex-1 table-scroll-wrapper">
-            <table className="w-full text-left border-collapse">
+          <div className="overflow-auto flex-1 table-scroll-wrapper thin-scrollbar">
+            <table className="w-max text-left border-collapse">
               <thead>
-                <tr className="text-[9px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
-                  <th className="pb-2 pr-2">Document Type</th>
-                  <th className="pb-2 pr-2">Document No.</th>
-                  <th className="pb-2 pr-2">Date</th>
-                  <th className="pb-2 pr-2">Amount</th>
-                  <th className="pb-2 pr-2">Status</th>
-                  <th className="pb-2">Action</th>
+                <tr className="text-[11px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
+                  <th className="pb-2 pr-3 text-left whitespace-nowrap">Document</th>
+                  <th className="pb-2 pr-3 text-left whitespace-nowrap">Document No.</th>
+                  <th className="pb-2 pr-3 text-left whitespace-nowrap">Date</th>
+                  <th className="pb-2 pr-3 text-left whitespace-nowrap">Amount</th>
+                  <th className="pb-2 pr-3 text-left whitespace-nowrap">Status</th>
+                  <th className="pb-2 text-center whitespace-nowrap">Action</th>
                 </tr>
               </thead>
               <tbody className="text-[11px] text-slate-700">
@@ -191,31 +206,38 @@ const AccountOverview = () => {
                   else if (doc.documentType === 'Proforma Invoice') docTypeBg = 'bg-[#e6f0fa] text-[#194090]';
                   else if (doc.documentType === 'Debit Note') docTypeBg = 'bg-[#faf5ff] text-[#7e22ce]';
                   else if (doc.documentType === 'Credit Note') docTypeBg = 'bg-[#fff1f2] text-[#e11d48]';
+                  else if (doc.documentType === 'Delivery Challan') docTypeBg = 'bg-teal-50 text-teal-700';
+                  else if (doc.documentType === 'Payment') docTypeBg = 'bg-amber-50 text-amber-600';
 
                   let statusBg = 'bg-gray-100 text-gray-600';
-                  if (doc.status === 'Paid' || doc.status === 'Accepted') statusBg = 'bg-[#e6f7ec] text-[#00a86b]';
+                  if (doc.status === 'Paid' || doc.status === 'Accepted' || doc.status === 'Received') statusBg = 'bg-[#e6f7ec] text-[#00a86b]';
                   else if (doc.status === 'Unpaid' || doc.status === 'Pending') statusBg = 'bg-[#ffebee] text-[#ff4d4f]';
+                  else if (doc.status === 'Cancelled') statusBg = 'bg-red-50 text-red-600';
+                  else if (doc.status === 'E-Sent') statusBg = 'bg-blue-50 text-blue-600';
+                  else if (doc.status === 'W-Sent') statusBg = 'bg-emerald-50 text-emerald-600';
+                  else if (doc.status === 'E/W-Sent') statusBg = 'bg-teal-50 text-teal-700';
                   else if (doc.status === 'Sent' || doc.status === 'Converted') statusBg = 'bg-[#e6f0fa] text-[#194090]';
+                  else if (['Issued', 'Delivered', 'Acknowledged', 'Draft'].includes(doc.status)) statusBg = 'bg-teal-50 text-teal-700';
 
-                  const viewPath = getDocViewPath(doc);
+                  const viewPath = getDocumentLink(doc);
 
                   return (
-                    <tr key={idx} className="border-b border-gray-50 last:border-0 hover:bg-slate-50/50">
-                      <td className="py-1 pr-2">
-                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${docTypeBg}`}>
+                    <tr key={idx} className="border-b border-gray-50 last:border-0 hover:bg-slate-50/50 leading-tight">
+                      <td className="py-0.5 pr-3 text-left whitespace-nowrap">
+                        <span className={`px-1.5 py-[1px] rounded text-[11px] font-medium whitespace-nowrap ${docTypeBg}`}>
                           {doc.documentType}
                         </span>
                       </td>
-                      <td className="py-1 pr-2 font-medium text-[#1a2b4b]">{doc.documentNo}</td>
-                      <td className="py-1 pr-2">{doc.date ? new Date(doc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</td>
-                      <td className="py-1 pr-2 font-medium text-[12px] text-[#1a2b4b]">{formatCurrency(doc.amount)}</td>
-                      <td className="py-1 pr-2">
-                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${statusBg}`}>
+                      <td className="py-0.5 pr-3 text-left font-medium text-[#1a2b4b] whitespace-nowrap">{doc.documentNo}</td>
+                      <td className="py-0.5 pr-3 text-left font-medium text-[#1a2b4b] whitespace-nowrap">{doc.date ? new Date(doc.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'}</td>
+                      <td className="py-0.5 pr-3 text-left font-medium text-[#1a2b4b] whitespace-nowrap">{formatCurrency(doc.amount)}</td>
+                      <td className="py-0.5 pr-3 text-left whitespace-nowrap">
+                        <span className={`px-1.5 py-[1px] rounded text-[11px] font-medium whitespace-nowrap ${statusBg}`}>
                           {doc.status}
                         </span>
                       </td>
-                      <td className="py-1">
-                        <div className="flex items-center gap-2 text-[#194090]">
+                      <td className="py-0.5 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-2 text-[#194090]">
                           <button
                             disabled={!viewPath}
                             onClick={() => viewPath && navigate(viewPath)}
@@ -239,15 +261,15 @@ const AccountOverview = () => {
           <div className="flex justify-between items-center mb-1.5">
             <h2 className="text-[13px] font-medium text-[#1a2b4b] tracking-tight">Payment Schedule</h2>
           </div>
-          <div className="overflow-x-auto flex-1">
+          <div className="overflow-auto flex-1 thin-scrollbar">
             <table className="w-full text-left border-collapse mb-1">
               <thead>
-                <tr className="text-[9px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
-                  <th className="pb-1 pr-1">#</th>
-                  <th className="pb-1 pr-2">Schedule Type</th>
-                  <th className="pb-1 pr-2">Due Date</th>
-                  <th className="pb-1 pr-2">Due Amount</th>
-                  <th className="pb-1">Status</th>
+                <tr className="text-[11px] font-medium text-slate-500 uppercase tracking-wide border-b border-gray-100">
+                  <th className="pb-2 pr-3 text-left whitespace-nowrap">#</th>
+                  <th className="pb-2 pr-3 text-left whitespace-nowrap">Schedule Type</th>
+                  <th className="pb-2 pr-3 text-left whitespace-nowrap">Due Date</th>
+                  <th className="pb-2 pr-3 text-left whitespace-nowrap">Due Amount</th>
+                  <th className="pb-2 text-left whitespace-nowrap">Status</th>
                 </tr>
               </thead>
               <tbody className="text-[11px] text-slate-700">
@@ -257,13 +279,13 @@ const AccountOverview = () => {
                   </tr>
                 )}
                 {paymentSchedule.map((schedule, idx) => (
-                  <tr key={schedule.id} className="border-b border-gray-50 hover:bg-slate-50/50">
-                    <td className="py-1 pr-1 text-slate-400 font-medium">{idx + 1}</td>
-                    <td className="py-1 pr-2 font-medium text-[#1a2b4b]">{schedule.scheduleType}</td>
-                    <td className="py-1 pr-2">{schedule.dueDate}</td>
-                    <td className="py-1 pr-2">{formatCurrency(schedule.dueAmount)}</td>
-                    <td className="py-1">
-                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${schedule.status === 'Paid' ? 'bg-[#e6f7ec] text-[#00a86b]' : 'bg-[#fff1f2] text-[#ea580c]'}`}>
+                  <tr key={schedule.id} className="border-b border-gray-50 last:border-0 hover:bg-slate-50/50 leading-tight">
+                    <td className="py-0.5 pr-3 text-left text-slate-400 font-medium whitespace-nowrap">{idx + 1}</td>
+                    <td className="py-0.5 pr-3 text-left font-medium text-[#1a2b4b] whitespace-nowrap">{schedule.scheduleType}</td>
+                    <td className="py-0.5 pr-3 text-left font-medium text-[#1a2b4b] whitespace-nowrap">{schedule.dueDate ? new Date(schedule.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'}</td>
+                    <td className="py-0.5 pr-3 text-left font-medium text-[#1a2b4b] whitespace-nowrap">{formatCurrency(schedule.dueAmount)}</td>
+                    <td className="py-0.5 text-left whitespace-nowrap">
+                      <span className={`px-1.5 py-[1px] rounded text-[11px] font-medium whitespace-nowrap ${schedule.status === 'Paid' ? 'bg-[#e6f7ec] text-[#00a86b]' : 'bg-[#fff1f2] text-[#ea580c]'}`}>
                         {schedule.status}
                       </span>
                     </td>
@@ -281,7 +303,7 @@ const AccountOverview = () => {
         </div>
 
         {/* Activity Logs */}
-        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-[380px] overflow-hidden self-start">
+        <div className="bg-white rounded-lg shadow-[rgba(67,71,85,0.18)_0px_0px_0.25em,rgba(90,125,188,0.05)_0px_0.25em_1em] border border-gray-100 p-3 flex flex-col h-[380px] overflow-hidden self-start xl:w-[280px] xl:justify-self-end">
           <div className="flex items-center justify-between mb-1.5">
             <h2 className="text-[13px] font-medium text-[#1a2b4b] tracking-tight">Activity Logs</h2>
             <div className="flex items-center gap-1 text-[9px] font-semibold text-[#194090] bg-[#e6f0fa] px-1.5 py-0.5 rounded-full">

@@ -446,10 +446,10 @@ const CreateEstimate1 = () => {
               </select>
             </div>
 
-            {/* Estimate No. */}
+            {/* Proforma Invoice No. */}
             <div>
               <label htmlFor="est_no" className={labelClass}>
-                Estimate No. *
+                Proforma Invoice No. *
               </label>
               <input
                 type="text"

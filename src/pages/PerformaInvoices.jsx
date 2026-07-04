@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api from '../lib/api';
 import {
@@ -22,6 +22,71 @@ const fmt = (n) =>
     '₹ ' + Math.round(Number(n || 0)).toLocaleString('en-IN');
 
 const roundAmount = (value) => Math.round(Number(value || 0));
+
+const escapeHtml = (value) => String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+
+const buildImpactPreviewHtml = (preview) => {
+    const changes = preview?.changedFields || [];
+    const itemChanges = preview?.itemChanges || {};
+    const dependencies = preview?.dependencies || {};
+    const dependencyRows = [
+        ['Invoices', dependencies.invoices, 'invoice_no'],
+        ['Delivery Challans', dependencies.deliveryChallans, 'challan_no'],
+        ['Payments', dependencies.payments, 'ex_no'],
+        ['Credit Notes', dependencies.creditNotes, 'create_note_no'],
+        ['Debit Notes', dependencies.debitNotes, 'debit_note_no'],
+    ].filter(([, records]) => records?.length);
+
+    const changeRows = changes.length
+        ? changes.map((change) => `
+            <tr>
+                <td style="padding:6px;border-bottom:1px solid #e5e7eb;font-weight:600">${escapeHtml(change.label)}</td>
+                <td style="padding:6px;border-bottom:1px solid #e5e7eb;color:#64748b">${escapeHtml(change.before || '—')}</td>
+                <td style="padding:6px;border-bottom:1px solid #e5e7eb;color:#166534">${escapeHtml(change.after || '—')}</td>
+            </tr>`).join('')
+        : '<tr><td colspan="3" style="padding:7px;color:#64748b">No header/detail field changed.</td></tr>';
+
+    const itemSummary = [
+        itemChanges.added ? `${itemChanges.added} added` : '',
+        itemChanges.removed ? `${itemChanges.removed} removed` : '',
+        itemChanges.modified ? `${itemChanges.modified} modified` : '',
+    ].filter(Boolean).join(', ') || 'No item changes';
+
+    const dependencyHtml = dependencyRows.length
+        ? dependencyRows.map(([label, records, numberField]) => `
+            <div style="padding:7px 9px;margin-top:6px;background:#fff7ed;border:1px solid #fed7aa;border-radius:6px">
+                <b>${escapeHtml(label)} (${records.length})</b>
+                <div style="font-size:11px;color:#7c2d12;margin-top:2px">
+                    ${escapeHtml(records.map((record) => record[numberField] || record._id).join(', '))}
+                </div>
+            </div>`).join('')
+        : '<div style="padding:8px;background:#f0fdf4;color:#166534;border-radius:6px">No linked downstream documents found.</div>';
+
+    return `
+        <div style="text-align:left;font-size:12px">
+            <p style="margin:0 0 8px;color:#475569">
+                PI will be updated, but already-created Invoice, Delivery Challan, Payment or Notes will remain unchanged.
+            </p>
+            <div style="max-height:210px;overflow:auto;border:1px solid #e5e7eb;border-radius:6px">
+                <table style="width:100%;border-collapse:collapse">
+                    <thead><tr style="background:#f8fafc">
+                        <th style="padding:6px;text-align:left">Field</th>
+                        <th style="padding:6px;text-align:left">Old</th>
+                        <th style="padding:6px;text-align:left">New</th>
+                    </tr></thead>
+                    <tbody>${changeRows}</tbody>
+                </table>
+            </div>
+            <p style="margin:8px 0"><b>Items:</b> ${escapeHtml(itemSummary)}</p>
+            <p style="margin:10px 0 4px"><b>Linked document impact:</b></p>
+            ${dependencyHtml}
+        </div>`;
+};
 
 const newItem = () => ({
     id: Date.now(),
@@ -109,7 +174,9 @@ const QuickAction = ({ icon: Icon, color, label, sub, onClick, disabled }) => (
 // ══════════════════════════════════════════════════════════════════════════════
 export const PerformaInvoices = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { id } = useParams();
+    const editEstimateId = location.state?.editEstimateId;
     const [companyData, setCompanyData] = useState(null);
     const [existingEstimateId, setExistingEstimateId] = useState(null);
 
@@ -209,32 +276,47 @@ export const PerformaInvoices = () => {
                 }
                 const actualCompanyId = companyInfo?.clientId || companyInfo?._id || id;
 
-                // Fetch existing estimates
+                // Fetch the clicked proforma first when coming from the list edit action.
                 let existingEstimate = null;
+                let templateEstimate = null;
+                if (editEstimateId) {
+                    try {
+                        const estRes = await api.get(`/api/estimates/${editEstimateId}`);
+                        existingEstimate = estRes.data?.data || estRes.data || null;
+                    } catch (e) {
+                        console.error("Error fetching selected estimate:", e);
+                    }
+                }
+
+                // Fetch existing estimates
                 try {
-                    let estRes = await api.get(`/api/estimates/grouped/${actualCompanyId}`);
-                    if (estRes.data?.success && estRes.data?.count > 0) {
-                        existingEstimate = estRes.data.data[0]; // Get the latest one
-                    } else if (companyInfo && actualCompanyId !== companyInfo._id) {
-                        estRes = await api.get(`/api/estimates/grouped/${companyInfo._id}`);
+                    if (!existingEstimate) {
+                        let estRes = await api.get(`/api/estimates/grouped/${actualCompanyId}`);
                         if (estRes.data?.success && estRes.data?.count > 0) {
-                            existingEstimate = estRes.data.data[0]; // Get the latest one
-                        }
-                    } else if (companyInfo && actualCompanyId !== id) {
-                        estRes = await api.get(`/api/estimates/grouped/${id}`);
-                        if (estRes.data?.success && estRes.data?.count > 0) {
-                            existingEstimate = estRes.data.data[0]; // Get the latest one
+                            templateEstimate = estRes.data.data[0]; // Get the latest one for prefill only
+                        } else if (companyInfo && actualCompanyId !== companyInfo._id) {
+                            estRes = await api.get(`/api/estimates/grouped/${companyInfo._id}`);
+                            if (estRes.data?.success && estRes.data?.count > 0) {
+                                templateEstimate = estRes.data.data[0]; // Get the latest one for prefill only
+                            }
+                        } else if (companyInfo && actualCompanyId !== id) {
+                            estRes = await api.get(`/api/estimates/grouped/${id}`);
+                            if (estRes.data?.success && estRes.data?.count > 0) {
+                                templateEstimate = estRes.data.data[0]; // Get the latest one for prefill only
+                            }
                         }
                     }
                 } catch (e) {
                     console.error("Error fetching existing estimates:", e);
                 }
 
-                if (existingEstimate) {
-                    setCompanyData(companyInfo);
-                    setExistingEstimateId(existingEstimate._id);
+                const estimateForPrefill = existingEstimate || templateEstimate;
 
-                    const formattedItems = (existingEstimate.items || []).map((item, index) => {
+                if (estimateForPrefill) {
+                    setCompanyData(companyInfo);
+                    setExistingEstimateId(existingEstimate?._id || null);
+
+                    const formattedItems = (estimateForPrefill.items || []).map((item, index) => {
                         let desc = item.description || '';
                         let subDesc = '';
                         if (desc.includes('\n')) {
@@ -271,21 +353,32 @@ export const PerformaInvoices = () => {
 
                     setForm(prev => ({
                         ...prev,
-                        estimateNo: existingEstimate.est_no,
-                        supplyDate: existingEstimate.supply_date || new Date().toISOString().split('T')[0],
-                        consigneeName: existingEstimate.company_name || (existingEstimate.consignee_name !== PROFORMA_EVENT_NAME ? existingEstimate.consignee_name : '') || companyInfo?.companyName || companyInfo?.exhibitorName || '',
-                        consigneeAddress: existingEstimate.company_addr || (existingEstimate.consignee_addr !== PROFORMA_PLACE_OF_SUPPLY ? existingEstimate.consignee_addr : '') || companyInfo?.address || companyInfo?.companyAddress || '',
-                        consigneePerson: existingEstimate.consignee_person || companyInfo?.contactPerson || (companyInfo?.contacts && companyInfo.contacts[0] ? [companyInfo.contacts[0].firstName, companyInfo.contacts[0].surname].filter(Boolean).join(' ') : '') || '',
-                        consigneePhone: existingEstimate.consignee_phone || companyInfo?.mobile || (companyInfo?.contacts && companyInfo.contacts[0] ? companyInfo.contacts[0].mobile : '') || '',
-                        consigneeEventName: existingEstimate.event_name || PROFORMA_EVENT_NAME,
-                        consigneeEventAddress: existingEstimate.event_place_of_supply || PROFORMA_PLACE_OF_SUPPLY,
-                        consigneeGstin: existingEstimate.event_gst_no || PROFORMA_EVENT_GST_NO,
-                        gstin: existingEstimate.company_gst_no || existingEstimate.gst_no || companyInfo?.gst || companyInfo?.gstNo || '',
-                        country: existingEstimate.country || companyInfo?.country || '',
-                        state: existingEstimate.state || companyInfo?.state || '',
-                        city: existingEstimate.city || companyInfo?.city || '',
-                        pinCode: existingEstimate.pincode || companyInfo?.pinCode || companyInfo?.pincode || '',
+                        estimateNo: existingEstimate ? estimateForPrefill.est_no : prev.estimateNo,
+                        supplyDate: estimateForPrefill.supply_date || new Date().toISOString().split('T')[0],
+                        consigneeName: estimateForPrefill.company_name || (estimateForPrefill.consignee_name !== PROFORMA_EVENT_NAME ? estimateForPrefill.consignee_name : '') || companyInfo?.companyName || companyInfo?.exhibitorName || '',
+                        consigneeAddress: estimateForPrefill.company_addr || (estimateForPrefill.consignee_addr !== PROFORMA_PLACE_OF_SUPPLY ? estimateForPrefill.consignee_addr : '') || companyInfo?.address || companyInfo?.companyAddress || '',
+                        consigneePerson: estimateForPrefill.consignee_person || companyInfo?.contactPerson || (companyInfo?.contacts && companyInfo.contacts[0] ? [companyInfo.contacts[0].firstName, companyInfo.contacts[0].surname].filter(Boolean).join(' ') : '') || '',
+                        consigneePhone: estimateForPrefill.consignee_phone || companyInfo?.mobile || (companyInfo?.contacts && companyInfo.contacts[0] ? companyInfo.contacts[0].mobile : '') || '',
+                        consigneeEventName: estimateForPrefill.event_name || PROFORMA_EVENT_NAME,
+                        consigneeEventAddress: estimateForPrefill.event_place_of_supply || PROFORMA_PLACE_OF_SUPPLY,
+                        consigneeGstin: estimateForPrefill.event_gst_no || PROFORMA_EVENT_GST_NO,
+                        gstin: estimateForPrefill.company_gst_no || estimateForPrefill.gst_no || companyInfo?.gst || companyInfo?.gstNo || '',
+                        country: estimateForPrefill.country || companyInfo?.country || '',
+                        state: estimateForPrefill.state || companyInfo?.state || '',
+                        city: estimateForPrefill.city || companyInfo?.city || '',
+                        pinCode: estimateForPrefill.pincode || companyInfo?.pinCode || companyInfo?.pincode || '',
                     }));
+
+                    if (!existingEstimate) {
+                        try {
+                            const res = await api.get('/api/estimates/next-number');
+                            if (res.data?.est_no) {
+                                setForm(prev => ({ ...prev, estimateNo: res.data.est_no }));
+                            }
+                        } catch (error) {
+                            console.error("Error fetching next estimate no:", error);
+                        }
+                    }
                 } else if (companyInfo) {
                     // Pre-fill with just company info
                     setCompanyData(companyInfo);
@@ -321,7 +414,7 @@ export const PerformaInvoices = () => {
         };
 
         fetchCompanyDetails();
-    }, [id]);
+    }, [id, editEstimateId]);
 
     // ── computed ─────────────────────────────────────────────────────────────────
     const subTotal = roundAmount(items.reduce((s, i) => s + Number(i.amount || 0), 0));
@@ -495,6 +588,34 @@ export const PerformaInvoices = () => {
 
         try {
             if (existingEstimateId) {
+                const previewResponse = await api.post(
+                    `/api/estimates/${existingEstimateId}/impact-preview`,
+                    payload
+                );
+                const preview = previewResponse.data;
+
+                if (!preview?.hasChanges) {
+                    await Swal.fire({
+                        icon: 'info',
+                        title: 'No changes found',
+                        text: 'Proforma Invoice data is already up to date.',
+                    });
+                    return;
+                }
+
+                const confirmation = await Swal.fire({
+                    icon: preview?.hasImpact ? 'warning' : 'question',
+                    title: 'Review PI Changes',
+                    html: buildImpactPreviewHtml(preview),
+                    width: 720,
+                    showCancelButton: true,
+                    confirmButtonText: 'Save PI Changes',
+                    cancelButtonText: 'Review Again',
+                    confirmButtonColor: '#166534',
+                    reverseButtons: true,
+                });
+                if (!confirmation.isConfirmed) return;
+
                 const res = await api.put(`/api/estimates/${existingEstimateId}`, payload);
                 if (res.data?.message) {
                     Swal.fire({
@@ -504,7 +625,7 @@ export const PerformaInvoices = () => {
                         timer: 2000,
                         showConfirmButton: false
                     });
-                    navigate(`/performa-invoice-list/${actualCompanyId}`);
+                    navigate(`/payments/estimateDetails/${existingEstimateId}`);
                 }
             } else {
                 const res = await api.post('/api/estimates', payload);
@@ -516,7 +637,8 @@ export const PerformaInvoices = () => {
                         timer: 2000,
                         showConfirmButton: false
                     });
-                    navigate(`/performa-invoice-list/${actualCompanyId}`);
+                    const newEstimateId = res.data.data?._id || res.data._id;
+                    navigate(`/payments/estimateDetails/${newEstimateId}`);
                 }
             }
         } catch (error) {
@@ -589,7 +711,7 @@ export const PerformaInvoices = () => {
                                 />
                             </div>
                             <div>
-                                <Label required>Estimate No.</Label>
+                                <Label required>Proforma Invoice No.</Label>
                                 <Input value={form.estimateNo} onChange={(e) => setField('estimateNo', e.target.value)} />
                             </div>
                             <div>
