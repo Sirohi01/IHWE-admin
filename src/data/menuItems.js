@@ -778,6 +778,7 @@ export const menuItems = [
     icon: FileText,
     children: [
       { label: "Payments", path: "/accounts/payments" },
+      { label: "Receipts", path: "/accounts/receipts" },
       { label: "Accounts Receivable", path: "/accounts/ar" },
       { label: "Invoices", path: "/accounts/invoices" },
       { label: "Credit Notes", path: "/accounts/credit-notes" },
