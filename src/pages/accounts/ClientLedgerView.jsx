@@ -197,7 +197,7 @@ const ClientLedgerView = () => {
     const [downloadingStatement, setDownloadingStatement] = useState(false);
     const [exporting, setExporting] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [itemsPerPage, setItemsPerPage] = useState(12);
 
     useEffect(() => {
         if (id === 'all') return;
@@ -480,14 +480,14 @@ const ClientLedgerView = () => {
                                 <input
                                     type="text"
                                     value={searchInput}
-                                    onChange={(e) => setSearchInput(e.target.value)}
+                                    onChange={(e) => { setSearchInput(e.target.value); setCurrentPage(1); }}
                                     placeholder="Search by invoice no, reference, narration..."
                                     className="pl-9 pr-3 py-1.5 border border-slate-300 rounded-md text-[11px] w-[280px] focus:outline-none focus:ring-1 focus:ring-blue-500"
                                 />
                             </div>
                             <select
                                 value={typeFilter}
-                                onChange={(e) => setTypeFilter(e.target.value)}
+                                onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
                                 className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white"
                             >
                                 <option value="All">All Transaction Types</option>
@@ -498,7 +498,7 @@ const ClientLedgerView = () => {
                             </select>
                             <select
                                 value={dateFilter}
-                                onChange={(e) => setDateFilter(e.target.value)}
+                                onChange={(e) => { setDateFilter(e.target.value); setCurrentPage(1); }}
                                 className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white"
                             >
                                 <option value="">Date Range</option>
@@ -511,7 +511,7 @@ const ClientLedgerView = () => {
                             </button>
                             {(searchInput || typeFilter !== 'All' || dateFilter) && (
                                 <button
-                                    onClick={() => { setSearchInput(''); setTypeFilter('All'); setDateFilter(''); }}
+                                    onClick={() => { setSearchInput(''); setTypeFilter('All'); setDateFilter(''); setCurrentPage(1); }}
                                     className="flex items-center gap-1 text-slate-500 font-bold text-[11px] px-2 shrink-0"
                                 >
                                     <X className="w-3 h-3" /> Clear All
@@ -520,7 +520,7 @@ const ClientLedgerView = () => {
                         </div>
 
                         {/* Transaction type chips */}
-                        <div className="flex items-center gap-1.5 flex-nowrap border-t border-slate-100 pt-2">
+                        <div className="flex items-center justify-end gap-1.5 flex-nowrap border-t border-slate-100 pt-2">
                             {chips.map((chip) => (
                                 <button
                                     key={chip.key}
@@ -550,9 +550,9 @@ const ClientLedgerView = () => {
                                 </tr>
                             </thead>
                             <tbody className="text-[11px]">
-                                {filteredLedger.length === 0 ? (
+                                {paginatedLedger.length === 0 ? (
                                     <tr><td colSpan="8" className="py-6 text-center text-slate-500">No transactions found.</td></tr>
-                                ) : filteredLedger.map((row, idx) => (
+                                ) : paginatedLedger.map((row, idx) => (
                                     <tr key={row.id || idx} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
                                         <td className="px-2 py-1.5 font-semibold text-slate-700 whitespace-nowrap">{formatDate(row.date)}</td>
                                         <td className="px-2 py-1.5">
@@ -571,14 +571,71 @@ const ClientLedgerView = () => {
                             </tbody>
                         </table>
 
-                        {/* Footer Totals */}
+                        {/* Footer Totals + Pagination */}
                         <div className="bg-white border-t border-slate-200 p-3">
-                            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] font-medium text-slate-500">
-                                <div>Showing 1 to {filteredLedger.length} of {filteredLedger.length} entries</div>
-                                <div className="flex items-center gap-4">
-                                    <span>Opening Balance as on {formatDate(firstDate)}: <span className="font-bold text-slate-800">₹ {formatCurrency(openingBalance)}</span></span>
-                                    <span>Closing Balance as on {formatDate(lastDate || now)}: <span className="font-bold text-slate-800">₹ {formatCurrency(closingBalance)}</span></span>
+                            <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-slate-500 font-medium">
+                                <div>
+                                    Showing {filteredLedger.length === 0 ? 0 : indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredLedger.length)} of {filteredLedger.length} entries
                                 </div>
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                        className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >&lt;</button>
+
+                                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                        let pageNum = i + 1;
+                                        if (totalPages > 5 && currentPage > 3) {
+                                            pageNum = currentPage - 2 + i;
+                                        }
+                                        if (pageNum > totalPages) return null;
+                                        return (
+                                            <button
+                                                key={pageNum}
+                                                onClick={() => setCurrentPage(pageNum)}
+                                                className={`w-6 h-6 flex items-center justify-center rounded font-bold ${currentPage === pageNum ? 'bg-blue-600 text-white' : 'border border-slate-300 hover:bg-slate-50'}`}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    })}
+
+                                    {totalPages > 5 && currentPage < totalPages - 2 && (
+                                        <>
+                                            <span className="px-1">...</span>
+                                            <button
+                                                onClick={() => setCurrentPage(totalPages)}
+                                                className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 font-bold"
+                                            >
+                                                {totalPages}
+                                            </button>
+                                        </>
+                                    )}
+
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages || totalPages === 0}
+                                        className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >&gt;</button>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span>Rows per page</span>
+                                    <select
+                                        value={itemsPerPage}
+                                        onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                                        className="border border-slate-300 rounded px-2 py-1 focus:outline-none"
+                                    >
+                                        <option value={10}>10</option>
+                                        <option value={20}>20</option>
+                                        <option value={50}>50</option>
+                                        <option value={100}>100</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row items-center justify-end gap-4 mt-2 pt-2 border-t border-slate-100 text-[11px] font-medium text-slate-500">
+                                <span>Opening Balance as on {formatDate(firstDate)}: <span className="font-bold text-slate-800">₹ {formatCurrency(openingBalance)}</span></span>
+                                <span>Closing Balance as on {formatDate(lastDate || now)}: <span className="font-bold text-slate-800">₹ {formatCurrency(closingBalance)}</span></span>
                             </div>
                         </div>
                     </div>
