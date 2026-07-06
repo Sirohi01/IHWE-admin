@@ -98,8 +98,9 @@ const CreditNotesView = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [cnRes, compRes, adminRes, invRes] = await Promise.all([
-                    api.get('/api/debitnotes'),
+                const [cnRes, dnRes, compRes, adminRes, invRes] = await Promise.all([
+                    api.get('/api/creditnotes').catch(() => ({ data: { data: [] } })),
+                    api.get('/api/debitnotes').catch(() => ({ data: { data: [] } })),
                     api.get('/api/companies'),
                     api.get('/api/admin/all').catch(() => ({ data: { data: [] } })),
                     api.get('/api/invoices').catch(() => ({ data: [] }))
@@ -113,40 +114,60 @@ const CreditNotesView = () => {
 
                 const invoicesData = invRes.data?.data || invRes.data || [];
 
-                if (cnRes.data?.data?.length > 0 || cnRes.data?.length > 0) {
-                    let data = cnRes.data.data || cnRes.data;
-                    if (!isAllList) data = data.filter(n => String(n.companyId) === String(id));
+                // Merge old credit notes + new debit notes
+                const oldCNs = cnRes.data?.data || cnRes.data || [];
+                const newDNs = dnRes.data?.data || dnRes.data || [];
 
-                    // Map company details and invoice details
-                    data = data.map(n => {
-                        const comp = compData.find(c => String(c._id) === String(n.companyId));
+                // Normalize old credit notes to have common fields
+                const normalizedOld = (Array.isArray(oldCNs) ? oldCNs : []).map(n => ({
+                    ...n,
+                    _source: 'creditnote',
+                    debit_note_no: n.debit_note_no || n.create_note_no || n.est_no,
+                    debit_note_date: n.debit_note_date || n.credit_note_date || n.created_at,
+                    toInvoiceNo: n.toInvoiceNo || n.reference_invoice_no || n.est_no,
+                    totalAmount: n.totalAmount || n.total_value || 0,
+                    type: n.type || n.credit_note_type || 'Credit Note',
+                    reason: n.reason || n.remarks || '',
+                    clientName: n.clientName || '',
+                }));
 
-                        // Find matching invoice
-                        const invoice = invoicesData.find(inv => inv._id === n.toInvoiceId || inv.invoice_no === n.toInvoiceNo || inv.invoice_no === n.reference_invoice_no);
+                // Normalize new debit notes
+                const normalizedNew = (Array.isArray(newDNs) ? newDNs : []).map(n => ({
+                    ...n,
+                    _source: 'debitnote',
+                }));
 
-                        // Try to extract stall from debit note items or invoice items
-                        let stallExtract = 'N/A';
-                        let hallExtract = 'N/A';
-                        const stallMatch = (n.items?.[0]?.description || invoice?.items?.[0]?.description || '').match(/Stall\s*(?:Booking)?\s*:\s*([\w-]+)/i);
-                        if (stallMatch) stallExtract = stallMatch[1];
+                let allNotes = [...normalizedNew, ...normalizedOld];
 
-                        // Check if company has it directly as a fallback
-                        if (stallExtract === 'N/A' && comp?.stallNo) stallExtract = comp.stallNo;
-                        if (comp?.hallNo) hallExtract = comp.hallNo;
+                if (!isAllList) allNotes = allNotes.filter(n => String(n.companyId) === String(id));
 
-                        return {
-                            ...n,
-                            companyName: comp?.companyName || comp?.name || n.clientName || 'Unknown Company',
-                            hallStall: n.hall_stall || `Hall: ${hallExtract}, Stall: ${stallExtract}`,
-                            totalAmount: n.totalAmount || n.total_value || (n.items || []).reduce((sum, item) => sum + ((parseFloat(item.amount || item.cn_amount) || 0) * (parseFloat(item.qty || item.quantity) || 1)), 0),
-                            mapped_invoice_date: invoice?.invoice_date || n.invoice_date
-                        };
-                    });
+                // Map company details and invoice details
+                allNotes = allNotes.map(n => {
+                    const comp = compData.find(c => String(c._id) === String(n.companyId));
+                    const invoice = invoicesData.find(inv =>
+                        inv._id === n.toInvoiceId ||
+                        inv.invoice_no === n.toInvoiceNo ||
+                        inv.invoice_no === n.reference_invoice_no
+                    );
 
-                    setCreditNotes(data);
-                } else {
-                    setCreditNotes([]);
-                }
+                    // Extract stall from items description
+                    let stallExtract = 'N/A';
+                    let hallExtract = 'N/A';
+                    const stallMatch = (n.items?.[0]?.description || invoice?.items?.[0]?.description || '').match(/Stall\s*(?:Booking)?\s*:\s*([\w-]+)/i);
+                    if (stallMatch) stallExtract = stallMatch[1];
+                    if (stallExtract === 'N/A' && comp?.stallNo) stallExtract = comp.stallNo;
+                    if (comp?.hallNo) hallExtract = comp.hallNo;
+
+                    return {
+                        ...n,
+                        companyName: comp?.companyName || comp?.name || n.clientName || 'Unknown Company',
+                        hallStall: n.hall_stall || `Hall: ${hallExtract}, Stall: ${stallExtract}`,
+                        totalAmount: n.totalAmount || n.total_value || 0,
+                        mapped_invoice_date: invoice?.invoice_date || n.invoice_date
+                    };
+                });
+
+                setCreditNotes(allNotes);
             } catch (err) {
                 console.error("Failed to fetch", err);
             } finally {
@@ -413,8 +434,8 @@ const CreditNotesView = () => {
                                             <tr key={note._id || idx} className="hover:bg-slate-50/50">
                                                 <td className="py-3 px-4 text-xs font-semibold text-slate-700 text-center">{indexOfFirstItem + idx + 1}</td>
                                                 <td className="py-3 px-4">
-                                                    <div className="font-medium text-slate-800 text-[11px]">{note.debit_note_no || note.create_note_no || 'N/A'}</div>
-                                                    <div className="text-[10px] text-slate-500 mt-0.5">Credit Note Date: {note.debit_note_date || note.added ? new Date(note.debit_note_date || note.added).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
+                                                    <div className="font-medium text-slate-800 text-[11px]">{note.debit_note_no || note.create_note_no || note.est_no || 'N/A'}</div>
+                                                    <div className="text-[10px] text-slate-500 mt-0.5">{note._source === 'debitnote' ? 'Debit' : 'Credit'} Note Date: {note.debit_note_date || note.added ? new Date(note.debit_note_date || note.added).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
                                                     <div className="text-[10px] text-blue-500 mt-0.5 cursor-pointer hover:underline">View Details <ChevronRight className="inline w-3 h-3 rotate-90" /></div>
                                                 </td>
                                                 <td className="py-3 px-4">

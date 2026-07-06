@@ -203,22 +203,22 @@ const CreateCreditNote = () => {
             <div className="max-w-[1400px] mx-auto">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <span className="text-slate-400 font-medium text-sm">Accounts / Exhibitor Account / <span className="text-slate-800 font-bold">Credit Notes</span></span>
+                        <span className="text-slate-400 font-semibold text-sm">Accounts / Exhibitor Account / <span className="text-slate-600 font-medium">Debit Notes</span></span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <button onClick={() => navigate(-1)} className="px-4 py-2 bg-white text-slate-600 border border-slate-200 font-bold rounded-lg hover:bg-slate-50 transition-colors text-sm">
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => navigate(-1)} className="px-5 py-2 bg-white text-slate-700 border border-slate-200 font-bold rounded-lg hover:bg-slate-50 transition-colors text-[13px]">
                             Cancel
                         </button>
-                        <button className="px-4 py-2 bg-white text-blue-600 border border-blue-200 font-bold rounded-lg hover:bg-blue-50 transition-colors text-sm">
+                        <button className="px-5 py-2 bg-white text-blue-600 border border-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-colors text-[13px]">
                             Save Draft
                         </button>
-                        <button onClick={handleSubmit} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm text-sm">
+                        <button onClick={handleSubmit} className="px-5 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm text-[13px]">
                             Save & Send for Approval
                         </button>
                     </div>
                 </div>
 
-                <h1 className="text-2xl font-black text-slate-900 mb-4">Create Credit Note</h1>
+                <h1 className="text-[26px] font-black text-slate-900 mb-6 tracking-tight">Create Debit Note</h1>
 
                 {/* Top Company Info Card */}
                 <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 mb-4 flex justify-between items-center">
@@ -250,15 +250,15 @@ const CreateCreditNote = () => {
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
                     <div className="xl:col-span-2 space-y-4">
                         {/* Credit Note Details */}
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="font-extrabold text-slate-800 text-lg">Credit Note Details</h3>
-                                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 font-bold text-[10px] rounded border border-emerald-100">Manual Entry</span>
+                        <div className="bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-200 p-6">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="font-extrabold text-slate-800 text-[17px]">Debit Note Details</h3>
+                                <span className="px-3 py-1 bg-emerald-50 text-emerald-600 font-bold text-[11px] rounded border border-emerald-100">Manual Entry</span>
                             </div>
                             
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-5">
                                 <div>
-                                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Credit Note Type <span className="text-red-500">*</span></label>
+                                    <label className="block text-[11px] font-bold text-slate-600 mb-1.5">Debit Note Type <span className="text-red-500">*</span></label>
                                     <select value={creditNoteType} onChange={e => setCreditNoteType(e.target.value)} className="w-full text-sm font-semibold border-slate-200 rounded-lg p-2.5 focus:ring-blue-500 outline-none">
                                         <option value="Stall Size Reduction">Stall Size Reduction</option>
                                         <option value="Discount">Discount</option>
@@ -268,12 +268,18 @@ const CreateCreditNote = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Credit Note Date <span className="text-red-500">*</span></label>
-                                    <input type="date" value={creditNoteDate} onChange={e => setCreditNoteDate(e.target.value)} className="w-full text-sm font-semibold border-slate-200 rounded-lg p-2.5 focus:ring-blue-500 outline-none" />
+                                    <label className="block text-[11px] font-bold text-slate-600 mb-1.5">Debit Note Date <span className="text-red-500">*</span></label>
+                                    <div className="relative">
+                                        <input type="date" value={creditNoteDate} onChange={e => setCreditNoteDate(e.target.value)} className="w-full text-sm font-semibold border border-slate-200 rounded-lg p-2.5 focus:ring-blue-500 outline-none pr-10" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-600 mb-1.5">Debit Note No. <span className="text-red-500">*</span></label>
+                                    <input type="text" value={creditNoteNo} onChange={e => setCreditNoteNo(e.target.value)} placeholder="Auto generated or enter manually" className="w-full text-sm font-semibold border border-slate-200 rounded-lg p-2.5 focus:ring-blue-500 outline-none" />
                                 </div>
                                 
                                 <div>
-                                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Reference Invoice / Document <span className="text-red-500">*</span></label>
+                                    <label className="block text-[11px] font-bold text-slate-600 mb-1.5">Reference Invoice / Document <span className="text-red-500">*</span></label>
                                     <select value={referenceInvoice} onChange={e => setReferenceInvoice(e.target.value)} className="w-full text-sm font-semibold border-slate-200 rounded-lg p-2.5 focus:ring-blue-500 outline-none">
                                         <option value="">Select Invoice</option>
                                         {invoices.map(inv => (
@@ -282,15 +288,27 @@ const CreateCreditNote = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Reason for Credit Note <span className="text-red-500">*</span></label>
-                                    <input type="text" value={reason} onChange={e => setReason(e.target.value)} placeholder="e.g., Stall size reduced" className="w-full text-sm font-semibold border-slate-200 rounded-lg p-2.5 focus:ring-blue-500 outline-none" />
+                                    <label className="block text-[11px] font-bold text-slate-600 mb-1.5">Reason for Debit Note <span className="text-red-500">*</span></label>
+                                    <input type="text" value={reason} onChange={e => setReason(e.target.value)} placeholder="e.g., Stall size reduced" className="w-full text-sm font-semibold border border-slate-200 rounded-lg p-2.5 focus:ring-blue-500 outline-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-600 mb-1.5">Event</label>
+                                    <input type="text" value={event} onChange={e => setEvent(e.target.value)} className="w-full text-sm font-semibold border border-slate-200 bg-slate-50 text-slate-600 rounded-lg p-2.5 outline-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-600 mb-1.5">Hall / Stall</label>
+                                    <input type="text" value={hallStall} onChange={e => setHallStall(e.target.value)} className="w-full text-sm font-semibold border border-slate-200 bg-slate-50 text-slate-600 rounded-lg p-2.5 outline-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-600 mb-1.5">GSTIN</label>
+                                    <input type="text" value={gstin} onChange={e => setGstin(e.target.value)} className="w-full text-sm font-semibold border border-slate-200 bg-slate-50 text-slate-600 rounded-lg p-2.5 outline-none" />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Adjustment Details */}
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                            <h3 className="font-extrabold text-slate-800 text-lg mb-4">Adjustment Details <span className="text-slate-400 font-medium text-sm">(Items Included)</span></h3>
+                        {/* Charge Details */}
+                        <div className="bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-200 p-6">
+                            <h3 className="font-extrabold text-slate-800 text-[17px] mb-4">Charge Details <span className="text-slate-500 font-bold text-[13px]">(Items Included)</span></h3>
                             
                             <table className="w-full text-left border-collapse mb-3">
                                 <thead>
@@ -335,26 +353,26 @@ const CreateCreditNote = () => {
                                 </button>
                                 
                                 <div className="w-64">
-                                    <div className="flex justify-between items-center py-1">
+                                    <div className="flex justify-between items-center py-2">
                                         <span className="text-[11px] font-bold text-slate-500">Sub Total</span>
                                         <span className="text-[11px] font-black text-slate-800">{formatCurrency(subTotal)}</span>
                                     </div>
-                                    <div className="flex justify-between items-center py-1">
-                                        <span className="text-[11px] font-bold text-slate-500">GST Reversal (18%)</span>
+                                    <div className="flex justify-between items-center py-2">
+                                        <span className="text-[11px] font-bold text-slate-500">GST (18%)</span>
                                         <span className="text-[11px] font-black text-slate-800">{formatCurrency(gstReversal)}</span>
                                     </div>
-                                    <div className="flex justify-between items-center py-2 border-t border-slate-200 mt-1">
-                                        <span className="text-xs font-black text-emerald-600">Total Credit Note Value</span>
-                                        <span className="text-sm font-black text-emerald-600">{formatCurrency(totalCreditNoteValue)}</span>
+                                    <div className="flex justify-between items-center py-3 border-t border-slate-200 mt-2">
+                                        <span className="text-[13px] font-bold text-blue-600">Total Debit Note Value</span>
+                                        <span className="text-[15px] font-black text-blue-600">{formatCurrency(totalCreditNoteValue)}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Adjust Against Invoices */}
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="font-extrabold text-slate-800 text-lg">Adjustment Against Outstanding Invoices</h3>
+                        <div className="bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-200 p-6">
+                            <div className="flex justify-between items-center mb-5">
+                                <h3 className="font-extrabold text-slate-800 text-[17px]">Apply Debit Note to Outstanding</h3>
                                 <span className="text-xs font-semibold text-slate-400">Auto allocation can be edited</span>
                             </div>
                             
@@ -362,11 +380,11 @@ const CreateCreditNote = () => {
                                 <thead>
                                     <tr className="bg-slate-50 border-y border-slate-100">
                                         <th className="py-2.5 px-3 w-8"></th>
-                                        <th className="py-2.5 px-3 text-[10px] font-extrabold text-slate-500">Invoice No.</th>
-                                        <th className="py-2.5 px-3 text-[10px] font-extrabold text-slate-500">Invoice Date</th>
-                                        <th className="py-2.5 px-3 text-[10px] font-extrabold text-slate-500 text-right">Invoice Amount (₹)</th>
-                                        <th className="py-2.5 px-3 text-[10px] font-extrabold text-slate-500 text-right">Outstanding (₹)</th>
-                                        <th className="py-2.5 px-3 text-[10px] font-extrabold text-slate-500 text-right w-32">Apply Credit (₹)</th>
+                                        <th className="py-2.5 px-3 text-[11px] font-extrabold text-slate-700">Invoice No.</th>
+                                        <th className="py-2.5 px-3 text-[11px] font-extrabold text-slate-700">Invoice Date</th>
+                                        <th className="py-2.5 px-3 text-[11px] font-extrabold text-slate-700 text-right">Invoice Amount (₹)</th>
+                                        <th className="py-2.5 px-3 text-[11px] font-extrabold text-slate-700 text-right">Outstanding (₹)</th>
+                                        <th className="py-2.5 px-3 text-[11px] font-extrabold text-slate-700 text-center w-36">Apply Debit (₹)</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
@@ -391,18 +409,18 @@ const CreateCreditNote = () => {
                             </table>
                             
                             <div className="flex justify-end mt-4">
-                                <div className="w-64">
-                                    <div className="flex justify-between items-center py-1">
-                                        <span className="text-[11px] font-bold text-slate-500">Credit Note Value</span>
-                                        <span className="text-[11px] font-black text-slate-800">{formatCurrency(totalCreditNoteValue)}</span>
+                                <div className="w-80 p-5 rounded-lg bg-emerald-50/50 border border-emerald-100">
+                                    <div className="flex justify-between items-center py-1.5">
+                                        <span className="text-xs font-bold text-slate-600">Debit Note Value</span>
+                                        <span className="text-sm font-black text-slate-800">{formatCurrency(totalCreditNoteValue)}</span>
                                     </div>
-                                    <div className="flex justify-between items-center py-1">
-                                        <span className="text-[11px] font-bold text-slate-500">Total Applied</span>
-                                        <span className="text-[11px] font-black text-slate-800">{formatCurrency(totalApplied)}</span>
+                                    <div className="flex justify-between items-center py-1.5">
+                                        <span className="text-xs font-bold text-slate-600">Total Applied</span>
+                                        <span className="text-sm font-black text-slate-800">{formatCurrency(totalApplied)}</span>
                                     </div>
-                                    <div className="flex justify-between items-center py-2 border-t border-slate-200 mt-1">
-                                        <span className={`text-xs font-black ${remainingBalance === 0 ? 'text-emerald-600' : 'text-orange-500'}`}>Remaining Credit Balance</span>
-                                        <span className={`text-sm font-black ${remainingBalance === 0 ? 'text-emerald-600' : 'text-orange-500'}`}>{formatCurrency(remainingBalance)}</span>
+                                    <div className="flex justify-between items-center py-3 border-t border-emerald-200 mt-2">
+                                        <span className={`text-[13px] font-black ${remainingBalance === 0 ? 'text-emerald-600' : 'text-orange-500'}`}>Remaining Debit Balance</span>
+                                        <span className={`text-base font-black ${remainingBalance === 0 ? 'text-emerald-600' : 'text-orange-500'}`}>{formatCurrency(remainingBalance)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -427,21 +445,33 @@ const CreateCreditNote = () => {
 
                     {/* Right Sidebar - Summary */}
                     <div className="space-y-4">
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                            <h3 className="font-extrabold text-slate-800 text-lg mb-4">Credit Note Summary</h3>
+                        <div className="bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-200 p-6">
+                            <h3 className="font-extrabold text-slate-800 text-[17px] mb-5">Debit Note Summary</h3>
                             
-                            <div className="space-y-3">
-                                <div className="flex justify-between">
-                                    <span className="text-xs font-semibold text-slate-500">Outstanding Before CN</span>
-                                    <span className="text-xs font-bold text-slate-800">{formatCurrency(outstandingBeforeCN)}</span>
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs font-bold text-slate-500">Invoice / PI Amount</span>
+                                    <span className="text-sm font-bold text-slate-800">{formatCurrency(accountData?.totalInvoiceAmount)}</span>
                                 </div>
-                                <div className="flex justify-between text-rose-600">
-                                    <span className="text-xs font-bold">Credit Note Amount</span>
-                                    <span className="text-xs font-black">{formatCurrency(totalCreditNoteValue)}</span>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs font-bold text-slate-500">Already Received</span>
+                                    <span className="text-sm font-bold text-slate-800">{formatCurrency(accountData?.totalAmountReceived)}</span>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-xs font-semibold text-slate-500">Credit Note / Adjustment</span>
-                                    <span className="text-xs font-bold text-slate-800">{formatCurrency(totalApplied)}</span>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs font-bold text-slate-500">Outstanding Before DN</span>
+                                    <span className="text-sm font-bold text-slate-800">{formatCurrency(outstandingBeforeCN)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-blue-600">
+                                    <span className="text-xs font-bold">Debit Note Amount</span>
+                                    <span className="text-sm font-black">{formatCurrency(totalCreditNoteValue)}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs font-bold text-slate-500">TDS Deduction</span>
+                                    <span className="text-sm font-bold text-slate-800">₹0.00</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs font-bold text-slate-500">Adjustment / Debit Note</span>
+                                    <span className="text-sm font-bold text-slate-800">₹0.00</span>
                                 </div>
                                 
                                 <div className="bg-slate-900 rounded-lg p-4 mt-4 text-white">
@@ -455,7 +485,7 @@ const CreateCreditNote = () => {
                         </div>
 
                         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                            <h3 className="font-extrabold text-slate-800 text-lg mb-4">Credit Note Preview</h3>
+                            <h3 className="font-extrabold text-slate-800 text-lg mb-4">Debit Note Preview</h3>
                             
                             <div className="space-y-2 mb-4">
                                 <div className="flex justify-between border-b border-slate-50 pb-2">
