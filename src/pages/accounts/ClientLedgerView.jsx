@@ -197,7 +197,7 @@ const ClientLedgerView = () => {
     const [downloadingStatement, setDownloadingStatement] = useState(false);
     const [exporting, setExporting] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(12);
+    const [itemsPerPage, setItemsPerPage] = useState(13);
 
     useEffect(() => {
         if (id === 'all') return;
@@ -706,7 +706,7 @@ const ClientLedgerView = () => {
                     <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
                         <h2 className="text-sm font-semibold text-slate-800 mb-2 tracking-wide">Aging Details</h2>
                         <div className="flex items-center justify-between gap-2 min-h-[110px]">
-                            <div className="w-[90px] h-full shrink-0 -ml-2">
+                            <div className="w-[90px] h-[90px] shrink-0 -ml-2">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <RechartsPieChart>
                                         <Pie data={agingBuckets} cx="50%" cy="50%" innerRadius={25} outerRadius={38} paddingAngle={2} dataKey="amount" stroke="none">
