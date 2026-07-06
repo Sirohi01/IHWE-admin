@@ -780,24 +780,16 @@ export const menuItems = [
       { label: "Payments", path: "/accounts/payments" },
       { label: "Accounts Receivable", path: "/accounts/ar" },
       { label: "Invoices", path: "/accounts/invoices" },
-    ],
-  },
-  {
-    type: "item",
-    label: "Bank Details",
-    icon: Building2,
-    path: "/accounts/bank-details",
-  },
-  {
-    type: "dropdown",
-    label: "Reports",
-    icon: FileText,
-    children: [
-      { label: "Sales Report", path: "/accounts/salesreport" },
-      { label: "Create Credit Note", path: "/debit-note-list/all" },
-      { label: "Create Invoice", path: "/invoice-list" },
-      // { label: "Credit Note Reports", path: "/accounts/" },
-      //  { label: "PI Reports", path: "/accounts/" },
+      { label: "Bank Details", path: "/accounts/bank-details" },
+      {
+        type: "dropdown",
+        label: "Reports",
+        children: [
+          { label: "Sales Report", path: "/accounts/salesreport" },
+          { label: "Create Credit Note", path: "/debit-note-list/all" },
+          { label: "Create Invoice", path: "/invoice-list" },
+        ]
+      }
     ],
   },
 ];
