@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
     FileText, Download, Search, Plus, Eye, Filter, Wallet, CheckCircle2, AlertTriangle,
     Calendar, FileSpreadsheet, BarChart2, ChevronRight, ArrowRightCircle, ChevronDown,
-    Mail, MessageCircleMore, Loader2, MoreVertical, Users, TrendingUp, Bell, RefreshCw
+    Mail, MessageCircleMore, Loader2, MoreVertical, Users, TrendingUp, Bell, RefreshCw,
+    IndianRupee, Calculator, ClipboardList, ArrowDownLeft, CalendarCheck
 } from 'lucide-react';
 import api, { SERVER_URL } from '../../lib/api';
 import toast from 'react-hot-toast';
@@ -48,63 +49,34 @@ function useCountUp(target, duration = 1200) {
 
 function AnimatedStatCard({ icon, title, value, subText1, subText2, iconBg, valueColor, percentage }) {
     const { ref, count } = useCountUp(typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]+/g, "")) : value);
-    const isCurrency = typeof value === 'string' && value.startsWith('â‚¹');
     return (
-        <div ref={ref} className="bg-white p-3 border border-slate-200 rounded-lg shadow-sm flex flex-col justify-between h-full">
-            <div className="flex items-start gap-2.5">
-                <div className={`w-8 h-8 ${iconBg} rounded-full flex items-center justify-center shrink-0 mt-0.5`}>
-                    {icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                    <h3 className="text-slate-700 font-bold text-[8px] uppercase tracking-wider leading-tight whitespace-nowrap truncate">{title}</h3>
-                    <div className={`text-lg font-semibold leading-none mt-1 ${valueColor || 'text-slate-800'}`}>
-                        {isCurrency ? `â‚¹ ${new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(count)}` : new Intl.NumberFormat('en-IN').format(Math.round(count))}
-                    </div>
-                    <div className="text-slate-400 text-[9px] font-semibold mt-0.5">{subText1}</div>
-                </div>
+        <div ref={ref} className="bg-white p-1 border border-slate-200 rounded-xl shadow-sm flex items-center h-full cursor-pointer hover:shadow-md transition-shadow">
+            <div className={`w-10 h-10 xl:w-11 xl:h-11 ${iconBg} rounded-full flex items-center justify-center shrink-0 mr-1`}>
+                {React.cloneElement(icon, { className: "w-5 h-5 xl:w-5 xl:h-5" })}
             </div>
-            <div className="pt-2 border-t border-slate-100 flex justify-between items-center text-[9px]">
-                <span className="text-slate-500 font-medium">{subText2 || 'Summary'}</span>
-                {percentage && <span className="text-emerald-600 font-bold">{percentage}</span>}
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <div className="text-slate-700 font-semibold text-[10px] mb-0.5 whitespace-nowrap overflow-hidden text-ellipsis">{title}</div>
+                <div className={`text-[12px] font-semibold leading-tight ${valueColor || 'text-slate-900'} whitespace-nowrap overflow-hidden text-ellipsis`}>
+                    {typeof value === 'string' && value.startsWith('₹') ? '₹ ' : ''}
+                    {typeof value === 'string' && (value.includes('.') || value.startsWith('₹'))
+                        ? new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(count)
+                        : new Intl.NumberFormat('en-IN').format(Math.round(count))}
+                </div>
+                <div className="flex items-center gap-1.5 mt-0.5 xl:mt-1 flex-wrap">
+                    {percentage && (
+                        <span className="text-[10px] font-bold text-emerald-600 leading-none">{percentage}</span>
+                    )}
+                    {(subText1 || subText2) && (
+                        <div className="text-slate-500 font-medium text-[9px] xl:text-[10px] whitespace-nowrap overflow-hidden text-ellipsis">
+                            {subText1} {subText2}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
 }
 
-/*
-function AnimatedStatCardOld({ icon, title, value, subText1, subText2, iconBg, valueColor, percentage }) {
-    const { ref, count } = useCountUp(typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]+/g, "")) : value);
-    return (
-        <div ref={ref} className="group cursor-pointer relative bg-gradient-to-br from-white to-slate-50/50 px-4 py-3 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden h-full flex flex-col justify-between">
-            <div className="relative z-10 flex flex-col h-full">
-                <div className="flex items-center gap-3 mb-3">
-                    <div className={`w-10 h-10 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
-                        {icon}
-                    </div>
-                    <div className="flex flex-col flex-1">
-                        <div className="flex justify-between items-center w-full">
-                            <span style={{ fontSize: '1.15rem', fontWeight: 800, color: valueColor || '#0f172a', lineHeight: 1, marginBottom: '2px', display: 'block', fontFamily: 'Inter, sans-serif' }}>
-                                {typeof value === 'string' && value.startsWith('₹') ? '₹ ' : ''}
-                                {typeof value === 'string' && value.includes('.')
-                                    ? new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(count)
-                                    : new Intl.NumberFormat('en-IN').format(Math.round(count))}
-                            </span>
-                            {percentage && (
-                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">{percentage}</span>
-                            )}
-                        </div>
-                        <span style={{ fontSize: '10px', fontWeight: 700, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif' }}>{title}</span>
-                    </div>
-                </div>
-                <div className="flex justify-between items-center mt-auto pt-2 border-t border-gray-100/60">
-                    <div className="text-[10px] font-medium text-slate-500 whitespace-nowrap overflow-hidden text-ellipsis mr-2">{subText1}</div>
-                    <div className="text-[10px] font-medium text-slate-800 whitespace-nowrap text-right shrink-0">{subText2}</div>
-                </div>
-            </div>
-        </div>
-    );
-}
-*/
 
 const PIE_COLORS = ['#4f46e5', '#ec4899', '#f59e0b', '#10b981', '#94a3b8'];
 
@@ -130,6 +102,12 @@ const ReceiptsView = () => {
 
     const [sendingReceipt, setSendingReceipt] = useState({});
     const [downloadingId, setDownloadingId] = useState('');
+
+    const [dateRangeOpen, setDateRangeOpen] = useState(false);
+    const [filtersOpen, setFiltersOpen] = useState(false);
+    const [fromDate, setFromDate] = useState('');
+    const [toDate, setToDate] = useState('');
+    const [statusFilter, setStatusFilter] = useState('All');
 
     // Add Payment Modal
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -471,40 +449,111 @@ const ReceiptsView = () => {
     const currentItems = filteredReceipts.slice(indexOfFirstItem, indexOfLastItem);
 
     return (
-        <div className="min-h-screen bg-slate-50 px-4 py-2 font-sans text-slate-800">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-1 gap-4">
+        <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-2">
+            {/* Header Area */}
+            <div className="px-6 py-2 flex justify-between items-center bg-white sticky top-0 z-40 border-b border-gray-100">
                 <div>
-                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Receipts</h1>
-                    <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 font-medium">
-                        <span>Accounts Receivable (AR)</span>
-                        <ChevronRight className="w-3 h-3" />
-                        <span className="text-blue-600 font-bold">Receipts</span>
+                    <h1 className="text-xl font-semibold text-slate-900 tracking-tight flex items-center gap-1">
+                        Receipts
+                    </h1>
+                    <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1 font-medium">
+                        Accounts Receivable (AR) <ChevronRight className="w-3 h-3 text-slate-400" /> <span className="text-slate-700">Receipts</span>
                     </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm">
-                        <Calendar className="w-4 h-4 text-slate-500" />
-                        {formatDate(new Date(now.getFullYear(), now.getMonth(), 1))} - {formatDate(now)}
-                        <ChevronRight className="w-3 h-3 ml-1 rotate-90" />
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <button
+                            onClick={() => setDateRangeOpen(!dateRangeOpen)}
+                            className="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50"
+                        >
+                            <Calendar className="w-4 h-4 text-slate-500" />
+                            {fromDate && toDate ? `${new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} - ${new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}` : 'Date Range'}
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                        </button>
+
+                        {dateRangeOpen && (
+                            <div className="absolute top-full right-0 mt-2 bg-white border border-slate-200 rounded-lg shadow-lg p-3 z-50 w-64">
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">From Date</label>
+                                        <input
+                                            type="date"
+                                            value={fromDate}
+                                            onChange={(e) => setFromDate(e.target.value)}
+                                            className="w-full text-xs border border-slate-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">To Date</label>
+                                        <input
+                                            type="date"
+                                            value={toDate}
+                                            onChange={(e) => setToDate(e.target.value)}
+                                            className="w-full text-xs border border-slate-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={() => setDateRangeOpen(false)}
+                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1.5 rounded transition-colors mt-2"
+                                    >
+                                        Apply Range
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                    <button className="flex items-center gap-2 bg-white border border-slate-300 text-blue-600 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 transition-colors">
-                        <Filter className="w-4 h-4 text-blue-600" /> Filters
-                    </button>
+                    
+                    <div className="relative">
+                        <button
+                            onClick={() => setFiltersOpen(!filtersOpen)}
+                            className="flex items-center gap-2 bg-white border border-slate-300 text-blue-600 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50"
+                        >
+                            <Filter className="w-4 h-4 text-blue-600" />
+                            Filters
+                        </button>
+
+                        {filtersOpen && (
+                            <div className="absolute top-full right-0 mt-2 bg-white border border-slate-200 rounded-lg shadow-lg p-3 z-50 w-56">
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Status</label>
+                                        <select
+                                            value={statusFilter}
+                                            onChange={(e) => setStatusFilter(e.target.value)}
+                                            className="w-full text-xs border border-slate-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                                        >
+                                            <option value="All">All Statuses</option>
+                                            <option value="Confirmed">Confirmed</option>
+                                            <option value="Pending">Pending</option>
+                                            <option value="Rejected">Rejected</option>
+                                        </select>
+                                    </div>
+                                    <button
+                                        onClick={() => setFiltersOpen(false)}
+                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1.5 rounded transition-colors mt-2"
+                                    >
+                                        Apply Filters
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     <button onClick={handleOpenAddPayment} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-colors">
-                        <Plus className="w-4 h-4" /> Add Payment
+                        <Plus className="w-4 h-4" /> Add Payment (New)
                     </button>
                 </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-2">
+            <div className="px-6 py-2">
+                <div className="flex flex-col xl:flex-row gap-2">
                     {/* Left Main Content */}
                     <div className="w-full lg:w-[80%] space-y-2 min-w-0">
 
                         {/* Stat Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-2">
                             <AnimatedStatCard
-                                icon={<FileText className="w-4 h-4 text-blue-500" />}
+                                icon={<ClipboardList className="w-4 h-4 text-blue-500" />}
                                 iconBg="bg-blue-50 text-blue-500"
                                 title="Total Receipts"
                                 value={totalReceipts.toString()}
@@ -512,7 +561,7 @@ const ReceiptsView = () => {
                                 subText2=""
                             />
                             <AnimatedStatCard
-                                icon={<TrendingUp className="w-4 h-4 text-emerald-500" />}
+                                icon={<ArrowDownLeft className="w-4 h-4 text-emerald-500" />}
                                 iconBg="bg-emerald-50 text-emerald-500"
                                 title="Total Received"
                                 value={`₹ ${formatCurrency(totalReceived)}`}
@@ -528,7 +577,7 @@ const ReceiptsView = () => {
                                 valueColor="text-slate-800"
                             />
                             <AnimatedStatCard
-                                icon={<AlertTriangle className="w-4 h-4 text-rose-500" />}
+                                icon={<IndianRupee className="w-4 h-4 text-rose-500" />}
                                 iconBg="bg-rose-50 text-rose-500"
                                 title="TDS Deducted"
                                 value={`₹ ${formatCurrency(totalTds)}`}
@@ -536,7 +585,7 @@ const ReceiptsView = () => {
                                 valueColor="text-slate-800"
                             />
                             <AnimatedStatCard
-                                icon={<Users className="w-4 h-4 text-purple-500" />}
+                                icon={<CalendarCheck className="w-4 h-4 text-purple-500" />}
                                 iconBg="bg-purple-50 text-purple-500"
                                 title="Avg Receipt Amount"
                                 value={`₹ ${formatCurrency(avgReceiptAmount)}`}
@@ -544,11 +593,12 @@ const ReceiptsView = () => {
                                 valueColor="text-slate-800"
                             />
                             <AnimatedStatCard
-                                icon={<Calendar className="w-4 h-4 text-blue-500" />}
-                                iconBg="bg-blue-50 text-blue-500"
+                                icon={<CalendarCheck className="w-4 h-4 text-orange-500" />}
+                                iconBg="bg-orange-50 text-orange-500"
                                 title="This Month Collection"
                                 value={`₹ ${formatCurrency(thisMonthCollection)}`}
-                                subText1="Collection Summary"
+                                subText1=""
+                                subText2="vs Last Month"
                                 valueColor="text-slate-800"
                                 percentage={monthGrowthPct !== null ? `${monthGrowthPct >= 0 ? '↑' : '↓'} ${Math.abs(monthGrowthPct)}%` : null}
                             />
@@ -591,6 +641,9 @@ const ReceiptsView = () => {
                                         <option value="Confirmed">Confirmed</option>
                                         <option value="Running">Running</option>
                                     </select>
+                                </div>
+
+                                <div className="flex items-center justify-between border-t border-slate-100 pt-1">
                                     <button
                                         onClick={() => {
                                             setFilterDate('');
@@ -601,31 +654,30 @@ const ReceiptsView = () => {
                                             setSearchInput('');
                                             setCurrentPage(1);
                                         }}
-                                        className="flex items-center gap-1 text-blue-600 font-bold text-[11px] px-2 shrink-0"
+                                        className="flex items-center gap-1 text-blue-600 hover:text-blue-700 font-bold text-[11px] px-2 transition-colors"
                                     >
-                                        <RefreshCw className="w-3 h-3" /> Reset
+                                        <RefreshCw className="w-3 h-3" /> Reset Filters
                                     </button>
-                                </div>
-
-                                <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-1">
-                                    <button
-                                        onClick={() => exportToExcel(filteredReceipts, 'Receipts_Export.xlsx')}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors whitespace-nowrap"
-                                    >
-                                        <Download className="w-3.5 h-3.5" /> Export
-                                    </button>
-                                    <button
-                                        onClick={() => navigate('/accounts/summary-report')}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors whitespace-nowrap"
-                                    >
-                                        <BarChart2 className="w-3.5 h-3.5" /> Receipt Report
-                                    </button>
-                                    <button
-                                        onClick={() => exportToExcel(payments, 'All_Receipts_Export.xlsx')}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-md text-[11px] font-bold border border-blue-100 hover:bg-blue-100 transition-colors whitespace-nowrap"
-                                    >
-                                        <FileSpreadsheet className="w-3.5 h-3.5" /> Download All Receipts
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => exportToExcel(filteredReceipts, 'Receipts_Export.xlsx')}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors whitespace-nowrap"
+                                        >
+                                            <Download className="w-3.5 h-3.5" /> Export
+                                        </button>
+                                        <button
+                                            onClick={() => navigate('/accounts/summary-report')}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors whitespace-nowrap"
+                                        >
+                                            <BarChart2 className="w-3.5 h-3.5" /> Receipt Report
+                                        </button>
+                                        <button
+                                            onClick={() => exportToExcel(payments, 'All_Receipts_Export.xlsx')}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-md text-[11px] font-bold border border-blue-100 hover:bg-blue-100 transition-colors whitespace-nowrap"
+                                        >
+                                            <FileSpreadsheet className="w-3.5 h-3.5" /> Download All Receipts
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -713,7 +765,9 @@ const ReceiptsView = () => {
                                                             <div className="font-bold text-slate-800 text-[11px]">{bank}</div>
                                                             <div className="text-[10px] text-slate-500 mt-0.5">{ref}</div>
                                                         </td>
-                                                        <td className="px-2 py-1 align-top text-[10px] text-slate-500 whitespace-normal w-40">{pmt.notes || 'N/A'}</td>
+                                                        <td className="px-2 py-1 align-top text-[10px] text-slate-500 whitespace-normal w-40">
+                                                            <div className="line-clamp-2" title={pmt.notes || ''}>{pmt.notes || 'N/A'}</div>
+                                                        </td>
                                                         <td className="px-2 py-1 align-top text-center">{getStatusBadge(pmt)}</td>
                                                         <td className="px-2 py-1 align-top text-center">
                                                             <div className="flex items-center justify-center gap-1.5">
@@ -794,35 +848,38 @@ const ReceiptsView = () => {
                         </div>
 
                         {/* Footer Totals */}
-                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-2 px-3 flex items-center justify-between overflow-x-auto text-center">
-                            <div>
-                                <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">TOTAL RECEIPTS</div>
-                                <div className="text-sm font-bold text-slate-800">{totalReceipts}</div>
-                            </div>
-                            <div>
-                                <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">TOTAL RECEIVED</div>
-                                <div className="text-sm font-bold text-slate-800">₹ {formatCurrency(totalReceived)}</div>
-                            </div>
-                            <div>
-                                <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">TOTAL TDS DEDUCTED</div>
-                                <div className="text-sm font-bold text-rose-500">₹ {formatCurrency(totalTds)}</div>
-                            </div>
-                            <div>
-                                <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">NET AMOUNT RECEIVED</div>
-                                <div className="text-sm font-bold text-emerald-600">₹ {formatCurrency(netAmountReceived)}</div>
-                                <div className="text-[9px] text-slate-500 font-medium">(After TDS)</div>
-                            </div>
-                            <div>
-                                <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">CREDIT NOTES ADJUSTED</div>
-                                <div className="text-sm font-bold text-slate-800">₹ {formatCurrency(creditNotesTotal)}</div>
-                            </div>
-                            <div>
-                                <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">REFUNDS ISSUED</div>
-                                <div className="text-sm font-bold text-slate-800">₹ 0.00</div>
-                            </div>
-                            <div>
-                                <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">AVERAGE PAYMENT DAYS</div>
-                                <div className="text-sm font-bold text-slate-800">{avgPaymentDays} Days</div>
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-2 px-3 flex items-center justify-between overflow-x-auto mt-2">
+                            <div className="flex items-center flex-1 divide-x divide-slate-200 min-w-max justify-between">
+                                <div className="pr-3 text-center">
+                                    <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">TOTAL RECEIPTS</div>
+                                    <div className="text-[11px] font-bold text-slate-800">{totalReceipts}</div>
+                                </div>
+                                <div className="px-3 text-center">
+                                    <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">TOTAL RECEIVED</div>
+                                    <div className="text-[11px] font-bold text-slate-800">₹ {formatCurrency(totalReceived)}</div>
+                                </div>
+                                <div className="px-3 text-center">
+                                    <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">TOTAL TDS DEDUCTED</div>
+                                    <div className="text-[11px] font-bold text-rose-500">₹ {formatCurrency(totalTds)}</div>
+                                </div>
+                                <div className="px-3 text-center">
+                                    <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">NET AMOUNT RECEIVED</div>
+                                    <div className="text-[11px] font-bold text-emerald-600 flex items-center justify-center gap-1">
+                                        ₹ {formatCurrency(netAmountReceived)} <span className="text-[9px] text-slate-500 font-medium">(After TDS)</span>
+                                    </div>
+                                </div>
+                                <div className="px-3 text-center">
+                                    <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">CREDIT NOTES ADJUSTED</div>
+                                    <div className="text-[11px] font-bold text-slate-800">₹ {formatCurrency(creditNotesTotal)}</div>
+                                </div>
+                                <div className="px-3 text-center">
+                                    <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">REFUNDS ISSUED</div>
+                                    <div className="text-[11px] font-bold text-slate-800">₹ 0.00</div>
+                                </div>
+                                <div className="pl-3 text-center">
+                                    <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">AVERAGE PAYMENT DAYS</div>
+                                    <div className="text-[11px] font-bold text-slate-800">{avgPaymentDays} Days</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -832,41 +889,41 @@ const ReceiptsView = () => {
 
                         {/* Collection Summary */}
                         <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
-                            <h3 className="text-sm font-semibold text-slate-800 mb-3 tracking-wide">Collection Summary</h3>
+                            <h2 className="text-xs font-black text-slate-800 mb-3 tracking-wide">Collection Summary</h2>
                             <div className="space-y-3">
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2.5">
                                     <div className="w-7 h-7 rounded-md bg-blue-50 flex items-center justify-center shrink-0"><Wallet className="w-3.5 h-3.5 text-blue-600" /></div>
-                                    <div className="flex-1">
-                                        <div className="text-[10px] font-medium text-slate-500 leading-tight">Today's Collection</div>
-                                        <div className="text-sm font-bold text-slate-800">₹ {formatCurrency(todayCollection)}</div>
+                                    <div>
+                                        <div className="text-[10px] font-bold text-slate-500 leading-tight">Today's Collection</div>
+                                        <div className="font-black text-slate-800 text-sm">₹ {formatCurrency(todayCollection)}</div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2.5">
                                     <div className="w-7 h-7 rounded-md bg-emerald-50 flex items-center justify-center shrink-0"><TrendingUp className="w-3.5 h-3.5 text-emerald-600" /></div>
-                                    <div className="flex-1">
-                                        <div className="text-[10px] font-medium text-slate-500 leading-tight">This Week Collection</div>
-                                        <div className="text-sm font-bold text-slate-800">₹ {formatCurrency(weekCollection)}</div>
+                                    <div>
+                                        <div className="text-[10px] font-bold text-slate-500 leading-tight">This Week Collection</div>
+                                        <div className="font-black text-slate-800 text-sm">₹ {formatCurrency(weekCollection)}</div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2.5">
                                     <div className="w-7 h-7 rounded-md bg-orange-50 flex items-center justify-center shrink-0"><Calendar className="w-3.5 h-3.5 text-orange-600" /></div>
-                                    <div className="flex-1">
-                                        <div className="text-[10px] font-medium text-slate-500 leading-tight">This Month Collection</div>
-                                        <div className="text-sm font-bold text-slate-800">₹ {formatCurrency(thisMonthCollection)}</div>
+                                    <div>
+                                        <div className="text-[10px] font-bold text-slate-500 leading-tight">This Month Collection</div>
+                                        <div className="font-black text-slate-800 text-sm">₹ {formatCurrency(thisMonthCollection)}</div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2.5">
                                     <div className="w-7 h-7 rounded-md bg-red-50 flex items-center justify-center shrink-0"><AlertTriangle className="w-3.5 h-3.5 text-red-500" /></div>
-                                    <div className="flex-1">
-                                        <div className="text-[10px] font-medium text-slate-500 leading-tight">Overdue Recovery Target</div>
-                                        <div className="text-sm font-bold text-slate-800">₹ {formatCurrency(overdueRecoveryTarget)}</div>
+                                    <div>
+                                        <div className="text-[10px] font-bold text-slate-500 leading-tight">Overdue Recovery Target</div>
+                                        <div className="font-black text-slate-800 text-sm">₹ {formatCurrency(overdueRecoveryTarget)}</div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2.5">
                                     <div className="w-7 h-7 rounded-md bg-indigo-50 flex items-center justify-center shrink-0"><Bell className="w-3.5 h-3.5 text-indigo-500" /></div>
-                                    <div className="flex-1">
-                                        <div className="text-[10px] font-medium text-slate-500 leading-tight">Pending Follow-ups</div>
-                                        <div className="text-sm font-bold text-slate-800">{pendingFollowUps}</div>
+                                    <div>
+                                        <div className="text-[10px] font-bold text-slate-500 leading-tight">Pending Follow-ups</div>
+                                        <div className="font-black text-slate-800 text-sm">{pendingFollowUps}</div>
                                     </div>
                                 </div>
                             </div>
@@ -874,14 +931,14 @@ const ReceiptsView = () => {
 
                         {/* Quick Actions */}
                         <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
-                            <h3 className="text-sm font-semibold text-slate-800 mb-3 tracking-wide">Quick Actions</h3>
+                            <h2 className="text-sm font-semibold text-slate-800 mb-3 tracking-wide">Quick Actions</h2>
                             <div className="space-y-2">
                                 <button onClick={handleOpenAddPayment} className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors group text-left">
                                     <div className="flex items-center gap-3">
                                         <div className="w-6 h-6 rounded bg-blue-50 flex items-center justify-center text-blue-500"><Plus className="w-3.5 h-3.5" /></div>
                                         <div>
-                                            <div className="text-[11px] font-medium text-slate-700 leading-tight">Add Payment</div>
-                                            <div className="text-[9px] text-slate-400 mt-0.5">Record a new payment</div>
+                                            <div className="text-[11px] font-semibold text-slate-800 leading-tight">Add Payment</div>
+                                            <div className="text-[10px] font-medium text-slate-500 mt-0.5">Record a new payment</div>
                                         </div>
                                     </div>
                                     <ChevronRight className="w-3 h-3 text-slate-300" />
@@ -893,8 +950,8 @@ const ReceiptsView = () => {
                                     <div className="flex items-center gap-3">
                                         <div className="w-6 h-6 rounded bg-emerald-50 flex items-center justify-center text-emerald-500"><Mail className="w-3.5 h-3.5" /></div>
                                         <div>
-                                            <div className="text-[11px] font-medium text-slate-700 leading-tight">Send Receipt</div>
-                                            <div className="text-[9px] text-slate-400 mt-0.5">Email/WhatsApp receipt</div>
+                                            <div className="text-[11px] font-semibold text-slate-800 leading-tight">Send Receipt</div>
+                                            <div className="text-[10px] font-medium text-slate-500 mt-0.5">Email/WhatsApp receipt</div>
                                         </div>
                                     </div>
                                     <ChevronRight className="w-3 h-3 text-slate-300" />
@@ -906,8 +963,8 @@ const ReceiptsView = () => {
                                     <div className="flex items-center gap-3">
                                         <div className="w-6 h-6 rounded bg-amber-50 flex items-center justify-center text-amber-500"><FileText className="w-3.5 h-3.5" /></div>
                                         <div>
-                                            <div className="text-[11px] font-medium text-slate-700 leading-tight">Collection Notes</div>
-                                            <div className="text-[9px] text-slate-400 mt-0.5">Add notes for receipt</div>
+                                            <div className="text-[11px] font-semibold text-slate-800 leading-tight">Collection Notes</div>
+                                            <div className="text-[10px] font-medium text-slate-500 mt-0.5">Add notes for receipt</div>
                                         </div>
                                     </div>
                                     <ChevronRight className="w-3 h-3 text-slate-300" />
@@ -919,8 +976,8 @@ const ReceiptsView = () => {
                                     <div className="flex items-center gap-3">
                                         <div className="w-6 h-6 rounded bg-indigo-50 flex items-center justify-center text-indigo-500"><Download className="w-3.5 h-3.5" /></div>
                                         <div>
-                                            <div className="text-[11px] font-medium text-slate-700 leading-tight">Download Receipts</div>
-                                            <div className="text-[9px] text-slate-400 mt-0.5">Download selected receipts</div>
+                                            <div className="text-[11px] font-semibold text-slate-800 leading-tight">Download Receipts</div>
+                                            <div className="text-[10px] font-medium text-slate-500 mt-0.5">Download selected receipts</div>
                                         </div>
                                     </div>
                                     <ChevronRight className="w-3 h-3 text-slate-300" />
@@ -932,8 +989,8 @@ const ReceiptsView = () => {
                                     <div className="flex items-center gap-3">
                                         <div className="w-6 h-6 rounded bg-blue-50 flex items-center justify-center text-blue-500"><BarChart2 className="w-3.5 h-3.5" /></div>
                                         <div>
-                                            <div className="text-[11px] font-medium text-slate-700 leading-tight">Receipt Report</div>
-                                            <div className="text-[9px] text-slate-400 mt-0.5">View detailed receipt report</div>
+                                            <div className="text-[11px] font-semibold text-slate-800 leading-tight">Receipt Report</div>
+                                            <div className="text-[10px] font-medium text-slate-500 mt-0.5">View detailed receipt report</div>
                                         </div>
                                     </div>
                                     <ChevronRight className="w-3 h-3 text-slate-300" />
@@ -943,17 +1000,17 @@ const ReceiptsView = () => {
 
                         {/* Payment Mode Summary */}
                         <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
-                            <h3 className="text-sm font-semibold text-slate-800 mb-3 tracking-wide">Payment Mode Summary</h3>
-                            <div className="flex items-center justify-between">
-                                <div className="w-20 h-20 relative">
+                            <h2 className="text-sm font-semibold text-slate-800 mb-3 tracking-wide">Payment Mode Summary</h2>
+                            <div className="flex items-center justify-between h-[140px]">
+                                <div className="w-[100px] h-full shrink-0 -ml-2">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <RechartsPieChart>
                                             <Pie
                                                 data={modeData}
                                                 cx="50%"
                                                 cy="50%"
-                                                innerRadius={25}
-                                                outerRadius={38}
+                                                innerRadius={30}
+                                                outerRadius={45}
                                                 paddingAngle={2}
                                                 dataKey="value"
                                                 stroke="none"
@@ -966,29 +1023,32 @@ const ReceiptsView = () => {
                                         </RechartsPieChart>
                                     </ResponsiveContainer>
                                 </div>
-                                <div className="flex-1 pl-3 space-y-2">
+                                <div className="flex flex-col gap-3 shrink-0">
                                     {modeData.length === 0 ? (
                                         <div className="text-[10px] text-slate-400">No data</div>
                                     ) : modeData.map((m, i) => (
-                                        <div key={m.name} className="flex items-start gap-1.5">
-                                            <div className="w-2 h-2 rounded-full mt-1 shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}></div>
-                                            <div>
-                                                <div className="text-[10px] font-medium text-slate-700 leading-tight">{m.name}</div>
-                                                <div className="text-[9px] text-slate-400">{((m.value / modeTotal) * 100).toFixed(1)}%</div>
+                                        <div key={m.name} className="flex items-center justify-between gap-4">
+                                            <div className="flex items-center gap-1.5">
+                                                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}></div>
+                                                <span className="text-[10px] font-semibold text-slate-600">{m.name}</span>
+                                            </div>
+                                            <div className="text-[10px] font-bold text-slate-800 text-right">
+                                                <span className="font-medium text-slate-500 ml-0.5">({((m.value / modeTotal) * 100).toFixed(1)}%)</span>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
-                            <div className="mt-4 pt-3 border-t border-gray-50 text-center">
-                                <button onClick={() => navigate('/accounts/summary-report')} className="text-blue-500 text-[11px] font-medium hover:underline flex items-center justify-center gap-1 w-full">
-                                    View All Reports <ArrowRightCircle className="w-3.5 h-3.5" />
+                            <div className="mt-2 text-center">
+                                <button onClick={() => navigate('/accounts/summary-report')} className="text-blue-600 hover:text-blue-700 text-[11px] font-bold tracking-wide transition-colors">
+                                    View All Reports →
                                 </button>
                             </div>
                         </div>
 
                     </div>
                 </div>
+            </div>
 
             {/* Add Payment Modal */}
             {isAddModalOpen && (
