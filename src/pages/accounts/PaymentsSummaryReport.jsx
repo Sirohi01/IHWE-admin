@@ -1,14 +1,74 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, DollarSign, CreditCard, PieChart as PieChartIcon, Activity, Download, Building2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, DollarSign, CreditCard, PieChart as PieChartIcon, Activity, Download, Building2, CheckCircle2, AlertTriangle, CalendarDays, ChevronDown, Settings } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import api from '../../lib/api';
 import toast from 'react-hot-toast';
+
+function useCountUp(target, duration = 1200) {
+    const [count, setCount] = useState(0);
+    const [started, setStarted] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => { if (entry.isIntersecting && !started) setStarted(true); },
+            { threshold: 0.3 }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [started]);
+
+    useEffect(() => {
+        if (!started) return;
+        const numTarget = parseFloat(target) || 0;
+        if (numTarget === 0) { setCount(0); return; }
+        const startTime = performance.now();
+        const tick = (now) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const ease = 1 - Math.pow(1 - progress, 3);
+            setCount(ease * numTarget);
+            if (progress < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+    }, [started, target, duration]);
+
+    return { ref, count };
+}
+
+function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, label, subLabel, subColor }) {
+    const { ref, count } = useCountUp(rawValue);
+    return (
+        <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white ${gradientTo} px-4 py-2.5 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}>
+            <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-2">
+                    <div className={`w-10 h-10 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
+                        {icon}
+                    </div>
+                    <div className="flex flex-col">
+                        <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>
+                            {displayValue(count)}
+                        </span>
+                        <span style={{ fontSize: '9px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif' }}>{label}</span>
+                    </div>
+                </div>
+                <div style={{ fontSize: '10px', fontWeight: 700, color: subColor, textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>{subLabel}</div>
+            </div>
+        </div>
+    );
+}
 
 function PaymentsSummaryReport() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [payments, setPayments] = useState([]);
+    
+    const [filterDate, setFilterDate] = useState('all');
+    const [filterBank, setFilterBank] = useState('');
+    const [filterMode, setFilterMode] = useState('');
 
     useEffect(() => {
         const fetchPayments = async () => {
@@ -25,26 +85,51 @@ function PaymentsSummaryReport() {
         fetchPayments();
     }, []);
 
+    const filteredPayments = payments.filter(pmt => {
+        if (filterBank && pmt.bankId !== filterBank) return false;
+        if (filterMode && pmt.payment_mode !== filterMode) return false;
+        
+        if (filterDate !== 'all') {
+            const pmtDate = new Date(pmt.payment_date || pmt.added);
+            if (!isNaN(pmtDate.getTime())) {
+                const now = new Date();
+                if (filterDate === 'this_month') {
+                    if (pmtDate.getMonth() !== now.getMonth() || pmtDate.getFullYear() !== now.getFullYear()) return false;
+                } else if (filterDate === 'last_3_months') {
+                    const threeMonthsAgo = new Date();
+                    threeMonthsAgo.setMonth(now.getMonth() - 3);
+                    if (pmtDate < threeMonthsAgo) return false;
+                } else if (filterDate === 'this_year') {
+                    if (pmtDate.getFullYear() !== now.getFullYear()) return false;
+                }
+            }
+        }
+        return true;
+    });
+
+    const uniqueBanks = [...new Set(payments.map(p => p.bankId).filter(Boolean))];
+    const uniqueModes = [...new Set(payments.map(p => p.payment_mode).filter(Boolean))];
+
     // Derived Metrics
-    const totalCollected = payments.reduce((sum, p) => sum + (parseFloat(p.amount_text) || 0), 0);
-    const totalTds = payments.reduce((sum, p) => sum + (parseFloat(p.tds_text) || 0), 0);
-    const completedCount = payments.filter(p => p.status === 'Completed' || p.status === '1' || String(p.status).toLowerCase() === 'completed').length;
-    const overdueCount = payments.filter(p => String(p.status).toLowerCase() === 'overdue').length;
-    const totalCount = payments.length || 1;
+    const totalCollected = filteredPayments.reduce((sum, p) => sum + (parseFloat(p.amount_text) || 0), 0);
+    const totalTds = filteredPayments.reduce((sum, p) => sum + (parseFloat(p.tds_text) || 0), 0);
+    const completedCount = filteredPayments.filter(p => p.status === 'Completed' || p.status === '1' || String(p.status).toLowerCase() === 'completed').length;
+    const overdueCount = filteredPayments.filter(p => String(p.status).toLowerCase() === 'overdue').length;
+    const avgTicket = filteredPayments.length > 0 ? (totalCollected / filteredPayments.length) : 0;
 
     const formatCurrency = (val) => `₹ ${Number(val).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
     // Data for Bank Bar Chart
-    const bankMap = payments.reduce((acc, p) => {
+    const bankMap = filteredPayments.reduce((acc, p) => {
         const bank = p.bankId || 'Other';
         if (!acc[bank]) acc[bank] = 0;
         acc[bank] += (parseFloat(p.amount_text) || 0);
         return acc;
     }, {});
-    const bankData = Object.entries(bankMap).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value).slice(0, 5); // Top 5
+    const bankData = Object.entries(bankMap).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value).slice(0, 5);
 
     // Data for Mode Pie Chart
-    const modeMap = payments.reduce((acc, p) => {
+    const modeMap = filteredPayments.reduce((acc, p) => {
         const mode = p.payment_mode || 'Unknown';
         if (!acc[mode]) acc[mode] = 0;
         acc[mode] += (parseFloat(p.amount_text) || 0);
@@ -55,7 +140,7 @@ function PaymentsSummaryReport() {
 
     // Data for Monthly Trend Line Chart (Last 6 Months)
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const trendMap = payments.reduce((acc, p) => {
+    const trendMap = filteredPayments.reduce((acc, p) => {
         const d = new Date(p.payment_date || p.added);
         if(!isNaN(d)) {
             const mYear = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
@@ -64,156 +149,191 @@ function PaymentsSummaryReport() {
         }
         return acc;
     }, {});
-    const trendData = Object.values(trendMap).sort((a,b) => a.time - b.time).slice(-6); // Last 6 months
+    const trendData = Object.values(trendMap).sort((a,b) => a.time - b.time).slice(-6);
 
     return (
-        <div className="min-h-screen bg-slate-50 p-4 sm:p-8">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <div className="flex items-center gap-5">
-                    <button onClick={() => navigate(-1)} className="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all text-slate-600">
+        <div className="min-h-screen bg-gray-50 pl-4 pr-4 py-4">
+            {/* -- Header -- */}
+            <div className="flex items-center justify-between mb-4 mt-2">
+                <div className="flex items-center gap-3">
+                    <button onClick={() => navigate(-1)} className="p-1.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg shadow-sm transition-colors text-slate-500">
                         <ArrowLeft className="w-5 h-5" />
                     </button>
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Financial Overview</h1>
-                        <p className="text-sm font-semibold text-slate-500 mt-1">Comprehensive breakdown of all collected payments and metrics</p>
+                        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Payments Summary</h1>
+                        <div className="text-sm text-slate-500 mt-1">Detailed breakdown of payment collections</div>
                     </div>
                 </div>
-                <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-md shadow-indigo-200 transition-all text-sm group">
-                    <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
-                    Export PDF Report
-                </button>
+                <div className="flex gap-2">
+                    <button className="flex items-center gap-1.5 text-blue-600 bg-white border border-slate-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-50 shadow-sm transition-colors">
+                        <Download className="w-4 h-4" />
+                        Download PDF
+                    </button>
+                </div>
             </div>
 
             {loading ? (
-                <div className="flex flex-col items-center justify-center py-32 space-y-4">
-                    <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                    <div className="text-indigo-600 font-bold tracking-widest text-sm uppercase">Aggregating Data...</div>
-                </div>
+                <div className="flex justify-center items-center py-20 text-slate-400">Loading...</div>
             ) : (
-                <div className="space-y-6">
-                    {/* Top KPI Row */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {/* KPI 1 */}
-                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity group-hover:scale-110 duration-500">
-                                <DollarSign className="w-24 h-24" />
-                            </div>
-                            <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mb-4 border border-indigo-100">
-                                <DollarSign className="w-6 h-6" />
-                            </div>
-                            <div className="text-3xl font-black text-slate-900 mb-1">{formatCurrency(totalCollected)}</div>
-                            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Revenue</div>
-                        </div>
+                <>
+                    {/* -- Stat Cards -- */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 mb-4">
+                        <AnimatedStatCard
+                            icon={<DollarSign className="w-5 h-5 text-indigo-600" strokeWidth={2.5} />}
+                            gradientTo="to-indigo-50" iconBg="bg-indigo-100"
+                            rawValue={totalCollected}
+                            displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+                            label="Total Revenue"
+                            subLabel="" subColor="#4f46e5"
+                        />
+                        <AnimatedStatCard
+                            icon={<Activity className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
+                            gradientTo="to-emerald-50" iconBg="bg-emerald-100"
+                            rawValue={completedCount}
+                            displayValue={(c) => Math.round(c)}
+                            label="Completed Txns"
+                            subLabel="" subColor="#059669"
+                        />
+                        <AnimatedStatCard
+                            icon={<CreditCard className="w-5 h-5 text-pink-600" strokeWidth={2.5} />}
+                            gradientTo="to-pink-50" iconBg="bg-pink-100"
+                            rawValue={totalTds}
+                            displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+                            label="TDS Deducted"
+                            subLabel="" subColor="#ec4899"
+                        />
+                        <AnimatedStatCard
+                            icon={<AlertTriangle className="w-5 h-5 text-amber-600" strokeWidth={2.5} />}
+                            gradientTo="to-amber-50" iconBg="bg-amber-100"
+                            rawValue={overdueCount}
+                            displayValue={(c) => Math.round(c)}
+                            label="Overdue Payments"
+                            subLabel="" subColor="#d97706"
+                        />
+                        <AnimatedStatCard
+                            icon={<PieChartIcon className="w-5 h-5 text-rose-600" strokeWidth={2.5} />}
+                            gradientTo="to-rose-50" iconBg="bg-rose-100"
+                            rawValue={avgTicket}
+                            displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+                            label="Avg. Ticket Size"
+                            subLabel="" subColor="#e11d48"
+                        />
+                    </div>
 
-                        {/* KPI 2 */}
-                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity group-hover:scale-110 duration-500">
-                                <Activity className="w-24 h-24" />
+                    {/* -- Filters -- */}
+                    <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-3 shadow-sm mb-4 overflow-x-auto">
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <CalendarDays className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                <select
+                                    value={filterDate}
+                                    onChange={(e) => setFilterDate(e.target.value)}
+                                    className="appearance-none bg-white border border-slate-200 text-slate-700 pl-9 pr-8 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 min-w-[140px] focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 cursor-pointer"
+                                >
+                                    <option value="all">All Dates</option>
+                                    <option value="this_month">This Month</option>
+                                    <option value="last_3_months">Last 3 Months</option>
+                                    <option value="this_year">This Year</option>
+                                </select>
+                                <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                             </div>
-                            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-4 border border-emerald-100">
-                                <CheckCircle2 className="w-6 h-6" />
+                            <div className="relative">
+                                <Building2 className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                <select
+                                    value={filterBank}
+                                    onChange={(e) => setFilterBank(e.target.value)}
+                                    className="appearance-none bg-white border border-slate-200 text-slate-700 pl-9 pr-8 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 min-w-[120px] focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 cursor-pointer"
+                                >
+                                    <option value="">All Banks</option>
+                                    {uniqueBanks.map(bank => <option key={bank} value={bank}>{bank}</option>)}
+                                </select>
+                                <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                             </div>
-                            <div className="text-3xl font-black text-slate-900 mb-1">{completedCount} <span className="text-lg text-slate-400 font-semibold">/ {totalCount}</span></div>
-                            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Completed Transactions</div>
-                        </div>
-
-                        {/* KPI 3 */}
-                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity group-hover:scale-110 duration-500">
-                                <CreditCard className="w-24 h-24" />
+                            <div className="relative">
+                                <Settings className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                <select
+                                    value={filterMode}
+                                    onChange={(e) => setFilterMode(e.target.value)}
+                                    className="appearance-none bg-white border border-slate-200 text-slate-700 pl-9 pr-8 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 min-w-[120px] focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 cursor-pointer"
+                                >
+                                    <option value="">All Modes</option>
+                                    {uniqueModes.map(mode => <option key={mode} value={mode}>{mode}</option>)}
+                                </select>
+                                <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                             </div>
-                            <div className="w-12 h-12 bg-pink-50 text-pink-600 rounded-xl flex items-center justify-center mb-4 border border-pink-100">
-                                <Activity className="w-6 h-6" />
-                            </div>
-                            <div className="text-3xl font-black text-slate-900 mb-1">{formatCurrency(totalTds)}</div>
-                            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">TDS Deducted</div>
-                        </div>
-
-                        {/* KPI 4 */}
-                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity group-hover:scale-110 duration-500">
-                                <AlertCircle className="w-24 h-24" />
-                            </div>
-                            <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center mb-4 border border-rose-100">
-                                <AlertCircle className="w-6 h-6" />
-                            </div>
-                            <div className="text-3xl font-black text-slate-900 mb-1">{overdueCount}</div>
-                            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Overdue Payments</div>
                         </div>
                     </div>
 
-                    {/* Charts Row */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {/* Monthly Trend Chart */}
-                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                            <div className="flex items-center justify-between mb-6">
+                        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                            <div className="flex items-center justify-between mb-4">
                                 <div>
-                                    <h2 className="text-lg font-bold text-slate-900">Revenue Trend</h2>
-                                    <p className="text-xs font-semibold text-slate-500">Last 6 active months</p>
+                                    <h2 className="text-sm font-bold text-slate-900">Revenue Trend</h2>
+                                    <p className="text-[10px] font-semibold text-slate-500">Last 6 active months</p>
                                 </div>
-                                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><Activity className="w-4 h-4" /></div>
+                                <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-md"><Activity className="w-3.5 h-3.5" /></div>
                             </div>
-                            <div className="h-[300px] w-full">
+                            <div className="h-[260px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <LineChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12, fontWeight: 600}} dy={10} />
-                                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12, fontWeight: 600}} tickFormatter={(value) => `₹${value >= 1000 ? (value/1000).toFixed(0) + 'k' : value}`} />
+                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10, fontWeight: 600}} dy={10} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10, fontWeight: 600}} tickFormatter={(value) => `₹${value >= 1000 ? (value/1000).toFixed(0) + 'k' : value}`} />
                                         <RechartsTooltip 
-                                            contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
+                                            contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px'}}
                                             formatter={(value) => [formatCurrency(value), 'Revenue']}
                                         />
-                                        <Line type="monotone" dataKey="Revenue" stroke="#4f46e5" strokeWidth={4} dot={{r: 6, fill: '#4f46e5', strokeWidth: 3, stroke: '#fff'}} activeDot={{r: 8}} />
+                                        <Line type="monotone" dataKey="Revenue" stroke="#4f46e5" strokeWidth={3} dot={{r: 4, fill: '#4f46e5', strokeWidth: 2, stroke: '#fff'}} activeDot={{r: 6}} />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </div>
                         </div>
 
                         {/* Top Banks Bar Chart */}
-                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                            <div className="flex items-center justify-between mb-6">
+                        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                            <div className="flex items-center justify-between mb-4">
                                 <div>
-                                    <h2 className="text-lg font-bold text-slate-900">Top Receiving Banks</h2>
-                                    <p className="text-xs font-semibold text-slate-500">Highest collection by bank account</p>
+                                    <h2 className="text-sm font-bold text-slate-900">Top Receiving Banks</h2>
+                                    <p className="text-[10px] font-semibold text-slate-500">Highest collection by bank account</p>
                                 </div>
-                                <div className="p-2 bg-pink-50 text-pink-600 rounded-lg"><Building2 className="w-4 h-4" /></div>
+                                <div className="p-1.5 bg-pink-50 text-pink-600 rounded-md"><Building2 className="w-3.5 h-3.5" /></div>
                             </div>
-                            <div className="h-[300px] w-full">
+                            <div className="h-[260px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={bankData} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
+                                    <BarChart data={bankData} layout="vertical" margin={{ top: 0, right: 20, left: -20, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
-                                        <XAxis type="number" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12, fontWeight: 600}} tickFormatter={(value) => `₹${value >= 1000 ? (value/1000).toFixed(0) + 'k' : value}`} />
-                                        <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 12, fontWeight: 700}} width={100} />
+                                        <XAxis type="number" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10, fontWeight: 600}} tickFormatter={(value) => `₹${value >= 1000 ? (value/1000).toFixed(0) + 'k' : value}`} />
+                                        <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 10, fontWeight: 700}} width={90} />
                                         <RechartsTooltip 
                                             cursor={{fill: 'transparent'}}
-                                            contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
+                                            contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px'}}
                                             formatter={(value) => [formatCurrency(value), 'Collection']}
                                         />
-                                        <Bar dataKey="value" fill="#ec4899" radius={[0, 6, 6, 0]} barSize={24} />
+                                        <Bar dataKey="value" fill="#ec4899" radius={[0, 4, 4, 0]} barSize={16} />
                                     </BarChart>
                                 </ResponsiveContainer>
                             </div>
                         </div>
                     </div>
 
-                    {/* Bottom Row - Pie Chart & Details */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Bottom Row */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
                         {/* Payment Mode Distribution */}
-                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-1">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="p-2 bg-amber-50 text-amber-600 rounded-lg"><PieChartIcon className="w-4 h-4" /></div>
-                                <h2 className="text-lg font-bold text-slate-900">Payment Modes</h2>
+                        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm lg:col-span-1">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="p-1.5 bg-amber-50 text-amber-600 rounded-md"><PieChartIcon className="w-3.5 h-3.5" /></div>
+                                <h2 className="text-sm font-bold text-slate-900">Payment Modes</h2>
                             </div>
-                            <div className="h-[250px] w-full flex items-center justify-center">
+                            <div className="h-[200px] w-full flex items-center justify-center">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie
                                             data={modeData}
                                             cx="50%"
                                             cy="50%"
-                                            innerRadius={60}
-                                            outerRadius={80}
+                                            innerRadius={50}
+                                            outerRadius={70}
                                             paddingAngle={5}
                                             dataKey="value"
                                         >
@@ -223,67 +343,65 @@ function PaymentsSummaryReport() {
                                         </Pie>
                                         <RechartsTooltip 
                                             formatter={(value) => formatCurrency(value)}
-                                            contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                                            contentStyle={{borderRadius: '6px', border: 'none', boxShadow: '0 2px 4px -1px rgb(0 0 0 / 0.1)', fontSize: '11px'}}
                                         />
                                     </PieChart>
                                 </ResponsiveContainer>
                             </div>
-                            <div className="space-y-3 mt-4">
+                            <div className="space-y-2.5 mt-2">
                                 {modeData.map((item, idx) => (
                                     <div key={item.name} className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-full" style={{backgroundColor: PIE_COLORS[idx % PIE_COLORS.length]}}></div>
-                                            <span className="text-sm font-semibold text-slate-600">{item.name}</span>
+                                            <div className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: PIE_COLORS[idx % PIE_COLORS.length]}}></div>
+                                            <span className="text-[11px] font-semibold text-slate-600">{item.name}</span>
                                         </div>
-                                        <span className="text-sm font-black text-slate-900">{formatCurrency(item.value)}</span>
+                                        <span className="text-[11px] font-black text-slate-900">{formatCurrency(item.value)}</span>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
                         {/* Recent Large Transactions */}
-                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2">
-                            <div className="flex items-center justify-between mb-6">
+                        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm lg:col-span-2 overflow-x-auto">
+                            <div className="flex items-center justify-between mb-4">
                                 <div>
-                                    <h2 className="text-lg font-bold text-slate-900">Top 5 Collections</h2>
-                                    <p className="text-xs font-semibold text-slate-500">Highest value single transactions</p>
+                                    <h2 className="text-sm font-bold text-slate-900">Top 5 Collections</h2>
+                                    <p className="text-[10px] font-semibold text-slate-500">Highest value single transactions</p>
                                 </div>
                             </div>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm">
-                                    <thead>
-                                        <tr className="border-b border-slate-100 text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
-                                            <th className="pb-3">Invoice No</th>
-                                            <th className="pb-3">Bank</th>
-                                            <th className="pb-3">Mode</th>
-                                            <th className="pb-3">Date</th>
-                                            <th className="pb-3 text-right">Amount</th>
+                            <table className="w-full text-left text-[11px]">
+                                <thead>
+                                    <tr className="border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                                        <th className="pb-3 px-2">Invoice No</th>
+                                        <th className="pb-3 px-2">Bank</th>
+                                        <th className="pb-3 px-2">Mode</th>
+                                        <th className="pb-3 px-2">Date</th>
+                                        <th className="pb-3 px-2 text-right">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50">
+                                    {[...filteredPayments].sort((a,b) => (parseFloat(b.amount_text)||0) - (parseFloat(a.amount_text)||0)).slice(0, 5).map((pmt, i) => (
+                                        <tr key={i} className="group hover:bg-slate-50 transition-colors">
+                                            <td className="py-3 px-2 font-bold text-blue-600">{pmt.invoice_no || pmt.invoice_id}</td>
+                                            <td className="py-3 px-2 font-semibold text-slate-700">{pmt.bankId}</td>
+                                            <td className="py-3 px-2 font-semibold text-slate-600">
+                                                <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-sm text-[10px]">
+                                                    {pmt.payment_mode}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-2 text-slate-500 font-medium">
+                                                {pmt.payment_date ? new Date(pmt.payment_date).toLocaleDateString('en-GB') : 'N/A'}
+                                            </td>
+                                            <td className="py-3 px-2 font-black text-slate-900 text-right">
+                                                {formatCurrency(pmt.amount_text)}
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-50">
-                                        {[...payments].sort((a,b) => (parseFloat(b.amount_text)||0) - (parseFloat(a.amount_text)||0)).slice(0, 5).map((pmt, i) => (
-                                            <tr key={i} className="group hover:bg-slate-50 transition-colors">
-                                                <td className="py-4 font-bold text-indigo-600">{pmt.invoice_no || pmt.invoice_id}</td>
-                                                <td className="py-4 font-semibold text-slate-700">{pmt.bankId}</td>
-                                                <td className="py-4 font-semibold text-slate-600">
-                                                    <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-xs">
-                                                        {pmt.payment_mode}
-                                                    </span>
-                                                </td>
-                                                <td className="py-4 text-slate-500 font-medium">
-                                                    {pmt.payment_date ? new Date(pmt.payment_date).toLocaleDateString('en-GB') : 'N/A'}
-                                                </td>
-                                                <td className="py-4 font-black text-slate-900 text-right">
-                                                    {formatCurrency(pmt.amount_text)}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                </div>
+                </>
             )}
         </div>
     );
