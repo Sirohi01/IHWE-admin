@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronRight, FileText, FileSpreadsheet, FileMinus, Truck, CreditCard, ArrowLeft } from 'lucide-react';
+import { ChevronRight, FileText, FileSpreadsheet, FileMinus, Truck, CreditCard, ArrowLeft, BookOpen } from 'lucide-react';
 
 const AccountNavigation = ({ id, accountName, pageName }) => {
   const navigate = useNavigate();
@@ -14,6 +14,7 @@ const AccountNavigation = ({ id, accountName, pageName }) => {
     { label: 'Invoices', path: `/invoice-list/${id}`, icon: <FileSpreadsheet size={12} /> },
     { label: 'Payments', path: `/payment-list/${id}`, icon: <CreditCard size={12} /> },
     { label: 'Credit Notes', path: `/debit-note-list/${id}`, icon: <FileMinus size={12} /> },
+    // { label: 'Client Ledger', path: `/dashboard/account/client-ledger/${id}`, icon: <BookOpen size={12} /> },
   ];
 
   return (
@@ -46,8 +47,8 @@ const AccountNavigation = ({ id, accountName, pageName }) => {
               key={idx}
               onClick={() => navigate(item.path)}
               className={`flex shrink-0 items-center gap-1 px-1.5 py-0.5 text-[11px] font-semibold rounded transition-all duration-200 ${isActive
-                  ? 'bg-[#194090] text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-[#194090] border border-transparent hover:border-gray-200'
+                ? 'bg-[#194090] text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-[#194090] border border-transparent hover:border-gray-200'
                 }`}
             >
               {item.icon}

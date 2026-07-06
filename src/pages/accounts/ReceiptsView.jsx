@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
     FileText, Download, Search, Plus, Eye, Filter, Wallet, CheckCircle2, AlertTriangle,
     Calendar, FileSpreadsheet, BarChart2, ChevronRight, ArrowRightCircle, ChevronDown,
-    Mail, MessageCircleMore, Loader2, MoreVertical, Users, TrendingUp, Bell
+    Mail, MessageCircleMore, Loader2, MoreVertical, Users, TrendingUp, Bell, RefreshCw
 } from 'lucide-react';
 import api, { SERVER_URL } from '../../lib/api';
 import toast from 'react-hot-toast';
@@ -48,6 +48,32 @@ function useCountUp(target, duration = 1200) {
 
 function AnimatedStatCard({ icon, title, value, subText1, subText2, iconBg, valueColor, percentage }) {
     const { ref, count } = useCountUp(typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]+/g, "")) : value);
+    const isCurrency = typeof value === 'string' && value.startsWith('â‚¹');
+    return (
+        <div ref={ref} className="bg-white p-3 border border-slate-200 rounded-lg shadow-sm flex flex-col justify-between h-full">
+            <div className="flex items-start gap-2.5">
+                <div className={`w-8 h-8 ${iconBg} rounded-full flex items-center justify-center shrink-0 mt-0.5`}>
+                    {icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                    <h3 className="text-slate-700 font-bold text-[8px] uppercase tracking-wider leading-tight whitespace-nowrap truncate">{title}</h3>
+                    <div className={`text-lg font-semibold leading-none mt-1 ${valueColor || 'text-slate-800'}`}>
+                        {isCurrency ? `â‚¹ ${new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(count)}` : new Intl.NumberFormat('en-IN').format(Math.round(count))}
+                    </div>
+                    <div className="text-slate-400 text-[9px] font-semibold mt-0.5">{subText1}</div>
+                </div>
+            </div>
+            <div className="pt-2 border-t border-slate-100 flex justify-between items-center text-[9px]">
+                <span className="text-slate-500 font-medium">{subText2 || 'Summary'}</span>
+                {percentage && <span className="text-emerald-600 font-bold">{percentage}</span>}
+            </div>
+        </div>
+    );
+}
+
+/*
+function AnimatedStatCardOld({ icon, title, value, subText1, subText2, iconBg, valueColor, percentage }) {
+    const { ref, count } = useCountUp(typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]+/g, "")) : value);
     return (
         <div ref={ref} className="group cursor-pointer relative bg-gradient-to-br from-white to-slate-50/50 px-4 py-3 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden h-full flex flex-col justify-between">
             <div className="relative z-10 flex flex-col h-full">
@@ -78,6 +104,7 @@ function AnimatedStatCard({ icon, title, value, subText1, subText2, iconBg, valu
         </div>
     );
 }
+*/
 
 const PIE_COLORS = ['#4f46e5', '#ec4899', '#f59e0b', '#10b981', '#94a3b8'];
 
@@ -180,14 +207,24 @@ const ReceiptsView = () => {
     };
 
     const getBankLine = (pmt) => {
-        const bank = pmt.neft_bank || pmt.cheque_bank || pmt.card_bank || pmt.bankId || 'N/A';
+        const bank = pmt.bank_name || pmt.neft_bank || pmt.cheque_bank || pmt.card_bank || pmt.bankId || pmt.wallet_name || pmt.payment_mode || 'N/A';
         let ref = '';
-        if (pmt.utr_no) ref = `UTR: ${pmt.utr_no}`;
+        if (pmt.payment_ref) ref = pmt.utr_no ? `UTR: ${pmt.payment_ref}` : `Ref: ${pmt.payment_ref}`;
+        else if (pmt.utr_no) ref = `UTR: ${pmt.utr_no}`;
         else if (pmt.cheque_no) ref = `Cheque No: ${pmt.cheque_no}`;
         else if (pmt.card_transaction_no) ref = `Card Txn: ${pmt.card_transaction_no}`;
         else if (pmt.wallet_transaction_no) ref = `Wallet Txn: ${pmt.wallet_transaction_no}`;
         else if (pmt.cash_receipt_no) ref = `Cash Receipt: ${pmt.cash_receipt_no}`;
         return { bank, ref };
+    };
+
+    const getStallLine = (pmt) => {
+        const stallNo = pmt.stall_no || pmt.stallNo || pmt.stall_number || pmt.stallNumber || '';
+        const hallNo = pmt.hall_no || pmt.hallNo || pmt.hall_number || pmt.hallNumber || '';
+        return {
+            stallNo: stallNo || 'Not assigned',
+            hallNo,
+        };
     };
 
     const isRunning = (pmt) => (pmt.pymnt_type || '').toLowerCase().includes('running');
@@ -434,37 +471,38 @@ const ReceiptsView = () => {
     const currentItems = filteredReceipts.slice(indexOfFirstItem, indexOfLastItem);
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-10">
+        <div className="min-h-screen bg-slate-50 px-4 py-2 font-sans text-slate-800">
             {/* Header */}
-            <div className="px-6 py-4 flex justify-between items-center bg-white sticky top-0 z-40 border-b border-gray-100">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-1 gap-4">
                 <div>
-                    <h1 className="text-xl font-bold text-slate-900 tracking-tight">Receipts</h1>
-                    <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1 font-medium">
-                        Accounts Receivable (AR) <ChevronRight className="w-3 h-3 text-slate-400" /> <span className="text-slate-700">Receipts</span>
+                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Receipts</h1>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 font-medium">
+                        <span>Accounts Receivable (AR)</span>
+                        <ChevronRight className="w-3 h-3" />
+                        <span className="text-blue-600 font-bold">Receipts</span>
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center border border-gray-200 rounded px-3 py-1.5 text-xs text-slate-600 bg-white">
-                        <Calendar className="w-3.5 h-3.5 mr-2 text-slate-400" />
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm">
+                        <Calendar className="w-4 h-4 text-slate-500" />
                         {formatDate(new Date(now.getFullYear(), now.getMonth(), 1))} - {formatDate(now)}
-                        <ChevronRight className="w-3.5 h-3.5 ml-3 rotate-90 text-slate-400" />
+                        <ChevronRight className="w-3 h-3 ml-1 rotate-90" />
                     </div>
-                    <button className="flex items-center border border-gray-200 rounded px-3 py-1.5 text-xs font-medium text-blue-600 bg-white hover:bg-slate-50 transition-colors">
-                        <Filter className="w-3.5 h-3.5 mr-2" /> Filters
+                    <button className="flex items-center gap-2 bg-white border border-slate-300 text-blue-600 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 transition-colors">
+                        <Filter className="w-4 h-4 text-blue-600" /> Filters
                     </button>
-                    <button onClick={handleOpenAddPayment} className="flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-xs font-medium transition-colors">
-                        <Plus className="w-3.5 h-3.5 mr-1.5" /> Add Payment (New)
+                    <button onClick={handleOpenAddPayment} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-colors">
+                        <Plus className="w-4 h-4" /> Add Payment
                     </button>
                 </div>
             </div>
 
-            <div className="px-6 py-4">
-                <div className="flex flex-col xl:flex-row gap-4">
+            <div className="flex flex-col lg:flex-row gap-2">
                     {/* Left Main Content */}
-                    <div className="flex-1 space-y-4 min-w-0">
+                    <div className="w-full lg:w-[80%] space-y-2 min-w-0">
 
                         {/* Stat Cards */}
-                        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2">
+                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-2">
                             <AnimatedStatCard
                                 icon={<FileText className="w-4 h-4 text-blue-500" />}
                                 iconBg="bg-blue-50 text-blue-500"
@@ -517,93 +555,104 @@ const ReceiptsView = () => {
                         </div>
 
                         {/* Filters Row */}
-                        <div className="bg-white rounded border border-gray-200 px-3 py-2 mb-3">
+                        <div className="bg-white p-3 py-1 rounded-lg border border-slate-200 shadow-sm flex flex-col gap-3">
                             <div className="flex flex-col gap-3">
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <div className="relative">
-                                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                                <div className="flex items-center gap-2 flex-wrap w-full">
+                                    <div className="relative shrink-0">
+                                        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                                         <input
                                             type="text"
                                             value={searchInput}
                                             onChange={(e) => { setSearchInput(e.target.value); setCurrentPage(1); }}
                                             placeholder="Search by receipt no., invoice no., client name, UTR, cheque no..."
-                                            className="pl-8 pr-3 py-1.5 border border-gray-200 rounded text-[11px] w-72 focus:outline-none focus:border-blue-400 placeholder:text-slate-400"
+                                            className="pl-9 pr-3 py-1.5 border border-slate-300 rounded-md text-[11px] w-[210px] focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-slate-400"
                                         />
                                     </div>
-                                    <select value={filterDate} onChange={(e) => { setFilterDate(e.target.value); setCurrentPage(1); }} className="border border-gray-200 rounded text-[11px] px-2 py-1.5 outline-none text-slate-600 bg-white">
+                                    <select value={filterDate} onChange={(e) => { setFilterDate(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white w-[120px]">
                                         <option value="">Date Range</option>
                                         <option value="today">Today</option>
                                         <option value="this_week">This Week</option>
                                         <option value="this_month">This Month</option>
                                     </select>
-                                    <select value={filterMode} onChange={(e) => { setFilterMode(e.target.value); setCurrentPage(1); }} className="border border-gray-200 rounded text-[11px] px-2 py-1.5 outline-none text-slate-600 bg-white">
+                                    <select value={filterMode} onChange={(e) => { setFilterMode(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white w-[145px]">
                                         <option value="">Payment Mode</option>
                                         {uniqueModes.map(m => <option key={m} value={m}>{m}</option>)}
                                     </select>
-                                    <select value={filterBank} onChange={(e) => { setFilterBank(e.target.value); setCurrentPage(1); }} className="border border-gray-200 rounded text-[11px] px-2 py-1.5 outline-none text-slate-600 bg-white">
+                                    <select value={filterBank} onChange={(e) => { setFilterBank(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white w-[135px]">
                                         <option value="">Bank</option>
                                         {uniqueBanks.map(b => <option key={b} value={b}>{b}</option>)}
                                     </select>
-                                    <select value={filterType} onChange={(e) => { setFilterType(e.target.value); setCurrentPage(1); }} className="border border-gray-200 rounded text-[11px] px-2 py-1.5 outline-none text-slate-600 bg-white">
+                                    <select value={filterType} onChange={(e) => { setFilterType(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white w-[145px]">
                                         <option value="">Payment Type</option>
                                         {uniqueTypes.map(t => <option key={t} value={t}>{t}</option>)}
                                     </select>
-                                    <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }} className="border border-gray-200 rounded text-[11px] px-2 py-1.5 outline-none text-slate-600 bg-white">
+                                    <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white w-[105px]">
                                         <option value="">Status</option>
                                         <option value="Confirmed">Confirmed</option>
                                         <option value="Running">Running</option>
                                     </select>
-                                    <button className="text-blue-600 text-[11px] flex items-center gap-1 hover:underline ml-1 whitespace-nowrap">
-                                        <Filter className="w-3 h-3" /> More Filters
+                                    <button
+                                        onClick={() => {
+                                            setFilterDate('');
+                                            setFilterMode('');
+                                            setFilterBank('');
+                                            setFilterType('');
+                                            setFilterStatus('');
+                                            setSearchInput('');
+                                            setCurrentPage(1);
+                                        }}
+                                        className="flex items-center gap-1 text-blue-600 font-bold text-[11px] px-2 shrink-0"
+                                    >
+                                        <RefreshCw className="w-3 h-3" /> Reset
                                     </button>
                                 </div>
 
-                                <div className="flex flex-wrap items-center justify-end gap-2">
+                                <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-1">
                                     <button
                                         onClick={() => exportToExcel(filteredReceipts, 'Receipts_Export.xlsx')}
-                                        className="flex items-center text-blue-600 text-[11px] font-medium px-3 py-1.5 border border-gray-100 bg-white hover:bg-slate-50 rounded whitespace-nowrap"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors whitespace-nowrap"
                                     >
-                                        <Download className="w-3 h-3 mr-1.5" /> Export
+                                        <Download className="w-3.5 h-3.5" /> Export
                                     </button>
                                     <button
                                         onClick={() => navigate('/accounts/summary-report')}
-                                        className="flex items-center text-blue-600 text-[11px] font-medium px-3 py-1.5 border border-gray-100 bg-white hover:bg-slate-50 rounded whitespace-nowrap"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors whitespace-nowrap"
                                     >
-                                        <BarChart2 className="w-3 h-3 mr-1.5" /> Receipt Report
+                                        <BarChart2 className="w-3.5 h-3.5" /> Receipt Report
                                     </button>
                                     <button
                                         onClick={() => exportToExcel(payments, 'All_Receipts_Export.xlsx')}
-                                        className="flex items-center text-blue-600 text-[11px] font-medium px-3 py-1.5 border border-gray-100 bg-white hover:bg-slate-50 rounded whitespace-nowrap"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-md text-[11px] font-bold border border-blue-100 hover:bg-blue-100 transition-colors whitespace-nowrap"
                                     >
-                                        <FileSpreadsheet className="w-3 h-3 mr-1.5" /> Download All Receipts
+                                        <FileSpreadsheet className="w-3.5 h-3.5" /> Download All Receipts
                                     </button>
                                 </div>
                             </div>
                         </div>
 
                         {/* Main Table */}
-                        <div className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden">
+                        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
                             <div className="overflow-x-auto">
                                 <table className="w-full min-w-[1400px] text-left border-collapse">
                                     <thead>
-                                        <tr className="border-b border-gray-100">
-                                            <th className="py-3 px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-wider w-10 text-center">S.NO.</th>
-                                            <th className="py-3 px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-wider">RECEIPT DETAILS</th>
-                                            <th className="py-3 px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-wider">INVOICE DETAILS</th>
-                                            <th className="py-3 px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-wider">CLIENT & STALL</th>
-                                            <th className="py-3 px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-wider">PAYMENT TYPE</th>
-                                            <th className="py-3 px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-wider">PAYMENT MODE</th>
-                                            <th className="py-3 px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-wider text-right">RECEIVED AMOUNT</th>
-                                            <th className="py-3 px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-wider text-right">TDS DEDUCTED</th>
-                                            <th className="py-3 px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-wider text-right">NET AMOUNT</th>
-                                            <th className="py-3 px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-wider">RECEIPT DATE</th>
-                                            <th className="py-3 px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-wider">BANK/UTR/CHEQUE NO</th>
-                                            <th className="py-3 px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-wider">REMARKS</th>
-                                            <th className="py-3 px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-wider text-center">STATUS</th>
-                                            <th className="py-3 px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-wider text-center">ACTION</th>
+                                        <tr className="bg-white text-[8px] font-bold uppercase tracking-wider text-slate-700 border-b border-slate-200 whitespace-nowrap">
+                                            <th className="px-2 py-1 text-center">S.No.</th>
+                                            <th className="px-2 py-1">Receipt Details</th>
+                                            <th className="px-2 py-1">Invoice Details</th>
+                                            <th className="px-2 py-1">Client & Stall</th>
+                                            <th className="px-2 py-1">Payment Type</th>
+                                            <th className="px-2 py-1">Payment Mode</th>
+                                            <th className="px-2 py-1 text-right">Received Amount</th>
+                                            <th className="px-2 py-1 text-right">TDS Deducted</th>
+                                            <th className="px-2 py-1 text-right">Net Amount</th>
+                                            <th className="px-2 py-1">Receipt Date</th>
+                                            <th className="px-2 py-1">Bank/UTR/Cheque No</th>
+                                            <th className="px-2 py-1">Remarks</th>
+                                            <th className="px-2 py-1 text-center">Status</th>
+                                            <th className="px-2 py-1 text-center">Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-50">
+                                    <tbody className="text-[11px] whitespace-nowrap">
                                         {loading ? (
                                             <tr>
                                                 <td colSpan="14" className="py-6 text-center text-gray-500">
@@ -620,62 +669,63 @@ const ReceiptsView = () => {
                                         ) : (
                                             currentItems.map((pmt, idx) => {
                                                 const { bank, ref } = getBankLine(pmt);
+                                                const { stallNo, hallNo } = getStallLine(pmt);
                                                 const received = Number(pmt.amount_text || 0);
                                                 const tds = Number(pmt.tds_text || 0);
                                                 const tdsPct = received > 0 ? ((tds / received) * 100).toFixed(2) : '0.00';
                                                 return (
-                                                    <tr key={pmt._id || idx} className="hover:bg-slate-50/50">
-                                                        <td className="py-3 px-3 text-xs font-semibold text-slate-700 text-center align-top">{indexOfFirstItem + idx + 1}</td>
-                                                        <td className="py-3 px-3 align-top">
-                                                            <div className="font-medium text-slate-800 text-[11px]">{pmt.receipt_no || 'N/A'}</div>
+                                                    <tr key={pmt._id || idx} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                                                        <td className="px-2 py-1 font-bold text-slate-700 text-center align-top">{indexOfFirstItem + idx + 1}</td>
+                                                        <td className="px-2 py-1 align-top">
+                                                            <div className="font-bold text-slate-800 text-[11px]">{pmt.receipt_no || 'N/A'}</div>
                                                             <div className="text-[10px] text-slate-500 mt-0.5">Receipt Date {formatDate(pmt.payment_date || pmt.added)}</div>
-                                                            <button onClick={() => openReceipt(pmt)} className="text-[10px] text-blue-500 mt-0.5 hover:underline">
+                                                            <button onClick={() => openReceipt(pmt)} className="text-[10px] text-blue-600 font-bold mt-0.5 hover:underline">
                                                                 View Receipt <ChevronRight className="inline w-3 h-3 rotate-90" />
                                                             </button>
                                                         </td>
-                                                        <td className="py-3 px-3 align-top">
-                                                            <div className="font-medium text-slate-800 text-[11px]">{pmt.invoice_no || pmt.invoice_id || 'N/A'}</div>
+                                                        <td className="px-2 py-1 align-top">
+                                                            <div className="font-bold text-slate-800 text-[11px]">{pmt.invoice_no || pmt.invoice_id || 'N/A'}</div>
                                                             <div className="text-[10px] text-slate-500 mt-0.5">Invoice Date: {formatDate(pmt.invoice_date)}</div>
                                                             <div className="text-[10px] text-slate-500 mt-0.5">Invoice Total: ₹ {formatCurrency(pmt.invoice_amount)}</div>
                                                         </td>
-                                                        <td className="py-3 px-3 align-top">
-                                                            <div className="font-medium text-blue-600 text-[11px] mb-0.5">{pmt.client_name || 'N/A'}</div>
-                                                            <div className="text-[10px] text-slate-500">{pmt.stall_no ? `Stall No: ${pmt.stall_no}` : 'N/A'}</div>
-                                                            {pmt.hall_no && <div className="text-[10px] text-slate-500">Hall {pmt.hall_no}</div>}
+                                                        <td className="px-2 py-1 align-top">
+                                                            <div className="font-bold text-blue-600 text-[11px] mb-0.5">{pmt.client_name || 'N/A'}</div>
+                                                            <div className="text-[10px] text-slate-500">Stall No: {stallNo}</div>
+                                                            {hallNo && <div className="text-[10px] text-slate-500">Hall: {hallNo}</div>}
                                                         </td>
-                                                        <td className="py-3 px-3 align-top">{getPaymentTypePill(pmt)}</td>
-                                                        <td className="py-3 px-3 align-top text-[11px] text-slate-700">{pmt.payment_mode || 'N/A'}</td>
-                                                        <td className="py-3 px-3 align-top text-right">
+                                                        <td className="px-2 py-1 align-top">{getPaymentTypePill(pmt)}</td>
+                                                        <td className="px-2 py-1 align-top text-[11px] font-semibold text-slate-700">{pmt.payment_mode || 'N/A'}</td>
+                                                        <td className="px-2 py-1 align-top text-right">
                                                             <div className="font-medium text-slate-800 text-[11px]">₹ {formatCurrency(received)}</div>
                                                         </td>
-                                                        <td className="py-3 px-3 align-top text-right">
+                                                        <td className="px-2 py-1 align-top text-right">
                                                             <div className="font-medium text-rose-500 text-[11px]">₹ {formatCurrency(tds)}</div>
                                                             <div className="text-[10px] text-slate-500 mt-0.5">({tdsPct}%)</div>
                                                         </td>
-                                                        <td className="py-3 px-3 align-top text-right">
+                                                        <td className="px-2 py-1 align-top text-right">
                                                             <div className="font-medium text-emerald-600 text-[11px]">₹ {formatCurrency(received - tds)}</div>
                                                         </td>
-                                                        <td className="py-3 px-3 align-top text-[11px] text-slate-700">
-                                                            <div>{formatDate(pmt.payment_date || pmt.added)}</div>
+                                                        <td className="px-2 py-1 align-top text-[11px] text-slate-700">
+                                                            <div className="font-bold">{formatDate(pmt.payment_date || pmt.added)}</div>
                                                             <div className="text-[10px] text-slate-500">{formatTime(pmt.payment_date || pmt.added)}</div>
                                                         </td>
-                                                        <td className="py-3 px-3 align-top">
-                                                            <div className="font-medium text-slate-800 text-[11px]">{bank}</div>
+                                                        <td className="px-2 py-1 align-top">
+                                                            <div className="font-bold text-slate-800 text-[11px]">{bank}</div>
                                                             <div className="text-[10px] text-slate-500 mt-0.5">{ref}</div>
                                                         </td>
-                                                        <td className="py-3 px-3 align-top text-[10px] text-slate-500 whitespace-normal w-40">{pmt.notes || 'N/A'}</td>
-                                                        <td className="py-3 px-3 align-top text-center">{getStatusBadge(pmt)}</td>
-                                                        <td className="py-3 px-3 align-top text-center">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <button onClick={() => openReceipt(pmt)} className="text-blue-500 hover:text-blue-600" title="View Receipt">
+                                                        <td className="px-2 py-1 align-top text-[10px] text-slate-500 whitespace-normal w-40">{pmt.notes || 'N/A'}</td>
+                                                        <td className="px-2 py-1 align-top text-center">{getStatusBadge(pmt)}</td>
+                                                        <td className="px-2 py-1 align-top text-center">
+                                                            <div className="flex items-center justify-center gap-1.5">
+                                                                <button onClick={() => openReceipt(pmt)} className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors" title="View Receipt">
                                                                     <Eye className="w-3.5 h-3.5" />
                                                                 </button>
-                                                                <button onClick={() => downloadReceipt(pmt)} disabled={downloadingId === pmt._id} className="text-blue-500 hover:text-blue-600 disabled:opacity-50" title="Download Receipt">
+                                                                <button onClick={() => downloadReceipt(pmt)} disabled={downloadingId === pmt._id} className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors disabled:opacity-50" title="Download Receipt">
                                                                     {downloadingId === pmt._id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
                                                                 </button>
                                                                 <div className="relative group">
-                                                                    <button className="text-slate-400 hover:text-slate-600" title="More Actions">
-                                                                        <MoreVertical className="w-3.5 h-3.5" />
+                                                                    <button className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors" title="More Actions">
+                                                                        <MoreVertical className="w-3 h-3" />
                                                                     </button>
                                                                     <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 flex flex-col py-1">
                                                                         <button
@@ -707,21 +757,21 @@ const ReceiptsView = () => {
                             </div>
 
                             {/* Pagination */}
-                            <div className="flex items-center justify-between p-3 border-t border-gray-100 bg-white">
-                                <div className="text-[11px] text-slate-600">
+                            <div className="bg-white border-t border-slate-200 p-4 flex items-center justify-between text-[11px] text-slate-500">
+                                <div>
                                     Showing {totalReceipts === 0 ? 0 : indexOfFirstItem + 1} to {Math.min(indexOfLastItem, totalReceipts)} of {totalReceipts} receipts
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <button
                                         disabled={currentPage === 1}
                                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                        className="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-600 disabled:opacity-50"><ChevronRight className="w-3.5 h-3.5 rotate-180" /></button>
+                                        className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"><ChevronRight className="w-3.5 h-3.5 rotate-180" /></button>
 
                                     {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                                         <button
                                             key={page}
                                             onClick={() => setCurrentPage(page)}
-                                            className={`w-6 h-6 flex items-center justify-center rounded text-[11px] font-medium ${currentPage === page ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
+                                            className={`w-6 h-6 flex items-center justify-center rounded font-bold ${currentPage === page ? 'bg-blue-600 text-white' : 'border border-slate-300 hover:bg-slate-50'}`}>
                                             {page}
                                         </button>
                                     ))}
@@ -729,12 +779,12 @@ const ReceiptsView = () => {
                                     <button
                                         disabled={currentPage === totalPages || totalPages === 0}
                                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                        className="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-600 disabled:opacity-50"><ChevronRight className="w-3.5 h-3.5" /></button>
+                                        className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"><ChevronRight className="w-3.5 h-3.5" /></button>
                                 </div>
-                                <div className="flex items-center gap-2 text-[11px] text-slate-600">
-                                    Rows per page:
+                                <div className="flex items-center gap-2">
+                                    Rows per page
                                     <div className="relative">
-                                        <select className="border-none bg-transparent outline-none pr-3 appearance-none cursor-pointer">
+                                        <select className="border border-slate-300 rounded px-2 py-1 bg-white outline-none pr-6 appearance-none cursor-pointer">
                                             <option>10</option>
                                         </select>
                                         <ChevronDown className="w-3 h-3 text-slate-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -744,7 +794,7 @@ const ReceiptsView = () => {
                         </div>
 
                         {/* Footer Totals */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-4 bg-white p-4 rounded shadow-sm border border-gray-100 text-center">
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-2 px-3 flex items-center justify-between overflow-x-auto text-center">
                             <div>
                                 <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-1">TOTAL RECEIPTS</div>
                                 <div className="text-sm font-bold text-slate-800">{totalReceipts}</div>
@@ -778,42 +828,42 @@ const ReceiptsView = () => {
                     </div>
 
                     {/* Right Sidebar */}
-                    <div className="w-full xl:w-72 shrink-0 space-y-4 sticky top-4">
+                    <div className="w-full lg:w-[20%] flex flex-col gap-2">
 
                         {/* Collection Summary */}
-                        <div className="bg-white rounded shadow-sm border border-gray-100 p-4">
-                            <h3 className="font-semibold text-[13px] text-slate-800 mb-4">Collection Summary</h3>
-                            <div className="space-y-4">
+                        <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
+                            <h3 className="text-sm font-semibold text-slate-800 mb-3 tracking-wide">Collection Summary</h3>
+                            <div className="space-y-3">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded bg-blue-50 flex items-center justify-center shrink-0"><Wallet className="w-4 h-4 text-blue-500" /></div>
+                                    <div className="w-7 h-7 rounded-md bg-blue-50 flex items-center justify-center shrink-0"><Wallet className="w-3.5 h-3.5 text-blue-600" /></div>
                                     <div className="flex-1">
                                         <div className="text-[10px] font-medium text-slate-500 leading-tight">Today's Collection</div>
                                         <div className="text-sm font-bold text-slate-800">₹ {formatCurrency(todayCollection)}</div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center shrink-0"><TrendingUp className="w-4 h-4 text-emerald-500" /></div>
+                                    <div className="w-7 h-7 rounded-md bg-emerald-50 flex items-center justify-center shrink-0"><TrendingUp className="w-3.5 h-3.5 text-emerald-600" /></div>
                                     <div className="flex-1">
                                         <div className="text-[10px] font-medium text-slate-500 leading-tight">This Week Collection</div>
                                         <div className="text-sm font-bold text-slate-800">₹ {formatCurrency(weekCollection)}</div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center shrink-0"><Calendar className="w-4 h-4 text-indigo-500" /></div>
+                                    <div className="w-7 h-7 rounded-md bg-orange-50 flex items-center justify-center shrink-0"><Calendar className="w-3.5 h-3.5 text-orange-600" /></div>
                                     <div className="flex-1">
                                         <div className="text-[10px] font-medium text-slate-500 leading-tight">This Month Collection</div>
                                         <div className="text-sm font-bold text-slate-800">₹ {formatCurrency(thisMonthCollection)}</div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded bg-rose-50 flex items-center justify-center shrink-0"><AlertTriangle className="w-4 h-4 text-rose-500" /></div>
+                                    <div className="w-7 h-7 rounded-md bg-red-50 flex items-center justify-center shrink-0"><AlertTriangle className="w-3.5 h-3.5 text-red-500" /></div>
                                     <div className="flex-1">
                                         <div className="text-[10px] font-medium text-slate-500 leading-tight">Overdue Recovery Target</div>
                                         <div className="text-sm font-bold text-slate-800">₹ {formatCurrency(overdueRecoveryTarget)}</div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded bg-purple-50 flex items-center justify-center shrink-0"><Bell className="w-4 h-4 text-purple-500" /></div>
+                                    <div className="w-7 h-7 rounded-md bg-indigo-50 flex items-center justify-center shrink-0"><Bell className="w-3.5 h-3.5 text-indigo-500" /></div>
                                     <div className="flex-1">
                                         <div className="text-[10px] font-medium text-slate-500 leading-tight">Pending Follow-ups</div>
                                         <div className="text-sm font-bold text-slate-800">{pendingFollowUps}</div>
@@ -823,9 +873,9 @@ const ReceiptsView = () => {
                         </div>
 
                         {/* Quick Actions */}
-                        <div className="bg-white rounded shadow-sm border border-gray-100 p-4">
-                            <h3 className="font-semibold text-[13px] text-slate-800 mb-3">Quick Actions</h3>
-                            <div className="space-y-1">
+                        <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
+                            <h3 className="text-sm font-semibold text-slate-800 mb-3 tracking-wide">Quick Actions</h3>
+                            <div className="space-y-2">
                                 <button onClick={handleOpenAddPayment} className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors group text-left">
                                     <div className="flex items-center gap-3">
                                         <div className="w-6 h-6 rounded bg-blue-50 flex items-center justify-center text-blue-500"><Plus className="w-3.5 h-3.5" /></div>
@@ -892,8 +942,8 @@ const ReceiptsView = () => {
                         </div>
 
                         {/* Payment Mode Summary */}
-                        <div className="bg-white rounded shadow-sm border border-gray-100 p-4">
-                            <h3 className="font-semibold text-[13px] text-slate-800 mb-2">Payment Mode Summary</h3>
+                        <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
+                            <h3 className="text-sm font-semibold text-slate-800 mb-3 tracking-wide">Payment Mode Summary</h3>
                             <div className="flex items-center justify-between">
                                 <div className="w-20 h-20 relative">
                                     <ResponsiveContainer width="100%" height="100%">
@@ -939,7 +989,6 @@ const ReceiptsView = () => {
 
                     </div>
                 </div>
-            </div>
 
             {/* Add Payment Modal */}
             {isAddModalOpen && (

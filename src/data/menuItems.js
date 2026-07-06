@@ -780,6 +780,7 @@ export const menuItems = [
       { label: "Payments", path: "/accounts/payments" },
       { label: "Receipts", path: "/accounts/receipts" },
       { label: "Accounts Receivable", path: "/accounts/ar" },
+      { label: "Client Ledger", path: "/accounts/client-ledger" },
       { label: "Invoices", path: "/accounts/invoices" },
       { label: "Credit Notes", path: "/accounts/credit-notes" },
       { label: "Bank Details", path: "/accounts/bank-details" },
