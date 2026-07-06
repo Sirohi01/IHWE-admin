@@ -781,8 +781,10 @@ export const menuItems = [
       { label: "Receipts", path: "/accounts/receipts" },
       { label: "Accounts Receivable", path: "/accounts/ar" },
       { label: "Client Ledger", path: "/accounts/client-ledger" },
+      { label: "Imprest / Reimbursement", path: "/accounts/imprest" },
       { label: "Invoices", path: "/accounts/invoices" },
       { label: "Credit Notes", path: "/accounts/credit-notes" },
+      { label: "Debit Notes", path: "/account-debit-notes" },
       { label: "Bank Details", path: "/accounts/bank-details" },
       {
         type: "dropdown",

@@ -287,11 +287,15 @@ const BankDetailsManage = lazy(() => import("../pages/accounts/BankDetailsManage
 const PaymentsView = lazy(() => import("../pages/accounts/PaymentsView"));
 const ReceiptsView = lazy(() => import("../pages/accounts/ReceiptsView"));
 const ClientLedgerView = lazy(() => import("../pages/accounts/ClientLedgerView"));
+const DebitNotesView = lazy(() => import("../pages/accounts/DebitNotesView"));
+const CreateAccountDebitNote = lazy(() => import("../pages/CreateAccountDebitNote"));
 const AccountsReceivableView = lazy(() => import("../pages/accounts/AccountsReceivableView"));
 const PaymentsSummaryReport = lazy(() => import("../pages/accounts/PaymentsSummaryReport"));
 const InvoicesView = lazy(() => import("../pages/accounts/InvoicesView"));
 const CreditNotesView = lazy(() => import("../pages/accounts/CreditNotesView"));
 const CreateCreditNote = lazy(() => import("../pages/accounts/CreateCreditNote"));
+const ImprestView = lazy(() => import("../pages/accounts/ImprestView"));
+const CreateImprestRequest = lazy(() => import("../pages/accounts/CreateImprestRequest"));
 // Sales Tools
 const SalesTools = lazy(() => import("../pages/sales_tools/SalesTools"));
 // Communication
@@ -718,10 +722,15 @@ export default function AppRoutes() {
             <Route path="accounts/receipts" element={<ReceiptsView />} />
             <Route path="accounts/client-ledger" element={<ClientLedgerView />} />
             <Route path="dashboard/account/client-ledger/:id" element={<ClientLedgerView />} />
+            <Route path="account-debit-notes" element={<DebitNotesView />} />
+            <Route path="account-debit-notes/:id" element={<DebitNotesView />} />
+            <Route path="create-account-debit-note/:id" element={<CreateAccountDebitNote />} />
             <Route path="accounts/ar" element={<AccountsReceivableView />} />
             <Route path="accounts/summary-report" element={<PaymentsSummaryReport />} />
             <Route path="accounts/invoices" element={<InvoicesView />} />
             <Route path="accounts/credit-notes" element={<CreditNotesView />} />
+            <Route path="accounts/imprest" element={<ImprestView />} />
+            <Route path="accounts/imprest/create" element={<CreateImprestRequest />} />
             <Route path="dashboard/account/credit-notes/:id" element={<CreditNotesView />} />
             <Route path="dashboard/account/create-credit-note/:id" element={<CreateCreditNote />} />
             <Route path="/client-overview/:id" element={<ClientOverview1 />} />

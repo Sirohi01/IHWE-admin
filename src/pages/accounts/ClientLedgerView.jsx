@@ -95,12 +95,21 @@ function StatCard({ icon, iconBg, rawValue, displayValue, label, subLabel, botto
     );
 }
 
+const statusBadgeStyle = (status) => {
+    const s = (status || '').toLowerCase();
+    if (s.includes('won') || s.includes('active') || s.includes('confirmed') || s.includes('paid')) return 'bg-emerald-50 text-emerald-600';
+    if (s.includes('lost') || s.includes('rejected') || s.includes('fail')) return 'bg-rose-50 text-rose-600';
+    if (s.includes('pending') || s.includes('lead')) return 'bg-amber-50 text-amber-600';
+    return 'bg-slate-100 text-slate-500';
+};
+
 // Client picker shown when no specific company id is provided (entry point from the sidebar)
 const ClientPicker = () => {
     const navigate = useNavigate();
     const [companies, setCompanies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
 
     useEffect(() => {
         const fetchCompanies = async () => {
@@ -117,69 +126,118 @@ const ClientPicker = () => {
         fetchCompanies();
     }, []);
 
+    const statusOptions = [...new Set(companies.map((c) => c.companyStatus).filter(Boolean))];
+
     const filtered = companies.filter((c) => {
+        if (statusFilter && c.companyStatus !== statusFilter) return false;
         if (!search) return true;
         const q = search.toLowerCase();
-        return (c.companyName || c.name || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q);
+        return (
+            (c.companyName || c.name || '').toLowerCase().includes(q) ||
+            (c.email || '').toLowerCase().includes(q) ||
+            (c.city || '').toLowerCase().includes(q)
+        );
     });
 
     return (
         <div className="min-h-screen bg-slate-50 px-4 py-2 font-sans text-slate-800">
-            <div className="mb-1">
-                <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Client Ledger</h1>
-                <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 font-medium">
-                    <span>Accounts Receivable (AR)</span>
-                    <ChevronRight className="w-3 h-3" />
-                    <span className="text-blue-600 font-bold">Client Ledger</span>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-1 gap-4">
+                <div>
+                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Client Ledger</h1>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 font-medium">
+                        <span>Accounts Receivable (AR)</span>
+                        <ChevronRight className="w-3 h-3" />
+                        <span className="text-blue-600 font-bold">Client Ledger</span>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm">
+                    <Building2 className="w-4 h-4 text-slate-500" />
+                    {companies.length} Client{companies.length === 1 ? '' : 's'}
                 </div>
             </div>
 
-            <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm mt-3 mb-3">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Search Clients</label>
-                <div className="relative max-w-md">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search by client name or email..."
-                        className="pl-9 pr-3 py-2 border border-slate-300 rounded-md text-[12px] w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
+            <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm mt-3 mb-3 flex flex-col sm:flex-row gap-2 sm:items-end">
+                <div className="flex-1">
+                    <label className="block text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-1.5">Search Clients</label>
+                    <div className="relative">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Search by client name, email, or city..."
+                            className="pl-9 pr-3 py-2 border border-slate-300 rounded-md text-[12px] w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                    </div>
                 </div>
+                {statusOptions.length > 0 && (
+                    <div className="sm:w-48">
+                        <label className="block text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-1.5">Status</label>
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="border border-slate-300 rounded-md px-3 py-2 text-[12px] font-medium text-slate-700 focus:outline-none bg-white w-full"
+                        >
+                            <option value="">All Statuses</option>
+                            {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                    </div>
+                )}
             </div>
 
             {loading ? (
-                <div className="flex items-center gap-2 text-slate-500 text-sm justify-center py-20">
-                    <Loader2 className="w-5 h-5 animate-spin" /> Loading clients...
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-6">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                        <div key={i} className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm animate-pulse">
+                            <div className="flex items-center gap-2.5 mb-3">
+                                <div className="w-9 h-9 rounded-full bg-slate-100 shrink-0"></div>
+                                <div className="flex-1 space-y-1.5">
+                                    <div className="h-2.5 bg-slate-100 rounded w-3/4"></div>
+                                    <div className="h-2 bg-slate-100 rounded w-1/2"></div>
+                                </div>
+                            </div>
+                            <div className="h-2 bg-slate-100 rounded w-full mt-3"></div>
+                        </div>
+                    ))}
                 </div>
             ) : filtered.length === 0 ? (
                 <div className="text-center text-slate-500 text-sm py-20">No clients found.</div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-6">
-                    {filtered.map((c) => (
-                        <button
-                            key={c._id}
-                            onClick={() => navigate(`/dashboard/account/client-ledger/${c._id}`)}
-                            className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm hover:shadow-md hover:border-blue-300 transition-all text-left group"
-                        >
-                            <div className="flex items-center gap-2.5 mb-2">
-                                <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center shrink-0 text-blue-600 font-bold text-xs">
-                                    {(c.companyName || c.name || '?').charAt(0).toUpperCase()}
+                <>
+                    <div className="text-[11px] font-medium text-slate-500 mb-2">
+                        Showing {filtered.length} of {companies.length} clients
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-6">
+                        {filtered.map((c) => (
+                            <button
+                                key={c._id}
+                                onClick={() => navigate(`/dashboard/account/client-ledger/${c._id}`)}
+                                className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm hover:shadow-md hover:border-blue-300 hover:-translate-y-0.5 transition-all text-left group"
+                            >
+                                <div className="flex items-start gap-2.5 mb-2">
+                                    <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center shrink-0 text-blue-600 font-bold text-xs">
+                                        {(c.companyName || c.name || '?').charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="text-[12px] font-semibold text-slate-800 truncate">{c.companyName || c.name || 'Unknown Client'}</div>
+                                        <div className="text-[9px] font-semibold text-slate-500 truncate">{c.city ? `${c.city}, ${c.state || ''}` : (c.category || 'N/A')}</div>
+                                    </div>
+                                    {c.companyStatus && (
+                                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded shrink-0 ${statusBadgeStyle(c.companyStatus)}`}>
+                                            {c.companyStatus}
+                                        </span>
+                                    )}
                                 </div>
-                                <div className="min-w-0">
-                                    <div className="text-[12px] font-semibold text-slate-800 truncate">{c.companyName || c.name || 'Unknown Client'}</div>
-                                    <div className="text-[8px] font-bold text-slate-400 uppercase tracking-wider truncate">{c.companyStatus || c.category || 'Client'}</div>
+                                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                                    <span className="text-[9px] font-semibold text-slate-500 truncate">{c.email || 'N/A'}</span>
+                                    <span className="text-[10px] font-bold text-blue-600 flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        View Ledger <ChevronRight className="w-3 h-3" />
+                                    </span>
                                 </div>
-                            </div>
-                            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                                <span className="text-[9px] font-semibold text-slate-500 truncate">{c.email || 'N/A'}</span>
-                                <span className="text-[10px] font-bold text-blue-600 flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    View <ChevronRight className="w-3 h-3" />
-                                </span>
-                            </div>
-                        </button>
-                    ))}
-                </div>
+                            </button>
+                        ))}
+                    </div>
+                </>
             )}
         </div>
     );
@@ -197,7 +255,7 @@ const ClientLedgerView = () => {
     const [downloadingStatement, setDownloadingStatement] = useState(false);
     const [exporting, setExporting] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [itemsPerPage, setItemsPerPage] = useState(13);
 
     useEffect(() => {
         if (id === 'all') return;
@@ -404,10 +462,10 @@ const ClientLedgerView = () => {
                             <div className="text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-0.5 flex items-center gap-1"><BadgeCheck className="w-2.5 h-2.5" /> GST No.</div>
                             <div className="text-[11px] font-semibold text-slate-700">{companyInfo.gstNo}</div>
                         </div>
-                        <div>
+                        {/* <div>
                             <div className="text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-0.5">PAN</div>
                             <div className="text-[11px] font-semibold text-slate-700">{companyInfo.panNo}</div>
-                        </div>
+                        </div> */}
                         <div>
                             <div className="text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-0.5 flex items-center gap-1"><MapPin className="w-2.5 h-2.5" /> State</div>
                             <div className="text-[11px] font-semibold text-slate-700">{companyInfo.state}</div>
@@ -480,14 +538,14 @@ const ClientLedgerView = () => {
                                 <input
                                     type="text"
                                     value={searchInput}
-                                    onChange={(e) => setSearchInput(e.target.value)}
+                                    onChange={(e) => { setSearchInput(e.target.value); setCurrentPage(1); }}
                                     placeholder="Search by invoice no, reference, narration..."
                                     className="pl-9 pr-3 py-1.5 border border-slate-300 rounded-md text-[11px] w-[280px] focus:outline-none focus:ring-1 focus:ring-blue-500"
                                 />
                             </div>
                             <select
                                 value={typeFilter}
-                                onChange={(e) => setTypeFilter(e.target.value)}
+                                onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
                                 className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white"
                             >
                                 <option value="All">All Transaction Types</option>
@@ -498,7 +556,7 @@ const ClientLedgerView = () => {
                             </select>
                             <select
                                 value={dateFilter}
-                                onChange={(e) => setDateFilter(e.target.value)}
+                                onChange={(e) => { setDateFilter(e.target.value); setCurrentPage(1); }}
                                 className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white"
                             >
                                 <option value="">Date Range</option>
@@ -511,7 +569,7 @@ const ClientLedgerView = () => {
                             </button>
                             {(searchInput || typeFilter !== 'All' || dateFilter) && (
                                 <button
-                                    onClick={() => { setSearchInput(''); setTypeFilter('All'); setDateFilter(''); }}
+                                    onClick={() => { setSearchInput(''); setTypeFilter('All'); setDateFilter(''); setCurrentPage(1); }}
                                     className="flex items-center gap-1 text-slate-500 font-bold text-[11px] px-2 shrink-0"
                                 >
                                     <X className="w-3 h-3" /> Clear All
@@ -520,7 +578,7 @@ const ClientLedgerView = () => {
                         </div>
 
                         {/* Transaction type chips */}
-                        <div className="flex items-center gap-1.5 flex-nowrap border-t border-slate-100 pt-2">
+                        <div className="flex items-center justify-end gap-1.5 flex-nowrap border-t border-slate-100 pt-2">
                             {chips.map((chip) => (
                                 <button
                                     key={chip.key}
@@ -550,9 +608,9 @@ const ClientLedgerView = () => {
                                 </tr>
                             </thead>
                             <tbody className="text-[11px]">
-                                {filteredLedger.length === 0 ? (
+                                {paginatedLedger.length === 0 ? (
                                     <tr><td colSpan="8" className="py-6 text-center text-slate-500">No transactions found.</td></tr>
-                                ) : filteredLedger.map((row, idx) => (
+                                ) : paginatedLedger.map((row, idx) => (
                                     <tr key={row.id || idx} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
                                         <td className="px-2 py-1.5 font-semibold text-slate-700 whitespace-nowrap">{formatDate(row.date)}</td>
                                         <td className="px-2 py-1.5">
@@ -571,14 +629,71 @@ const ClientLedgerView = () => {
                             </tbody>
                         </table>
 
-                        {/* Footer Totals */}
+                        {/* Footer Totals + Pagination */}
                         <div className="bg-white border-t border-slate-200 p-3">
-                            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] font-medium text-slate-500">
-                                <div>Showing 1 to {filteredLedger.length} of {filteredLedger.length} entries</div>
-                                <div className="flex items-center gap-4">
-                                    <span>Opening Balance as on {formatDate(firstDate)}: <span className="font-bold text-slate-800">₹ {formatCurrency(openingBalance)}</span></span>
-                                    <span>Closing Balance as on {formatDate(lastDate || now)}: <span className="font-bold text-slate-800">₹ {formatCurrency(closingBalance)}</span></span>
+                            <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-slate-500 font-medium">
+                                <div>
+                                    Showing {filteredLedger.length === 0 ? 0 : indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredLedger.length)} of {filteredLedger.length} entries
                                 </div>
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                        className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >&lt;</button>
+
+                                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                        let pageNum = i + 1;
+                                        if (totalPages > 5 && currentPage > 3) {
+                                            pageNum = currentPage - 2 + i;
+                                        }
+                                        if (pageNum > totalPages) return null;
+                                        return (
+                                            <button
+                                                key={pageNum}
+                                                onClick={() => setCurrentPage(pageNum)}
+                                                className={`w-6 h-6 flex items-center justify-center rounded font-bold ${currentPage === pageNum ? 'bg-blue-600 text-white' : 'border border-slate-300 hover:bg-slate-50'}`}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    })}
+
+                                    {totalPages > 5 && currentPage < totalPages - 2 && (
+                                        <>
+                                            <span className="px-1">...</span>
+                                            <button
+                                                onClick={() => setCurrentPage(totalPages)}
+                                                className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 font-bold"
+                                            >
+                                                {totalPages}
+                                            </button>
+                                        </>
+                                    )}
+
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages || totalPages === 0}
+                                        className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >&gt;</button>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span>Rows per page</span>
+                                    <select
+                                        value={itemsPerPage}
+                                        onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                                        className="border border-slate-300 rounded px-2 py-1 focus:outline-none"
+                                    >
+                                        <option value={10}>10</option>
+                                        <option value={20}>20</option>
+                                        <option value={50}>50</option>
+                                        <option value={100}>100</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row items-center justify-end gap-4 mt-2 pt-2 border-t border-slate-100 text-[11px] font-medium text-slate-500">
+                                <span>Opening Balance as on {formatDate(firstDate)}: <span className="font-bold text-slate-800">₹ {formatCurrency(openingBalance)}</span></span>
+                                <span>Closing Balance as on {formatDate(lastDate || now)}: <span className="font-bold text-slate-800">₹ {formatCurrency(closingBalance)}</span></span>
                             </div>
                         </div>
                     </div>
@@ -648,8 +763,8 @@ const ClientLedgerView = () => {
                     {/* Aging Details */}
                     <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
                         <h2 className="text-sm font-semibold text-slate-800 mb-2 tracking-wide">Aging Details</h2>
-                        <div className="flex items-center justify-between h-[110px]">
-                            <div className="w-[90px] h-full shrink-0 -ml-2">
+                        <div className="flex items-center justify-between gap-2 min-h-[110px]">
+                            <div className="w-[90px] h-[90px] shrink-0 -ml-2">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <RechartsPieChart>
                                         <Pie data={agingBuckets} cx="50%" cy="50%" innerRadius={25} outerRadius={38} paddingAngle={2} dataKey="amount" stroke="none">
@@ -661,13 +776,13 @@ const ClientLedgerView = () => {
                                     </RechartsPieChart>
                                 </ResponsiveContainer>
                             </div>
-                            <div className="flex flex-col gap-2 shrink-0">
+                            <div className="flex flex-col gap-2 flex-1 min-w-0">
                                 {agingBuckets.map((bucket, i) => (
-                                    <div key={bucket.label} className="flex items-center gap-1.5">
-                                        <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: AGING_COLORS[i % AGING_COLORS.length] }}></div>
-                                        <div>
+                                    <div key={bucket.label} className="flex items-start gap-1.5">
+                                        <div className="w-1.5 h-1.5 rounded-full shrink-0 mt-1" style={{ backgroundColor: AGING_COLORS[i % AGING_COLORS.length] }}></div>
+                                        <div className="min-w-0">
                                             <div className="text-[10px] font-semibold text-slate-600">{bucket.label}</div>
-                                            <div className="text-[9px] font-bold text-slate-800">₹ {formatCurrency(bucket.amount)} <span className="font-medium text-slate-500">({bucket.pct}%)</span></div>
+                                            <div className="text-[9px] font-bold text-slate-800 break-words">₹ {formatCurrency(bucket.amount)} <span className="font-medium text-slate-500">({bucket.pct}%)</span></div>
                                         </div>
                                     </div>
                                 ))}
