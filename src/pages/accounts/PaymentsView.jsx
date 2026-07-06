@@ -202,6 +202,9 @@ const PaymentList = () => {
 
         // Add Data
         filteredPayments.forEach((pmt, index) => {
+            const rawStatus = String(pmt.status || 'Completed');
+            const pmtStatus = (rawStatus.toLowerCase() === 'completed' || rawStatus === '1') ? 'Completed' : (rawStatus.toLowerCase() === 'overdue' ? 'Overdue' : 'Partially Paid');
+            
             const row = worksheet.addRow({
                 sno: index + 1,
                 invoice_no: pmt.invoice_no || pmt.invoice_id || 'N/A',
@@ -211,7 +214,7 @@ const PaymentList = () => {
                 bank: pmt.bankId || 'N/A',
                 utr: pmt.utr_no || 'N/A',
                 date: formatDate(pmt.payment_date || pmt.added),
-                status: String(pmt.status || 'Completed').toLowerCase() === 'completed' || pmt.status === '1' ? 'Completed' : (String(pmt.status).toLowerCase() === 'overdue' ? 'Overdue' : 'Partially Paid'),
+                status: pmtStatus,
                 created_by: pmt.added_by || 'Admin',
                 created_date: formatDate(pmt.added)
             });
