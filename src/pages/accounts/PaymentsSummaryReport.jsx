@@ -65,7 +65,7 @@ function PaymentsSummaryReport() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [payments, setPayments] = useState([]);
-    
+
     const [filterDate, setFilterDate] = useState('all');
     const [filterBank, setFilterBank] = useState('');
     const [filterMode, setFilterMode] = useState('');
@@ -88,7 +88,7 @@ function PaymentsSummaryReport() {
     const filteredPayments = payments.filter(pmt => {
         if (filterBank && pmt.bankId !== filterBank) return false;
         if (filterMode && pmt.payment_mode !== filterMode) return false;
-        
+
         if (filterDate !== 'all') {
             const pmtDate = new Date(pmt.payment_date || pmt.added);
             if (!isNaN(pmtDate.getTime())) {
@@ -126,7 +126,7 @@ function PaymentsSummaryReport() {
         acc[bank] += (parseFloat(p.amount_text) || 0);
         return acc;
     }, {});
-    const bankData = Object.entries(bankMap).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value).slice(0, 5);
+    const bankData = Object.entries(bankMap).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 5);
 
     // Data for Mode Pie Chart
     const modeMap = filteredPayments.reduce((acc, p) => {
@@ -142,14 +142,14 @@ function PaymentsSummaryReport() {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const trendMap = filteredPayments.reduce((acc, p) => {
         const d = new Date(p.payment_date || p.added);
-        if(!isNaN(d)) {
+        if (!isNaN(d)) {
             const mYear = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
             if (!acc[mYear]) acc[mYear] = { name: mYear, Revenue: 0, time: d.getTime() };
             acc[mYear].Revenue += (parseFloat(p.amount_text) || 0);
         }
         return acc;
     }, {});
-    const trendData = Object.values(trendMap).sort((a,b) => a.time - b.time).slice(-6);
+    const trendData = Object.values(trendMap).sort((a, b) => a.time - b.time).slice(-6);
 
     return (
         <div className="min-h-screen bg-gray-50 pl-4 pr-4 py-4">
@@ -164,12 +164,7 @@ function PaymentsSummaryReport() {
                         <div className="text-sm text-slate-500 mt-1">Detailed breakdown of payment collections</div>
                     </div>
                 </div>
-                <div className="flex gap-2">
-                    <button className="flex items-center gap-1.5 text-blue-600 bg-white border border-slate-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-50 shadow-sm transition-colors">
-                        <Download className="w-4 h-4" />
-                        Download PDF
-                    </button>
-                </div>
+
             </div>
 
             {loading ? (
@@ -278,13 +273,13 @@ function PaymentsSummaryReport() {
                                 <ResponsiveContainer width="100%" height="100%">
                                     <LineChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10, fontWeight: 600}} dy={10} />
-                                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10, fontWeight: 600}} tickFormatter={(value) => `₹${value >= 1000 ? (value/1000).toFixed(0) + 'k' : value}`} />
-                                        <RechartsTooltip 
-                                            contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px'}}
+                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }} dy={10} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }} tickFormatter={(value) => `₹${value >= 1000 ? (value / 1000).toFixed(0) + 'k' : value}`} />
+                                        <RechartsTooltip
+                                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
                                             formatter={(value) => [formatCurrency(value), 'Revenue']}
                                         />
-                                        <Line type="monotone" dataKey="Revenue" stroke="#4f46e5" strokeWidth={3} dot={{r: 4, fill: '#4f46e5', strokeWidth: 2, stroke: '#fff'}} activeDot={{r: 6}} />
+                                        <Line type="monotone" dataKey="Revenue" stroke="#4f46e5" strokeWidth={3} dot={{ r: 4, fill: '#4f46e5', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </div>
@@ -303,11 +298,11 @@ function PaymentsSummaryReport() {
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={bankData} layout="vertical" margin={{ top: 0, right: 20, left: -20, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
-                                        <XAxis type="number" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10, fontWeight: 600}} tickFormatter={(value) => `₹${value >= 1000 ? (value/1000).toFixed(0) + 'k' : value}`} />
-                                        <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 10, fontWeight: 700}} width={90} />
-                                        <RechartsTooltip 
-                                            cursor={{fill: 'transparent'}}
-                                            contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px'}}
+                                        <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }} tickFormatter={(value) => `₹${value >= 1000 ? (value / 1000).toFixed(0) + 'k' : value}`} />
+                                        <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 10, fontWeight: 700 }} width={90} />
+                                        <RechartsTooltip
+                                            cursor={{ fill: 'transparent' }}
+                                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
                                             formatter={(value) => [formatCurrency(value), 'Collection']}
                                         />
                                         <Bar dataKey="value" fill="#ec4899" radius={[0, 4, 4, 0]} barSize={16} />
@@ -341,9 +336,9 @@ function PaymentsSummaryReport() {
                                                 <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                                             ))}
                                         </Pie>
-                                        <RechartsTooltip 
+                                        <RechartsTooltip
                                             formatter={(value) => formatCurrency(value)}
-                                            contentStyle={{borderRadius: '6px', border: 'none', boxShadow: '0 2px 4px -1px rgb(0 0 0 / 0.1)', fontSize: '11px'}}
+                                            contentStyle={{ borderRadius: '6px', border: 'none', boxShadow: '0 2px 4px -1px rgb(0 0 0 / 0.1)', fontSize: '11px' }}
                                         />
                                     </PieChart>
                                 </ResponsiveContainer>
@@ -352,7 +347,7 @@ function PaymentsSummaryReport() {
                                 {modeData.map((item, idx) => (
                                     <div key={item.name} className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: PIE_COLORS[idx % PIE_COLORS.length]}}></div>
+                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }}></div>
                                             <span className="text-[11px] font-semibold text-slate-600">{item.name}</span>
                                         </div>
                                         <span className="text-[11px] font-black text-slate-900">{formatCurrency(item.value)}</span>
@@ -380,7 +375,7 @@ function PaymentsSummaryReport() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
-                                    {[...filteredPayments].sort((a,b) => (parseFloat(b.amount_text)||0) - (parseFloat(a.amount_text)||0)).slice(0, 5).map((pmt, i) => (
+                                    {[...filteredPayments].sort((a, b) => (parseFloat(b.amount_text) || 0) - (parseFloat(a.amount_text) || 0)).slice(0, 5).map((pmt, i) => (
                                         <tr key={i} className="group hover:bg-slate-50 transition-colors">
                                             <td className="py-3 px-2 font-bold text-blue-600">{pmt.invoice_no || pmt.invoice_id}</td>
                                             <td className="py-3 px-2 font-semibold text-slate-700">{pmt.bankId}</td>

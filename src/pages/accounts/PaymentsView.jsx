@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import AccountNavigation from '../../components/AccountNavigation';
+import Select from 'react-select';
 function useCountUp(target, duration = 1200) {
     const [count, setCount] = useState(0);
     const [started, setStarted] = useState(false);
@@ -83,6 +84,39 @@ const PaymentList = () => {
     const [filterBank, setFilterBank] = useState('');
     const [filterMode, setFilterMode] = useState('');
     const [filterStatus, setFilterStatus] = useState('');
+
+    // Add Payment Modal states
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [modalCompanies, setModalCompanies] = useState([]);
+    const [selectedCompanyId, setSelectedCompanyId] = useState('');
+    const [loadingCompanies, setLoadingCompanies] = useState(false);
+
+    const handleOpenAddPayment = async () => {
+        if (id !== 'all') {
+            navigate(`/dashboard/account/AddPayment/${id}`);
+        } else {
+            setIsAddModalOpen(true);
+            setLoadingCompanies(true);
+            try {
+                const res = await api.get('/api/companies');
+                const compData = res.data?.data || res.data || [];
+                const options = compData.map(c => ({ value: c._id, label: c.companyName || c.name || 'Unknown Company' }));
+                setModalCompanies(options);
+            } catch (error) {
+                toast.error('Failed to load exhibitors');
+            } finally {
+                setLoadingCompanies(false);
+            }
+        }
+    };
+
+    const handleProceedAddPayment = () => {
+        if (!selectedCompanyId) {
+            toast.error('Please select an exhibitor first');
+            return;
+        }
+        navigate(`/dashboard/account/AddPayment/${selectedCompanyId}`);
+    };
 
     useEffect(() => {
         const fetchPayments = async () => {
@@ -474,15 +508,13 @@ const PaymentList = () => {
                         />
                         <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
                     </div>
-                    {id !== 'all' && (
-                        <button
-                            onClick={() => navigate(`/dashboard/account/AddPayment/${id}`)}
-                            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold shadow-sm transition-colors text-[13px]"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Add Payment
-                        </button>
-                    )}
+                    <button
+                        onClick={handleOpenAddPayment}
+                        className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold shadow-sm transition-colors text-[13px]"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Add Payment
+                    </button>
                 </div>
             </div>
 
@@ -846,6 +878,48 @@ const PaymentList = () => {
                         >
                             <FileText className="w-4 h-4" /> View Summary Report
                         </button>
+                    </div>
+                </div>
+            )}
+            
+            {/* Add Payment Modal */}
+            {isAddModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+                        <div className="flex justify-between items-center p-4 border-b border-slate-100">
+                            <h3 className="font-bold text-slate-800 text-lg">Select Exhibitor</h3>
+                            <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        <div className="p-4">
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">Search & Select Company</label>
+                            <Select
+                                options={modalCompanies}
+                                isLoading={loadingCompanies}
+                                onChange={(selected) => setSelectedCompanyId(selected ? selected.value : '')}
+                                placeholder="Select exhibitor..."
+                                className="text-sm"
+                                isClearable
+                                menuPortalTarget={document.body}
+                                styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                            />
+                        </div>
+                        <div className="p-4 border-t border-slate-100 flex justify-end gap-2 bg-slate-50">
+                            <button
+                                onClick={() => setIsAddModalOpen(false)}
+                                className="px-4 py-2 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleProceedAddPayment}
+                                className="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                disabled={!selectedCompanyId}
+                            >
+                                Proceed
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
