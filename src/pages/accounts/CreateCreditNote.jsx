@@ -565,18 +565,18 @@ const CreateCreditNote = () => {
 
                             {/* Totals */}
                             <div className="flex justify-end mt-4">
-                                <div className="w-72 bg-emerald-50/60 border border-emerald-100 rounded-lg p-4 space-y-2">
-                                    <div className="flex justify-between text-[12px]">
-                                        <span className="font-semibold text-slate-600">Credit Note Value</span>
-                                        <span className="font-bold text-slate-800">₹{fmt(totalCreditNoteValue)}</span>
+                                <div className="bg-emerald-50/60 border border-emerald-100 rounded-lg p-4 space-y-2" style={{ minWidth: '300px' }}>
+                                    <div className="flex items-center justify-between gap-8 text-[12px]">
+                                        <span className="font-semibold text-slate-600 whitespace-nowrap">Credit Note Value</span>
+                                        <span className="font-bold text-slate-800 shrink-0">₹{fmt(totalCreditNoteValue)}</span>
                                     </div>
-                                    <div className="flex justify-between text-[12px]">
-                                        <span className="font-semibold text-slate-600">Total Applied</span>
-                                        <span className="font-bold text-slate-800">₹{fmt(totalApplied)}</span>
+                                    <div className="flex items-center justify-between gap-8 text-[12px]">
+                                        <span className="font-semibold text-slate-600 whitespace-nowrap">Total Applied</span>
+                                        <span className="font-bold text-slate-800 shrink-0">₹{fmt(totalApplied)}</span>
                                     </div>
-                                    <div className={`flex justify-between text-[13px] border-t pt-2 ${remainingBalance === 0 ? 'border-emerald-200' : 'border-orange-200'}`}>
-                                        <span className={`font-bold ${remainingBalance === 0 ? 'text-emerald-600' : 'text-orange-500'}`}>Remaining Credit Balance</span>
-                                        <span className={`font-black ${remainingBalance === 0 ? 'text-emerald-600' : 'text-orange-500'}`}>₹{fmt(remainingBalance)}</span>
+                                    <div className={`flex items-center justify-between gap-8 text-[13px] border-t pt-2 ${remainingBalance === 0 ? 'border-emerald-200' : 'border-orange-200'}`}>
+                                        <span className={`font-bold whitespace-nowrap ${remainingBalance === 0 ? 'text-emerald-600' : 'text-orange-500'}`}>Remaining Credit Balance</span>
+                                        <span className={`font-black shrink-0 ${remainingBalance === 0 ? 'text-emerald-600' : 'text-orange-500'}`}>₹{fmt(remainingBalance)}</span>
                                     </div>
                                 </div>
                             </div>
