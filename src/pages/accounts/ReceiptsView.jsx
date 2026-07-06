@@ -502,7 +502,7 @@ const ReceiptsView = () => {
                             </div>
                         )}
                     </div>
-                    
+
                     <div className="relative">
                         <button
                             onClick={() => setFiltersOpen(!filtersOpen)}
@@ -1001,8 +1001,8 @@ const ReceiptsView = () => {
                         {/* Payment Mode Summary */}
                         <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
                             <h2 className="text-sm font-semibold text-slate-800 mb-3 tracking-wide">Payment Mode Summary</h2>
-                            <div className="flex items-center justify-between h-[140px]">
-                                <div className="w-[100px] h-full shrink-0 -ml-2">
+                            <div className="flex items-center justify-between min-h-[140px]">
+                                <div className="w-[100px] h-[100px] shrink-0 -ml-2 self-start mt-2">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <RechartsPieChart>
                                             <Pie
@@ -1023,17 +1023,17 @@ const ReceiptsView = () => {
                                         </RechartsPieChart>
                                     </ResponsiveContainer>
                                 </div>
-                                <div className="flex flex-col gap-3 shrink-0">
+                                <div className="flex flex-col gap-2.5 ml-2 justify-center py-2 flex-1 min-w-0">
                                     {modeData.length === 0 ? (
                                         <div className="text-[10px] text-slate-400">No data</div>
                                     ) : modeData.map((m, i) => (
-                                        <div key={m.name} className="flex items-center justify-between gap-4">
-                                            <div className="flex items-center gap-1.5">
-                                                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}></div>
-                                                <span className="text-[10px] font-semibold text-slate-600">{m.name}</span>
-                                            </div>
-                                            <div className="text-[10px] font-bold text-slate-800 text-right">
-                                                <span className="font-medium text-slate-500 ml-0.5">({((m.value / modeTotal) * 100).toFixed(1)}%)</span>
+                                        <div key={m.name} className="flex items-start gap-1.5 w-full">
+                                            <div className="w-1.5 h-1.5 rounded-full mt-[5px] shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}></div>
+                                            <div className="flex flex-col leading-tight min-w-0">
+                                                <span className="text-[10px] font-bold text-slate-800 truncate" title={m.name}>{m.name}</span>
+                                                <div className="text-[9px] font-medium text-slate-500 mt-0.5 truncate" title={`₹ ${formatCurrency(m.value)} (${((m.value / modeTotal) * 100).toFixed(1)}%)`}>
+                                                    ₹ {formatCurrency(m.value)} ({((m.value / modeTotal) * 100).toFixed(1)}%)
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
