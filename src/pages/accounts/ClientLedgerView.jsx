@@ -705,7 +705,7 @@ const ClientLedgerView = () => {
                     {/* Aging Details */}
                     <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
                         <h2 className="text-sm font-semibold text-slate-800 mb-2 tracking-wide">Aging Details</h2>
-                        <div className="flex items-center justify-between h-[110px]">
+                        <div className="flex items-center justify-between gap-2 min-h-[110px]">
                             <div className="w-[90px] h-full shrink-0 -ml-2">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <RechartsPieChart>
@@ -718,13 +718,13 @@ const ClientLedgerView = () => {
                                     </RechartsPieChart>
                                 </ResponsiveContainer>
                             </div>
-                            <div className="flex flex-col gap-2 shrink-0">
+                            <div className="flex flex-col gap-2 flex-1 min-w-0">
                                 {agingBuckets.map((bucket, i) => (
-                                    <div key={bucket.label} className="flex items-center gap-1.5">
-                                        <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: AGING_COLORS[i % AGING_COLORS.length] }}></div>
-                                        <div>
+                                    <div key={bucket.label} className="flex items-start gap-1.5">
+                                        <div className="w-1.5 h-1.5 rounded-full shrink-0 mt-1" style={{ backgroundColor: AGING_COLORS[i % AGING_COLORS.length] }}></div>
+                                        <div className="min-w-0">
                                             <div className="text-[10px] font-semibold text-slate-600">{bucket.label}</div>
-                                            <div className="text-[9px] font-bold text-slate-800">₹ {formatCurrency(bucket.amount)} <span className="font-medium text-slate-500">({bucket.pct}%)</span></div>
+                                            <div className="text-[9px] font-bold text-slate-800 break-words">₹ {formatCurrency(bucket.amount)} <span className="font-medium text-slate-500">({bucket.pct}%)</span></div>
                                         </div>
                                     </div>
                                 ))}
