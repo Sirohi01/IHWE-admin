@@ -458,7 +458,7 @@ const PaymentList = () => {
             {!isAllList && <AccountNavigation id={id} accountName={accountName} pageName="Payments" />}
 
             {/* -- Header -- */}
-            <div className="flex items-center justify-between mb-4 mt-2">
+            <div className="flex items-center justify-between mb-2 mt-2">
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight">Payments</h1>
                     <div className="text-sm text-slate-500 mt-1">Track all payments received against invoices</div>
@@ -489,7 +489,7 @@ const PaymentList = () => {
             {statCards}
 
             {/* -- Filters -- */}
-            <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-3 shadow-sm mb-4 overflow-x-auto">
+            <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-3 shadow-sm mb-2 overflow-x-auto">
                 <div className="flex items-center gap-3">
                     <div className="relative">
                         <CalendarDays className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -731,7 +731,7 @@ const PaymentList = () => {
             {/* Pagination Controls */}
             {
                 totalPages > 1 && (
-                    <div className="flex justify-between items-center mt-4 px-2">
+                    <div className="flex justify-between items-center mt-2 px-2">
                         <span className="text-sm text-gray-500 font-medium">
                             Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, groupedPayments.length)} of {groupedPayments.length} invoice entries
                         </span>
@@ -781,7 +781,7 @@ const PaymentList = () => {
 
             {/* Total Summary Section (Outside Table) */}
             {!loading && groupedPayments.length > 0 && (
-                <div className="mt-4 bg-white border border-slate-200 rounded-lg shadow-sm p-4 flex flex-wrap items-center justify-between gap-4">
+                <div className="mt-2 bg-white border border-slate-200 rounded-lg shadow-sm p-3 flex flex-wrap items-center justify-between gap-4">
                     <div className="flex flex-1 flex-wrap items-center justify-between gap-4 pr-6 border-r border-slate-200">
                         {/* Total Invoice Value */}
                         <div className="flex flex-col gap-1 items-center px-2 whitespace-nowrap">
