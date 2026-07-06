@@ -284,6 +284,9 @@ const DebitNoteList = lazy(() => import("../pages/DebitNoteList"));
 const DebitNoteView = lazy(() => import("../pages/DebitNoteView"));
 const CreateInvoicePage = lazy(() => import("../pages/CreateInvoice"));
 const BankDetailsManage = lazy(() => import("../pages/accounts/BankDetailsManage"));
+const PaymentsView = lazy(() => import("../pages/accounts/PaymentsView"));
+const AccountsReceivableView = lazy(() => import("../pages/accounts/AccountsReceivableView"));
+const InvoicesView = lazy(() => import("../pages/accounts/InvoicesView"));
 // Sales Tools
 const SalesTools = lazy(() => import("../pages/sales_tools/SalesTools"));
 // Communication
@@ -704,11 +707,11 @@ export default function AppRoutes() {
             <Route path="ihweClientData2026/AddStatus" element={<AddStatus />} />
             <Route path="ihweClientData2026/AddTarget" element={<AddTarget />} />
             <Route path="ihweClientData2026/AddNextAction" element={<AddNextAction />} />
-         // ############################# -- Account Section
             <Route path="accounts/salesreport" element={<SalesReport />} />
             <Route path="accounts/bank-details" element={<BankDetailsManage />} />
-
-        // ############################# -- Account Section
+            <Route path="accounts/payments" element={<PaymentsView />} />
+            <Route path="accounts/ar" element={<AccountsReceivableView />} />
+            <Route path="accounts/invoices" element={<InvoicesView />} />
             <Route path="/client-overview/:id" element={<ClientOverview1 />} />
             <Route path="/client-contacts/:id" element={<ClientContacts />} />
             <Route path="/add-team-members/:id" element={<AddTeamMembersAdmin />} />

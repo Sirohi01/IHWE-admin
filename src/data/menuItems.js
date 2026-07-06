@@ -773,8 +773,14 @@ export const menuItems = [
     path: "/sidebar-customize",
   },
   {
-    type: "heading",
+    type: "dropdown",
     label: "Account Section",
+    icon: FileText,
+    children: [
+      { label: "Payments", path: "/accounts/payments" },
+      { label: "Accounts Receivable", path: "/accounts/ar" },
+      { label: "Invoices", path: "/accounts/invoices" },
+    ],
   },
   {
     type: "item",
