@@ -1,502 +1,398 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate, Link, useParams } from 'react-router-dom';
-import { ChevronRight, MessageCircleMore, Mail, FileText, Users, DollarSign, CreditCard, Loader2 } from 'lucide-react';
-import api, { SERVER_URL } from '../../lib/api';
-import Swal from 'sweetalert2';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+    Calendar, Filter, Plus, Search, Download, Eye, MoreVertical,
+    CreditCard, ArrowDownToLine, Clock, AlertCircle, FileText,
+    Users, PieChart, CheckCircle2, TrendingUp, TrendingDown,
+    Building2, FileSpreadsheet, Landmark, MessageCircleMore,
+    Mail, RefreshCw, BarChart2
+} from 'lucide-react';
 import toast from 'react-hot-toast';
-import AccountNavigation from '../../components/AccountNavigation';
+import Swal from 'sweetalert2';
 
-// Hook: animate number from 0 to target when element enters viewport
-function useCountUp(target, duration = 1200) {
-    const [count, setCount] = useState(0);
-    const [started, setStarted] = useState(false);
-    const ref = useRef(null);
-
-    useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-        const observer = new IntersectionObserver(
-            ([entry]) => { if (entry.isIntersecting && !started) setStarted(true); },
-            { threshold: 0.3 }
-        );
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, [started]);
-
-    useEffect(() => {
-        if (!started) return;
-        const numTarget = parseFloat(target) || 0;
-        if (numTarget === 0) { setCount(0); return; }
-        const startTime = performance.now();
-        const tick = (now) => {
-            const elapsed = now - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            const ease = 1 - Math.pow(1 - progress, 3);
-            setCount(ease * numTarget);
-            if (progress < 1) requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-    }, [started, target, duration]);
-
-    return { ref, count };
-}
-
-function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, label, subLabel, subColor }) {
-    const { ref, count } = useCountUp(rawValue);
+function StatCard({ icon, iconBg, iconColor, title, value, subLabel, subText, trendUp, bottomText }) {
     return (
-        <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white ${gradientTo} p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}>
-            <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className={`w-10 h-10 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
-                        {icon}
-                    </div>
-                    <div className="flex flex-col">
-                        <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>
-                            {displayValue(count)}
-                        </span>
-                        <span style={{ fontSize: '9px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif' }}>{label}</span>
-                    </div>
+        <div className="bg-white p-3 border border-slate-200 rounded-lg shadow-sm flex flex-col justify-between h-full hover:shadow-md transition-shadow">
+            <div className="flex items-start gap-3">
+                <div className={`w-9 h-9 ${iconBg} ${iconColor} rounded-lg flex items-center justify-center shrink-0`}>
+                    {icon}
                 </div>
-                <div style={{ fontSize: '10px', fontWeight: 700, color: subColor, textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>{subLabel}</div>
+                <div className="flex-1 min-w-0">
+                    <h3 className="text-slate-700 font-bold text-[9px] uppercase tracking-wider leading-tight whitespace-nowrap truncate">{title}</h3>
+                    <div className="text-lg font-black text-slate-800 leading-tight mt-1 truncate">
+                        {value}
+                    </div>
+                    {subLabel && (
+                        <div className="text-slate-500 text-[10px] font-medium mt-0.5">{subLabel}</div>
+                    )}
+                </div>
             </div>
+            {(subText || bottomText) && (
+                <div className="mt-3 pt-2 border-t border-slate-100 flex justify-between items-center text-[10px]">
+                    {subText && (
+                        <span className={`font-bold flex items-center gap-1 ${trendUp === true ? 'text-emerald-600' : trendUp === false ? 'text-rose-600' : 'text-slate-500'}`}>
+                            {trendUp === true ? <TrendingUp className="w-3 h-3" /> : trendUp === false ? <TrendingDown className="w-3 h-3" /> : null}
+                            {subText}
+                        </span>
+                    )}
+                    {bottomText && <span className="text-slate-500 font-semibold">{bottomText}</span>}
+                </div>
+            )}
         </div>
     );
 }
+
+const mockData = [
+    {
+        sno: 1,
+        client: 'City Dental', stallNo: '91', sqMtr: '12 Sq. Mtr.', contact: 'Dr. Ashish Verma',
+        invNo: 'NGW/INV/26-27/039', invDate: '03 Jul 26', totalInv: 2,
+        paymentType: 'Advance', paymentTypeColor: 'text-blue-600 bg-blue-50 border-blue-200',
+        invValue: '₹ 2,27,174.00',
+        received: '₹ 1,29,769.00', receivedPct: '57.14%',
+        tds: '₹ 2,595.38', tdsColor: 'text-rose-600',
+        netReceived: '₹ 1,27,173.62', netReceivedColor: 'text-emerald-600',
+        outstanding: '₹ 97,404.62',
+        paymentMode: 'NEFT', bank: 'HDFC Bank',
+        utr: 'HDFC260704672981', utrDate: '04 Jul 26',
+        dueDate: '06 Aug 26',
+        status: 'Partially Paid', statusColor: 'bg-orange-50 text-orange-600 border-orange-200'
+    },
+    {
+        sno: 2,
+        client: 'Ayush Wellness Pvt. Ltd.', stallNo: '157', sqMtr: '9 Sq. Mtr.', contact: 'Mr. Rajesh Mehra',
+        invNo: 'NGW/INV/26-27/038', invDate: '03 Jul 26', totalInv: 1,
+        paymentType: 'Full Payment', paymentTypeColor: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+        invValue: '₹ 2,27,183.04',
+        received: '₹ 2,27,183.04', receivedPct: '100%',
+        tds: '₹ 0.00', tdsColor: 'text-rose-600',
+        netReceived: '₹ 2,27,183.04', netReceivedColor: 'text-emerald-600',
+        outstanding: '₹ 0.00',
+        paymentMode: 'Online', bank: 'Razorpay',
+        utr: 'pay_T9LH7YGH40jKAM', utrDate: '04 Jul 26',
+        dueDate: '-',
+        status: 'Paid', statusColor: 'bg-emerald-50 text-emerald-600 border-emerald-200'
+    },
+    {
+        sno: 3,
+        client: 'Wellness Forever', stallNo: '203', sqMtr: '18 Sq. Mtr.', contact: 'Mr. Sandeep Rao',
+        invNo: 'NGW/INV/26-27/040', invDate: '03 Jul 26', totalInv: 1,
+        paymentType: 'Full Payment', paymentTypeColor: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+        invValue: '₹ 12,01,334.00',
+        received: '₹ 12,01,334.00', receivedPct: '100%',
+        tds: '₹ 0.00', tdsColor: 'text-rose-600',
+        netReceived: '₹ 12,01,334.00', netReceivedColor: 'text-emerald-600',
+        outstanding: '₹ 0.00',
+        paymentMode: 'NEFT', bank: 'HDFC Bank',
+        utr: 'HDFC260703458921', utrDate: '04 Jul 26',
+        dueDate: '-',
+        status: 'Paid', statusColor: 'bg-emerald-50 text-emerald-600 border-emerald-200'
+    },
+    {
+        sno: 4,
+        client: 'Werbal India', stallNo: '112', sqMtr: '9 Sq. Mtr.', contact: 'Ms. Neha Gupta',
+        invNo: 'NGW/INV/26-27/041', invDate: '03 Jul 26', totalInv: 2,
+        paymentType: 'Running', paymentTypeColor: 'text-orange-600 bg-orange-50 border-orange-200',
+        invValue: '₹ 2,27,183.00',
+        received: '₹ 10,000.00', receivedPct: '4.40%',
+        tds: '₹ 4,543.66', tdsColor: 'text-rose-600',
+        netReceived: '₹ 5,456.34', netReceivedColor: 'text-emerald-600',
+        outstanding: '₹ 2,17,183.00',
+        paymentMode: 'NEFT', bank: 'HDFC Bank',
+        utr: '95855599595', utrDate: '04 Jul 26',
+        dueDate: '07 Jul 26',
+        status: 'Partially Paid', statusColor: 'bg-orange-50 text-orange-600 border-orange-200'
+    },
+    {
+        sno: 5,
+        client: 'Health Kart', stallNo: '305', sqMtr: '12 Sq. Mtr.', contact: 'Mr. Vivek Sharma',
+        invNo: 'NGW/INV/26-27/031', invDate: '02 Jul 26', totalInv: 1,
+        paymentType: 'Full Payment', paymentTypeColor: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+        invValue: '₹ 1,18,944.00',
+        received: '₹ 1,18,944.00', receivedPct: '100%',
+        tds: '₹ 0.00', tdsColor: 'text-rose-600',
+        netReceived: '₹ 1,18,944.00', netReceivedColor: 'text-emerald-600',
+        outstanding: '₹ 0.00',
+        paymentMode: 'NEFT', bank: 'HDFC Bank',
+        utr: '467654345676543', utrDate: '03 Jul 26',
+        dueDate: '-',
+        status: 'Paid', statusColor: 'bg-emerald-50 text-emerald-600 border-emerald-200'
+    },
+    {
+        sno: 6,
+        client: 'Arogya Naturals', stallNo: '78', sqMtr: '9 Sq. Mtr.', contact: 'Mr. Amit Tiwari',
+        invNo: 'NGW/26-27/PI/017', invDate: '01 Jul 26', totalInv: 1,
+        paymentType: 'Advance', paymentTypeColor: 'text-blue-600 bg-blue-50 border-blue-200',
+        invValue: '₹ 1,18,944.00',
+        received: '₹ 200.00', receivedPct: '0.17%',
+        tds: '₹ 0.00', tdsColor: 'text-rose-600',
+        netReceived: '₹ 200.00', netReceivedColor: 'text-emerald-600',
+        outstanding: '₹ 1,18,744.00',
+        paymentMode: 'NEFT', bank: 'Bank',
+        utr: '1212', utrDate: '01 Jul 26',
+        dueDate: '15 Jul 26',
+        status: 'Partially Paid', statusColor: 'bg-orange-50 text-orange-600 border-orange-200'
+    },
+    {
+        sno: 7,
+        client: 'GreenLife Pharma', stallNo: '66', sqMtr: '9 Sq. Mtr.', contact: 'Mr. Rohit Jain',
+        invNo: 'NGW/INV/26-27/013', invDate: '29 Jun 26', totalInv: 1,
+        paymentType: 'Advance', paymentTypeColor: 'text-blue-600 bg-blue-50 border-blue-200',
+        invValue: '₹ 1,18,944.00',
+        received: '₹ 1,212.00', receivedPct: '1.02%',
+        tds: '₹ 0.00', tdsColor: 'text-rose-600',
+        netReceived: '₹ 1,212.00', netReceivedColor: 'text-emerald-600',
+        outstanding: '₹ 1,17,732.00',
+        paymentMode: 'NEFT', bank: '1212',
+        utr: '1212', utrDate: '30 Jun 26',
+        dueDate: '30 Jun 26',
+        status: 'Overdue', statusColor: 'bg-rose-50 text-rose-600 border-rose-200'
+    }
+];
 
 const AccountsReceivableView = () => {
     const navigate = useNavigate();
-    const { id = 'all' } = useParams();
-    const isAllList = id === 'all';
-    const [loading, setLoading] = useState(true);
-    const [payments, setPayments] = useState([]);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [accountName, setAccountName] = useState('Account');
-    const [sendingReceipt, setSendingReceipt] = useState({});
-
-    // Pagination states
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
-
-    useEffect(() => {
-        const fetchPayments = async () => {
-            try {
-                const res = await api.get('/api/payments');
-                setPayments(res.data?.data || res.data || []);
-            } catch (err) {
-                console.error("Failed to fetch payments", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchPayments();
-    }, []);
-
-    useEffect(() => {
-        if (isAllList) {
-            setAccountName('');
-            return;
-        }
-
-        let cancelled = false;
-        const fetchAccountName = async () => {
-            try {
-                const res = await api.get(`/api/account-overview/${id}`);
-                if (!cancelled && res.data?.success) {
-                    setAccountName(res.data.data?.companyInfo?.name || '');
-                }
-            } catch (err) {
-                if (!cancelled) setAccountName('');
-            }
-        };
-
-        fetchAccountName();
-        return () => {
-            cancelled = true;
-        };
-    }, [id, isAllList]);
-
-    const formatDate = (dateString) => {
-        if (!dateString) return "N/A";
-        const d = new Date(dateString);
-        if (isNaN(d.getTime())) return "N/A";
-        const day = String(d.getDate()).padStart(2, '0');
-        const month = d.toLocaleString('en-US', { month: 'short' });
-        const year = String(d.getFullYear()).slice(-2);
-        return `${day} ${month} ${year}`;
-    };
-
-    const formatDateTime = (dateString) => {
-        if (!dateString) return "N/A";
-        const d = new Date(dateString);
-        if (isNaN(d.getTime())) return "N/A";
-        const day = String(d.getDate()).padStart(2, '0');
-        const month = d.toLocaleString('en-US', { month: 'short' });
-        const year = String(d.getFullYear()).slice(-2);
-        const time = d.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-        return `${day} ${month} ${year}, ${time}`;
-    };
-
-    const formatCurrency = (value) => {
-        const amount = Number(value || 0);
-        return `₹ ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    };
-
-    const getPaymentDetailLines = (pmt) => {
-        const lines = [];
-        if (pmt.payment_mode) lines.push(pmt.payment_mode);
-        if (pmt.bankId) lines.push(`Bank: ${pmt.bankId}`);
-        if (pmt.utr_no) lines.push(`UTR: ${pmt.utr_no}`);
-        if (pmt.cash_receipt_no) lines.push(`Cash Receipt: ${pmt.cash_receipt_no}`);
-        if (pmt.cheque_no) lines.push(`Cheque: ${pmt.cheque_no}`);
-        if (pmt.card_transaction_no) lines.push(`Card Txn: ${pmt.card_transaction_no}`);
-        if (pmt.wallet_transaction_no) lines.push(`Wallet Txn: ${pmt.wallet_transaction_no}`);
-        const txnDate = pmt.cheque_date || pmt.card_date || pmt.neft_date;
-        if (txnDate) lines.push(`Txn Date: ${formatDateTime(txnDate)}`);
-        return lines.length ? lines : ['N/A'];
-    };
-
-    const openReceipt = (pmt) => {
-        window.open(`${SERVER_URL}/api/payments/${pmt._id}/receipt`, '_blank', 'noopener,noreferrer');
-    };
-
-    const filteredPayments = payments.filter(pmt => {
-        // filter by company if not all list
-        if (!isAllList && String(pmt.companyId || '') !== String(id)) return false;
-        if (!searchQuery) return true;
-        const q = searchQuery.toLowerCase();
-        return (
-            (pmt.invoice_no || pmt.invoice_id || '').toLowerCase().includes(q) ||
-            (pmt.payment_mode || '').toLowerCase().includes(q) ||
-            (pmt.status_short || '').toLowerCase().includes(q) ||
-            (pmt.added_by || '').toLowerCase().includes(q)
-        );
-    });
-
-    const groupedPayments = Object.values(filteredPayments.reduce((acc, pmt) => {
-        const invoiceKey = String(pmt.invoice_id || pmt.invoice_no || 'no-invoice');
-        if (!acc[invoiceKey]) {
-            acc[invoiceKey] = {
-                key: invoiceKey,
-                invoiceNo: pmt.invoice_no || pmt.invoice_id || 'N/A',
-                invoiceDate: pmt.invoice_date || pmt.added,
-                invoiceAmount: Number(pmt.invoice_amount || pmt.f_amount || 0),
-                payments: [],
-                receivedTotal: 0,
-                tdsTotal: 0,
-            };
-        }
-
-        acc[invoiceKey].payments.push(pmt);
-        acc[invoiceKey].receivedTotal += Number(pmt.amount_text || 0);
-        acc[invoiceKey].tdsTotal += Number(pmt.tds_text || 0);
-        acc[invoiceKey].invoiceAmount = Math.max(acc[invoiceKey].invoiceAmount, Number(pmt.invoice_amount || pmt.f_amount || 0));
-        return acc;
-    }, {}));
-
-    const totalPages = Math.ceil(groupedPayments.length / itemsPerPage);
-    const paginatedGroups = groupedPayments.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
-
-    const handlePageChange = (newPage) => {
-        if (newPage >= 1 && newPage <= totalPages) {
-            setCurrentPage(newPage);
-        }
-    };
-
-    const totalPayments = filteredPayments.length;
-    const totalInvoices = groupedPayments.length;
-    const totalReceived = filteredPayments.reduce((sum, pmt) => sum + (parseFloat(pmt.amount_text) || 0), 0);
-    const totalTds = filteredPayments.reduce((sum, pmt) => sum + (parseFloat(pmt.tds_text) || 0), 0);
-    const totalClients = new Set(filteredPayments.map(pmt => pmt.companyId).filter(Boolean)).size;
-
-    const handleSendReceipt = async (pmtId, type) => {
-        setSendingReceipt(prev => ({ ...prev, [`${pmtId}-${type}`]: true }));
-        try {
-            const res = await api.post(`/api/payments/${pmtId}/send-receipt?type=${type}`);
-            if (res.data?.success) {
-                toast.success(`Receipt sent successfully via ${type === 'whatsapp' ? 'WhatsApp' : 'Email'}!`);
-            } else {
-                toast.error(res.data?.message || `Failed to send ${type} receipt`);
-            }
-        } catch (err) {
-            console.error(err);
-            toast.error(err.response?.data?.message || `Error sending ${type} receipt`);
-        } finally {
-            setSendingReceipt(prev => ({ ...prev, [`${pmtId}-${type}`]: false }));
-        }
-    };
-
-    const statCards = (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <AnimatedStatCard
-                icon={<CreditCard className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
-                gradientTo="to-blue-50" iconBg="bg-blue-100"
-                rawValue={totalPayments}
-                displayValue={(c) => Math.round(c)}
-                label="TOTAL PAYMENTS"
-                subLabel={`${totalInvoices} Invoice${totalInvoices === 1 ? '' : 's'}`} subColor="#2563eb"
-            />
-            <AnimatedStatCard
-                icon={<DollarSign className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
-                gradientTo="to-emerald-50" iconBg="bg-emerald-100"
-                rawValue={totalReceived / 100000}
-                displayValue={(c) => `₹ ${c.toFixed(1)}L`}
-                label="TOTAL RECEIVED"
-                subLabel="Amount" subColor="#059669"
-            />
-            <AnimatedStatCard
-                icon={<DollarSign className="w-5 h-5 text-orange-600" strokeWidth={2.5} />}
-                gradientTo="to-orange-50" iconBg="bg-orange-100"
-                rawValue={totalTds / 1000}
-                displayValue={(c) => `₹ ${c.toFixed(1)}k`}
-                label="TOTAL TDS"
-                subLabel="Deducted" subColor="#d97706"
-            />
-            <AnimatedStatCard
-                icon={<Users className="w-5 h-5 text-rose-600" strokeWidth={2.5} />}
-                gradientTo="to-rose-50" iconBg="bg-rose-100"
-                rawValue={totalClients}
-                displayValue={(c) => Math.round(c)}
-                label="CLIENT"
-                subLabel="Paid" subColor="#e11d48"
-            />
-        </div>
-    );
 
     return (
-        <div className="min-h-screen bg-gray-50 pl-4 pr-4 py-4">
-            {!isAllList && <AccountNavigation id={id} accountName={accountName} pageName="Payments" />}
-
-            {/* -- Header -- */}
-            <div className="flex items-center justify-between mb-3 px-1 mt-1">
+        <div className="min-h-screen bg-slate-50 p-4 font-sans text-slate-800">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
                 <div>
-                    <h1 className="text-lg font-bold text-gray-900">Accounts Receivable (AR)</h1>
-                    {isAllList && (
-                        <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
-                            <span className="hover:text-blue-600 cursor-pointer transition-colors" onClick={() => navigate('/dashboard')}>Home</span>
-                            <ChevronRight className="w-3 h-3" />
-                            <span className="text-gray-700 font-medium">All Payments</span>
-                        </div>
-                    )}
+                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">Accounts Receivable (AR)</h1>
+                    <div className="text-[11px] text-slate-500 font-medium mt-0.5">
+                        Track all payments received against invoices, outstanding amounts and collection status.
+                    </div>
                 </div>
-                <div className="flex gap-2 items-center">
-                    <input
-                        type="text"
-                        placeholder="Search payments..."
-                        value={searchQuery}
-                        onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setCurrentPage(1);
-                        }}
-                        className="border border-gray-300 rounded-md px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-[#3598dc]"
-                    />
-                    {id !== 'all' && (
-                        <button
-                            onClick={() => navigate(`/dashboard/account/AddPayment/${id}`)}
-                            className="flex items-center gap-1.5 bg-[#194090] hover:bg-[#112f6b] text-white px-3 py-1.5 rounded-md font-bold transition text-[13px]"
-                        >
-                            Add Payment
-                        </button>
-                    )}
+                <div className="flex items-center gap-2">
+                    <button className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-300 rounded-md text-[11px] font-bold text-slate-700 shadow-sm">
+                        <Calendar className="w-3.5 h-3.5 text-slate-500" /> 01 Jun 2026 - 04 Jul 2026
+                    </button>
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 rounded-md text-[11px] font-bold text-blue-600 shadow-sm">
+                        <Filter className="w-3.5 h-3.5" /> Filters
+                    </button>
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-[11px] font-bold shadow-sm transition-colors">
+                        <Plus className="w-3.5 h-3.5" /> Add Payment
+                    </button>
                 </div>
             </div>
 
-            {statCards}
+            {/* Stat Cards - Row 1 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-3">
+                <StatCard
+                    icon={<CreditCard className="w-4 h-4" />} iconBg="bg-blue-100" iconColor="text-blue-600"
+                    title="Total Collections" value="₹ 20,03,230.04" subLabel="This Month"
+                    subText="18.6%" trendUp={true} bottomText="vs May '26"
+                />
+                <StatCard
+                    icon={<ArrowDownToLine className="w-4 h-4" />} iconBg="bg-emerald-100" iconColor="text-emerald-600"
+                    title="Net Amount Received" value="₹ 19,96,091.00" subLabel="This Month"
+                    subText="17.3%" trendUp={true} bottomText="vs May '26"
+                />
+                <StatCard
+                    icon={<Clock className="w-4 h-4" />} iconBg="bg-orange-100" iconColor="text-orange-600"
+                    title="Pending Collections" value="₹ 6,80,550.00" subLabel="Due & Upcoming"
+                    subText="8.2%" trendUp={false} bottomText="vs May '26"
+                />
+                <StatCard
+                    icon={<AlertCircle className="w-4 h-4" />} iconBg="bg-rose-100" iconColor="text-rose-600"
+                    title="Overdue Collections" value="₹ 38,120.00" subLabel="Overdue"
+                    subText="12.5%" trendUp={false} bottomText="vs May '26"
+                />
+                <StatCard
+                    icon={<FileText className="w-4 h-4" />} iconBg="bg-purple-100" iconColor="text-purple-600"
+                    title="TDS Deducted" value="₹ 7,139.04" subLabel="This Month"
+                    subText="5.1%" trendUp={false} bottomText="vs May '26"
+                />
+            </div>
 
-            {/* -- Table Container -- */}
-            <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
-                <table className="w-full min-w-[1120px] border-collapse text-left text-[11px] leading-tight">
+            {/* Stat Cards - Row 2 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+                <StatCard
+                    icon={<FileText className="w-4 h-4" />} iconBg="bg-blue-100" iconColor="text-blue-600"
+                    title="Total Invoices" value="7" subLabel="This Month"
+                />
+                <StatCard
+                    icon={<CheckCircle2 className="w-4 h-4" />} iconBg="bg-emerald-100" iconColor="text-emerald-600"
+                    title="Fully Paid Invoices" value="4" subLabel="57.14%"
+                />
+                <StatCard
+                    icon={<PieChart className="w-4 h-4" />} iconBg="bg-orange-100" iconColor="text-orange-600"
+                    title="Partially Paid Invoices" value="2" subLabel="28.57%"
+                />
+                <StatCard
+                    icon={<FileSpreadsheet className="w-4 h-4" />} iconBg="bg-rose-100" iconColor="text-rose-600"
+                    title="Unpaid Invoices" value="1" subLabel="14.29%"
+                />
+                <StatCard
+                    icon={<Users className="w-4 h-4" />} iconBg="bg-purple-100" iconColor="text-purple-600"
+                    title="Total Clients" value="5" subLabel="Active Clients"
+                />
+            </div>
+
+            {/* Filters Row */}
+            <div className="bg-white p-2.5 rounded-t-xl border border-slate-200 border-b-0 shadow-sm flex flex-col md:flex-row items-center gap-2">
+                <div className="relative flex-1 min-w-[200px]">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                        type="text"
+                        placeholder="Search by invoice no., client, stall no., UTR..."
+                        className="pl-8 pr-3 py-1.5 border border-slate-200 rounded-md text-[11px] w-full focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                    />
+                </div>
+                <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto scrollbar-hide">
+                    <select className="border border-slate-200 rounded-md px-2 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none bg-slate-50 min-w-[120px]">
+                        <option>All Banks</option>
+                    </select>
+                    <select className="border border-slate-200 rounded-md px-2 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none bg-slate-50 min-w-[130px]">
+                        <option>All Payment Types</option>
+                    </select>
+                    <select className="border border-slate-200 rounded-md px-2 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none bg-slate-50 min-w-[110px]">
+                        <option>All Status</option>
+                    </select>
+                    <select className="border border-slate-200 rounded-md px-2 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none bg-slate-50 min-w-[140px]">
+                        <option>All Sales Persons</option>
+                    </select>
+                    <button className="flex items-center gap-1 text-blue-600 font-bold text-[11px] px-2 whitespace-nowrap">
+                        <Filter className="w-3 h-3" /> More Filters
+                    </button>
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-md text-[11px] font-bold text-slate-700 hover:bg-slate-50 ml-auto whitespace-nowrap">
+                        <Download className="w-3.5 h-3.5" /> Export
+                    </button>
+                </div>
+            </div>
+
+            {/* Table */}
+            <div className="bg-white border border-slate-200 shadow-sm overflow-x-auto">
+                <table className="w-full min-w-[1300px] text-left border-collapse">
                     <thead>
-                        <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase tracking-[0.02em] text-slate-700">
-                            <th className="w-[48px] px-3 py-2">S.No.</th>
-                            <th className="min-w-[195px] px-3 py-2">Invoice Details</th>
-                            <th className="min-w-[120px] px-3 py-2">Received</th>
-                            <th className="min-w-[90px] px-3 py-2">TDS</th>
-                            <th className="min-w-[180px] px-3 py-2">Payment Details</th>
-                            <th className="min-w-[120px] px-3 py-2">Payment Date</th>
-                            <th className="min-w-[115px] px-3 py-2">Created By</th>
-                            <th className="min-w-[112px] px-3 py-2 text-center">Action</th>
+                        <tr className="bg-white text-[8px] font-black uppercase tracking-wider text-slate-700 border-b border-slate-200 whitespace-nowrap">
+                            <th className="px-3 py-2.5 text-center w-10">S.No.</th>
+                            <th className="px-3 py-2.5">Client & Stall Details</th>
+                            <th className="px-3 py-2.5">Invoice Details</th>
+                            <th className="px-3 py-2.5 text-center">Payment Type</th>
+                            <th className="px-3 py-2.5 text-right">Invoice Value</th>
+                            <th className="px-3 py-2.5 text-center">Received Till Date</th>
+                            <th className="px-3 py-2.5 text-center">TDS Deducted</th>
+                            <th className="px-3 py-2.5 text-center">Net Received</th>
+                            <th className="px-3 py-2.5 text-right">Outstanding Amount</th>
+                            <th className="px-3 py-2.5">Payment Mode</th>
+                            <th className="px-3 py-2.5">UTR / Cheque No.</th>
+                            <th className="px-3 py-2.5 text-center">Due Date</th>
+                            <th className="px-3 py-2.5 text-center">Status</th>
+                            <th className="px-3 py-2.5 text-center">Action</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {loading ? (
-                            <tr>
-                                <td colSpan="8" className="py-8 text-center text-gray-500">
-                                    <div className="flex justify-center items-center gap-2">
-                                        <div className="w-4 h-4 border-2 border-[#3598dc] border-t-transparent rounded-full animate-spin"></div>
-                                        <span>Loading payments...</span>
+                    <tbody className="text-[11px] whitespace-nowrap">
+                        {mockData.map((row, idx) => (
+                            <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                                <td className="px-3 py-2 font-black text-slate-800 text-center">{row.sno}</td>
+                                <td className="px-3 py-2">
+                                    <div className="font-bold text-blue-600 text-[12px]">{row.client}</div>
+                                    <div className="text-slate-600 font-bold mt-0.5 text-[10px]">Stall No. {row.stallNo} <span className="text-slate-400 font-medium">| {row.sqMtr}</span></div>
+                                    <div className="text-slate-500 font-medium mt-0.5 text-[10px] flex items-center gap-1"><Users className="w-3 h-3" /> Contact: {row.contact}</div>
+                                </td>
+                                <td className="px-3 py-2">
+                                    <div className="font-bold text-slate-800 text-[11px]">{row.invNo}</div>
+                                    <div className="text-slate-500 mt-0.5 text-[10px] font-medium">Date: {row.invDate}</div>
+                                    <div className="text-slate-500 mt-0.5 text-[10px] font-medium">Total Invoices: <span className="font-bold text-slate-700">{row.totalInv}</span></div>
+                                </td>
+                                <td className="px-3 py-2 text-center">
+                                    <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold border ${row.paymentTypeColor}`}>
+                                        {row.paymentType}
+                                    </span>
+                                </td>
+                                <td className="px-3 py-2 font-bold text-slate-800 text-[11px] text-right">
+                                    {row.invValue}
+                                </td>
+                                <td className="px-3 py-2 text-center">
+                                    <div className="font-bold text-emerald-600 text-[11px]">{row.received}</div>
+                                    <div className="text-blue-600 font-bold mt-0.5 text-[10px]">{row.receivedPct}</div>
+                                </td>
+                                <td className="px-3 py-2 text-center">
+                                    <div className={`font-bold text-[11px] ${row.tdsColor}`}>{row.tds}</div>
+                                </td>
+                                <td className="px-3 py-2 text-center">
+                                    <div className={`font-bold text-[11px] ${row.netReceivedColor}`}>{row.netReceived}</div>
+                                </td>
+                                <td className="px-3 py-2 font-bold text-slate-800 text-[11px] text-right">
+                                    {row.outstanding}
+                                </td>
+                                <td className="px-3 py-2">
+                                    <div className="font-bold text-slate-800 text-[11px]">{row.paymentMode}</div>
+                                    <div className="text-slate-500 font-medium mt-0.5 text-[10px]">{row.bank}</div>
+                                </td>
+                                <td className="px-3 py-2">
+                                    <div className="font-medium text-slate-700 text-[11px]">{row.utr}</div>
+                                    <div className="text-slate-500 font-medium mt-0.5 text-[10px]">{row.utrDate}</div>
+                                </td>
+                                <td className="px-3 py-2 font-black text-slate-700 text-center">
+                                    {row.dueDate}
+                                </td>
+                                <td className="px-3 py-2 text-center">
+                                    <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${row.statusColor}`}>
+                                        {row.status}
+                                    </span>
+                                </td>
+                                <td className="px-3 py-2">
+                                    <div className="flex items-center justify-center gap-1.5">
+                                        <button className="w-6 h-6 flex items-center justify-center border border-blue-100 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors">
+                                            <Eye className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button className="w-6 h-6 flex items-center justify-center border border-slate-200 text-slate-500 rounded hover:bg-slate-50 transition-colors">
+                                            <MoreVertical className="w-3.5 h-3.5" />
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
-                        ) : paginatedGroups.length === 0 ? (
-                            <tr>
-                                <td colSpan="8" className="py-8 text-center text-gray-500 text-[12px]">
-                                    No payments found.
-                                </td>
-                            </tr>
-                        ) : (
-                            paginatedGroups.map((group, idx) => {
-                                const rowIdx = (currentPage - 1) * itemsPerPage + idx + 1;
-                                return (
-                                    <tr key={group.key} className="border-b border-slate-100 text-[11px] text-slate-600 transition-colors hover:bg-blue-50/30">
-                                        <td className="px-3 py-2 font-bold text-slate-700">{rowIdx}</td>
-                                        <td className="px-3 py-2">
-                                            <div className="font-bold text-slate-950">{group.invoiceNo}</div>
-                                            <div className="mt-0.5 text-slate-500">Date: <span className="font-semibold text-slate-700">{formatDate(group.invoiceDate)}</span></div>
-                                            <div className="mt-0.5 text-slate-500">Invoice Total: <span className="font-semibold text-slate-800">{formatCurrency(group.invoiceAmount)}</span></div>
-                                            <div className="mt-1 inline-flex rounded-full bg-blue-50 px-1.5 py-[1px] text-[10px] font-bold text-blue-700">
-                                                {group.payments.length} Payment{group.payments.length === 1 ? '' : 's'}
-                                            </div>
-                                        </td>
-                                        <td className="whitespace-nowrap px-3 py-2 text-emerald-700">
-                                            {group.payments.map((pmt, paymentIndex) => (
-                                                <div key={`${pmt._id}-received`} className={paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}>
-                                                    <div className="font-bold">{formatCurrency(pmt.amount_text)}</div>
-                                                </div>
-                                            ))}
-                                            {group.payments.length > 1 && (
-                                                <div className="mt-1 border-t border-emerald-100 pt-1 text-[10px] font-bold uppercase text-emerald-800">
-                                                    Total: {formatCurrency(group.receivedTotal)}
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td className="whitespace-nowrap px-3 py-2 text-orange-600">
-                                            {group.payments.map((pmt, paymentIndex) => (
-                                                <div key={`${pmt._id}-tds`} className={paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}>
-                                                    <div className="font-bold">{formatCurrency(pmt.tds_text)}</div>
-                                                </div>
-                                            ))}
-                                            {group.payments.length > 1 && (
-                                                <div className="mt-1 border-t border-orange-100 pt-1 text-[10px] font-bold uppercase text-orange-700">
-                                                    Total: {formatCurrency(group.tdsTotal)}
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td className="px-3 py-1.5 text-slate-600 leading-[1.15]">
-                                            {group.payments.map((pmt, paymentIndex) => (
-                                                <div key={pmt._id} className={paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}>
-                                                    {getPaymentDetailLines(pmt).map((line, lineIndex) => (
-                                                        <div key={`${pmt._id}-${lineIndex}`} className={lineIndex === 0 ? 'font-bold text-slate-900' : 'mt-[1px] text-slate-500'}>
-                                                            {line}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ))}
-                                        </td>
-                                        <td className="whitespace-nowrap px-3 py-2 text-slate-600">
-                                            {group.payments.map((pmt, paymentIndex) => (
-                                                <div key={`${pmt._id}-date`} className={paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}>
-                                                    <div className="font-bold text-slate-900">{formatDateTime(pmt.payment_date)}</div>
-                                                </div>
-                                            ))}
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            {group.payments.map((pmt, paymentIndex) => (
-                                                <div key={`${pmt._id}-created`} className={paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}>
-                                                    <div className="font-bold text-[#194090]">{pmt.added_by || 'Admin'}</div>
-                                                    <div className="mt-0.5 text-slate-500">{formatDateTime(pmt.added)}</div>
-                                                </div>
-                                            ))}
-                                        </td>
-                                        <td className="px-3 py-2 text-center">
-                                            {group.payments.map((pmt, paymentIndex) => (
-                                                <div key={`${pmt._id}-actions`} className={`flex items-center justify-center gap-1.5 ${paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}`}>
-                                                    <button
-                                                        onClick={() => openReceipt(pmt)}
-                                                        title="Open Payment Receipt"
-                                                        className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-50 text-slate-700 transition-colors hover:bg-slate-100"
-                                                    >
-                                                        <FileText size={14} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleSendReceipt(pmt._id, 'whatsapp')}
-                                                        disabled={sendingReceipt[`${pmt._id}-whatsapp`]}
-                                                        title="Send WhatsApp Receipt"
-                                                        className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-green-50 text-green-600 transition-colors hover:bg-green-100 disabled:opacity-50"
-                                                    >
-                                                        {sendingReceipt[`${pmt._id}-whatsapp`] ? <Loader2 size={14} className="animate-spin" /> : <MessageCircleMore size={14} />}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleSendReceipt(pmt._id, 'email')}
-                                                        disabled={sendingReceipt[`${pmt._id}-email`]}
-                                                        title="Send Email Receipt with PDF"
-                                                        className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100 disabled:opacity-50"
-                                                    >
-                                                        {sendingReceipt[`${pmt._id}-email`] ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </td>
-                                    </tr>
-                                );
-                            })
-                        )}
+                        ))}
                     </tbody>
-                    {!loading && groupedPayments.length > 0 && (
-                        <tfoot>
-                            <tr className="bg-slate-50 text-[11px] font-bold uppercase text-slate-800">
-                                <td className="px-3 py-2" colSpan="2">Total</td>
-                                <td className="whitespace-nowrap px-3 py-2 text-emerald-700">{formatCurrency(totalReceived)}</td>
-                                <td className="whitespace-nowrap px-3 py-2 text-orange-700">{formatCurrency(totalTds)}</td>
-                                <td className="px-3 py-2 text-slate-600" colSpan="4">
-                                    {totalPayments} payment{totalPayments === 1 ? '' : 's'} against {totalInvoices} invoice{totalInvoices === 1 ? '' : 's'}
-                                </td>
-                            </tr>
-                        </tfoot>
-                    )}
                 </table>
             </div>
 
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-                <div className="flex justify-between items-center mt-4 px-2">
-                    <span className="text-sm text-gray-500 font-medium">
-                        Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, groupedPayments.length)} of {groupedPayments.length} invoice entries
-                    </span>
-                    <div className="flex gap-1 bg-white border border-gray-200 rounded-md shadow-sm p-1">
-                        <button
-                            onClick={() => handlePageChange(currentPage - 1)}
-                            disabled={currentPage === 1}
-                            className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
-                        >
-                            Prev
-                        </button>
+            {/* Bottom Summary Bar */}
+            <div className="mt-3 bg-white border border-slate-200 rounded-xl shadow-sm p-3 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-6 overflow-x-auto w-full md:w-auto scrollbar-hide">
+                    <div className="font-black text-slate-800 text-[12px] whitespace-nowrap">Total Summary</div>
+                    
+                    <div className="flex flex-col border-l border-slate-200 pl-4 whitespace-nowrap">
+                        <span className="text-emerald-600 font-black text-[12px]">₹ 28,39,706.04</span>
+                        <span className="text-slate-500 text-[9px] font-bold mt-0.5">Total Invoice Value</span>
+                    </div>
 
-                        {Array.from({ length: totalPages }).map((_, idx) => {
-                            const pageNum = idx + 1;
-                            if (
-                                pageNum === 1 ||
-                                pageNum === totalPages ||
-                                (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
-                            ) {
-                                return (
-                                    <button
-                                        key={pageNum}
-                                        onClick={() => handlePageChange(pageNum)}
-                                        className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${currentPage === pageNum ? 'bg-[#194090] text-white' : 'text-gray-700 hover:bg-gray-100'}`}
-                                    >
-                                        {pageNum}
-                                    </button>
-                                );
-                            }
-                            if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
-                                return <span key={pageNum} className="px-2 py-1.5 text-gray-400">...</span>;
-                            }
-                            return null;
-                        })}
+                    <div className="flex flex-col border-l border-slate-200 pl-4 whitespace-nowrap">
+                        <span className="text-emerald-600 font-black text-[12px]">₹ 20,03,230.04</span>
+                        <span className="text-slate-500 text-[9px] font-bold mt-0.5">Total Received</span>
+                    </div>
 
-                        <button
-                            onClick={() => handlePageChange(currentPage + 1)}
-                            disabled={currentPage === totalPages}
-                            className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
-                        >
-                            Next
-                        </button>
+                    <div className="flex flex-col border-l border-slate-200 pl-4 whitespace-nowrap">
+                        <span className="text-orange-500 font-black text-[12px]">₹ 7,139.04</span>
+                        <span className="text-slate-500 text-[9px] font-bold mt-0.5">Total TDS Deducted</span>
+                    </div>
+
+                    <div className="flex flex-col border-l border-slate-200 pl-4 whitespace-nowrap">
+                        <span className="text-emerald-600 font-black text-[12px]">₹ 19,96,091.00</span>
+                        <span className="text-slate-500 text-[9px] font-bold mt-0.5">Net Amount Received</span>
+                    </div>
+
+                    <div className="flex flex-col border-l border-slate-200 pl-4 whitespace-nowrap">
+                        <span className="text-slate-800 font-black text-[12px]">₹ 6,80,550.00</span>
+                        <span className="text-slate-500 text-[9px] font-bold mt-0.5">Total Outstanding</span>
+                    </div>
+
+                    <div className="flex flex-col border-l border-slate-200 pl-4 whitespace-nowrap">
+                        <span className="text-rose-600 font-black text-[12px]">₹ 38,120.00</span>
+                        <span className="text-slate-500 text-[9px] font-bold mt-0.5">Overdue Amount</span>
                     </div>
                 </div>
-            )}
+
+                <button className="flex items-center gap-1.5 px-4 py-2 border border-blue-200 bg-blue-50 text-blue-700 rounded-lg text-[11px] font-bold whitespace-nowrap hover:bg-blue-100 transition-colors shrink-0">
+                    <BarChart2 className="w-4 h-4" /> View Summary Report
+                </button>
+            </div>
+            
+            <div className="mt-4 flex items-center gap-1.5 text-[9px] font-medium text-slate-400">
+                <AlertCircle className="w-3.5 h-3.5" /> Amounts are inclusive of GST where applicable.
+            </div>
         </div>
     );
 };

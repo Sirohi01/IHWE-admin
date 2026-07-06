@@ -97,6 +97,20 @@ const CreateAccountDebitNote = () => {
     const invoices = useMemo(() => context?.invoices || [], [context]);
     const selectedInvoice = invoices.find((inv) => inv.id === selectedInvoiceId);
 
+    // Auto-fill Charge Details from the selected invoice's own line items, as a starting
+    // point the admin can edit — only when the items table is still untouched, so we
+    // never silently wipe out charges the admin has already started typing.
+    useEffect(() => {
+        if (readOnly || !selectedInvoice) return;
+        const isUntouched = items.length === 1 && !items[0].description.trim() && Number(items[0].amount) === 0;
+        if (!isUntouched) return;
+        if (selectedInvoice.items && selectedInvoice.items.length > 0) {
+            setItems(selectedInvoice.items.map((it) => ({ ...it, id: `${Date.now()}-${Math.random()}` })));
+            toast.success('Charge details pre-filled from the invoice — edit as needed');
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedInvoiceId]);
+
     const updateItem = (itemId, field, val) => {
         setItems((prev) => prev.map((item) => {
             if (item.id !== itemId) return item;
