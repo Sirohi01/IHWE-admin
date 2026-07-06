@@ -119,17 +119,26 @@ const CreditNotesView = () => {
                 const newDNs = dnRes.data?.data || dnRes.data || [];
 
                 // Normalize old credit notes to have common fields
-                const normalizedOld = (Array.isArray(oldCNs) ? oldCNs : []).map(n => ({
-                    ...n,
-                    _source: 'creditnote',
-                    debit_note_no: n.debit_note_no || n.create_note_no || n.est_no,
-                    debit_note_date: n.debit_note_date || n.credit_note_date || n.created_at,
-                    toInvoiceNo: n.toInvoiceNo || n.reference_invoice_no || n.est_no,
-                    totalAmount: n.totalAmount || n.total_value || 0,
-                    type: n.type || n.credit_note_type || 'Credit Note',
-                    reason: n.reason || n.remarks || '',
-                    clientName: n.clientName || '',
-                }));
+                const normalizedOld = (Array.isArray(oldCNs) ? oldCNs : []).map(n => {
+                    // Calculate total from items if total_value is 0 or missing
+                    const itemsTotal = (n.items || []).reduce((sum, item) => {
+                        const qty = parseFloat(item.quantity || item.qty || 1);
+                        const amt = parseFloat(item.cn_amount || item.rate || item.amount || 0);
+                        return sum + (qty * amt);
+                    }, 0);
+                    const total = n.totalAmount || n.total_value || itemsTotal || 0;
+                    return {
+                        ...n,
+                        _source: 'creditnote',
+                        debit_note_no: n.debit_note_no || n.create_note_no || n.est_no,
+                        debit_note_date: n.debit_note_date || n.credit_note_date || n.created_at,
+                        toInvoiceNo: n.toInvoiceNo || n.reference_invoice_no || n.est_no,
+                        totalAmount: total,
+                        type: n.type || n.credit_note_type || 'Credit Note',
+                        reason: n.reason || n.remarks || '',
+                        clientName: n.clientName || '',
+                    };
+                });
 
                 // Normalize new debit notes
                 const normalizedNew = (Array.isArray(newDNs) ? newDNs : []).map(n => ({
@@ -413,7 +422,7 @@ const CreditNotesView = () => {
                         {/* Main Table */}
                         <div className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden">
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse whitespace-nowrap">
+                                <table className="w-full text-left border-collapse">
                                     <thead>
                                         <tr className="border-b border-gray-100">
                                             <th className="py-3 px-4 text-[9px] font-semibold text-slate-400 uppercase tracking-wider w-10 text-center">S.NO.</th>
