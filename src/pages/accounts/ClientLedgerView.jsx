@@ -95,12 +95,21 @@ function StatCard({ icon, iconBg, rawValue, displayValue, label, subLabel, botto
     );
 }
 
+const statusBadgeStyle = (status) => {
+    const s = (status || '').toLowerCase();
+    if (s.includes('won') || s.includes('active') || s.includes('confirmed') || s.includes('paid')) return 'bg-emerald-50 text-emerald-600';
+    if (s.includes('lost') || s.includes('rejected') || s.includes('fail')) return 'bg-rose-50 text-rose-600';
+    if (s.includes('pending') || s.includes('lead')) return 'bg-amber-50 text-amber-600';
+    return 'bg-slate-100 text-slate-500';
+};
+
 // Client picker shown when no specific company id is provided (entry point from the sidebar)
 const ClientPicker = () => {
     const navigate = useNavigate();
     const [companies, setCompanies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
 
     useEffect(() => {
         const fetchCompanies = async () => {
@@ -117,69 +126,118 @@ const ClientPicker = () => {
         fetchCompanies();
     }, []);
 
+    const statusOptions = [...new Set(companies.map((c) => c.companyStatus).filter(Boolean))];
+
     const filtered = companies.filter((c) => {
+        if (statusFilter && c.companyStatus !== statusFilter) return false;
         if (!search) return true;
         const q = search.toLowerCase();
-        return (c.companyName || c.name || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q);
+        return (
+            (c.companyName || c.name || '').toLowerCase().includes(q) ||
+            (c.email || '').toLowerCase().includes(q) ||
+            (c.city || '').toLowerCase().includes(q)
+        );
     });
 
     return (
         <div className="min-h-screen bg-slate-50 px-4 py-2 font-sans text-slate-800">
-            <div className="mb-1">
-                <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Client Ledger</h1>
-                <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 font-medium">
-                    <span>Accounts Receivable (AR)</span>
-                    <ChevronRight className="w-3 h-3" />
-                    <span className="text-blue-600 font-bold">Client Ledger</span>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-1 gap-4">
+                <div>
+                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Client Ledger</h1>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 font-medium">
+                        <span>Accounts Receivable (AR)</span>
+                        <ChevronRight className="w-3 h-3" />
+                        <span className="text-blue-600 font-bold">Client Ledger</span>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm">
+                    <Building2 className="w-4 h-4 text-slate-500" />
+                    {companies.length} Client{companies.length === 1 ? '' : 's'}
                 </div>
             </div>
 
-            <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm mt-3 mb-3">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Search Clients</label>
-                <div className="relative max-w-md">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search by client name or email..."
-                        className="pl-9 pr-3 py-2 border border-slate-300 rounded-md text-[12px] w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
+            <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm mt-3 mb-3 flex flex-col sm:flex-row gap-2 sm:items-end">
+                <div className="flex-1">
+                    <label className="block text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-1.5">Search Clients</label>
+                    <div className="relative">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Search by client name, email, or city..."
+                            className="pl-9 pr-3 py-2 border border-slate-300 rounded-md text-[12px] w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                    </div>
                 </div>
+                {statusOptions.length > 0 && (
+                    <div className="sm:w-48">
+                        <label className="block text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-1.5">Status</label>
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="border border-slate-300 rounded-md px-3 py-2 text-[12px] font-medium text-slate-700 focus:outline-none bg-white w-full"
+                        >
+                            <option value="">All Statuses</option>
+                            {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                    </div>
+                )}
             </div>
 
             {loading ? (
-                <div className="flex items-center gap-2 text-slate-500 text-sm justify-center py-20">
-                    <Loader2 className="w-5 h-5 animate-spin" /> Loading clients...
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-6">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                        <div key={i} className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm animate-pulse">
+                            <div className="flex items-center gap-2.5 mb-3">
+                                <div className="w-9 h-9 rounded-full bg-slate-100 shrink-0"></div>
+                                <div className="flex-1 space-y-1.5">
+                                    <div className="h-2.5 bg-slate-100 rounded w-3/4"></div>
+                                    <div className="h-2 bg-slate-100 rounded w-1/2"></div>
+                                </div>
+                            </div>
+                            <div className="h-2 bg-slate-100 rounded w-full mt-3"></div>
+                        </div>
+                    ))}
                 </div>
             ) : filtered.length === 0 ? (
                 <div className="text-center text-slate-500 text-sm py-20">No clients found.</div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-6">
-                    {filtered.map((c) => (
-                        <button
-                            key={c._id}
-                            onClick={() => navigate(`/dashboard/account/client-ledger/${c._id}`)}
-                            className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm hover:shadow-md hover:border-blue-300 transition-all text-left group"
-                        >
-                            <div className="flex items-center gap-2.5 mb-2">
-                                <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center shrink-0 text-blue-600 font-bold text-xs">
-                                    {(c.companyName || c.name || '?').charAt(0).toUpperCase()}
+                <>
+                    <div className="text-[11px] font-medium text-slate-500 mb-2">
+                        Showing {filtered.length} of {companies.length} clients
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-6">
+                        {filtered.map((c) => (
+                            <button
+                                key={c._id}
+                                onClick={() => navigate(`/dashboard/account/client-ledger/${c._id}`)}
+                                className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm hover:shadow-md hover:border-blue-300 hover:-translate-y-0.5 transition-all text-left group"
+                            >
+                                <div className="flex items-start gap-2.5 mb-2">
+                                    <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center shrink-0 text-blue-600 font-bold text-xs">
+                                        {(c.companyName || c.name || '?').charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="text-[12px] font-semibold text-slate-800 truncate">{c.companyName || c.name || 'Unknown Client'}</div>
+                                        <div className="text-[9px] font-semibold text-slate-500 truncate">{c.city ? `${c.city}, ${c.state || ''}` : (c.category || 'N/A')}</div>
+                                    </div>
+                                    {c.companyStatus && (
+                                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded shrink-0 ${statusBadgeStyle(c.companyStatus)}`}>
+                                            {c.companyStatus}
+                                        </span>
+                                    )}
                                 </div>
-                                <div className="min-w-0">
-                                    <div className="text-[12px] font-semibold text-slate-800 truncate">{c.companyName || c.name || 'Unknown Client'}</div>
-                                    <div className="text-[8px] font-bold text-slate-400 uppercase tracking-wider truncate">{c.companyStatus || c.category || 'Client'}</div>
+                                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                                    <span className="text-[9px] font-semibold text-slate-500 truncate">{c.email || 'N/A'}</span>
+                                    <span className="text-[10px] font-bold text-blue-600 flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        View Ledger <ChevronRight className="w-3 h-3" />
+                                    </span>
                                 </div>
-                            </div>
-                            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                                <span className="text-[9px] font-semibold text-slate-500 truncate">{c.email || 'N/A'}</span>
-                                <span className="text-[10px] font-bold text-blue-600 flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    View <ChevronRight className="w-3 h-3" />
-                                </span>
-                            </div>
-                        </button>
-                    ))}
-                </div>
+                            </button>
+                        ))}
+                    </div>
+                </>
             )}
         </div>
     );
