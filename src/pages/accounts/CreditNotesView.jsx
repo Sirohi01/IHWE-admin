@@ -43,27 +43,31 @@ function useCountUp(target, duration = 1200) {
 function AnimatedStatCard({ icon, title, value, subText1, subText2, iconBg, valueColor, percentage }) {
     const { ref, count } = useCountUp(typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]+/g, "")) : value);
     return (
-        <div ref={ref} className="bg-white p-4 rounded border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
-            <div className="flex justify-between items-start mb-3">
-                <div className={`w-8 h-8 ${iconBg} rounded flex items-center justify-center`}>
-                    {icon}
-                </div>
-                {percentage && (
-                    <div className="text-[10px] font-bold text-emerald-600">
-                        {percentage}
+        <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white to-slate-50/50 px-4 py-3 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden h-full flex flex-col justify-between`}>
+            <div className="relative z-10 flex flex-col h-full">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className={`w-10 h-10 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
+                        {icon}
                     </div>
-                )}
-            </div>
-            <div className="text-[11px] font-medium text-slate-600 mb-0.5 leading-tight">{title}</div>
-            <div className={`text-lg font-bold mb-3 ${valueColor || 'text-slate-800'}`}>
-                {typeof value === 'string' && value.startsWith('₹') ? '₹ ' : ''}
-                {typeof value === 'string' && value.includes('.')
-                    ? new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(count)
-                    : new Intl.NumberFormat('en-IN').format(Math.round(count))}
-            </div>
-            <div className="flex justify-between items-end mt-auto pt-2 text-[10px]">
-                <div className="text-slate-500">{subText1}</div>
-                <div className="text-right text-slate-500">{subText2}</div>
+                    <div className="flex flex-col flex-1">
+                        <div className="flex justify-between items-center w-full">
+                            <span style={{ fontSize: '1.15rem', fontWeight: 800, color: valueColor || '#0f172a', lineHeight: 1, marginBottom: '2px', display: 'block', fontFamily: 'Inter, sans-serif' }}>
+                                {typeof value === 'string' && value.startsWith('₹') ? '₹ ' : ''}
+                                {typeof value === 'string' && value.includes('.')
+                                    ? new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(count)
+                                    : new Intl.NumberFormat('en-IN').format(Math.round(count))}
+                            </span>
+                            {percentage && (
+                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">{percentage}</span>
+                            )}
+                        </div>
+                        <span style={{ fontSize: '10px', fontWeight: 700, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif' }}>{title}</span>
+                    </div>
+                </div>
+                <div className="flex justify-between items-center mt-auto pt-2 border-t border-gray-100/60">
+                    <div className="text-[10px] font-medium text-slate-500 whitespace-nowrap overflow-hidden text-ellipsis mr-2">{subText1}</div>
+                    <div className="text-[10px] font-medium text-slate-800 whitespace-nowrap text-right shrink-0">{subText2}</div>
+                </div>
             </div>
         </div>
     );
@@ -266,14 +270,14 @@ const CreditNotesView = () => {
                     <div className="flex-1 space-y-4 min-w-0">
 
                         {/* Stat Cards Row */}
-                        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+                        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2">
                             <AnimatedStatCard
                                 icon={<FileText className="w-4 h-4 text-blue-500" />}
                                 iconBg="bg-blue-50 text-blue-500"
                                 title="Total Credit Notes"
                                 value={totalNotes.toString()}
                                 subText1={`Against ${totalNotes} Invoices`}
-                                subText2={<>Total Value<br /><span className="text-[10px] text-slate-800 font-medium">₹ {formatCurrency(totalValue)}</span></>}
+                                subText2={`₹ ${formatCurrency(totalValue)}`}
                             />
                             <AnimatedStatCard
                                 icon={<CheckCircle2 className="w-4 h-4 text-emerald-500" />}
@@ -533,7 +537,7 @@ const CreditNotesView = () => {
                     </div>
 
                     {/* Right Sidebar */}
-                    <div className="w-full xl:w-72 shrink-0 space-y-4">
+                    <div className="w-full xl:w-72 shrink-0 space-y-4 sticky top-4">
 
                         {/* Summary Widget */}
                         <div className="bg-white rounded shadow-sm border border-gray-100 p-4">
