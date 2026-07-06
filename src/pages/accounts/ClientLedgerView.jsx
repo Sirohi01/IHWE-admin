@@ -196,6 +196,8 @@ const ClientLedgerView = () => {
     const [dateFilter, setDateFilter] = useState('');
     const [downloadingStatement, setDownloadingStatement] = useState(false);
     const [exporting, setExporting] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     useEffect(() => {
         if (id === 'all') return;
@@ -310,6 +312,10 @@ const ClientLedgerView = () => {
         const s = searchInput.toLowerCase();
         return (row.documentNo || '').toLowerCase().includes(s) || (row.reference || '').toLowerCase().includes(s);
     });
+    const totalPages = Math.ceil(filteredLedger.length / itemsPerPage);
+    const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+    const indexOfLastItem = indexOfFirstItem + itemsPerPage;
+    const paginatedLedger = filteredLedger.slice(indexOfFirstItem, indexOfLastItem);
 
     const chips = [
         { key: 'All', label: 'All Transactions', count: fullLedger.length, total: null },
@@ -514,12 +520,12 @@ const ClientLedgerView = () => {
                         </div>
 
                         {/* Transaction type chips */}
-                        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide border-t border-slate-100 pt-2">
+                        <div className="flex items-center gap-1.5 flex-nowrap border-t border-slate-100 pt-2">
                             {chips.map((chip) => (
                                 <button
                                     key={chip.key}
-                                    onClick={() => setTypeFilter(chip.key)}
-                                    className={`flex flex-col items-start px-3 py-1.5 rounded-md border text-left transition-colors shrink-0 whitespace-nowrap ${typeFilter === chip.key ? 'border-blue-500 bg-blue-50' : 'border-slate-300 bg-white hover:bg-slate-50'}`}
+                                    onClick={() => { setTypeFilter(chip.key); setCurrentPage(1); }}
+                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-left transition-colors shrink-0 whitespace-nowrap min-w-0 ${typeFilter === chip.key ? 'border-blue-500 bg-blue-50' : 'border-slate-300 bg-white hover:bg-slate-50'}`}
                                 >
                                     <span className="text-[10px] font-bold text-slate-700">{chip.label} <span className="text-slate-400 font-medium">{chip.count}</span></span>
                                     {chip.total !== null && <span className="text-[9px] font-semibold text-slate-500">₹ {formatCurrency(chip.total)}</span>}
