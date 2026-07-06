@@ -404,10 +404,10 @@ const ClientLedgerView = () => {
                             <div className="text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-0.5 flex items-center gap-1"><BadgeCheck className="w-2.5 h-2.5" /> GST No.</div>
                             <div className="text-[11px] font-semibold text-slate-700">{companyInfo.gstNo}</div>
                         </div>
-                        <div>
+                        {/* <div>
                             <div className="text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-0.5">PAN</div>
                             <div className="text-[11px] font-semibold text-slate-700">{companyInfo.panNo}</div>
-                        </div>
+                        </div> */}
                         <div>
                             <div className="text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-0.5 flex items-center gap-1"><MapPin className="w-2.5 h-2.5" /> State</div>
                             <div className="text-[11px] font-semibold text-slate-700">{companyInfo.state}</div>
