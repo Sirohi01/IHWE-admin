@@ -265,27 +265,27 @@ const CreateAccountDebitNote = () => {
             </div>
 
             {/* Exhibitor Info Bar */}
-            <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm flex flex-wrap items-center gap-x-8 gap-y-2 mb-2">
-                <div>
+            <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm flex flex-wrap items-center justify-between gap-x-6 gap-y-2 mb-2">
+                <div className="min-w-0">
                     <div className="text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-0.5">Exhibitor</div>
-                    <div className="font-semibold text-slate-800 text-[13px]">{context.companyInfo.name}</div>
-                    <div className="text-[10px] font-semibold text-slate-500">Stall No. {context.companyInfo.stallNo} · {context.companyInfo.stallSize} Sq. Mtr. · IHWE 2026</div>
+                    <div className="font-semibold text-slate-800 text-[13px] truncate">{context.companyInfo.name}</div>
+                    <div className="text-[10px] font-semibold text-slate-500 whitespace-nowrap">Stall No. {context.companyInfo.stallNo} · {context.companyInfo.stallSize} Sq. Mtr. · IHWE 2026</div>
                 </div>
-                <div>
+                <div className="shrink-0">
                     <div className="text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-0.5">Total Payable</div>
-                    <div className="font-semibold text-slate-800 text-[15px]">₹ {formatCurrency(context.totalPayable)}</div>
+                    <div className="font-semibold text-slate-800 text-[15px] whitespace-nowrap">₹ {formatCurrency(context.totalPayable)}</div>
                 </div>
-                <div>
+                <div className="shrink-0">
                     <div className="text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-0.5">Total Received</div>
-                    <div className="font-semibold text-emerald-600 text-[15px]">₹ {formatCurrency(context.totalReceived)}</div>
+                    <div className="font-semibold text-emerald-600 text-[15px] whitespace-nowrap">₹ {formatCurrency(context.totalReceived)}</div>
                 </div>
-                <div>
+                <div className="shrink-0">
                     <div className="text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-0.5">Outstanding</div>
-                    <div className="font-semibold text-rose-500 text-[15px]">₹ {formatCurrency(context.outstanding)}</div>
+                    <div className="font-semibold text-rose-500 text-[15px] whitespace-nowrap">₹ {formatCurrency(context.outstanding)}</div>
                 </div>
-                <div>
+                <div className="shrink-0">
                     <div className="text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-0.5">Account Status</div>
-                    <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-600">{context.accountStatus}</span>
+                    <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-600 whitespace-nowrap">{context.accountStatus}</span>
                 </div>
             </div>
 
