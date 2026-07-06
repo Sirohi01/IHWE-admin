@@ -45,11 +45,10 @@ const AccountNavigation = ({ id, accountName, pageName }) => {
             <button
               key={idx}
               onClick={() => navigate(item.path)}
-              className={`flex shrink-0 items-center gap-1 px-1.5 py-0.5 text-[11px] font-semibold rounded transition-all duration-200 ${
-                isActive
+              className={`flex shrink-0 items-center gap-1 px-1.5 py-0.5 text-[11px] font-semibold rounded transition-all duration-200 ${isActive
                   ? 'bg-[#194090] text-white shadow-sm'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-[#194090] border border-transparent hover:border-gray-200'
-              }`}
+                }`}
             >
               {item.icon}
               {item.label}

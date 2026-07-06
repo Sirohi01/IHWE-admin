@@ -780,6 +780,7 @@ export const menuItems = [
       { label: "Payments", path: "/accounts/payments" },
       { label: "Accounts Receivable", path: "/accounts/ar" },
       { label: "Invoices", path: "/accounts/invoices" },
+      { label: "Credit Notes", path: "/accounts/credit-notes" },
       { label: "Bank Details", path: "/accounts/bank-details" },
       {
         type: "dropdown",
