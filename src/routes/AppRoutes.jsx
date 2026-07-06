@@ -286,6 +286,7 @@ const CreateInvoicePage = lazy(() => import("../pages/CreateInvoice"));
 const BankDetailsManage = lazy(() => import("../pages/accounts/BankDetailsManage"));
 const PaymentsView = lazy(() => import("../pages/accounts/PaymentsView"));
 const AccountsReceivableView = lazy(() => import("../pages/accounts/AccountsReceivableView"));
+const PaymentsSummaryReport = lazy(() => import("../pages/accounts/PaymentsSummaryReport"));
 const InvoicesView = lazy(() => import("../pages/accounts/InvoicesView"));
 // Sales Tools
 const SalesTools = lazy(() => import("../pages/sales_tools/SalesTools"));
@@ -711,6 +712,7 @@ export default function AppRoutes() {
             <Route path="accounts/bank-details" element={<BankDetailsManage />} />
             <Route path="accounts/payments" element={<PaymentsView />} />
             <Route path="accounts/ar" element={<AccountsReceivableView />} />
+            <Route path="accounts/summary-report" element={<PaymentsSummaryReport />} />
             <Route path="accounts/invoices" element={<InvoicesView />} />
             <Route path="/client-overview/:id" element={<ClientOverview1 />} />
             <Route path="/client-contacts/:id" element={<ClientContacts />} />

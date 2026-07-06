@@ -4,6 +4,8 @@ import { ChevronRight, MessageCircleMore, Mail, FileText, Users, DollarSign, Cre
 import api, { SERVER_URL } from '../../lib/api';
 import Swal from 'sweetalert2';
 import toast from 'react-hot-toast';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 import AccountNavigation from '../../components/AccountNavigation';
 function useCountUp(target, duration = 1200) {
     const [count, setCount] = useState(0);
@@ -170,6 +172,88 @@ const PaymentList = () => {
 
     const openReceipt = (pmt) => {
         window.open(`${SERVER_URL}/api/payments/${pmt._id}/receipt`, '_blank', 'noopener,noreferrer');
+    };
+
+    const exportToExcel = async () => {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Payments');
+
+        // Define columns
+        worksheet.columns = [
+            { header: 'S.No.', key: 'sno', width: 8 },
+            { header: 'Invoice No', key: 'invoice_no', width: 20 },
+            { header: 'Received Amount', key: 'received', width: 20 },
+            { header: 'TDS Deducted', key: 'tds', width: 20 },
+            { header: 'Payment Mode', key: 'mode', width: 18 },
+            { header: 'Bank', key: 'bank', width: 20 },
+            { header: 'UTR / Ref No', key: 'utr', width: 25 },
+            { header: 'Payment Date', key: 'date', width: 18 },
+            { header: 'Status', key: 'status', width: 15 },
+            { header: 'Created By', key: 'created_by', width: 15 },
+            { header: 'Created Date', key: 'created_date', width: 18 }
+        ];
+
+        // Style the header row
+        const headerRow = worksheet.getRow(1);
+        headerRow.font = { name: 'Arial', family: 4, size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+        headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
+        headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+        headerRow.height = 25;
+
+        // Add Data
+        filteredPayments.forEach((pmt, index) => {
+            const row = worksheet.addRow({
+                sno: index + 1,
+                invoice_no: pmt.invoice_no || pmt.invoice_id || 'N/A',
+                received: Number(pmt.amount_text || 0),
+                tds: Number(pmt.tds_text || 0),
+                mode: pmt.payment_mode || 'N/A',
+                bank: pmt.bankId || 'N/A',
+                utr: pmt.utr_no || 'N/A',
+                date: formatDate(pmt.payment_date || pmt.added),
+                status: String(pmt.status || 'Completed').toLowerCase() === 'completed' || pmt.status === '1' ? 'Completed' : (String(pmt.status).toLowerCase() === 'overdue' ? 'Overdue' : 'Partially Paid'),
+                created_by: pmt.added_by || 'Admin',
+                created_date: formatDate(pmt.added)
+            });
+
+            // Center alignment for specific columns
+            row.getCell('sno').alignment = { horizontal: 'center', vertical: 'middle' };
+            row.getCell('status').alignment = { horizontal: 'center', vertical: 'middle' };
+            row.getCell('date').alignment = { horizontal: 'center', vertical: 'middle' };
+
+            // Currency formatting for amount columns
+            row.getCell('received').numFmt = '₹#,##0.00';
+            row.getCell('tds').numFmt = '₹#,##0.00';
+            
+            // Color code status
+            const statusCell = row.getCell('status');
+            const statusValue = statusCell.value;
+            if (statusValue === 'Completed') {
+                statusCell.font = { color: { argb: 'FF059669' }, bold: true };
+            } else if (statusValue === 'Overdue') {
+                statusCell.font = { color: { argb: 'FFDC2626' }, bold: true };
+            } else {
+                statusCell.font = { color: { argb: 'FFD97706' }, bold: true };
+            }
+
+            row.height = 22;
+            row.alignment = { vertical: 'middle' };
+        });
+
+        // Add borders to all cells
+        worksheet.eachRow((row) => {
+            row.eachCell((cell) => {
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFD4D4D8' } },
+                    left: { style: 'thin', color: { argb: 'FFD4D4D8' } },
+                    bottom: { style: 'thin', color: { argb: 'FFD4D4D8' } },
+                    right: { style: 'thin', color: { argb: 'FFD4D4D8' } }
+                };
+            });
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        saveAs(new Blob([buffer]), 'Payments_Export.xlsx');
     };
 
     const filteredPayments = payments.filter(pmt => {
@@ -440,8 +524,11 @@ return (
                     <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
             </div>
-            <div className="shrink-0 pl-3 border-l border-slate-200 ml-3">
-                <button className="flex items-center gap-2 text-blue-600 bg-white border border-slate-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-50 shadow-sm transition-colors">
+            <div className="shrink-0 pl-3 border-l border-slate-200 ml-3 flex gap-2">
+                <button 
+                    onClick={exportToExcel}
+                    className="flex items-center gap-2 text-blue-600 bg-white border border-slate-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-50 shadow-sm transition-colors"
+                >
                     <Download className="w-4 h-4" />
                     Export
                 </button>
@@ -630,7 +717,10 @@ return (
                     <div className="text-[10px] text-slate-500 font-bold mt-0.5">Total Transactions</div>
                 </td>
                 <td className="px-4 py-4 text-right">
-                    <button className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-blue-600 rounded-md text-[11px] font-bold border border-blue-200 hover:bg-blue-50 transition-colors">
+                    <button 
+                        onClick={() => navigate('/accounts/summary-report')}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-indigo-600 rounded-md text-[11px] font-bold border border-indigo-200 hover:bg-indigo-50 transition-colors"
+                    >
                         <FileText className="w-4 h-4" /> View Summary Report
                     </button>
                 </td>
