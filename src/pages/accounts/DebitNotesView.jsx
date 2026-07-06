@@ -8,6 +8,7 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import api from '../../lib/api';
 import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 import Select from 'react-select';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
@@ -91,6 +92,13 @@ const STATUS_DOT = {
 };
 const PIE_COLORS = { Adjusted: '#059669', 'Partially Adjusted': '#f59e0b', Outstanding: '#e11d48' };
 
+const DOC_STATUS_LABELS = { draft: 'Draft', active: 'Active', cancelled: 'Cancelled' };
+const DOC_STATUS_STYLES = {
+    draft: 'bg-blue-50 text-blue-600',
+    active: 'bg-emerald-50 text-emerald-600',
+    cancelled: 'bg-rose-50 text-rose-600',
+};
+
 const formatCurrency = (val) => new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val || 0);
 const formatDate = (val) => {
     if (!val) return 'N/A';
@@ -121,6 +129,7 @@ const DebitNotesView = () => {
     const [selectedCompanyId, setSelectedCompanyId] = useState('');
     const [loadingCompanies, setLoadingCompanies] = useState(false);
     const [exporting, setExporting] = useState(false);
+    const [statusUpdatingId, setStatusUpdatingId] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -164,6 +173,41 @@ const DebitNotesView = () => {
             return;
         }
         navigate(`/create-account-debit-note/${selectedCompanyId}`);
+    };
+
+    const handleStatusChange = async (note, newStatus) => {
+        if (newStatus === 'cancelled') {
+            const result = await Swal.fire({
+                title: 'Cancel this debit note?',
+                text: `${note.debit_note_no} will be marked as cancelled. This can be reversed later if needed.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, Cancel It',
+            });
+            if (!result.isConfirmed) return;
+        }
+
+        setStatusUpdatingId(note._id);
+        try {
+            const res = await api.put(`/api/account-debit-notes/${note._id}`, { status: newStatus });
+            if (res.data?.success) {
+                setDebitNotes((prev) => prev.map((n) => n._id === note._id ? { ...n, status: newStatus } : n));
+                Swal.fire({
+                    icon: 'success',
+                    title: newStatus === 'cancelled' ? 'Debit Note Cancelled' : newStatus === 'active' && note.status === 'cancelled' ? 'Debit Note Reactivated' : 'Debit Note Activated',
+                    timer: 1400,
+                    showConfirmButton: false,
+                });
+            } else {
+                Swal.fire({ icon: 'error', title: 'Could Not Update', text: res.data?.message || 'Failed to update status.' });
+            }
+        } catch (err) {
+            Swal.fire({ icon: 'error', title: 'Could Not Update', text: err.response?.data?.message || 'Failed to update status.' });
+        } finally {
+            setStatusUpdatingId('');
+        }
     };
 
     const exportToExcel = async (rows, filename) => {
@@ -458,7 +502,10 @@ const DebitNotesView = () => {
                                         <tr key={note._id || idx} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
                                             <td className="px-2 py-2 font-bold text-slate-700 text-center align-top">{indexOfFirstItem + idx + 1}</td>
                                             <td className="px-2 py-2 align-top">
-                                                <div className="font-bold text-slate-800 text-[11px]">{note.debit_note_no}</div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <div className="font-bold text-slate-800 text-[11px]">{note.debit_note_no}</div>
+                                                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${DOC_STATUS_STYLES[note.status] || 'bg-slate-100 text-slate-500'}`}>{DOC_STATUS_LABELS[note.status] || note.status}</span>
+                                                </div>
                                                 <div className="text-slate-500 mt-0.5 text-[10px] font-medium">Debit Note Date: {formatDate(note.debit_note_date || note.added)}</div>
                                                 <button onClick={() => navigate(`/create-account-debit-note/${note.companyId}?view=${note._id}`)} className="text-blue-600 font-bold mt-1 text-[10px] cursor-pointer">View Details ˅</button>
                                             </td>
@@ -498,7 +545,26 @@ const DebitNotesView = () => {
                                                 <div className="flex items-center justify-center gap-1.5">
                                                     <button onClick={() => navigate(`/create-account-debit-note/${note.companyId}?view=${note._id}`)} title="View" className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors"><Eye className="w-3.5 h-3.5" /></button>
                                                     <button title="Download" className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors"><Download className="w-3.5 h-3.5" /></button>
-                                                    <button title="More" className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors"><MoreVertical className="w-3 h-3" /></button>
+                                                    <div className="relative group">
+                                                        <button title="More" className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors"><MoreVertical className="w-3 h-3" /></button>
+                                                        <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 flex flex-col py-1">
+                                                            {note.status === 'draft' && (
+                                                                <button onClick={() => handleStatusChange(note, 'active')} disabled={statusUpdatingId === note._id} className="flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-slate-700 hover:bg-slate-50 hover:text-emerald-600 transition-colors w-full text-left disabled:opacity-50">
+                                                                    <CheckCircle2 className="w-3.5 h-3.5" /> Activate Debit Note
+                                                                </button>
+                                                            )}
+                                                            {note.status !== 'cancelled' && (
+                                                                <button onClick={() => handleStatusChange(note, 'cancelled')} disabled={statusUpdatingId === note._id} className="flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-slate-700 hover:bg-slate-50 hover:text-rose-600 transition-colors w-full text-left disabled:opacity-50">
+                                                                    <AlertTriangle className="w-3.5 h-3.5" /> Cancel Debit Note
+                                                                </button>
+                                                            )}
+                                                            {note.status === 'cancelled' && (
+                                                                <button onClick={() => handleStatusChange(note, 'active')} disabled={statusUpdatingId === note._id} className="flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-slate-700 hover:bg-slate-50 hover:text-emerald-600 transition-colors w-full text-left disabled:opacity-50">
+                                                                    <CheckCircle2 className="w-3.5 h-3.5" /> Reactivate Debit Note
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </td>
                                         </tr>
@@ -534,32 +600,37 @@ const DebitNotesView = () => {
                     </div>
 
                     {/* Footer Totals */}
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-2 px-3 flex items-center justify-between overflow-x-auto mt-2">
-                        <div className="flex items-center flex-1 divide-x divide-slate-200 min-w-max">
-                            <div className="pr-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">Total Debit Note Value</div>
-                                <div className="font-bold text-slate-800 mt-0.5 text-[11px]">₹ {formatCurrency(totalValue)}</div>
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex items-center overflow-x-auto mt-3">
+                        <div className="flex items-center gap-8 min-w-max w-full justify-between px-2">
+                            <div className="flex flex-col items-center">
+                                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Debit Note Value</div>
+                                <div className="font-black text-slate-800 mt-1 text-sm md:text-base">₹ {formatCurrency(totalValue)}</div>
                             </div>
-                            <div className="px-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">Total Raised</div>
-                                <div className="font-bold text-slate-800 mt-0.5 text-[11px]">₹ {formatCurrency(totalValue)}</div>
+                            <div className="w-px h-10 bg-slate-200"></div>
+                            <div className="flex flex-col items-center">
+                                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Raised</div>
+                                <div className="font-black text-slate-800 mt-1 text-sm md:text-base">₹ {formatCurrency(totalValue)}</div>
                             </div>
-                            <div className="px-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">Total Adjusted</div>
-                                <div className="font-bold text-slate-800 mt-0.5 text-[11px]">₹ {formatCurrency(totalAdjusted)} <span className="text-emerald-500">({adjustedPct}%)</span></div>
+                            <div className="w-px h-10 bg-slate-200"></div>
+                            <div className="flex flex-col items-center">
+                                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Adjusted</div>
+                                <div className="font-black text-slate-800 mt-1 text-sm md:text-base">₹ {formatCurrency(totalAdjusted)} <span className="text-emerald-500 text-sm">({adjustedPct}%)</span></div>
                             </div>
-                            <div className="px-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">Total Outstanding</div>
-                                <div className="font-bold text-rose-500 mt-0.5 text-[11px]">₹ {formatCurrency(totalOutstanding)}</div>
-                                <div className="text-[9px] text-slate-400">{filteredNotes.filter(n => n.outstandingAmount > 0).length} Debit Notes</div>
+                            <div className="w-px h-10 bg-slate-200"></div>
+                            <div className="flex flex-col items-center">
+                                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Outstanding</div>
+                                <div className="font-black text-rose-600 mt-1 text-sm md:text-base">₹ {formatCurrency(totalOutstanding)}</div>
+                                <div className="text-[10px] font-bold text-slate-400 mt-0.5">{filteredNotes.filter(n => n.outstandingAmount > 0).length} Debit Notes</div>
                             </div>
-                            <div className="px-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">Total Invoices Affected</div>
-                                <div className="font-bold text-slate-800 mt-0.5 text-[11px]">{uniqueInvoices}</div>
+                            <div className="w-px h-10 bg-slate-200"></div>
+                            <div className="flex flex-col items-center">
+                                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Invoices Affected</div>
+                                <div className="font-black text-slate-800 mt-1 text-sm md:text-base">{uniqueInvoices}</div>
                             </div>
-                            <div className="pl-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">Average Debit Note Age</div>
-                                <div className="font-bold text-slate-800 mt-0.5 text-[11px]">{avgAgeDays} Days</div>
+                            <div className="w-px h-10 bg-slate-200"></div>
+                            <div className="flex flex-col items-center">
+                                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Average Debit Note Age</div>
+                                <div className="font-black text-slate-800 mt-1 text-sm md:text-base">{avgAgeDays} Days</div>
                             </div>
                         </div>
                     </div>
