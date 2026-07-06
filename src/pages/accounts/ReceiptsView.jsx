@@ -557,7 +557,7 @@ const ReceiptsView = () => {
                         {/* Filters Row */}
                         <div className="bg-white p-3 py-1 rounded-lg border border-slate-200 shadow-sm flex flex-col gap-3">
                             <div className="flex flex-col gap-3">
-                                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide w-full">
+                                <div className="flex items-center gap-2 flex-wrap w-full">
                                     <div className="relative shrink-0">
                                         <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                                         <input
@@ -565,28 +565,28 @@ const ReceiptsView = () => {
                                             value={searchInput}
                                             onChange={(e) => { setSearchInput(e.target.value); setCurrentPage(1); }}
                                             placeholder="Search by receipt no., invoice no., client name, UTR, cheque no..."
-                                            className="pl-9 pr-3 py-1.5 border border-slate-300 rounded-md text-[11px] w-[300px] focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-slate-400"
+                                            className="pl-9 pr-3 py-1.5 border border-slate-300 rounded-md text-[11px] w-[210px] focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-slate-400"
                                         />
                                     </div>
-                                    <select value={filterDate} onChange={(e) => { setFilterDate(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white">
+                                    <select value={filterDate} onChange={(e) => { setFilterDate(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white w-[120px]">
                                         <option value="">Date Range</option>
                                         <option value="today">Today</option>
                                         <option value="this_week">This Week</option>
                                         <option value="this_month">This Month</option>
                                     </select>
-                                    <select value={filterMode} onChange={(e) => { setFilterMode(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white">
+                                    <select value={filterMode} onChange={(e) => { setFilterMode(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white w-[145px]">
                                         <option value="">Payment Mode</option>
                                         {uniqueModes.map(m => <option key={m} value={m}>{m}</option>)}
                                     </select>
-                                    <select value={filterBank} onChange={(e) => { setFilterBank(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white">
+                                    <select value={filterBank} onChange={(e) => { setFilterBank(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white w-[135px]">
                                         <option value="">Bank</option>
                                         {uniqueBanks.map(b => <option key={b} value={b}>{b}</option>)}
                                     </select>
-                                    <select value={filterType} onChange={(e) => { setFilterType(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white">
+                                    <select value={filterType} onChange={(e) => { setFilterType(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white w-[145px]">
                                         <option value="">Payment Type</option>
                                         {uniqueTypes.map(t => <option key={t} value={t}>{t}</option>)}
                                     </select>
-                                    <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white">
+                                    <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white w-[105px]">
                                         <option value="">Status</option>
                                         <option value="Confirmed">Confirmed</option>
                                         <option value="Running">Running</option>
