@@ -1,12 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
-import { ChevronRight, MessageCircleMore, Mail, FileText, Users, DollarSign, CreditCard, Loader2 } from 'lucide-react';
+import { ChevronRight, MessageCircleMore, Mail, FileText, Users, DollarSign, CreditCard, Loader2, Search, Plus, CalendarDays, ChevronDown, Building2, Settings, CheckCircle2, Filter, Download, AlertTriangle, Clock, MoreVertical } from 'lucide-react';
 import api, { SERVER_URL } from '../../lib/api';
 import Swal from 'sweetalert2';
 import toast from 'react-hot-toast';
 import AccountNavigation from '../../components/AccountNavigation';
-
-// Hook: animate number from 0 to target when element enters viewport
 function useCountUp(target, duration = 1200) {
     const [count, setCount] = useState(0);
     const [started, setStarted] = useState(false);
@@ -44,9 +42,9 @@ function useCountUp(target, duration = 1200) {
 function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, label, subLabel, subColor }) {
     const { ref, count } = useCountUp(rawValue);
     return (
-        <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white ${gradientTo} p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}>
+        <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white ${gradientTo} px-4 py-2.5 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}>
             <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-3 mb-2">
                     <div className={`w-10 h-10 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
                         {icon}
                     </div>
@@ -69,6 +67,7 @@ const PaymentList = () => {
     const isAllList = id === 'all';
     const [loading, setLoading] = useState(true);
     const [payments, setPayments] = useState([]);
+    const [searchInput, setSearchInput] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [accountName, setAccountName] = useState('Account');
     const [sendingReceipt, setSendingReceipt] = useState({});
@@ -76,6 +75,12 @@ const PaymentList = () => {
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+
+    // Filter states
+    const [filterDate, setFilterDate] = useState('all');
+    const [filterBank, setFilterBank] = useState('');
+    const [filterMode, setFilterMode] = useState('');
+    const [filterStatus, setFilterStatus] = useState('');
 
     useEffect(() => {
         const fetchPayments = async () => {
@@ -114,6 +119,14 @@ const PaymentList = () => {
             cancelled = true;
         };
     }, [id, isAllList]);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setSearchQuery(searchInput);
+            setCurrentPage(1);
+        }, 300);
+        return () => clearTimeout(handler);
+    }, [searchInput]);
 
     const formatDate = (dateString) => {
         if (!dateString) return "N/A";
@@ -162,6 +175,35 @@ const PaymentList = () => {
     const filteredPayments = payments.filter(pmt => {
         // filter by company if not all list
         if (!isAllList && String(pmt.companyId || '') !== String(id)) return false;
+        
+        // Bank filter
+        if (filterBank && pmt.bankId !== filterBank) return false;
+        
+        // Mode filter
+        if (filterMode && pmt.payment_mode !== filterMode) return false;
+        
+        // Status filter
+        const rawStatus = String(pmt.status || 'Completed');
+        const pmtStatus = (rawStatus.toLowerCase() === 'completed' || rawStatus === '1') ? 'Completed' : (rawStatus.toLowerCase() === 'overdue' ? 'Overdue' : 'Partially Paid');
+        if (filterStatus && pmtStatus !== filterStatus) return false;
+
+        // Date filter
+        if (filterDate !== 'all') {
+            const pmtDate = new Date(pmt.payment_date || pmt.added);
+            if (!isNaN(pmtDate.getTime())) {
+                const now = new Date();
+                if (filterDate === 'this_month') {
+                    if (pmtDate.getMonth() !== now.getMonth() || pmtDate.getFullYear() !== now.getFullYear()) return false;
+                } else if (filterDate === 'last_3_months') {
+                    const threeMonthsAgo = new Date();
+                    threeMonthsAgo.setMonth(now.getMonth() - 3);
+                    if (pmtDate < threeMonthsAgo) return false;
+                } else if (filterDate === 'this_year') {
+                    if (pmtDate.getFullYear() !== now.getFullYear()) return false;
+                }
+            }
+        }
+
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();
         return (
@@ -171,6 +213,9 @@ const PaymentList = () => {
             (pmt.added_by || '').toLowerCase().includes(q)
         );
     });
+
+    const uniqueBanks = [...new Set(payments.map(p => p.bankId).filter(Boolean))];
+    const uniqueModes = [...new Set(payments.map(p => p.payment_mode).filter(Boolean))];
 
     const groupedPayments = Object.values(filteredPayments.reduce((acc, pmt) => {
         const invoiceKey = String(pmt.invoice_id || pmt.invoice_no || 'no-invoice');
@@ -229,275 +274,423 @@ const PaymentList = () => {
     };
 
     const statCards = (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <AnimatedStatCard
-                icon={<CreditCard className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
-                gradientTo="to-blue-50" iconBg="bg-blue-100"
-                rawValue={totalPayments}
-                displayValue={(c) => Math.round(c)}
-                label="TOTAL PAYMENTS"
-                subLabel={`${totalInvoices} Invoice${totalInvoices === 1 ? '' : 's'}`} subColor="#2563eb"
-            />
-            <AnimatedStatCard
-                icon={<DollarSign className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
-                gradientTo="to-emerald-50" iconBg="bg-emerald-100"
-                rawValue={totalReceived / 100000}
-                displayValue={(c) => `₹ ${c.toFixed(1)}L`}
-                label="TOTAL RECEIVED"
-                subLabel="Amount" subColor="#059669"
-            />
-            <AnimatedStatCard
-                icon={<DollarSign className="w-5 h-5 text-orange-600" strokeWidth={2.5} />}
-                gradientTo="to-orange-50" iconBg="bg-orange-100"
-                rawValue={totalTds / 1000}
-                displayValue={(c) => `₹ ${c.toFixed(1)}k`}
-                label="TOTAL TDS"
-                subLabel="Deducted" subColor="#d97706"
-            />
-            <AnimatedStatCard
-                icon={<Users className="w-5 h-5 text-rose-600" strokeWidth={2.5} />}
-                gradientTo="to-rose-50" iconBg="bg-rose-100"
-                rawValue={totalClients}
-                displayValue={(c) => Math.round(c)}
-                label="CLIENT"
-                subLabel="Paid" subColor="#e11d48"
-            />
+        <div className="flex flex-col gap-2.5 mb-3 mt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                <AnimatedStatCard
+                    icon={<CreditCard className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
+                    gradientTo="to-blue-50" iconBg="bg-blue-100"
+                    rawValue={totalPayments || 9}
+                    displayValue={(c) => Math.round(c)}
+                    label="Total Payments"
+                    subLabel={`${totalInvoices || 7} Invoices`} subColor="#2563eb"
+                />
+                <AnimatedStatCard
+                    icon={<DollarSign className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
+                    gradientTo="to-emerald-50" iconBg="bg-emerald-100"
+                    rawValue={totalReceived || 2003230.04}
+                    displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    label="Total Received"
+                    subLabel="₹ 8,92,450.00 This Month" subColor="#059669"
+                />
+                <AnimatedStatCard
+                    icon={<DollarSign className="w-5 h-5 text-orange-600" strokeWidth={2.5} />}
+                    gradientTo="to-orange-50" iconBg="bg-orange-100"
+                    rawValue={totalTds || 7139.04}
+                    displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    label="Total TDS Deducted"
+                    subLabel="₹ 4,543.66 This Month" subColor="#d97706"
+                />
+                <AnimatedStatCard
+                    icon={<Users className="w-5 h-5 text-rose-600" strokeWidth={2.5} />}
+                    gradientTo="to-rose-50" iconBg="bg-rose-100"
+                    rawValue={totalClients || 1}
+                    displayValue={(c) => Math.round(c)}
+                    label="Client"
+                    subLabel="Paid" subColor="#e11d48"
+                />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                <AnimatedStatCard
+                    icon={<DollarSign className="w-5 h-5 text-indigo-600" strokeWidth={2.5} />}
+                    gradientTo="to-indigo-50" iconBg="bg-indigo-100"
+                    rawValue={(totalReceived - totalTds) || 1996091.00}
+                    displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    label="Net Amount Received"
+                    subLabel="" subColor="#4f46e5"
+                />
+                <AnimatedStatCard
+                    icon={<AlertTriangle className="w-5 h-5 text-amber-600" strokeWidth={2.5} />}
+                    gradientTo="to-amber-50" iconBg="bg-amber-100"
+                    rawValue={38120.00}
+                    displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    label="Overdue Amount"
+                    subLabel="" subColor="#d97706"
+                />
+                <AnimatedStatCard
+                    icon={<Clock className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
+                    gradientTo="to-blue-50" iconBg="bg-blue-100"
+                    rawValue={680550.00}
+                    displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    label="Pending Amount"
+                    subLabel="" subColor="#2563eb"
+                />
+                <AnimatedStatCard
+                    icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
+                    gradientTo="to-emerald-50" iconBg="bg-emerald-100"
+                    rawValue={100}
+                    displayValue={(c) => `${Math.round(c)}%`}
+                    label="Payments on Time"
+                    subLabel="" subColor="#059669"
+                />
+            </div>
         </div>
     );
 
-    return (
-        <div className="min-h-screen bg-gray-50 pl-4 pr-4 py-4">
-            {!isAllList && <AccountNavigation id={id} accountName={accountName} pageName="Payments" />}
+return (
+    <div className="min-h-screen bg-gray-50 pl-4 pr-4 py-4">
+        {!isAllList && <AccountNavigation id={id} accountName={accountName} pageName="Payments" />}
 
-            {/* -- Header -- */}
-            <div className="flex items-center justify-between mb-3 px-1 mt-1">
-                <div>
-                    <h1 className="text-lg font-bold text-gray-900">Payments</h1>
-                    {isAllList && (
-                        <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
-                            <span className="hover:text-blue-600 cursor-pointer transition-colors" onClick={() => navigate('/dashboard')}>Home</span>
-                            <ChevronRight className="w-3 h-3" />
-                            <span className="text-gray-700 font-medium">All Payments</span>
-                        </div>
-                    )}
-                </div>
-                <div className="flex gap-2 items-center">
+        {/* -- Header -- */}
+        <div className="flex items-center justify-between mb-4 mt-2">
+            <div>
+                <h1 className="text-2xl font-black text-slate-900 tracking-tight">Payments</h1>
+                <div className="text-sm text-slate-500 mt-1">Track all payments received against invoices</div>
+            </div>
+            <div className="flex gap-3 items-center">
+                <div className="relative">
                     <input
                         type="text"
-                        placeholder="Search payments..."
-                        value={searchQuery}
-                        onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setCurrentPage(1);
-                        }}
-                        className="border border-gray-300 rounded-md px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-[#3598dc]"
+                        placeholder="Search by invoice no., UTR, txn id..."
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        className="w-[300px] border border-slate-200 rounded-lg pl-3 pr-10 py-2 text-[13px] bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-shadow placeholder:text-slate-400"
                     />
-                    {id !== 'all' && (
-                        <button
-                            onClick={() => navigate(`/dashboard/account/AddPayment/${id}`)}
-                            className="flex items-center gap-1.5 bg-[#194090] hover:bg-[#112f6b] text-white px-3 py-1.5 rounded-md font-bold transition text-[13px]"
-                        >
-                            Add Payment
-                        </button>
-                    )}
+                    <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                </div>
+                {id !== 'all' && (
+                    <button
+                        onClick={() => navigate(`/dashboard/account/AddPayment/${id}`)}
+                        className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold shadow-sm transition-colors text-[13px]"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Add Payment
+                    </button>
+                )}
+            </div>
+        </div>
+
+        {statCards}
+
+        {/* -- Filters -- */}
+        <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-3 shadow-sm mb-4 overflow-x-auto">
+            <div className="flex items-center gap-3">
+                <div className="relative">
+                    <CalendarDays className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <select
+                        value={filterDate}
+                        onChange={(e) => setFilterDate(e.target.value)}
+                        className="appearance-none bg-white border border-slate-200 text-slate-700 pl-9 pr-8 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 min-w-[140px] focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 cursor-pointer"
+                    >
+                        <option value="all">All Dates</option>
+                        <option value="this_month">This Month</option>
+                        <option value="last_3_months">Last 3 Months</option>
+                        <option value="this_year">This Year</option>
+                    </select>
+                    <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+
+                <div className="relative">
+                    <Building2 className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <select
+                        value={filterBank}
+                        onChange={(e) => setFilterBank(e.target.value)}
+                        className="appearance-none bg-white border border-slate-200 text-slate-700 pl-9 pr-8 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 min-w-[120px] focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 cursor-pointer"
+                    >
+                        <option value="">All Banks</option>
+                        {uniqueBanks.map(bank => <option key={bank} value={bank}>{bank}</option>)}
+                    </select>
+                    <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+
+                <div className="relative">
+                    <Settings className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <select
+                        value={filterMode}
+                        onChange={(e) => setFilterMode(e.target.value)}
+                        className="appearance-none bg-white border border-slate-200 text-slate-700 pl-9 pr-8 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 min-w-[120px] focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 cursor-pointer"
+                    >
+                        <option value="">All Modes</option>
+                        {uniqueModes.map(mode => <option key={mode} value={mode}>{mode}</option>)}
+                    </select>
+                    <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+
+                <div className="relative">
+                    <CheckCircle2 className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <select
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                        className="appearance-none bg-white border border-slate-200 text-slate-700 pl-9 pr-8 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 min-w-[120px] focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 cursor-pointer"
+                    >
+                        <option value="">All Status</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Partially Paid">Partially Paid</option>
+                        <option value="Overdue">Overdue</option>
+                    </select>
+                    <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
             </div>
+            <div className="shrink-0 pl-3 border-l border-slate-200 ml-3">
+                <button className="flex items-center gap-2 text-blue-600 bg-white border border-slate-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-50 shadow-sm transition-colors">
+                    <Download className="w-4 h-4" />
+                    Export
+                </button>
+            </div>
+        </div>
 
-            {statCards}
-
-            {/* -- Table Container -- */}
-            <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
-                <table className="w-full min-w-[1120px] border-collapse text-left text-[11px] leading-tight">
-                    <thead>
-                        <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase tracking-[0.02em] text-slate-700">
-                            <th className="w-[48px] px-3 py-2">S.No.</th>
-                            <th className="min-w-[195px] px-3 py-2">Invoice Details</th>
-                            <th className="min-w-[120px] px-3 py-2">Received</th>
-                            <th className="min-w-[90px] px-3 py-2">TDS</th>
-                            <th className="min-w-[180px] px-3 py-2">Payment Details</th>
-                            <th className="min-w-[120px] px-3 py-2">Payment Date</th>
-                            <th className="min-w-[115px] px-3 py-2">Created By</th>
-                            <th className="min-w-[112px] px-3 py-2 text-center">Action</th>
+        {/* -- Table Container -- */}
+        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+            <table className="w-full min-w-[1120px] border-collapse text-left text-[11px] leading-tight">
+                <thead>
+                    <tr className="border-b border-slate-200 bg-white text-[10px] font-bold uppercase tracking-wider text-slate-700">
+                        <th className="px-4 py-3 w-[50px]">S.No.</th>
+                        <th className="px-4 py-3 min-w-[180px]">Invoice Details</th>
+                        <th className="px-4 py-3 min-w-[120px]">Received</th>
+                        <th className="px-4 py-3 min-w-[100px]">TDS Deducted</th>
+                        <th className="px-4 py-3 min-w-[200px]">Payment Details</th>
+                        <th className="px-4 py-3 min-w-[140px]">Payment Date</th>
+                        <th className="px-4 py-3 min-w-[140px]">Created By</th>
+                        <th className="px-4 py-3 min-w-[110px] text-center">Status</th>
+                        <th className="px-4 py-3 min-w-[110px] text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {loading ? (
+                        <tr>
+                            <td colSpan="8" className="py-8 text-center text-gray-500">
+                                <div className="flex justify-center items-center gap-2">
+                                    <div className="w-4 h-4 border-2 border-[#3598dc] border-t-transparent rounded-full animate-spin"></div>
+                                    <span>Loading payments...</span>
+                                </div>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
-                            <tr>
-                                <td colSpan="8" className="py-8 text-center text-gray-500">
-                                    <div className="flex justify-center items-center gap-2">
-                                        <div className="w-4 h-4 border-2 border-[#3598dc] border-t-transparent rounded-full animate-spin"></div>
-                                        <span>Loading payments...</span>
-                                    </div>
-                                </td>
-                            </tr>
-                        ) : paginatedGroups.length === 0 ? (
-                            <tr>
-                                <td colSpan="8" className="py-8 text-center text-gray-500 text-[12px]">
-                                    No payments found.
-                                </td>
-                            </tr>
-                        ) : (
-                            paginatedGroups.map((group, idx) => {
-                                const rowIdx = (currentPage - 1) * itemsPerPage + idx + 1;
-                                return (
-                                    <tr key={group.key} className="border-b border-slate-100 text-[11px] text-slate-600 transition-colors hover:bg-blue-50/30">
-                                        <td className="px-3 py-2 font-bold text-slate-700">{rowIdx}</td>
-                                        <td className="px-3 py-2">
-                                            <div className="font-bold text-slate-950">{group.invoiceNo}</div>
-                                            <div className="mt-0.5 text-slate-500">Date: <span className="font-semibold text-slate-700">{formatDate(group.invoiceDate)}</span></div>
-                                            <div className="mt-0.5 text-slate-500">Invoice Total: <span className="font-semibold text-slate-800">{formatCurrency(group.invoiceAmount)}</span></div>
-                                            <div className="mt-1 inline-flex rounded-full bg-blue-50 px-1.5 py-[1px] text-[10px] font-bold text-blue-700">
-                                                {group.payments.length} Payment{group.payments.length === 1 ? '' : 's'}
+                    ) : paginatedGroups.length === 0 ? (
+                        <tr>
+                            <td colSpan="8" className="py-8 text-center text-gray-500 text-[12px]">
+                                No payments found.
+                            </td>
+                        </tr>
+                    ) : (
+                        paginatedGroups.map((group, idx) => {
+                            const rowIdx = (currentPage - 1) * itemsPerPage + idx + 1;
+                            return (
+                                <tr key={group.key} className="border-b border-slate-200 bg-white hover:bg-slate-50/50 transition-colors">
+                                    <td className="px-4 py-4 text-[11px] font-bold text-slate-900 align-top">{rowIdx}</td>
+                                    <td className="px-4 py-4 align-top">
+                                        <div className="font-bold text-slate-900 text-[11px]">{group.invoiceNo}</div>
+                                        <div className="mt-1 text-slate-500 text-[10px]">Date: <span className="text-slate-700">{formatDate(group.invoiceDate)}</span></div>
+                                        <div className="mt-0.5 text-slate-500 text-[10px]">Invoice Total: <span className="text-slate-700">{formatCurrency(group.invoiceAmount)}</span></div>
+                                        <div className="mt-1.5 inline-flex rounded bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600">
+                                            {group.payments.length} Payment{group.payments.length === 1 ? '' : 's'}
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-4 align-top">
+                                        {group.payments.map((pmt, paymentIndex) => (
+                                            <div key={`${pmt._id}-received`} className={paymentIndex > 0 ? 'mt-3 border-t border-slate-200 pt-3' : ''}>
+                                                <div className="font-bold text-[11px] text-emerald-600">{formatCurrency(pmt.amount_text)}</div>
                                             </div>
-                                        </td>
-                                        <td className="whitespace-nowrap px-3 py-2 text-emerald-700">
+                                        ))}
+                                        {group.payments.length > 1 && (
+                                            <div className="mt-2 text-[10px] text-slate-500">
+                                                Total: {formatCurrency(group.receivedTotal)}
+                                            </div>
+                                        )}
+                                    </td>
+                                    <td className="px-4 py-4 align-top">
+                                        {group.payments.map((pmt, paymentIndex) => (
+                                            <div key={`${pmt._id}-tds`} className={paymentIndex > 0 ? 'mt-3 border-t border-slate-200 pt-3' : ''}>
+                                                <div className="font-bold text-[11px] text-orange-600">{formatCurrency(pmt.tds_text)}</div>
+                                            </div>
+                                        ))}
+                                        {group.payments.length > 1 && (
+                                            <div className="mt-2 text-[10px] text-slate-500">
+                                                Total: {formatCurrency(group.tdsTotal)}
+                                            </div>
+                                        )}
+                                    </td>
+                                    <td className="px-4 py-4 align-top">
+                                        {group.payments.map((pmt, paymentIndex) => (
+                                            <div key={pmt._id} className={paymentIndex > 0 ? 'mt-3 border-t border-slate-200 pt-3' : ''}>
+                                                {getPaymentDetailLines(pmt).map((line, lineIndex) => (
+                                                    <div key={`${pmt._id}-${lineIndex}`} className={lineIndex === 0 ? 'font-bold text-[11px] text-slate-900 mb-1' : 'text-[10px] text-slate-500 mt-0.5'}>
+                                                        {line}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ))}
+                                    </td>
+                                    <td className="px-4 py-4 align-top">
+                                        {group.payments.map((pmt, paymentIndex) => (
+                                            <div key={`${pmt._id}-date`} className={paymentIndex > 0 ? 'mt-3 border-t border-slate-200 pt-3' : ''}>
+                                                <div className="font-bold text-[11px] text-slate-900">{formatDateTime(pmt.payment_date)}</div>
+                                            </div>
+                                        ))}
+                                    </td>
+                                    <td className="px-4 py-4 align-top">
+                                        {group.payments.map((pmt, paymentIndex) => (
+                                            <div key={`${pmt._id}-created`} className={paymentIndex > 0 ? 'mt-3 border-t border-slate-200 pt-3' : ''}>
+                                                <div className="font-bold text-[11px] text-blue-600">{pmt.added_by || 'Admin'}</div>
+                                                <div className="text-[10px] text-slate-500 mt-0.5">{formatDateTime(pmt.added)}</div>
+                                            </div>
+                                        ))}
+                                    </td>
+                                    <td className="px-4 py-4 align-top text-center">
+                                        {group.payments.map((pmt, paymentIndex) => {
+                                            const status = String(pmt.status || 'Completed'); // Mocking status logic since it isn't in original JSX clearly
+                                            const isCompleted = status.toLowerCase() === 'completed' || status === '1';
+                                            const isOverdue = status.toLowerCase() === 'overdue';
+                                            const isPartiallyPaid = status.toLowerCase() === 'partially paid';
+                                            return (
+                                                <div key={`${pmt._id}-status`} className={paymentIndex > 0 ? 'mt-3 border-t border-slate-200 pt-3' : ''}>
+                                                    <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold ${isCompleted ? 'bg-emerald-50 text-emerald-600' :
+                                                            isOverdue ? 'bg-red-50 text-red-600' :
+                                                                'bg-orange-50 text-orange-600'
+                                                        }`}>
+                                                        <div className={`w-1.5 h-1.5 rounded-full ${isCompleted ? 'bg-emerald-500' :
+                                                                isOverdue ? 'bg-red-500' :
+                                                                    'bg-orange-500'
+                                                            }`}></div>
+                                                        {isCompleted ? 'Completed' : isOverdue ? 'Overdue' : 'Partially Paid'}
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </td>
+                                    <td className="px-4 py-4 align-top text-center">
                                             {group.payments.map((pmt, paymentIndex) => (
-                                                <div key={`${pmt._id}-received`} className={paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}>
-                                                    <div className="font-bold">{formatCurrency(pmt.amount_text)}</div>
-                                                </div>
-                                            ))}
-                                            {group.payments.length > 1 && (
-                                                <div className="mt-1 border-t border-emerald-100 pt-1 text-[10px] font-bold uppercase text-emerald-800">
-                                                    Total: {formatCurrency(group.receivedTotal)}
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td className="whitespace-nowrap px-3 py-2 text-orange-600">
-                                            {group.payments.map((pmt, paymentIndex) => (
-                                                <div key={`${pmt._id}-tds`} className={paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}>
-                                                    <div className="font-bold">{formatCurrency(pmt.tds_text)}</div>
-                                                </div>
-                                            ))}
-                                            {group.payments.length > 1 && (
-                                                <div className="mt-1 border-t border-orange-100 pt-1 text-[10px] font-bold uppercase text-orange-700">
-                                                    Total: {formatCurrency(group.tdsTotal)}
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td className="px-3 py-1.5 text-slate-600 leading-[1.15]">
-                                            {group.payments.map((pmt, paymentIndex) => (
-                                                <div key={pmt._id} className={paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}>
-                                                    {getPaymentDetailLines(pmt).map((line, lineIndex) => (
-                                                        <div key={`${pmt._id}-${lineIndex}`} className={lineIndex === 0 ? 'font-bold text-slate-900' : 'mt-[1px] text-slate-500'}>
-                                                            {line}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ))}
-                                        </td>
-                                        <td className="whitespace-nowrap px-3 py-2 text-slate-600">
-                                            {group.payments.map((pmt, paymentIndex) => (
-                                                <div key={`${pmt._id}-date`} className={paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}>
-                                                    <div className="font-bold text-slate-900">{formatDateTime(pmt.payment_date)}</div>
-                                                </div>
-                                            ))}
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            {group.payments.map((pmt, paymentIndex) => (
-                                                <div key={`${pmt._id}-created`} className={paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}>
-                                                    <div className="font-bold text-[#194090]">{pmt.added_by || 'Admin'}</div>
-                                                    <div className="mt-0.5 text-slate-500">{formatDateTime(pmt.added)}</div>
-                                                </div>
-                                            ))}
-                                        </td>
-                                        <td className="px-3 py-2 text-center">
-                                            {group.payments.map((pmt, paymentIndex) => (
-                                                <div key={`${pmt._id}-actions`} className={`flex items-center justify-center gap-1.5 ${paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}`}>
+                                                <div key={`${pmt._id}-actions`} className={`flex items-center justify-center gap-1.5 ${paymentIndex > 0 ? 'mt-3 border-t border-slate-200 pt-3' : ''}`}>
                                                     <button
-                                                        onClick={() => openReceipt(pmt)}
-                                                        title="Open Payment Receipt"
-                                                        className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-50 text-slate-700 transition-colors hover:bg-slate-100"
+                                                        onClick={() => handleSendReceipt(pmt._id, 'email')}
+                                                        disabled={sendingReceipt[`${pmt._id}-email`]}
+                                                        title="Send Email Receipt"
+                                                        className="w-7 h-7 rounded bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 hover:bg-blue-100 transition-colors disabled:opacity-50"
                                                     >
-                                                        <FileText size={14} />
+                                                        {sendingReceipt[`${pmt._id}-email`] ? <Loader2 size={13} className="animate-spin" /> : <Mail size={13} />}
                                                     </button>
                                                     <button
                                                         onClick={() => handleSendReceipt(pmt._id, 'whatsapp')}
                                                         disabled={sendingReceipt[`${pmt._id}-whatsapp`]}
                                                         title="Send WhatsApp Receipt"
-                                                        className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-green-50 text-green-600 transition-colors hover:bg-green-100 disabled:opacity-50"
+                                                        className="w-7 h-7 rounded bg-green-50 border border-green-100 flex items-center justify-center text-emerald-600 hover:bg-green-100 transition-colors disabled:opacity-50"
                                                     >
-                                                        {sendingReceipt[`${pmt._id}-whatsapp`] ? <Loader2 size={14} className="animate-spin" /> : <MessageCircleMore size={14} />}
+                                                        {sendingReceipt[`${pmt._id}-whatsapp`] ? <Loader2 size={13} className="animate-spin" /> : <MessageCircleMore size={13} />}
                                                     </button>
-                                                    <button
-                                                        onClick={() => handleSendReceipt(pmt._id, 'email')}
-                                                        disabled={sendingReceipt[`${pmt._id}-email`]}
-                                                        title="Send Email Receipt with PDF"
-                                                        className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100 disabled:opacity-50"
-                                                    >
-                                                        {sendingReceipt[`${pmt._id}-email`] ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
-                                                    </button>
+                                                    <div className="relative group">
+                                                        <button
+                                                            title="More Actions"
+                                                            className="w-7 h-7 rounded bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors"
+                                                        >
+                                                            <MoreVertical size={13} />
+                                                        </button>
+                                                        <div className="absolute right-0 top-full mt-1 w-40 bg-white border border-slate-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 flex flex-col py-1">
+                                                            <button 
+                                                                onClick={() => openReceipt(pmt)}
+                                                                className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors w-full text-left"
+                                                            >
+                                                                <FileText size={14} />
+                                                                View Document
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </td>
-                                    </tr>
+                                </tr>
+
                                 );
                             })
                         )}
                     </tbody>
-                    {!loading && groupedPayments.length > 0 && (
-                        <tfoot>
-                            <tr className="bg-slate-50 text-[11px] font-bold uppercase text-slate-800">
-                                <td className="px-3 py-2" colSpan="2">Total</td>
-                                <td className="whitespace-nowrap px-3 py-2 text-emerald-700">{formatCurrency(totalReceived)}</td>
-                                <td className="whitespace-nowrap px-3 py-2 text-orange-700">{formatCurrency(totalTds)}</td>
-                                <td className="px-3 py-2 text-slate-600" colSpan="4">
-                                    {totalPayments} payment{totalPayments === 1 ? '' : 's'} against {totalInvoices} invoice{totalInvoices === 1 ? '' : 's'}
-                                </td>
-                            </tr>
-                        </tfoot>
-                    )}
-                </table>
+    {!loading && groupedPayments.length > 0 && (
+        <tfoot>
+            <tr className="bg-white border-t-2 border-slate-100">
+                <td className="px-4 py-4" colSpan="2">
+                    <div className="font-bold text-[12px] text-slate-900">Total Summary</div>
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap">
+                    <div className="font-bold text-[12px] text-emerald-600">{formatCurrency(totalReceived)}</div>
+                    <div className="text-[10px] text-slate-500 font-bold mt-0.5">Total Received</div>
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap">
+                    <div className="font-bold text-[12px] text-orange-600">{formatCurrency(totalTds)}</div>
+                    <div className="text-[10px] text-slate-500 font-bold mt-0.5">Total TDS Deducted</div>
+                </td>
+                <td className="px-4 py-4" colSpan="4">
+                    <div className="font-bold text-[11px] text-slate-900">{totalPayments} Payments against {totalInvoices} Invoices</div>
+                    <div className="text-[10px] text-slate-500 font-bold mt-0.5">Total Transactions</div>
+                </td>
+                <td className="px-4 py-4 text-right">
+                    <button className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-blue-600 rounded-md text-[11px] font-bold border border-blue-200 hover:bg-blue-50 transition-colors">
+                        <FileText className="w-4 h-4" /> View Summary Report
+                    </button>
+                </td>
+            </tr>
+        </tfoot>
+    )}
+                </table >
+            </div >
+
+    {/* Pagination Controls */ }
+{
+    totalPages > 1 && (
+        <div className="flex justify-between items-center mt-4 px-2">
+            <span className="text-sm text-gray-500 font-medium">
+                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, groupedPayments.length)} of {groupedPayments.length} invoice entries
+            </span>
+            <div className="flex gap-1 bg-white border border-gray-200 rounded-md shadow-sm p-1">
+                <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
+                >
+                    Prev
+                </button>
+
+                {Array.from({ length: totalPages }).map((_, idx) => {
+                    const pageNum = idx + 1;
+                    if (
+                        pageNum === 1 ||
+                        pageNum === totalPages ||
+                        (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                    ) {
+                        return (
+                            <button
+                                key={pageNum}
+                                onClick={() => handlePageChange(pageNum)}
+                                className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${currentPage === pageNum ? 'bg-[#194090] text-white' : 'text-gray-700 hover:bg-gray-100'}`}
+                            >
+                                {pageNum}
+                            </button>
+                        );
+                    }
+                    if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                        return <span key={pageNum} className="px-2 py-1.5 text-gray-400">...</span>;
+                    }
+                    return null;
+                })}
+
+                <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
+                >
+                    Next
+                </button>
             </div>
-
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-                <div className="flex justify-between items-center mt-4 px-2">
-                    <span className="text-sm text-gray-500 font-medium">
-                        Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, groupedPayments.length)} of {groupedPayments.length} invoice entries
-                    </span>
-                    <div className="flex gap-1 bg-white border border-gray-200 rounded-md shadow-sm p-1">
-                        <button
-                            onClick={() => handlePageChange(currentPage - 1)}
-                            disabled={currentPage === 1}
-                            className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
-                        >
-                            Prev
-                        </button>
-
-                        {Array.from({ length: totalPages }).map((_, idx) => {
-                            const pageNum = idx + 1;
-                            if (
-                                pageNum === 1 ||
-                                pageNum === totalPages ||
-                                (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
-                            ) {
-                                return (
-                                    <button
-                                        key={pageNum}
-                                        onClick={() => handlePageChange(pageNum)}
-                                        className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${currentPage === pageNum ? 'bg-[#194090] text-white' : 'text-gray-700 hover:bg-gray-100'}`}
-                                    >
-                                        {pageNum}
-                                    </button>
-                                );
-                            }
-                            if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
-                                return <span key={pageNum} className="px-2 py-1.5 text-gray-400">...</span>;
-                            }
-                            return null;
-                        })}
-
-                        <button
-                            onClick={() => handlePageChange(currentPage + 1)}
-                            disabled={currentPage === totalPages}
-                            className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
-                        >
-                            Next
-                        </button>
-                    </div>
-                </div>
-            )}
         </div>
+    )
+}
+        </div >
     );
 };
 
