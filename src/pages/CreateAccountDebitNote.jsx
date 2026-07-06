@@ -3,7 +3,10 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { FileText, Plus, Trash2, Upload, X, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 import { getCurrentUserName } from '../utils/currentUser';
+
+const warn = (title, text) => Swal.fire({ icon: 'warning', title, text, confirmButtonColor: '#2563eb' });
 
 const TYPE_OPTIONS = [
     { value: 'additional_charges', label: 'Additional Charges' },
@@ -97,17 +100,36 @@ const CreateAccountDebitNote = () => {
     const invoices = useMemo(() => context?.invoices || [], [context]);
     const selectedInvoice = invoices.find((inv) => inv.id === selectedInvoiceId);
 
-    // Auto-fill Charge Details from the selected invoice's own line items, as a starting
-    // point the admin can edit — only when the items table is still untouched, so we
-    // never silently wipe out charges the admin has already started typing.
+    // Auto-fill Charge Details from the selected invoice's own line items (only when the
+    // table is still untouched), then auto-allocate this invoice using the RESULTING total —
+    // computed inline from the new items rather than the component's `totalAmount`, which
+    // would otherwise still reflect the pre-update items in this same effect pass and lock
+    // in a wrong (often zero) applied amount, making "Remaining Debit Balance" impossible
+    // to reach ₹0.00.
     useEffect(() => {
         if (readOnly || !selectedInvoice) return;
-        const isUntouched = items.length === 1 && !items[0].description.trim() && Number(items[0].amount) === 0;
-        if (!isUntouched) return;
-        if (selectedInvoice.items && selectedInvoice.items.length > 0) {
-            setItems(selectedInvoice.items.map((it) => ({ ...it, id: `${Date.now()}-${Math.random()}` })));
-            toast.success('Charge details pre-filled from the invoice — edit as needed');
-        }
+
+        setItems((prevItems) => {
+            const isUntouched = prevItems.length === 1 && !prevItems[0].description.trim() && Number(prevItems[0].amount) === 0;
+            let nextItems = prevItems;
+            if (isUntouched && selectedInvoice.items && selectedInvoice.items.length > 0) {
+                nextItems = selectedInvoice.items.map((it) => ({ ...it, id: `${Date.now()}-${Math.random()}` }));
+                toast.success('Charge details pre-filled from the invoice — edit as needed');
+            }
+
+            const nextTaxable = nextItems.reduce((sum, it) => sum + (Number(it.amount) || 0), 0);
+            const nextGst = nextItems.reduce((sum, it) => sum + (Number(it.gstAmount) || 0), 0);
+            const nextTotal = nextTaxable + nextGst;
+
+            setAllocMap((prevAlloc) => {
+                if (prevAlloc[selectedInvoiceId] !== undefined || nextTotal <= 0) return prevAlloc;
+                const alreadyApplied = Object.values(prevAlloc).reduce((s, v) => s + v, 0);
+                const remaining = Math.max(0, nextTotal - alreadyApplied);
+                return { ...prevAlloc, [selectedInvoiceId]: Math.round(Math.min(remaining, selectedInvoice.outstanding) * 100) / 100 };
+            });
+
+            return nextItems;
+        });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedInvoiceId]);
 
@@ -148,13 +170,6 @@ const CreateAccountDebitNote = () => {
         setAllocMap((prev) => ({ ...prev, [invId]: Math.max(0, Number(val) || 0) }));
     };
 
-    useEffect(() => {
-        if (selectedInvoiceId && allocMap[selectedInvoiceId] === undefined && selectedInvoice) {
-            toggleInvoice(selectedInvoice, true);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedInvoiceId]);
-
     const outstandingBeforeDN = selectedInvoice?.outstanding || 0;
     const alreadyReceived = selectedInvoice ? Math.max(0, selectedInvoice.invoiceAmount - selectedInvoice.outstanding) : 0;
     const newOutstandingAfterDN = Math.max(0, outstandingBeforeDN + totalAmount - tdsDeduction - adjustmentCreditNote);
@@ -173,11 +188,11 @@ const CreateAccountDebitNote = () => {
     const allChecksPass = withinLimitCheck && hasAllocation && balancedCheck && infoCompleteCheck;
 
     const handleSubmit = async (status) => {
-        if (!reason.trim()) { toast.error('Please enter a reason for the debit note'); return; }
-        if (!remarks.trim()) { toast.error('Please enter remarks'); return; }
-        if (!hasAllocation) { toast.error('Please select at least one invoice to allocate this debit note to'); return; }
-        if (!balancedCheck) { toast.error(`Remaining debit balance must be ₹0.00 (currently ₹${formatCurrency(remainingBalance)})`); return; }
-        if (!withinLimitCheck) { toast.error('Applied amount on one or more invoices exceeds its outstanding balance'); return; }
+        if (!reason.trim()) { warn('Reason Required', 'Please enter a reason for the debit note.'); return; }
+        if (!remarks.trim()) { warn('Remarks Required', 'Please enter remarks before saving.'); return; }
+        if (!hasAllocation) { warn('No Invoice Selected', 'Please select at least one invoice to allocate this debit note to.'); return; }
+        if (!balancedCheck) { warn('Balance Not Matched', `Remaining debit balance must be ₹0.00 (currently ₹${formatCurrency(remainingBalance)}). Adjust the "Apply Debit" amounts so they add up to the full debit note value.`); return; }
+        if (!withinLimitCheck) { warn('Over Outstanding Limit', 'The applied amount on one or more invoices exceeds that invoice\'s outstanding balance. Please reduce it.'); return; }
 
         setSubmitting(true);
         try {
@@ -227,13 +242,19 @@ const CreateAccountDebitNote = () => {
             }
 
             if (res.data?.success) {
-                toast.success(status === 'draft' ? 'Debit note saved as draft' : 'Debit note created successfully');
+                await Swal.fire({
+                    icon: 'success',
+                    title: status === 'draft' ? 'Saved as Draft' : 'Debit Note Created',
+                    text: `${res.data.data?.debit_note_no || debitNoteNo} has been saved successfully.`,
+                    timer: 1600,
+                    showConfirmButton: false,
+                });
                 navigate(`/account-debit-notes/${id}`);
             } else {
-                toast.error(res.data?.message || 'Failed to create debit note');
+                Swal.fire({ icon: 'error', title: 'Could Not Save', text: res.data?.message || 'Failed to create debit note.' });
             }
         } catch (err) {
-            toast.error(err.response?.data?.message || 'Failed to create debit note');
+            Swal.fire({ icon: 'error', title: 'Could Not Save', text: err.response?.data?.message || 'Failed to create debit note.' });
         } finally {
             setSubmitting(false);
         }
