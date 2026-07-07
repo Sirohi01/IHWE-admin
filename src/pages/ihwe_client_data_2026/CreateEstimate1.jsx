@@ -131,7 +131,7 @@ const CreateEstimate1 = () => {
       amount: "0.00",
       disc: "0",
       tax: "0.00",
-      gstRate: "",
+      gstRate: "18",
       finalAmount: "0.00",
       remarks: "",
     },
@@ -180,6 +180,15 @@ const CreateEstimate1 = () => {
     setItems(newItems);
   };
 
+  const getAreaMultiplier = (value) => {
+    const text = String(value ?? "").replace(/,/g, "").trim();
+    const dimensions = text.match(/(\d+(?:\.\d+)?)\s*[xX×*]\s*(\d+(?:\.\d+)?)/);
+    if (dimensions) return (parseFloat(dimensions[1]) || 0) * (parseFloat(dimensions[2]) || 0) || 1;
+    const match = text.match(/\d+(?:\.\d+)?/);
+    const number = match ? parseFloat(match[0]) : 0;
+    return Number.isFinite(number) && number > 0 ? number : 1;
+  };
+
   // --- Calculation Logic (Unchanged) ---
   useEffect(() => {
     let totalFinalAmount = 0;
@@ -188,9 +197,9 @@ const CreateEstimate1 = () => {
       const qty = parseFloat(item.qty) || 0;
       const rate = parseFloat(item.rate) || 0;
       const disc = parseFloat(item.disc) || 0;
-      const gstRate = parseFloat(item.gstRate) || 0;
+      const gstRate = parseFloat(item.gstRate) || 18;
 
-      const amount = qty * rate;
+      const amount = qty * rate * getAreaMultiplier(item.size);
       const taxableValue = amount - amount * (disc / 100);
       const gstAmount = taxableValue * (gstRate / 100);
       const finalAmount = taxableValue + gstAmount;
@@ -231,7 +240,7 @@ const CreateEstimate1 = () => {
         amount: "0.00",
         disc: "0",
         tax: "0.00",
-        gstRate: "",
+        gstRate: "18",
         finalAmount: "0.00",
         remarks: "",
       },
@@ -271,7 +280,7 @@ const CreateEstimate1 = () => {
     // Item Data Transformation with GST Breakdown
     const transformedItems = items.map((item) => {
       const taxableValue = parseFloat(item.tax) || 0;
-      const totalGstRate = parseFloat(item.gstRate) || 0;
+      const totalGstRate = parseFloat(item.gstRate) || 18;
       const totalGstAmount = (taxableValue * (totalGstRate / 100));
       let cgstPer = "0";
       let cgstAmount = "0.00";

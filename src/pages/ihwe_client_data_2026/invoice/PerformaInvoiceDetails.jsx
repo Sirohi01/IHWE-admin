@@ -15,6 +15,31 @@ const PROFORMA_EVENT_NAME = "9th Edition of International Health & Wellness Expo
 const PROFORMA_PLACE_OF_SUPPLY = "Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, Bharat";
 const PROFORMA_EVENT_GST_NO = "08AAFCN9238F1Z6";
 
+const joinAddressParts = (parts) => {
+  const used = new Set();
+  const out = [];
+
+  (parts || [])
+    .filter(Boolean)
+    .map((part) => String(part).trim())
+    .flatMap((part) => part.split(",").map((p) => p.trim()))
+    .forEach((part) => {
+      if (!part) return;
+      const key = part.toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (!key || used.has(key)) return;
+      used.add(key);
+
+      if (/^\d{6}$/.test(part) && out.length) {
+        out[out.length - 1] = `${out[out.length - 1]} - ${part}`;
+        return;
+      }
+
+      out.push(part);
+    });
+
+  return out.join(", ");
+};
+
 const PerformaInvoiceDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -54,17 +79,21 @@ const PerformaInvoiceDetails = () => {
 
   const c1 = company?.contacts?.[0] || {};
   const clientCompanyName = matchedEstimate?.company_name || company?.companyName || "";
-  const clientCompanyAddress = matchedEstimate?.company_addr || [
-    company?.landline,
+  const clientCompanyAddress = matchedEstimate?.company_addr || joinAddressParts([
     company?.address,
     company?.city,
+    company?.pincode,
     company?.state,
     company?.country,
-    company?.pincode,
-  ].filter(Boolean).join(", ");
+  ]);
   const clientGstNo = matchedEstimate?.company_gst_no || matchedEstimate?.gst_no || "";
   const eventName = matchedEstimate?.event_name || matchedEstimate?.consignee_name || PROFORMA_EVENT_NAME;
-  const eventPlaceOfSupply = matchedEstimate?.event_place_of_supply || matchedEstimate?.consignee_addr || PROFORMA_PLACE_OF_SUPPLY;
+  const eventPlaceOfSupply = joinAddressParts([
+    (matchedEstimate?.event_place_of_supply || matchedEstimate?.consignee_addr || PROFORMA_PLACE_OF_SUPPLY)
+      .replace(/,\s*Bharat$/i, ""),
+    "Delhi",
+    "Bharat",
+  ]);
   const eventGstNo = matchedEstimate?.event_gst_no || PROFORMA_EVENT_GST_NO;
 
   useEffect(() => {
@@ -443,11 +472,11 @@ const PerformaInvoiceDetails = () => {
                 <tr>
                   <td
                     colSpan="1"
-                    className="border px-2 py-0.5 text-[11px] font-semibold"
+                    className="border px-2 py-0.5 text-[11px] font-semibold text-center"
                   >
                     Amount in Words
                   </td>
-                  <td colSpan="4" className="border px-2 py-0.5 text-[11px]">
+                  <td colSpan="4" className="border px-2 py-0.5 text-[11px] text-center">
                     Seventy Thousand, Seven Hundred Ninety Nine Rupees Only
                   </td>
                   <td className="border text-center align-middle text-[11px] font-semibold">
