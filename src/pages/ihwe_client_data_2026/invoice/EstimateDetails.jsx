@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { MdOutlineModeEdit } from "react-icons/md";
 import { useReactToPrint } from "react-to-print";
 import { FaPrint } from "react-icons/fa";
@@ -12,47 +13,83 @@ const EstimateDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const sameRef = useRef();
-  const [piCopy, setPiCopy] = useState("ORIGINAL PROFORMA INVOICE");
+  const [piCopies, setPiCopies] = useState(["ORIGINAL PROFORMA INVOICE"]);
   const [piMeta, setPiMeta] = useState({ companyId: "", cancelled: false });
 
   const printPi = useReactToPrint({
     contentRef: sameRef,
     documentTitle: "invoice",
-    onAfterPrint: () => setPiCopy("ORIGINAL PROFORMA INVOICE"),
+    onAfterPrint: () => setPiCopies(["ORIGINAL PROFORMA INVOICE"]),
+  });
+
+  const waitForPrintContent = (expectedCopyCount) => new Promise((resolve) => {
+    const startedAt = Date.now();
+    const check = () => {
+      const text = sameRef.current?.textContent || "";
+      const expectedCopiesReady = sameRef.current?.querySelectorAll(".invoice-print-root").length >= expectedCopyCount;
+      const isLoading = text.includes("Loading estimate details");
+
+      if ((expectedCopiesReady && !isLoading) || Date.now() - startedAt > 4000) {
+        resolve();
+        return;
+      }
+
+      window.setTimeout(check, 100);
+    };
+
+    check();
   });
 
   const handlePrint = async () => {
     const result = await Swal.fire({
-      title: "Choose PI Copy",
-      width: 460,
+      title: "Choose Invoice Copy",
+      width: 590,
       html: `
-        <p style="margin:0 0 14px;color:#64748b;font-size:13px">
+        <p style="margin:0 0 18px;color:#64748b;font-size:14px">
           Select the copy required for this print.
         </p>
         <div class="pi-copy-options">
-          <label class="pi-copy-card">
-            <input type="radio" name="pi-copy" value="ORIGINAL PROFORMA INVOICE" checked />
-            <span class="pi-copy-check">✓</span>
-            <span class="pi-copy-name">Original Proforma Invoice</span>
-            <span class="pi-copy-help">Primary proforma copy</span>
+          <label class="pi-copy-all">
+            <input type="checkbox" id="select-all-pi-copies" checked />
+            <span class="pi-copy-all-label">Select All</span>
           </label>
           <label class="pi-copy-card">
-            <input type="radio" name="pi-copy" value="DUPLICATE PROFORMA INVOICE" />
+            <input type="checkbox" name="pi-copy" value="ORIGINAL PROFORMA INVOICE" checked />
             <span class="pi-copy-check">✓</span>
-            <span class="pi-copy-name">Duplicate Proforma Invoice</span>
-            <span class="pi-copy-help">Additional proforma copy</span>
+            <span class="pi-copy-name">Original</span>
+            <span class="pi-copy-purpose">For Recipient</span>
+            <span class="pi-copy-help">Customer's official copy</span>
+          </label>
+          <label class="pi-copy-card">
+            <input type="checkbox" name="pi-copy" value="DUPLICATE PROFORMA INVOICE" checked />
+            <span class="pi-copy-check">✓</span>
+            <span class="pi-copy-name">Duplicate</span>
+            <span class="pi-copy-purpose">For Supplier</span>
+            <span class="pi-copy-help">Office and accounts record</span>
+          </label>
+          <label class="pi-copy-card">
+            <input type="checkbox" name="pi-copy" value="TRIPLICATE PROFORMA INVOICE" checked />
+            <span class="pi-copy-check">✓</span>
+            <span class="pi-copy-name">Triplicate</span>
+            <span class="pi-copy-purpose">For Transportation</span>
+            <span class="pi-copy-help">For movement of goods</span>
           </label>
         </div>
         <style>
-          .pi-copy-options{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;text-align:left}
-          .pi-copy-card{position:relative;display:flex;min-height:88px;padding:13px 11px 10px;flex-direction:column;border:2px solid #e2e8f0;border-radius:9px;background:#fff;cursor:pointer;transition:all .18s ease}
+          .pi-copy-options{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;text-align:left}
+          .pi-copy-all{grid-column:1 / -1;display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid #e2e8f0;border-radius:9px;background:#f8fafc;cursor:pointer}
+          .pi-copy-all input{width:16px;height:16px}
+          .pi-copy-all-label{color:#0d1f3c;font-size:13px;font-weight:700}
+          .pi-copy-card{position:relative;display:flex;min-height:102px;padding:13px 11px 10px;flex-direction:column;border:2px solid #e2e8f0;border-radius:9px;background:#fff;cursor:pointer;transition:all .18s ease}
           .pi-copy-card:hover{border-color:#94a3b8;transform:translateY(-1px)}
           .pi-copy-card:has(input:checked){border-color:#0d1f3c;background:#f1f5f9;box-shadow:0 5px 16px rgba(13,31,60,.12)}
           .pi-copy-card input{position:absolute;opacity:0;pointer-events:none}
           .pi-copy-check{position:absolute;top:8px;right:8px;display:none;width:18px;height:18px;align-items:center;justify-content:center;border-radius:50%;background:#0d1f3c;color:#fff;font-size:11px;font-weight:700}
           .pi-copy-card:has(input:checked) .pi-copy-check{display:flex}
           .pi-copy-name{color:#0d1f3c;font-size:16px;font-weight:700}
-          .pi-copy-help{margin-top:auto;padding-top:7px;color:#64748b;font-size:10px}
+          .pi-copy-purpose{margin-top:4px;color:#334155;font-size:12px;font-weight:600}
+          .pi-copy-help{margin-top:auto;padding-top:7px;color:#64748b;font-size:10px;line-height:1.35}
+          @media (max-width:600px){.pi-copy-options{grid-template-columns:1fr}.pi-copy-card{min-height:90px}}
         </style>
       `,
       showCancelButton: true,
@@ -60,20 +97,42 @@ const EstimateDetails = () => {
       cancelButtonText: "Cancel",
       confirmButtonColor: "#0d1f3c",
       focusConfirm: false,
+      didOpen: () => {
+        const selectAll = Swal.getPopup()?.querySelector('#select-all-pi-copies');
+        const copyInputs = Array.from(Swal.getPopup()?.querySelectorAll('input[name="pi-copy"]') || []);
+        const syncSelectAll = () => {
+          if (!selectAll) return;
+          selectAll.checked = copyInputs.length > 0 && copyInputs.every((input) => input.checked);
+        };
+        selectAll?.addEventListener('change', () => {
+          copyInputs.forEach((input) => {
+            input.checked = selectAll.checked;
+          });
+        });
+        copyInputs.forEach((input) => input.addEventListener('change', syncSelectAll));
+        syncSelectAll();
+      },
       preConfirm: () => {
-        const selected = document.querySelector('input[name="pi-copy"]:checked');
-        if (!selected) {
-          Swal.showValidationMessage("Please select a PI copy");
+        const selected = Array.from(document.querySelectorAll('input[name="pi-copy"]:checked'))
+          .map((input) => input.value)
+          .filter(Boolean);
+        if (!selected.length) {
+          Swal.showValidationMessage("Please select at least one invoice copy");
           return false;
         }
-        return selected.value;
+        return selected;
       },
     });
 
     if (!result.isConfirmed) return;
 
-    setPiCopy(result.value);
-    requestAnimationFrame(() => requestAnimationFrame(() => printPi()));
+    flushSync(() => {
+      setPiCopies(result.value);
+    });
+    requestAnimationFrame(async () => {
+      await waitForPrintContent(result.value.length);
+      printPi();
+    });
   };
 
   return (
@@ -123,7 +182,22 @@ const EstimateDetails = () => {
         </div>
 
         <div ref={sameRef}>
-          <EstimateFormDetail piCopy={piCopy} onMetaChange={setPiMeta} />
+          {piCopies.map((copyLabel, index) => (
+            <div
+              key={`${copyLabel}-${index}`}
+              className="print-copy-page"
+              style={{
+                breakAfter: index < piCopies.length - 1 ? "page" : "auto",
+                pageBreakAfter: index < piCopies.length - 1 ? "always" : "auto",
+              }}
+            >
+              <EstimateFormDetail
+                piCopy={copyLabel}
+                onMetaChange={index === 0 ? setPiMeta : undefined}
+              />
+              <div className="print-copy-page-label" style={{ display: "none" }}>1/1</div>
+            </div>
+          ))}
         </div>
       </div>
     </>

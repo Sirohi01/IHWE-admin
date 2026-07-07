@@ -2,6 +2,7 @@ import { ChevronDown, X, Menu } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { menuItems } from "../data/menuItems";
+import SocialSidebar from "../components/SocialSidebar";
 import { NavLink, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import { logout } from "../utils/auth";
@@ -661,6 +662,12 @@ export default function Sidebar({
             </div>
           )}
         </div>)}
+
+        {sidebarOpen && (
+          <div className="mt-auto px-4 pb-4 pt-2 z-20 relative">
+            <SocialSidebar />
+          </div>
+        )}
       </aside>
     </>
   );

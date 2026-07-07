@@ -237,7 +237,7 @@ const ReceiptsView = () => {
             const res = await api.get(`/api/payments/${pmt._id}/receipt`, { responseType: 'blob' });
             const clientName = (pmt.client_name || 'Receipt').replace(/[^a-zA-Z0-9 -]/g, '').trim();
             const d = new Date(pmt.payment_date || pmt.added);
-            const dateStr = !isNaN(d.getTime()) 
+            const dateStr = !isNaN(d.getTime())
                 ? `${String(d.getDate()).padStart(2, '0')}-${d.toLocaleDateString('en-GB', { month: 'long' })}`
                 : 'Date';
             saveAs(new Blob([res.data], { type: 'application/pdf' }), `${clientName}_${dateStr}.pdf`);

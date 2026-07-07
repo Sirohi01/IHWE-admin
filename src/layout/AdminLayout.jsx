@@ -3,7 +3,6 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { useState } from "react";
 import Sidebar from "./Sidebar";
-import SocialSidebar from "../components/SocialSidebar";
 
 export default function AdminLayout({ onLogout }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -53,8 +52,6 @@ export default function AdminLayout({ onLogout }) {
         </div>
       </div>
 
-      {/* Floating Widgets */}
-      <SocialSidebar />
     </div>
   );
 }

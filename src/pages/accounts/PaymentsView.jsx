@@ -8,6 +8,10 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import AccountNavigation from '../../components/AccountNavigation';
 import Select from 'react-select';
+import { useDispatch, useSelector } from 'react-redux';
+import { createActivityLogThunk } from '../../features/activityLog/activityLogSlice';
+import { getCurrentUserName } from '../../utils/currentUser';
+
 function useCountUp(target, duration = 1200) {
     const [count, setCount] = useState(0);
     const [started, setStarted] = useState(false);
@@ -66,6 +70,7 @@ function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, la
 
 const PaymentList = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const { id = 'all' } = useParams();
     const isAllList = id === 'all';
     const [loading, setLoading] = useState(true);
@@ -294,6 +299,25 @@ const PaymentList = () => {
         const buffer = await workbook.xlsx.writeBuffer();
         const formattedDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long' }).replace(/ /g, '');
         saveAs(new Blob([buffer]), `paymentExport_${formattedDate}.xlsx`);
+
+        const userName = getCurrentUserName();
+        const userStr = sessionStorage.getItem("user") || localStorage.getItem("user");
+        const user = userStr ? JSON.parse(userStr) : null;
+        const userId = user?._id || sessionStorage.getItem("user_id") || localStorage.getItem("user_id");
+
+        const logPayload = {
+            user: userName,
+            action: "Exported",
+            module: "Accounts / Payments",
+            details: "Exported Payments list to Excel",
+            link: `/accounts/payments`
+        };
+
+        if (userId) {
+            logPayload.user_id = userId;
+        }
+
+        dispatch(createActivityLogThunk(logPayload));
     };
 
     const filteredPayments = payments.filter(pmt => {
@@ -494,25 +518,32 @@ const PaymentList = () => {
             {!isAllList && <AccountNavigation id={id} accountName={accountName} pageName="Payments" />}
 
             {/* -- Header -- */}
-            <div className="flex items-center justify-between mb-2 mt-2">
-                <div>
-                    <h1 className="text-2xl font-medium text-slate-900 tracking-tight">Payments</h1>
-                    <div className="text-sm text-slate-500 mt-1">Internal transaction log — every payment recorded against an invoice, who recorded it and when. For the receipt document to send a client, see Receipts.</div>
+            <div className="w-full flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-3 p-3 bg-white rounded-lg border border-slate-100" style={{ boxShadow: 'rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em', fontFamily: 'Inter, sans-serif' }}>
+                <div className="flex flex-col justify-center">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Accounts Receivable (AR)</p>
+                    <div className="flex items-center gap-2 mb-1">
+                        <h2 className="text-lg font-bold text-[#124170] leading-tight">Payments</h2>
+                    </div>
+                    <div className="flex items-center gap-2.5 mt-0.5 flex-wrap">
+                        <p className="text-xs font-medium text-slate-500 leading-relaxed max-w-2xl">
+                            Internal transaction log — every payment recorded against an invoice, who recorded it and when. For the receipt document to send a client, see Receipts.
+                        </p>
+                    </div>
                 </div>
-                <div className="flex gap-3 items-center">
-                    <div className="relative">
+                <div className="flex flex-col sm:flex-row gap-3 items-center">
+                    <div className="relative w-full sm:w-auto">
                         <input
                             type="text"
                             placeholder="Search by invoice no., UTR, txn id..."
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
-                            className="w-[300px] border border-slate-200 rounded-lg pl-3 pr-10 py-2 text-[13px] bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-shadow placeholder:text-slate-400"
+                            className="w-full sm:w-[260px] border border-slate-200 rounded-lg pl-3 pr-9 py-2 text-xs font-medium bg-white shadow-sm focus:outline-none focus:border-[#124170] transition-colors placeholder:text-slate-400"
                         />
-                        <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                        <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
                     <button
                         onClick={handleOpenAddPayment}
-                        className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold shadow-sm transition-colors text-[13px]"
+                        className="flex items-center justify-center gap-1.5 bg-[#124170] hover:bg-[#0c2b4a] text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-colors w-full sm:w-auto whitespace-nowrap"
                     >
                         <Plus className="w-4 h-4" />
                         Add Payment
@@ -584,7 +615,7 @@ const PaymentList = () => {
                 <div className="shrink-0 pl-3 border-l border-slate-200 ml-3 flex gap-2">
                     <button
                         onClick={exportToExcel}
-                        className="flex items-center gap-2 text-blue-600 bg-white border border-slate-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-50 shadow-sm transition-colors"
+                        className="flex items-center gap-2 text-white bg-green-600 border border-green-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-green-700 shadow-sm transition-colors"
                     >
                         <Download className="w-4 h-4" />
                         Export Excel
@@ -596,20 +627,20 @@ const PaymentList = () => {
             <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
                 <table className="w-full min-w-[1120px] border-collapse text-left text-[11px] leading-tight">
                     <thead>
-                        <tr className="border-b border-slate-200 bg-white text-[10px] font-bold uppercase tracking-wider text-slate-700">
-                            <th className="px-3 py-2 w-[40px]">S.No.</th>
-                            <th className="px-3 py-2 min-w-[160px]">Invoice Details</th>
-                            <th className="px-3 py-2 min-w-[160px]">Client / Company</th>
-                            <th className="px-3 py-2 min-w-[100px]">Received</th>
-                            <th className="px-3 py-2 min-w-[100px]">TDS Deducted</th>
-                            <th className="px-3 py-2 min-w-[180px]">Payment Details</th>
-                            <th className="px-3 py-2 min-w-[130px]">Payment Date</th>
-                            <th className="px-3 py-2 min-w-[130px]">Created By</th>
-                            <th className="px-3 py-2 min-w-[100px] text-center">Status</th>
-                            <th className="px-3 py-2 min-w-[100px] text-center">Action</th>
+                        <tr className="bg-white text-[8px] font-black uppercase tracking-wider text-slate-700 border-b border-slate-200 whitespace-nowrap">
+                            <th className="px-3 py-2.5 text-center w-[40px]">S.No.</th>
+                            <th className="px-3 py-2.5 min-w-[160px]">Invoice Details</th>
+                            <th className="px-3 py-2.5 min-w-[160px]">Client / Company</th>
+                            <th className="px-3 py-2.5 min-w-[100px]">Received</th>
+                            <th className="px-3 py-2.5 min-w-[100px]">TDS Deducted</th>
+                            <th className="px-3 py-2.5 min-w-[180px]">Payment Details</th>
+                            <th className="px-3 py-2.5 min-w-[130px]">Payment Date</th>
+                            <th className="px-3 py-2.5 min-w-[130px]">Created By</th>
+                            <th className="px-3 py-2.5 min-w-[100px] text-center">Status</th>
+                            <th className="px-3 py-2.5 min-w-[100px] text-center">Action</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="text-[11px] whitespace-nowrap">
                         {loading ? (
                             <tr>
                                 <td colSpan="10" className="py-6 text-center text-gray-500">
@@ -632,37 +663,37 @@ const PaymentList = () => {
                                     <tr key={group.key} className="border-b border-slate-200 bg-white hover:bg-slate-50/50 transition-colors">
                                         <td className="px-3 py-2.5 text-[11px] font-bold text-slate-900 align-top">{rowIdx}</td>
                                         <td className="px-3 py-2.5 align-top">
-                                            <div className="font-bold text-slate-900 text-[11px]">{group.invoiceNo}</div>
-                                            <div className="mt-1 text-slate-500 text-[10px]">Date: <span className="text-slate-700">{formatDate(group.invoiceDate)}</span></div>
-                                            <div className="mt-0.5 text-slate-500 text-[10px]">Invoice Total: <span className="text-slate-700">{formatCurrency(group.invoiceAmount)}</span></div>
+                                            <div className="font-bold text-[11px]" style={{ color: '#093C5D' }}>{group.invoiceNo}</div>
+                                            <div className="mt-1 text-[9px] font-bold" style={{ color: '#5E0006' }}>Date: {formatDate(group.invoiceDate)}</div>
+                                            <div className="mt-0.5 text-[9px] font-bold" style={{ color: '#5E0006' }}>Invoice Total: {formatCurrency(group.invoiceAmount)}</div>
                                             <div className="mt-1.5 inline-flex rounded bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600">
                                                 {group.payments.length} Payment{group.payments.length === 1 ? '' : 's'}
                                             </div>
                                         </td>
                                         <td className="px-3 py-2.5 align-top">
-                                            <div className="font-bold text-slate-800 text-[11px]">{group.clientName}</div>
+                                            <div className="font-bold text-[11px]" style={{ color: '#093C5D' }}>{group.clientName}</div>
                                         </td>
                                         <td className="px-3 py-2.5 align-top">
                                             {group.payments.map((pmt, paymentIndex) => (
                                                 <div key={`${pmt._id}-received`} className={paymentIndex > 0 ? 'mt-1.5 border-t border-slate-200 pt-1.5' : ''}>
-                                                    <div className="font-bold text-[11px] text-emerald-600">{formatCurrency(pmt.amount_text)}</div>
+                                                    <div className="font-bold text-[10px]" style={{ color: '#064232' }}>{formatCurrency(pmt.amount_text)}</div>
                                                 </div>
                                             ))}
                                             {group.payments.length > 1 && (
                                                 <div className="mt-1.5 text-[10px] text-slate-500">
-                                                    Total: {formatCurrency(group.receivedTotal)}
+                                                    Total: <span style={{ color: '#064232' }}>{formatCurrency(group.receivedTotal)}</span>
                                                 </div>
                                             )}
                                         </td>
                                         <td className="px-3 py-2.5 align-top">
                                             {group.payments.map((pmt, paymentIndex) => (
                                                 <div key={`${pmt._id}-tds`} className={paymentIndex > 0 ? 'mt-1.5 border-t border-slate-200 pt-1.5' : ''}>
-                                                    <div className="font-bold text-[11px] text-orange-600">{formatCurrency(pmt.tds_text)}</div>
+                                                    <div className="font-bold text-[10px]" style={{ color: '#5E0006' }}>{formatCurrency(pmt.tds_text)}</div>
                                                 </div>
                                             ))}
                                             {group.payments.length > 1 && (
                                                 <div className="mt-1.5 text-[10px] text-slate-500">
-                                                    Total: {formatCurrency(group.tdsTotal)}
+                                                    Total: <span style={{ color: '#5E0006' }}>{formatCurrency(group.tdsTotal)}</span>
                                                 </div>
                                             )}
                                         </td>
@@ -670,7 +701,7 @@ const PaymentList = () => {
                                             {group.payments.map((pmt, paymentIndex) => (
                                                 <div key={pmt._id} className={paymentIndex > 0 ? 'mt-1.5 border-t border-slate-200 pt-1.5' : ''}>
                                                     {getPaymentDetailLines(pmt).map((line, lineIndex) => (
-                                                        <div key={`${pmt._id}-${lineIndex}`} className={lineIndex === 0 ? 'font-bold text-[11px] text-slate-900 mb-0.5' : 'text-[10px] text-slate-500'}>
+                                                        <div key={`${pmt._id}-${lineIndex}`} className={lineIndex === 0 ? 'font-bold text-[10px] mb-0.5' : 'text-[9px] font-bold'} style={lineIndex === 0 ? { color: '#15173D' } : { color: '#016B61' }}>
                                                             {line}
                                                         </div>
                                                     ))}
@@ -680,15 +711,17 @@ const PaymentList = () => {
                                         <td className="px-3 py-2.5 align-top">
                                             {group.payments.map((pmt, paymentIndex) => (
                                                 <div key={`${pmt._id}-date`} className={paymentIndex > 0 ? 'mt-1.5 border-t border-slate-200 pt-1.5' : ''}>
-                                                    <div className="font-bold text-[11px] text-slate-900">{formatDateTime(pmt.payment_date)}</div>
+                                                    <div className="font-bold text-[10px]" style={{ color: '#111844' }}>{formatDateTime(pmt.payment_date).split(', ')[0]}</div>
+                                                    <div className="text-[9px] font-bold mt-0.5" style={{ color: '#5E0006' }}>{formatDateTime(pmt.payment_date).split(', ')[1] || ''}</div>
                                                 </div>
                                             ))}
                                         </td>
                                         <td className="px-3 py-2.5 align-top">
                                             {group.payments.map((pmt, paymentIndex) => (
                                                 <div key={`${pmt._id}-created`} className={paymentIndex > 0 ? 'mt-1.5 border-t border-slate-200 pt-1.5' : ''}>
-                                                    <div className="font-bold text-[11px] text-blue-600">{pmt.added_by || 'Admin'}</div>
-                                                    <div className="text-[10px] text-slate-500">{formatDateTime(pmt.added)}</div>
+                                                    <div className="font-bold text-[10px]" style={{ color: '#093C5D' }}>{pmt.added_by || 'Admin'}</div>
+                                                    <div className="text-[9px] font-bold mt-0.5" style={{ color: '#111844' }}>{formatDateTime(pmt.added).split(', ')[0]}</div>
+                                                    <div className="text-[9px] font-bold mt-0.5" style={{ color: '#5E0006' }}>{formatDateTime(pmt.added).split(', ')[1] || ''}</div>
                                                 </div>
                                             ))}
                                         </td>
@@ -700,9 +733,9 @@ const PaymentList = () => {
                                                 const isPartiallyPaid = status.toLowerCase() === 'partially paid';
                                                 return (
                                                     <div key={`${pmt._id}-status`} className={paymentIndex > 0 ? 'mt-1.5 border-t border-slate-200 pt-1.5' : ''}>
-                                                        <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${isCompleted ? 'bg-emerald-50 text-emerald-600' :
-                                                            isOverdue ? 'bg-red-50 text-red-600' :
-                                                                'bg-orange-50 text-orange-600'
+                                                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold whitespace-nowrap ${isCompleted ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                                                            isOverdue ? 'bg-red-50 text-red-600 border border-red-200' :
+                                                                'bg-amber-50 text-amber-600 border border-amber-200'
                                                             }`}>
                                                             <div className={`w-1.5 h-1.5 rounded-full ${isCompleted ? 'bg-emerald-500' :
                                                                 isOverdue ? 'bg-red-500' :
@@ -816,60 +849,42 @@ const PaymentList = () => {
             {/* Total Summary Section (Outside Table) */}
             {!loading && groupedPayments.length > 0 && (
                 <div className="mt-2 bg-white border border-slate-200 rounded-lg shadow-sm p-3 flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex flex-1 flex-wrap items-center justify-between gap-4 pr-6 border-r border-slate-200">
-                        {/* Total Invoice Value */}
-                        <div className="flex flex-col gap-1 items-center px-2 whitespace-nowrap">
-                            <span className="text-[10px] font-bold text-slate-500">Total Invoice Value</span>
-                            <span className="text-sm font-black text-slate-800">{formatCurrency(totalInvoiceValue)}</span>
+                    <div className="flex items-center gap-6 overflow-x-auto w-full md:w-auto scrollbar-hide">
+                        <div className="font-black text-slate-800 text-[12px] whitespace-nowrap">Total Summary</div>
+
+                        <div className="flex flex-col border-l border-slate-200 pl-4 whitespace-nowrap">
+                            <span className="text-emerald-600 font-black text-[12px]">{formatCurrency(totalInvoiceValue)}</span>
+                            <span className="text-slate-500 text-[9px] font-bold mt-0.5">Total Invoice Value</span>
                         </div>
 
-                        <div className="w-px h-8 bg-slate-200 hidden sm:block"></div>
-
-                        {/* Total Collections */}
-                        <div className="flex flex-col gap-1 items-center px-2 whitespace-nowrap">
-                            <span className="text-[10px] font-bold text-slate-500">Total Collections</span>
-                            <span className="text-sm font-black text-slate-800">{formatCurrency(totalReceived)}</span>
+                        <div className="flex flex-col border-l border-slate-200 pl-4 whitespace-nowrap">
+                            <span className="text-emerald-600 font-black text-[12px]">{formatCurrency(totalReceived)}</span>
+                            <span className="text-slate-500 text-[9px] font-bold mt-0.5">Total Collections</span>
                         </div>
 
-                        <div className="w-px h-8 bg-slate-200 hidden sm:block"></div>
-
-                        {/* Total Outstanding */}
-                        <div className="flex flex-col gap-1 items-center px-2 whitespace-nowrap">
-                            <span className="text-[10px] font-bold text-slate-500">Total Outstanding</span>
-                            <span className="text-sm font-black text-slate-800">{formatCurrency(totalOutstanding)}</span>
+                        <div className="flex flex-col border-l border-slate-200 pl-4 whitespace-nowrap">
+                            <span className="text-orange-500 font-black text-[12px]">{formatCurrency(totalTds)}</span>
+                            <span className="text-slate-500 text-[9px] font-bold mt-0.5">Total TDS Deducted</span>
                         </div>
 
-                        <div className="w-px h-8 bg-slate-200 hidden sm:block"></div>
-
-                        {/* Total Overdue */}
-                        <div className="flex flex-col gap-1 items-center px-2 whitespace-nowrap">
-                            <span className="text-[10px] font-bold text-slate-500">Total Overdue</span>
-                            <span className="text-sm font-black text-red-600">{formatCurrency(totalOverdue)}</span>
+                        <div className="flex flex-col border-l border-slate-200 pl-4 whitespace-nowrap">
+                            <span className="text-emerald-600 font-black text-[12px]">{formatCurrency(netAmountReceived)}</span>
+                            <span className="text-slate-500 text-[9px] font-bold mt-0.5">Net Amount Received</span>
                         </div>
 
-                        <div className="w-px h-8 bg-slate-200 hidden sm:block"></div>
-
-                        {/* Total TDS Deducted */}
-                        <div className="flex flex-col gap-1 items-center px-2 whitespace-nowrap">
-                            <span className="text-[10px] font-bold text-slate-500">Total TDS Deducted</span>
-                            <span className="text-sm font-black text-slate-800">{formatCurrency(totalTds)}</span>
+                        <div className="flex flex-col border-l border-slate-200 pl-4 whitespace-nowrap">
+                            <span className="text-rose-600 font-black text-[12px]">{formatCurrency(totalCreditNotes)}</span>
+                            <span className="text-slate-500 text-[9px] font-bold mt-0.5">Total Credit Notes</span>
                         </div>
 
-                        <div className="w-px h-8 bg-slate-200 hidden sm:block"></div>
-
-                        {/* Total Credit Notes */}
-                        <div className="flex flex-col gap-1 items-center px-2 whitespace-nowrap">
-                            <span className="text-[10px] font-bold text-slate-500">Total Credit Notes</span>
-                            <span className="text-sm font-black text-slate-800">{formatCurrency(totalCreditNotes)}</span>
+                        <div className="flex flex-col border-l border-slate-200 pl-4 whitespace-nowrap">
+                            <span className="text-slate-800 font-black text-[12px]">{formatCurrency(totalOutstanding)}</span>
+                            <span className="text-slate-500 text-[9px] font-bold mt-0.5">Total Outstanding</span>
                         </div>
 
-                        <div className="w-px h-8 bg-slate-200 hidden sm:block"></div>
-
-                        {/* Net Amount Received */}
-                        <div className="flex flex-col items-center px-2 text-center whitespace-nowrap">
-                            <span className="text-[10px] font-bold text-slate-500">Net Amount Received</span>
-                            <span className="text-sm font-black text-slate-800 mt-1">{formatCurrency(netAmountReceived)}</span>
-                            <span className="text-[9px] text-slate-500 font-medium">(After TDS)</span>
+                        <div className="flex flex-col border-l border-slate-200 pl-4 whitespace-nowrap">
+                            <span className="text-rose-600 font-black text-[12px]">{formatCurrency(totalOverdue)}</span>
+                            <span className="text-slate-500 text-[9px] font-bold mt-0.5">Overdue Amount</span>
                         </div>
                     </div>
 

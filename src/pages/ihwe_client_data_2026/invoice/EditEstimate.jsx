@@ -51,7 +51,7 @@ const EditEstimate = () => {
       amount: "0.00",
       disc: "0",
       tax: "0.00",
-      gstRate: "",
+      gstRate: "18",
       finalAmount: "0.00",
       remarks: "",
     },
@@ -154,7 +154,7 @@ const EditEstimate = () => {
       const qty = parseFloat(item.qty) || 0;
       const rate = parseFloat(item.rate) || 0;
       const disc = parseFloat(item.disc) || 0;
-      const gstRate = parseFloat(item.gstRate) || 0;
+      const gstRate = parseFloat(item.gstRate) || 18;
 
       const amount = qty * rate;
       const taxableValue = amount - (amount * disc) / 100;
@@ -207,7 +207,7 @@ const EditEstimate = () => {
         amount: "0.00",
         disc: "0",
         tax: "0.00",
-        gstRate: "",
+        gstRate: "18",
         finalAmount: "0.00",
         remarks: "",
       },
@@ -228,7 +228,7 @@ const EditEstimate = () => {
 
     const transformedItems = items.map((item) => {
       const taxableValue = parseFloat(item.tax) || 0;
-      const totalGstRate = parseFloat(item.gstRate) || 0;
+      const totalGstRate = parseFloat(item.gstRate) || 18;
       const gstAmount = (taxableValue * totalGstRate) / 100;
 
       return {
