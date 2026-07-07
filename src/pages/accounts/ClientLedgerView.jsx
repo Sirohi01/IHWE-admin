@@ -544,8 +544,8 @@ const ClientLedgerView = () => {
             worksheet.addRow({ date: `Closing Balance: Rs. ${formatCurrency(ledger.closingBalance)}` });
 
             const buffer = await workbook.xlsx.writeBuffer();
-            const name = ledger.companyInfo?.name?.replace(/[^a-z0-9]+/gi, '_') || 'Client';
-            saveAs(new Blob([buffer]), `Ledger_${name}.xlsx`);
+            const formattedDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long' }).replace(/ /g, '');
+            saveAs(new Blob([buffer]), `ledgerExport_${formattedDate}.xlsx`);
         } finally {
             setExporting(false);
         }
@@ -626,7 +626,7 @@ const ClientLedgerView = () => {
                         disabled={exporting}
                         className="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 disabled:opacity-50"
                     >
-                        {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4 text-slate-500" />} Export Ledger
+                        {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4 text-slate-500" />} Export Ledger Excel
                     </button>
                     <button
                         onClick={downloadStatement}
