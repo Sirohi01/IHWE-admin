@@ -42,32 +42,30 @@ function useCountUp(target, duration = 1200) {
     return { ref, count };
 }
 
-function AnimatedStatCard({ icon, title, value, subText1, subText2, iconBg, valueColor, percentage }) {
-    const { ref, count } = useCountUp(typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]+/g, "")) : value);
+function StatCard({ icon, iconBg, rawValue, displayValue, label, subLabel, bottomLabel, bottomValue, isCurrency }) {
+    const { ref, count } = useCountUp(rawValue);
     return (
-        <div ref={ref} className="bg-white p-3 border border-slate-200 rounded-lg shadow-sm flex flex-col justify-between h-full cursor-pointer hover:shadow-md transition-shadow">
-            <div className="flex items-start gap-2.5">
-                <div className={`w-8 h-8 ${iconBg} rounded-full flex items-center justify-center shrink-0 mt-0.5`}>
-                    {icon}
+        <div ref={ref} className="bg-white p-1 border border-slate-200 rounded-xl shadow-sm flex items-center h-full cursor-pointer hover:shadow-md transition-shadow">
+            <div className={`w-10 h-10 xl:w-11 xl:h-11 ${iconBg} rounded-full flex items-center justify-center shrink-0 mr-1`}>
+                {React.cloneElement(icon, { className: "w-5 h-5 xl:w-5 xl:h-5" })}
+            </div>
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <div className="text-slate-700 font-semibold text-[10px] mb-0.5 whitespace-nowrap overflow-hidden text-ellipsis">{label}</div>
+                <div className={`text-[12px] font-semibold leading-tight text-slate-900 whitespace-nowrap overflow-hidden text-ellipsis`}>
+                    {isCurrency && displayValue.startsWith('₹') ? '₹ ' : ''}
+                    {isCurrency
+                        ? new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(count)
+                        : Math.round(count).toLocaleString('en-IN')}
+                    {!isCurrency && displayValue.includes('%') ? '%' : ''}
                 </div>
-                <div className="flex-1 min-w-0">
-                    <h3 className="text-slate-700 font-bold text-[8px] uppercase tracking-wider leading-tight whitespace-nowrap truncate">{title}</h3>
-                    <div className="flex items-center gap-2 mt-1">
-                        <div className={`text-lg font-semibold leading-none ${valueColor || 'text-slate-800'}`}>
-                            {typeof value === 'string' && value.startsWith('₹') ? '₹ ' : ''}
-                            {typeof value === 'string' && value.includes('.')
-                                ? new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(count)
-                                : new Intl.NumberFormat('en-IN').format(Math.round(count))}
-                        </div>
-                        {percentage && (
-                            <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded leading-none">{percentage}</span>
-                        )}
+                <div className="flex items-center gap-1.5 mt-0.5 xl:mt-1 flex-wrap">
+                    {bottomValue && bottomValue.includes('↑') || bottomValue.includes('↓') ? (
+                        <span className="text-[10px] font-bold text-emerald-600 leading-none">{bottomValue}</span>
+                    ) : null}
+                    <div className="text-slate-500 font-medium text-[9px] xl:text-[10px] whitespace-nowrap overflow-hidden text-ellipsis">
+                        {subLabel} {bottomValue && !bottomValue.includes('↑') && !bottomValue.includes('↓') ? `• ${bottomValue}` : ''}
                     </div>
                 </div>
-            </div>
-            <div className="pt-2 mt-3 border-t border-slate-100 flex justify-between items-center text-[9px]">
-                <div className="text-slate-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis mr-2">{subText1}</div>
-                <div className="text-slate-800 font-bold whitespace-nowrap text-right shrink-0">{subText2}</div>
             </div>
         </div>
     );
@@ -481,55 +479,41 @@ const CreditNotesView = () => {
 
                         {/* Stat Cards Row */}
                         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2">
-                            <AnimatedStatCard
-                                icon={<FileText className="w-4 h-4 text-blue-500" />}
-                                iconBg="bg-blue-50 text-blue-500"
-                                title="Total Credit Notes"
-                                value={totalNotes.toString()}
-                                subText1={`Against ${totalNotes} Invoices`}
-                                subText2={`₹ ${formatCurrency(totalValue)}`}
+                            <StatCard
+                                icon={<FileText className="w-4 h-4 text-blue-600" />} iconBg="bg-blue-100"
+                                rawValue={totalNotes} displayValue={totalNotes.toString()}
+                                label="Total Credit Notes" subLabel={`Against ${totalNotes} Invoices`}
+                                bottomLabel="Total Value" bottomValue={`₹ ${formatCurrency(totalValue)}`}
                             />
-                            <AnimatedStatCard
-                                icon={<CheckCircle2 className="w-4 h-4 text-emerald-500" />}
-                                iconBg="bg-emerald-50 text-emerald-500"
-                                title="Total Adjusted"
-                                value={`₹ ${formatCurrency(totalAdjusted)}`}
-                                subText1="Already Adjusted"
-                                valueColor="text-slate-800"
-                                percentage={adjustedPct}
+                            <StatCard
+                                icon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />} iconBg="bg-emerald-100"
+                                rawValue={totalAdjusted} displayValue={`₹ ${formatCurrency(totalAdjusted)}`} isCurrency
+                                label="Total Adjusted" subLabel="Already Adjusted"
+                                bottomLabel="% of Value" bottomValue={`${adjustedPct}%`}
                             />
-                            <AnimatedStatCard
-                                icon={<AlertTriangle className="w-4 h-4 text-orange-500" />}
-                                iconBg="bg-orange-50 text-orange-500"
-                                title="Cancelled"
-                                value={`₹ ${formatCurrency(totalCancelled)}`}
-                                subText1={`${cancelledCount} Voided Notes`}
-                                valueColor="text-slate-800"
-                                percentage={cancelledPct}
+                            <StatCard
+                                icon={<AlertTriangle className="w-4 h-4 text-orange-600" />} iconBg="bg-orange-100"
+                                rawValue={totalCancelled} displayValue={`₹ ${formatCurrency(totalCancelled)}`} isCurrency
+                                label="Cancelled" subLabel={`${cancelledCount} Voided Notes`}
+                                bottomLabel="% of Value" bottomValue={`${cancelledPct}%`}
                             />
-                            <AnimatedStatCard
-                                icon={<Calendar className="w-4 h-4 text-indigo-500" />}
-                                iconBg="bg-indigo-50 text-indigo-500"
-                                title="This Month Issued"
-                                value={`₹ ${formatCurrency(thisMonthValue)}`}
-                                subText1={`${thisMonthNotes.length} Credit Notes`}
-                                subText2={<span className="text-emerald-500 flex items-center gap-1 font-medium"></span>}
+                            <StatCard
+                                icon={<Calendar className="w-4 h-4 text-indigo-600" />} iconBg="bg-indigo-100"
+                                rawValue={thisMonthValue} displayValue={`₹ ${formatCurrency(thisMonthValue)}`} isCurrency
+                                label="This Month Issued" subLabel={`${thisMonthNotes.length} Credit Notes`}
+                                bottomLabel="" bottomValue=""
                             />
-                            <AnimatedStatCard
-                                icon={<RefreshCcw className="w-4 h-4 text-purple-500" />}
-                                iconBg="bg-purple-50 text-purple-500"
-                                title="Refunds Issued"
-                                value={`₹ ${formatCurrency(refundsIssued)}`}
-                                subText1="Total Refunded"
-                                subText2={<span className="font-medium text-slate-700">0 Refunds</span>}
+                            <StatCard
+                                icon={<RefreshCcw className="w-4 h-4 text-purple-600" />} iconBg="bg-purple-100"
+                                rawValue={refundsIssued} displayValue={`₹ ${formatCurrency(refundsIssued)}`} isCurrency
+                                label="Refunds Issued" subLabel="Total Refunded"
+                                bottomLabel="Refunds" bottomValue="0 Refunds"
                             />
-                            <AnimatedStatCard
-                                icon={<Activity className="w-4 h-4 text-blue-500" />}
-                                iconBg="bg-blue-50 text-blue-500"
-                                title="Avg Credit Note Value"
-                                value={`₹ ${formatCurrency(avgValue)}`}
-                                subText1="Overall"
-                                subText2={<span className="font-medium text-slate-700">Avg. per Credit Note</span>}
+                            <StatCard
+                                icon={<Activity className="w-4 h-4 text-blue-600" />} iconBg="bg-blue-100"
+                                rawValue={avgValue} displayValue={`₹ ${formatCurrency(avgValue)}`} isCurrency
+                                label="Avg Credit Note Value" subLabel="Overall"
+                                bottomLabel="" bottomValue="Avg. per Credit Note"
                             />
                         </div>
 
@@ -616,61 +600,62 @@ const CreditNotesView = () => {
                                     </thead>
                                     <tbody className="divide-y divide-gray-50 text-[11px]">
                                         {currentItems.map((note, idx) => {
-                                        const noteTotal = note.totalAmount !== undefined ? note.totalAmount : note.total_value;
-                                        const isCancelledNote = normalizeStatus(note.status) === 'Cancelled';
-                                        const adjustedAmt = isCancelledNote ? 0 : (Number(noteTotal) || 0);
-                                        const outstandingAmt = isCancelledNote ? (Number(noteTotal) || 0) : 0;
-                                        return (
-                                            <tr key={note._id || idx} className="hover:bg-slate-50/50">
-                                                <td className="py-1 px-2 font-bold text-slate-700 text-center">{indexOfFirstItem + idx + 1}</td>
-                                                <td className="py-1 px-2">
-                                                    <div className="font-bold text-slate-800 text-[11px]">{note.debit_note_no || note.create_note_no || note.est_no || 'N/A'}</div>
-                                                    {/* Both _source values are credit-adjustment documents on this page (see backend/services/ledgerTotals.js) — always label the date as a Credit Note date so it isn't misread as a debit (charge-increasing) document. */}
-                                                    <div className="text-[10px] text-slate-500 mt-0.5">Credit Note Date: {note.debit_note_date || note.added ? new Date(note.debit_note_date || note.added).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
-                                                    <div className="text-[10px] font-bold text-blue-600 mt-0.5 cursor-pointer hover:underline">View Details <ChevronRight className="inline w-3 h-3 rotate-90" /></div>
-                                                </td>
-                                                <td className="py-1 px-2">
-                                                    <div className="font-bold text-slate-800 text-[11px]">{note.toInvoiceNo || note.reference_invoice_no || note.est_no || 'N/A'}</div>
-                                                    <div className="text-[10px] text-slate-500 mt-0.5">Invoice Date: {note.mapped_invoice_date ? new Date(note.mapped_invoice_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
-                                                    <div className="text-[10px] text-slate-500 mt-0.5">Invoice Value: {note.originalAmount !== undefined ? `₹ ${formatCurrency(note.originalAmount)}` : (note.invoice_amount !== undefined ? `₹ ${formatCurrency(note.invoice_amount)}` : 'N/A')}</div>
-                                                </td>
-                                                <td className="py-1 px-2">
-                                                    <div className="font-bold text-blue-600 text-[11px] mb-0.5 cursor-pointer hover:underline">{note.clientName || note.companyName || 'N/A'}</div>
-                                                    <div className="text-[10px] text-slate-500">{note.hallStall ? note.hallStall.split(',')[1]?.trim() : 'N/A'}</div>
-                                                </td>
-                                                <td className="py-1 px-2">
-                                                    <div className="font-bold text-slate-800 text-[11px] mb-0.5">
-                                                        {(note.type || note.credit_note_type)
-                                                            ? (note.type || note.credit_note_type).split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-                                                            : 'N/A'}
-                                                    </div>
-                                                    <div className="text-[10px] text-slate-500 whitespace-normal w-32">{note.reason || 'N/A'}</div>
-                                                </td>
-                                                <td className="py-1 px-2 font-bold text-[11px] text-slate-700 text-center">
-                                                    {note.debit_note_date || note.added ? new Date(note.debit_note_date || note.added).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
-                                                </td>
-                                                <td className="py-1 px-2 text-right">
-                                                    <div className="font-bold text-emerald-600 text-[11px]">₹ {formatCurrency(note.totalAmount !== undefined ? note.totalAmount : note.total_value)}</div>
-                                                </td>
-                                                <td className="py-1 px-2 text-right">
-                                                    <div className="font-bold text-slate-800 text-[11px]">₹ {formatCurrency(adjustedAmt)}</div>
-                                                    <div className="text-[10px] text-slate-500 font-bold mt-0.5">{noteTotal > 0 ? Math.round((adjustedAmt / noteTotal) * 100) : 0}%</div>
-                                                </td>
-                                                <td className="py-1 px-2 text-right">
-                                                    <div className={`font-bold text-[11px] ${outstandingAmt > 0 ? 'text-rose-600' : 'text-slate-800'}`}>
-                                                        ₹ {formatCurrency(outstandingAmt)}
-                                                    </div>
-                                                </td>
-                                                <td className="py-1 px-2 text-center">
-                                                    {getStatusBadge(note.status)}
-                                                </td>
-                                                <td className="py-1 px-2 text-center">
-                                                    <div className="flex items-center justify-center gap-1.5">
-                                                        <button onClick={() => navigate(`/dashboard/account/client-ledger/${note.companyId}`)} className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors" title="View client ledger"><Eye className="w-3.5 h-3.5" /></button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );})}
+                                            const noteTotal = note.totalAmount !== undefined ? note.totalAmount : note.total_value;
+                                            const isCancelledNote = normalizeStatus(note.status) === 'Cancelled';
+                                            const adjustedAmt = isCancelledNote ? 0 : (Number(noteTotal) || 0);
+                                            const outstandingAmt = isCancelledNote ? (Number(noteTotal) || 0) : 0;
+                                            return (
+                                                <tr key={note._id || idx} className="hover:bg-slate-50/50">
+                                                    <td className="py-1 px-2 font-bold text-slate-700 text-center">{indexOfFirstItem + idx + 1}</td>
+                                                    <td className="py-1 px-2">
+                                                        <div className="font-bold text-slate-800 text-[11px]">{note.debit_note_no || note.create_note_no || note.est_no || 'N/A'}</div>
+                                                        {/* Both _source values are credit-adjustment documents on this page (see backend/services/ledgerTotals.js) — always label the date as a Credit Note date so it isn't misread as a debit (charge-increasing) document. */}
+                                                        <div className="text-[10px] text-slate-500 mt-0.5">Credit Note Date: {note.debit_note_date || note.added ? new Date(note.debit_note_date || note.added).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
+                                                        {/* <div className="text-[10px] font-bold text-blue-600 mt-0.5 cursor-pointer hover:underline">View Details <ChevronRight className="inline w-3 h-3 rotate-90" /></div> */}
+                                                    </td>
+                                                    <td className="py-1 px-2">
+                                                        <div className="font-bold text-slate-800 text-[11px]">{note.toInvoiceNo || note.reference_invoice_no || note.est_no || 'N/A'}</div>
+                                                        <div className="text-[10px] text-slate-500 mt-0.5">Invoice Date: {note.mapped_invoice_date ? new Date(note.mapped_invoice_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
+                                                        <div className="text-[10px] text-slate-500 mt-0.5">Invoice Value: {note.originalAmount !== undefined ? `₹ ${formatCurrency(note.originalAmount)}` : (note.invoice_amount !== undefined ? `₹ ${formatCurrency(note.invoice_amount)}` : 'N/A')}</div>
+                                                    </td>
+                                                    <td className="py-1 px-2">
+                                                        <div className="font-bold text-blue-600 text-[11px] mb-0.5 cursor-pointer hover:underline">{note.clientName || note.companyName || 'N/A'}</div>
+                                                        <div className="text-[10px] text-slate-500">{note.hallStall ? note.hallStall.split(',')[1]?.trim() : 'N/A'}</div>
+                                                    </td>
+                                                    <td className="py-1 px-2">
+                                                        <div className="font-bold text-slate-800 text-[11px] mb-0.5">
+                                                            {(note.type || note.credit_note_type)
+                                                                ? (note.type || note.credit_note_type).split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+                                                                : 'N/A'}
+                                                        </div>
+                                                        <div className="text-[10px] text-slate-500 whitespace-normal w-32">{note.reason || 'N/A'}</div>
+                                                    </td>
+                                                    <td className="py-1 px-2 font-bold text-[11px] text-slate-700 text-center">
+                                                        {note.debit_note_date || note.added ? new Date(note.debit_note_date || note.added).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
+                                                    </td>
+                                                    <td className="py-1 px-2 text-right">
+                                                        <div className="font-bold text-emerald-600 text-[11px]">₹ {formatCurrency(note.totalAmount !== undefined ? note.totalAmount : note.total_value)}</div>
+                                                    </td>
+                                                    <td className="py-1 px-2 text-right">
+                                                        <div className="font-bold text-slate-800 text-[11px]">₹ {formatCurrency(adjustedAmt)}</div>
+                                                        <div className="text-[10px] text-slate-500 font-bold mt-0.5">{noteTotal > 0 ? Math.round((adjustedAmt / noteTotal) * 100) : 0}%</div>
+                                                    </td>
+                                                    <td className="py-1 px-2 text-right">
+                                                        <div className={`font-bold text-[11px] ${outstandingAmt > 0 ? 'text-rose-600' : 'text-slate-800'}`}>
+                                                            ₹ {formatCurrency(outstandingAmt)}
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-1 px-2 text-center">
+                                                        {getStatusBadge(note.status)}
+                                                    </td>
+                                                    <td className="py-1 px-2 text-center">
+                                                        <div className="flex items-center justify-center gap-1.5">
+                                                            <button onClick={() => navigate(`/dashboard/account/client-ledger/${note.companyId}`)} className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors" title="View client ledger"><Eye className="w-3.5 h-3.5" /></button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
