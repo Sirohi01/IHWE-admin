@@ -71,25 +71,26 @@ function useCountUp(target, duration = 1200) {
 }
 
 // Matches InvoicesView.jsx's StatCard exactly, for visual/typography consistency across Accounts pages
-function StatCard({ icon, iconBg, rawValue, displayValue, label, subLabel, bottomLabel, bottomValue, isCurrency }) {
+function StatCard({ icon, iconBg, accent, rawValue, displayValue, label, subLabel, bottomLabel, bottomValue, isCurrency }) {
     const { ref, count } = useCountUp(rawValue);
     return (
-        <div ref={ref} className="bg-white p-3 border border-slate-200 rounded-lg shadow-sm flex flex-col justify-between h-full">
-            <div className="flex items-start gap-2.5">
-                <div className={`w-8 h-8 ${iconBg} rounded-full flex items-center justify-center shrink-0 mt-0.5`}>
+        <div ref={ref} className="relative bg-white p-3.5 border border-slate-200 rounded-xl shadow-sm flex flex-col justify-between h-full overflow-hidden hover:shadow-md hover:border-slate-300 transition-all">
+            <div className={`absolute top-0 left-0 right-0 h-[3px] ${accent || 'bg-slate-200'}`} />
+            <div className="flex items-start gap-3">
+                <div className={`w-10 h-10 ${iconBg} rounded-xl flex items-center justify-center shrink-0`}>
                     {icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="text-slate-700 font-bold text-[8px] uppercase tracking-wider leading-tight whitespace-nowrap truncate">{label}</h3>
-                    <div className="text-lg font-semibold text-slate-800 leading-none mt-1">
+                    <h3 className="text-slate-500 font-bold text-[9px] uppercase tracking-wider leading-tight whitespace-nowrap truncate">{label}</h3>
+                    <div className="text-xl font-bold text-slate-800 leading-tight mt-1 truncate">
                         {isCurrency ? displayValue : Math.round(count).toLocaleString('en-IN')}
                     </div>
-                    <div className="text-slate-400 text-[9px] font-semibold mt-0.5">{subLabel}</div>
+                    <div className="text-slate-400 text-[10px] font-semibold mt-0.5 truncate">{subLabel}</div>
                 </div>
             </div>
-            <div className="pt-2 border-t border-slate-100 flex justify-between items-center text-[9px]">
+            <div className="pt-2.5 mt-2.5 border-t border-slate-100 flex justify-between items-center text-[10px]">
                 <span className="text-slate-500 font-medium">{bottomLabel}</span>
-                <span className="text-slate-800 font-bold">{bottomValue}</span>
+                <span className="text-slate-700 font-bold">{bottomValue}</span>
             </div>
         </div>
     );
@@ -217,6 +218,17 @@ const ClientPicker = () => {
         followUp: companies.filter(c => c.companyStatus === 'Follow-Up Call' || c.companyStatus === 'Follow Up').length,
     };
 
+    // Ledger-level financial roll-up across every client — this page is Client Ledger,
+    // so its headline stats should be money-in/money-out, not the CRM pipeline funnel.
+    const finTotals = companies.reduce((acc, c) => {
+        acc.invoiced += c.financials.invoiced || 0;
+        acc.received += c.financials.received || 0;
+        acc.outstanding += c.financials.outstanding || 0;
+        if ((c.financials.outstanding || 0) > 0) acc.clientsWithDues += 1;
+        return acc;
+    }, { invoiced: 0, received: 0, outstanding: 0, clientsWithDues: 0 });
+    const collectionRatePct = finTotals.invoiced > 0 ? Math.round((finTotals.received / finTotals.invoiced) * 100) : 0;
+
     return (
         <div className="min-h-screen bg-slate-50 p-4 font-sans text-slate-800">
             {/* Header */}
@@ -235,124 +247,143 @@ const ClientPicker = () => {
                 </div>
             ) : (
                 <>
-                    {/* Stat Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+                    {/* Stat Cards — ledger roll-up: money in, money out, money still owed */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
                         <StatCard
-                            icon={<Building2 className="w-4 h-4 text-blue-600" />} iconBg="bg-blue-100"
+                            icon={<Building2 className="w-5 h-5 text-blue-600" />} iconBg="bg-blue-50" accent="bg-blue-500"
                             rawValue={stats.total} displayValue={stats.total}
                             label="Total Clients" subLabel="All registered profiles"
-                            bottomLabel="Database" bottomValue={stats.total}
+                            bottomLabel="Converted" bottomValue={stats.converted}
                         />
                         <StatCard
-                            icon={<BadgeCheck className="w-4 h-4 text-emerald-600" />} iconBg="bg-emerald-100"
-                            rawValue={stats.converted} displayValue={stats.converted}
-                            label="Converted Clients" subLabel="Successfully onboarded"
-                            bottomLabel="Won Deals" bottomValue={stats.converted}
+                            icon={<FileText className="w-5 h-5 text-indigo-600" />} iconBg="bg-indigo-50" accent="bg-indigo-500"
+                            rawValue={finTotals.invoiced} displayValue={`₹ ${formatCurrency(finTotals.invoiced)}`} isCurrency
+                            label="Total Invoiced" subLabel="Across all clients"
+                            bottomLabel="Clients Billed" bottomValue={companies.filter(c => c.financials.invoiced > 0).length}
                         />
                         <StatCard
-                            icon={<Plus className="w-4 h-4 text-orange-600" />} iconBg="bg-orange-100"
-                            rawValue={stats.lead} displayValue={stats.lead}
-                            label="New Leads" subLabel="Recently added prospects"
-                            bottomLabel="Pipeline" bottomValue={stats.lead}
+                            icon={<TrendingUp className="w-5 h-5 text-emerald-600" />} iconBg="bg-emerald-50" accent="bg-emerald-500"
+                            rawValue={finTotals.received} displayValue={`₹ ${formatCurrency(finTotals.received)}`} isCurrency
+                            label="Total Collected" subLabel={`${collectionRatePct}% of invoiced value`}
+                            bottomLabel="Collection Rate" bottomValue={`${collectionRatePct}%`}
                         />
                         <StatCard
-                            icon={<TrendingUp className="w-4 h-4 text-purple-600" />} iconBg="bg-purple-100"
-                            rawValue={stats.warm} displayValue={stats.warm}
-                            label="Warm Clients" subLabel="High chance of conversion"
-                            bottomLabel="In Progress" bottomValue={stats.warm}
+                            icon={<Wallet className="w-5 h-5 text-rose-600" />} iconBg="bg-rose-50" accent="bg-rose-500"
+                            rawValue={finTotals.outstanding} displayValue={`₹ ${formatCurrency(finTotals.outstanding)}`} isCurrency
+                            label="Total Outstanding" subLabel="Pending recovery"
+                            bottomLabel="Clients w/ Dues" bottomValue={finTotals.clientsWithDues}
                         />
                         <StatCard
-                            icon={<Phone className="w-4 h-4 text-rose-600" />} iconBg="bg-rose-100"
-                            rawValue={stats.followUp} displayValue={stats.followUp}
-                            label="Follow-Ups" subLabel="Requires attention"
-                            bottomLabel="Pending" bottomValue={stats.followUp}
+                            icon={<AlertTriangle className="w-5 h-5 text-amber-600" />} iconBg="bg-amber-50" accent="bg-amber-500"
+                            rawValue={finTotals.clientsWithDues} displayValue={finTotals.clientsWithDues}
+                            label="Clients with Dues" subLabel="Need follow-up"
+                            bottomLabel="Follow-Ups" bottomValue={stats.followUp}
                         />
                     </div>
 
                     {/* Filters Row */}
-                    <div className="bg-white p-2.5 rounded-t-xl border border-slate-200 border-b-0 shadow-sm flex flex-col md:flex-row items-center gap-2">
-                        <div className="relative flex-1 min-w-[200px]">
-                            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <div className="bg-white p-3 rounded-t-xl border border-slate-200 border-b-0 shadow-sm flex flex-col md:flex-row items-center gap-2.5">
+                        <div className="relative flex-1 min-w-[200px] w-full">
+                            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                             <input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search by client name, email, or city..."
-                                className="pl-8 pr-3 py-1.5 border border-slate-200 rounded-md text-[11px] w-full focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                                className="pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-[12px] w-full focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-shadow"
                             />
                         </div>
                         <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto scrollbar-hide">
+                            <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
-                                className="border border-slate-200 rounded-md px-2 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none bg-slate-50 min-w-[110px]"
+                                className="border border-slate-200 rounded-lg px-2.5 py-2 text-[11px] font-bold text-slate-700 focus:outline-none bg-slate-50 min-w-[130px] shrink-0"
                             >
                                 <option value="All Statuses">All Statuses</option>
                                 {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
                             </select>
+                            <span className="text-[10px] font-semibold text-slate-400 shrink-0 whitespace-nowrap pl-1">{filtered.length} of {companies.length} clients</span>
                         </div>
                     </div>
 
                     {/* Table */}
-                    <div className="bg-white border border-slate-200 shadow-sm overflow-x-auto">
-                        <table className="w-full text-left border-collapse min-w-[1000px]">
+                    <div className="bg-white border border-slate-200 rounded-b-xl shadow-sm overflow-x-auto">
+                        <table className="w-full text-left border-collapse min-w-[1050px]">
                             <thead>
-                                <tr className="bg-slate-50 text-[9px] font-black uppercase tracking-wider text-slate-700 border-b border-slate-200 whitespace-nowrap">
+                                <tr className="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 whitespace-nowrap">
                                     <th className="px-3 py-3 text-center w-10">S.No.</th>
                                     <th className="px-3 py-3">Client Profile</th>
                                     <th className="px-3 py-3">Contact & Location</th>
+                                    <th className="px-3 py-3 text-center">Status</th>
                                     <th className="px-3 py-3 text-right">Invoiced (₹)</th>
                                     <th className="px-3 py-3 text-right">Collections</th>
                                     <th className="px-3 py-3 text-right">Outstanding (₹)</th>
-                                    {/* <th className="px-3 py-3 text-center">Status</th> */}
                                     <th className="px-3 py-3 text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="text-[11px] whitespace-nowrap">
                                 {paginated.length === 0 && (
                                     <tr>
-                                        <td colSpan={8} className="py-8 text-center text-slate-400 font-medium">No clients found.</td>
+                                        <td colSpan={8} className="py-12 text-center text-slate-400 font-medium">
+                                            <Building2 className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                                            No clients found.
+                                        </td>
                                     </tr>
                                 )}
                                 {paginated.map((c, idx) => {
                                     const fin = c.financials;
                                     const stallInfo = c.stallNo || fin.stallNo;
                                     const sqMtrInfo = c.stallSize || fin.sqMtr;
-                                    
+
                                     const primaryContact = c.contacts?.find(contact => contact.isPrimary) || c.contacts?.[0];
                                     const mobile = primaryContact?.mobile || c.landline || 'N/A';
                                     const email = c.email || primaryContact?.email || 'N/A';
+                                    const clientName = c.companyName || c.name || 'Unknown Client';
+                                    const initial = clientName.charAt(0).toUpperCase();
 
                                     return (
-                                        <tr key={c._id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-3 py-2 font-black text-slate-800 text-center">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
-                                            <td className="px-3 py-2">
-                                                <div className="font-bold text-blue-600 text-[12px] truncate max-w-[200px]">{c.companyName || c.name || 'Unknown Client'}</div>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-slate-500 font-medium text-[10px]">{c.category || 'Standard'}</span>
-                                                    {(stallInfo && stallInfo !== 'N/A') && (
-                                                        <span className="bg-amber-50 text-amber-700 border border-amber-100 px-1.5 py-0.5 rounded text-[9px] font-bold">
-                                                            Stall: {stallInfo} {sqMtrInfo && sqMtrInfo !== 'N/A' ? `(${sqMtrInfo})` : ''}
-                                                        </span>
-                                                    )}
+                                        <tr key={c._id} className="border-b border-slate-100 even:bg-slate-50/40 hover:bg-blue-50/40 transition-colors">
+                                            <td className="px-3 py-3 font-bold text-slate-400 text-center tabular-nums">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
+                                            <td className="px-3 py-3">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center font-bold text-[12px] shrink-0">
+                                                        {initial}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <div className="font-bold text-slate-800 text-[12px] truncate max-w-[180px]">{clientName}</div>
+                                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                                            <span className="text-slate-400 font-medium text-[10px]">{c.category || 'Standard'}</span>
+                                                            {(stallInfo && stallInfo !== 'N/A') && (
+                                                                <span className="bg-amber-50 text-amber-700 border border-amber-100 px-1.5 py-0.5 rounded text-[9px] font-bold">
+                                                                    Stall {stallInfo}{sqMtrInfo && sqMtrInfo !== 'N/A' ? ` · ${sqMtrInfo}` : ''}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </td>
-                                            <td className="px-3 py-2">
-                                                <div className="font-bold text-slate-800 text-[11px] truncate max-w-[150px] flex items-center gap-1">
-                                                    <Mail className="w-3 h-3 text-slate-400" /> {email}
+                                            <td className="px-3 py-3">
+                                                <div className="font-semibold text-slate-700 text-[11px] truncate max-w-[150px] flex items-center gap-1.5">
+                                                    <Mail className="w-3 h-3 text-slate-400 shrink-0" /> {email}
                                                 </div>
-                                                <div className="text-slate-500 font-medium mt-1 text-[10px] truncate max-w-[150px] flex items-center gap-1">
-                                                    <Phone className="w-3 h-3 text-slate-400" /> {mobile}
-                                                    {c.city && <span className="ml-1 px-1 bg-slate-100 rounded border border-slate-200">{c.city}</span>}
+                                                <div className="text-slate-500 font-medium mt-1 text-[10px] truncate max-w-[150px] flex items-center gap-1.5">
+                                                    <Phone className="w-3 h-3 text-slate-400 shrink-0" /> {mobile}
+                                                    {c.city && <span className="ml-0.5 px-1.5 py-0.5 bg-slate-100 rounded text-slate-500 font-semibold">{c.city}</span>}
                                                 </div>
                                             </td>
-                                            <td className="px-3 py-2 text-right">
-                                                <div className="font-bold text-slate-700 text-[11px]">{fin.invoiced > 0 ? `₹ ${formatCurrency(fin.invoiced)}` : '-'}</div>
+                                            <td className="px-3 py-3 text-center">
+                                                <span className={`inline-block px-2 py-1 rounded-full text-[9px] font-bold ${statusBadgeStyle(c.companyStatus)}`}>
+                                                    {c.companyStatus || 'N/A'}
+                                                </span>
                                             </td>
-                                            <td className="px-3 py-2 text-right">
-                                                <div className="font-bold text-emerald-600 text-[11px] mb-1">{fin.received > 0 ? `₹ ${formatCurrency(fin.received)}` : '-'}</div>
+                                            <td className="px-3 py-3 text-right">
+                                                <div className="font-bold text-slate-700 text-[11px] tabular-nums">{fin.invoiced > 0 ? `₹ ${formatCurrency(fin.invoiced)}` : '—'}</div>
+                                            </td>
+                                            <td className="px-3 py-3 text-right">
+                                                <div className="font-bold text-emerald-600 text-[11px] mb-1.5 tabular-nums">{fin.received > 0 ? `₹ ${formatCurrency(fin.received)}` : '—'}</div>
                                                 {fin.invoiced > 0 && (
-                                                    <div className="w-24 h-1.5 bg-slate-100 rounded-full ml-auto overflow-hidden">
+                                                    <div className="w-24 h-1.5 bg-emerald-50 rounded-full ml-auto overflow-hidden" title={`${fin.receivedPct}% collected`}>
                                                         <div
                                                             className={`h-full rounded-full transition-all duration-500 ${fin.receivedPct === 100 ? 'bg-emerald-500' : 'bg-blue-500'}`}
                                                             style={{ width: `${fin.receivedPct}%` }}
@@ -360,20 +391,15 @@ const ClientPicker = () => {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td className="px-3 py-2 text-right">
-                                                <div className={`font-black text-[12px] ${fin.outstanding > 0 ? 'text-rose-500' : 'text-slate-400'}`}>
-                                                    {fin.outstanding > 0 ? `₹ ${formatCurrency(fin.outstanding)}` : '-'}
+                                            <td className="px-3 py-3 text-right">
+                                                <div className={`font-bold text-[12px] tabular-nums ${fin.outstanding > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                                                    {fin.outstanding > 0 ? `₹ ${formatCurrency(fin.outstanding)}` : 'Settled'}
                                                 </div>
                                             </td>
-                                            {/* <td className="px-3 py-2 text-center">
-                                            <span className={`inline-block px-2 py-1 rounded text-[9px] font-bold shadow-sm ${statusBadgeStyle(c.companyStatus)}`}>
-                                                {c.companyStatus || 'N/A'}
-                                            </span>
-                                        </td> */}
-                                            <td className="px-3 py-2">
+                                            <td className="px-3 py-3">
                                                 <div className="flex items-center justify-center">
                                                     <button
-                                                        className="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded text-[10px] font-bold hover:bg-blue-600 hover:text-white transition-all flex items-center gap-1 shadow-sm"
+                                                        className="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg text-[10px] font-bold hover:bg-blue-600 hover:text-white hover:shadow-sm transition-all flex items-center gap-1"
                                                         onClick={() => navigate(`/dashboard/account/client-ledger/${c._id}`)}
                                                     >
                                                         View Ledger <ChevronRight className="w-3 h-3" />
