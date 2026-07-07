@@ -180,7 +180,9 @@ const ImprestView = () => {
         0,
         Number(summary.totalReimbursed || 0) + Number(summary.totalPending || 0),
     );
-    const balanceInHand = Math.max(0, openingBalance - Number(summary.totalReimbursed || 0));
+    // Money already approved/disbursed to employees that hasn't been reimbursed/settled yet —
+    // NOT the same as "Total Pending" (requests still awaiting approval).
+    const balanceInHand = Math.max(0, Number(summary.totalApproved || 0) - Number(summary.totalReimbursed || 0));
 
     const resetFilters = () => {
         setSearch('');
@@ -216,12 +218,12 @@ const ImprestView = () => {
             <div className="flex flex-col lg:flex-row gap-2">
                 <main className="w-full lg:w-[82%] space-y-2">
                     <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-1.5">
-                        <StatCard icon={<FileCheck2 className="w-4 h-4" />} iconClass="bg-blue-50 text-blue-600" label="Total Requests" value={requests.length} note="This Month" />
-                        <StatCard icon={<IndianRupee className="w-4 h-4" />} iconClass="bg-emerald-50 text-emerald-600" label="Total Amount Requested" value={money(summary.totalRequested)} note="This Month" />
-                        <StatCard icon={<CheckCircle2 className="w-4 h-4" />} iconClass="bg-amber-50 text-amber-600" label="Total Approved" value={money(summary.totalApproved)} note="This Month" />
-                        <StatCard icon={<WalletCards className="w-4 h-4" />} iconClass="bg-purple-50 text-purple-600" label="Total Reimbursed" value={money(summary.totalReimbursed)} note="This Month" />
-                        <StatCard icon={<Clock3 className="w-4 h-4" />} iconClass="bg-rose-50 text-rose-600" label="Total Pending" value={money(summary.totalPending)} note="This Month" />
-                        <StatCard icon={<Clock3 className="w-4 h-4" />} iconClass="bg-cyan-50 text-cyan-600" label="Average Settlement Time" value={`${summary.averageSettlementDays || 0} Days`} note="This Month" />
+                        <StatCard icon={<FileCheck2 className="w-4 h-4" />} iconClass="bg-blue-50 text-blue-600" label="Total Requests" value={requests.length} note="All Time" />
+                        <StatCard icon={<IndianRupee className="w-4 h-4" />} iconClass="bg-emerald-50 text-emerald-600" label="Total Amount Requested" value={money(summary.totalRequested)} note="All Time" />
+                        <StatCard icon={<CheckCircle2 className="w-4 h-4" />} iconClass="bg-amber-50 text-amber-600" label="Total Approved" value={money(summary.totalApproved)} note="All Time" />
+                        <StatCard icon={<WalletCards className="w-4 h-4" />} iconClass="bg-purple-50 text-purple-600" label="Total Reimbursed" value={money(summary.totalReimbursed)} note="All Time" />
+                        <StatCard icon={<Clock3 className="w-4 h-4" />} iconClass="bg-rose-50 text-rose-600" label="Total Pending" value={money(summary.totalPending)} note="All Time" />
+                        <StatCard icon={<Clock3 className="w-4 h-4" />} iconClass="bg-cyan-50 text-cyan-600" label="Average Settlement Time" value={`${summary.averageSettlementDays || 0} Days`} note="All Time" />
                     </div>
 
                     <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-2 space-y-2">
@@ -279,7 +281,7 @@ const ImprestView = () => {
                                 ) : visibleRows.map((item) => (
                                     <tr key={item._id} className="border-b border-slate-100 hover:bg-slate-50/60">
                                         <td className="px-2 py-2.5 font-bold text-blue-600">{item.requestNo}</td>
-                                        <td className="px-2 py-2.5"><div className="font-bold text-slate-800">{item.employeeName}</div><div className="text-[10px] text-slate-400 mt-0.5">{item.employeeId}</div></td>
+                                        <td className="px-2 py-2.5"><div className="font-bold text-slate-800">{item.employeeName}</div></td>
                                         <td className="px-2 py-2.5 font-medium text-slate-600">{item.department}</td>
                                         <td className="px-2 py-2.5 font-medium text-slate-700 max-w-[220px] truncate">{item.purpose}</td>
                                         <td className="px-2 py-2.5 font-semibold text-slate-600 whitespace-nowrap">{dateText(item.requestDate)}</td>

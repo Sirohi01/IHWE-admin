@@ -99,13 +99,6 @@ const CreateAccountDebitNote = () => {
 
     const invoices = useMemo(() => context?.invoices || [], [context]);
     const selectedInvoice = invoices.find((inv) => inv.id === selectedInvoiceId);
-
-    // Auto-fill Charge Details from the selected invoice's own line items (only when the
-    // table is still untouched), then auto-allocate this invoice using the RESULTING total —
-    // computed inline from the new items rather than the component's `totalAmount`, which
-    // would otherwise still reflect the pre-update items in this same effect pass and lock
-    // in a wrong (often zero) applied amount, making "Remaining Debit Balance" impossible
-    // to reach ₹0.00.
     useEffect(() => {
         if (readOnly || !selectedInvoice) return;
 
@@ -125,7 +118,7 @@ const CreateAccountDebitNote = () => {
                 if (prevAlloc[selectedInvoiceId] !== undefined || nextTotal <= 0) return prevAlloc;
                 const alreadyApplied = Object.values(prevAlloc).reduce((s, v) => s + v, 0);
                 const remaining = Math.max(0, nextTotal - alreadyApplied);
-                return { ...prevAlloc, [selectedInvoiceId]: Math.round(Math.min(remaining, selectedInvoice.outstanding) * 100) / 100 };
+                return { ...prevAlloc, [selectedInvoiceId]: Math.round(remaining * 100) / 100 };
             });
 
             return nextItems;
@@ -162,7 +155,7 @@ const CreateAccountDebitNote = () => {
             const next = { ...prev };
             if (!checked) { delete next[inv.id]; return next; }
             const remaining = Math.max(0, totalAmount - Object.values(prev).reduce((s, v) => s + v, 0));
-            next[inv.id] = Math.round(Math.min(remaining, inv.outstanding) * 100) / 100;
+            next[inv.id] = Math.round(remaining * 100) / 100;
             return next;
         });
     };
@@ -174,15 +167,9 @@ const CreateAccountDebitNote = () => {
     const alreadyReceived = selectedInvoice ? Math.max(0, selectedInvoice.invoiceAmount - selectedInvoice.outstanding) : 0;
     const newOutstandingAfterDN = Math.max(0, outstandingBeforeDN + totalAmount - tdsDeduction - adjustmentCreditNote);
 
-    const withinLimitCheck = useMemo(
-        () => Object.entries(allocMap).every(([invId, amt]) => {
-            const inv = invoices.find((i) => i.id === invId);
-            return inv && amt <= inv.outstanding + 0.5;
-        }),
-        [allocMap, invoices],
-    );
+    const withinLimitCheck = true;
     const hasAllocation = Object.keys(allocMap).length > 0;
-    const gstOk = Math.abs(gstAmount - taxableAmount * 0) >= 0; // GST is auto-computed per item; always structurally valid
+    const gstOk = Math.abs(gstAmount - taxableAmount * 0) >= 0;
     const balancedCheck = Math.abs(remainingBalance) < 0.5;
     const infoCompleteCheck = Boolean(reason.trim() && remarks.trim() && items.every((it) => it.description.trim()));
     const allChecksPass = withinLimitCheck && hasAllocation && balancedCheck && infoCompleteCheck;
@@ -493,21 +480,21 @@ const CreateAccountDebitNote = () => {
                                 <textarea disabled={readOnly} value={remarks} onChange={(e) => setRemarks(e.target.value)} rows={3} className="w-full border border-slate-300 rounded-md px-2.5 py-1.5 text-[12px] focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-50" placeholder="Add remarks for this debit note..." />
                             </div>
                             {!readOnly && (
-                            <div>
-                                <label className="block text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-1">Attachments</label>
-                                <label className="flex flex-col items-center justify-center gap-1 border border-dashed border-slate-300 rounded-md py-4 text-[11px] text-slate-500 cursor-pointer hover:bg-slate-50">
-                                    <Upload className="w-4 h-4 text-slate-400" />
-                                    Drag &amp; drop files here or <span className="text-blue-600 font-semibold">click to upload</span>
-                                    <span className="text-[9px] text-slate-400">PDF, JPG, PNG up to 5 MB</span>
-                                    <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)} />
-                                </label>
-                                {attachmentFile && (
-                                    <div className="flex items-center justify-between mt-1.5 bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[10px]">
-                                        <span className="truncate text-slate-600">{attachmentFile.name} ({Math.round(attachmentFile.size / 1024)} KB)</span>
-                                        <button onClick={() => setAttachmentFile(null)} className="text-slate-400 hover:text-rose-500"><X className="w-3 h-3" /></button>
-                                    </div>
-                                )}
-                            </div>
+                                <div>
+                                    <label className="block text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-1">Attachments</label>
+                                    <label className="flex flex-col items-center justify-center gap-1 border border-dashed border-slate-300 rounded-md py-4 text-[11px] text-slate-500 cursor-pointer hover:bg-slate-50">
+                                        <Upload className="w-4 h-4 text-slate-400" />
+                                        Drag &amp; drop files here or <span className="text-blue-600 font-semibold">click to upload</span>
+                                        <span className="text-[9px] text-slate-400">PDF, JPG, PNG up to 5 MB</span>
+                                        <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)} />
+                                    </label>
+                                    {attachmentFile && (
+                                        <div className="flex items-center justify-between mt-1.5 bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[10px]">
+                                            <span className="truncate text-slate-600">{attachmentFile.name} ({Math.round(attachmentFile.size / 1024)} KB)</span>
+                                            <button onClick={() => setAttachmentFile(null)} className="text-slate-400 hover:text-rose-500"><X className="w-3 h-3" /></button>
+                                        </div>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>

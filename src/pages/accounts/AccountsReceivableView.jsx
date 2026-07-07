@@ -56,6 +56,52 @@ const PAYMENT_TYPE_STYLES = {
     'Pending': 'text-blue-600 bg-blue-50 border-blue-200',
 };
 
+const getDueMeta = (row) => {
+    if (!row?.dueDate) {
+        return {
+            cellClass: 'text-slate-400',
+            badgeClass: 'bg-slate-100 text-slate-500 border-slate-200',
+            label: row?.dueLabel || 'No Due Date',
+            helper: 'Not set',
+        };
+    }
+
+    if (row.isOverdue) {
+        const days = Math.abs(Number(row.dueDaysDiff || 0));
+        return {
+            cellClass: 'text-rose-700',
+            badgeClass: 'bg-rose-100 text-rose-700 border-rose-200',
+            label: row.dueLabel || row.dueType || 'Overdue',
+            helper: days > 0 ? `${days}d overdue` : 'Overdue',
+        };
+    }
+
+    if (Number(row.dueDaysDiff) === 0) {
+        return {
+            cellClass: 'text-amber-700',
+            badgeClass: 'bg-amber-100 text-amber-700 border-amber-200',
+            label: row.dueLabel || row.dueType || 'Due Today',
+            helper: 'Due today',
+        };
+    }
+
+    if (Number(row.dueDaysDiff) > 0) {
+        return {
+            cellClass: 'text-blue-700',
+            badgeClass: 'bg-blue-50 text-blue-700 border-blue-200',
+            label: row.dueLabel || row.dueType || 'Upcoming',
+            helper: `Due in ${row.dueDaysDiff}d`,
+        };
+    }
+
+    return {
+        cellClass: 'text-slate-700',
+        badgeClass: 'bg-slate-100 text-slate-600 border-slate-200',
+        label: row.dueLabel || row.dueType || 'Due Date',
+        helper: '',
+    };
+};
+
 const AccountsReceivableView = () => {
     const navigate = useNavigate();
     const [rows, setRows] = useState([]);
@@ -115,7 +161,7 @@ const AccountsReceivableView = () => {
     const filteredRows = useMemo(() => {
         const s = search.trim().toLowerCase();
         return rows.filter((row) => {
-            const matchesSearch = !s || [row.client, row.invNo, row.stallNo, row.utr]
+            const matchesSearch = !s || [row.client, row.invNo, row.docType, row.stallNo, row.utr]
                 .some((field) => String(field || '').toLowerCase().includes(s));
             const matchesStatus = statusFilter === 'All Status' || row.status === statusFilter;
             return matchesSearch && matchesStatus;
@@ -186,21 +232,21 @@ const AccountsReceivableView = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
                         <StatCard
                             icon={<FileText className="w-4 h-4" />} iconBg="bg-blue-100" iconColor="text-blue-600"
-                            title="Total Invoices" value={stats?.totalInvoices ?? 0} subLabel="Active"
+                            title="Total Documents" value={stats?.totalInvoices ?? 0} subLabel="Active"
                         />
                         <StatCard
                             icon={<CheckCircle2 className="w-4 h-4" />} iconBg="bg-emerald-100" iconColor="text-emerald-600"
-                            title="Fully Paid Invoices" value={stats?.fullyPaidCount ?? 0}
+                            title="Fully Paid Docs" value={stats?.fullyPaidCount ?? 0}
                             subLabel={stats?.totalInvoices ? `${Math.round((stats.fullyPaidCount / stats.totalInvoices) * 100)}%` : '0%'}
                         />
                         <StatCard
                             icon={<PieChart className="w-4 h-4" />} iconBg="bg-orange-100" iconColor="text-orange-600"
-                            title="Partially Paid Invoices" value={stats?.partiallyPaidCount ?? 0}
+                            title="Partially Paid Docs" value={stats?.partiallyPaidCount ?? 0}
                             subLabel={stats?.totalInvoices ? `${Math.round((stats.partiallyPaidCount / stats.totalInvoices) * 100)}%` : '0%'}
                         />
                         <StatCard
                             icon={<FileSpreadsheet className="w-4 h-4" />} iconBg="bg-rose-100" iconColor="text-rose-600"
-                            title="Unpaid Invoices" value={stats?.unpaidCount ?? 0}
+                            title="Unpaid Docs" value={stats?.unpaidCount ?? 0}
                             subLabel={stats?.totalInvoices ? `${Math.round((stats.unpaidCount / stats.totalInvoices) * 100)}%` : '0%'}
                         />
                         <StatCard
@@ -217,7 +263,7 @@ const AccountsReceivableView = () => {
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search by invoice no., client, stall no., UTR..."
+                                placeholder="Search by document no., client, stall no., UTR..."
                                 className="pl-8 pr-3 py-1.5 border border-slate-200 rounded-md text-[11px] w-full focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
                             />
                         </div>
@@ -237,15 +283,16 @@ const AccountsReceivableView = () => {
                     </div>
 
                     {/* Table */}
-                    <div className="bg-white border border-slate-200 shadow-sm overflow-x-auto">
+                    <div className="bg-white border border-slate-200 shadow-sm">
+                        <div className="overflow-x-auto">
                         <table className="w-full min-w-[1300px] text-left border-collapse">
                             <thead>
                                 <tr className="bg-white text-[8px] font-black uppercase tracking-wider text-slate-700 border-b border-slate-200 whitespace-nowrap">
                                     <th className="px-3 py-2.5 text-center w-10">S.No.</th>
                                     <th className="px-3 py-2.5">Client & Stall Details</th>
-                                    <th className="px-3 py-2.5">Invoice Details</th>
+                                    <th className="px-3 py-2.5">Document Details</th>
                                     <th className="px-3 py-2.5 text-center">Payment Type</th>
-                                    <th className="px-3 py-2.5 text-right">Invoice Value</th>
+                                    <th className="px-3 py-2.5 text-right">Document Value</th>
                                     <th className="px-3 py-2.5 text-right">Credit / Debit Note</th>
                                     <th className="px-3 py-2.5 text-center">Received Till Date</th>
                                     <th className="px-3 py-2.5 text-center">TDS Deducted</th>
@@ -261,15 +308,19 @@ const AccountsReceivableView = () => {
                             <tbody className="text-[11px] whitespace-nowrap">
                                 {filteredRows.length === 0 && (
                                     <tr>
-                                        <td colSpan={15} className="py-8 text-center text-slate-400">No invoices found.</td>
+                                        <td colSpan={15} className="py-8 text-center text-slate-400">No receivable documents found.</td>
                                     </tr>
                                 )}
-                                {paginatedRows.map((row, idx) => (
+                                {paginatedRows.map((row, idx) => {
+                                    const dueMeta = getDueMeta(row);
+                                    return (
                                     <tr
                                         key={row.id}
-                                        className={`border-b transition-colors ${row.status === 'Overdue'
-                                            ? 'bg-rose-50 border-rose-100 hover:bg-rose-100 border-l-4 border-l-rose-500'
-                                            : 'border-slate-100 hover:bg-slate-50/50'
+                                        className={`border-b transition-colors ${row.isOverdue
+                                            ? 'bg-rose-50/80 border-rose-100 hover:bg-rose-100 border-l-4 border-l-rose-500'
+                                            : row.docType === 'Proforma Invoice'
+                                                ? 'bg-amber-50/30 border-amber-100 hover:bg-amber-50/60'
+                                                : 'border-slate-100 hover:bg-slate-50/50'
                                             }`}
                                     >
                                         <td className="px-3 py-2 font-black text-slate-800 text-center">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
@@ -280,15 +331,18 @@ const AccountsReceivableView = () => {
                                         </td>
                                         <td className="px-3 py-2">
                                             <div className="font-bold text-slate-800 text-[11px]">{row.invNo}</div>
+                                            <div className={`inline-block mt-1 px-1.5 py-0.5 rounded border text-[8px] font-black uppercase tracking-wide ${row.docType === 'Proforma Invoice' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                                                {row.docType || 'Invoice'}
+                                            </div>
                                             <div className="text-slate-500 mt-0.5 text-[10px] font-medium">Date: {formatDate(row.invDate)}</div>
-                                            <div className="text-slate-500 mt-0.5 text-[10px] font-medium">Total Invoices: <span className="font-bold text-slate-700">{row.totalInvoicesForClient}</span></div>
+                                            <div className="text-slate-500 mt-0.5 text-[10px] font-medium">Total Docs: <span className="font-bold text-slate-700">{row.totalInvoicesForClient}</span></div>
                                         </td>
                                         <td className="px-3 py-2 text-center">
                                             <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold border ${PAYMENT_TYPE_STYLES[row.paymentType] || 'text-slate-600 bg-slate-50 border-slate-200'}`}>
                                                 {row.paymentType}
                                             </span>
                                         </td>
-                                        <td className="px-3 py-2 font-bold text-slate-800 text-[11px] text-right">
+                                        <td className="px-3 py-2 font-bold text-[12px] text-indigo-600 text-right">
                                             {formatCurrency(row.invValue)}
                                         </td>
                                         <td className="px-3 py-2 text-right">
@@ -306,19 +360,36 @@ const AccountsReceivableView = () => {
                                         <td className="px-3 py-2 text-center">
                                             <div className="font-bold text-[11px] text-emerald-600">{formatCurrency(row.netReceived)}</div>
                                         </td>
-                                        <td className="px-3 py-2 font-bold text-slate-800 text-[11px] text-right">
+                                        <td className={`px-3 py-2 font-bold text-[11px] text-right ${row.outstanding > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                                             {formatCurrency(row.outstanding)}
                                         </td>
                                         <td className="px-3 py-2">
                                             <div className="font-bold text-slate-800 text-[11px]">{row.paymentMode}</div>
-                                            <div className="text-slate-500 font-medium mt-0.5 text-[10px]">{row.bank}</div>
+                                            {row.bank && row.bank !== '-' && (
+                                                <div className="text-slate-500 font-medium mt-0.5 text-[10px]">{row.bank}</div>
+                                            )}
                                         </td>
                                         <td className="px-3 py-2">
                                             <div className="font-medium text-slate-700 text-[11px]">{row.utr}</div>
-                                            <div className="text-slate-500 font-medium mt-0.5 text-[10px]">{formatDate(row.utrDate)}</div>
+                                            {row.utrDate && (
+                                                <div className="text-slate-500 font-medium mt-0.5 text-[10px]">{formatDate(row.utrDate)}</div>
+                                            )}
                                         </td>
-                                        <td className="px-3 py-2 font-black text-slate-700 text-center">
-                                            {formatDate(row.dueDate)}
+                                        <td className={`px-3 py-2 font-black text-center ${dueMeta.cellClass}`}>
+                                            <div className="leading-tight">{formatDate(row.dueDate)}</div>
+                                            <div className={`inline-block mt-1 px-1.5 py-0.5 rounded border text-[8px] font-black uppercase tracking-wide ${dueMeta.badgeClass}`}>
+                                                {dueMeta.label}
+                                            </div>
+                                            {dueMeta.helper && (
+                                                <div className={`mt-0.5 text-[9px] font-bold leading-tight ${row.isOverdue ? 'text-rose-600' : 'text-slate-500'}`}>
+                                                    {dueMeta.helper}
+                                                </div>
+                                            )}
+                                            {row.hasInstallmentDue && row.installmentDueDate && (
+                                                <div className="mt-0.5 text-[9px] font-semibold text-amber-700 leading-tight">
+                                                    Inst.: {formatDate(row.installmentDueDate)}
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="px-3 py-2 text-center">
                                             <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${STATUS_STYLES[row.status] || 'bg-slate-100 text-slate-600 border-slate-200'}`}>
@@ -344,9 +415,11 @@ const AccountsReceivableView = () => {
                                             </div>
                                         </td>
                                     </tr>
-                                ))}
+                                    );
+                                })}
                             </tbody>
                         </table>
+                        </div>
 
                         {/* Pagination */}
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 p-3 border-t border-slate-200">
@@ -421,7 +494,7 @@ const AccountsReceivableView = () => {
 
                             <div className="flex flex-col border-l border-slate-200 pl-4 whitespace-nowrap">
                                 <span className="text-emerald-600 font-black text-[12px]">{formatCurrency(stats?.totalInvoiceValue)}</span>
-                                <span className="text-slate-500 text-[9px] font-bold mt-0.5">Total Invoice Value</span>
+                                <span className="text-slate-500 text-[9px] font-bold mt-0.5">Total Document Value</span>
                             </div>
 
                             <div className="flex flex-col border-l border-slate-200 pl-4 whitespace-nowrap">
