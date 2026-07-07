@@ -1,3 +1,5 @@
+
+
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchCompanies } from '../../../features/company/companySlice';
@@ -18,11 +20,16 @@ function toWords(n) {
         return convert(Math.floor(num / 10000000)) + ' Crore' + (num % 10000000 ? ' ' + convert(num % 10000000) : '');
     };
     const intPart = Math.floor(n);
-    return 'RUPEES ' + convert(intPart) + ' Only.';
+    const words = convert(intPart).trim();
+    return 'Rupees ' + words + ' Only.';
 }
 
 const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceCopy = 'ORIGINAL INVOICE' }) => {
     const dispatch = useDispatch();
+    const invoiceCopyType = String(invoiceCopy || '')
+        .replace(/\s*INVOICE\s*/gi, '')
+        .trim();
+    const invoiceCopyLabel = invoiceCopyType ? `${invoiceCopyType} INVOICE` : invoiceCopy;
     const { companies } = useSelector((state) => state.companies);
     const [company, setCompany] = useState(null);
     const [bankDetails, setBankDetails] = useState(null);
@@ -58,7 +65,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
             const targetCompanyId = matchedInvoice ? (matchedInvoice.companyId || matchedInvoice.company_id) : form?.companyId;
             if (!targetCompanyId) return;
             const cId = typeof targetCompanyId === 'object' ? targetCompanyId._id : targetCompanyId;
-            
+
             try {
                 const res = await api.get(`/api/companies/lookup/${cId}`);
                 setCompany(res.data.data || res.data);
@@ -75,7 +82,220 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
     }, [companies, form?.companyId, matchedInvoice]);
 
     const cur = '₹';
+    const parseNum = (value) => {
+        if (value === null || value === undefined || value === '') return 0;
+        const parsed = Number(String(value).replace(/,/g, '').replace(/%/g, '').trim());
+        return Number.isFinite(parsed) ? parsed : 0;
+    };
     const fmtNum = (n) => Math.round(Number(n || 0)).toLocaleString('en-IN');
+    const getItemAmount = (item = {}) => {
+        const qty = parseNum(item.qty ?? item.quantity ?? 1) || 1;
+        const rate = parseNum(item.rate ?? item.unit_rate ?? item.price);
+        const getAreaMultiplier = (...values) => {
+            for (const value of values) {
+                const text = String(value ?? '').replace(/,/g, '').trim();
+                const dimensions = text.match(/(\d+(?:\.\d+)?)\s*[xX×*]\s*(\d+(?:\.\d+)?)/);
+                if (dimensions) return parseNum(dimensions[1]) * parseNum(dimensions[2]);
+                const match = text.match(/\d+(?:\.\d+)?/);
+                const number = match ? parseNum(match[0]) : 0;
+                if (number > 0) return number;
+            }
+            return 1;
+        };
+        const computedAmount = rate * getAreaMultiplier(item.size, item.area, item.areaSqm, item.area_sqm, item.sqm) * qty;
+        const explicitAmount = parseNum(
+            item.amount ??
+            item.itemValue ??
+            item.item_value ??
+            item.totalBeforeTax ??
+            item.total_before_tax
+        );
+        if (explicitAmount && computedAmount && explicitAmount < computedAmount * 0.5) return computedAmount;
+        return explicitAmount || computedAmount;
+    };
+    const getItemTaxable = (item = {}) => {
+        const amount = getItemAmount(item);
+        const discountPercent = parseNum(item.discountPct ?? item.discount_percent ?? item.discountPercentage ?? item.disc);
+        const discountAmount = parseNum(item.discountAmount ?? item.discount_amount);
+        if (discountPercent || discountAmount) {
+            return Math.max(0, amount - (discountAmount || ((amount * discountPercent) / 100)));
+        }
+
+        const taxValue = parseNum(item.tax);
+        const gstRate = getItemGstRate(item);
+        const expectedGstFromTaxable = amount && gstRate ? (amount * gstRate) / 100 : 0;
+        const taxLooksLikeGstAmount = taxValue && expectedGstFromTaxable && Math.abs(taxValue - expectedGstFromTaxable) < 1;
+
+        const explicitTaxable = parseNum(
+            item.taxableValue ??
+            item.taxable_value ??
+            item.taxable ??
+            (taxLooksLikeGstAmount ? 0 : item.tax)
+        );
+        if (explicitTaxable) return explicitTaxable;
+
+        return amount;
+    };
+    const getItemGstRate = (item = {}) => {
+        const directRate = parseNum(
+            item.gstPct ??
+            item.gstRate ??
+            item.gst_rate ??
+            item.gst ??
+            item.taxRate ??
+            item.tax_rate ??
+            item.igst_per
+        );
+        if (directRate) return directRate;
+
+        const cgstRate = parseNum(item.cgst_per);
+        return cgstRate ? cgstRate * 2 : 18;
+    };
+    const getItemGstAmount = (item = {}) => {
+        const taxable = getItemTaxable(item);
+        const gstRate = getItemGstRate(item);
+        const computedGstAmount = taxable && gstRate ? (taxable * gstRate) / 100 : 0;
+        if (computedGstAmount) return computedGstAmount;
+
+        const explicitGstAmount = parseNum(
+            item.gstAmount ??
+            item.gst_amount ??
+            item.totalTax ??
+            item.total_tax ??
+            (parseNum(item.cgst) + parseNum(item.sgst) + parseNum(item.igst))
+        );
+        if (explicitGstAmount) return explicitGstAmount;
+
+        return 0;
+    };
+    const getItemFinalAmount = (item = {}) => {
+        return getItemTaxable(item) + getItemGstAmount(item);
+    };
+    const formatSize = (value) => {
+        if (!value) return '—';
+        return `${String(value).replace(/\s*[xX*]\s*/g, ' × ').trim()} m`;
+    };
+    const formatArea = (value) => value ? `${value} sqm` : '—';
+    const joinAddressParts = (parts) => {
+        const used = new Set();
+        const out = [];
+        return (parts || [])
+            .map(cleanAddressPart)
+            .flatMap((part) => String(part || '').split(',').map((p) => p.trim()))
+            .filter((part) => {
+                if (!part) return false;
+                const lowered = part.toLowerCase();
+                if (lowered === '—' || lowered === 'null' || lowered === 'undefined' || lowered === 'n/a') return false;
+                const key = lowered.replace(/[^a-z0-9]/g, '');
+                if (!key || used.has(key)) return false;
+                used.add(key);
+                return true;
+            })
+            .forEach((part) => {
+                if (/^\d{6}$/.test(part) && out.length) {
+                    out[out.length - 1] = `${out[out.length - 1]} - ${part}`;
+                    return;
+                }
+                out.push(part);
+            }) || out.join(', ');
+    };
+
+    const cleanAddressPart = (value) => {
+        if (value === null || value === undefined) return '';
+
+        if (Array.isArray(value)) {
+            return joinAddressParts(value);
+        }
+
+        if (typeof value === 'object') {
+            return joinAddressParts([
+                value.address,
+                value.company_addr,
+                value.companyAddress,
+                value.addressLine,
+                value.address_line,
+                value.city,
+                value.district,
+                value.state,
+                value.country,
+                value.pincode,
+                value.pinCode,
+                value.pin_code,
+                value.postalCode,
+                value.postal_code,
+                value.zipCode,
+                value.zip_code,
+            ]);
+        }
+
+        let text = String(value).trim().replace(/\s+/g, ' ');
+        if (!text || text === '—') return '';
+        if (['null', 'undefined', 'n/a'].includes(text.toLowerCase())) return '';
+
+        // If backend sends object-like text such as:
+        // "city: 'asd'" or "{ city: 'asd', state: 'UP', pincode: '123' }"
+        // this removes the labels and keeps only clean values.
+        const hasAddressLabels = /(?:^|[,{\s])(?:address|company_addr|companyAddress|addressLine|address_line|city|district|state|country|pincode|pinCode|pin_code|postalCode|postal_code|zipCode|zip_code)\s*:/i.test(text);
+        if (hasAddressLabels) {
+            const values = [];
+            const regex = /(?:address|company_addr|companyAddress|addressLine|address_line|city|district|state|country|pincode|pinCode|pin_code|postalCode|postal_code|zipCode|zip_code)\s*:\s*['"]?([^,'"}]+)['"]?/gi;
+            let match;
+            while ((match = regex.exec(text)) !== null) {
+                const cleaned = String(match[1] || '')
+                    .replace(/^['"`{\[]+|['"`}\]]+$/g, '')
+                    .trim();
+                if (cleaned) values.push(cleaned);
+            }
+            if (values.length) return joinAddressParts(values);
+        }
+
+        return text
+            .replace(/^['"`{\[]+|['"`}\]]+$/g, '')
+            .replace(/,$/, '')
+            .trim();
+    };
+
+    const getFirstAddressValue = (...values) => values.find((value) => cleanAddressPart(value)) || '';
+    const getFirstCleanValue = (...values) => values.find((value) => String(value ?? '').trim()) || '';
+    const normalizeContactName = (name, titledName) => {
+        const clean = (value) => String(value || '').replace(/\s+/g, ' ').trim();
+        const value = clean(name) || clean(titledName);
+        return value ? value.replace(/^(mr|mrs|ms|miss|dr|prof)\.?\s+/i, '').trim() : '—';
+    };
+
+    const getDeliveryChallanNo = (source) => {
+        const directNo = (
+            source?.delivery_challan_no ||
+            source?.deliveryChallanNo ||
+            source?.delivery_challan_number ||
+            source?.deliveryChallanNumber ||
+            source?.challan_no ||
+            source?.challanNo ||
+            source?.challan_number ||
+            source?.delivery_challan?.delivery_challan_no ||
+            source?.delivery_challan?.deliveryChallanNo ||
+            source?.delivery_challan?.delivery_challan_number ||
+            source?.delivery_challan?.deliveryChallanNumber ||
+            source?.delivery_challan?.challan_no ||
+            source?.delivery_challan?.challanNo ||
+            source?.delivery_challan?.challan_number
+        );
+
+        if (directNo) return directNo;
+
+        return deliveryChallans
+            .map((challan) => (
+                challan?.delivery_challan_no ||
+                challan?.deliveryChallanNo ||
+                challan?.delivery_challan_number ||
+                challan?.deliveryChallanNumber ||
+                challan?.challan_no ||
+                challan?.challanNo ||
+                challan?.challan_number
+            ))
+            .filter(Boolean)
+            .join(', ');
+    };
 
     const activeItems = matchedInvoice ? matchedInvoice.items : items;
     const invoiceNo = matchedInvoice ? matchedInvoice.invoice_no : (form?.invoiceNo || '');
@@ -89,23 +309,141 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
         ? new Date(matchedInvoice?.supply_date || form?.supply_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
         : '';
 
-    const totalTaxable = activeItems?.reduce((sum, item) => sum + (parseFloat(item.taxableValue) || 0), 0) || 0;
-    const totalGstAmount = activeItems?.reduce((sum, item) => sum + (parseFloat(item.gstAmount) || 0), 0) || 0;
-    const grandTotal = matchedInvoice ? (matchedInvoice.finalAmount || 0) : (activeItems?.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0) || 0);
+    const totalTaxable = activeItems?.reduce((sum, item) => sum + getItemTaxable(item), 0) || 0;
+    const totalGstAmount = activeItems?.reduce((sum, item) => sum + getItemGstAmount(item), 0) || 0;
+    const grandTotal = activeItems?.reduce((sum, item) => sum + getItemFinalAmount(item), 0) || parseNum(matchedInvoice?.finalAmount ?? matchedInvoice?.final_amount ?? form?.finalAmount ?? form?.final_amount);
+    const getDiscountPercent = (item = {}) => {
+        const directPercent = parseNum(item.discountPct ?? item.disc ?? item.discount_percent ?? item.discountPercentage);
+        return Number.isFinite(directPercent) ? directPercent : 0;
+    };
 
-    const c1 = company?.contacts?.[0] || company?.contact1 || {};
+    const targetCompanyId = matchedInvoice ? (matchedInvoice.companyId || matchedInvoice.company_id) : form?.companyId;
+    const normalizedCompanyId = typeof targetCompanyId === 'object' ? targetCompanyId?._id : targetCompanyId;
+    const reduxCompany = companies?.find((item) =>
+        String(item?._id) === String(normalizedCompanyId) ||
+        String(item?.clientId) === String(normalizedCompanyId)
+    );
+    const resolvedCompany = company || reduxCompany || {};
+    const c1 = resolvedCompany?.contacts?.[0] || resolvedCompany?.contact1 || {};
     const companyName = "Namo Gange Wellness Pvt. Ltd.";
 
     const PROFORMA_EVENT_NAME = '9th Edition of International Health & Wellness Expo (IHWE Global Edition)';
     const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, Bharat';
-    const PROFORMA_EVENT_GST_NO = '08AAFCN9238F1Z6';
+    const PROFORMA_EVENT_STATE = 'Delhi';
+    const PROFORMA_PLACE_OF_SUPPLY_WITH_CODE = 'Delhi (07)';
+    const PROFORMA_EVENT_GST_NO = '07AAFCN9238F1Z6';
 
-    const clientCompanyName = matchedInvoice?.company_name || form?.company_name || company?.companyName || company?.exhibitorName || '—';
-    const clientCompanyAddress = matchedInvoice?.company_addr || form?.company_addr || [company?.address, company?.city, company?.pincode ? `- ${company.pincode}` : '', company?.state, company?.country].filter(Boolean).join(', ');
+    const clientCompanyName = matchedInvoice?.company_name || form?.company_name || resolvedCompany?.companyName || resolvedCompany?.exhibitorName || '—';
+    const titledContactPerson = [c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ');
+    const rawClientContactPerson = getFirstCleanValue(
+        matchedInvoice?.contact_person,
+        matchedInvoice?.company_contact_person,
+        matchedInvoice?.consignee_person,
+        form?.contact_person,
+        form?.company_contact_person,
+        form?.consignee_person,
+        titledContactPerson,
+        resolvedCompany?.contactPerson,
+        resolvedCompany?.contact_person
+    ) || '—';
+    const clientContactPerson = normalizeContactName(rawClientContactPerson, titledContactPerson);
+    const clientContactNo = getFirstCleanValue(
+        matchedInvoice?.contact_no,
+        matchedInvoice?.contact_phone,
+        matchedInvoice?.company_contact_no,
+        matchedInvoice?.company_phone,
+        matchedInvoice?.mobile,
+        matchedInvoice?.phone,
+        matchedInvoice?.consignee_phone,
+        form?.contact_no,
+        form?.contact_phone,
+        form?.company_contact_no,
+        form?.company_phone,
+        form?.mobile,
+        form?.phone,
+        form?.consignee_phone,
+        c1.mobile,
+        resolvedCompany?.landline,
+        resolvedCompany?.mobile
+    ) || '—';
+    const clientEmail = getFirstCleanValue(
+        matchedInvoice?.company_email,
+        matchedInvoice?.contact_email,
+        matchedInvoice?.email,
+        form?.company_email,
+        form?.contact_email,
+        form?.email,
+        c1.email,
+        resolvedCompany?.companyEmail,
+        resolvedCompany?.email
+    ) || '—';
+    const clientAddressLine = getFirstAddressValue(
+        matchedInvoice?.company_addr,
+        matchedInvoice?.address,
+        form?.company_addr,
+        form?.address,
+        resolvedCompany?.address,
+        resolvedCompany?.companyAddress,
+        resolvedCompany?.company_addr
+    );
+    const clientCity = getFirstAddressValue(
+        matchedInvoice?.company_city,
+        matchedInvoice?.city,
+        form?.company_city,
+        form?.city,
+        resolvedCompany?.city,
+        resolvedCompany?.district
+    );
+    const clientState = getFirstAddressValue(
+        matchedInvoice?.company_state,
+        matchedInvoice?.state,
+        form?.company_state,
+        form?.state,
+        resolvedCompany?.state
+    );
+    const clientCountry = getFirstAddressValue(
+        matchedInvoice?.company_country,
+        matchedInvoice?.country,
+        form?.company_country,
+        form?.country,
+        resolvedCompany?.country
+    );
+    const clientPincode = getFirstAddressValue(
+        matchedInvoice?.company_pincode,
+        matchedInvoice?.pincode,
+        matchedInvoice?.pin_code,
+        matchedInvoice?.postal_code,
+        matchedInvoice?.zip_code,
+        form?.company_pincode,
+        form?.pincode,
+        form?.pin_code,
+        form?.postal_code,
+        form?.zip_code,
+        resolvedCompany?.pincode,
+        resolvedCompany?.pinCode,
+        resolvedCompany?.pin_code,
+        resolvedCompany?.postalCode,
+        resolvedCompany?.postal_code,
+        resolvedCompany?.zipCode,
+        resolvedCompany?.zip_code
+    );
+    const clientCompanyAddress = joinAddressParts([
+        clientAddressLine,
+        clientCity,
+        clientPincode,
+        clientState,
+        clientCountry,
+    ]);
     const clientGstNo = matchedInvoice?.company_gst_no || form?.company_gst_no || matchedInvoice?.gst_no || form?.gstin;
 
     const eventName = matchedInvoice?.event_name || form?.event_name || matchedInvoice?.consignee_name || form?.consignee_name || PROFORMA_EVENT_NAME;
-    const eventPlaceOfSupply = matchedInvoice?.event_place_of_supply || matchedInvoice?.consignee_addr || form?.consignee_addr || PROFORMA_PLACE_OF_SUPPLY;
+    const eventPlaceOfSupply = joinAddressParts([
+        (matchedInvoice?.event_place_of_supply || matchedInvoice?.consignee_addr || form?.consignee_addr || PROFORMA_PLACE_OF_SUPPLY)
+            .replace(/,\s*Bharat$/i, ''),
+        PROFORMA_EVENT_STATE,
+        'Bharat',
+    ]);
+    const shipmentAddress = eventPlaceOfSupply;
     const eventGstNo = matchedInvoice?.event_gst_no || form?.event_gst_no || PROFORMA_EVENT_GST_NO;
 
     const termsCondition = matchedInvoice ? matchedInvoice.terms : form?.terms;
@@ -137,29 +475,68 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
     const cancelled = String(matchedInvoice?.status || form?.status || '').toLowerCase() === 'cancelled';
     const deliveryChallans = matchedInvoice?.delivery_challans || form?.delivery_challans || [];
     const activeItemList = activeItems || [];
+    const displayChallanNo = getDeliveryChallanNo(activeItemList?.[0]);
+    const ewayChallan = deliveryChallans.find((challan) => getFirstCleanValue(
+        challan?.eway_bill_no,
+        challan?.ewayBillNo,
+        challan?.eway_bill,
+        challan?.ewayBill
+    ));
+    const ewayBillNo = getFirstCleanValue(
+        matchedInvoice?.eway_bill_no,
+        matchedInvoice?.ewayBillNo,
+        matchedInvoice?.eway_bill,
+        matchedInvoice?.ewayBill,
+        form?.eway_bill_no,
+        form?.ewayBillNo,
+        form?.eway_bill,
+        form?.ewayBill,
+        ewayChallan?.eway_bill_no,
+        ewayChallan?.ewayBillNo,
+        ewayChallan?.eway_bill,
+        ewayChallan?.ewayBill
+    );
 
     const renderInvoiceHeader = () => (
         <>
-            <div style={{ marginBottom: 8, textAlign: 'center' }}>
+            <div className="invoice-header-image" style={{ marginBottom: 2, textAlign: 'center' }}>
                 <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
             </div>
 
             <div
                 className="invoice-title-bar"
                 style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr auto 1fr',
+                    position: 'relative',
+                    display: 'flex',
                     alignItems: 'center',
-                    marginBottom: 4,
-                    paddingTop: 2,
-                    paddingBottom: 2,
+                    justifyContent: 'center',
+                    minHeight: 22,
+                    marginBottom: 0,
+                    paddingTop: 0,
+                    paddingBottom: 0,
                     color: '#0d1f3c',
                     textTransform: 'uppercase',
                 }}
             >
-                <span aria-hidden="true" />
-                <div style={{ fontWeight: 400, fontSize: 18 }}>{heading || 'TAX INVOICE'}</div>
-                <div style={{ justifySelf: 'end', fontWeight: 700, fontSize: 11 }}>{invoiceCopy}</div>
+                <div style={{ fontWeight: 400, fontSize: 18, lineHeight: 1.1, textAlign: 'center' }}>{heading || 'TAX INVOICE'}</div>
+                <div
+                    className="invoice-copy-label"
+                    style={{
+                        position: 'absolute',
+                        right: 0,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        fontWeight: 700,
+                        fontSize: 9.2,
+                        lineHeight: 1,
+                        paddingRight: 2,
+                        whiteSpace: 'nowrap',
+                        textAlign: 'right',
+                        letterSpacing: '-0.2px',
+                    }}
+                >
+                    {invoiceCopyLabel}
+                </div>
             </div>
 
             <table className="invoice-avoid-break" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
@@ -173,24 +550,27 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                 <tbody>
                     <tr>
                         <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
-                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{clientCompanyName}</div>
+                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>
+                                {clientContactPerson !== '—' ? clientContactPerson : clientCompanyName}
+                            </div>
+                            <div style={{ marginTop: 2, textTransform: 'uppercase' }}>{clientCompanyName}</div>
                             <div style={{ marginTop: 2, textTransform: 'capitalize' }}>{clientCompanyAddress || '—'}</div>
                             <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%', marginTop: 4 }}>
                                 <tbody>
                                     <tr>
                                         <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact Person</td>
                                         <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0' }}>{[c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ') || '—'}</td>
+                                        <td style={{ border: 'none', padding: '1px 0' }}>{clientContactPerson}</td>
                                     </tr>
                                     <tr>
                                         <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact No.</td>
                                         <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0' }}>{c1.mobile || company?.landline || '—'}</td>
+                                        <td style={{ border: 'none', padding: '1px 0' }}>{clientContactNo}</td>
                                     </tr>
                                     <tr>
                                         <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Email</td>
                                         <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0' }}>{c1.email || company?.email || '—'}</td>
+                                        <td style={{ border: 'none', padding: '1px 0' }}>{clientEmail}</td>
                                     </tr>
                                     {clientGstNo && (
                                         <tr>
@@ -204,23 +584,23 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                         </td>
                         <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
                             <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{eventName}</div>
-                            <div style={{ marginTop: 2 }}>{eventPlaceOfSupply}</div>
+                            <div style={{ marginTop: 2 }}>{shipmentAddress || '—'}</div>
                             <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%', marginTop: 4 }}>
                                 <tbody>
                                     <tr>
                                         <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Place of Supply &amp; Code</td>
                                         <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0' }}>{form?.placeOfSupply || matchedInvoice?.place_of_supply || matchedInvoice?.state || form?.state || '—'}</td>
+                                        <td style={{ border: 'none', padding: '1px 0' }}>{PROFORMA_PLACE_OF_SUPPLY_WITH_CODE}</td>
                                     </tr>
                                     <tr>
                                         <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact Person</td>
                                         <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0' }}>{[c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ') || '—'}</td>
+                                        <td style={{ border: 'none', padding: '1px 0' }}>{clientContactPerson}</td>
                                     </tr>
                                     <tr>
                                         <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact No.</td>
                                         <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0' }}>{c1.mobile || company?.landline || '—'}</td>
+                                        <td style={{ border: 'none', padding: '1px 0' }}>{clientContactNo}</td>
                                     </tr>
                                     <tr>
                                         <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>GSTIN.</td>
@@ -238,27 +618,11 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{invoiceNo}</td>
                                     </tr>
-                                    {Number(matchedInvoice?.revision_no || 0) > 0 && (
-                                        <tr>
-                                            <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Revision</td>
-                                            <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                            <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>Rev {matchedInvoice.revision_no}</td>
-                                        </tr>
-                                    )}
+
                                     <tr>
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Invoice Date</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{invoiceDate}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created Date</td>
-                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{createdDateTime}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created By</td>
-                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', textTransform: 'capitalize' }}>{matchedInvoice?.added_by || 'Admin'}</td>
                                     </tr>
                                     <tr>
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>PO No.</td>
@@ -269,6 +633,21 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Supply Date</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{supplyDateTime || '—'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>E-way Bill No.</td>
+                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{ewayBillNo || '—'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created Date</td>
+                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{createdDateTime}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created By</td>
+                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', textTransform: 'capitalize' }}>{matchedInvoice?.added_by || 'Admin'}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -289,7 +668,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                     <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 5 }}>
                         <tbody>
                             <tr>
-                                <td style={{ width: '25%', padding: '2px 5px' }}><b>Challan No.:</b> {challan.challan_no || '—'}</td>
+                                <td style={{ width: '25%', padding: '2px 5px' }}><b>Delivery Challan No.:</b> {getDeliveryChallanNo(challan) || '—'}</td>
                                 <td style={{ width: '20%', padding: '2px 5px' }}><b>Date:</b> {challan.challan_date ? new Date(challan.challan_date).toLocaleDateString('en-IN') : '—'}</td>
                                 <td style={{ width: '15%', padding: '2px 5px', textTransform: 'capitalize' }}><b>Status:</b> {challan.status || '—'}</td>
                                 <td style={{ width: '40%', padding: '2px 5px' }}><b>Delivery:</b> {challan.delivery_address || '—'}</td>
@@ -330,54 +709,96 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
     );
 
     const renderItemsTable = (itemsToRender = activeItemList, startIndex = 0, showTotals = true) => (
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
+        <table className="invoice-items-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8, tableLayout: 'fixed' }}>
             <thead>
                 <tr style={{ background: '#0d1f3c', color: '#fff', textTransform: 'uppercase' }}>
                     {[
                         { label: 'S.No.', width: '3%' },
-                        { label: 'Item Description', width: '48%' },
-                        { label: 'HSN Code', width: '7%' },
+                        { label: 'Item Description', width: '41%' },
+                        { label: 'HSN Code', width: '8%' },
                         { label: 'Qty.', width: '4%' },
-                        { label: 'Area', width: '7%' },
-                        { label: 'Size', width: '7%' },
-                        { label: 'Unit', width: '6%' },
+                        { label: 'Size', width: '8%' },
+                        { label: 'Area', width: '8%' },
+                        { label: 'Unit', width: '5%' },
                         { label: 'Rate', width: '7%' },
-                        { label: 'Discount', width: '8%' },
-                        { label: 'Total', width: '10%' },
+                        { label: 'Discount', width: '7%' },
+                        { label: 'Total', width: '9%' },
                     ].map(h => (
-                        <th key={h.label} style={{ border: '1px solid #0d1f3c', padding: '3px 2px', textAlign: 'center', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold', width: h.width }}>{h.label}</th>
+                        <th key={h.label} style={{ border: '1px solid #0d1f3c', padding: '3px 2px', textAlign: 'center', fontSize: 9, background: '#0d1f3c', color: '#fff', fontWeight: 'bold', width: h.width, whiteSpace: 'nowrap' }}>{h.label}</th>
                     ))}
                 </tr>
             </thead>
             <tbody>
                 {itemsToRender.map((item, index) => {
-                    const amt = parseFloat(item.amount) || 0;
-                    const disc = parseFloat(item.taxableValue) ? amt - parseFloat(item.taxableValue) : 0;
+                    const discountPercent = getDiscountPercent(item);
                     return (
                         <tr key={`${startIndex}-${index}`}>
-                            <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{startIndex + index + 1}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '5px' }}>
-                                <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>9TH EDITION OF INTERNATIONAL HEALTH & WELLNESS EXPO (IHWE GLOBAL EDITION)</div>
-                                <div style={{ fontSize: 10, color: '#555', whiteSpace: 'pre-wrap' }}>
-                                    {item?.description}
-                                    {item?.remarks ? `\n${item.remarks}` : ''}
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{startIndex + index + 1}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, lineHeight: 1.15 }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
+                                    <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>9TH EDITION OF INTERNATIONAL HEALTH & WELLNESS EXPO (IHWE GLOBAL EDITION)</div>
+                                    <div style={{ fontSize: 10, color: '#555', whiteSpace: 'pre-wrap' }}>
+                                        {item?.description}
+                                        {item?.remarks ? `\n${item.remarks}` : ''}
+                                    </div>
                                 </div>
                             </td>
-                            <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{item?.hsn}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{item?.qty}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{item?.area || '—'}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{item?.size || '—'}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{item?.unit}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right' }}>{fmtNum(item?.rate)}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'center' }}>{fmtNum(disc)}%</td>
-                            <td style={{ border: '1px solid #ccc', padding: '5px', textAlign: 'right', fontWeight: 700 }}>{fmtNum(item.taxableValue)}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{item?.hsn || item?.hsnCode || item?.hsn_code || '—'}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{item?.qty ?? item?.quantity ?? '—'}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{formatSize(item?.area)}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{formatArea(item?.size)}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>Nos</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', whiteSpace: 'nowrap', fontSize: 10 }}>{fmtNum(item?.rate ?? item?.unit_rate ?? item?.price)}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{fmtNum(discountPercent)}%</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontWeight: 700, whiteSpace: 'nowrap', fontSize: 10 }}>{fmtNum(getItemTaxable(item))}</td>
                         </tr>
                     );
                 })}
                 {showTotals && (
-                    <tr style={{ textTransform: 'uppercase' }}>
-                        <td colSpan={9} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right', background: '#f8fafc' }}>Taxable Value</td>
-                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right' }}>{fmtNum(totalTaxable)}</td>
+                    <tr className="challan-taxable-row" style={{ textTransform: 'uppercase' }}>
+                        <td
+                            colSpan={7}
+                            style={{
+                                border: '1px solid #ccc',
+                                padding: '4px 6px',
+                                fontWeight: 700,
+                                background: '#f8fafc',
+                                fontSize: 10,
+                                lineHeight: '1.2',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            {displayChallanNo ? <>Delivery Challan No.: {displayChallanNo}</> : null}
+                        </td>
+                        <td
+                            colSpan={2}
+                            style={{
+                                border: '1px solid #ccc',
+                                padding: '4px 6px',
+                                fontWeight: 700,
+                                background: '#f8fafc',
+                                textAlign: 'right',
+                                fontSize: 10,
+                                lineHeight: '1.2',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            Taxable Value
+                        </td>
+                        <td
+                            style={{
+                                border: '1px solid #ccc',
+                                padding: '4px 4px',
+                                fontWeight: 700,
+                                background: '#f8fafc',
+                                textAlign: 'center',
+                                fontSize: 10,
+                                lineHeight: '1.2',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            {fmtNum(totalTaxable)}
+                        </td>
                     </tr>
                 )}
             </tbody>
@@ -385,7 +806,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
     );
 
     const renderTaxTable = () => (
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
+        <table className="invoice-tax-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
             <thead>
                 <tr style={{ background: '#0d1f3c', color: '#fff', textTransform: 'uppercase' }}>
                     {['S.No.', 'HSN/SAC No.', 'Item Value', 'Qty.', 'CGST(%)', 'Amount', 'SGST(%)', 'Amount', 'IGST(%)', 'Amount', 'Total Tax'].map((label, index) => (
@@ -395,39 +816,39 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
             </thead>
             <tbody>
                 {activeItemList.map((item, index) => {
-                    const gstRate = parseFloat(item?.gstPct) || 0;
+                    const gstRate = getItemGstRate(item);
                     const halfGst = gstRate / 2;
-                    const gstAmt = parseFloat(item?.gstAmount) || 0;
+                    const gstAmt = getItemGstAmount(item);
                     const halfGstAmt = gstAmt / 2;
-                    const itemTaxable = parseFloat(item?.taxableValue) || 0;
+                    const itemTaxable = getItemTaxable(item);
                     return (
                         <tr key={index}>
                             <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{index + 1}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{item?.hsn}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'right' }}>{fmtNum(itemTaxable)}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{item?.qty}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{item?.hsn || item?.hsnCode || item?.hsn_code || '—'}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{fmtNum(itemTaxable)}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{item?.qty ?? item?.quantity ?? '—'}</td>
                             <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{!isIgst ? halfGst + '%' : '-'}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'right' }}>{!isIgst ? fmtNum(halfGstAmt) : '-'}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{!isIgst ? fmtNum(halfGstAmt) : '-'}</td>
                             <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{!isIgst ? halfGst + '%' : '-'}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'right' }}>{!isIgst ? fmtNum(halfGstAmt) : '-'}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{!isIgst ? fmtNum(halfGstAmt) : '-'}</td>
                             <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{isIgst ? gstRate + '%' : '-'}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'right' }}>{isIgst ? fmtNum(gstAmt) : '-'}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'right', fontWeight: 700 }}>{fmtNum(gstAmt)}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{isIgst ? fmtNum(gstAmt) : '-'}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center', fontWeight: 700 }}>{fmtNum(gstAmt)}</td>
                         </tr>
                     );
                 })}
                 <tr style={{ background: '#f8fafc', textTransform: 'uppercase' }}>
-                    <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700 }}>GST Amount in Words ({currAbbr})</td>
-                    <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize' }}>{`${toWords(Math.round(totalGstAmount))}`.toUpperCase()}</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700 }}>Total GST Amount</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right' }}>{fmtNum(totalGstAmount)}</td>
+                    <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>GST Amount in Words ({currAbbr})</td>
+                    <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center' }}>{toWords(Math.round(totalGstAmount))}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, whiteSpace: 'nowrap', textAlign: 'center' }}>Total GST Amt</td>
+                    <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>{fmtNum(totalGstAmount)}</td>
                 </tr>
                 <tr style={{ height: 8 }}>{Array(11).fill(0).map((_, j) => <td key={j} style={{ border: 'none', padding: 0 }}></td>)}</tr>
                 <tr style={{ background: '#f8fafc', textTransform: 'uppercase' }}>
-                    <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700 }}>Amount in Words ({currAbbr})</td>
-                    <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize' }}>{`${toWords(Math.round(grandTotal))}`.toUpperCase()}</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700 }}>Grand Total</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right', fontSize: 13, color: '#000' }}>{fmtNum(grandTotal)}</td>
+                    <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>Amount in Words ({currAbbr})</td>
+                    <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center' }}>{toWords(Math.round(grandTotal))}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>Grand Total</td>
+                    <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', fontSize: 13, color: '#000' }}>{fmtNum(grandTotal)}</td>
                 </tr>
             </tbody>
         </table>
@@ -499,7 +920,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
     );
 
     return (
-        <div className="bg-white border border-slate-300 p-10 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', maxWidth: '1000px', margin: '0 auto', position: 'relative' }}>
+        <div className="invoice-print-root bg-white border border-slate-300 p-10 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', maxWidth: '1000px', margin: '0 auto', position: 'relative' }}>
             <style>{`
                 .invoice-print-shell {
                     width: 100%;
@@ -517,10 +938,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                 .invoice-print-shell td {
                     vertical-align: top;
                 }
-                .invoice-print-document {
-                    display: none;
-                }
-                .invoice-print-page-number {
+                .invoice-print-info-once {
                     display: none;
                 }
                 .invoice-avoid-break,
@@ -534,50 +952,90 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                     page-break-inside: auto;
                 }
                 @media print {
-                    @page { size: A4 portrait; margin: 8mm; }
+                    @page {
+                        size: A4 portrait;
+                        margin: 0;
+                    }
+                    .print-copy-page {
+                        position: relative !important;
+                        padding: 9mm 8mm 11mm !important;
+                        box-sizing: border-box !important;
+                    }
+                    .print-copy-page-label {
+                        display: block !important;
+                        position: absolute !important;
+                        right: 8mm !important;
+                        bottom: 5mm !important;
+                        font-family: Calibri, Arial, sans-serif !important;
+                        font-size: 11px !important;
+                        line-height: 1 !important;
+                        font-weight: 700 !important;
+                        color: #0d1f3c !important;
+                    }
+                    .invoice-print-root {
+                        padding: 0 !important;
+                        border: 0 !important;
+                        margin: 0 !important;
+                        max-width: none !important;
+                        box-shadow: inset 0 0 0 1px #cbd5e1 !important;
+                        box-sizing: border-box !important;
+                    }
                     .invoice-print-shell {
+                        margin: 0 !important;
+                        display: table !important;
+                        width: 100% !important;
+                        border-collapse: collapse !important;
+                    }
+                    .invoice-print-shell > thead {
+                        display: table-header-group !important;
+                    }
+                    .invoice-print-shell > tbody {
+                        display: table-row-group !important;
+                    }
+                    .invoice-print-shell > thead > tr,
+                    .invoice-print-shell > tbody > tr {
+                        display: table-row !important;
+                    }
+                    .invoice-print-shell > thead > tr > td,
+                    .invoice-print-shell > tbody > tr > td {
+                        display: table-cell !important;
+                        width: 100% !important;
+                    }
+                    .invoice-print-shell > thead > tr > td {
+                        padding-bottom: 0 !important;
+                    }
+                    .invoice-print-info-once {
                         display: none !important;
                     }
-                    .invoice-print-document {
-                        display: block !important;
+                    .invoice-print-shell > tbody table {
+                        page-break-inside: auto;
+                        break-inside: auto;
                     }
-                    .invoice-print-header {
-                        position: fixed;
-                        top: 8mm;
-                        left: 8mm;
-                        right: 8mm;
-                        z-index: 20;
-                        background: #fff;
+                    .invoice-print-shell > tbody table thead {
+                        display: table-header-group;
                     }
-                    .invoice-print-content {
-                        margin-top: 75mm;
-                        padding-bottom: 14mm;
+                    .invoice-title-bar {
+                        margin-bottom: 0 !important;
+                        padding-top: 0 !important;
+                        padding-bottom: 0 !important;
                     }
-                    .invoice-print-page-number {
-                        display: block !important;
-                        position: fixed;
-                        left: 0;
-                        right: 0;
-                        bottom: 5mm;
-                        text-align: center;
-                        font-size: 10px;
-                        color: #555;
+                    .invoice-copy-label {
+                        right: 0 !important;
+                        font-size: 8.8px !important;
+                        line-height: 1 !important;
+                        letter-spacing: -0.25px !important;
+                        max-width: 44% !important;
+                        white-space: nowrap !important;
+                        overflow: visible !important;
+                        text-align: right !important;
                     }
-                    .invoice-print-content table,
                     .invoice-avoid-break {
                         break-inside: avoid !important;
                         page-break-inside: avoid !important;
                     }
-                    .invoice-print-content tr {
-                        break-inside: auto;
-                        page-break-inside: auto;
-                    }
                     .invoice-footer-section {
-                        break-before: page;
-                        page-break-before: always;
                         break-inside: avoid;
                         page-break-inside: avoid;
-                        padding-top: 88mm;
                     }
                     .invoice-footer-section table,
                     .invoice-footer-section tr {
@@ -588,9 +1046,60 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                         display: table-cell !important;
                         visibility: visible !important;
                     }
+                    .invoice-items-table {
+                        table-layout: fixed !important;
+                        width: 100% !important;
+                    }
+                    .invoice-items-table th,
+                    .invoice-items-table td {
+                        font-size: 9px !important;
+                        padding: 3px 2px !important;
+                        vertical-align: middle !important;
+                    }
+                    .invoice-items-table th:nth-child(3),
+                    .invoice-items-table td:nth-child(3),
+                    .invoice-items-table th:nth-child(4),
+                    .invoice-items-table td:nth-child(4),
+                    .invoice-items-table th:nth-child(5),
+                    .invoice-items-table td:nth-child(5),
+                    .invoice-items-table th:nth-child(6),
+                    .invoice-items-table td:nth-child(6),
+                    .invoice-items-table th:nth-child(7),
+                    .invoice-items-table td:nth-child(7) {
+                        white-space: nowrap !important;
+                        word-break: keep-all !important;
+                    }
+                    .invoice-tax-table th,
+                    .invoice-tax-table td {
+                        white-space: nowrap !important;
+                        font-size: 9px !important;
+                        padding: 3px 2px !important;
+                    }
                     .invoice-client-column { width: 34% !important; }
                     .invoice-shipment-column { width: 36% !important; }
                     .invoice-details-column { width: 30% !important; }
+
+                    .challan-taxable-line {
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: space-between !important;
+                        gap: 12px !important;
+                        width: 100% !important;
+                        font-size: 10px !important;
+                        line-height: 1.2 !important;
+                        white-space: nowrap !important;
+                    }
+                    .challan-taxable-line span {
+                        white-space: nowrap !important;
+                    }
+
+                    .taxable-total-cell {
+                        font-size: 9px !important;
+                        line-height: 1.1 !important;
+                        white-space: normal !important;
+                        word-break: break-word !important;
+                        overflow-wrap: anywhere !important;
+                    }
                 }
             `}</style>
             {cancelled && (
@@ -613,433 +1122,423 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                 </div>
             )}
 
-            <div className="invoice-print-document">
-                <div className="invoice-print-header">
-                    {renderInvoiceHeader()}
-                </div>
-                <div className="invoice-print-content">
-                    {renderDeliveryChallanDetails()}
-                    {renderItemsTable(activeItemList, 0, true)}
-                    {renderTaxTable()}
-                    {renderFooterDetails()}
-                </div>
-                <div className="invoice-print-page-number" aria-hidden="true"></div>
-            </div>
-
-            <table className="invoice-print-shell">
+            <table className="invoice-print-shell" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                     <tr>
                         <td style={{ border: 0, padding: 0 }}>
-            <div style={{ marginBottom: 8, textAlign: 'center' }}>
-                <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
-            </div>
-
-            <div
-                className="invoice-title-bar"
-                style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr auto 1fr',
-                    alignItems: 'center',
-                    marginBottom: 4,
-                    paddingTop: 2,
-                    paddingBottom: 2,
-                    color: '#0d1f3c',
-                    textTransform: 'uppercase',
-                }}
-            >
-                <span aria-hidden="true" />
-                <div style={{ fontWeight: 400, fontSize: 18 }}>{heading || 'TAX INVOICE'}</div>
-                <div style={{ justifySelf: 'end', fontWeight: 700, fontSize: 11 }}>{invoiceCopy}</div>
-            </div>
-
-            <table className="invoice-avoid-break" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
-                <thead>
-                    <tr>
-                        <th className="invoice-client-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Client Name &amp; Address</th>
-                        <th className="invoice-shipment-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Shipment Details</th>
-                        <th className="invoice-details-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '24%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}> Invoice Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
-                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{clientCompanyName}</div>
-                            <div style={{ marginTop: 2, textTransform: 'capitalize' }}>
-                                {clientCompanyAddress || '—'}
+                            <div className="invoice-header-image" style={{ marginBottom: 2, textAlign: 'center' }}>
+                                <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
                             </div>
-                            <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%', marginTop: 4 }}>
-                                <tbody>
-                                    <tr>
-                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact Person</td>
-                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0' }}>{[c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ') || '—'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact No.</td>
-                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0' }}>{c1.mobile || company?.landline || '—'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Email</td>
-                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0' }}>{c1.email || company?.email || '—'}</td>
-                                    </tr>
-                                    {clientGstNo && (
-                                        <tr>
-                                            <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>GSTIN.</td>
-                                            <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                            <td style={{ border: 'none', padding: '1px 0' }}>{clientGstNo}</td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </td>
-                        <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
-                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{eventName}</div>
-                            <div style={{ marginTop: 2 }}>{eventPlaceOfSupply}</div>
-                            <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%', marginTop: 4 }}>
-                                <tbody>
-                                    <tr>
-                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Place of Supply &amp; Code</td>
-                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0' }}>{form?.placeOfSupply || matchedInvoice?.place_of_supply || matchedInvoice?.state || form?.state || '—'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact Person</td>
-                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0' }}>{[c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ') || '—'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact No.</td>
-                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0' }}>{c1.mobile || company?.landline || '—'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>GSTIN.</td>
-                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0' }}>{eventGstNo}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </td>
-                        <td style={{ border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 11 }}>
-                            <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%' }}>
-                                <tbody>
-                                    <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Invoice No.</td>
-                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{invoiceNo}</td>
-                                    </tr>
-                                    {Number(matchedInvoice?.revision_no || 0) > 0 && (
-                                        <tr>
-                                            <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Revision</td>
-                                            <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                            <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>Rev {matchedInvoice.revision_no}</td>
-                                        </tr>
-                                    )}
-                                    <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Invoice Date</td>
-                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{invoiceDate}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created Date</td>
-                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{createdDateTime}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created By</td>
-                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', textTransform: 'capitalize' }}>
-                                            {matchedInvoice?.added_by || 'Admin'}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>PO No.</td>
-                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{matchedInvoice?.po_no || form?.poNo || '—'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Supply Date</td>
-                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{supplyDateTime || '—'}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-                        </td>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td style={{ border: 0, padding: 0 }}>
 
-            {(matchedInvoice?.delivery_challans || form?.delivery_challans || []).length > 0 && (
-                <div style={{ marginBottom: 8, pageBreakInside: 'auto' }}>
-                    <div style={{
-                        background: '#0d1f3c',
-                        color: '#fff',
-                        border: '1px solid #0d1f3c',
-                        padding: '4px 6px',
-                        textAlign: 'center',
-                        textTransform: 'uppercase',
-                        fontSize: 10,
-                        fontWeight: 'bold',
-                    }}>
-                        Delivery Challan Details
-                    </div>
-                    {(matchedInvoice?.delivery_challans || form?.delivery_challans || []).map((challan, challanIndex) => (
-                        <div
-                            key={challan.delivery_challan_id || `${challan.challan_no}-${challanIndex}`}
-                            style={{ border: '1px solid #ccc', borderTop: 0, padding: 6, pageBreakInside: 'avoid' }}
-                        >
-                            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 5 }}>
-                                <tbody>
-                                    <tr>
-                                        <td style={{ width: '25%', padding: '2px 5px' }}><b>Challan No.:</b> {challan.challan_no || '—'}</td>
-                                        <td style={{ width: '20%', padding: '2px 5px' }}><b>Date:</b> {challan.challan_date ? new Date(challan.challan_date).toLocaleDateString('en-IN') : '—'}</td>
-                                        <td style={{ width: '15%', padding: '2px 5px', textTransform: 'capitalize' }}><b>Status:</b> {challan.status || '—'}</td>
-                                        <td style={{ width: '40%', padding: '2px 5px' }}><b>Delivery:</b> {challan.delivery_address || '—'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ padding: '2px 5px' }}><b>Transporter:</b> {challan.transporter_name || '—'}</td>
-                                        <td style={{ padding: '2px 5px' }}><b>Vehicle:</b> {challan.vehicle_no || '—'}</td>
-                                        <td style={{ padding: '2px 5px' }}><b>E-way Bill:</b> {challan.eway_bill || '—'}</td>
-                                        <td style={{ padding: '2px 5px' }}><b>Bilty No.:</b> {challan.bilty_no || '—'}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <div
+                                className="invoice-title-bar"
+                                style={{
+                                    position: 'relative',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    minHeight: 22,
+                                    marginBottom: 4,
+                                    paddingTop: 2,
+                                    paddingBottom: 2,
+                                    color: '#0d1f3c',
+                                    textTransform: 'uppercase',
+                                }}
+                            >
+                                <div style={{ fontWeight: 400, fontSize: 18, lineHeight: 1.1, textAlign: 'center' }}>{heading || 'TAX INVOICE'}</div>
+                                <div
+                                    className="invoice-copy-label"
+                                    style={{
+                                        position: 'absolute',
+                                        right: 0,
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        fontWeight: 700,
+                                        fontSize: 9.2,
+                                        lineHeight: 1,
+                                        paddingRight: 2,
+                                        whiteSpace: 'nowrap',
+                                        textAlign: 'right',
+                                        letterSpacing: '-0.2px',
+                                    }}
+                                >
+                                    {invoiceCopyLabel}
+                                </div>
+                            </div>
+
+                            <table className="invoice-avoid-break" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
                                 <thead>
-                                    <tr style={{ background: '#eef2f7' }}>
-                                        <th style={{ border: '1px solid #ccc', padding: 3, width: '5%' }}>#</th>
-                                        <th style={{ border: '1px solid #ccc', padding: 3, textAlign: 'left' }}>Delivered Item</th>
-                                        <th style={{ border: '1px solid #ccc', padding: 3, width: '15%' }}>HSN</th>
-                                        <th style={{ border: '1px solid #ccc', padding: 3, width: '12%' }}>Qty.</th>
-                                        <th style={{ border: '1px solid #ccc', padding: 3, width: '12%' }}>Unit</th>
+                                    <tr>
+                                        <th className="invoice-client-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Client Name &amp; Address</th>
+                                        <th className="invoice-shipment-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Shipment Details</th>
+                                        <th className="invoice-details-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '24%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}> Invoice Details</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {(challan.items || []).map((item, itemIndex) => (
-                                        <tr key={`${challan.challan_no}-${itemIndex}`}>
-                                            <td style={{ border: '1px solid #ccc', padding: 3, textAlign: 'center' }}>{itemIndex + 1}</td>
-                                            <td style={{ border: '1px solid #ccc', padding: 3 }}>{item.description || '—'}</td>
-                                            <td style={{ border: '1px solid #ccc', padding: 3, textAlign: 'center' }}>{item.hsn || '—'}</td>
-                                            <td style={{ border: '1px solid #ccc', padding: 3, textAlign: 'center' }}>{item.qty ?? '—'}</td>
-                                            <td style={{ border: '1px solid #ccc', padding: 3, textAlign: 'center' }}>{item.unit || '—'}</td>
+                                    <tr>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
+                                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>
+                                                {clientContactPerson !== '—' ? clientContactPerson : clientCompanyName}
+                                            </div>
+                                            <div style={{ marginTop: 2, textTransform: 'uppercase' }}>{clientCompanyName}</div>
+                                            <div style={{ marginTop: 2, textTransform: 'capitalize' }}>
+                                                {clientCompanyAddress || '—'}
+                                            </div>
+                                            <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%', marginTop: 4 }}>
+                                                <tbody>
+                                                    <tr>
+                                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact Person</td>
+                                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                                        <td style={{ border: 'none', padding: '1px 0' }}>{clientContactPerson}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact No.</td>
+                                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                                        <td style={{ border: 'none', padding: '1px 0' }}>{clientContactNo}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Email</td>
+                                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                                        <td style={{ border: 'none', padding: '1px 0' }}>{clientEmail}</td>
+                                                    </tr>
+                                                    {clientGstNo && (
+                                                        <tr>
+                                                            <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>GSTIN.</td>
+                                                            <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                                            <td style={{ border: 'none', padding: '1px 0' }}>{clientGstNo}</td>
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
+                                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{eventName}</div>
+                                            <div style={{ marginTop: 2 }}>{shipmentAddress || '—'}</div>
+                                            <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%', marginTop: 4 }}>
+                                                <tbody>
+                                                    <tr>
+                                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Place of Supply &amp; Code</td>
+                                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                                        <td style={{ border: 'none', padding: '1px 0' }}>{PROFORMA_PLACE_OF_SUPPLY_WITH_CODE}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact Person</td>
+                                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                                        <td style={{ border: 'none', padding: '1px 0' }}>{clientContactPerson}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact No.</td>
+                                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                                        <td style={{ border: 'none', padding: '1px 0' }}>{clientContactNo}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>GSTIN.</td>
+                                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                                        <td style={{ border: 'none', padding: '1px 0' }}>{eventGstNo}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                        <td style={{ border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 11 }}>
+                                            <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%' }}>
+                                                <tbody>
+                                                    <tr>
+                                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Invoice No.</td>
+                                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{invoiceNo}</td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Invoice Date</td>
+                                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{invoiceDate}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>PO No.</td>
+                                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{matchedInvoice?.po_no || form?.poNo || '—'}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Supply Date</td>
+                                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{supplyDateTime || '—'}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>E-way Bill No.</td>
+                                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{ewayBillNo || '—'}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created Date</td>
+                                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{createdDateTime}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created By</td>
+                                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', textTransform: 'capitalize' }}>
+                                                            {matchedInvoice?.added_by || 'Admin'}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style={{ border: 0, padding: 0 }}>
+
+                            <div className="invoice-print-info-once">
+                                {renderInvoiceHeader()}
+                            </div>
+
+                            <table className="invoice-items-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8, tableLayout: 'fixed' }}>
+                                <thead>
+                                    <tr style={{ background: '#0d1f3c', color: '#fff', textTransform: 'uppercase' }}>
+                                        {[
+                                            { label: 'S.No.', width: '3%' },
+                                            { label: 'Item Description', width: '41%' },
+                                            { label: 'HSN Code', width: '8%' },
+                                            { label: 'Qty.', width: '4%' },
+                                            { label: 'Size', width: '8%' },
+                                            { label: 'Area', width: '8%' },
+                                            { label: 'Unit', width: '5%' },
+                                            { label: 'Rate', width: '7%' },
+                                            { label: 'Discount', width: '7%' },
+                                            { label: 'Total', width: '9%' },
+                                        ].map(h => (
+                                            <th key={h.label} style={{ border: '1px solid #0d1f3c', padding: '3px 2px', textAlign: 'center', fontSize: 9, background: '#0d1f3c', color: '#fff', fontWeight: 'bold', width: h.width, whiteSpace: 'nowrap' }}>{h.label}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {activeItems?.map((item, index) => {
+                                        const discountPercent = getDiscountPercent(item);
+                                        return (
+                                            <tr key={index}>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{index + 1}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, lineHeight: 1.15 }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
+                                                        <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>9TH EDITION OF INTERNATIONAL HEALTH & WELLNESS EXPO (IHWE GLOBAL EDITION)</div>
+                                                        <div style={{ fontSize: 10, color: '#555', whiteSpace: 'pre-wrap' }}>
+                                                            {item?.description}
+                                                            {item?.remarks ? `\n${item.remarks}` : ''}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{item?.hsn || item?.hsnCode || item?.hsn_code || '—'}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{item?.qty ?? item?.quantity ?? '—'}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{formatSize(item?.area)}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{formatArea(item?.size)}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>Nos</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', whiteSpace: 'nowrap', fontSize: 10 }}>{fmtNum(item?.rate ?? item?.unit_rate ?? item?.price)}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{fmtNum(discountPercent)}%</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontWeight: 700, whiteSpace: 'nowrap', fontSize: 10 }}>{fmtNum(getItemTaxable(item))}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                    {Array.from({ length: Math.max(0, 7 - (activeItems?.length || 0)) }).map((_, i) => (
+                                        <tr key={`empty-${i}`} style={{ height: 24 }}>
+                                            {Array(10).fill(0).map((_, j) => <td key={j} style={{ border: '1px solid #ccc' }}></td>)}
                                         </tr>
                                     ))}
+                                    <tr className="challan-taxable-row" style={{ textTransform: 'uppercase' }}>
+                                        <td
+                                            colSpan={7}
+                                            style={{
+                                                border: '1px solid #ccc',
+                                                padding: '4px 6px',
+                                                fontWeight: 700,
+                                                background: '#f8fafc',
+                                                fontSize: 10,
+                                                lineHeight: '1.2',
+                                                whiteSpace: 'nowrap',
+                                            }}
+                                        >
+                                            {displayChallanNo ? <>Delivery Challan No.: {displayChallanNo}</> : null}
+                                        </td>
+                                        <td
+                                            colSpan={2}
+                                            style={{
+                                                border: '1px solid #ccc',
+                                                padding: '4px 6px',
+                                                fontWeight: 700,
+                                                background: '#f8fafc',
+                                                textAlign: 'right',
+                                                fontSize: 10,
+                                                lineHeight: '1.2',
+                                                whiteSpace: 'nowrap',
+                                            }}
+                                        >
+                                            Taxable Value
+                                        </td>
+                                        <td
+                                            style={{
+                                                border: '1px solid #ccc',
+                                                padding: '4px 4px',
+                                                fontWeight: 700,
+                                                background: '#f8fafc',
+                                                textAlign: 'center',
+                                                fontSize: 10,
+                                                lineHeight: '1.2',
+                                                whiteSpace: 'nowrap',
+                                            }}
+                                        >
+                                            {fmtNum(totalTaxable)}
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
-                        </div>
-                    ))}
-                </div>
-            )}
 
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
-                <thead>
-                    <tr style={{ background: '#0d1f3c', color: '#fff', textTransform: 'uppercase' }}>
-                        {[
-                            { label: 'S.No.', width: '3%' },
-                            { label: 'Item Description', width: '48%' },
-                            { label: 'HSN Code', width: '7%' },
-                            { label: 'Qty.', width: '4%' },
-                            { label: 'Area', width: '7%' },
-                            { label: 'Size', width: '7%' },
-                            { label: 'Unit', width: '6%' },
-                            { label: 'Rate', width: '7%' },
-                            { label: 'Discount', width: '8%' },
-                            { label: 'Total', width: '10%' },
-                        ].map(h => (
-                            <th key={h.label} style={{ border: '1px solid #0d1f3c', padding: '3px 2px', textAlign: 'center', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold', width: h.width }}>{h.label}</th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody>
-                    {activeItems?.map((item, index) => {
-                        const amt = parseFloat(item.amount) || 0;
-                        const disc = parseFloat(item.taxableValue) ? amt - parseFloat(item.taxableValue) : 0;
-                        return (
-                            <tr key={index}>
-                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{index + 1}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '6px' }}>
-                                    <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>9TH EDITION OF INTERNATIONAL HEALTH & WELLNESS EXPO (IHWE GLOBAL EDITION)</div>
-                                    <div style={{ fontSize: 10, color: '#555', whiteSpace: 'pre-wrap' }}>
-                                        {item?.description}
-                                        {item?.remarks ? `\n${item.remarks}` : ''}
-                                    </div>
-                                </td>
-                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.hsn}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.qty}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.area || '—'}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.size || '—'}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item?.unit}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(item?.rate)}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{fmtNum(disc)}%</td>
-                                <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right', fontWeight: 700 }}>{fmtNum(item.taxableValue)}</td>
-                            </tr>
-                        );
-                    })}
-                    {Array.from({ length: Math.max(0, 7 - (activeItems?.length || 0)) }).map((_, i) => (
-                        <tr key={`empty-${i}`} style={{ height: 24 }}>
-                            {Array(10).fill(0).map((_, j) => <td key={j} style={{ border: '1px solid #ccc' }}></td>)}
-                        </tr>
-                    ))}
-                    <tr style={{ textTransform: 'uppercase' }}>
-                        <td colSpan={9} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right', background: '#f8fafc' }}>Taxable Value</td>
-                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right' }}>{fmtNum(totalTaxable)}</td>
-                    </tr>
-                </tbody>
-            </table>
+                            <table className="invoice-tax-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
+                                <thead>
+                                    <tr style={{ background: '#0d1f3c', color: '#fff', textTransform: 'uppercase' }}>
+                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>S.No.</th>
+                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>HSN/SAC No.</th>
+                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>Item Value</th>
+                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>Qty.</th>
+                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>CGST(%)</th>
+                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>Amount</th>
+                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>SGST(%)</th>
+                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>Amount</th>
+                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>IGST(%)</th>
+                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>Amount</th>
+                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>Total Tax</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {activeItems?.map((item, index) => {
+                                        const gstRate = getItemGstRate(item);
+                                        const halfGst = gstRate / 2;
+                                        const gstAmt = getItemGstAmount(item);
+                                        const halfGstAmt = gstAmt / 2;
+                                        const itemTaxable = getItemTaxable(item);
 
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
-                <thead>
-                    <tr style={{ background: '#0d1f3c', color: '#fff', textTransform: 'uppercase' }}>
-                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>S.No.</th>
-                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>HSN/SAC No.</th>
-                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>Item Value</th>
-                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>Qty.</th>
-                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>CGST(%)</th>
-                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>Amount</th>
-                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>SGST(%)</th>
-                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>Amount</th>
-                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>IGST(%)</th>
-                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>Amount</th>
-                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>Total Tax</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {activeItems?.map((item, index) => {
-                        const gstRate = parseFloat(item?.gstPct) || 0;
-                        const halfGst = gstRate / 2;
-                        const gstAmt = parseFloat(item?.gstAmount) || 0;
-                        const halfGstAmt = gstAmt / 2;
-                        const itemTaxable = parseFloat(item?.taxableValue) || 0;
+                                        return (
+                                            <tr key={index}>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{index + 1}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{item?.hsn || item?.hsnCode || item?.hsn_code || '—'}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{fmtNum(itemTaxable)}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{item?.qty ?? item?.quantity ?? '—'}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{!isIgst ? halfGst + '%' : '-'}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{!isIgst ? fmtNum(halfGstAmt) : '-'}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{!isIgst ? halfGst + '%' : '-'}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{!isIgst ? fmtNum(halfGstAmt) : '-'}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{isIgst ? gstRate + '%' : '-'}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{isIgst ? fmtNum(gstAmt) : '-'}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center', fontWeight: 700 }}>{fmtNum(gstAmt)}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                    <tr style={{ background: '#f8fafc', textTransform: 'uppercase' }}>
+                                        <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>GST Amount in Words ({currAbbr})</td>
+                                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center' }}>{toWords(Math.round(totalGstAmount))}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>Total GST Amount</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>{fmtNum(totalGstAmount)}</td>
+                                    </tr>
+                                    <tr style={{ height: 8 }}>
+                                        {Array(11).fill(0).map((_, j) => <td key={j} style={{ border: 'none', padding: 0 }}></td>)}
+                                    </tr>
+                                    <tr style={{ background: '#f8fafc', textTransform: 'uppercase' }}>
+                                        <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>Amount in Words ({currAbbr})</td>
+                                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center' }}>{toWords(Math.round(grandTotal))}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>Grand Total</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', fontSize: 13, color: '#000' }}>{fmtNum(grandTotal)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
 
-                        return (
-                            <tr key={index}>
-                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{index + 1}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{item?.hsn}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'right' }}>{fmtNum(itemTaxable)}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{item?.qty}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{!isIgst ? halfGst + '%' : '-'}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'right' }}>{!isIgst ? fmtNum(halfGstAmt) : '-'}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{!isIgst ? halfGst + '%' : '-'}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'right' }}>{!isIgst ? fmtNum(halfGstAmt) : '-'}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{isIgst ? gstRate + '%' : '-'}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'right' }}>{isIgst ? fmtNum(gstAmt) : '-'}</td>
-                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'right', fontWeight: 700 }}>{fmtNum(gstAmt)}</td>
-                            </tr>
-                        );
-                    })}
-                    <tr style={{ background: '#f8fafc', textTransform: 'uppercase' }}>
-                        <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700 }}>GST Amount in Words ({currAbbr})</td>
-                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize' }}>{`${toWords(Math.round(totalGstAmount))}`.toUpperCase()}</td>
-                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700 }}>Total GST Amount</td>
-                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right' }}>{fmtNum(totalGstAmount)}</td>
-                    </tr>
-                    <tr style={{ height: 8 }}>
-                        {Array(11).fill(0).map((_, j) => <td key={j} style={{ border: 'none', padding: 0 }}></td>)}
-                    </tr>
-                    <tr style={{ background: '#f8fafc', textTransform: 'uppercase' }}>
-                        <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700 }}>Amount in Words ({currAbbr})</td>
-                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize' }}>{`${toWords(Math.round(grandTotal))}`.toUpperCase()}</td>
-                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700 }}>Grand Total</td>
-                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right', fontSize: 13, color: '#000' }}>{fmtNum(grandTotal)}</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <table className="invoice-terms-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
-                <tbody>
-                    <tr>
-                        <td style={{ width: '60%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                            <div style={{ fontWeight: 700, marginBottom: 2 }}>Terms and Conditions:</div>
-                            <div>1. Payment must be made in favor of Namo Gange Wellness Pvt. Ltd. via Cheque / DD / RTGS / NEFT / UPI only.</div>
-                            <div>2. Full payment is due within the stipulated invoice period.</div>
-                            <div>3. Delay in payment shall attract interest @24% per annum.</div>
-                            <div>4. Booking / services shall be confirmed only after receipt of payment.</div>
-                            <div>5. Cancellation or amendments shall be subject to company policy and management approval.</div>
-                            <div>6. All disputes are subject to Delhi Jurisdiction only.</div>
-                        </td>
-                        <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                            <div style={{ fontWeight: 700, marginBottom: 2 }}>Payment Conditions:</div>
-                            <div style={{ fontWeight: 700 }}>1. 100% Advance Payment.</div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
-                <thead>
-                    <tr style={{ background: '#0d1f3c', color: '#fff', textTransform: 'uppercase' }}>
-                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', width: '33%', background: '#0d1f3c', color: '#fff', fontWeight: 'bold', fontSize: 10 }}>NGWPL Bank Details</th>
-                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', width: '33%', background: '#0d1f3c', color: '#fff', fontWeight: 'bold', fontSize: 10 }}>Client Signature</th>
-                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', width: '34%', background: '#0d1f3c', color: '#fff', fontWeight: 'bold', fontSize: 10 }}>For {companyName}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td style={{ border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10 }}>
-                            <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: 'auto' }}>
+                            <table className="invoice-terms-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
                                 <tbody>
                                     <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>Bank Name</td>
-                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0' }}>:</td>
-                                        <td style={{ border: 'none', whiteSpace: 'nowrap', padding: '1px 0' }}>{bankDetails?.bankname || 'Kotak Mahindra Bank'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>Account Name</td>
-                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0' }}>:</td>
-                                        <td style={{ border: 'none', whiteSpace: 'nowrap', padding: '1px 0' }}>{bankDetails?.accountname || 'Namo Gange Wellness Pvt. Ltd.'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>Account No.</td>
-                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0' }}>:</td>
-                                        <td style={{ border: 'none', whiteSpace: 'nowrap', padding: '1px 0' }}>{bankDetails?.accountno || '6812013962'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>IFSC Code</td>
-                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0' }}>:</td>
-                                        <td style={{ border: 'none', whiteSpace: 'nowrap', padding: '1px 0' }}>{bankDetails?.ifsccode || 'KKBK0004584'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>Branch Name</td>
-                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0' }}>:</td>
-                                        <td style={{ border: 'none', whiteSpace: 'nowrap', padding: '1px 0' }}>{bankDetails?.bankbranch || 'Jagriti Enclave, Anand Vihar, Delhi'}</td>
+                                        <td style={{ width: '60%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
+                                            <div style={{ fontWeight: 700, marginBottom: 2 }}>Terms and Conditions:</div>
+                                            <div>1. Payment must be made in favor of Namo Gange Wellness Pvt. Ltd. via Cheque / DD / RTGS / NEFT / UPI only.</div>
+                                            <div>2. Full payment is due within the stipulated invoice period.</div>
+                                            <div>3. Delay in payment shall attract interest @24% per annum.</div>
+                                            <div>4. Booking / services shall be confirmed only after receipt of payment.</div>
+                                            <div>5. Cancellation or amendments shall be subject to company policy and management approval.</div>
+                                            <div>6. All disputes are subject to Delhi Jurisdiction only.</div>
+                                        </td>
+                                        <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
+                                            <div style={{ fontWeight: 700, marginBottom: 2 }}>Payment Conditions:</div>
+                                            <div style={{ fontWeight: 700 }}>1. 100% Advance Payment.</div>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
-                        </td>
-                        <td style={{ border: '1px solid #ccc', padding: '6px 8px', textAlign: 'center', verticalAlign: 'bottom' }}>
-                            <div style={{ height: 60 }}></div>
-                            <div style={{ borderTop: '1px solid #ccc', paddingTop: 4, fontWeight: 700, width: '60%', margin: '0 auto' }}>Auth Signatory</div>
-                        </td>
-                        <td style={{ border: '1px solid #ccc', padding: '6px 8px', textAlign: 'center', verticalAlign: 'bottom' }}>
-                            <div style={{ height: 80, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-                                {sigUrl && <img src={sigUrl} alt="Signature" style={{ maxHeight: 60, maxWidth: 130 }} />}
-                                {stampUrl && <img src={stampUrl} alt="Stamp" style={{ maxHeight: 60, maxWidth: 60 }} />}
+
+                            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
+                                <thead>
+                                    <tr style={{ background: '#0d1f3c', color: '#fff', textTransform: 'uppercase' }}>
+                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', width: '33%', background: '#0d1f3c', color: '#fff', fontWeight: 'bold', fontSize: 10 }}>NGWPL Bank Details</th>
+                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', width: '33%', background: '#0d1f3c', color: '#fff', fontWeight: 'bold', fontSize: 10 }}>Client Signature</th>
+                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', width: '34%', background: '#0d1f3c', color: '#fff', fontWeight: 'bold', fontSize: 10 }}>For {companyName}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style={{ border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10 }}>
+                                            <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: 'auto' }}>
+                                                <tbody>
+                                                    <tr>
+                                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>Bank Name</td>
+                                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0' }}>:</td>
+                                                        <td style={{ border: 'none', whiteSpace: 'nowrap', padding: '1px 0' }}>{bankDetails?.bankname || 'Kotak Mahindra Bank'}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>Account Name</td>
+                                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0' }}>:</td>
+                                                        <td style={{ border: 'none', whiteSpace: 'nowrap', padding: '1px 0' }}>{bankDetails?.accountname || 'Namo Gange Wellness Pvt. Ltd.'}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>Account No.</td>
+                                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0' }}>:</td>
+                                                        <td style={{ border: 'none', whiteSpace: 'nowrap', padding: '1px 0' }}>{bankDetails?.accountno || '6812013962'}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>IFSC Code</td>
+                                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0' }}>:</td>
+                                                        <td style={{ border: 'none', whiteSpace: 'nowrap', padding: '1px 0' }}>{bankDetails?.ifsccode || 'KKBK0004584'}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>Branch Name</td>
+                                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0' }}>:</td>
+                                                        <td style={{ border: 'none', whiteSpace: 'nowrap', padding: '1px 0' }}>{bankDetails?.bankbranch || 'Jagriti Enclave, Anand Vihar, Delhi'}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                        <td style={{ border: '1px solid #ccc', padding: '6px 8px', textAlign: 'center', verticalAlign: 'bottom' }}>
+                                            <div style={{ height: 60 }}></div>
+                                            <div style={{ borderTop: '1px solid #ccc', paddingTop: 4, fontWeight: 700, width: '60%', margin: '0 auto' }}>Auth Signatory</div>
+                                        </td>
+                                        <td style={{ border: '1px solid #ccc', padding: '6px 8px', textAlign: 'center', verticalAlign: 'bottom' }}>
+                                            <div style={{ height: 80, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+                                                {sigUrl && <img src={sigUrl} alt="Signature" style={{ maxHeight: 60, maxWidth: 130 }} />}
+                                                {stampUrl && <img src={stampUrl} alt="Stamp" style={{ maxHeight: 60, maxWidth: 60 }} />}
+                                            </div>
+                                            <div style={{ borderTop: '1px solid #ccc', paddingTop: 4, fontWeight: 700, width: '60%', margin: '0 auto' }}>Auth Signatory</div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <div style={{ fontSize: 12, textAlign: 'center', color: '#666', marginTop: 8, paddingTop: 6 }}>
+                                <b>Registered Address:</b> First Floor, E-1, Opposite KFC, Kalkaji Main Market, South Delhi-110019, Delhi, India
                             </div>
-                            <div style={{ borderTop: '1px solid #ccc', paddingTop: 4, fontWeight: 700, width: '60%', margin: '0 auto' }}>Auth Signatory</div>
+                            <div style={{ fontSize: 11, textAlign: 'center', color: '#999', marginTop: 4 }}>
+                                This is a computer generated document and does not require a physical signature.
+                            </div>
                         </td>
                     </tr>
                 </tbody>
             </table>
-
-            <div style={{ fontSize: 12, textAlign: 'center', color: '#666', marginTop: 8, paddingTop: 6 }}>
-                <b>Registered Address:</b> First Floor, E-1, Opposite KFC, Kalkaji Main Market, South Delhi-110019, Delhi, India
-            </div>
-            <div style={{ fontSize: 11, textAlign: 'center', color: '#999', marginTop: 4 }}>
-                This is a computer generated document and does not require a physical signature.
-            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
         </div>
     );
 };
