@@ -320,7 +320,8 @@ const ReceiptsView = () => {
         });
 
         const buffer = await workbook.xlsx.writeBuffer();
-        saveAs(new Blob([buffer]), filename);
+        const formattedDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long' }).replace(/ /g, '');
+        saveAs(new Blob([buffer]), `receiptExport_${formattedDate}.xlsx`);
     };
 
     // ---- Filtering ----
@@ -661,22 +662,16 @@ const ReceiptsView = () => {
                                     </button>
                                     <div className="flex items-center gap-2">
                                         <button
-                                            onClick={() => exportToExcel(filteredReceipts, 'Receipts_Export.xlsx')}
+                                            onClick={() => exportToExcel(filteredReceipts)}
                                             className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors whitespace-nowrap"
                                         >
-                                            <Download className="w-3.5 h-3.5" /> Export
+                                            <Download className="w-3.5 h-3.5" /> Export Excel
                                         </button>
                                         <button
                                             onClick={() => navigate('/accounts/summary-report')}
                                             className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors whitespace-nowrap"
                                         >
                                             <BarChart2 className="w-3.5 h-3.5" /> Receipt Report
-                                        </button>
-                                        <button
-                                            onClick={() => exportToExcel(payments, 'All_Receipts_Export.xlsx')}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-md text-[11px] font-bold border border-blue-100 hover:bg-blue-100 transition-colors whitespace-nowrap"
-                                        >
-                                            <FileSpreadsheet className="w-3.5 h-3.5" /> Download All Receipts
                                         </button>
                                     </div>
                                 </div>
@@ -971,13 +966,13 @@ const ReceiptsView = () => {
                                     <ChevronRight className="w-3 h-3 text-slate-300" />
                                 </button>
                                 <button
-                                    onClick={() => exportToExcel(filteredReceipts, 'Receipts_Export.xlsx')}
+                                    onClick={() => exportToExcel(filteredReceipts)}
                                     className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors group text-left"
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="w-6 h-6 rounded bg-indigo-50 flex items-center justify-center text-indigo-500"><Download className="w-3.5 h-3.5" /></div>
                                         <div>
-                                            <div className="text-[11px] font-semibold text-slate-800 leading-tight">Download Receipts</div>
+                                            <div className="text-[11px] font-semibold text-slate-800 leading-tight">Export Excel</div>
                                             <div className="text-[10px] font-medium text-slate-500 mt-0.5">Download selected receipts</div>
                                         </div>
                                     </div>
