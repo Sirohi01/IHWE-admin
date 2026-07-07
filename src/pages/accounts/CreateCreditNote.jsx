@@ -110,7 +110,7 @@ const CreateCreditNote = () => {
     const outstandingBeforeCN  = financials?.remainingBalance ?? 0;
     const totalPayable         = financials?.totalDue          ?? 0;
     const totalReceived        = financials?.paidAmount         ?? 0;
-    const balanceAfterPosting  = outstandingBeforeCN + totalCreditNoteValue;
+    const balanceAfterPosting  = Math.max(0, outstandingBeforeCN - totalCreditNoteValue);
 
     const fmt = (val) => new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val || 0);
 
@@ -203,8 +203,12 @@ const CreateCreditNote = () => {
     // ── Submit ────────────────────────────────────────────────────────
     const handleSubmit = async (e) => {
         e?.preventDefault();
+        if (!creditNoteType) { toast.error("Please select a Credit Note Type"); return; }
+        if (!referenceInvoice) { toast.error("Please select a Reference Invoice"); return; }
+        if (!reason.trim()) { toast.error("Please enter a Reason for Credit Note"); return; }
+        if (!remarks.trim()) { toast.error("Please enter Remarks"); return; }
         if (remainingBalance < 0) { toast.error("Applied credit exceeds total value"); return; }
-        
+
         const formData = new FormData();
         formData.append('companyId', id);
         formData.append('credit_note_type', creditNoteType);
