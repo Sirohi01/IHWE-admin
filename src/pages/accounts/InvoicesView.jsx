@@ -434,7 +434,7 @@ const InvoicesView = () => {
                                     const dueNote = dueDateNote(row);
                                     const statusStyle = STATUS_STYLES[row.status] || { badge: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' };
                                     return (
-                                    <tr key={row.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                                    <tr key={row.id} className={`border-b border-slate-100 hover:bg-slate-50/50 transition-colors ${dueNote?.text?.startsWith('Overdue') ? 'bg-rose-50/50' : dueNote?.text?.startsWith('Due') ? 'bg-orange-50/50' : ''}`}>
                                         <td className="px-2 py-1 font-bold text-slate-700 text-center">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
                                         <td className="px-2 py-1">
                                             <div className="font-bold text-slate-800 text-[11px]">{row.invNo}</div>
@@ -494,10 +494,10 @@ const InvoicesView = () => {
                                 );})}
                             </tbody>
                         </table>
+                    </div>
 
-                        {/* Footer Totals */}
-                        <div className="bg-white border-t border-slate-200 p-4">
-                            <div className="flex justify-between items-center mb-4 text-[11px] text-slate-500">
+                    {/* Pagination */}
+                    <div className="mt-3 flex justify-between items-center text-[11px] text-slate-500 px-1">
                                 <div>
                                     Showing {filteredInvoices.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredInvoices.length)} of {filteredInvoices.length} entries
                                 </div>
@@ -561,9 +561,6 @@ const InvoicesView = () => {
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                </div>
 
                 {/* Right Side: Sidebar Area */}
                 <div className="w-full lg:w-[20%] flex flex-col gap-2">
