@@ -311,11 +311,15 @@ const AccountsReceivableView = () => {
                                         </td>
                                         <td className="px-3 py-2">
                                             <div className="font-bold text-slate-800 text-[11px]">{row.paymentMode}</div>
-                                            <div className="text-slate-500 font-medium mt-0.5 text-[10px]">{row.bank}</div>
+                                            {row.bank && row.bank !== '-' && (
+                                                <div className="text-slate-500 font-medium mt-0.5 text-[10px]">{row.bank}</div>
+                                            )}
                                         </td>
                                         <td className="px-3 py-2">
                                             <div className="font-medium text-slate-700 text-[11px]">{row.utr}</div>
-                                            <div className="text-slate-500 font-medium mt-0.5 text-[10px]">{formatDate(row.utrDate)}</div>
+                                            {row.utrDate && (
+                                                <div className="text-slate-500 font-medium mt-0.5 text-[10px]">{formatDate(row.utrDate)}</div>
+                                            )}
                                         </td>
                                         <td className="px-3 py-2 font-black text-slate-700 text-center">
                                             {formatDate(row.dueDate)}
