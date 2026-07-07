@@ -56,6 +56,52 @@ const PAYMENT_TYPE_STYLES = {
     'Pending': 'text-blue-600 bg-blue-50 border-blue-200',
 };
 
+const getDueMeta = (row) => {
+    if (!row?.dueDate) {
+        return {
+            cellClass: 'text-slate-400',
+            badgeClass: 'bg-slate-100 text-slate-500 border-slate-200',
+            label: row?.dueLabel || 'No Due Date',
+            helper: 'Not set',
+        };
+    }
+
+    if (row.isOverdue) {
+        const days = Math.abs(Number(row.dueDaysDiff || 0));
+        return {
+            cellClass: 'text-rose-700',
+            badgeClass: 'bg-rose-100 text-rose-700 border-rose-200',
+            label: row.dueLabel || row.dueType || 'Overdue',
+            helper: days > 0 ? `${days}d overdue` : 'Overdue',
+        };
+    }
+
+    if (Number(row.dueDaysDiff) === 0) {
+        return {
+            cellClass: 'text-amber-700',
+            badgeClass: 'bg-amber-100 text-amber-700 border-amber-200',
+            label: row.dueLabel || row.dueType || 'Due Today',
+            helper: 'Due today',
+        };
+    }
+
+    if (Number(row.dueDaysDiff) > 0) {
+        return {
+            cellClass: 'text-blue-700',
+            badgeClass: 'bg-blue-50 text-blue-700 border-blue-200',
+            label: row.dueLabel || row.dueType || 'Upcoming',
+            helper: `Due in ${row.dueDaysDiff}d`,
+        };
+    }
+
+    return {
+        cellClass: 'text-slate-700',
+        badgeClass: 'bg-slate-100 text-slate-600 border-slate-200',
+        label: row.dueLabel || row.dueType || 'Due Date',
+        helper: '',
+    };
+};
+
 const AccountsReceivableView = () => {
     const navigate = useNavigate();
     const [rows, setRows] = useState([]);
@@ -237,7 +283,8 @@ const AccountsReceivableView = () => {
                     </div>
 
                     {/* Table */}
-                    <div className="bg-white border border-slate-200 shadow-sm overflow-x-auto">
+                    <div className="bg-white border border-slate-200 shadow-sm">
+                        <div className="overflow-x-auto">
                         <table className="w-full min-w-[1300px] text-left border-collapse">
                             <thead>
                                 <tr className="bg-white text-[8px] font-black uppercase tracking-wider text-slate-700 border-b border-slate-200 whitespace-nowrap">
@@ -264,12 +311,16 @@ const AccountsReceivableView = () => {
                                         <td colSpan={15} className="py-8 text-center text-slate-400">No receivable documents found.</td>
                                     </tr>
                                 )}
-                                {paginatedRows.map((row, idx) => (
+                                {paginatedRows.map((row, idx) => {
+                                    const dueMeta = getDueMeta(row);
+                                    return (
                                     <tr
                                         key={row.id}
                                         className={`border-b transition-colors ${row.isOverdue
-                                            ? 'bg-rose-50 border-rose-100 hover:bg-rose-100 border-l-4 border-l-rose-500'
-                                            : 'border-slate-100 hover:bg-slate-50/50'
+                                            ? 'bg-rose-50/80 border-rose-100 hover:bg-rose-100 border-l-4 border-l-rose-500'
+                                            : row.docType === 'Proforma Invoice'
+                                                ? 'bg-amber-50/30 border-amber-100 hover:bg-amber-50/60'
+                                                : 'border-slate-100 hover:bg-slate-50/50'
                                             }`}
                                     >
                                         <td className="px-3 py-2 font-black text-slate-800 text-center">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
@@ -324,11 +375,19 @@ const AccountsReceivableView = () => {
                                                 <div className="text-slate-500 font-medium mt-0.5 text-[10px]">{formatDate(row.utrDate)}</div>
                                             )}
                                         </td>
-                                        <td className={`px-3 py-2 font-black text-center ${row.isOverdue ? 'text-rose-600' : 'text-slate-700'}`}>
-                                            <div>{formatDate(row.dueDate)}</div>
-                                            {row.installmentOverdue && (
-                                                <div className="mt-0.5 text-[9px] font-bold text-rose-500 leading-tight">
-                                                    Installment due: {formatDate(row.installmentDueDate)}
+                                        <td className={`px-3 py-2 font-black text-center ${dueMeta.cellClass}`}>
+                                            <div className="leading-tight">{formatDate(row.dueDate)}</div>
+                                            <div className={`inline-block mt-1 px-1.5 py-0.5 rounded border text-[8px] font-black uppercase tracking-wide ${dueMeta.badgeClass}`}>
+                                                {dueMeta.label}
+                                            </div>
+                                            {dueMeta.helper && (
+                                                <div className={`mt-0.5 text-[9px] font-bold leading-tight ${row.isOverdue ? 'text-rose-600' : 'text-slate-500'}`}>
+                                                    {dueMeta.helper}
+                                                </div>
+                                            )}
+                                            {row.hasInstallmentDue && row.installmentDueDate && (
+                                                <div className="mt-0.5 text-[9px] font-semibold text-amber-700 leading-tight">
+                                                    Inst.: {formatDate(row.installmentDueDate)}
                                                 </div>
                                             )}
                                         </td>
@@ -356,9 +415,11 @@ const AccountsReceivableView = () => {
                                             </div>
                                         </td>
                                     </tr>
-                                ))}
+                                    );
+                                })}
                             </tbody>
                         </table>
+                        </div>
 
                         {/* Pagination */}
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 p-3 border-t border-slate-200">
