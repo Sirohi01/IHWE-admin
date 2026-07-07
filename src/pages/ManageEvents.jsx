@@ -204,12 +204,12 @@ const ManageEvents = () => {
                                     <div className="col-span-1">
                                         <label className="block text-[10px] font-bold text-gray-700 mb-1 tracking-tight">General Reminder (Days before Exhibition)</label>
                                         <input type="number" min="0" value={eventForm.generalReminderDays ?? 10} onChange={(e) => setEventForm({ ...eventForm, generalReminderDays: Number(e.target.value) })} className="w-full px-3 py-1.5 border border-gray-200 focus:border-blue-400 outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="10" />
-                                        <p className="text-[9px] text-gray-500 mt-1 leading-tight">Sent to clients with dues (no installments)</p>
+                                        <p className="text-[9px] text-gray-500 mt-1 leading-tight">Within this many days before exhibition, clients with pending full/general dues get max 1 reminder per day.</p>
                                     </div>
                                     <div className="col-span-1">
                                         <label className="block text-[10px] font-bold text-gray-700 mb-1 tracking-tight">Installment Reminder (Days before Exhibition)</label>
                                         <input type="number" min="0" value={eventForm.installmentReminderDays ?? 15} onChange={(e) => setEventForm({ ...eventForm, installmentReminderDays: Number(e.target.value) })} className="w-full px-3 py-1.5 border border-gray-200 focus:border-blue-400 outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="15" />
-                                        <p className="text-[9px] text-gray-500 mt-1 leading-tight">Sent to clients with pending installments</p>
+                                        <p className="text-[9px] text-gray-500 mt-1 leading-tight">Within this many days before exhibition, clients with pending installments get max 1 reminder per day.</p>
                                     </div>
                                 </div>
                             </div>
