@@ -103,35 +103,98 @@ const statusBadgeStyle = (status) => {
     return 'bg-slate-100 text-slate-500';
 };
 
+function MiniStatCard({ icon, iconBg, iconColor, title, value, subLabel }) {
+    return (
+        <div className="bg-white p-3 border border-slate-200 rounded-lg shadow-sm flex flex-col justify-between h-full hover:shadow-md transition-shadow">
+            <div className="flex items-start gap-3">
+                <div className={`w-9 h-9 ${iconBg} ${iconColor} rounded-lg flex items-center justify-center shrink-0`}>
+                    {icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                    <h3 className="text-slate-700 font-bold text-[9px] uppercase tracking-wider leading-tight whitespace-nowrap truncate">{title}</h3>
+                    <div className="text-lg font-black text-slate-800 leading-tight mt-1 truncate">
+                        {value}
+                    </div>
+                    {subLabel && (
+                        <div className="text-slate-500 text-[10px] font-medium mt-0.5">{subLabel}</div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // Client picker shown when no specific company id is provided (entry point from the sidebar)
 const ClientPicker = () => {
     const navigate = useNavigate();
     const [companies, setCompanies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
-    const [statusFilter, setStatusFilter] = useState('');
+    const [statusFilter, setStatusFilter] = useState('All Statuses');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     useEffect(() => {
-        const fetchCompanies = async () => {
+        const fetchData = async () => {
             try {
-                const res = await api.get('/api/companies');
-                const compData = res.data?.data || res.data || [];
-                setCompanies(compData);
+                const [compRes, arRes] = await Promise.all([
+                    api.get('/api/companies'),
+                    api.get('/api/accounts-receivable').catch(() => ({ data: { data: { rows: [] } } }))
+                ]);
+
+                const compData = compRes.data?.data || compRes.data || [];
+                const arRows = arRes.data?.data?.rows || [];
+
+                const clientFinancials = {};
+                arRows.forEach(row => {
+                    const cid = String(row.companyId);
+                    if (!clientFinancials[cid]) {
+                        clientFinancials[cid] = { invoiced: 0, received: 0, outstanding: 0, stallNo: row.stallNo, sqMtr: row.sqMtr };
+                    }
+                    clientFinancials[cid].invoiced += (row.invValue || 0);
+                    clientFinancials[cid].received += (row.received || 0);
+                    clientFinancials[cid].outstanding += (row.outstanding || 0);
+                    if (row.stallNo && !clientFinancials[cid].stallNo) clientFinancials[cid].stallNo = row.stallNo;
+                    if (row.sqMtr && !clientFinancials[cid].sqMtr) clientFinancials[cid].sqMtr = row.sqMtr;
+                });
+
+                let merged = compData.map(c => {
+                    let status = c.companyStatus || 'N/A';
+                    if (status === 'Closed - Won') status = 'Converted Client';
+
+                    const fin = clientFinancials[String(c._id)] || { invoiced: 0, received: 0, outstanding: 0, stallNo: null, sqMtr: null };
+                    fin.receivedPct = fin.invoiced > 0 ? Math.min(100, Math.round((fin.received / fin.invoiced) * 100)) : 0;
+
+                    return {
+                        ...c,
+                        companyStatus: status,
+                        financials: fin
+                    };
+                });
+
+                // Sort: Converted Client at the top
+                merged.sort((a, b) => {
+                    if (a.companyStatus === 'Converted Client' && b.companyStatus !== 'Converted Client') return -1;
+                    if (b.companyStatus === 'Converted Client' && a.companyStatus !== 'Converted Client') return 1;
+                    return 0;
+                });
+
+                setCompanies(merged);
             } catch {
-                toast.error('Failed to load clients');
+                toast.error('Failed to load clients data');
             } finally {
                 setLoading(false);
             }
         };
-        fetchCompanies();
+        fetchData();
     }, []);
 
     const statusOptions = [...new Set(companies.map((c) => c.companyStatus).filter(Boolean))];
 
     const filtered = companies.filter((c) => {
-        if (statusFilter && c.companyStatus !== statusFilter) return false;
+        if (statusFilter && statusFilter !== 'All Statuses' && c.companyStatus !== statusFilter) return false;
         if (!search) return true;
-        const q = search.toLowerCase();
+        const q = search.trim().toLowerCase();
         return (
             (c.companyName || c.name || '').toLowerCase().includes(q) ||
             (c.email || '').toLowerCase().includes(q) ||
@@ -139,103 +202,250 @@ const ClientPicker = () => {
         );
     });
 
-    return (
-        <div className="min-h-screen bg-slate-50 px-4 py-2 font-sans text-slate-800">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-1 gap-4">
-                <div>
-                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Client Ledger</h1>
-                    <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 font-medium">
-                        <span>Accounts Receivable (AR)</span>
-                        <ChevronRight className="w-3 h-3" />
-                        <span className="text-blue-600 font-bold">Client Ledger</span>
-                    </div>
-                </div>
-                <div className="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm">
-                    <Building2 className="w-4 h-4 text-slate-500" />
-                    {companies.length} Client{companies.length === 1 ? '' : 's'}
-                </div>
-            </div>
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [search, statusFilter]);
 
-            <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm mt-3 mb-3 flex flex-col sm:flex-row gap-2 sm:items-end">
-                <div className="flex-1">
-                    <label className="block text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-1.5">Search Clients</label>
-                    <div className="relative">
-                        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Search by client name, email, or city..."
-                            className="pl-9 pr-3 py-2 border border-slate-300 rounded-md text-[12px] w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
+    const totalPages = Math.ceil(filtered.length / itemsPerPage);
+    const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    const stats = {
+        total: companies.length,
+        converted: companies.filter(c => c.companyStatus === 'Converted Client').length,
+        lead: companies.filter(c => c.companyStatus === 'New Lead').length,
+        warm: companies.filter(c => c.companyStatus === 'Warm client').length,
+        followUp: companies.filter(c => c.companyStatus === 'Follow-Up Call' || c.companyStatus === 'Follow Up').length,
+    };
+
+    return (
+        <div className="min-h-screen bg-slate-50 p-4 font-sans text-slate-800">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+                <div>
+                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">Client Ledger</h1>
+                    <div className="text-[11px] text-slate-500 font-medium mt-0.5">
+                        Accounts Receivable (AR) &gt; <span className="text-blue-600 font-bold">Client Ledger</span>
                     </div>
                 </div>
-                {statusOptions.length > 0 && (
-                    <div className="sm:w-48">
-                        <label className="block text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-1.5">Status</label>
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="border border-slate-300 rounded-md px-3 py-2 text-[12px] font-medium text-slate-700 focus:outline-none bg-white w-full"
-                        >
-                            <option value="">All Statuses</option>
-                            {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                    </div>
-                )}
             </div>
 
             {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-6">
-                    {Array.from({ length: 8 }).map((_, i) => (
-                        <div key={i} className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm animate-pulse">
-                            <div className="flex items-center gap-2.5 mb-3">
-                                <div className="w-9 h-9 rounded-full bg-slate-100 shrink-0"></div>
-                                <div className="flex-1 space-y-1.5">
-                                    <div className="h-2.5 bg-slate-100 rounded w-3/4"></div>
-                                    <div className="h-2 bg-slate-100 rounded w-1/2"></div>
-                                </div>
-                            </div>
-                            <div className="h-2 bg-slate-100 rounded w-full mt-3"></div>
-                        </div>
-                    ))}
+                <div className="flex items-center justify-center py-24 text-slate-400 gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin" /> Loading clients...
                 </div>
-            ) : filtered.length === 0 ? (
-                <div className="text-center text-slate-500 text-sm py-20">No clients found.</div>
             ) : (
                 <>
-                    <div className="text-[11px] font-medium text-slate-500 mb-2">
-                        Showing {filtered.length} of {companies.length} clients
+                    {/* Stat Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+                        <StatCard
+                            icon={<Building2 className="w-4 h-4 text-blue-600" />} iconBg="bg-blue-100"
+                            rawValue={stats.total} displayValue={stats.total}
+                            label="Total Clients" subLabel="All registered profiles"
+                            bottomLabel="Database" bottomValue={stats.total}
+                        />
+                        <StatCard
+                            icon={<BadgeCheck className="w-4 h-4 text-emerald-600" />} iconBg="bg-emerald-100"
+                            rawValue={stats.converted} displayValue={stats.converted}
+                            label="Converted Clients" subLabel="Successfully onboarded"
+                            bottomLabel="Won Deals" bottomValue={stats.converted}
+                        />
+                        <StatCard
+                            icon={<Plus className="w-4 h-4 text-orange-600" />} iconBg="bg-orange-100"
+                            rawValue={stats.lead} displayValue={stats.lead}
+                            label="New Leads" subLabel="Recently added prospects"
+                            bottomLabel="Pipeline" bottomValue={stats.lead}
+                        />
+                        <StatCard
+                            icon={<TrendingUp className="w-4 h-4 text-purple-600" />} iconBg="bg-purple-100"
+                            rawValue={stats.warm} displayValue={stats.warm}
+                            label="Warm Clients" subLabel="High chance of conversion"
+                            bottomLabel="In Progress" bottomValue={stats.warm}
+                        />
+                        <StatCard
+                            icon={<Phone className="w-4 h-4 text-rose-600" />} iconBg="bg-rose-100"
+                            rawValue={stats.followUp} displayValue={stats.followUp}
+                            label="Follow-Ups" subLabel="Requires attention"
+                            bottomLabel="Pending" bottomValue={stats.followUp}
+                        />
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-6">
-                        {filtered.map((c) => (
-                            <button
-                                key={c._id}
-                                onClick={() => navigate(`/dashboard/account/client-ledger/${c._id}`)}
-                                className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm hover:shadow-md hover:border-blue-300 hover:-translate-y-0.5 transition-all text-left group"
+
+                    {/* Filters Row */}
+                    <div className="bg-white p-2.5 rounded-t-xl border border-slate-200 border-b-0 shadow-sm flex flex-col md:flex-row items-center gap-2">
+                        <div className="relative flex-1 min-w-[200px]">
+                            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Search by client name, email, or city..."
+                                className="pl-8 pr-3 py-1.5 border border-slate-200 rounded-md text-[11px] w-full focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto scrollbar-hide">
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                className="border border-slate-200 rounded-md px-2 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none bg-slate-50 min-w-[110px]"
                             >
-                                <div className="flex items-start gap-2.5 mb-2">
-                                    <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center shrink-0 text-blue-600 font-bold text-xs">
-                                        {(c.companyName || c.name || '?').charAt(0).toUpperCase()}
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <div className="text-[12px] font-semibold text-slate-800 truncate">{c.companyName || c.name || 'Unknown Client'}</div>
-                                        <div className="text-[9px] font-semibold text-slate-500 truncate">{c.city ? `${c.city}, ${c.state || ''}` : (c.category || 'N/A')}</div>
-                                    </div>
-                                    {c.companyStatus && (
-                                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded shrink-0 ${statusBadgeStyle(c.companyStatus)}`}>
-                                            {c.companyStatus}
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                                    <span className="text-[9px] font-semibold text-slate-500 truncate">{c.email || 'N/A'}</span>
-                                    <span className="text-[10px] font-bold text-blue-600 flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        View Ledger <ChevronRight className="w-3 h-3" />
-                                    </span>
-                                </div>
-                            </button>
-                        ))}
+                                <option value="All Statuses">All Statuses</option>
+                                {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Table */}
+                    <div className="bg-white border border-slate-200 shadow-sm overflow-x-auto">
+                        <table className="w-full text-left border-collapse min-w-[1000px]">
+                            <thead>
+                                <tr className="bg-slate-50 text-[9px] font-black uppercase tracking-wider text-slate-700 border-b border-slate-200 whitespace-nowrap">
+                                    <th className="px-3 py-3 text-center w-10">S.No.</th>
+                                    <th className="px-3 py-3">Client Profile</th>
+                                    <th className="px-3 py-3">Contact & Location</th>
+                                    <th className="px-3 py-3 text-right">Invoiced (₹)</th>
+                                    <th className="px-3 py-3 text-right">Collections</th>
+                                    <th className="px-3 py-3 text-right">Outstanding (₹)</th>
+                                    {/* <th className="px-3 py-3 text-center">Status</th> */}
+                                    <th className="px-3 py-3 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="text-[11px] whitespace-nowrap">
+                                {paginated.length === 0 && (
+                                    <tr>
+                                        <td colSpan={8} className="py-8 text-center text-slate-400 font-medium">No clients found.</td>
+                                    </tr>
+                                )}
+                                {paginated.map((c, idx) => {
+                                    const fin = c.financials;
+                                    const stallInfo = c.stallNo || fin.stallNo;
+                                    const sqMtrInfo = c.stallSize || fin.sqMtr;
+
+                                    return (
+                                        <tr key={c._id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                                            <td className="px-3 py-2 font-black text-slate-800 text-center">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
+                                            <td className="px-3 py-2">
+                                                <div className="font-bold text-blue-600 text-[12px] truncate max-w-[200px]">{c.companyName || c.name || 'Unknown Client'}</div>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <span className="text-slate-500 font-medium text-[10px]">{c.category || 'Standard'}</span>
+                                                    {(stallInfo && stallInfo !== 'N/A') && (
+                                                        <span className="bg-amber-50 text-amber-700 border border-amber-100 px-1.5 py-0.5 rounded text-[9px] font-bold">
+                                                            Stall: {stallInfo} {sqMtrInfo && sqMtrInfo !== 'N/A' ? `(${sqMtrInfo})` : ''}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-3 py-2">
+                                                <div className="font-bold text-slate-800 text-[11px] truncate max-w-[150px] flex items-center gap-1">
+                                                    <Mail className="w-3 h-3 text-slate-400" /> {c.email || 'N/A'}
+                                                </div>
+                                                <div className="text-slate-500 font-medium mt-1 text-[10px] truncate max-w-[150px] flex items-center gap-1">
+                                                    <Phone className="w-3 h-3 text-slate-400" /> {c.mobile || 'N/A'}
+                                                    {c.city && <span className="ml-1 px-1 bg-slate-100 rounded border border-slate-200">{c.city}</span>}
+                                                </div>
+                                            </td>
+                                            <td className="px-3 py-2 text-right">
+                                                <div className="font-bold text-slate-700 text-[11px]">{fin.invoiced > 0 ? `₹ ${formatCurrency(fin.invoiced)}` : '-'}</div>
+                                            </td>
+                                            <td className="px-3 py-2 text-right">
+                                                <div className="font-bold text-emerald-600 text-[11px] mb-1">{fin.received > 0 ? `₹ ${formatCurrency(fin.received)}` : '-'}</div>
+                                                {fin.invoiced > 0 && (
+                                                    <div className="w-24 h-1.5 bg-slate-100 rounded-full ml-auto overflow-hidden">
+                                                        <div
+                                                            className={`h-full rounded-full transition-all duration-500 ${fin.receivedPct === 100 ? 'bg-emerald-500' : 'bg-blue-500'}`}
+                                                            style={{ width: `${fin.receivedPct}%` }}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="px-3 py-2 text-right">
+                                                <div className={`font-black text-[12px] ${fin.outstanding > 0 ? 'text-rose-500' : 'text-slate-400'}`}>
+                                                    {fin.outstanding > 0 ? `₹ ${formatCurrency(fin.outstanding)}` : '-'}
+                                                </div>
+                                            </td>
+                                            {/* <td className="px-3 py-2 text-center">
+                                            <span className={`inline-block px-2 py-1 rounded text-[9px] font-bold shadow-sm ${statusBadgeStyle(c.companyStatus)}`}>
+                                                {c.companyStatus || 'N/A'}
+                                            </span>
+                                        </td> */}
+                                            <td className="px-3 py-2">
+                                                <div className="flex items-center justify-center">
+                                                    <button
+                                                        className="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded text-[10px] font-bold hover:bg-blue-600 hover:text-white transition-all flex items-center gap-1 shadow-sm"
+                                                        onClick={() => navigate(`/dashboard/account/client-ledger/${c._id}`)}
+                                                    >
+                                                        View Ledger <ChevronRight className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+
+                        {/* Pagination */}
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 p-3 border-t border-slate-200 bg-slate-50 rounded-b-xl">
+                            <div className="text-[11px] text-slate-500 font-medium">
+                                Showing {filtered.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} entries
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                    className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-[11px] bg-white"
+                                >&lt;</button>
+
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                    let pageNum = i + 1;
+                                    if (totalPages > 5 && currentPage > 3) {
+                                        pageNum = currentPage - 2 + i;
+                                    }
+                                    if (pageNum > totalPages) return null;
+                                    return (
+                                        <button
+                                            key={pageNum}
+                                            onClick={() => setCurrentPage(pageNum)}
+                                            className={`w-6 h-6 flex items-center justify-center rounded text-[11px] font-bold shadow-sm ${currentPage === pageNum ? 'bg-blue-600 text-white border-blue-600' : 'border border-slate-300 hover:bg-slate-50 bg-white'}`}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    );
+                                })}
+
+                                {totalPages > 5 && currentPage < totalPages - 2 && (
+                                    <>
+                                        <span className="px-1 text-slate-400 font-bold">...</span>
+                                        <button
+                                            onClick={() => setCurrentPage(totalPages)}
+                                            className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 font-bold text-[11px] bg-white shadow-sm"
+                                        >
+                                            {totalPages}
+                                        </button>
+                                    </>
+                                )}
+
+                                <button
+                                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages || totalPages === 0}
+                                    className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-[11px] bg-white"
+                                >&gt;</button>
+                            </div>
+                            <div className="flex items-center gap-2 text-[11px] text-slate-600 font-medium">
+                                <span>Rows per page</span>
+                                <select
+                                    value={itemsPerPage}
+                                    onChange={(e) => {
+                                        setItemsPerPage(Number(e.target.value));
+                                        setCurrentPage(1);
+                                    }}
+                                    className="border border-slate-300 rounded px-2 py-1 focus:outline-none font-bold bg-white shadow-sm"
+                                >
+                                    <option value={10}>10</option>
+                                    <option value={20}>20</option>
+                                    <option value={50}>50</option>
+                                    <option value={100}>100</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </>
             )}
