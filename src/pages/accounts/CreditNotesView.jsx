@@ -798,27 +798,30 @@ const CreditNotesView = () => {
                                     </div>
                                     <ChevronRight className="w-3 h-3 text-slate-300" />
                                 </button>
-                                <button className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors group text-left">
+                                <button disabled title="Coming soon" className="w-full flex items-center justify-between p-2 rounded transition-colors group text-left opacity-50 cursor-not-allowed">
                                     <div className="flex items-center gap-2.5">
                                         <div className="w-6 h-6 rounded bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0"><CheckCircle2 className="w-3.5 h-3.5" /></div>
                                         <div>
                                             <div className="text-[11px] font-semibold text-slate-800 leading-tight">Adjust Credit Note</div>
-                                            <div className="text-[9px] font-medium text-slate-500 mt-0.5">Adjust against invoice</div>
+                                            <div className="text-[9px] font-medium text-slate-500 mt-0.5">Coming soon</div>
                                         </div>
                                     </div>
                                     <ChevronRight className="w-3 h-3 text-slate-300" />
                                 </button>
-                                <button className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors group text-left">
+                                <button disabled title="Coming soon" className="w-full flex items-center justify-between p-2 rounded transition-colors group text-left opacity-50 cursor-not-allowed">
                                     <div className="flex items-center gap-2.5">
                                         <div className="w-6 h-6 rounded bg-purple-50 flex items-center justify-center text-purple-600 shrink-0"><RefreshCcw className="w-3.5 h-3.5" /></div>
                                         <div>
                                             <div className="text-[11px] font-semibold text-slate-800 leading-tight">Issue Refund</div>
-                                            <div className="text-[9px] font-medium text-slate-500 mt-0.5">Process refund</div>
+                                            <div className="text-[9px] font-medium text-slate-500 mt-0.5">Coming soon</div>
                                         </div>
                                     </div>
                                     <ChevronRight className="w-3 h-3 text-slate-300" />
                                 </button>
-                                <button className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors group text-left">
+                                <button
+                                    onClick={() => navigate(isAllList ? '/accounts/client-ledger' : `/dashboard/account/client-ledger/${id}`)}
+                                    className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors group text-left"
+                                >
                                     <div className="flex items-center gap-2.5">
                                         <div className="w-6 h-6 rounded bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0"><FileText className="w-3.5 h-3.5" /></div>
                                         <div>
@@ -828,12 +831,12 @@ const CreditNotesView = () => {
                                     </div>
                                     <ChevronRight className="w-3 h-3 text-slate-300" />
                                 </button>
-                                <button className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors group text-left">
+                                <button disabled title="Coming soon" className="w-full flex items-center justify-between p-2 rounded transition-colors group text-left opacity-50 cursor-not-allowed">
                                     <div className="flex items-center gap-2.5">
                                         <div className="w-6 h-6 rounded bg-blue-50 flex items-center justify-center text-blue-600 shrink-0"><BarChart2 className="w-3.5 h-3.5" /></div>
                                         <div>
                                             <div className="text-[11px] font-semibold text-slate-800 leading-tight">Download Report</div>
-                                            <div className="text-[10px] font-medium text-slate-500 mt-0.5">Get detailed report</div>
+                                            <div className="text-[10px] font-medium text-slate-500 mt-0.5">Coming soon</div>
                                         </div>
                                     </div>
                                     <ChevronRight className="w-3 h-3 text-slate-300" />
@@ -885,7 +888,7 @@ const CreditNotesView = () => {
                                 </div>
                             </div>
                             <div className="mt-2 text-center">
-                                <button className="text-blue-600 hover:text-blue-700 text-[11px] font-bold tracking-wide transition-colors">
+                                <button disabled title="Coming soon" className="text-blue-600 text-[11px] font-bold tracking-wide opacity-50 cursor-not-allowed">
                                     View All Reports →
                                 </button>
                             </div>

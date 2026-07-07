@@ -301,7 +301,6 @@ const DebitNotesView = () => {
     const adjustedPct = totalValue > 0 ? ((totalAdjusted / totalValue) * 100).toFixed(2) : '0.00';
     const outstandingPct = totalValue > 0 ? ((totalOutstanding / totalValue) * 100).toFixed(2) : '0.00';
     const uniqueInvoices = new Set(filteredNotes.flatMap((n) => (n.allocations || []).map((a) => a.invoiceId))).size;
-    const avgValue = totalNotes > 0 ? totalValue / totalNotes : 0;
 
     const now = new Date();
     const thisMonthNotes = filteredNotes.filter((n) => {
@@ -309,6 +308,7 @@ const DebitNotesView = () => {
         return !isNaN(d.getTime()) && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     });
     const thisMonthRaised = thisMonthNotes.reduce((sum, n) => sum + (n.totalAmount || 0), 0);
+    const avgValueThisMonth = thisMonthNotes.length > 0 ? thisMonthRaised / thisMonthNotes.length : 0;
     const lastMonthRef = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const lastMonthRaised = filteredNotes
         .filter((n) => { const d = new Date(n.debit_note_date || n.added); return !isNaN(d.getTime()) && d.getMonth() === lastMonthRef.getMonth() && d.getFullYear() === lastMonthRef.getFullYear(); })
@@ -457,7 +457,7 @@ const DebitNotesView = () => {
                         />
                         <StatCard
                             icon={<Wallet className="w-4 h-4 text-indigo-600" />} iconBg="bg-indigo-100"
-                            rawValue={totalValue} displayValue={`₹ ${formatCurrency(thisMonthRaised)}`} isCurrency
+                            rawValue={thisMonthRaised} displayValue={`₹ ${formatCurrency(thisMonthRaised)}`} isCurrency
                             label="Total Raised" subLabel="This Month"
                             bottomLabel={monthGrowthPct !== null ? 'vs Last Month' : 'Overall'} bottomValue={monthGrowthPct !== null ? `${monthGrowthPct >= 0 ? '↑' : '↓'} ${Math.abs(monthGrowthPct)}%` : `₹ ${formatCurrency(totalValue)}`}
                         />
@@ -481,7 +481,7 @@ const DebitNotesView = () => {
                         />
                         <StatCard
                             icon={<BarChart2 className="w-4 h-4 text-purple-600" />} iconBg="bg-purple-100"
-                            rawValue={avgValue} displayValue={`₹ ${formatCurrency(avgValue)}`} isCurrency
+                            rawValue={avgValueThisMonth} displayValue={`₹ ${formatCurrency(avgValueThisMonth)}`} isCurrency
                             label="Avg Debit Note Value" subLabel="This Month"
                             bottomLabel="Avg. Age" bottomValue={`${avgAgeDays} Days`}
                         />
