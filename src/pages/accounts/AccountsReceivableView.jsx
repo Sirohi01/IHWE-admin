@@ -267,7 +267,7 @@ const AccountsReceivableView = () => {
                                 {paginatedRows.map((row, idx) => (
                                     <tr
                                         key={row.id}
-                                        className={`border-b transition-colors ${row.status === 'Overdue'
+                                        className={`border-b transition-colors ${(row.outstanding > 0 && new Date(row.dueDate) < new Date())
                                             ? 'bg-rose-50 border-rose-100 hover:bg-rose-100 border-l-4 border-l-rose-500'
                                             : 'border-slate-100 hover:bg-slate-50/50'
                                             }`}
@@ -288,7 +288,7 @@ const AccountsReceivableView = () => {
                                                 {row.paymentType}
                                             </span>
                                         </td>
-                                        <td className="px-3 py-2 font-bold text-slate-800 text-[11px] text-right">
+                                        <td className="px-3 py-2 font-bold text-[12px] text-indigo-600 text-right">
                                             {formatCurrency(row.invValue)}
                                         </td>
                                         <td className="px-3 py-2 text-right">
@@ -306,7 +306,7 @@ const AccountsReceivableView = () => {
                                         <td className="px-3 py-2 text-center">
                                             <div className="font-bold text-[11px] text-emerald-600">{formatCurrency(row.netReceived)}</div>
                                         </td>
-                                        <td className="px-3 py-2 font-bold text-slate-800 text-[11px] text-right">
+                                        <td className={`px-3 py-2 font-bold text-[11px] text-right ${row.outstanding > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                                             {formatCurrency(row.outstanding)}
                                         </td>
                                         <td className="px-3 py-2">
@@ -321,7 +321,7 @@ const AccountsReceivableView = () => {
                                                 <div className="text-slate-500 font-medium mt-0.5 text-[10px]">{formatDate(row.utrDate)}</div>
                                             )}
                                         </td>
-                                        <td className="px-3 py-2 font-black text-slate-700 text-center">
+                                        <td className={`px-3 py-2 font-black text-center ${(row.outstanding > 0 && new Date(row.dueDate) < new Date()) ? 'text-rose-600' : 'text-slate-700'}`}>
                                             {formatDate(row.dueDate)}
                                         </td>
                                         <td className="px-3 py-2 text-center">

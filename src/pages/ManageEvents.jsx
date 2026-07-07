@@ -22,7 +22,9 @@ const EMPTY_EVENT = {
         { id: 'phase1', label: 'Phase 1 – Advance (25%)', percentage: 25, isDefault: false, dueDate: null },
         { id: 'phase2', label: 'Phase 2 – Mid Payment (50%)', percentage: 50, isDefault: false, dueDate: null },
         { id: 'phase3', label: 'Phase 3 – Final Payment (75%)', percentage: 75, isDefault: false, dueDate: null }
-    ]
+    ],
+    generalReminderDays: 10,
+    installmentReminderDays: 15
 };
 
 const ManageEvents = () => {
@@ -192,6 +194,26 @@ const ManageEvents = () => {
                                 <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Event Description</label>
                                 <textarea rows={3} value={eventForm.description} onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="Briefly describe the event..." />
                             </div>
+                            
+                            {/* Reminder Configuration Section */}
+                            <div className="pt-4 border-t-2 border-gray-100 mb-3">
+                                <label className="block text-[11px] font-black text-black uppercase tracking-tight flex items-center gap-2 mb-3">
+                                    <Calendar size={14} className="text-blue-600" /> Automated Reminders
+                                </label>
+                                <div className="grid grid-cols-2 gap-3 bg-blue-50/50 p-3 rounded border border-blue-100">
+                                    <div className="col-span-1">
+                                        <label className="block text-[10px] font-bold text-gray-700 mb-1 tracking-tight">General Reminder (Days before Exhibition)</label>
+                                        <input type="number" min="0" value={eventForm.generalReminderDays ?? 10} onChange={(e) => setEventForm({ ...eventForm, generalReminderDays: Number(e.target.value) })} className="w-full px-3 py-1.5 border border-gray-200 focus:border-blue-400 outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="10" />
+                                        <p className="text-[9px] text-gray-500 mt-1 leading-tight">Sent to clients with dues (no installments)</p>
+                                    </div>
+                                    <div className="col-span-1">
+                                        <label className="block text-[10px] font-bold text-gray-700 mb-1 tracking-tight">Installment Reminder (Days before Exhibition)</label>
+                                        <input type="number" min="0" value={eventForm.installmentReminderDays ?? 15} onChange={(e) => setEventForm({ ...eventForm, installmentReminderDays: Number(e.target.value) })} className="w-full px-3 py-1.5 border border-gray-200 focus:border-blue-400 outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="15" />
+                                        <p className="text-[9px] text-gray-500 mt-1 leading-tight">Sent to clients with pending installments</p>
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Payment Plans Section */}
                             <div className="pt-4 border-t-2 border-gray-100">
                                 <div className="flex items-center justify-between mb-3">
