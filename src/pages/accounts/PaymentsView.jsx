@@ -103,7 +103,7 @@ const PaymentList = () => {
                 const options = compData.map(c => ({ value: c._id, label: c.companyName || c.name || 'Unknown Company' }));
                 setModalCompanies(options);
             } catch (error) {
-                toast.error('Failed to load exhibitors');
+                toast.error('Failed to load clients');
             } finally {
                 setLoadingCompanies(false);
             }
@@ -112,7 +112,7 @@ const PaymentList = () => {
 
     const handleProceedAddPayment = () => {
         if (!selectedCompanyId) {
-            toast.error('Please select an exhibitor first');
+            toast.error('Please select a client first');
             return;
         }
         navigate(`/dashboard/account/AddPayment/${selectedCompanyId}`);
@@ -496,7 +496,7 @@ const PaymentList = () => {
             <div className="flex items-center justify-between mb-2 mt-2">
                 <div>
                     <h1 className="text-2xl font-medium text-slate-900 tracking-tight">Payments</h1>
-                    <div className="text-sm text-slate-500 mt-1">Internal transaction log — every payment recorded against an invoice, who recorded it and when. For the receipt document to send an exhibitor, see Receipts.</div>
+                    <div className="text-sm text-slate-500 mt-1">Internal transaction log — every payment recorded against an invoice, who recorded it and when. For the receipt document to send a client, see Receipts.</div>
                 </div>
                 <div className="flex gap-3 items-center">
                     <div className="relative">
@@ -888,7 +888,7 @@ const PaymentList = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
                         <div className="flex justify-between items-center p-4 border-b border-slate-100">
-                            <h3 className="font-bold text-slate-800 text-lg">Select Exhibitor</h3>
+                            <h3 className="font-bold text-slate-800 text-lg">Select Client</h3>
                             <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
                             </button>
@@ -899,7 +899,7 @@ const PaymentList = () => {
                                 options={modalCompanies}
                                 isLoading={loadingCompanies}
                                 onChange={(selected) => setSelectedCompanyId(selected ? selected.value : '')}
-                                placeholder="Select exhibitor..."
+                                placeholder="Select client..."
                                 className="text-sm"
                                 isClearable
                                 menuPortalTarget={document.body}

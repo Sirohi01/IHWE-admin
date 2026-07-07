@@ -80,7 +80,7 @@ const AccountsReceivableView = () => {
             const options = compData.map((c) => ({ value: c._id, label: c.companyName || c.name || 'Unknown Company' }));
             setModalCompanies(options);
         } catch (error) {
-            toast.error('Failed to load exhibitors');
+            toast.error('Failed to load clients');
         } finally {
             setLoadingCompanies(false);
         }
@@ -88,7 +88,7 @@ const AccountsReceivableView = () => {
 
     const handleProceedAddPayment = () => {
         if (!selectedCompanyId) {
-            toast.error('Please select an exhibitor first');
+            toast.error('Please select a client first');
             return;
         }
         navigate(`/dashboard/account/AddPayment/${selectedCompanyId}`);
@@ -470,7 +470,7 @@ const AccountsReceivableView = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
                         <div className="flex justify-between items-center p-4 border-b border-slate-100">
-                            <h3 className="font-bold text-slate-800 text-lg">Select Exhibitor</h3>
+                            <h3 className="font-bold text-slate-800 text-lg">Select Client</h3>
                             <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
                                 <X className="w-5 h-5" />
                             </button>
@@ -481,7 +481,7 @@ const AccountsReceivableView = () => {
                                 options={modalCompanies}
                                 isLoading={loadingCompanies}
                                 onChange={(selected) => setSelectedCompanyId(selected ? selected.value : '')}
-                                placeholder="Select exhibitor..."
+                                placeholder="Select client..."
                                 className="text-sm"
                                 isClearable
                                 menuPortalTarget={document.body}
