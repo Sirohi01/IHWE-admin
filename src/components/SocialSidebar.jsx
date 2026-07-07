@@ -80,7 +80,7 @@ const SocialSidebar = () => {
         .social-item:hover .social-button { animation: iconSpin 0.6s ease-in-out; }
       `}</style>
 
-      <div className="hidden lg:flex flex-col gap-2 fixed right-2 top-1/2 -translate-y-1/2 z-[1000]">
+      <div className="flex flex-nowrap justify-center gap-1.5 w-full">
         {socialData.map((social, index) => {
           const Icon = social.icon;
           return (
