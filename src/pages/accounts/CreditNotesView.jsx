@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FileText, Download, Search, Plus, Eye, Filter, CreditCard, CheckCircle2, AlertTriangle, RefreshCcw, Activity, Calendar, FileSpreadsheet, BarChart2, FilePlus, ChevronRight, ChevronDown, ArrowRightCircle } from 'lucide-react';
+import { FileText, Download, Search, Plus, Eye, Filter, CheckCircle2, AlertTriangle, RefreshCcw, Activity, Calendar, BarChart2, FilePlus, ChevronRight, ChevronDown } from 'lucide-react';
 import api from '../../lib/api';
 import toast from 'react-hot-toast';
 import Select from 'react-select';
@@ -86,10 +86,12 @@ const CreditNotesView = () => {
     const [toDate, setToDate] = useState('');
     const [filtersOpen, setFiltersOpen] = useState(false);
     const [statusFilter, setStatusFilter] = useState('All');
+    const [inlineDateRange, setInlineDateRange] = useState('');
+    const [inlineSalesPerson, setInlineSalesPerson] = useState('');
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     // Modal
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -98,7 +100,7 @@ const CreditNotesView = () => {
     const [loadingCompanies, setLoadingCompanies] = useState(false);
 
     const [companies, setCompanies] = useState([]);
-    const [users, setUsers] = useState([]);
+    const [adminUsers, setAdminUsers] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -114,8 +116,10 @@ const CreditNotesView = () => {
                 const compData = compRes.data?.data || compRes.data || [];
                 setCompanies(compData);
 
-                const usersData = adminRes.data?.data || [];
-                setUsers(usersData);
+                // Same admin-users list shown on /admin-users — used to populate "Added By"
+                // with every real user (not just whoever happens to already have a note),
+                // and with their canonical name instead of whatever raw string got stored.
+                setAdminUsers(adminRes.data?.data || []);
 
                 const invoicesData = invRes.data?.data || invRes.data || [];
 
@@ -210,6 +214,55 @@ const CreditNotesView = () => {
         }
     };
 
+    const exportToExcel = async (rows, filename) => {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Credit Notes');
+        worksheet.columns = [
+            { header: 'S.No.', key: 'sno', width: 8 },
+            { header: 'Credit Note No', key: 'note_no', width: 20 },
+            { header: 'Invoice No', key: 'invoice_no', width: 20 },
+            { header: 'Client', key: 'client', width: 25 },
+            { header: 'Reason', key: 'reason', width: 30 },
+            { header: 'Date', key: 'date', width: 16 },
+            { header: 'Value', key: 'value', width: 16 },
+            { header: 'Status', key: 'status', width: 14 },
+        ];
+        const headerRow = worksheet.getRow(1);
+        headerRow.font = { name: 'Arial', family: 4, size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+        headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
+        headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+        headerRow.height = 25;
+
+        rows.forEach((note, index) => {
+            const row = worksheet.addRow({
+                sno: index + 1,
+                note_no: note.debit_note_no || note.create_note_no || note.est_no || 'N/A',
+                invoice_no: note.toInvoiceNo || note.reference_invoice_no || note.est_no || 'N/A',
+                client: note.clientName || note.companyName || 'N/A',
+                reason: note.reason || 'N/A',
+                date: note.debit_note_date || note.added ? new Date(note.debit_note_date || note.added).toLocaleDateString('en-GB') : 'N/A',
+                value: Number(note.totalAmount !== undefined ? note.totalAmount : note.total_value) || 0,
+                status: normalizeStatus(note.status),
+            });
+            row.getCell('value').numFmt = '₹#,##0.00';
+            row.height = 20;
+        });
+
+        worksheet.eachRow((row) => {
+            row.eachCell((cell) => {
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFD4D4D8' } },
+                    left: { style: 'thin', color: { argb: 'FFD4D4D8' } },
+                    bottom: { style: 'thin', color: { argb: 'FFD4D4D8' } },
+                    right: { style: 'thin', color: { argb: 'FFD4D4D8' } },
+                };
+            });
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        saveAs(new Blob([buffer]), filename);
+    };
+
     const handleProceedAddCreditNote = () => {
         if (!selectedCompanyId) {
             toast.error('Please select an exhibitor first');
@@ -220,17 +273,58 @@ const CreditNotesView = () => {
 
     const formatCurrency = (val) => new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val || 0);
 
+    // Real lifecycle status for this legacy model is just active/cancelled/updated
+    // (there is no partial-adjustment tracking in the underlying CreditNote/DebitNote
+    // schema) — a credit note takes full effect the moment it's active, and stops
+    // applying the moment it's cancelled.
+    const normalizeStatus = (status) => {
+        const s = String(status || 'active').toLowerCase();
+        if (s === 'cancelled') return 'Cancelled';
+        if (s === 'updated') return 'Updated';
+        return 'Active';
+    };
     const getStatusBadge = (status) => {
-        switch (status) {
-            case 'Fully Adjusted': return <span className="text-[10px] font-medium text-emerald-600">Fully Adjusted</span>;
-            case 'Partially Adjusted': return <span className="text-[10px] font-medium text-amber-500">Partially Adjusted</span>;
-            case 'Unadjusted': return <span className="text-[10px] font-medium text-rose-500 bg-rose-50 px-2 py-0.5 rounded">Unadjusted</span>;
-            default: return <span className="text-[10px] font-medium text-slate-600">Draft</span>;
+        switch (normalizeStatus(status)) {
+            case 'Cancelled': return <span className="text-[10px] font-medium text-rose-500 bg-rose-50 px-2 py-0.5 rounded">Cancelled</span>;
+            case 'Updated': return <span className="text-[10px] font-medium text-blue-500">Updated</span>;
+            default: return <span className="text-[10px] font-medium text-emerald-600">Active</span>;
         }
     };
 
-    // Apply Search Filter
+    // "Added By" is stored on the note as whatever string was passed at creation time —
+    // sometimes a username, sometimes a full name (confirmed by real data: "test6", "Admin",
+    // "Vansh Chaudhary" all appear) — so match against BOTH of the selected admin's fields.
+    const selectedAdmin = adminUsers.find((u) => u.username === inlineSalesPerson);
+    const selectedAdminNames = selectedAdmin ? [selectedAdmin.username, selectedAdmin.fullName].filter(Boolean) : [];
+
+    // Apply Search + real filters (status/date-range/added-by)
     const filteredNotes = creditNotes.filter(n => {
+        if (statusFilter !== 'All' && normalizeStatus(n.status) !== statusFilter) return false;
+        if (inlineSalesPerson && !selectedAdminNames.includes(n.added_by)) return false;
+
+        if (fromDate || toDate) {
+            const d = new Date(n.debit_note_date || n.added);
+            if (isNaN(d.getTime())) return false;
+            if (fromDate && d < new Date(fromDate)) return false;
+            if (toDate && d > new Date(new Date(toDate).setHours(23, 59, 59, 999))) return false;
+        }
+
+        if (inlineDateRange) {
+            const d = new Date(n.debit_note_date || n.added);
+            if (isNaN(d.getTime())) return false;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (inlineDateRange === 'Today') {
+                if (d.toDateString() !== today.toDateString()) return false;
+            } else if (inlineDateRange === 'This Week') {
+                const weekAgo = new Date(today);
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                if (d < weekAgo || d > today) return false;
+            } else if (inlineDateRange === 'This Month') {
+                if (d.getMonth() !== today.getMonth() || d.getFullYear() !== today.getFullYear()) return false;
+            }
+        }
+
         if (!searchInput) return true;
         const s = searchInput.toLowerCase();
         return (
@@ -242,32 +336,39 @@ const CreditNotesView = () => {
 
     const totalNotes = filteredNotes.length;
     const totalValue = filteredNotes.reduce((sum, n) => sum + (Number(n.totalAmount) || 0), 0);
-    const totalAdjusted = filteredNotes.reduce((sum, n) => sum + (Number(n.adjusted_amount) || 0), 0);
-    const totalOutstanding = filteredNotes.reduce((sum, n) => sum + (Number(n.remaining_balance) || 0), 0);
+    // This legacy model has no partial-adjustment tracking: a note takes full effect the
+    // moment it's active/updated, and none once cancelled — so "adjusted" is just the
+    // active total, and "cancelled" (voided, never applied) replaces the old, always-zero
+    // "outstanding" figure (there is no such field on CreditNote/DebitNote at all).
+    const activeNotes = filteredNotes.filter(n => normalizeStatus(n.status) !== 'Cancelled');
+    const cancelledNotes = filteredNotes.filter(n => normalizeStatus(n.status) === 'Cancelled');
+    const totalAdjusted = activeNotes.reduce((sum, n) => sum + (Number(n.totalAmount) || 0), 0);
+    const totalCancelled = cancelledNotes.reduce((sum, n) => sum + (Number(n.totalAmount) || 0), 0);
 
     const adjustedPct = totalValue > 0 ? ((totalAdjusted / totalValue) * 100).toFixed(2) + '%' : '0%';
-    const outstandingPct = totalValue > 0 ? ((totalOutstanding / totalValue) * 100).toFixed(2) + '%' : '0%';
+    const cancelledPct = totalValue > 0 ? ((totalCancelled / totalValue) * 100).toFixed(2) + '%' : '0%';
 
-    const fullyAdjustedCount = filteredNotes.filter(n => n.status === 'Fully Adjusted').length;
-    const partiallyAdjustedCount = filteredNotes.filter(n => n.status === 'Partially Adjusted').length;
-    const unadjustedCount = filteredNotes.filter(n => n.status === 'Unadjusted' || !n.status).length;
-
-    const isChartEmpty = fullyAdjustedCount === 0 && partiallyAdjustedCount === 0 && unadjustedCount === 0;
+    const activeCount = filteredNotes.filter(n => normalizeStatus(n.status) === 'Active').length;
+    const updatedCount = filteredNotes.filter(n => normalizeStatus(n.status) === 'Updated').length;
+    const cancelledCount = cancelledNotes.length;
 
     const pieData = [
-        { name: 'Fully Adjusted', value: isChartEmpty ? 11 : fullyAdjustedCount, color: '#059669' },
-        { name: 'Partially Adjusted', value: isChartEmpty ? 2 : partiallyAdjustedCount, color: '#f59e0b' },
-        { name: 'Unadjusted', value: isChartEmpty ? 5 : unadjustedCount, color: '#e11d48' },
+        { name: 'Active', value: activeCount, color: '#059669' },
+        { name: 'Updated', value: updatedCount, color: '#2563eb' },
+        { name: 'Cancelled', value: cancelledCount, color: '#e11d48' },
     ];
 
     const totalStatusCount = pieData.reduce((sum, item) => sum + item.value, 0) || 1;
 
-    const fullyAdjustedPct = ((pieData[0].value / totalStatusCount) * 100).toFixed(2) + '%';
-    const partiallyAdjustedPct = ((pieData[1].value / totalStatusCount) * 100).toFixed(2) + '%';
-    const unadjustedPct = ((pieData[2].value / totalStatusCount) * 100).toFixed(2) + '%';
-
-    const refundsIssued = 0; // Update when refund tracking is available
+    const refundsIssued = 0; // No refund tracking exists yet anywhere in this system
     const avgValue = totalNotes > 0 ? (totalValue / totalNotes) : 0;
+
+    const now = new Date();
+    const thisMonthNotes = filteredNotes.filter((n) => {
+        const d = new Date(n.debit_note_date || n.added);
+        return !isNaN(d.getTime()) && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+    const thisMonthValue = thisMonthNotes.reduce((sum, n) => sum + (Number(n.totalAmount) || 0), 0);
 
     // Pagination state derived
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -349,9 +450,9 @@ const CreditNotesView = () => {
                                             className="w-full text-xs border border-slate-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
                                         >
                                             <option value="All">All Statuses</option>
-                                            <option value="Fully Adjusted">Fully Adjusted</option>
-                                            <option value="Partially Adjusted">Partially Adjusted</option>
-                                            <option value="Unadjusted">Unadjusted</option>
+                                            <option value="Active">Active</option>
+                                            <option value="Updated">Updated</option>
+                                            <option value="Cancelled">Cancelled</option>
                                         </select>
                                     </div>
                                     <button
@@ -397,18 +498,18 @@ const CreditNotesView = () => {
                             <AnimatedStatCard
                                 icon={<AlertTriangle className="w-4 h-4 text-orange-500" />}
                                 iconBg="bg-orange-50 text-orange-500"
-                                title="Total Outstanding"
-                                value={`₹ ${formatCurrency(totalOutstanding)}`}
-                                subText1="Yet to be Adjusted"
+                                title="Cancelled"
+                                value={`₹ ${formatCurrency(totalCancelled)}`}
+                                subText1={`${cancelledCount} Voided Notes`}
                                 valueColor="text-slate-800"
-                                percentage={outstandingPct}
+                                percentage={cancelledPct}
                             />
                             <AnimatedStatCard
                                 icon={<Calendar className="w-4 h-4 text-indigo-500" />}
                                 iconBg="bg-indigo-50 text-indigo-500"
                                 title="This Month Issued"
-                                value={`₹ ${formatCurrency(totalValue)}`}
-                                subText1={`${totalNotes} Credit Notes`}
+                                value={`₹ ${formatCurrency(thisMonthValue)}`}
+                                subText1={`${thisMonthNotes.length} Credit Notes`}
                                 subText2={<span className="text-emerald-500 flex items-center gap-1 font-medium"></span>}
                             />
                             <AnimatedStatCard
@@ -447,49 +548,45 @@ const CreditNotesView = () => {
                                             className="pl-8 pr-3 py-1.5 border border-gray-200 rounded text-[11px] w-56 focus:outline-none focus:border-blue-400 placeholder:text-slate-400"
                                         />
                                     </div>
-                                    <select className="border border-gray-200 rounded text-[11px] px-2 py-1.5 outline-none text-slate-600 bg-white">
+                                    <select
+                                        value={inlineDateRange}
+                                        onChange={(e) => { setInlineDateRange(e.target.value); setCurrentPage(1); }}
+                                        className="border border-gray-200 rounded text-[11px] px-2 py-1.5 outline-none text-slate-600 bg-white"
+                                    >
                                         <option value="">Date Range</option>
-                                        <option value="today">Today</option>
-                                        <option value="this_week">This Week</option>
-                                        <option value="this_month">This Month</option>
+                                        <option value="Today">Today</option>
+                                        <option value="This Week">This Week</option>
+                                        <option value="This Month">This Month</option>
                                     </select>
-                                    <select className="border border-gray-200 rounded text-[11px] px-2 py-1.5 outline-none text-slate-600 bg-white">
-                                        <option value="">Status</option>
-                                        <option value="Fully Adjusted">Fully Adjusted</option>
-                                        <option value="Partially Adjusted">Partially Adjusted</option>
-                                        <option value="Unadjusted">Unadjusted</option>
+                                    <select
+                                        value={statusFilter}
+                                        onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+                                        className="border border-gray-200 rounded text-[11px] px-2 py-1.5 outline-none text-slate-600 bg-white"
+                                    >
+                                        <option value="All">Status</option>
+                                        <option value="Active">Active</option>
+                                        <option value="Updated">Updated</option>
+                                        <option value="Cancelled">Cancelled</option>
                                     </select>
-                                    <select className="border border-gray-200 rounded text-[11px] px-2 py-1.5 outline-none text-slate-600 bg-white">
-                                        <option value="">Adjustment Status</option>
-                                        <option value="Adjusted">Adjusted</option>
-                                        <option value="Not Adjusted">Not Adjusted</option>
-                                    </select>
-                                    <select className="border border-gray-200 rounded text-[11px] px-2 py-1.5 outline-none text-slate-600 bg-white">
-                                        <option value="">Credit Note Type</option>
-                                        <option value="Discount">Discount</option>
-                                        <option value="Refund">Refund</option>
-                                    </select>
-                                    <select className="border border-gray-200 rounded text-[11px] px-2 py-1.5 outline-none text-slate-600 bg-white">
-                                        <option value="">Sales Person</option>
-                                        {users.map(u => (
-                                            <option key={u._id} value={u._id}>{u.fullName || u.username || 'Unknown User'}</option>
+                                    <select
+                                        value={inlineSalesPerson}
+                                        onChange={(e) => { setInlineSalesPerson(e.target.value); setCurrentPage(1); }}
+                                        className="border border-gray-200 rounded text-[11px] px-2 py-1.5 outline-none text-slate-600 bg-white"
+                                    >
+                                        <option value="">Added By</option>
+                                        {adminUsers.map((u) => (
+                                            <option key={u._id} value={u.username}>{u.fullName || u.username}</option>
                                         ))}
                                     </select>
-                                    <button className="text-blue-600 text-[11px] flex items-center gap-1 hover:underline ml-1 whitespace-nowrap">
-                                        <Filter className="w-3 h-3" /> More Filters
-                                    </button>
                                 </div>
 
                                 {/* Bottom Row: Action Buttons */}
                                 <div className="flex flex-wrap items-center justify-end gap-2">
-                                    <button className="flex items-center text-blue-600 text-[11px] font-medium px-3 py-1.5 border border-gray-100 bg-white hover:bg-slate-50 rounded whitespace-nowrap">
+                                    <button
+                                        onClick={() => exportToExcel(filteredNotes, `Credit_Notes_${new Date().toISOString().slice(0, 10)}.xlsx`)}
+                                        className="flex items-center text-blue-600 text-[11px] font-medium px-3 py-1.5 border border-gray-100 bg-white hover:bg-slate-50 rounded whitespace-nowrap"
+                                    >
                                         <Download className="w-3 h-3 mr-1.5" /> Export
-                                    </button>
-                                    <button className="flex items-center text-blue-600 text-[11px] font-medium px-3 py-1.5 border border-gray-100 bg-white hover:bg-slate-50 rounded whitespace-nowrap">
-                                        <BarChart2 className="w-3 h-3 mr-1.5" /> Credit Note Report
-                                    </button>
-                                    <button className="flex items-center text-blue-600 text-[11px] font-medium px-3 py-1.5 border border-gray-100 bg-white hover:bg-slate-50 rounded whitespace-nowrap">
-                                        <FileSpreadsheet className="w-3 h-3 mr-1.5" /> Adjustment Report
                                     </button>
                                 </div>
                             </div>
@@ -515,12 +612,18 @@ const CreditNotesView = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-50 text-[11px]">
-                                        {currentItems.map((note, idx) => (
+                                        {currentItems.map((note, idx) => {
+                                        const noteTotal = note.totalAmount !== undefined ? note.totalAmount : note.total_value;
+                                        const isCancelledNote = normalizeStatus(note.status) === 'Cancelled';
+                                        const adjustedAmt = isCancelledNote ? 0 : (Number(noteTotal) || 0);
+                                        const outstandingAmt = isCancelledNote ? (Number(noteTotal) || 0) : 0;
+                                        return (
                                             <tr key={note._id || idx} className="hover:bg-slate-50/50">
                                                 <td className="py-1 px-2 font-bold text-slate-700 text-center">{indexOfFirstItem + idx + 1}</td>
                                                 <td className="py-1 px-2">
                                                     <div className="font-bold text-slate-800 text-[11px]">{note.debit_note_no || note.create_note_no || note.est_no || 'N/A'}</div>
-                                                    <div className="text-[10px] text-slate-500 mt-0.5">{note._source === 'debitnote' ? 'Debit' : 'Credit'} Note Date: {note.debit_note_date || note.added ? new Date(note.debit_note_date || note.added).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
+                                                    {/* Both _source values are credit-adjustment documents on this page (see backend/services/ledgerTotals.js) — always label the date as a Credit Note date so it isn't misread as a debit (charge-increasing) document. */}
+                                                    <div className="text-[10px] text-slate-500 mt-0.5">Credit Note Date: {note.debit_note_date || note.added ? new Date(note.debit_note_date || note.added).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
                                                     <div className="text-[10px] font-bold text-blue-600 mt-0.5 cursor-pointer hover:underline">View Details <ChevronRight className="inline w-3 h-3 rotate-90" /></div>
                                                 </td>
                                                 <td className="py-1 px-2">
@@ -547,12 +650,12 @@ const CreditNotesView = () => {
                                                     <div className="font-bold text-emerald-600 text-[11px]">₹ {formatCurrency(note.totalAmount !== undefined ? note.totalAmount : note.total_value)}</div>
                                                 </td>
                                                 <td className="py-1 px-2 text-right">
-                                                    <div className="font-bold text-slate-800 text-[11px]">₹ {formatCurrency(note.adjusted_amount || 0)}</div>
-                                                    <div className="text-[10px] text-slate-500 font-bold mt-0.5">{(note.totalAmount || note.total_value) > 0 ? Math.round(((note.adjusted_amount || 0) / (note.totalAmount || note.total_value)) * 100) : 0}%</div>
+                                                    <div className="font-bold text-slate-800 text-[11px]">₹ {formatCurrency(adjustedAmt)}</div>
+                                                    <div className="text-[10px] text-slate-500 font-bold mt-0.5">{noteTotal > 0 ? Math.round((adjustedAmt / noteTotal) * 100) : 0}%</div>
                                                 </td>
                                                 <td className="py-1 px-2 text-right">
-                                                    <div className={`font-bold text-[11px] ${(note.remaining_balance || 0) > 0 ? 'text-rose-600' : 'text-slate-800'}`}>
-                                                        ₹ {formatCurrency(note.remaining_balance || 0)}
+                                                    <div className={`font-bold text-[11px] ${outstandingAmt > 0 ? 'text-rose-600' : 'text-slate-800'}`}>
+                                                        ₹ {formatCurrency(outstandingAmt)}
                                                     </div>
                                                 </td>
                                                 <td className="py-1 px-2 text-center">
@@ -560,12 +663,11 @@ const CreditNotesView = () => {
                                                 </td>
                                                 <td className="py-1 px-2 text-center">
                                                     <div className="flex items-center justify-center gap-1.5">
-                                                        <button className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors" title="View"><Eye className="w-3.5 h-3.5" /></button>
-                                                        <button className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors" title="Download"><FileText className="w-3.5 h-3.5" /></button>
+                                                        <button onClick={() => navigate(`/dashboard/account/client-ledger/${note.companyId}`)} className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors" title="View client ledger"><Eye className="w-3.5 h-3.5" /></button>
                                                     </div>
                                                 </td>
                                             </tr>
-                                        ))}
+                                        );})}
                                     </tbody>
                                 </table>
                             </div>
@@ -621,9 +723,9 @@ const CreditNotesView = () => {
                                     </div>
                                 </div>
                                 <div className="px-3 text-center">
-                                    <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">TOTAL OUTSTANDING</div>
+                                    <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">TOTAL CANCELLED</div>
                                     <div className="text-[11px] font-bold text-slate-800 flex items-center justify-center gap-1">
-                                        ₹ {formatCurrency(totalOutstanding)} <span className="text-[9px] text-rose-500 font-medium">↑ {outstandingPct}</span>
+                                        ₹ {formatCurrency(totalCancelled)} <span className="text-[9px] text-rose-500 font-medium">{cancelledPct}</span>
                                     </div>
                                 </div>
                                 <div className="px-3 text-center">
@@ -673,8 +775,8 @@ const CreditNotesView = () => {
                                 <div className="flex items-center gap-2.5">
                                     <div className="w-7 h-7 rounded-md bg-rose-50 flex items-center justify-center text-rose-600 shrink-0"><AlertTriangle className="w-3.5 h-3.5" /></div>
                                     <div>
-                                        <div className="text-[10px] font-semibold text-slate-600">Total Outstanding</div>
-                                        <div className="font-bold text-slate-800 text-xs">₹ {formatCurrency(totalOutstanding)}</div>
+                                        <div className="text-[10px] font-semibold text-slate-600">Total Cancelled</div>
+                                        <div className="font-bold text-slate-800 text-xs">₹ {formatCurrency(totalCancelled)}</div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2.5">

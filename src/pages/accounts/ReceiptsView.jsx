@@ -459,6 +459,7 @@ const ReceiptsView = () => {
                     <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1 font-medium">
                         Accounts Receivable (AR) <ChevronRight className="w-3 h-3 text-slate-400" /> <span className="text-slate-700">Receipts</span>
                     </div>
+                    <div className="text-[11px] text-slate-400 mt-0.5 font-medium">Download or resend the receipt document for a payment already recorded. For the full transaction log, see Payments.</div>
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="relative">

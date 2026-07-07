@@ -9,7 +9,7 @@ import {
   Eye,
   RefreshCw, ChevronRight,
   User, ArrowRight, FilePlus, CreditCard, Activity,
-  FileMinus,
+  FileMinus, FileWarning,
   Truck,
 } from "lucide-react";
 
@@ -168,6 +168,17 @@ const AccountOverview = () => {
           <div className="flex-1 min-w-0">
             <h4 className="text-[13px] font-normal text-[#1a2b4b] leading-tight truncate">Credit Note</h4>
             <p className="text-[10.5px] text-slate-500 leading-tight truncate">View and create credit notes</p>
+          </div>
+          <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
+        </button>
+
+        <button onClick={() => navigate(`/create-account-debit-note/${id}`)} className="flex items-center gap-2 p-2 bg-[#fff7ed] hover:bg-[#ffedd5] border border-[#fbe3c4] rounded-lg transition-colors text-left group">
+          <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
+            <FileWarning size={16} className="text-[#c2410c]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="text-[13px] font-normal text-[#1a2b4b] leading-tight truncate">Debit Note</h4>
+            <p className="text-[10.5px] text-slate-500 leading-tight truncate">Charge additional amount</p>
           </div>
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>

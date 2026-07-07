@@ -396,6 +396,15 @@ const PaymentList = () => {
 
     const totalCreditNotes = filteredPayments.reduce((sum, pmt) => sum + (parseFloat(pmt.debit_note_ammount || pmt.credit_note_amount) || 0), 0);
     const netAmountReceived = totalReceived - totalTds;
+    const totalPending = Math.max(0, totalOutstanding - totalOverdue);
+
+    const now = new Date();
+    const thisMonthPayments = filteredPayments.filter((pmt) => {
+        const d = new Date(pmt.payment_date || pmt.added);
+        return !isNaN(d.getTime()) && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+    const thisMonthReceived = thisMonthPayments.reduce((sum, pmt) => sum + (parseFloat(pmt.amount_text) || 0), 0);
+    const thisMonthTds = thisMonthPayments.reduce((sum, pmt) => sum + (parseFloat(pmt.tds_text) || 0), 0);
 
     const handleSendReceipt = async (pmtId, type) => {
         setSendingReceipt(prev => ({ ...prev, [`${pmtId}-${type}`]: true }));
@@ -420,41 +429,41 @@ const PaymentList = () => {
                 <AnimatedStatCard
                     icon={<CreditCard className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
                     gradientTo="to-blue-50" iconBg="bg-blue-100"
-                    rawValue={totalPayments || 9}
+                    rawValue={totalPayments}
                     displayValue={(c) => Math.round(c)}
                     label="Total Payments"
-                    subLabel={`${totalInvoices || 7} Invoices`} subColor="#2563eb"
+                    subLabel={`${totalInvoices} Invoices`} subColor="#2563eb"
                 />
                 <AnimatedStatCard
                     icon={<DollarSign className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
                     gradientTo="to-emerald-50" iconBg="bg-emerald-100"
-                    rawValue={totalReceived || 2003230.04}
+                    rawValue={totalReceived}
                     displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                     label="Total Received"
-                    subLabel="₹ 8,92,450.00 This Month" subColor="#059669"
+                    subLabel={`₹ ${thisMonthReceived.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} This Month`} subColor="#059669"
                 />
                 <AnimatedStatCard
                     icon={<DollarSign className="w-5 h-5 text-orange-600" strokeWidth={2.5} />}
                     gradientTo="to-orange-50" iconBg="bg-orange-100"
-                    rawValue={totalTds || 7139.04}
+                    rawValue={totalTds}
                     displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                     label="Total TDS Deducted"
-                    subLabel="₹ 4,543.66 This Month" subColor="#d97706"
+                    subLabel={`₹ ${thisMonthTds.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} This Month`} subColor="#d97706"
                 />
                 <AnimatedStatCard
                     icon={<Users className="w-5 h-5 text-rose-600" strokeWidth={2.5} />}
                     gradientTo="to-rose-50" iconBg="bg-rose-100"
-                    rawValue={totalClients || 1}
+                    rawValue={totalClients}
                     displayValue={(c) => Math.round(c)}
                     label="Client"
                     subLabel="Paid" subColor="#e11d48"
                 />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                 <AnimatedStatCard
                     icon={<DollarSign className="w-5 h-5 text-indigo-600" strokeWidth={2.5} />}
                     gradientTo="to-indigo-50" iconBg="bg-indigo-100"
-                    rawValue={(totalReceived - totalTds) || 1996091.00}
+                    rawValue={netAmountReceived}
                     displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                     label="Net Amount Received"
                     subLabel="" subColor="#4f46e5"
@@ -462,26 +471,18 @@ const PaymentList = () => {
                 <AnimatedStatCard
                     icon={<AlertTriangle className="w-5 h-5 text-amber-600" strokeWidth={2.5} />}
                     gradientTo="to-amber-50" iconBg="bg-amber-100"
-                    rawValue={38120.00}
+                    rawValue={totalOverdue}
                     displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                     label="Overdue Amount"
-                    subLabel="" subColor="#d97706"
+                    subLabel="Invoice > 30 days old, still outstanding" subColor="#d97706"
                 />
                 <AnimatedStatCard
                     icon={<Clock className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
                     gradientTo="to-blue-50" iconBg="bg-blue-100"
-                    rawValue={680550.00}
+                    rawValue={totalPending}
                     displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                     label="Pending Amount"
-                    subLabel="" subColor="#2563eb"
-                />
-                <AnimatedStatCard
-                    icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
-                    gradientTo="to-emerald-50" iconBg="bg-emerald-100"
-                    rawValue={100}
-                    displayValue={(c) => `${Math.round(c)}%`}
-                    label="Payments on Time"
-                    subLabel="" subColor="#059669"
+                    subLabel="Outstanding, not yet overdue" subColor="#2563eb"
                 />
             </div>
         </div>
@@ -495,7 +496,7 @@ const PaymentList = () => {
             <div className="flex items-center justify-between mb-2 mt-2">
                 <div>
                     <h1 className="text-2xl font-medium text-slate-900 tracking-tight">Payments</h1>
-                    <div className="text-sm text-slate-500 mt-1">Track all payments received against invoices</div>
+                    <div className="text-sm text-slate-500 mt-1">Internal transaction log — every payment recorded against an invoice, who recorded it and when. For the receipt document to send an exhibitor, see Receipts.</div>
                 </div>
                 <div className="flex gap-3 items-center">
                     <div className="relative">

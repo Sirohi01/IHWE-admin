@@ -878,9 +878,9 @@ const CreateInvoice = () => {
                                 </div>
                             </div>
                             <div>
-                                <Label>Due Date</Label>
+                                <Label required>Due Date</Label>
                                 <div className="relative">
-                                    <Input type="date" value={form.dueDate} onChange={(e) => setField('dueDate', e.target.value)} className="py-2.5" />
+                                    <Input required type="date" value={form.dueDate} onChange={(e) => setField('dueDate', e.target.value)} className="py-2.5" />
                                 </div>
                             </div>
                             <div>

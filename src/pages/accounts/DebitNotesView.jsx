@@ -6,7 +6,7 @@ import {
     Wallet, ClipboardList, Send, Target, FileSpreadsheet, MoreVertical, Loader2, ChevronDown
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
-import api from '../../lib/api';
+import api, { SERVER_URL } from '../../lib/api';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import Select from 'react-select';
@@ -121,7 +121,7 @@ const DebitNotesView = () => {
     const [payments, setPayments] = useState([]);
     const [searchInput, setSearchInput] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     const [dateFilter, setDateFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
@@ -621,7 +621,12 @@ const DebitNotesView = () => {
                                             <td className="px-2 py-2 align-top">
                                                 <div className="flex items-center justify-center gap-1.5">
                                                     <button onClick={() => navigate(`/create-account-debit-note/${note.companyId}?view=${note._id}`)} title="View" className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors"><Eye className="w-3.5 h-3.5" /></button>
-                                                    <button title="Download" className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors"><Download className="w-3.5 h-3.5" /></button>
+                                                    <button
+                                                        title={note.attachmentUrl ? 'Download supporting attachment' : 'No attachment uploaded for this debit note'}
+                                                        disabled={!note.attachmentUrl}
+                                                        onClick={() => window.open(`${SERVER_URL}${note.attachmentUrl}`, '_blank', 'noopener,noreferrer')}
+                                                        className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    ><Download className="w-3.5 h-3.5" /></button>
                                                     <div className="relative group">
                                                         <button title="More" className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors"><MoreVertical className="w-3 h-3" /></button>
                                                         <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 flex flex-col py-1">
@@ -668,8 +673,15 @@ const DebitNotesView = () => {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span>Rows per page</span>
-                                    <select value={itemsPerPage} disabled className="border border-slate-300 rounded px-2 py-1 focus:outline-none">
+                                    <select
+                                        value={itemsPerPage}
+                                        onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                                        className="border border-slate-300 rounded px-2 py-1 focus:outline-none"
+                                    >
                                         <option value={10}>10</option>
+                                        <option value={20}>20</option>
+                                        <option value={50}>50</option>
+                                        <option value={100}>100</option>
                                     </select>
                                 </div>
                             </div>
