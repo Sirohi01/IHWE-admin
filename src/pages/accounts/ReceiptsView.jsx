@@ -12,9 +12,6 @@ import Select from 'react-select';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { useDispatch } from 'react-redux';
-import { createActivityLogThunk } from '../../features/activityLog/activityLogSlice';
-import { getCurrentUserName } from '../../utils/currentUser';
 
 function useCountUp(target, duration = 1200) {
     const [count, setCount] = useState(0);
@@ -52,40 +49,29 @@ function useCountUp(target, duration = 1200) {
 
 function AnimatedStatCard({ icon, title, value, subText1, subText2, iconBg, valueColor, percentage }) {
     const { ref, count } = useCountUp(typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]+/g, "")) : value);
-    
-    let gradientTo = 'to-slate-50';
-    const bgClass = iconBg || '';
-    if (bgClass.includes('emerald')) gradientTo = 'to-emerald-50';
-    else if (bgClass.includes('blue')) gradientTo = 'to-blue-50';
-    else if (bgClass.includes('indigo')) gradientTo = 'to-indigo-50';
-    else if (bgClass.includes('amber')) gradientTo = 'to-amber-50';
-    else if (bgClass.includes('orange')) gradientTo = 'to-orange-50';
-    else if (bgClass.includes('rose')) gradientTo = 'to-rose-50';
-    else if (bgClass.includes('cyan')) gradientTo = 'to-cyan-50';
-
     return (
-        <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white ${gradientTo} p-2 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden h-full flex flex-col justify-center`}>
-            <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-1">
-                    <div className={`w-8 h-8 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
-                        {React.cloneElement(icon, { className: "w-4 h-4 xl:w-4 xl:h-4" })}
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                        <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#0f172a', lineHeight: 1, marginBottom: '2px', display: 'block', fontFamily: 'Inter, sans-serif' }} className="truncate">
-                            {typeof value === 'string' && value.startsWith('₹') ? '₹ ' : ''}
-                            {typeof value === 'string' && (value.includes('.') || value.startsWith('₹'))
-                                ? new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(count)
-                                : new Intl.NumberFormat('en-IN').format(Math.round(count))}
-                        </span>
-                        <span style={{ fontSize: '7.5px', fontWeight: 700, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif' }} className="truncate uppercase">{title}</span>
-                    </div>
+        <div ref={ref} className="bg-white p-1 border border-slate-200 rounded-xl shadow-sm flex items-center h-full cursor-pointer hover:shadow-md transition-shadow">
+            <div className={`w-10 h-10 xl:w-11 xl:h-11 ${iconBg} rounded-full flex items-center justify-center shrink-0 mr-1`}>
+                {React.cloneElement(icon, { className: "w-5 h-5 xl:w-5 xl:h-5" })}
+            </div>
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <div className="text-slate-700 font-semibold text-[10px] mb-0.5 whitespace-nowrap overflow-hidden text-ellipsis">{title}</div>
+                <div className={`text-[12px] font-semibold leading-tight ${valueColor || 'text-slate-900'} whitespace-nowrap overflow-hidden text-ellipsis`}>
+                    {typeof value === 'string' && value.startsWith('₹') ? '₹ ' : ''}
+                    {typeof value === 'string' && (value.includes('.') || value.startsWith('₹'))
+                        ? new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(count)
+                        : new Intl.NumberFormat('en-IN').format(Math.round(count))}
                 </div>
-                {(subText1 || subText2 || percentage) && (
-                    <div style={{ fontSize: '8px', fontWeight: 600, color: '#475569', textAlign: 'center', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }} className="truncate mt-1">
-                        {percentage && <span className="text-emerald-600 mr-1">{percentage}</span>}
-                        {subText1} {subText2}
-                    </div>
-                )}
+                <div className="flex items-center gap-1.5 mt-0.5 xl:mt-1 flex-wrap">
+                    {percentage && (
+                        <span className="text-[10px] font-bold text-emerald-600 leading-none">{percentage}</span>
+                    )}
+                    {(subText1 || subText2) && (
+                        <div className="text-slate-500 font-medium text-[9px] xl:text-[10px] whitespace-nowrap overflow-hidden text-ellipsis">
+                            {subText1} {subText2}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -97,7 +83,6 @@ const PIE_COLORS = ['#4f46e5', '#ec4899', '#f59e0b', '#10b981', '#94a3b8'];
 const ReceiptsView = () => {
     const navigate = useNavigate();
     const { id = 'all' } = useParams();
-    const dispatch = useDispatch();
     const isAllList = id === 'all';
 
     const [loading, setLoading] = useState(true);
@@ -235,9 +220,10 @@ const ReceiptsView = () => {
     const getStatusBadge = (pmt) => {
         const running = isRunning(pmt);
         return (
-            <span className={`px-2 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${running ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                {running ? 'RUNNING' : 'CONFIRMED'}
-            </span>
+            <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${running ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${running ? 'bg-orange-500' : 'bg-emerald-500'}`}></div>
+                {running ? 'Running' : 'Confirmed'}
+            </div>
         );
     };
 
@@ -249,17 +235,12 @@ const ReceiptsView = () => {
         setDownloadingId(pmt._id);
         try {
             const res = await api.get(`/api/payments/${pmt._id}/receipt`, { responseType: 'blob' });
-            saveAs(new Blob([res.data], { type: 'application/pdf' }), `${pmt.receipt_no || pmt._id}.pdf`);
-
-            const currentAdminName = getCurrentUserName();
-            dispatch(createActivityLogThunk({
-                action: 'Download Single Receipt',
-                module: 'Receipts',
-                details: `Downloaded receipt ${pmt.receipt_no || 'N/A'} - ${pmt.client_name || 'N/A'}`,
-                entityId: pmt._id,
-                entityType: 'Payment',
-                performedBy: currentAdminName
-            }));
+            const clientName = (pmt.client_name || 'Receipt').replace(/[^a-zA-Z0-9 -]/g, '').trim();
+            const d = new Date(pmt.payment_date || pmt.added);
+            const dateStr = !isNaN(d.getTime())
+                ? `${String(d.getDate()).padStart(2, '0')}-${d.toLocaleDateString('en-GB', { month: 'long' })}`
+                : 'Date';
+            saveAs(new Blob([res.data], { type: 'application/pdf' }), `${clientName}_${dateStr}.pdf`);
         } catch {
             toast.error('Failed to download receipt');
         } finally {
@@ -344,26 +325,8 @@ const ReceiptsView = () => {
         });
 
         const buffer = await workbook.xlsx.writeBuffer();
-        saveAs(new Blob([buffer]), filename);
-
-        const userName = getCurrentUserName();
-        const userStr = sessionStorage.getItem("user") || localStorage.getItem("user");
-        const user = userStr ? JSON.parse(userStr) : null;
-        const userId = user?._id || sessionStorage.getItem("user_id") || localStorage.getItem("user_id");
-
-        const logPayload = {
-            user: userName,
-            action: "Downloaded",
-            module: "Accounts / Receipts",
-            details: "Downloaded Receipts list to Excel",
-            link: `/accounts/receipts`
-        };
-
-        if (userId) {
-            logPayload.user_id = userId;
-        }
-
-        dispatch(createActivityLogThunk(logPayload));
+        const formattedDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long' }).replace(/ /g, '');
+        saveAs(new Blob([buffer]), `receiptExport_${formattedDate}.xlsx`);
     };
 
     // ---- Filtering ----
@@ -494,104 +457,98 @@ const ReceiptsView = () => {
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-2">
             {/* Header Area */}
-            <div className="px-6 pt-4">
-                <div className="w-full flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 p-3 bg-white rounded-lg border border-slate-100" style={{ boxShadow: 'rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em', fontFamily: 'Inter, sans-serif' }}>
-                    <div className="flex flex-col justify-center">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Accounts Receivable (AR)</p>
-                        <div className="flex items-center gap-2 mb-1">
-                            <h2 className="text-lg font-bold text-[#124170] leading-tight">Receipts</h2>
-                        </div>
-                        <div className="flex items-center gap-2.5 mt-0.5 flex-wrap">
-                            <p className="text-xs font-medium text-slate-500 leading-relaxed max-w-2xl">
-                                Download or resend the receipt document for a payment already recorded. For the full transaction log, see Payments.
-                            </p>
-                        </div>
+            <div className="px-6 py-2 flex justify-between items-center bg-white sticky top-0 z-40 border-b border-gray-100">
+                <div>
+                    <h1 className="text-xl font-semibold text-slate-900 tracking-tight flex items-center gap-1">
+                        Receipts
+                    </h1>
+                    <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1 font-medium">
+                        Accounts Receivable (AR) <ChevronRight className="w-3 h-3 text-slate-400" /> <span className="text-slate-700">Receipts</span>
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-3 items-center">
-                        <div className="relative w-full sm:w-auto">
-                            <button
-                                onClick={() => setDateRangeOpen(!dateRangeOpen)}
-                                className="w-full flex items-center justify-between sm:justify-center gap-2 bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50"
-                            >
-                                <div className="flex items-center gap-2">
-                                    <Calendar className="w-4 h-4 text-slate-500" />
-                                    {fromDate && toDate ? `${new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} - ${new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}` : 'Date Range'}
-                                </div>
-                                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                            </button>
-
-                            {dateRangeOpen && (
-                                <div className="absolute top-full right-0 mt-2 bg-white border border-slate-200 rounded-lg shadow-lg p-3 z-50 w-64">
-                                    <div className="space-y-3">
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">From Date</label>
-                                            <input
-                                                type="date"
-                                                value={fromDate}
-                                                onChange={(e) => setFromDate(e.target.value)}
-                                                className="w-full text-xs border border-slate-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">To Date</label>
-                                            <input
-                                                type="date"
-                                                value={toDate}
-                                                onChange={(e) => setToDate(e.target.value)}
-                                                className="w-full text-xs border border-slate-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                            />
-                                        </div>
-                                        <button
-                                            onClick={() => setDateRangeOpen(false)}
-                                            className="w-full bg-[#124170] hover:bg-[#0c2b4a] text-white text-xs font-bold py-1.5 rounded transition-colors mt-2"
-                                        >
-                                            Apply Range
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="relative w-full sm:w-auto">
-                            <button
-                                onClick={() => setFiltersOpen(!filtersOpen)}
-                                className="w-full flex items-center justify-center gap-2 bg-white border border-slate-300 text-[#124170] px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50"
-                            >
-                                <Filter className="w-4 h-4 text-[#124170]" />
-                                Filters
-                            </button>
-
-                            {filtersOpen && (
-                                <div className="absolute top-full right-0 mt-2 bg-white border border-slate-200 rounded-lg shadow-lg p-3 z-50 w-56">
-                                    <div className="space-y-3">
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Status</label>
-                                            <select
-                                                value={statusFilter}
-                                                onChange={(e) => setStatusFilter(e.target.value)}
-                                                className="w-full text-xs border border-slate-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
-                                            >
-                                                <option value="All">All Statuses</option>
-                                                <option value="Confirmed">Confirmed</option>
-                                                <option value="Pending">Pending</option>
-                                                <option value="Rejected">Rejected</option>
-                                            </select>
-                                        </div>
-                                        <button
-                                            onClick={() => setFiltersOpen(false)}
-                                            className="w-full bg-[#124170] hover:bg-[#0c2b4a] text-white text-xs font-bold py-1.5 rounded transition-colors mt-2"
-                                        >
-                                            Apply Filters
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <button onClick={handleOpenAddPayment} className="flex items-center justify-center gap-1.5 bg-[#124170] hover:bg-[#0c2b4a] text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-colors w-full sm:w-auto whitespace-nowrap">
-                            <Plus className="w-4 h-4" /> Add Payment (New)
+                    <div className="text-[11px] text-slate-400 mt-0.5 font-medium">Download or resend the receipt document for a payment already recorded. For the full transaction log, see Payments.</div>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <button
+                            onClick={() => setDateRangeOpen(!dateRangeOpen)}
+                            className="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50"
+                        >
+                            <Calendar className="w-4 h-4 text-slate-500" />
+                            {fromDate && toDate ? `${new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} - ${new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}` : 'Date Range'}
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                         </button>
+
+                        {dateRangeOpen && (
+                            <div className="absolute top-full right-0 mt-2 bg-white border border-slate-200 rounded-lg shadow-lg p-3 z-50 w-64">
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">From Date</label>
+                                        <input
+                                            type="date"
+                                            value={fromDate}
+                                            onChange={(e) => setFromDate(e.target.value)}
+                                            className="w-full text-xs border border-slate-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">To Date</label>
+                                        <input
+                                            type="date"
+                                            value={toDate}
+                                            onChange={(e) => setToDate(e.target.value)}
+                                            className="w-full text-xs border border-slate-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={() => setDateRangeOpen(false)}
+                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1.5 rounded transition-colors mt-2"
+                                    >
+                                        Apply Range
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
+
+                    <div className="relative">
+                        <button
+                            onClick={() => setFiltersOpen(!filtersOpen)}
+                            className="flex items-center gap-2 bg-white border border-slate-300 text-blue-600 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50"
+                        >
+                            <Filter className="w-4 h-4 text-blue-600" />
+                            Filters
+                        </button>
+
+                        {filtersOpen && (
+                            <div className="absolute top-full right-0 mt-2 bg-white border border-slate-200 rounded-lg shadow-lg p-3 z-50 w-56">
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Status</label>
+                                        <select
+                                            value={statusFilter}
+                                            onChange={(e) => setStatusFilter(e.target.value)}
+                                            className="w-full text-xs border border-slate-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                                        >
+                                            <option value="All">All Statuses</option>
+                                            <option value="Confirmed">Confirmed</option>
+                                            <option value="Pending">Pending</option>
+                                            <option value="Rejected">Rejected</option>
+                                        </select>
+                                    </div>
+                                    <button
+                                        onClick={() => setFiltersOpen(false)}
+                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1.5 rounded transition-colors mt-2"
+                                    >
+                                        Apply Filters
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <button onClick={handleOpenAddPayment} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-colors">
+                        <Plus className="w-4 h-4" /> Add Payment (New)
+                    </button>
                 </div>
             </div>
 
@@ -655,88 +612,97 @@ const ReceiptsView = () => {
                         </div>
 
                         {/* Filters Row */}
-                        <div className="px-3 pt-4 pb-3 border border-slate-100 flex items-center gap-2 bg-white overflow-x-auto rounded-xl shadow-sm mb-2">
-                            <div className="flex items-center gap-2 flex-nowrap min-w-0">
-                                <div className="relative shrink-0">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                                    <input
-                                        type="text"
-                                        value={searchInput}
-                                        onChange={(e) => { setSearchInput(e.target.value); setCurrentPage(1); }}
-                                        placeholder="Search by receipt no., invoice..."
-                                        className="w-full sm:w-[180px] pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-emerald-500 placeholder:text-slate-400"
-                                        style={{ fontFamily: 'Inter, sans-serif' }}
-                                    />
+                        <div className="bg-white p-3 py-1 rounded-lg border border-slate-200 shadow-sm flex flex-col gap-3">
+                            <div className="flex flex-col gap-3">
+                                <div className="flex items-center gap-2 flex-wrap w-full">
+                                    <div className="relative shrink-0">
+                                        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                                        <input
+                                            type="text"
+                                            value={searchInput}
+                                            onChange={(e) => { setSearchInput(e.target.value); setCurrentPage(1); }}
+                                            placeholder="Search by receipt no., invoice no., client name, UTR, cheque no..."
+                                            className="pl-9 pr-3 py-1.5 border border-slate-300 rounded-md text-[11px] w-[210px] focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-slate-400"
+                                        />
+                                    </div>
+                                    <select value={filterDate} onChange={(e) => { setFilterDate(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white w-[120px]">
+                                        <option value="">Date Range</option>
+                                        <option value="today">Today</option>
+                                        <option value="this_week">This Week</option>
+                                        <option value="this_month">This Month</option>
+                                    </select>
+                                    <select value={filterMode} onChange={(e) => { setFilterMode(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white w-[145px]">
+                                        <option value="">Payment Mode</option>
+                                        {uniqueModes.map(m => <option key={m} value={m}>{m}</option>)}
+                                    </select>
+                                    <select value={filterBank} onChange={(e) => { setFilterBank(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white w-[135px]">
+                                        <option value="">Bank</option>
+                                        {uniqueBanks.map(b => <option key={b} value={b}>{b}</option>)}
+                                    </select>
+                                    <select value={filterType} onChange={(e) => { setFilterType(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white w-[145px]">
+                                        <option value="">Payment Type</option>
+                                        {uniqueTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                    <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }} className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white w-[105px]">
+                                        <option value="">Status</option>
+                                        <option value="Confirmed">Confirmed</option>
+                                        <option value="Running">Running</option>
+                                    </select>
                                 </div>
-                                <select value={filterDate} onChange={(e) => { setFilterDate(e.target.value); setCurrentPage(1); }} className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-emerald-500 shrink-0">
-                                    <option value="">Date Range</option>
-                                    <option value="today">Today</option>
-                                    <option value="this_week">This Week</option>
-                                    <option value="this_month">This Month</option>
-                                </select>
-                                <select value={filterMode} onChange={(e) => { setFilterMode(e.target.value); setCurrentPage(1); }} className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-emerald-500 shrink-0">
-                                    <option value="">Payment Mode</option>
-                                    {uniqueModes.map(m => <option key={m} value={m}>{m}</option>)}
-                                </select>
-                                <select value={filterBank} onChange={(e) => { setFilterBank(e.target.value); setCurrentPage(1); }} className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-emerald-500 shrink-0">
-                                    <option value="">Bank</option>
-                                    {uniqueBanks.map(b => <option key={b} value={b}>{b}</option>)}
-                                </select>
-                                <select value={filterType} onChange={(e) => { setFilterType(e.target.value); setCurrentPage(1); }} className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-emerald-500 shrink-0">
-                                    <option value="">Payment Type</option>
-                                    {uniqueTypes.map(t => <option key={t} value={t}>{t}</option>)}
-                                </select>
-                                <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }} className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-emerald-500 shrink-0">
-                                    <option value="">Status</option>
-                                    <option value="Confirmed">Confirmed</option>
-                                    <option value="Running">Running</option>
-                                </select>
-                            </div>
 
-                            <div className="flex items-center gap-2 ml-auto shrink-0">
-                                <button
-                                    onClick={() => {
-                                        setFilterDate('');
-                                        setFilterMode('');
-                                        setFilterBank('');
-                                        setFilterType('');
-                                        setFilterStatus('');
-                                        setSearchInput('');
-                                        setCurrentPage(1);
-                                    }}
-                                    className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[10px] font-bold text-white transition-all duration-200 hover:opacity-90 shadow-sm whitespace-nowrap" style={{ backgroundColor: '#EF4444', fontFamily: 'Inter, sans-serif' }}
-                                >
-                                    <RefreshCw size={11} /> Reset
-                                </button>
-                                <button
-                                    onClick={() => exportToExcel(filteredReceipts, 'Receipts_Export.xlsx')}
-                                    className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[10px] font-bold text-white transition-all duration-200 hover:opacity-90 shadow-sm whitespace-nowrap" style={{ backgroundColor: '#10B981', fontFamily: 'Inter, sans-serif' }}
-                                >
-                                    <Download size={11} /> Export
-                                </button>
+                                <div className="flex items-center justify-between border-t border-slate-100 pt-1">
+                                    <button
+                                        onClick={() => {
+                                            setFilterDate('');
+                                            setFilterMode('');
+                                            setFilterBank('');
+                                            setFilterType('');
+                                            setFilterStatus('');
+                                            setSearchInput('');
+                                            setCurrentPage(1);
+                                        }}
+                                        className="flex items-center gap-1 text-blue-600 hover:text-blue-700 font-bold text-[11px] px-2 transition-colors"
+                                    >
+                                        <RefreshCw className="w-3 h-3" /> Reset Filters
+                                    </button>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => exportToExcel(filteredReceipts)}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors whitespace-nowrap"
+                                        >
+                                            <Download className="w-3.5 h-3.5" /> Export Excel
+                                        </button>
+                                        <button
+                                            onClick={() => navigate('/accounts/summary-report')}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors whitespace-nowrap"
+                                        >
+                                            <BarChart2 className="w-3.5 h-3.5" /> Receipt Report
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         {/* Main Table */}
-                        <div className="bg-white border border-[#EDF0F7] rounded-xl overflow-hidden">
-                            <div className="overflow-x-auto custom-scrollbar">
-                                <table className="w-full min-w-[1400px] text-left border-collapse whitespace-nowrap text-[10px]" style={{ fontFamily: 'Inter, sans-serif', color: '#15173D' }}>
+                        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full min-w-[1400px] text-left border-collapse">
                                     <thead>
-                                        <tr className="bg-white text-[8px] font-black uppercase tracking-wider text-slate-700 border-b border-slate-200 whitespace-nowrap">
-                                            <th className="px-3 py-2.5 text-center w-10">S.No.</th>
-                                            <th className="px-3 py-2.5">Receipt Details</th>
-                                            <th className="px-3 py-2.5">Invoice Details</th>
-                                            <th className="px-3 py-2.5">Client & Stall</th>
-                                            <th className="px-3 py-2.5 text-center">Payment Type</th>
-                                            <th className="px-3 py-2.5">Payment Mode</th>
-                                            <th className="px-3 py-2.5 text-right">Received Amount</th>
-                                            <th className="px-3 py-2.5 text-right">TDS Deducted</th>
-                                            <th className="px-3 py-2.5 text-right">Net Amount</th>
-                                            <th className="px-3 py-2.5">Receipt Date</th>
-                                            <th className="px-3 py-2.5">Bank/UTR/Cheque No</th>
-                                            <th className="px-3 py-2.5">Remarks</th>
-                                            <th className="px-3 py-2.5 text-center">Status</th>
-                                            <th className="px-3 py-2.5 text-center">Action</th>
+                                        <tr className="bg-white text-[8px] font-bold uppercase tracking-wider text-slate-700 border-b border-slate-200 whitespace-nowrap">
+                                            <th className="px-2 py-1 text-center">S.No.</th>
+                                            <th className="px-2 py-1">Receipt Details</th>
+                                            <th className="px-2 py-1">Invoice Details</th>
+                                            <th className="px-2 py-1">Client & Stall</th>
+                                            <th className="px-2 py-1">Payment Type</th>
+                                            <th className="px-2 py-1">Payment Mode</th>
+                                            <th className="px-2 py-1 text-right">Received Amount</th>
+                                            <th className="px-2 py-1 text-right">TDS Deducted</th>
+                                            <th className="px-2 py-1 text-right">Net Amount</th>
+                                            <th className="px-2 py-1">Receipt Date</th>
+                                            <th className="px-2 py-1">Bank/UTR/Cheque No</th>
+                                            <th className="px-2 py-1">Remarks</th>
+                                            <th className="px-2 py-1 text-center">Status</th>
+                                            <th className="px-2 py-1 text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody className="text-[11px] whitespace-nowrap">
@@ -762,49 +728,49 @@ const ReceiptsView = () => {
                                                 const tdsPct = received > 0 ? ((tds / received) * 100).toFixed(2) : '0.00';
                                                 return (
                                                     <tr key={pmt._id || idx} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
-                                                        <td className="px-3 py-2 font-black text-slate-800 text-center align-top">{indexOfFirstItem + idx + 1}</td>
-                                                        <td className="px-3 py-2 align-top">
-                                                            <div className="font-bold text-[11px]" style={{ color: '#093C5D' }}>{pmt.receipt_no || 'N/A'}</div>
-                                                            <div className="text-[10px] font-bold mt-0.5" style={{ color: '#5E0006' }}>Receipt Date {formatDate(pmt.payment_date || pmt.added)}</div>
+                                                        <td className="px-2 py-1 font-bold text-slate-700 text-center align-top">{indexOfFirstItem + idx + 1}</td>
+                                                        <td className="px-2 py-1 align-top">
+                                                            <div className="font-bold text-slate-800 text-[11px]">{pmt.receipt_no || 'N/A'}</div>
+                                                            <div className="text-[10px] text-slate-500 mt-0.5">Receipt Date {formatDate(pmt.payment_date || pmt.added)}</div>
                                                             <button onClick={() => openReceipt(pmt)} className="text-[10px] text-blue-600 font-bold mt-0.5 hover:underline">
                                                                 View Receipt <ChevronRight className="inline w-3 h-3 rotate-90" />
                                                             </button>
                                                         </td>
-                                                        <td className="px-3 py-2 align-top">
-                                                            <div className="font-bold text-[11px]" style={{ color: '#15173D' }}>{pmt.invoice_no || pmt.invoice_id || 'N/A'}</div>
-                                                            <div className="text-[10px] font-bold mt-0.5" style={{ color: '#5E0006' }}>Invoice Date: {formatDate(pmt.invoice_date)}</div>
-                                                            <div className="text-[10px] font-bold mt-0.5" style={{ color: '#064232' }}>Invoice Total: ₹ {formatCurrency(pmt.invoice_amount)}</div>
+                                                        <td className="px-2 py-1 align-top">
+                                                            <div className="font-bold text-slate-800 text-[11px]">{pmt.invoice_no || pmt.invoice_id || 'N/A'}</div>
+                                                            <div className="text-[10px] text-slate-500 mt-0.5">Invoice Date: {formatDate(pmt.invoice_date)}</div>
+                                                            <div className="text-[10px] text-slate-500 mt-0.5">Invoice Total: ₹ {formatCurrency(pmt.invoice_amount)}</div>
                                                         </td>
-                                                        <td className="px-3 py-2 align-top">
-                                                            <div className="font-bold text-[11px] mb-0.5" style={{ color: '#093C5D' }}>{pmt.client_name || 'N/A'}</div>
-                                                            <div className="text-[10px] font-bold text-red-600">Stall No: {stallNo}</div>
-                                                            {hallNo && <div className="text-[10px] font-bold text-red-600">Hall: {hallNo}</div>}
+                                                        <td className="px-2 py-1 align-top">
+                                                            <div className="font-bold text-blue-600 text-[11px] mb-0.5">{pmt.client_name || 'N/A'}</div>
+                                                            <div className="text-[10px] text-slate-500">Stall No: {stallNo}</div>
+                                                            {hallNo && <div className="text-[10px] text-slate-500">Hall: {hallNo}</div>}
                                                         </td>
-                                                        <td className="px-3 py-2 align-top text-center">{getPaymentTypePill(pmt)}</td>
-                                                        <td className="px-3 py-2 align-top text-[11px] font-bold" style={{ color: '#15173D' }}>{pmt.payment_mode || 'N/A'}</td>
-                                                        <td className="px-3 py-2 align-top text-right">
-                                                            <div className="font-bold text-[11px]" style={{ color: '#064232' }}>₹ {formatCurrency(received)}</div>
+                                                        <td className="px-2 py-1 align-top">{getPaymentTypePill(pmt)}</td>
+                                                        <td className="px-2 py-1 align-top text-[11px] font-semibold text-slate-700">{pmt.payment_mode || 'N/A'}</td>
+                                                        <td className="px-2 py-1 align-top text-right">
+                                                            <div className="font-medium text-slate-800 text-[11px]">₹ {formatCurrency(received)}</div>
                                                         </td>
-                                                        <td className="px-3 py-2 align-top text-right">
-                                                            <div className="font-bold text-[11px]" style={{ color: '#5E0006' }}>₹ {formatCurrency(tds)}</div>
-                                                            <div className="text-[10px] font-bold mt-0.5" style={{ color: '#111844' }}>({tdsPct}%)</div>
+                                                        <td className="px-2 py-1 align-top text-right">
+                                                            <div className="font-medium text-rose-500 text-[11px]">₹ {formatCurrency(tds)}</div>
+                                                            <div className="text-[10px] text-slate-500 mt-0.5">({tdsPct}%)</div>
                                                         </td>
-                                                        <td className="px-3 py-2 align-top text-right">
-                                                            <div className="font-bold text-[11px]" style={{ color: '#064232' }}>₹ {formatCurrency(received - tds)}</div>
+                                                        <td className="px-2 py-1 align-top text-right">
+                                                            <div className="font-medium text-emerald-600 text-[11px]">₹ {formatCurrency(received - tds)}</div>
                                                         </td>
-                                                        <td className="px-3 py-2 align-top">
-                                                            <div className="font-bold text-[11px]" style={{ color: '#111844' }}>{formatDate(pmt.payment_date || pmt.added)}</div>
-                                                            <div className="text-[10px] font-bold mt-0.5" style={{ color: '#5E0006' }}>{formatTime(pmt.payment_date || pmt.added)}</div>
+                                                        <td className="px-2 py-1 align-top text-[11px] text-slate-700">
+                                                            <div className="font-bold">{formatDate(pmt.payment_date || pmt.added)}</div>
+                                                            <div className="text-[10px] text-slate-500">{formatTime(pmt.payment_date || pmt.added)}</div>
                                                         </td>
-                                                        <td className="px-3 py-2 align-top">
-                                                            <div className="font-bold text-[11px]" style={{ color: '#093C5D' }}>{bank}</div>
-                                                            <div className="text-[10px] font-bold mt-0.5" style={{ color: '#111844' }}>{ref}</div>
+                                                        <td className="px-2 py-1 align-top">
+                                                            <div className="font-bold text-slate-800 text-[11px]">{bank}</div>
+                                                            <div className="text-[10px] text-slate-500 mt-0.5">{ref}</div>
                                                         </td>
-                                                        <td className="px-3 py-2 align-top text-[10px] font-medium text-slate-600 whitespace-normal w-40">
+                                                        <td className="px-2 py-1 align-top text-[10px] text-slate-500 whitespace-normal w-40">
                                                             <div className="line-clamp-2" title={pmt.notes || ''}>{pmt.notes || 'N/A'}</div>
                                                         </td>
-                                                        <td className="px-3 py-2 align-top text-center">{getStatusBadge(pmt)}</td>
-                                                        <td className="px-3 py-2 align-top text-center">
+                                                        <td className="px-2 py-1 align-top text-center">{getStatusBadge(pmt)}</td>
+                                                        <td className="px-2 py-1 align-top text-center">
                                                             <div className="flex items-center justify-center gap-1.5">
                                                                 <button onClick={() => openReceipt(pmt)} className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors" title="View Receipt">
                                                                     <Eye className="w-3.5 h-3.5" />
@@ -923,120 +889,119 @@ const ReceiptsView = () => {
                     <div className="w-full lg:w-[20%] flex flex-col gap-2">
 
                         {/* Collection Summary */}
-                        <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px', fontFamily: 'Inter, sans-serif' }}>
-                            <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
-                                <h3 className="text-sm font-bold tracking-tight text-[#15173D]">Collection Summary</h3>
-                            </div>
+                        <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
+                            <h2 className="text-xs font-black text-slate-800 mb-3 tracking-wide">Collection Summary</h2>
                             <div className="space-y-3">
                                 <div className="flex items-center gap-2.5">
                                     <div className="w-7 h-7 rounded-md bg-blue-50 flex items-center justify-center shrink-0"><Wallet className="w-3.5 h-3.5 text-blue-600" /></div>
-                                    <div className="flex flex-col justify-center min-w-0">
-                                        <div className="text-[10px] font-bold leading-tight truncate" style={{ color: '#15173D' }}>Today's Collection</div>
-                                        <div className="text-[10px] font-bold truncate mt-0.5" style={{ color: '#093C5D' }}>₹ {formatCurrency(todayCollection)}</div>
+                                    <div>
+                                        <div className="text-[10px] font-bold text-slate-500 leading-tight">Today's Collection</div>
+                                        <div className="font-black text-slate-800 text-sm">₹ {formatCurrency(todayCollection)}</div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2.5">
                                     <div className="w-7 h-7 rounded-md bg-emerald-50 flex items-center justify-center shrink-0"><TrendingUp className="w-3.5 h-3.5 text-emerald-600" /></div>
-                                    <div className="flex flex-col justify-center min-w-0">
-                                        <div className="text-[10px] font-bold leading-tight truncate" style={{ color: '#15173D' }}>This Week Collection</div>
-                                        <div className="text-[10px] font-bold truncate mt-0.5" style={{ color: '#093C5D' }}>₹ {formatCurrency(weekCollection)}</div>
+                                    <div>
+                                        <div className="text-[10px] font-bold text-slate-500 leading-tight">This Week Collection</div>
+                                        <div className="font-black text-slate-800 text-sm">₹ {formatCurrency(weekCollection)}</div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2.5">
                                     <div className="w-7 h-7 rounded-md bg-orange-50 flex items-center justify-center shrink-0"><Calendar className="w-3.5 h-3.5 text-orange-600" /></div>
-                                    <div className="flex flex-col justify-center min-w-0">
-                                        <div className="text-[10px] font-bold leading-tight truncate" style={{ color: '#15173D' }}>This Month Collection</div>
-                                        <div className="text-[10px] font-bold truncate mt-0.5" style={{ color: '#093C5D' }}>₹ {formatCurrency(thisMonthCollection)}</div>
+                                    <div>
+                                        <div className="text-[10px] font-bold text-slate-500 leading-tight">This Month Collection</div>
+                                        <div className="font-black text-slate-800 text-sm">₹ {formatCurrency(thisMonthCollection)}</div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2.5">
                                     <div className="w-7 h-7 rounded-md bg-red-50 flex items-center justify-center shrink-0"><AlertTriangle className="w-3.5 h-3.5 text-red-500" /></div>
-                                    <div className="flex flex-col justify-center min-w-0">
-                                        <div className="text-[10px] font-bold leading-tight truncate" style={{ color: '#15173D' }}>Overdue Recovery Target</div>
-                                        <div className="text-[10px] font-bold truncate mt-0.5" style={{ color: '#093C5D' }}>₹ {formatCurrency(overdueRecoveryTarget)}</div>
+                                    <div>
+                                        <div className="text-[10px] font-bold text-slate-500 leading-tight">Overdue Recovery Target</div>
+                                        <div className="font-black text-slate-800 text-sm">₹ {formatCurrency(overdueRecoveryTarget)}</div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2.5">
                                     <div className="w-7 h-7 rounded-md bg-indigo-50 flex items-center justify-center shrink-0"><Bell className="w-3.5 h-3.5 text-indigo-500" /></div>
-                                    <div className="flex flex-col justify-center min-w-0">
-                                        <div className="text-[10px] font-bold leading-tight truncate" style={{ color: '#15173D' }}>Pending Follow-ups</div>
-                                        <div className="text-[10px] font-bold truncate mt-0.5" style={{ color: '#093C5D' }}>{pendingFollowUps}</div>
+                                    <div>
+                                        <div className="text-[10px] font-bold text-slate-500 leading-tight">Pending Follow-ups</div>
+                                        <div className="font-black text-slate-800 text-sm">{pendingFollowUps}</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Quick Actions */}
-                        <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px', fontFamily: 'Inter, sans-serif' }}>
-                            <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
-                                <h3 className="text-sm font-bold tracking-tight text-[#15173D]">Quick Actions</h3>
-                            </div>
+                        <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
+                            <h2 className="text-sm font-semibold text-slate-800 mb-3 tracking-wide">Quick Actions</h2>
                             <div className="space-y-2">
-                                <button onClick={handleOpenAddPayment} className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors group text-left border border-transparent hover:border-slate-100">
+                                <button onClick={handleOpenAddPayment} className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors group text-left">
                                     <div className="flex items-center gap-3">
                                         <div className="w-6 h-6 rounded bg-blue-50 flex items-center justify-center text-blue-500"><Plus className="w-3.5 h-3.5" /></div>
                                         <div>
-                                            <div className="text-[10px] font-bold mb-0.5 leading-tight" style={{ color: '#4B1426' }}>Add Payment</div>
-                                            <div className="text-[9px] font-medium text-black">Record a new payment</div>
+                                            <div className="text-[11px] font-semibold text-slate-800 leading-tight">Add Payment</div>
+                                            <div className="text-[10px] font-medium text-slate-500 mt-0.5">Record a new payment</div>
                                         </div>
                                     </div>
+                                    <ChevronRight className="w-3 h-3 text-slate-300" />
                                 </button>
                                 <button
                                     onClick={() => toast('Select a receipt row\'s ⋮ menu to email or WhatsApp it', { icon: 'ℹ️' })}
-                                    className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors group text-left border border-transparent hover:border-slate-100"
+                                    className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors group text-left"
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="w-6 h-6 rounded bg-emerald-50 flex items-center justify-center text-emerald-500"><Mail className="w-3.5 h-3.5" /></div>
                                         <div>
-                                            <div className="text-[10px] font-bold mb-0.5 leading-tight" style={{ color: '#4B1426' }}>Send Receipt</div>
-                                            <div className="text-[9px] font-medium text-black">Email/WhatsApp receipt</div>
+                                            <div className="text-[11px] font-semibold text-slate-800 leading-tight">Send Receipt</div>
+                                            <div className="text-[10px] font-medium text-slate-500 mt-0.5">Email/WhatsApp receipt</div>
                                         </div>
                                     </div>
+                                    <ChevronRight className="w-3 h-3 text-slate-300" />
                                 </button>
                                 <button
                                     onClick={() => toast('Collection notes are coming soon', { icon: '📝' })}
-                                    className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors group text-left border border-transparent hover:border-slate-100"
+                                    className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors group text-left"
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="w-6 h-6 rounded bg-amber-50 flex items-center justify-center text-amber-500"><FileText className="w-3.5 h-3.5" /></div>
                                         <div>
-                                            <div className="text-[10px] font-bold mb-0.5 leading-tight" style={{ color: '#4B1426' }}>Collection Notes</div>
-                                            <div className="text-[9px] font-medium text-black">Add notes for receipt</div>
+                                            <div className="text-[11px] font-semibold text-slate-800 leading-tight">Collection Notes</div>
+                                            <div className="text-[10px] font-medium text-slate-500 mt-0.5">Add notes for receipt</div>
                                         </div>
                                     </div>
+                                    <ChevronRight className="w-3 h-3 text-slate-300" />
                                 </button>
                                 <button
-                                    onClick={() => exportToExcel(filteredReceipts, 'Receipts_Export.xlsx')}
-                                    className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors group text-left border border-transparent hover:border-slate-100"
+                                    onClick={() => exportToExcel(filteredReceipts)}
+                                    className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors group text-left"
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="w-6 h-6 rounded bg-indigo-50 flex items-center justify-center text-indigo-500"><Download className="w-3.5 h-3.5" /></div>
                                         <div>
-                                            <div className="text-[10px] font-bold mb-0.5 leading-tight" style={{ color: '#4B1426' }}>Download Receipts</div>
-                                            <div className="text-[9px] font-medium text-black">Download selected receipts</div>
+                                            <div className="text-[11px] font-semibold text-slate-800 leading-tight">Export Excel</div>
+                                            <div className="text-[10px] font-medium text-slate-500 mt-0.5">Download selected receipts</div>
                                         </div>
                                     </div>
+                                    <ChevronRight className="w-3 h-3 text-slate-300" />
                                 </button>
                                 <button
                                     onClick={() => navigate('/accounts/summary-report')}
-                                    className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors group text-left border border-transparent hover:border-slate-100"
+                                    className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded transition-colors group text-left"
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="w-6 h-6 rounded bg-blue-50 flex items-center justify-center text-blue-500"><BarChart2 className="w-3.5 h-3.5" /></div>
                                         <div>
-                                            <div className="text-[10px] font-bold mb-0.5 leading-tight" style={{ color: '#4B1426' }}>Receipt Report</div>
-                                            <div className="text-[9px] font-medium text-black">View detailed receipt report</div>
+                                            <div className="text-[11px] font-semibold text-slate-800 leading-tight">Receipt Report</div>
+                                            <div className="text-[10px] font-medium text-slate-500 mt-0.5">View detailed receipt report</div>
                                         </div>
                                     </div>
+                                    <ChevronRight className="w-3 h-3 text-slate-300" />
                                 </button>
                             </div>
                         </div>
 
                         {/* Payment Mode Summary */}
-                        <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px', fontFamily: 'Inter, sans-serif' }}>
-                            <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
-                                <h3 className="text-sm font-bold tracking-tight text-[#15173D]">Payment Mode Summary</h3>
-                            </div>
+                        <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
+                            <h2 className="text-sm font-semibold text-slate-800 mb-3 tracking-wide">Payment Mode Summary</h2>
                             <div className="flex items-center justify-between min-h-[140px]">
                                 <div className="w-[100px] h-[100px] shrink-0 -ml-2 self-start mt-2">
                                     <ResponsiveContainer width="100%" height="100%">
@@ -1066,9 +1031,9 @@ const ReceiptsView = () => {
                                         <div key={m.name} className="flex items-start gap-1.5 w-full">
                                             <div className="w-1.5 h-1.5 rounded-full mt-[5px] shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}></div>
                                             <div className="flex flex-col leading-tight min-w-0">
-                                                <span className="text-[10px] font-bold truncate" style={{ color: '#15173D' }} title={m.name}>{m.name}</span>
-                                                <div className="text-[10px] font-bold mt-0.5 truncate" style={{ color: '#093C5D' }} title={`₹ ${formatCurrency(m.value)} (${((m.value / modeTotal) * 100).toFixed(1)}%)`}>
-                                                    ₹ {formatCurrency(m.value)} <span style={{ color: PIE_COLORS[i % PIE_COLORS.length] }}>({((m.value / modeTotal) * 100).toFixed(1)}%)</span>
+                                                <span className="text-[10px] font-bold text-slate-800 truncate" title={m.name}>{m.name}</span>
+                                                <div className="text-[9px] font-medium text-slate-500 mt-0.5 truncate" title={`₹ ${formatCurrency(m.value)} (${((m.value / modeTotal) * 100).toFixed(1)}%)`}>
+                                                    ₹ {formatCurrency(m.value)} ({((m.value / modeTotal) * 100).toFixed(1)}%)
                                                 </div>
                                             </div>
                                         </div>
