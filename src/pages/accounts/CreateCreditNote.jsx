@@ -23,6 +23,7 @@ const CreateCreditNote = () => {
     const [hallStall, setHallStall] = useState('');
     const [gstin, setGstin] = useState('');
     const [remarks, setRemarks] = useState('');
+    const [attachment, setAttachment] = useState(null);
 
     const [items, setItems] = useState([
         { id: 1, particular: '', qty: 1, rate: 0, amount: 0 }
@@ -203,25 +204,44 @@ const CreateCreditNote = () => {
     const handleSubmit = async (e) => {
         e?.preventDefault();
         if (remainingBalance < 0) { toast.error("Applied credit exceeds total value"); return; }
-        const dataToSend = {
-            companyId: id, credit_note_type: creditNoteType, credit_note_date: creditNoteDate,
-            reference_invoice_no: referenceInvoice, est_no: referenceInvoice, invoice_date: referenceInvoiceDate,
-            reason, event, hall_stall: hallStall, gstin, remarks,
-            sub_total: subTotal, gst_reversal: gstAmt, total_value: totalCreditNoteValue,
-            adjusted_amount: totalApplied, remaining_balance: remainingBalance,
-            status: totalApplied >= totalCreditNoteValue ? 'Fully Adjusted' : totalApplied > 0 ? 'Partially Adjusted' : 'Draft',
-            items: items.map(item => ({ item: item.particular, quantity: item.qty, rate: item.rate, cn_amount: item.rate, cedit_note_remark: '' })),
-            adjusted_invoices: invoices.filter(inv => inv.selected).map(inv => ({
-                invoice_id: inv._id, invoice_no: inv.invoice_no, invoice_date: inv.invoice_date,
-                invoice_amount: inv.invoice_amount, outstanding: inv.outstanding, applied_credit: inv.apply_credit
-            })),
-            added_by: 'Admin'
-        };
+        
+        const formData = new FormData();
+        formData.append('companyId', id);
+        formData.append('credit_note_type', creditNoteType);
+        formData.append('credit_note_date', creditNoteDate);
+        formData.append('reference_invoice_no', referenceInvoice);
+        formData.append('est_no', referenceInvoice);
+        formData.append('invoice_date', referenceInvoiceDate);
+        formData.append('reason', reason);
+        formData.append('event', event);
+        formData.append('hall_stall', hallStall);
+        formData.append('gstin', gstin);
+        formData.append('remarks', remarks);
+        formData.append('sub_total', subTotal);
+        formData.append('gst_reversal', gstAmt);
+        formData.append('total_value', totalCreditNoteValue);
+        formData.append('adjusted_amount', totalApplied);
+        formData.append('remaining_balance', remainingBalance);
+        formData.append('status', totalApplied >= totalCreditNoteValue ? 'Fully Adjusted' : totalApplied > 0 ? 'Partially Adjusted' : 'Draft');
+        formData.append('added_by', 'Admin');
+        
+        formData.append('items', JSON.stringify(items.map(item => ({ item: item.particular, quantity: item.qty, rate: item.rate, cn_amount: item.rate, cedit_note_remark: '' }))));
+        formData.append('adjusted_invoices', JSON.stringify(invoices.filter(inv => inv.selected).map(inv => ({
+            invoice_id: inv._id, invoice_no: inv.invoice_no, invoice_date: inv.invoice_date,
+            invoice_amount: inv.invoice_amount, outstanding: inv.outstanding, applied_credit: inv.apply_credit
+        }))));
+
+        if (attachment) {
+            formData.append('attachment', attachment);
+        }
+
         try {
-            const res = await api.post('/api/creditnotes', dataToSend);
+            const res = await api.post('/api/creditnotes', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
             if (res.data?.success || res.status === 201) {
                 toast.success('Credit Note Created Successfully');
-                navigate('/dashboard/account/credit-notes');
+                navigate(-1);
             }
         } catch (error) { toast.error('Failed to create credit note'); console.error(error); }
     };
@@ -592,11 +612,14 @@ const CreateCreditNote = () => {
                                 </div>
                                 <div>
                                     <label className={labelCls}>Attachments</label>
-                                    <div className="border-2 border-dashed border-slate-200 rounded-lg h-28 flex flex-col items-center justify-center bg-slate-50 text-slate-400 hover:bg-slate-100 transition-colors cursor-pointer">
+                                    <label className="border-2 border-dashed border-slate-200 rounded-lg h-28 flex flex-col items-center justify-center bg-slate-50 text-slate-400 hover:bg-slate-100 transition-colors cursor-pointer relative overflow-hidden">
+                                        <input type="file" onChange={e => setAttachment(e.target.files[0])} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".pdf,.jpg,.jpeg,.png" />
                                         <UploadCloud className="w-6 h-6 mb-1.5" />
-                                        <span className="text-[11px] font-bold">Drag &amp; drop files here or <span className="text-blue-500">click to upload</span></span>
-                                        <span className="text-[10px] mt-0.5">PDF, JPG, PNG up to 5 MB</span>
-                                    </div>
+                                        <span className="text-[11px] font-bold text-center px-2">
+                                            {attachment ? attachment.name : <><span className="text-slate-600">Drag &amp; drop files here or</span> <span className="text-blue-500">click to upload</span></>}
+                                        </span>
+                                        <span className="text-[10px] mt-0.5">{attachment ? `${(attachment.size / 1024 / 1024).toFixed(2)} MB` : 'PDF, JPG, PNG up to 5 MB'}</span>
+                                    </label>
                                 </div>
                             </div>
                         </div>
