@@ -5,6 +5,8 @@ import api from '../../lib/api';
 import toast from 'react-hot-toast';
 import Select from 'react-select';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 function useCountUp(target, duration = 1200) {
     const [count, setCount] = useState(0);
@@ -260,7 +262,8 @@ const CreditNotesView = () => {
         });
 
         const buffer = await workbook.xlsx.writeBuffer();
-        saveAs(new Blob([buffer]), filename);
+        const formattedDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long' }).replace(/ /g, '');
+        saveAs(new Blob([buffer]), `creditNoteExport_${formattedDate}.xlsx`);
     };
 
     const handleProceedAddCreditNote = () => {
@@ -583,10 +586,10 @@ const CreditNotesView = () => {
                                 {/* Bottom Row: Action Buttons */}
                                 <div className="flex flex-wrap items-center justify-end gap-2">
                                     <button
-                                        onClick={() => exportToExcel(filteredNotes, `Credit_Notes_${new Date().toISOString().slice(0, 10)}.xlsx`)}
-                                        className="flex items-center text-blue-600 text-[11px] font-medium px-3 py-1.5 border border-gray-100 bg-white hover:bg-slate-50 rounded whitespace-nowrap"
+                                        onClick={() => exportToExcel(filteredNotes)}
+                                        className="flex items-center px-4 py-2 bg-white text-slate-700 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 transition-colors border border-slate-300"
                                     >
-                                        <Download className="w-3 h-3 mr-1.5" /> Export
+                                        <Download className="w-3 h-3 mr-1.5" /> Export Excel
                                     </button>
                                 </div>
                             </div>

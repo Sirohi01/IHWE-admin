@@ -260,7 +260,8 @@ const DebitNotesView = () => {
             });
 
             const buffer = await workbook.xlsx.writeBuffer();
-            saveAs(new Blob([buffer]), filename);
+            const formattedDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long' }).replace(/ /g, '');
+            saveAs(new Blob([buffer]), `debitNoteExport_${formattedDate}.xlsx`);
         } finally {
             setExporting(false);
         }
@@ -529,19 +530,13 @@ const DebitNotesView = () => {
                         <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-2">
                             <button
                                 disabled={exporting}
-                                onClick={() => exportToExcel(filteredNotes, 'Debit_Notes_Export.xlsx')}
+                                onClick={() => exportToExcel(filteredNotes)}
                                 className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors disabled:opacity-50"
                             >
-                                {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} Export
+                                {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} Export Excel
                             </button>
                             <button onClick={() => navigate('/accounts/summary-report')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors">
                                 <BarChart2 className="w-3.5 h-3.5" /> Debit Note Report
-                            </button>
-                            <button
-                                onClick={() => exportToExcel(filteredNotes.filter(n => n.outstandingAmount > 0), 'Outstanding_Debit_Notes.xlsx')}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors"
-                            >
-                                <FileSpreadsheet className="w-3.5 h-3.5" /> Outstanding Report
                             </button>
                         </div>
                     </div>
