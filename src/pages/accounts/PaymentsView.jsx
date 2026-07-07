@@ -292,7 +292,8 @@ const PaymentList = () => {
         });
 
         const buffer = await workbook.xlsx.writeBuffer();
-        saveAs(new Blob([buffer]), 'Payments_Export.xlsx');
+        const formattedDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long' }).replace(/ /g, '');
+        saveAs(new Blob([buffer]), `paymentExport_${formattedDate}.xlsx`);
     };
 
     const filteredPayments = payments.filter(pmt => {
@@ -586,7 +587,7 @@ const PaymentList = () => {
                         className="flex items-center gap-2 text-blue-600 bg-white border border-slate-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-50 shadow-sm transition-colors"
                     >
                         <Download className="w-4 h-4" />
-                        Export
+                        Export Excel
                     </button>
                 </div>
             </div>
