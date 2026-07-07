@@ -318,6 +318,10 @@ const ClientPicker = () => {
                                     const fin = c.financials;
                                     const stallInfo = c.stallNo || fin.stallNo;
                                     const sqMtrInfo = c.stallSize || fin.sqMtr;
+                                    
+                                    const primaryContact = c.contacts?.find(contact => contact.isPrimary) || c.contacts?.[0];
+                                    const mobile = primaryContact?.mobile || c.landline || 'N/A';
+                                    const email = c.email || primaryContact?.email || 'N/A';
 
                                     return (
                                         <tr key={c._id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
@@ -335,10 +339,10 @@ const ClientPicker = () => {
                                             </td>
                                             <td className="px-3 py-2">
                                                 <div className="font-bold text-slate-800 text-[11px] truncate max-w-[150px] flex items-center gap-1">
-                                                    <Mail className="w-3 h-3 text-slate-400" /> {c.email || 'N/A'}
+                                                    <Mail className="w-3 h-3 text-slate-400" /> {email}
                                                 </div>
                                                 <div className="text-slate-500 font-medium mt-1 text-[10px] truncate max-w-[150px] flex items-center gap-1">
-                                                    <Phone className="w-3 h-3 text-slate-400" /> {c.mobile || 'N/A'}
+                                                    <Phone className="w-3 h-3 text-slate-400" /> {mobile}
                                                     {c.city && <span className="ml-1 px-1 bg-slate-100 rounded border border-slate-200">{c.city}</span>}
                                                 </div>
                                             </td>
