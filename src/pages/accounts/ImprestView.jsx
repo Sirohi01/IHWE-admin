@@ -279,7 +279,7 @@ const ImprestView = () => {
                                 ) : visibleRows.map((item) => (
                                     <tr key={item._id} className="border-b border-slate-100 hover:bg-slate-50/60">
                                         <td className="px-2 py-2.5 font-bold text-blue-600">{item.requestNo}</td>
-                                        <td className="px-2 py-2.5"><div className="font-bold text-slate-800">{item.employeeName}</div><div className="text-[10px] text-slate-400 mt-0.5">{item.employeeId}</div></td>
+                                        <td className="px-2 py-2.5"><div className="font-bold text-slate-800">{item.employeeName}</div></td>
                                         <td className="px-2 py-2.5 font-medium text-slate-600">{item.department}</td>
                                         <td className="px-2 py-2.5 font-medium text-slate-700 max-w-[220px] truncate">{item.purpose}</td>
                                         <td className="px-2 py-2.5 font-semibold text-slate-600 whitespace-nowrap">{dateText(item.requestDate)}</td>
