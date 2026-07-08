@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FileText, Download, Search, Plus, Eye, Filter, CheckCircle2, AlertTriangle, RefreshCcw, Activity, Calendar, BarChart2, FilePlus, ChevronRight, ChevronDown } from 'lucide-react';
+import { FileText, Download, Search, Plus, Eye, Filter, CheckCircle2, AlertTriangle, RefreshCcw, Activity, Calendar, BarChart2, FilePlus, ChevronRight, ChevronDown, Building2 } from 'lucide-react';
 import api from '../../lib/api';
 import toast from 'react-hot-toast';
 import Select from 'react-select';
@@ -88,6 +88,8 @@ const CreditNotesView = () => {
     const [statusFilter, setStatusFilter] = useState('All');
     const [inlineDateRange, setInlineDateRange] = useState('');
     const [inlineSalesPerson, setInlineSalesPerson] = useState('');
+    const [events, setEvents] = useState([]);
+    const [filterEvent, setFilterEvent] = useState('all');
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -105,13 +107,21 @@ const CreditNotesView = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [cnRes, dnRes, compRes, adminRes, invRes] = await Promise.all([
+                const [cnRes, dnRes, compRes, adminRes, invRes, eventsRes] = await Promise.all([
                     api.get('/api/creditnotes').catch(() => ({ data: { data: [] } })),
                     api.get('/api/debitnotes').catch(() => ({ data: { data: [] } })),
                     api.get('/api/companies'),
                     api.get('/api/admin/all').catch(() => ({ data: { data: [] } })),
-                    api.get('/api/invoices').catch(() => ({ data: [] }))
+                    api.get('/api/invoices').catch(() => ({ data: [] })),
+                    api.get('/api/events').catch(() => ({ data: { data: [] } }))
                 ]);
+
+                const eventsData = eventsRes.data?.data || eventsRes.data || [];
+                eventsData.sort((a, b) => (a.order || 0) - (b.order || 0));
+                setEvents(eventsData);
+                if (eventsData.length > 0) {
+                    setFilterEvent(eventsData[0]._id);
+                }
 
                 const compData = compRes.data?.data || compRes.data || [];
                 setCompanies(compData);
@@ -144,7 +154,7 @@ const CreditNotesView = () => {
                         toInvoiceNo: n.toInvoiceNo || n.reference_invoice_no || n.est_no,
                         totalAmount: total,
                         type: n.type || n.credit_note_type || 'Credit Note',
-                        reason: n.reason || n.remarks || '',
+                        reason: n.reason || n.remarks || 'N/A',
                         clientName: n.clientName || '',
                     };
                 });
@@ -181,7 +191,8 @@ const CreditNotesView = () => {
                         companyName: comp?.companyName || comp?.name || n.clientName || 'Unknown Company',
                         hallStall: n.hall_stall || `Hall: ${hallExtract}, Stall: ${stallExtract}`,
                         totalAmount: n.totalAmount || n.total_value || 0,
-                        mapped_invoice_date: invoice?.invoice_date || n.invoice_date
+                        mapped_invoice_date: invoice?.invoice_date || n.invoice_date,
+                        originalAmount: invoice?.finalAmount || invoice?.invoice_amount || n.originalAmount
                     };
                 });
 
@@ -240,7 +251,7 @@ const CreditNotesView = () => {
                 invoice_no: note.toInvoiceNo || note.reference_invoice_no || note.est_no || 'N/A',
                 client: note.clientName || note.companyName || 'N/A',
                 reason: note.reason || 'N/A',
-                date: note.debit_note_date || note.added ? new Date(note.debit_note_date || note.added).toLocaleDateString('en-GB') : 'N/A',
+                date: note.debit_note_date || note.added ? new Date(note.debit_note_date || note.added).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : 'N/A',
                 value: Number(note.totalAmount !== undefined ? note.totalAmount : note.total_value) || 0,
                 status: normalizeStatus(note.status),
             });
@@ -300,6 +311,7 @@ const CreditNotesView = () => {
 
     // Apply Search + real filters (status/date-range/added-by)
     const filteredNotes = creditNotes.filter(n => {
+        if (filterEvent !== 'all' && String(n.eventId || '') !== String(filterEvent)) return false;
         if (statusFilter !== 'All' && normalizeStatus(n.status) !== statusFilter) return false;
         if (inlineSalesPerson && !selectedAdminNames.includes(n.added_by)) return false;
 
@@ -430,6 +442,22 @@ const CreditNotesView = () => {
                                 </div>
                             </div>
                         )}
+                    </div>
+                    <div className="relative">
+                        <button
+                            className="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 cursor-pointer pointer-events-none"
+                        >
+                            <Building2 className="w-4 h-4 text-slate-500" />
+                            <select
+                                value={filterEvent}
+                                onChange={(e) => setFilterEvent(e.target.value)}
+                                className="appearance-none bg-transparent border-none text-slate-700 focus:outline-none focus:ring-0 cursor-pointer pointer-events-auto pr-2 max-w-[150px] truncate"
+                            >
+                                <option value="all">All Events</option>
+                                {events.map(event => <option key={event._id} value={event._id}>{event.name}</option>)}
+                            </select>
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 -ml-1" />
+                        </button>
                     </div>
                     <div className="relative">
                         <button
@@ -610,12 +638,12 @@ const CreditNotesView = () => {
                                                     <td className="py-1 px-2">
                                                         <div className="font-bold text-slate-800 text-[11px]">{note.debit_note_no || note.create_note_no || note.est_no || 'N/A'}</div>
                                                         {/* Both _source values are credit-adjustment documents on this page (see backend/services/ledgerTotals.js) — always label the date as a Credit Note date so it isn't misread as a debit (charge-increasing) document. */}
-                                                        <div className="text-[10px] text-slate-500 mt-0.5">Credit Note Date: {note.debit_note_date || note.added ? new Date(note.debit_note_date || note.added).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
+                                                        <div className="text-[10px] text-slate-500 mt-0.5">Credit Note Date: {note.debit_note_date || note.added ? new Date(note.debit_note_date || note.added).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : 'N/A'}</div>
                                                         {/* <div className="text-[10px] font-bold text-blue-600 mt-0.5 cursor-pointer hover:underline">View Details <ChevronRight className="inline w-3 h-3 rotate-90" /></div> */}
                                                     </td>
                                                     <td className="py-1 px-2">
                                                         <div className="font-bold text-slate-800 text-[11px]">{note.toInvoiceNo || note.reference_invoice_no || note.est_no || 'N/A'}</div>
-                                                        <div className="text-[10px] text-slate-500 mt-0.5">Invoice Date: {note.mapped_invoice_date ? new Date(note.mapped_invoice_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
+                                                        <div className="text-[10px] text-slate-500 mt-0.5">Invoice Date: {note.mapped_invoice_date ? new Date(note.mapped_invoice_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : 'N/A'}</div>
                                                         <div className="text-[10px] text-slate-500 mt-0.5">Invoice Value: {note.originalAmount !== undefined ? `₹ ${formatCurrency(note.originalAmount)}` : (note.invoice_amount !== undefined ? `₹ ${formatCurrency(note.invoice_amount)}` : 'N/A')}</div>
                                                     </td>
                                                     <td className="py-1 px-2">
@@ -628,10 +656,19 @@ const CreditNotesView = () => {
                                                                 ? (note.type || note.credit_note_type).split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
                                                                 : 'N/A'}
                                                         </div>
-                                                        <div className="text-[10px] text-slate-500 whitespace-normal w-32">{note.reason || 'N/A'}</div>
+                                                        <div className="group relative w-32">
+                                                            <div className="text-[10px] text-slate-500 truncate cursor-help">
+                                                                {note.reason || 'N/A'}
+                                                            </div>
+                                                            {(note.reason && note.reason !== 'N/A') && (
+                                                                <div className="absolute z-[999] left-0 bottom-full mb-1 hidden group-hover:block w-48 p-2 bg-slate-800 text-white text-[10px] rounded shadow-lg whitespace-normal leading-tight">
+                                                                    {note.reason}
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                     <td className="py-1 px-2 font-bold text-[11px] text-slate-700 text-center">
-                                                        {note.debit_note_date || note.added ? new Date(note.debit_note_date || note.added).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
+                                                        {note.debit_note_date || note.added ? new Date(note.debit_note_date || note.added).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : 'N/A'}
                                                     </td>
                                                     <td className="py-1 px-2 text-right">
                                                         <div className="font-bold text-emerald-600 text-[11px]">₹ {formatCurrency(note.totalAmount !== undefined ? note.totalAmount : note.total_value)}</div>
@@ -706,14 +743,16 @@ const CreditNotesView = () => {
                                 </div>
                                 <div className="px-3 text-center">
                                     <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">TOTAL ADJUSTED</div>
-                                    <div className="text-[11px] font-bold text-slate-800 flex items-center justify-center gap-1">
-                                        ₹ {formatCurrency(totalAdjusted)} <span className="text-[9px] text-emerald-500 font-medium">↑ {adjustedPct}</span>
+                                    <div className="text-[11px] font-bold text-slate-800 flex items-center justify-center gap-2">
+                                        <span>₹ {formatCurrency(totalAdjusted)}</span>
+                                        <span className="text-[9px] text-emerald-600 font-medium bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-100">↑ {adjustedPct}</span>
                                     </div>
                                 </div>
                                 <div className="px-3 text-center">
                                     <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">TOTAL CANCELLED</div>
-                                    <div className="text-[11px] font-bold text-slate-800 flex items-center justify-center gap-1">
-                                        ₹ {formatCurrency(totalCancelled)} <span className="text-[9px] text-rose-500 font-medium">{cancelledPct}</span>
+                                    <div className="text-[11px] font-bold text-slate-800 flex items-center justify-center gap-2">
+                                        <span>₹ {formatCurrency(totalCancelled)}</span>
+                                        <span className="text-[9px] text-rose-600 font-medium bg-rose-50 px-1.5 py-0.5 rounded-md border border-rose-100">{cancelledPct}</span>
                                     </div>
                                 </div>
                                 <div className="px-3 text-center">

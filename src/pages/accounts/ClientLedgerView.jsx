@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
     ChevronRight, Calendar, Download, FileSpreadsheet, Search, Filter, Building2,
     Phone, Mail, BadgeCheck, MapPin, Wallet, TrendingUp, AlertTriangle, Clock,
-    Plus, FileText, FileMinus, Send, BarChart2, ArrowRightCircle, Loader2, X
+    Plus, FileText, FileMinus, Send, BarChart2, ArrowRightCircle, Loader2, X, ChevronDown
 } from 'lucide-react';
 import api, { SERVER_URL } from '../../lib/api';
 import toast from 'react-hot-toast';
@@ -32,7 +32,7 @@ const formatDate = (val) => {
     if (!val) return 'N/A';
     const d = new Date(val);
     if (isNaN(d.getTime())) return 'N/A';
-    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
 };
 
 // Hook: animate number from 0 to target when element enters viewport (matches InvoicesView.jsx)
@@ -132,16 +132,26 @@ const ClientPicker = () => {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('All Statuses');
+    const [events, setEvents] = useState([]);
+    const [filterEvent, setFilterEvent] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [compRes, arRes] = await Promise.all([
+                const [compRes, arRes, eventsRes] = await Promise.all([
                     api.get('/api/companies'),
-                    api.get('/api/accounts-receivable').catch(() => ({ data: { data: { rows: [] } } }))
+                    api.get('/api/accounts-receivable').catch(() => ({ data: { data: { rows: [] } } })),
+                    api.get('/api/events').catch(() => ({ data: { data: [] } }))
                 ]);
+
+                const eventsData = eventsRes.data?.data || eventsRes.data || [];
+                eventsData.sort((a, b) => (a.order || 0) - (b.order || 0));
+                setEvents(eventsData);
+                if (eventsData.length > 0) {
+                    setFilterEvent(eventsData[0]._id);
+                }
 
                 const compData = compRes.data?.data || compRes.data || [];
                 const arRows = arRes.data?.data?.rows || [];
@@ -150,25 +160,27 @@ const ClientPicker = () => {
                 arRows.forEach(row => {
                     const cid = String(row.companyId);
                     if (!clientFinancials[cid]) {
-                        clientFinancials[cid] = { invoiced: 0, received: 0, outstanding: 0, stallNo: row.stallNo, sqMtr: row.sqMtr };
+                        clientFinancials[cid] = { invoiced: 0, received: 0, outstanding: 0, stallNo: row.stallNo, sqMtr: row.sqMtr, eventId: row.eventId };
                     }
                     clientFinancials[cid].invoiced += (row.invValue || 0);
                     clientFinancials[cid].received += (row.received || 0);
                     clientFinancials[cid].outstanding += (row.outstanding || 0);
                     if (row.stallNo && !clientFinancials[cid].stallNo) clientFinancials[cid].stallNo = row.stallNo;
                     if (row.sqMtr && !clientFinancials[cid].sqMtr) clientFinancials[cid].sqMtr = row.sqMtr;
+                    if (row.eventId && !clientFinancials[cid].eventId) clientFinancials[cid].eventId = row.eventId;
                 });
 
                 let merged = compData.map(c => {
                     let status = c.companyStatus || 'N/A';
                     if (status === 'Closed - Won') status = 'Converted Client';
 
-                    const fin = clientFinancials[String(c._id)] || { invoiced: 0, received: 0, outstanding: 0, stallNo: null, sqMtr: null };
+                    const fin = clientFinancials[String(c._id)] || { invoiced: 0, received: 0, outstanding: 0, stallNo: null, sqMtr: null, eventId: null };
                     fin.receivedPct = fin.invoiced > 0 ? Math.min(100, Math.round((fin.received / fin.invoiced) * 100)) : 0;
 
                     return {
                         ...c,
                         companyStatus: status,
+                        eventId: fin.eventId || c.eventId,
                         financials: fin
                     };
                 });
@@ -193,6 +205,7 @@ const ClientPicker = () => {
     const statusOptions = [...new Set(companies.map((c) => c.companyStatus).filter(Boolean))];
 
     const filtered = companies.filter((c) => {
+        if (filterEvent !== 'all' && String(c.eventId || '') !== String(filterEvent)) return false;
         if (statusFilter && statusFilter !== 'All Statuses' && c.companyStatus !== statusFilter) return false;
         if (!search) return true;
         const q = search.trim().toLowerCase();
@@ -205,7 +218,7 @@ const ClientPicker = () => {
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [search, statusFilter]);
+    }, [search, statusFilter, filterEvent]);
 
     const totalPages = Math.ceil(filtered.length / itemsPerPage);
     const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -283,6 +296,17 @@ const ClientPicker = () => {
 
                     {/* Filters Row */}
                     <div className="bg-white p-3 rounded-t-xl border border-slate-200 border-b-0 shadow-sm flex flex-col md:flex-row items-center gap-2.5">
+                        <div className="relative">
+                            <select
+                                value={filterEvent}
+                                onChange={(e) => setFilterEvent(e.target.value)}
+                                className="w-full sm:w-auto appearance-none bg-white border border-slate-200 text-slate-700 pl-3 pr-8 py-2 rounded-lg text-[12px] font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-100 cursor-pointer max-w-[150px] truncate"
+                            >
+                                <option value="all">All Events</option>
+                                {events.map(event => <option key={event._id} value={event._id}>{event.name}</option>)}
+                            </select>
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
                         <div className="relative flex-1 min-w-[200px] w-full">
                             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                             <input

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-    FileText, Download, Search, Plus, Eye, Filter, Wallet, CheckCircle2, AlertTriangle,
+    Building2, FileText, Download, Search, Plus, Eye, Filter, Wallet, CheckCircle2, AlertTriangle,
     Calendar, FileSpreadsheet, BarChart2, ChevronRight, ArrowRightCircle, ChevronDown,
     Mail, MessageCircleMore, Loader2, MoreVertical, Users, TrendingUp, Bell, RefreshCw,
     IndianRupee, Calculator, ClipboardList, ArrowDownLeft, CalendarCheck
@@ -99,6 +99,8 @@ const ReceiptsView = () => {
     const [filterBank, setFilterBank] = useState('');
     const [filterType, setFilterType] = useState('');
     const [filterStatus, setFilterStatus] = useState('');
+    const [events, setEvents] = useState([]);
+    const [filterEvent, setFilterEvent] = useState('all');
 
     const [sendingReceipt, setSendingReceipt] = useState({});
     const [downloadingId, setDownloadingId] = useState('');
@@ -118,10 +120,18 @@ const ReceiptsView = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [payRes, dnRes] = await Promise.all([
+                const [payRes, dnRes, eventsRes] = await Promise.all([
                     api.get('/api/payments'),
                     api.get('/api/debitnotes').catch(() => ({ data: { data: [] } })),
+                    api.get('/api/events').catch(() => ({ data: { data: [] } }))
                 ]);
+
+                const eventsData = eventsRes.data?.data || eventsRes.data || [];
+                eventsData.sort((a, b) => (a.order || 0) - (b.order || 0));
+                setEvents(eventsData);
+                if (eventsData.length > 0) {
+                    setFilterEvent(eventsData[0]._id);
+                }
 
                 let list = payRes.data?.data || payRes.data || [];
                 if (!isAllList) list = list.filter(p => String(p.companyId) === String(id));
@@ -174,7 +184,7 @@ const ReceiptsView = () => {
         if (!dateString) return 'N/A';
         const d = new Date(dateString);
         if (isNaN(d.getTime())) return 'N/A';
-        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
     };
 
     const formatTime = (dateString) => {
@@ -544,6 +554,21 @@ const ReceiptsView = () => {
                                 </div>
                             </div>
                         )}
+                    </div>
+
+                    <div className="relative">
+                        <div className="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 cursor-pointer focus-within:ring-2 focus-within:ring-blue-100">
+                            <Building2 className="w-4 h-4 text-slate-500" />
+                            <select
+                                value={filterEvent}
+                                onChange={(e) => setFilterEvent(e.target.value)}
+                                className="appearance-none bg-transparent border-none text-slate-700 focus:outline-none focus:ring-0 cursor-pointer pr-4 max-w-[150px] truncate"
+                            >
+                                <option value="all">All Events</option>
+                                {events.map(event => <option key={event._id} value={event._id}>{event.name}</option>)}
+                            </select>
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 pointer-events-none" />
+                        </div>
                     </div>
 
                     <button onClick={handleOpenAddPayment} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-colors">

@@ -4,7 +4,7 @@ import {
     Plus, Search, Eye, MoreVertical,
     CreditCard, ArrowDownToLine, Clock, AlertCircle, FileText,
     Users, PieChart, CheckCircle2, FileSpreadsheet,
-    Loader2, X
+    Loader2, X, ChevronDown
 } from 'lucide-react';
 import Select from 'react-select';
 import toast from 'react-hot-toast';
@@ -110,6 +110,8 @@ const AccountsReceivableView = () => {
     const [error, setError] = useState(null);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('All Status');
+    const [events, setEvents] = useState([]);
+    const [filterEvent, setFilterEvent] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -141,32 +143,45 @@ const AccountsReceivableView = () => {
     };
 
     useEffect(() => {
-        const fetchAR = async () => {
+        const fetchData = async () => {
             try {
                 setLoading(true);
-                const res = await api.get('/api/accounts-receivable');
-                setRows(res.data?.data?.rows || []);
-                setStats(res.data?.data?.stats || null);
+                const [eventsRes, arRes] = await Promise.all([
+                    api.get('/api/events').catch(() => ({ data: { data: [] } })),
+                    api.get('/api/accounts-receivable')
+                ]);
+
+                const eventsData = eventsRes.data?.data || eventsRes.data || [];
+                eventsData.sort((a, b) => (a.order || 0) - (b.order || 0));
+                setEvents(eventsData);
+                if (eventsData.length > 0) {
+                    setFilterEvent(eventsData[0]._id);
+                }
+
+                setRows(arRes.data?.data?.rows || []);
+                setStats(arRes.data?.data?.stats || null);
                 setError(null);
             } catch (err) {
-                console.error('Error fetching accounts receivable:', err);
+                console.error('Error fetching data:', err);
                 setError('Failed to load accounts receivable data.');
             } finally {
                 setLoading(false);
             }
         };
-        fetchAR();
+        fetchData();
     }, []);
 
     const filteredRows = useMemo(() => {
         const s = search.trim().toLowerCase();
         return rows.filter((row) => {
+            if (filterEvent !== 'all' && String(row.eventId || '') !== String(filterEvent)) return false;
+
             const matchesSearch = !s || [row.client, row.invNo, row.docType, row.stallNo, row.utr]
                 .some((field) => String(field || '').toLowerCase().includes(s));
             const matchesStatus = statusFilter === 'All Status' || row.status === statusFilter;
             return matchesSearch && matchesStatus;
         });
-    }, [rows, search, statusFilter]);
+    }, [rows, search, statusFilter, filterEvent]);
 
     useEffect(() => {
         setCurrentPage(1);
@@ -257,6 +272,17 @@ const AccountsReceivableView = () => {
 
                     {/* Filters Row */}
                     <div className="bg-white p-2.5 rounded-t-xl border border-slate-200 border-b-0 shadow-sm flex flex-col md:flex-row items-center gap-2">
+                        <div className="relative">
+                            <select
+                                value={filterEvent}
+                                onChange={(e) => setFilterEvent(e.target.value)}
+                                className="w-full sm:w-auto appearance-none bg-white border border-slate-200 text-slate-700 pl-3 pr-8 py-1.5 rounded-md text-[11px] font-bold shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[150px] truncate"
+                            >
+                                <option value="all">All Events</option>
+                                {events.map(event => <option key={event._id} value={event._id}>{event.name}</option>)}
+                            </select>
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
                         <div className="relative flex-1 min-w-[200px]">
                             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                             <input
@@ -285,140 +311,140 @@ const AccountsReceivableView = () => {
                     {/* Table */}
                     <div className="bg-white border border-slate-200 shadow-sm">
                         <div className="overflow-x-auto">
-                        <table className="w-full min-w-[1300px] text-left border-collapse">
-                            <thead>
-                                <tr className="bg-white text-[8px] font-black uppercase tracking-wider text-slate-700 border-b border-slate-200 whitespace-nowrap">
-                                    <th className="px-3 py-2.5 text-center w-10">S.No.</th>
-                                    <th className="px-3 py-2.5">Client & Stall Details</th>
-                                    <th className="px-3 py-2.5">Document Details</th>
-                                    <th className="px-3 py-2.5 text-center">Payment Type</th>
-                                    <th className="px-3 py-2.5 text-right">Document Value</th>
-                                    <th className="px-3 py-2.5 text-right">Credit / Debit Note</th>
-                                    <th className="px-3 py-2.5 text-center">Received Till Date</th>
-                                    <th className="px-3 py-2.5 text-center">TDS Deducted</th>
-                                    <th className="px-3 py-2.5 text-center">Net Received</th>
-                                    <th className="px-3 py-2.5 text-right">Outstanding Amount</th>
-                                    <th className="px-3 py-2.5">Payment Mode</th>
-                                    <th className="px-3 py-2.5">UTR / Cheque No.</th>
-                                    <th className="px-3 py-2.5 text-center">Due Date</th>
-                                    <th className="px-3 py-2.5 text-center">Status</th>
-                                    <th className="px-3 py-2.5 text-center">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="text-[11px] whitespace-nowrap">
-                                {filteredRows.length === 0 && (
-                                    <tr>
-                                        <td colSpan={15} className="py-8 text-center text-slate-400">No receivable documents found.</td>
+                            <table className="w-full min-w-[1300px] text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-white text-[8px] font-black uppercase tracking-wider text-slate-700 border-b border-slate-200 whitespace-nowrap">
+                                        <th className="px-3 py-2.5 text-center w-10">S.No.</th>
+                                        <th className="px-3 py-2.5">Client & Stall Details</th>
+                                        <th className="px-3 py-2.5">Document Details</th>
+                                        <th className="px-3 py-2.5 text-center">Payment Type</th>
+                                        <th className="px-3 py-2.5 text-right">Document Value</th>
+                                        <th className="px-3 py-2.5 text-right">Credit / Debit Note</th>
+                                        <th className="px-3 py-2.5 text-center">Received Till Date</th>
+                                        <th className="px-3 py-2.5 text-center">TDS Deducted</th>
+                                        <th className="px-3 py-2.5 text-center">Net Received</th>
+                                        <th className="px-3 py-2.5 text-right">Outstanding Amount</th>
+                                        <th className="px-3 py-2.5">Payment Mode</th>
+                                        <th className="px-3 py-2.5">UTR / Cheque No.</th>
+                                        <th className="px-3 py-2.5 text-center">Due Date</th>
+                                        <th className="px-3 py-2.5 text-center">Status</th>
+                                        <th className="px-3 py-2.5 text-center">Action</th>
                                     </tr>
-                                )}
-                                {paginatedRows.map((row, idx) => {
-                                    const dueMeta = getDueMeta(row);
-                                    return (
-                                    <tr
-                                        key={row.id}
-                                        className={`border-b transition-colors ${row.isOverdue
-                                            ? 'bg-rose-50/80 border-rose-100 hover:bg-rose-100 border-l-4 border-l-rose-500'
-                                            : row.docType === 'Proforma Invoice'
-                                                ? 'bg-amber-50/30 border-amber-100 hover:bg-amber-50/60'
-                                                : 'border-slate-100 hover:bg-slate-50/50'
-                                            }`}
-                                    >
-                                        <td className="px-3 py-2 font-black text-slate-800 text-center">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
-                                        <td className="px-3 py-2">
-                                            <div className="font-bold text-blue-600 text-[12px]">{row.client}</div>
-                                            <div className="text-slate-600 font-bold mt-0.5 text-[10px]">Stall No. {row.stallNo} <span className="text-slate-400 font-medium">| {row.sqMtr}</span></div>
-                                            <div className="text-slate-500 font-medium mt-0.5 text-[10px] flex items-center gap-1"><Users className="w-3 h-3" /> Contact: {row.contact}</div>
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <div className="font-bold text-slate-800 text-[11px]">{row.invNo}</div>
-                                            <div className={`inline-block mt-1 px-1.5 py-0.5 rounded border text-[8px] font-black uppercase tracking-wide ${row.docType === 'Proforma Invoice' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
-                                                {row.docType || 'Invoice'}
-                                            </div>
-                                            <div className="text-slate-500 mt-0.5 text-[10px] font-medium">Date: {formatDate(row.invDate)}</div>
-                                            <div className="text-slate-500 mt-0.5 text-[10px] font-medium">Total Docs: <span className="font-bold text-slate-700">{row.totalInvoicesForClient}</span></div>
-                                        </td>
-                                        <td className="px-3 py-2 text-center">
-                                            <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold border ${PAYMENT_TYPE_STYLES[row.paymentType] || 'text-slate-600 bg-slate-50 border-slate-200'}`}>
-                                                {row.paymentType}
-                                            </span>
-                                        </td>
-                                        <td className="px-3 py-2 font-bold text-[12px] text-indigo-600 text-right">
-                                            {formatCurrency(row.invValue)}
-                                        </td>
-                                        <td className="px-3 py-2 text-right">
-                                            {(!row.credited && !row.debited) && <span className="text-slate-400 text-[11px]">-</span>}
-                                            {row.credited > 0 && <div className="text-rose-600 font-bold text-[10px]">CN: {formatCurrency(row.credited)}</div>}
-                                            {row.debited > 0 && <div className="text-orange-600 font-bold text-[10px] mt-0.5">DN: {formatCurrency(row.debited)}</div>}
-                                        </td>
-                                        <td className="px-3 py-2 text-center">
-                                            <div className="font-bold text-emerald-600 text-[11px]">{formatCurrency(row.received)}</div>
-                                            <div className="text-blue-600 font-bold mt-0.5 text-[10px]">{row.receivedPct}%</div>
-                                        </td>
-                                        <td className="px-3 py-2 text-center">
-                                            <div className="font-bold text-[11px] text-rose-600">{formatCurrency(row.tds)}</div>
-                                        </td>
-                                        <td className="px-3 py-2 text-center">
-                                            <div className="font-bold text-[11px] text-emerald-600">{formatCurrency(row.netReceived)}</div>
-                                        </td>
-                                        <td className={`px-3 py-2 font-bold text-[11px] text-right ${row.outstanding > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                                            {formatCurrency(row.outstanding)}
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <div className="font-bold text-slate-800 text-[11px]">{row.paymentMode}</div>
-                                            {row.bank && row.bank !== '-' && (
-                                                <div className="text-slate-500 font-medium mt-0.5 text-[10px]">{row.bank}</div>
-                                            )}
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <div className="font-medium text-slate-700 text-[11px]">{row.utr}</div>
-                                            {row.utrDate && (
-                                                <div className="text-slate-500 font-medium mt-0.5 text-[10px]">{formatDate(row.utrDate)}</div>
-                                            )}
-                                        </td>
-                                        <td className={`px-3 py-2 font-black text-center ${dueMeta.cellClass}`}>
-                                            <div className="leading-tight">{formatDate(row.dueDate)}</div>
-                                            <div className={`inline-block mt-1 px-1.5 py-0.5 rounded border text-[8px] font-black uppercase tracking-wide ${dueMeta.badgeClass}`}>
-                                                {dueMeta.label}
-                                            </div>
-                                            {dueMeta.helper && (
-                                                <div className={`mt-0.5 text-[9px] font-bold leading-tight ${row.isOverdue ? 'text-rose-600' : 'text-slate-500'}`}>
-                                                    {dueMeta.helper}
-                                                </div>
-                                            )}
-                                            {row.hasInstallmentDue && row.installmentDueDate && (
-                                                <div className="mt-0.5 text-[9px] font-semibold text-amber-700 leading-tight">
-                                                    Inst.: {formatDate(row.installmentDueDate)}
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td className="px-3 py-2 text-center">
-                                            <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${STATUS_STYLES[row.status] || 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                                                {row.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-3 py-2">
-                                            <div className="flex items-center justify-center gap-1.5">
-                                                <button
-                                                    className="w-6 h-6 flex items-center justify-center border border-blue-100 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
-                                                    onClick={() => navigate(`/dashboard/account/${row.companyId}`)}
-                                                    title="View account overview"
-                                                >
-                                                    <Eye className="w-3.5 h-3.5" />
-                                                </button>
-                                                <button
-                                                    className="w-6 h-6 flex items-center justify-center border border-slate-200 text-slate-500 rounded hover:bg-slate-50 transition-colors"
-                                                    onClick={() => navigate(`/dashboard/account/client-ledger/${row.companyId}`)}
-                                                    title="View client ledger"
-                                                >
-                                                    <MoreVertical className="w-3.5 h-3.5" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="text-[11px] whitespace-nowrap">
+                                    {filteredRows.length === 0 && (
+                                        <tr>
+                                            <td colSpan={15} className="py-8 text-center text-slate-400">No receivable documents found.</td>
+                                        </tr>
+                                    )}
+                                    {paginatedRows.map((row, idx) => {
+                                        const dueMeta = getDueMeta(row);
+                                        return (
+                                            <tr
+                                                key={row.id}
+                                                className={`border-b transition-colors ${row.isOverdue
+                                                    ? 'bg-rose-50/80 border-rose-100 hover:bg-rose-100 border-l-4 border-l-rose-500'
+                                                    : row.docType === 'Proforma Invoice'
+                                                        ? 'bg-amber-50/30 border-amber-100 hover:bg-amber-50/60'
+                                                        : 'border-slate-100 hover:bg-slate-50/50'
+                                                    }`}
+                                            >
+                                                <td className="px-3 py-2 font-black text-slate-800 text-center">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
+                                                <td className="px-3 py-2">
+                                                    <div className="font-bold text-blue-600 text-[12px]">{row.client}</div>
+                                                    <div className="text-slate-600 font-bold mt-0.5 text-[10px]">Stall No. {row.stallNo} <span className="text-slate-400 font-medium">| {row.sqMtr}</span></div>
+                                                    <div className="text-slate-500 font-medium mt-0.5 text-[10px] flex items-center gap-1"><Users className="w-3 h-3" /> Contact: {row.contact}</div>
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                    <div className="font-bold text-slate-800 text-[11px]">{row.invNo}</div>
+                                                    <div className={`inline-block mt-1 px-1.5 py-0.5 rounded border text-[8px] font-black uppercase tracking-wide ${row.docType === 'Proforma Invoice' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                                                        {row.docType || 'Invoice'}
+                                                    </div>
+                                                    <div className="text-slate-500 mt-0.5 text-[10px] font-medium">Date: {formatDate(row.invDate)}</div>
+                                                    <div className="text-slate-500 mt-0.5 text-[10px] font-medium">Total Docs: <span className="font-bold text-slate-700">{row.totalInvoicesForClient}</span></div>
+                                                </td>
+                                                <td className="px-3 py-2 text-center">
+                                                    <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold border ${PAYMENT_TYPE_STYLES[row.paymentType] || 'text-slate-600 bg-slate-50 border-slate-200'}`}>
+                                                        {row.paymentType}
+                                                    </span>
+                                                </td>
+                                                <td className="px-3 py-2 font-bold text-[12px] text-indigo-600 text-right">
+                                                    {formatCurrency(row.invValue)}
+                                                </td>
+                                                <td className="px-3 py-2 text-right">
+                                                    {(!row.credited && !row.debited) && <span className="text-slate-400 text-[11px]">-</span>}
+                                                    {row.credited > 0 && <div className="text-rose-600 font-bold text-[10px]">CN: {formatCurrency(row.credited)}</div>}
+                                                    {row.debited > 0 && <div className="text-orange-600 font-bold text-[10px] mt-0.5">DN: {formatCurrency(row.debited)}</div>}
+                                                </td>
+                                                <td className="px-3 py-2 text-center">
+                                                    <div className="font-bold text-emerald-600 text-[11px]">{formatCurrency(row.received)}</div>
+                                                    <div className="text-blue-600 font-bold mt-0.5 text-[10px]">{row.receivedPct}%</div>
+                                                </td>
+                                                <td className="px-3 py-2 text-center">
+                                                    <div className="font-bold text-[11px] text-rose-600">{formatCurrency(row.tds)}</div>
+                                                </td>
+                                                <td className="px-3 py-2 text-center">
+                                                    <div className="font-bold text-[11px] text-emerald-600">{formatCurrency(row.netReceived)}</div>
+                                                </td>
+                                                <td className={`px-3 py-2 font-bold text-[11px] text-right ${row.outstanding > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                                    {formatCurrency(row.outstanding)}
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                    <div className="font-bold text-slate-800 text-[11px]">{row.paymentMode}</div>
+                                                    {row.bank && row.bank !== '-' && (
+                                                        <div className="text-slate-500 font-medium mt-0.5 text-[10px]">{row.bank}</div>
+                                                    )}
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                    <div className="font-medium text-slate-700 text-[11px]">{row.utr}</div>
+                                                    {row.utrDate && (
+                                                        <div className="text-slate-500 font-medium mt-0.5 text-[10px]">{formatDate(row.utrDate)}</div>
+                                                    )}
+                                                </td>
+                                                <td className={`px-3 py-2 font-black text-center ${dueMeta.cellClass}`}>
+                                                    <div className="leading-tight">{formatDate(row.dueDate)}</div>
+                                                    <div className={`inline-block mt-1 px-1.5 py-0.5 rounded border text-[8px] font-black uppercase tracking-wide ${dueMeta.badgeClass}`}>
+                                                        {dueMeta.label}
+                                                    </div>
+                                                    {dueMeta.helper && (
+                                                        <div className={`mt-0.5 text-[9px] font-bold leading-tight ${row.isOverdue ? 'text-rose-600' : 'text-slate-500'}`}>
+                                                            {dueMeta.helper}
+                                                        </div>
+                                                    )}
+                                                    {row.hasInstallmentDue && row.installmentDueDate && (
+                                                        <div className="mt-0.5 text-[9px] font-semibold text-amber-700 leading-tight">
+                                                            Inst.: {formatDate(row.installmentDueDate)}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="px-3 py-2 text-center">
+                                                    <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${STATUS_STYLES[row.status] || 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                                                        {row.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                    <div className="flex items-center justify-center gap-1.5">
+                                                        <button
+                                                            className="w-6 h-6 flex items-center justify-center border border-blue-100 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
+                                                            onClick={() => navigate(`/dashboard/account/${row.companyId}`)}
+                                                            title="View account overview"
+                                                        >
+                                                            <Eye className="w-3.5 h-3.5" />
+                                                        </button>
+                                                        <button
+                                                            className="w-6 h-6 flex items-center justify-center border border-slate-200 text-slate-500 rounded hover:bg-slate-50 transition-colors"
+                                                            onClick={() => navigate(`/dashboard/account/client-ledger/${row.companyId}`)}
+                                                            title="View client ledger"
+                                                        >
+                                                            <MoreVertical className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
                         </div>
 
                         {/* Pagination */}

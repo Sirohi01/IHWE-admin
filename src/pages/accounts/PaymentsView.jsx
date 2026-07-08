@@ -89,6 +89,8 @@ const PaymentList = () => {
     const [filterBank, setFilterBank] = useState('');
     const [filterMode, setFilterMode] = useState('');
     const [filterStatus, setFilterStatus] = useState('');
+    const [events, setEvents] = useState([]);
+    const [filterEvent, setFilterEvent] = useState('all');
 
     // Add Payment Modal states
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -124,17 +126,27 @@ const PaymentList = () => {
     };
 
     useEffect(() => {
-        const fetchPayments = async () => {
+        const fetchEventsAndPayments = async () => {
             try {
-                const res = await api.get('/api/payments');
-                setPayments(res.data?.data || res.data || []);
+                const [eventsRes, paymentsRes] = await Promise.all([
+                    api.get('/api/events').catch(() => ({ data: { data: [] } })),
+                    api.get('/api/payments').catch(() => ({ data: { data: [] } }))
+                ]);
+                const eventsData = eventsRes.data?.data || eventsRes.data || [];
+                eventsData.sort((a, b) => (a.order || 0) - (b.order || 0));
+                setEvents(eventsData);
+                if (eventsData.length > 0) {
+                    setFilterEvent(eventsData[0]._id);
+                }
+                
+                setPayments(paymentsRes.data?.data || paymentsRes.data || []);
             } catch (err) {
-                console.error("Failed to fetch payments", err);
+                console.error("Failed to fetch data", err);
             } finally {
                 setLoading(false);
             }
         };
-        fetchPayments();
+        fetchEventsAndPayments();
     }, []);
 
     useEffect(() => {
@@ -321,6 +333,9 @@ const PaymentList = () => {
     };
 
     const filteredPayments = payments.filter(pmt => {
+        // Event filter
+        if (filterEvent !== 'all' && String(pmt.eventId || '') !== String(filterEvent)) return false;
+
         // filter by company if not all list
         if (!isAllList && String(pmt.companyId || '') !== String(id)) return false;
 
@@ -567,6 +582,19 @@ const PaymentList = () => {
                             <option value="this_month">This Month</option>
                             <option value="last_3_months">Last 3 Months</option>
                             <option value="this_year">This Year</option>
+                        </select>
+                        <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+
+                    <div className="relative">
+                        <Building2 className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <select
+                            value={filterEvent}
+                            onChange={(e) => setFilterEvent(e.target.value)}
+                            className="appearance-none bg-white border border-slate-200 text-slate-700 pl-9 pr-8 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 min-w-[120px] max-w-[150px] truncate focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 cursor-pointer"
+                        >
+                            <option value="all">All Events</option>
+                            {events.map(event => <option key={event._id} value={event._id}>{event.name}</option>)}
                         </select>
                         <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>

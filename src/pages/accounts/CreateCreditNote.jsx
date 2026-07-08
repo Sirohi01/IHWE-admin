@@ -383,7 +383,7 @@ const CreateCreditNote = () => {
                                                             <div>
                                                                 <div className="text-[13px] font-bold text-slate-800">{inv.invoice_no}</div>
                                                                 <div className="text-[10px] text-slate-400 mt-0.5">
-                                                                    {inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                                                                    {inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'}
                                                                     {inv.items?.length ? ` · ${inv.items.length} item${inv.items.length > 1 ? 's' : ''}` : ''}
                                                                 </div>
                                                             </div>
@@ -527,7 +527,7 @@ const CreateCreditNote = () => {
                                                     <input type="checkbox" checked={inv.selected} onChange={() => handleInvoiceToggle(inv._id)} className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
                                                 </td>
                                                 <td className="py-2.5 px-3 text-[13px] font-bold text-slate-800">{inv.invoice_no}</td>
-                                                <td className="py-2.5 px-3 text-[12px] text-slate-500">{inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString('en-GB') : '—'}</td>
+                                                <td className="py-2.5 px-3 text-[12px] text-slate-500">{inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'}</td>
                                                 <td className="py-2.5 px-3 text-[13px] font-bold text-slate-800 text-right">₹{fmt(inv.invoice_amount)}</td>
                                                 <td className="py-2.5 px-3 text-[13px] font-bold text-rose-600 text-right">₹{fmt(inv.outstanding)}</td>
                                                 <td className="py-2.5 px-3 text-center">
@@ -672,7 +672,7 @@ const CreateCreditNote = () => {
                             <div className="space-y-2.5">
                                 {[
                                     ['Credit Note No.', creditNoteNo],
-                                    ['Credit Note Date', creditNoteDate ? new Date(creditNoteDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'],
+                                    ['Credit Note Date', creditNoteDate ? new Date(creditNoteDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'],
                                     ['Exhibitor', companyInfo?.name || '—'],
                                 ].map(([label, value]) => (
                                     <div key={label} className="flex justify-between text-[12px] border-b border-slate-50 pb-2">

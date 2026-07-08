@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     ChevronRight, FileText, CheckCircle2, AlertTriangle, Clock, Calendar,
-    Download, Eye, Filter, Search, Plus, CalendarDays, RefreshCw, BarChart2,
+    Download, Eye, Filter, Search, Plus, CalendarDays, RefreshCw, BarChart2, Building2,
     Wallet, ClipboardList, Send, Target, FileSpreadsheet, MoreVertical, Loader2, ChevronDown
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
@@ -108,7 +108,7 @@ const formatDate = (val) => {
     if (!val) return 'N/A';
     const d = new Date(val);
     if (isNaN(d.getTime())) return 'N/A';
-    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
 };
 
 const DebitNotesView = () => {
@@ -127,6 +127,8 @@ const DebitNotesView = () => {
     const [statusFilter, setStatusFilter] = useState('');
     const [typeFilter, setTypeFilter] = useState('');
     const [createdByFilter, setCreatedByFilter] = useState('');
+    const [events, setEvents] = useState([]);
+    const [filterEvent, setFilterEvent] = useState('all');
 
     const [dateRangeOpen, setDateRangeOpen] = useState(false);
     const [filtersOpen, setFiltersOpen] = useState(false);
@@ -143,10 +145,19 @@ const DebitNotesView = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [notesRes, paymentsRes] = await Promise.all([
+                const [notesRes, paymentsRes, eventsRes] = await Promise.all([
                     api.get('/api/account-debit-notes', { params: isAllList ? {} : { companyId: id } }),
                     api.get('/api/payments').catch(() => ({ data: [] })),
+                    api.get('/api/events').catch(() => ({ data: { data: [] } }))
                 ]);
+
+                const eventsData = eventsRes.data?.data || eventsRes.data || [];
+                eventsData.sort((a, b) => (a.order || 0) - (b.order || 0));
+                setEvents(eventsData);
+                if (eventsData.length > 0) {
+                    setFilterEvent(eventsData[0]._id);
+                }
+
                 setDebitNotes(notesRes.data?.data || []);
                 setPayments(paymentsRes.data?.data || paymentsRes.data || []);
             } catch {
@@ -270,6 +281,7 @@ const DebitNotesView = () => {
     const uniqueCreators = [...new Set(debitNotes.map((n) => n.added_by).filter(Boolean))];
 
     const filteredNotes = debitNotes.filter((n) => {
+        if (filterEvent !== 'all' && String(n.eventId || '') !== String(filterEvent)) return false;
         if (statusFilter && n.settlementStatus !== statusFilter) return false;
         if (typeFilter && n.debitNoteType !== typeFilter) return false;
         if (createdByFilter && n.added_by !== createdByFilter) return false;
@@ -399,6 +411,22 @@ const DebitNotesView = () => {
                                 </div>
                             </div>
                         )}
+                    </div>
+                    <div className="relative">
+                        <button
+                            className="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 cursor-pointer pointer-events-none"
+                        >
+                            <Building2 className="w-4 h-4 text-slate-500" />
+                            <select
+                                value={filterEvent}
+                                onChange={(e) => setFilterEvent(e.target.value)}
+                                className="appearance-none bg-transparent border-none text-slate-700 focus:outline-none focus:ring-0 cursor-pointer pointer-events-auto pr-2 max-w-[150px] truncate"
+                            >
+                                <option value="all">All Events</option>
+                                {events.map(event => <option key={event._id} value={event._id}>{event.name}</option>)}
+                            </select>
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 -ml-1" />
+                        </button>
                     </div>
                     <div className="relative">
                         <button

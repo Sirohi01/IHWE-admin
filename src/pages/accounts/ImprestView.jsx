@@ -19,7 +19,7 @@ const dateText = (value) => {
     const date = new Date(value);
     return Number.isNaN(date.getTime())
         ? '-'
-        : date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        : date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
 };
 
 const STATUS_CLASS = {

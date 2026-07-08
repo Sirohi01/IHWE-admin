@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
     ChevronRight, FileText, CheckCircle2, AlertCircle, Clock,
     Calendar, Eye, MoreVertical, Target,
-    ClipboardList, Filter, Search, Plus, RefreshCw, BarChart2, Loader2
+    ClipboardList, Filter, Search, Plus, RefreshCw, BarChart2, Loader2, Building2, ChevronDown
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import api from '../../lib/api';
@@ -81,7 +81,7 @@ const formatDate = (value) => {
     if (!value) return '-';
     const d = new Date(value);
     if (isNaN(d.getTime())) return '-';
-    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
 };
 
 const dueDateNote = (row) => {
@@ -129,6 +129,8 @@ const InvoicesView = () => {
     const [inlinePaymentType, setInlinePaymentType] = useState('');
     const [inlineHall, setInlineHall] = useState('');
     const [inlineSalesPerson, setInlineSalesPerson] = useState('');
+    const [events, setEvents] = useState([]);
+    const [filterEvent, setFilterEvent] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -136,9 +138,20 @@ const InvoicesView = () => {
         const fetchInvoices = async () => {
             try {
                 setLoading(true);
-                const res = await api.get('/api/accounts-receivable');
-                setRows(res.data?.data?.rows || []);
-                setStats(res.data?.data?.stats || null);
+                const [eventsRes, arRes] = await Promise.all([
+                    api.get('/api/events').catch(() => ({ data: { data: [] } })),
+                    api.get('/api/accounts-receivable')
+                ]);
+
+                const eventsData = eventsRes.data?.data || eventsRes.data || [];
+                eventsData.sort((a, b) => (a.order || 0) - (b.order || 0));
+                setEvents(eventsData);
+                if (eventsData.length > 0) {
+                    setFilterEvent(eventsData[0]._id);
+                }
+
+                setRows(arRes.data?.data?.rows || []);
+                setStats(arRes.data?.data?.stats || null);
                 setError(null);
             } catch (err) {
                 console.error('Failed to fetch invoices', err);
@@ -156,6 +169,7 @@ const InvoicesView = () => {
 
     // Pagination & Filtering Logic
     const filteredInvoices = rows.filter((row) => {
+        if (filterEvent !== 'all' && String(row.eventId || '') !== String(filterEvent)) return false;
         if (statusFilter !== 'All' && row.status !== statusFilter) return false;
         if (inlineInvoiceStatus && row.status !== inlineInvoiceStatus) return false;
         if (inlinePaymentType && row.paymentType !== inlinePaymentType) return false;
@@ -222,6 +236,23 @@ const InvoicesView = () => {
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
+                    <div className="relative">
+                        <button
+                            className="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 cursor-pointer pointer-events-none"
+                        >
+                            <Building2 className="w-4 h-4 text-slate-500" />
+                            <select
+                                value={filterEvent}
+                                onChange={(e) => setFilterEvent(e.target.value)}
+                                className="appearance-none bg-transparent border-none text-slate-700 focus:outline-none focus:ring-0 cursor-pointer pointer-events-auto pr-2 max-w-[150px] truncate"
+                            >
+                                <option value="all">All Events</option>
+                                {events.map(event => <option key={event._id} value={event._id}>{event.name}</option>)}
+                            </select>
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 -ml-1" />
+                        </button>
+                    </div>
+
                     <div className="relative">
                         <button
                             onClick={() => setFiltersOpen(!filtersOpen)}

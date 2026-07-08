@@ -385,7 +385,7 @@ function PaymentsSummaryReport() {
                                                 </span>
                                             </td>
                                             <td className="py-3 px-2 text-slate-500 font-medium">
-                                                {pmt.payment_date ? new Date(pmt.payment_date).toLocaleDateString('en-GB') : 'N/A'}
+                                                {pmt.payment_date ? new Date(pmt.payment_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : 'N/A'}
                                             </td>
                                             <td className="py-3 px-2 font-black text-slate-900 text-right">
                                                 {formatCurrency(pmt.amount_text)}
