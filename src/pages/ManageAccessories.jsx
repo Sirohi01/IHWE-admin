@@ -10,10 +10,20 @@ const EMPTY = {
     hsnCode: '', sacCode: '',
     category: 'Furniture', includedQty: 1, availableQty: 0,
     isActive: true, sortOrder: 0,
+    allocationMode: 'fixed', ratioQty: 1, ratioArea: 9, roundingMode: 'floor',
 };
 
 const iCls = "w-full h-9 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]";
 const lCls = "text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block";
+
+const PREVIEW_STALL_SIZES = [9, 12, 18, 27];
+const ROUND_FN = { floor: Math.floor, round: Math.round, ceil: Math.ceil };
+const computeEntitlementPreview = (form, stallArea) => {
+    const ratioArea = Number(form.ratioArea);
+    if (!stallArea || !ratioArea) return 0;
+    const roundFn = ROUND_FN[form.roundingMode] || Math.floor;
+    return roundFn(stallArea / ratioArea) * (Number(form.ratioQty) || 0);
+};
 
 export default function ManageAccessories() {
     const [items, setItems] = useState([]);
@@ -209,7 +219,16 @@ export default function ManageAccessories() {
                                             </div>
                                         </td>
                                         <td className="py-2.5 px-4">
-                                            {item.type === 'complimentary' ? <span className="text-[10px] font-black text-emerald-600 uppercase">Included</span> : (
+                                            {item.type === 'complimentary' ? (
+                                                item.allocationMode === 'perArea' ? (
+                                                    <>
+                                                        <p className="text-[10px] font-black text-emerald-600 uppercase">Per Area</p>
+                                                        <p className="text-[9px] text-gray-400 font-bold">{item.ratioQty} per {item.ratioArea} sqm</p>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-[10px] font-black text-emerald-600 uppercase">Included ({item.includedQty})</span>
+                                                )
+                                            ) : (
                                                 <>
                                                     <p className="text-xs font-black text-[#23471d]">₹{Number(item.price || 0).toLocaleString('en-IN')}</p>
                                                     <p className="text-[10px] text-gray-400 font-bold">GST {item.gstPercent}%</p>
@@ -405,15 +424,68 @@ export default function ManageAccessories() {
                                                 </div>
                                             </>
                                         )}
-                                        <div>
-                                            <label className={lCls}>{form.type === 'complimentary' ? 'Included Qty' : 'Min Order Qty'}</label>
-                                            <input type="number" value={form.includedQty} onChange={e => inp('includedQty', e.target.value)} className={iCls} min={1} />
-                                        </div>
+                                        {form.type === 'complimentary' ? (
+                                            <div className="col-span-2">
+                                                <label className={lCls}>Allocation Mode</label>
+                                                <select value={form.allocationMode} onChange={e => inp('allocationMode', e.target.value)} className={iCls}>
+                                                    <option value="fixed">Fixed Qty (same for every exhibitor)</option>
+                                                    <option value="perArea">Per Stall Area (auto-scales by stall size)</option>
+                                                </select>
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <label className={lCls}>Min Order Qty</label>
+                                                <input type="number" value={form.includedQty} onChange={e => inp('includedQty', e.target.value)} className={iCls} min={1} />
+                                            </div>
+                                        )}
+
+                                        {form.type === 'complimentary' && form.allocationMode === 'fixed' && (
+                                            <div>
+                                                <label className={lCls}>Included Qty</label>
+                                                <input type="number" value={form.includedQty} onChange={e => inp('includedQty', e.target.value)} className={iCls} min={1} />
+                                            </div>
+                                        )}
+
+                                        {form.type === 'complimentary' && form.allocationMode === 'perArea' && (
+                                            <>
+                                                <div>
+                                                    <label className={lCls}>Give Qty</label>
+                                                    <input type="number" value={form.ratioQty} onChange={e => inp('ratioQty', e.target.value)} className={iCls} min={0} step="0.5" />
+                                                </div>
+                                                <div>
+                                                    <label className={lCls}>Per Stall Area (sqm)</label>
+                                                    <input type="number" value={form.ratioArea} onChange={e => inp('ratioArea', e.target.value)} className={iCls} min={0.1} step="0.5" />
+                                                </div>
+                                                <div className="col-span-2">
+                                                    <label className={lCls}>Rounding Rule</label>
+                                                    <select value={form.roundingMode} onChange={e => inp('roundingMode', e.target.value)} className={iCls}>
+                                                        <option value="floor">Floor (round down — never over-allocate)</option>
+                                                        <option value="round">Nearest (round off)</option>
+                                                        <option value="ceil">Ceil (round up)</option>
+                                                    </select>
+                                                </div>
+                                            </>
+                                        )}
+
                                         <div>
                                             <label className={lCls}>Available Stock</label>
                                             <input type="number" value={form.availableQty} onChange={e => inp('availableQty', e.target.value)} className={iCls} placeholder="0" />
                                         </div>
                                     </div>
+
+                                    {form.type === 'complimentary' && form.allocationMode === 'perArea' && (
+                                        <div className="bg-emerald-50 border border-emerald-200 rounded-[2px] p-3">
+                                            <p className="text-[9px] font-black text-emerald-700 uppercase tracking-widest mb-2">Live Preview — Qty exhibitor gets by stall size</p>
+                                            <div className="flex flex-wrap gap-3">
+                                                {PREVIEW_STALL_SIZES.map(size => (
+                                                    <div key={size} className="flex items-center gap-1.5 bg-white border border-emerald-100 rounded-[2px] px-2.5 py-1">
+                                                        <span className="text-[10px] font-bold text-slate-500">{size} sqm →</span>
+                                                        <span className="text-xs font-black text-emerald-700">{computeEntitlementPreview(form, size)} {form.unit || 'unit'}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
