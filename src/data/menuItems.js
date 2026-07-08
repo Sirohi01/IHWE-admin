@@ -92,6 +92,7 @@ export const menuItems = [
       // { label: "Hot Leads", path: "/ihweClientData2026/hotClientList" },
       { label: "Exhibitor List", path: "/ihweClientData2026/confirmClientList" },
       { label: "New  Registration", path: "/book-a-stand" },
+      { label: "Exhibitor Useful Documents", path: "/exhibitor-useful-documents" },
     ],
   },
 

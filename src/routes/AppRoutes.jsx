@@ -336,6 +336,7 @@ export default function AppRoutes() {
             <Route path="epromotion" element={<EPromotionWebManagement />} />
             <Route path="faq-manage" element={<FAQManage />} />
             <Route path="add-pdf" element={<AddPdf />} />
+            <Route path="exhibitor-useful-documents" element={<AddPdf />} />
             <Route path="stats-counter" element={<StatsCounter />} />
             <Route path="global-platform" element={<GlobalPlatform />} />
             <Route path="/event-overview" element={<EventOverviewManagement />} />
