@@ -800,6 +800,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, copyLabel = DEFA
   }, {})).map((row) => ({ ...row, taxable: roundMoney(row.taxable), gst: roundMoney(row.gst) }));
   const companyName = settings?.companyName || "Namo Gange Wellness Pvt. Ltd.";
   const companyGst = forceDelhiGstin(settings?.companyGst || settings?.companyGstin || "07AAFCN9238F1Z6");
+  const companyGstShort = String(companyGst || "-").slice(0, 11);
   const bank = bankDetails || {};
   const bankName = bank.bankname || bank.bankName || settings?.bankName || "-";
   const accountName = bank.accountname || bank.accountName || settings?.accountName || companyName;
@@ -1047,14 +1048,17 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, copyLabel = DEFA
                         ["Place of Supply & Code", placeOfSupplyCode],
                         ["Contact Person", buyerContactPerson],
                         ["Contact No.", buyerContactNo],
-                        ["GSTIN", companyGst],
-                      ].map(([label, value]) => (
+                        ["GSTIN", companyGstShort],
+                      ].map(([label, value]) => {
+                        const isCompanyGstRow = label === "GSTIN";
+                        return (
                         <tr key={label}>
-                          <td style={labelCell}>{label}</td>
+                          <td style={labelCell}>{isCompanyGstRow ? "GST" : label}</td>
                           <td style={colonCell}>:</td>
-                          <td style={valueCell}>{value}</td>
+                          <td style={isCompanyGstRow ? { ...valueCell, whiteSpace: "nowrap", wordBreak: "keep-all", overflowWrap: "normal", fontSize: 10.5 } : valueCell}>{value}</td>
                         </tr>
-                      ))}
+                      );
+                      })}
                     </tbody>
                   </table>
                 </td>
