@@ -322,7 +322,7 @@ export default function MobilePassConfig() {
                   <div className={`h-1.5 w-full bg-gradient-to-r ${colorClass[meta.color]}`} />
 
                   {/* Card Header */}
-                  <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-6">
+                  <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-4">
                     <div className="flex items-start gap-4">
                       <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br shadow-lg ${colorClass[meta.color]}`}>
                         <Icon size={26} className="text-white" strokeWidth={2.5} />
@@ -372,7 +372,7 @@ export default function MobilePassConfig() {
                   </div>
 
                   {/* Card Body */}
-                  <div className="flex-1 space-y-6 p-6">
+                  <div className="flex-1 space-y-4 p-4">
 
                     {/* Free Allocation */}
                     <div>
@@ -496,7 +496,7 @@ export default function MobilePassConfig() {
                   </div>
 
                   {/* Card Footer */}
-                  <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/80 px-6 py-4">
+                  <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/80 px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm">
                         <IndianRupee size={14} className="text-slate-400" />
