@@ -16,7 +16,7 @@ const EMPTY = {
 const iCls = "w-full h-9 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]";
 const lCls = "text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block";
 
-const PREVIEW_STALL_SIZES = [9, 12, 18, 27];
+const PREVIEW_STALL_SIZES = [9, 12, 15, 18, 20, 24, 27, 28, 32, 36];
 const ROUND_FN = { floor: Math.floor, round: Math.round, ceil: Math.ceil };
 const computeEntitlementPreview = (form, stallArea) => {
     const ratioArea = Number(form.ratioArea);

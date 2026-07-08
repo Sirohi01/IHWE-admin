@@ -41,7 +41,7 @@ const colorClass = {
   cyan: "from-cyan-500 to-sky-500 shadow-cyan-500/20",
 };
 
-const PREVIEW_STALL_SIZES = [9, 12, 18, 27];
+const PREVIEW_STALL_SIZES = [9, 12, 15, 18, 20, 24, 27, 28, 32, 36];
 const ROUND_FN = { floor: Math.floor, round: Math.round, ceil: Math.ceil };
 const computeEntitlementPreview = (item, stallArea) => {
   const ratioArea = Number(item.ratioArea);
