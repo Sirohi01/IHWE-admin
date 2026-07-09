@@ -7,7 +7,7 @@ import api, { SERVER_URL } from '../../../lib/api';
 import { Landmark, SquarePen, Mail, Globe } from 'lucide-react';
 
 const PROFORMA_EVENT_NAME = '9th Edition of International Health & Wellness Expo (IHWE Global Edition)';
-const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, Bharat';
+const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, India';
 const PROFORMA_EVENT_STATE = 'Delhi';
 const PROFORMA_PLACE_OF_SUPPLY_WITH_CODE = 'Delhi (07)';
 const PROFORMA_EVENT_GST_NO = '07AAFCN9238F1Z6';
@@ -638,7 +638,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
         matchedEstimate?.place_of_supply_address ||
         PROFORMA_PLACE_OF_SUPPLY
     ]).replace(/,\s*Bharat$/i, '');
-    const shipmentAddress = joinAddressParts([eventPlaceOfSupply, PROFORMA_EVENT_STATE, 'Bharat']);
+    const shipmentAddress = joinAddressParts([eventPlaceOfSupply, PROFORMA_EVENT_STATE, 'India']);
 
     const eventGstNo = forceDelhiGstin(
         matchedEstimate?.event_gst_no ||
@@ -682,7 +682,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
 
     const renderHeaderDetails = () => (
         <>
-            <div className="invoice-header-image" style={{ marginBottom: 2, textAlign: 'center' }}>
+            <div className="invoice-header-image" style={{ marginBottom: 0, textAlign: 'center' }}>
                 <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
             </div>
 
@@ -694,24 +694,23 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                     alignItems: 'center',
                     justifyContent: 'center',
                     minHeight: 22,
-                    marginBottom: 4,
-                    paddingTop: 2,
-                    paddingBottom: 2,
+                    marginBottom: 0,
+                    paddingTop: 0,
+                    paddingBottom: 0,
                     color: '#0d1f3c',
                     textTransform: 'uppercase',
                 }}
             >
-                <div style={{ fontWeight: 400, fontSize: 18, lineHeight: 1.1, textAlign: 'center' }}>PROFORMA INVOICE</div>
+                <div style={{ fontWeight: 500, fontSize: 15, lineHeight: 1, textAlign: 'center' }}>PROFORMA INVOICE</div>
                 <div
                     className="invoice-copy-label"
                     style={{
                         position: 'absolute',
-                        right: 8,
+                        right: 0,
                         top: '50%',
-                        transform: 'translateY(-50%) scaleX(0.94)',
-                        transformOrigin: 'right center',
-                        fontWeight: 700,
-                        fontSize: 8.6,
+                        transform: 'translateY(-50%)',
+                        fontWeight: 600,
+                        fontSize: 11,
                         lineHeight: 1,
                         paddingRight: 2,
                         whiteSpace: 'nowrap',
