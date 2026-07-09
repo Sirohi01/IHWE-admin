@@ -1303,18 +1303,18 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                         <col style={{ width: '34%' }} />
                                     </colgroup>
                                     <thead>
-                                        <tr>
-                                            <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fff', textAlign: 'center' }}>
+                                        <tr style={{ background: '#fafafa' }}>
+                                            <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
                                                     <Landmark size={14} strokeWidth={2} /> NGWPL Bank Details
                                                 </div>
                                             </th>
-                                            <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fff', textAlign: 'center' }}>
+                                            <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
                                                     <SquarePen size={14} strokeWidth={2} /> Receiver's Acknowledgement
                                                 </div>
                                             </th>
-                                            <th style={{ border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fff', textAlign: 'center' }}>
+                                            <th style={{ border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
                                                     <SquarePen size={14} strokeWidth={2} /> For {companyName}
                                                 </div>
@@ -1356,15 +1356,16 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                             </td>
                                             <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '16px 8px 8px', verticalAlign: 'top', fontSize: 10 }}>
                                                 <div>Received the above goods / services in good condition.</div>
-                                                <div style={{ borderTop: '1px solid #ccc', margin: '60px 10px 8px' }}></div>
-                                                <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 9, marginTop: 6 }}>(Signature &amp; Company Seal)</div>
+                                                <div style={{ borderTop: '1px solid #ccc', margin: '75px 10px 8px' }}></div>
+                                                <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 10, marginTop: 6 }}>(Signature &amp; Company Seal)</div>
                                             </td>
                                             <td style={{ border: 'none', padding: '2px 8px 8px', textAlign: 'center', verticalAlign: 'bottom' }}>
                                                 <div style={{ height: 55, marginTop: 15, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
                                                     {sigUrl && <img src={sigUrl} alt="Signature" style={{ maxHeight: 55, maxWidth: 120 }} />}
                                                     {stampUrl && <img src={stampUrl} alt="Stamp" style={{ maxHeight: 55, maxWidth: 55 }} />}
                                                 </div>
-                                                <div style={{ borderTop: '1px solid #ccc', marginTop: 20, paddingTop: 4, fontWeight: 700, width: '60%', marginLeft: 'auto', marginRight: 'auto' }}>Auth. Sign.</div>
+                                                <div style={{ borderTop: '1px solid #ccc', margin: '35px 10px 8px' }}></div>
+                                                <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 10, marginTop: 6 }}>Authorized Signatory.</div>
                                             </td>
                                         </tr>
                                     </tbody>
