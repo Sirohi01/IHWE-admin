@@ -878,9 +878,9 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
             <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
                 <thead>
                     <tr style={{ background: '#0d1f3c', color: '#fff', textTransform: 'uppercase' }}>
-                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', width: '33%', background: '#0d1f3c', color: '#fff', fontWeight: 'bold', fontSize: 10 }}>NGWPL Bank Details</th>
-                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', width: '33%', background: '#0d1f3c', color: '#fff', fontWeight: 'bold', fontSize: 10 }}>Client Signature</th>
-                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', width: '34%', background: '#0d1f3c', color: '#fff', fontWeight: 'bold', fontSize: 10 }}>For {companyName}</th>
+                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', width: '33%', background: '#0d1f3c', color: '#fff', fontWeight: 'bold', fontSize: 10, textAlign: 'center' }}>NGWPL Bank Details</th>
+                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', width: '33%', background: '#0d1f3c', color: '#fff', fontWeight: 'bold', fontSize: 10, textAlign: 'center' }}>Client Signature</th>
+                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', width: '34%', background: '#0d1f3c', color: '#fff', fontWeight: 'bold', fontSize: 10, textAlign: 'center' }}>For {companyName}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1476,9 +1476,9 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                             <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
                                 <thead>
                                     <tr style={{ background: '#0d1f3c', color: '#fff', textTransform: 'uppercase' }}>
-                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', width: '33%', background: '#0d1f3c', color: '#fff', fontWeight: 'bold', fontSize: 10 }}>NGWPL Bank Details</th>
-                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', width: '33%', background: '#0d1f3c', color: '#fff', fontWeight: 'bold', fontSize: 10 }}>Client Signature</th>
-                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', width: '34%', background: '#0d1f3c', color: '#fff', fontWeight: 'bold', fontSize: 10 }}>For {companyName}</th>
+                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', width: '33%', background: '#0d1f3c', color: '#fff', fontWeight: 'bold', fontSize: 10, textAlign: 'center' }}>NGWPL Bank Details</th>
+                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', width: '33%', background: '#0d1f3c', color: '#fff', fontWeight: 'bold', fontSize: 10, textAlign: 'center' }}>Client Signature</th>
+                                        <th style={{ border: '1px solid #0d1f3c', padding: '3px 2px', width: '34%', background: '#0d1f3c', color: '#fff', fontWeight: 'bold', fontSize: 10, textAlign: 'center' }}>For {companyName}</th>
                                     </tr>
                                 </thead>
                                 <tbody>

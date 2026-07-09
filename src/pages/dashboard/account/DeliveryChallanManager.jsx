@@ -1205,12 +1205,29 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, copyLabel = DEFA
           <table className="challan-remarks-table" style={{ width: "100%", borderCollapse: "collapse", marginBottom: 8 }}>
             <tbody>
               <tr>
-                <td style={{ ...td, fontWeight: 800, width: "16%", background: "#fafafa" }}>Special Remark:</td>
-                <td style={{ ...td, height: 24 }}>{challan.remarks || "-"}</td>
-              </tr>
-              <tr>
-                <td style={{ ...td, fontWeight: 800, background: "#fafafa" }}>Terms and Conditions:</td>
-                <td style={{ ...td }}>{challan.terms || "Goods/material received in good condition. All disputes are subject to Delhi jurisdiction."}</td>
+                <td style={{ ...td, width: '50%', verticalAlign: 'top', background: '#fafafa' }}>
+                    <div style={{ fontWeight: 800, marginBottom: 4 }}>Terms and Conditions:</div>
+                    <div style={{ marginLeft: 4 }}>
+                        <div>1. Goods once delivered will not be taken back.</div>
+                        <div>2. Please check the goods in presence of our delivery executive.</div>
+                        <div>3. Any discrepancy should be reported within 24 hours.</div>
+                        <div>4. Goods are delivered in good condition.</div>
+                        <div>5. Subject to Delhi Jurisdiction only.</div>
+                    </div>
+                </td>
+                <td style={{ ...td, width: '50%', verticalAlign: 'top', background: '#fafafa' }}>
+                    <div style={{ fontWeight: 800, marginBottom: 4 }}>Delivery Notes:</div>
+                    <div style={{ marginLeft: 4 }}>
+                        <div>1. Goods delivered as per Purchase Order.</div>
+                        <div>2. For any queries, please contact our office.</div>
+                    </div>
+                    {challan.remarks && (
+                        <>
+                            <div style={{ fontWeight: 800, marginTop: 8, marginBottom: 4 }}>Special Remark:</div>
+                            <div style={{ marginLeft: 4 }}>{challan.remarks}</div>
+                        </>
+                    )}
+                </td>
               </tr>
             </tbody>
           </table>
