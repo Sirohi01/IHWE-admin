@@ -95,10 +95,10 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
         <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', marginBottom: 4, color: NAVY, textTransform: 'uppercase' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', marginTop: 0, marginBottom: 2, color: NAVY, textTransform: 'uppercase' }}>
         <span aria-hidden="true" />
-        <div style={{ fontWeight: 400, fontSize: 18 }}>DEBIT NOTE</div>
-        <div style={{ justifySelf: 'end', fontWeight: 700, fontSize: 11 }}>ORIGINAL COPY</div>
+        <div style={{ fontWeight: 400, fontSize: 18, lineHeight: 1 }}>DEBIT NOTE</div>
+        <div style={{ justifySelf: 'end', fontWeight: 700, fontSize: 11, lineHeight: 1 }}>ORIGINAL COPY</div>
       </div>
 
       {/* Billed To + Debit Note Details + Reason */}
@@ -132,8 +132,6 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
                   {detailRow('Debit Note Date', formatDate(note.debit_note_date))}
                   {detailRow('Original Invoice No.', firstAllocation?.invoiceNo)}
                   {detailRow('Original Invoice Date', formatDate(firstAllocation?.invoiceDate))}
-                  {detailRow('Proforma Invoice No.', note.proforma_invoice_no)}
-                  {detailRow('Event / Project Name', 'IHWE 2026 - 9th International Health & Wellness Expo')}
                   {detailRow('Place of Supply', PLACE_OF_SUPPLY)}
                 </tbody>
               </table>
@@ -256,10 +254,10 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
             <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'center' }}>Adjustment Type</td>
           </tr>
           <tr>
-            <td style={{ border: '1px solid #ccc', padding: '6px 8px' }} />
-            <td style={{ border: '1px solid #ccc', padding: '6px 8px', textAlign: 'center' }}>{firstAllocation?.invoiceNo || '—'}</td>
-            <td style={{ border: '1px solid #ccc', padding: '6px 8px', textAlign: 'center' }}>{formatDate(firstAllocation?.invoiceDate)}</td>
-            <td style={{ border: '1px solid #ccc', padding: '6px 8px', textAlign: 'center' }}>Against Invoice</td>
+            <td style={{ border: '1px solid #ccc', padding: '4px 8px' }} />
+            <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'center' }}>{firstAllocation?.invoiceNo || '—'}</td>
+            <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'center' }}>{formatDate(firstAllocation?.invoiceDate)}</td>
+            <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'center' }}>Against Invoice</td>
           </tr>
         </tbody>
       </table>

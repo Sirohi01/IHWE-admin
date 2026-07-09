@@ -145,10 +145,10 @@ const CreditNotePrintTemplate = ({ note, company, settings }) => {
         <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', marginBottom: 4, color: NAVY, textTransform: 'uppercase' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', marginTop: 0, marginBottom: 2, color: NAVY, textTransform: 'uppercase' }}>
         <span aria-hidden="true" />
-        <div style={{ fontWeight: 400, fontSize: 18 }}>CREDIT NOTE</div>
-        <div style={{ justifySelf: 'end', fontWeight: 700, fontSize: 11 }}>ORIGINAL COPY</div>
+        <div style={{ fontWeight: 400, fontSize: 18, lineHeight: 1 }}>CREDIT NOTE</div>
+        <div style={{ justifySelf: 'end', fontWeight: 700, fontSize: 11, lineHeight: 1 }}>ORIGINAL COPY</div>
       </div>
 
       {/* Billed To + Credit Note Details + Reason */}
@@ -182,8 +182,6 @@ const CreditNotePrintTemplate = ({ note, company, settings }) => {
                   {detailRow('Credit Note Date', formatDate(note.credit_note_date))}
                   {detailRow('Original Invoice No.', note.reference_invoice_no)}
                   {detailRow('Original Invoice Date', formatDate(note.invoice_date))}
-                  {detailRow('Proforma Invoice No.', note.est_no)}
-                  {detailRow('Event / Project Name', note.event)}
                   {detailRow('Place of Supply', PLACE_OF_SUPPLY)}
                 </tbody>
               </table>
@@ -315,10 +313,10 @@ const CreditNotePrintTemplate = ({ note, company, settings }) => {
             <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'center' }}>Adjustment Type</td>
           </tr>
           <tr>
-            <td style={{ border: '1px solid #ccc', padding: '6px 8px' }} />
-            <td style={{ border: '1px solid #ccc', padding: '6px 8px', textAlign: 'center' }}>{note.reference_invoice_no || '—'}</td>
-            <td style={{ border: '1px solid #ccc', padding: '6px 8px', textAlign: 'center' }}>{formatDate(note.invoice_date)}</td>
-            <td style={{ border: '1px solid #ccc', padding: '6px 8px', textAlign: 'center' }}>{note.adjustment_type || 'Against Invoice'}</td>
+            <td style={{ border: '1px solid #ccc', padding: '4px 8px' }} />
+            <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'center' }}>{note.reference_invoice_no || '—'}</td>
+            <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'center' }}>{formatDate(note.invoice_date)}</td>
+            <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'center' }}>{note.adjustment_type || 'Against Invoice'}</td>
           </tr>
         </tbody>
       </table>
