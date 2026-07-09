@@ -1,0 +1,76 @@
+@@ -93,6 +93,75 @@
+     "Bharat",
+   ]);
+   const eventGstNo = matchedEstimate?.event_gst_no || PROFORMA_EVENT_GST_NO;
++
++  useEffect(() => {
++    // Match estimate using est_no (since your route uses est_no like "NGW/25-26/EST/009")
++    if (perInvoices && perInvoices.length > 0) {
++      const match = perInvoices.find((e) => e._id === id);
++      setMatchedPerIvo(match || null);
++    }
++  }, [id, perInvoices]);
++
++  useEffect(() => {
++    // Fetch estimates only when we have the companyId from the PROFORMA Invoice
++    if (matchedPerIvo?.companyId) {
++      dispatch(fetchEstimates(matchedPerIvo.companyId));
++    }
++  }, [matchedPerIvo?.companyId, dispatch]);
++
++  useEffect(() => {
++    if (estimates && estimates.length > 0 && matchedPerIvo) {
++      const match = estimates.find((e) => e.est_no === matchedPerIvo?.est_no);
++      setMatchedEstimate(match || null);
++    }
++  }, [matchedPerIvo, estimates]);
++
++  useEffect(() => {
++    const fetchCompanyData = async () => {
++      const companyId = matchedEstimate?.companyId || matchedPerIvo?.companyId;
++      if (!companyId) return;
++
++      if (companies && companies.length > 0) {
++        const matchedCompany = companies.find((c) => c._id === companyId);
++        if (matchedCompany) {
++          setCompany(matchedCompany);
++          return;
++        }
++      }
++
++      try {
++        const response = await api.get(`/api/exhibitor-registration/${companyId}`);
++        const exhibitorData = response.data?.data;
++        if (exhibitorData) {
++          setCompany({
++            ...exhibitorData,
++            companyName: exhibitorData.exhibitorName,
++            contacts: [{
++              title: exhibitorData.contact1?.title || "",
++              firstName: exhibitorData.contact1?.firstName || "",
++              surname: exhibitorData.contact1?.lastName || "",
++              designation: exhibitorData.contact1?.designation || "",
++              email: exhibitorData.contact1?.email || exhibitorData.email || "",
++              mobile: exhibitorData.contact1?.mobile || exhibitorData.mobile || exhibitorData.landlineNo || ""
++            }]
++          });
++        }
++      } catch (err) {
++        console.error("Failed to fetch company details", err);
++      }
++    };
++    fetchCompanyData();
++  }, [matchedEstimate, matchedPerIvo, companies]);
++
++  const handleprint = useReactToPrint({
++    contentRef: sameRef, // Changed from contentRef to content
++    documentTitle: "invoice",
++  });
++
++  return (
++    <>
++      <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-inter animate-fadeIn">
++        {/* <div className="w-full h-auto flex justify-between bg-white px-5 py-0.5 ">
+           <h1 className="text-xl font-norma text-gray-600">
+             ACCOUNT SECTION | Proforma Invoice
+           </h1>
