@@ -59,6 +59,9 @@ const Settings = () => {
     const [companyAddress, setCompanyAddress] = useState("12/29, Site-II, Loni Road, Industrial Area, Mohan Nagar, Ghaziabad, India");
     const [companyGst, setCompanyGst] = useState("");
     const [companyCin, setCompanyCin] = useState("");
+    const [receiptContactPhone, setReceiptContactPhone] = useState("+91 96549 00525");
+    const [receiptContactEmail, setReceiptContactEmail] = useState("info@namogangewellness.com");
+    const [receiptContactWebsite, setReceiptContactWebsite] = useState("www.namogangewellness.com");
     const [fullPaymentDiscount, setFullPaymentDiscount] = useState(5);
     const [availableTdsRates, setAvailableTdsRates] = useState([1, 2, 10]);
     const [signatureFile, setSignatureFile] = useState(null);
@@ -150,6 +153,7 @@ const Settings = () => {
                     emails, phones, addresses, mapIframe: savedIframe,
                     marqueeText: savedMarquee, topbarDate: savedDate, supportDeskText: savedSupportDeskText,
                     companyName: sName, companyAddress: sAddress, companyGst: sGst, companyCin: sCin,
+                    contactPhone: sContactPhone, contactEmail: sContactEmail, contactWebsite: sContactWebsite,
                     fullPaymentDiscount: sDisc, availableTdsRates: sTds, authorizedSignature, companyStamp,
                     showBrochurePopUp: sShowPopUp, brochurePopUpDelay: sPopUpDelay, showGovtPmsScheme: sShowPms,
                     downloadBrochurePdf
@@ -198,6 +202,9 @@ const Settings = () => {
                 if (sAddress) setCompanyAddress(sAddress);
                 if (sGst) setCompanyGst(sGst);
                 if (sCin) setCompanyCin(sCin);
+                if (sContactPhone) setReceiptContactPhone(sContactPhone);
+                if (sContactEmail) setReceiptContactEmail(sContactEmail);
+                if (sContactWebsite) setReceiptContactWebsite(sContactWebsite);
                 if (sDisc !== undefined) setFullPaymentDiscount(sDisc);
                 if (sTds) setAvailableTdsRates(sTds);
                 if (authorizedSignature) setSignaturePreview(`${SERVER_URL}${authorizedSignature}`);
@@ -297,6 +304,9 @@ const Settings = () => {
             formData.append('companyAddress', companyAddress);
             formData.append('companyGst', companyGst);
             formData.append('companyCin', companyCin);
+            formData.append('contactPhone', receiptContactPhone);
+            formData.append('contactEmail', receiptContactEmail);
+            formData.append('contactWebsite', receiptContactWebsite);
             formData.append('fullPaymentDiscount', fullPaymentDiscount);
             formData.append('availableTdsRates', JSON.stringify(availableTdsRates));
             if (signatureFile) formData.append('authorizedSignature', signatureFile);
@@ -955,6 +965,36 @@ const Settings = () => {
                                         className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d] font-mono"
                                     />
                                 </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 mt-3">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Contact Phone</label>
+                                    <input
+                                        type="text"
+                                        value={receiptContactPhone}
+                                        onChange={(e) => setReceiptContactPhone(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Contact Email</label>
+                                    <input
+                                        type="email"
+                                        value={receiptContactEmail}
+                                        onChange={(e) => setReceiptContactEmail(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-3">
+                                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Contact Website</label>
+                                <input
+                                    type="text"
+                                    value={receiptContactWebsite}
+                                    onChange={(e) => setReceiptContactWebsite(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                />
                             </div>
 
                             <div className="pt-2">
