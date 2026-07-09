@@ -71,14 +71,17 @@ const WhatsAppIcon = () => (
 );
 
 const FooterBlock = () => (
-  <div style={{ position: 'relative', height: 62, overflow: 'hidden', border: '1px solid #ccc' }}>
+  <div className="avoid-break" style={{ position: 'relative', height: 82, overflow: 'hidden', border: '1px solid #ccc', borderTop: 'none' }}>
     <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 34, background: NAVY, zIndex: 0 }} />
-    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, fontSize: 10, fontWeight: 600, color: NAVY, zIndex: 2 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Phone size={12} /><WhatsAppIcon /> +91 96549 00525</div>
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, fontSize: 10, fontWeight: 600, color: NAVY, zIndex: 2, background: '#fff' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><WhatsAppIcon /> +91 96549 00525</div>
       <div style={{ width: 1, height: 12, background: '#ccc' }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Mail size={12} /> info@namogangewellness.com</div>
       <div style={{ width: 1, height: 12, background: '#ccc' }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Globe size={12} /> www.namogangewellness.com</div>
+    </div>
+    <div style={{ position: 'absolute', top: 28, left: 0, right: 0, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#666', zIndex: 2, background: '#fff' }}>
+      <span><b style={{ color: '#333' }}>Note:</b> Applicable TDS, if deducted, must be supported with TDS certificate / Form 16A.</span>
     </div>
     <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10.5, zIndex: 2 }}>
       <span>This is a computer generated document and does not require a physical signature.</span>
@@ -145,10 +148,10 @@ const CreditNotePrintTemplate = ({ note, company, settings }) => {
         <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', marginBottom: 4, color: NAVY, textTransform: 'uppercase' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', marginTop: 0, marginBottom: 2, color: NAVY, textTransform: 'uppercase' }}>
         <span aria-hidden="true" />
-        <div style={{ fontWeight: 400, fontSize: 18 }}>CREDIT NOTE</div>
-        <div style={{ justifySelf: 'end', fontWeight: 700, fontSize: 11 }}>ORIGINAL COPY</div>
+        <div style={{ fontWeight: 400, fontSize: 18, lineHeight: 1 }}>CREDIT NOTE</div>
+        <div style={{ justifySelf: 'end', fontWeight: 700, fontSize: 11, lineHeight: 1 }}>ORIGINAL COPY</div>
       </div>
 
       {/* Billed To + Credit Note Details + Reason */}
@@ -182,8 +185,6 @@ const CreditNotePrintTemplate = ({ note, company, settings }) => {
                   {detailRow('Credit Note Date', formatDate(note.credit_note_date))}
                   {detailRow('Original Invoice No.', note.reference_invoice_no)}
                   {detailRow('Original Invoice Date', formatDate(note.invoice_date))}
-                  {detailRow('Proforma Invoice No.', note.est_no)}
-                  {detailRow('Event / Project Name', note.event)}
                   {detailRow('Place of Supply', PLACE_OF_SUPPLY)}
                 </tbody>
               </table>
@@ -315,10 +316,10 @@ const CreditNotePrintTemplate = ({ note, company, settings }) => {
             <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'center' }}>Adjustment Type</td>
           </tr>
           <tr>
-            <td style={{ border: '1px solid #ccc', padding: '6px 8px' }} />
-            <td style={{ border: '1px solid #ccc', padding: '6px 8px', textAlign: 'center' }}>{note.reference_invoice_no || '—'}</td>
-            <td style={{ border: '1px solid #ccc', padding: '6px 8px', textAlign: 'center' }}>{formatDate(note.invoice_date)}</td>
-            <td style={{ border: '1px solid #ccc', padding: '6px 8px', textAlign: 'center' }}>{note.adjustment_type || 'Against Invoice'}</td>
+            <td style={{ border: '1px solid #ccc', padding: '4px 8px' }} />
+            <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'center' }}>{note.reference_invoice_no || '—'}</td>
+            <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'center' }}>{formatDate(note.invoice_date)}</td>
+            <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'center' }}>{note.adjustment_type || 'Against Invoice'}</td>
           </tr>
         </tbody>
       </table>
@@ -340,16 +341,33 @@ const CreditNotePrintTemplate = ({ note, company, settings }) => {
         </tbody>
       </table>
 
-      {/* Prepared By / Reviewed By / Authorized Signatory */}
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 4, border: '1px solid #ccc' }}>
+      <table className="avoid-break" style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ccc' }}>
+        <thead>
+          <tr>
+            <th style={{ width: '35%', border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '4px 6px', background: '#f8fafc', textAlign: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: NAVY, fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
+                <SquarePen size={14} strokeWidth={2} /> Prepared By
+              </div>
+            </th>
+            <th style={{ width: '35%', border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '4px 6px', background: '#f8fafc', textAlign: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: NAVY, fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
+                <SquarePen size={14} strokeWidth={2} /> Reviewed By
+              </div>
+            </th>
+            <th style={{ width: '30%', border: 'none', borderBottom: '1px solid #ccc', padding: '4px 6px', background: '#f8fafc', textAlign: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: NAVY, fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
+                <SquarePen size={14} strokeWidth={2} /> For {settings?.companyName || 'Namo Gange Wellness Pvt. Ltd.'}
+              </div>
+            </th>
+          </tr>
+        </thead>
         <tbody>
           <tr>
             {[
-              { label: 'Prepared By', ...asNamedPerson(note.preparedBy), date: note.credit_note_date },
-              { label: 'Reviewed By', ...asNamedPerson(note.reviewedBy), date: note.credit_note_date },
-            ].map((col, i) => (
-              <td key={col.label} style={{ width: '25%', border: 'none', borderRight: '1px solid #ccc', padding: '8px', verticalAlign: 'top', fontSize: 10 }}>
-                <div style={{ fontWeight: 700, marginBottom: 4 }}>{col.label}</div>
+              { label: 'Prepared By', name: note.preparedBy?.name, designation: note.preparedBy?.designation, date: note.credit_note_date },
+              { label: 'Reviewed By', name: note.reviewedBy?.name, designation: note.reviewedBy?.designation, date: note.credit_note_date },
+            ].map((col, idx) => (
+              <td key={idx} style={{ width: '35%', border: 'none', borderRight: '1px solid #ccc', padding: '8px', verticalAlign: 'top', fontSize: 10 }}>
                 <table style={{ borderCollapse: 'collapse', border: 'none', width: '100%', lineHeight: 1.5 }}>
                   <tbody>
                     {detailRow('Name', col.name)}
@@ -360,21 +378,16 @@ const CreditNotePrintTemplate = ({ note, company, settings }) => {
                 <div style={{ borderTop: '1px solid #ccc', marginTop: 40, paddingTop: 4, textAlign: 'center', color: '#888', fontStyle: 'italic', fontSize: 9 }}>(Signature)</div>
               </td>
             ))}
-            <td style={{ width: '50%', border: 'none', padding: '8px', verticalAlign: 'top', fontSize: 10 }}>
-              <div style={{ fontWeight: 700, marginBottom: 4 }}>Authorized Signatory</div>
+            <td style={{ width: '30%', border: 'none', padding: '2px 8px 8px', textAlign: 'center', verticalAlign: 'bottom' }}>
               <div style={{ height: 55, marginTop: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
                 {sigUrl && <img src={sigUrl} alt="Signature" style={{ maxHeight: 55, maxWidth: 120 }} />}
                 {stampUrl && <img src={stampUrl} alt="Stamp" style={{ maxHeight: 55, maxWidth: 55 }} />}
               </div>
-              <div style={{ borderTop: '1px solid #ccc', marginTop: 20, paddingTop: 4, fontWeight: 700, width: '60%', marginLeft: 'auto', marginRight: 'auto', textAlign: 'center' }}>Auth. Sign.</div>
+              <div style={{ borderTop: '1px solid #ccc', marginTop: 20, paddingTop: 4, textAlign: 'center', color: '#888', fontStyle: 'italic', fontSize: 9, width: '60%', marginLeft: 'auto', marginRight: 'auto' }}>(Authorized Signatory)</div>
             </td>
           </tr>
         </tbody>
       </table>
-
-      <div style={{ textAlign: 'center', fontSize: 10, color: '#666', marginBottom: 8 }}>
-        <b>Note:</b> Applicable TDS, if deducted, must be supported with TDS certificate / Form 16A.
-      </div>
 
       <FooterBlock />
     </div>
