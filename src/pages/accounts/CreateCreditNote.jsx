@@ -1,19 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, UploadCloud, Plus, Trash2, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import api from '../../lib/api';
 import toast from 'react-hot-toast';
+import { getCurrentUserName, getCurrentUsername } from '../../utils/currentUser';
 
 const CreateCreditNote = () => {
     const navigate = useNavigate();
     const { id } = useParams();
+    const [searchParams] = useSearchParams();
+    const editId = searchParams.get('edit');
+    const isEdit = Boolean(editId);
 
     const [loading, setLoading] = useState(true);
     const [companyInfo, setCompanyInfo] = useState(null);
     const [financials, setFinancials] = useState(null);
 
     // Form States
-    const [creditNoteType, setCreditNoteType] = useState('Additional Charges');
+    const [creditNoteType, setCreditNoteType] = useState('Discount Adjustment');
     const [creditNoteDate, setCreditNoteDate] = useState(new Date().toISOString().split('T')[0]);
     const [creditNoteNo, setCreditNoteNo] = useState('Auto-generating...');
     const [referenceInvoice, setReferenceInvoice] = useState('');
@@ -24,9 +28,15 @@ const CreateCreditNote = () => {
     const [gstin, setGstin] = useState('');
     const [remarks, setRemarks] = useState('');
     const [attachment, setAttachment] = useState(null);
+    const [adjustmentType, setAdjustmentType] = useState('Against Invoice');
+    const [tdsAmount, setTdsAmount] = useState(0);
+    const [preparedByName, setPreparedByName] = useState('');
+    const [preparedByDesignation, setPreparedByDesignation] = useState('');
+    const [reviewedByName, setReviewedByName] = useState('');
+    const [reviewedByDesignation, setReviewedByDesignation] = useState('');
 
     const [items, setItems] = useState([
-        { id: 1, particular: '', qty: 1, rate: 0, amount: 0 }
+        { id: 1, particular: '', hsn: '', qty: 1, unit: 'Nos', rate: 0, amount: 0, gstPct: '18', gstAmt: 0, total: 0 }
     ]);
 
     const [invoices, setInvoices] = useState([]);
@@ -74,7 +84,7 @@ const CreateCreditNote = () => {
                 setAllInvoicesForDropdown(rawCompanyInvs);
 
                 // Map to table format
-                const companyInvs = rawCompanyInvs.map(inv => ({
+                let companyInvs = rawCompanyInvs.map(inv => ({
                     _id: inv._id,
                     invoice_no: inv.invoice_no,
                     invoice_date: inv.invoice_date || inv.added,
@@ -83,13 +93,66 @@ const CreateCreditNote = () => {
                     selected: false,
                     apply_credit: 0
                 }));
-                setInvoices(companyInvs);
 
-                // ── Auto-generate Credit Note number ──────────────────
-                const existingCNs = cnCountRes.data?.data || cnCountRes.data || [];
-                const count = Array.isArray(existingCNs) ? existingCNs.length + 1 : 1;
-                const yr = new Date().getFullYear();
-                setCreditNoteNo(`CN-${yr}-${String(count).padStart(5, '0')}`);
+                if (editId) {
+                    // ── Editing an existing credit note: load its saved data ──
+                    const existingRes = await api.get(`/api/creditnotes/${editId}`);
+                    const note = existingRes.data?.data || existingRes.data;
+                    if (note) {
+                        setCreditNoteType(note.credit_note_type || 'Discount Adjustment');
+                        setCreditNoteDate((note.credit_note_date || '').slice(0, 10) || new Date().toISOString().split('T')[0]);
+                        setCreditNoteNo(note.create_note_no || '');
+                        setReferenceInvoice(note.reference_invoice_no || '');
+                        setReferenceInvoiceDate((note.invoice_date || '').slice(0, 10) || '');
+                        setReason(note.reason || '');
+                        setEvent(note.event || event);
+                        setHallStall(note.hall_stall || hallStall);
+                        setGstin(note.gstin || '');
+                        setRemarks(note.remarks || '');
+                        setAdjustmentType(note.adjustment_type || 'Against Invoice');
+                        setTdsAmount(note.tdsAmount || 0);
+                        // Only apply the note's own saved values when it actually has them —
+                        // older notes saved before this field existed leave these untouched
+                        // so the auto-fill effect below can fill them from the logged-in
+                        // admin's profile instead of showing permanently blank fields.
+                        if (note.preparedBy?.name) setPreparedByName(note.preparedBy.name);
+                        if (note.preparedBy?.designation) setPreparedByDesignation(note.preparedBy.designation);
+                        if (note.reviewedBy?.name) setReviewedByName(note.reviewedBy.name);
+                        if (note.reviewedBy?.designation) setReviewedByDesignation(note.reviewedBy.designation);
+
+                        if (note.items?.length) {
+                            setItems(note.items.map((it, idx) => ({
+                                id: it._id || Date.now() + idx,
+                                particular: it.item || '',
+                                hsn: it.hsn || '',
+                                qty: it.quantity || 1,
+                                unit: it.unit || 'Nos',
+                                rate: it.rate != null ? it.rate : it.cn_amount,
+                                amount: it.taxableValue != null ? it.taxableValue : (it.rate != null ? it.rate * (it.quantity || 1) : it.cn_amount * (it.quantity || 1)),
+                                gstPct: (it.gstPct || '18%').replace('%', ''),
+                                gstAmt: it.gstAmount || 0,
+                                total: it.total || 0,
+                                area: it.area || '',
+                                size: it.size || '',
+                                discountPct: it.discountPct,
+                            })));
+                        }
+
+                        const appliedByInvoiceId = {};
+                        (note.adjusted_invoices || []).forEach((a) => { appliedByInvoiceId[a.invoice_id] = a.applied_credit; });
+                        companyInvs = companyInvs.map(inv => appliedByInvoiceId[inv._id] != null
+                            ? { ...inv, selected: true, apply_credit: appliedByInvoiceId[inv._id] }
+                            : inv);
+                    }
+                } else {
+                    // ── Auto-generate Credit Note number for a brand new note ──
+                    const existingCNs = cnCountRes.data?.data || cnCountRes.data || [];
+                    const count = Array.isArray(existingCNs) ? existingCNs.length + 1 : 1;
+                    const yr = new Date().getFullYear();
+                    setCreditNoteNo(`CN-${yr}-${String(count).padStart(5, '0')}`);
+                }
+
+                setInvoices(companyInvs);
 
             } catch (err) {
                 console.error("Failed to fetch data", err);
@@ -99,7 +162,34 @@ const CreateCreditNote = () => {
             }
         };
         fetchData();
-    }, [id, navigate]);
+    }, [id, editId, navigate]);
+
+    // Prepared By / Reviewed By auto-fill from the logged-in admin's own profile
+    // (designation + their HOD's name/designation) — editable afterwards. Runs for
+    // both new notes and edits of older notes that never had these fields saved;
+    // every set-call below uses the "only fill if still empty" pattern so a note's
+    // own saved values (loaded above, when present) always take priority.
+    useEffect(() => {
+        // Name is always available from the login payload — set it immediately so
+        // it's never blank even if the enrichment fetch below fails or 404s.
+        setPreparedByName(prev => prev || getCurrentUserName());
+
+        const username = getCurrentUsername();
+        if (!username) return;
+        api.get(`/api/admin/by-username/${encodeURIComponent(username)}`)
+            .then(res => {
+                const user = res.data?.data;
+                if (!user) {
+                    console.warn('Prepared By auto-fill: no admin user found for username', username);
+                    return;
+                }
+                setPreparedByName(prev => prev || user.fullName || '');
+                setPreparedByDesignation(prev => prev || user.designation || '');
+                setReviewedByName(prev => prev || user.hodName || user.reportingToName || '');
+                setReviewedByDesignation(prev => prev || user.hodDesignation || user.reportingToDesignation || '');
+            })
+            .catch((err) => console.warn('Prepared By auto-fill failed', err));
+    }, []);
 
     // ── Derived values ────────────────────────────────────────────────
     const subTotal             = items.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
@@ -131,13 +221,17 @@ const CreateCreditNote = () => {
     const pagedInvoices  = invoices.slice(invStart, invStart + INV_PER_PAGE);
 
     // ── Item handlers ─────────────────────────────────────────────────
-    const handleAddItem    = () => setItems([...items, { id: Date.now(), particular: '', qty: 1, rate: 0, amount: 0 }]);
+    const handleAddItem    = () => setItems([...items, { id: Date.now(), particular: '', hsn: '', qty: 1, unit: 'Nos', rate: 0, amount: 0, gstPct: '18', gstAmt: 0, total: 0 }]);
     const handleRemoveItem = (iid) => setItems(items.filter(i => i.id !== iid));
     const handleItemChange = (iid, field, value) => {
         setItems(items.map(item => {
             if (item.id !== iid) return item;
             const u = { ...item, [field]: value };
-            if (field === 'qty' || field === 'rate') u.amount = (parseFloat(u.qty) || 0) * (parseFloat(u.rate) || 0);
+            if (field === 'qty' || field === 'rate' || field === 'gstPct') {
+                u.amount = (parseFloat(u.qty) || 0) * (parseFloat(u.rate) || 0);
+                u.gstAmt = u.amount * (parseFloat(u.gstPct) || 0) / 100;
+                u.total = u.amount + u.gstAmt;
+            }
             return u;
         }));
     };
@@ -172,19 +266,36 @@ const CreateCreditNote = () => {
 
         // Auto-populate Charge Details items from invoice items
         if (found.items && found.items.length > 0) {
-            const autoItems = found.items.map((item, idx) => ({
-                id: Date.now() + idx,
-                particular: item.description || item.item_name || '',
-                hsn: item.hsn || '',
-                qty: parseFloat(item.qty || item.quantity || 1),
-                unit: item.unit || 'Nos',
-                rate: parseFloat(item.rate || 0),
-                amount: parseFloat(item.amount || item.taxableValue || (item.rate * (item.qty || 1)) || 0),
-                gstPct: item.gstPct || '18',
-                gstAmt: parseFloat(item.gstAmount || 0),
-                total: parseFloat(item.total || 0),
-                fromInvoice: true  // flag to mark auto-populated
-            }));
+            const autoItems = found.items.map((item, idx) => {
+                // Invoice items store the pre-discount price as `amount` and the
+                // post-discount price as `taxableValue` — the printout's "Total"
+                // column shows the taxable value, not a `.total` field (invoice
+                // items don't have one, so reading it always produced ₹0 here).
+                const grossAmount = parseFloat(item.amount || 0);
+                const qty = parseFloat(item.qty || item.quantity || 1);
+                const rate = parseFloat(item.rate || 0);
+                const taxableValue = parseFloat(item.taxableValue ?? item.amount ?? (rate * qty) ?? 0);
+                const discountPct = item.discountPct != null
+                    ? parseFloat(item.discountPct)
+                    : (grossAmount > 0 ? ((grossAmount - taxableValue) / grossAmount) * 100 : 0);
+                const gstAmt = parseFloat(item.gstAmount || 0);
+                return {
+                    id: Date.now() + idx,
+                    particular: item.description || item.item_name || '',
+                    hsn: item.hsn || '',
+                    qty,
+                    unit: item.unit || 'Nos',
+                    rate,
+                    amount: taxableValue,
+                    gstPct: item.gstPct || '18',
+                    gstAmt,
+                    total: taxableValue + gstAmt,
+                    area: item.area || item.stall_area || '',
+                    size: item.size || item.stall_size || '',
+                    discountPct,
+                    fromInvoice: true  // flag to mark auto-populated
+                };
+            });
             setItems(autoItems);
         }
     };
@@ -228,8 +339,30 @@ const CreateCreditNote = () => {
         formData.append('remaining_balance', remainingBalance);
         formData.append('status', totalApplied >= totalCreditNoteValue ? 'Fully Adjusted' : totalApplied > 0 ? 'Partially Adjusted' : 'Draft');
         formData.append('added_by', 'Admin');
-        
-        formData.append('items', JSON.stringify(items.map(item => ({ item: item.particular, quantity: item.qty, rate: item.rate, cn_amount: item.rate, cedit_note_remark: '' }))));
+        formData.append('taxableAmount', subTotal);
+        formData.append('gstAmount', gstAmt);
+        formData.append('totalAmount', totalCreditNoteValue);
+        formData.append('tdsAmount', tdsAmount);
+        formData.append('adjustment_type', adjustmentType);
+        formData.append('preparedBy', JSON.stringify({ name: preparedByName, designation: preparedByDesignation }));
+        formData.append('reviewedBy', JSON.stringify({ name: reviewedByName, designation: reviewedByDesignation }));
+
+        formData.append('items', JSON.stringify(items.map(item => ({
+            item: item.particular,
+            quantity: item.qty,
+            cn_amount: item.rate,
+            cedit_note_remark: '',
+            hsn: item.hsn || '',
+            unit: item.unit || 'Nos',
+            rate: parseFloat(item.rate) || 0,
+            gstPct: `${item.gstPct || 18}%`,
+            gstAmount: item.gstAmt || 0,
+            total: item.total || item.amount,
+            area: item.area || '',
+            size: item.size || '',
+            discountPct: item.discountPct,
+            taxableValue: item.amount,
+        }))));
         formData.append('adjusted_invoices', JSON.stringify(invoices.filter(inv => inv.selected).map(inv => ({
             invoice_id: inv._id, invoice_no: inv.invoice_no, invoice_date: inv.invoice_date,
             invoice_amount: inv.invoice_amount, outstanding: inv.outstanding, applied_credit: inv.apply_credit
@@ -240,14 +373,14 @@ const CreateCreditNote = () => {
         }
 
         try {
-            const res = await api.post('/api/creditnotes', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            if (res.data?.success || res.status === 201) {
-                toast.success('Credit Note Created Successfully');
+            const res = isEdit
+                ? await api.put(`/api/creditnotes/${editId}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+                : await api.post('/api/creditnotes', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            if (res.data?.success || res.status === 201 || res.data?._id) {
+                toast.success(isEdit ? 'Credit Note Updated Successfully' : 'Credit Note Created Successfully');
                 navigate(-1);
             }
-        } catch (error) { toast.error('Failed to create credit note'); console.error(error); }
+        } catch (error) { toast.error(isEdit ? 'Failed to update credit note' : 'Failed to create credit note'); console.error(error); }
     };
 
     if (loading) {
@@ -276,12 +409,12 @@ const CreateCreditNote = () => {
                     </div>
                     <div className="flex items-center gap-2.5">
                         <button onClick={() => navigate(-1)} className="px-4 py-2 bg-white text-slate-700 border border-slate-200 font-bold rounded-lg hover:bg-slate-50 transition-colors text-[13px]">Cancel</button>
-                        <button className="px-4 py-2 bg-white text-blue-600 border border-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-colors text-[13px]">Save Draft</button>
-                        <button onClick={handleSubmit} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors text-[13px]">Save &amp; Send for Approval</button>
+                        {!isEdit && <button className="px-4 py-2 bg-white text-blue-600 border border-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-colors text-[13px]">Save Draft</button>}
+                        <button onClick={handleSubmit} className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors text-[13px]">{isEdit ? 'Save Changes' : 'Save & Send for Approval'}</button>
                     </div>
                 </div>
 
-                <h1 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">Create Credit Note</h1>
+                <h1 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">{isEdit ? 'Edit Credit Note' : 'Create Credit Note'}</h1>
 
                 {/* ── Company Banner ───────────────────────────────── */}
                 <div className="bg-white rounded-xl border border-slate-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] mb-4 px-5 py-3.5 flex items-center justify-between flex-wrap gap-4">
@@ -327,11 +460,13 @@ const CreateCreditNote = () => {
                                 <div>
                                     <label className={labelCls}>Credit Note Type <span className="text-red-500">*</span></label>
                                     <select value={creditNoteType} onChange={e => setCreditNoteType(e.target.value)} className={inputCls}>
-                                        <option value="Additional Charges">Additional Charges</option>
-                                        <option value="Stall Size Reduction">Stall Size Reduction</option>
-                                        <option value="Discount">Discount</option>
-                                        <option value="Booking Cancellation">Booking Cancellation</option>
-                                        <option value="Service Adjustment">Service Adjustment</option>
+                                        <option value="Discount Adjustment">Discount Adjustment</option>
+                                        <option value="Sales Return">Sales Return</option>
+                                        <option value="Rate Difference">Rate Difference</option>
+                                        <option value="Short Supply">Short Supply</option>
+                                        <option value="Service Deficiency">Service Deficiency</option>
+                                        <option value="TDS Adjustment">TDS Adjustment</option>
+                                        <option value="GST Correction">GST Correction</option>
                                         <option value="Other">Other</option>
                                     </select>
                                 </div>
@@ -606,6 +741,41 @@ const CreateCreditNote = () => {
                             </div>
                         </div>
 
+                        {/* Approval & Adjustment Type */}
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-5">
+                            <h3 className="font-extrabold text-slate-800 text-base mb-4">Approval &amp; Adjustment</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label className={labelCls}>Adjustment Type</label>
+                                    <select value={adjustmentType} onChange={e => setAdjustmentType(e.target.value)} className={inputCls}>
+                                        <option value="Against Invoice">Against Invoice</option>
+                                        <option value="Against Proforma">Against Proforma</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className={labelCls}>Prepared By — Name</label>
+                                    <input type="text" value={preparedByName} onChange={e => setPreparedByName(e.target.value)} placeholder="e.g. Vansh Chaudhary" className={inputCls} />
+                                </div>
+                                <div>
+                                    <label className={labelCls}>Prepared By — Designation</label>
+                                    <input type="text" value={preparedByDesignation} onChange={e => setPreparedByDesignation(e.target.value)} placeholder="e.g. Accounts Executive" className={inputCls} />
+                                </div>
+                                <div>
+                                    <label className={labelCls}>Reviewed By — Name</label>
+                                    <input type="text" value={reviewedByName} onChange={e => setReviewedByName(e.target.value)} placeholder="e.g. Neha Singh" className={inputCls} />
+                                </div>
+                                <div>
+                                    <label className={labelCls}>Reviewed By — Designation</label>
+                                    <input type="text" value={reviewedByDesignation} onChange={e => setReviewedByDesignation(e.target.value)} placeholder="e.g. Accounts Manager" className={inputCls} />
+                                </div>
+                                <div>
+                                    <label className={labelCls}>TDS Impact (If Any)</label>
+                                    <input type="number" min="0" value={tdsAmount} onChange={e => setTdsAmount(Math.max(0, parseFloat(e.target.value) || 0))} className={inputCls} />
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Remarks & Attachments */}
                         <div className="bg-white rounded-xl border border-slate-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-5">
                             <div className="grid grid-cols-2 gap-4">
@@ -686,7 +856,7 @@ const CreateCreditNote = () => {
                                 </div>
                                 <div className="flex justify-between text-[12px]">
                                     <span className="font-semibold text-slate-500">Prepared By</span>
-                                    <span className="font-bold text-slate-800">Admin</span>
+                                    <span className="font-bold text-slate-800">{preparedByName || 'Admin'}</span>
                                 </div>
                             </div>
                         </div>

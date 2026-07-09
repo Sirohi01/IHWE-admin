@@ -294,6 +294,8 @@ const PaymentsSummaryReport = lazy(() => import("../pages/accounts/PaymentsSumma
 const InvoicesView = lazy(() => import("../pages/accounts/InvoicesView"));
 const CreditNotesView = lazy(() => import("../pages/accounts/CreditNotesView"));
 const CreateCreditNote = lazy(() => import("../pages/accounts/CreateCreditNote"));
+const CreditNoteView = lazy(() => import("../pages/accounts/CreditNoteView"));
+const DebitNoteViewAccount = lazy(() => import("../pages/accounts/DebitNoteViewAccount"));
 const ImprestView = lazy(() => import("../pages/accounts/ImprestView"));
 const CreateImprestRequest = lazy(() => import("../pages/accounts/CreateImprestRequest"));
 // Sales Tools
@@ -726,6 +728,7 @@ export default function AppRoutes() {
             <Route path="account-debit-notes" element={<DebitNotesView />} />
             <Route path="account-debit-notes/:id" element={<DebitNotesView />} />
             <Route path="create-account-debit-note/:id" element={<CreateAccountDebitNote />} />
+            <Route path="debit-note-view-account/:id" element={<DebitNoteViewAccount />} />
             <Route path="accounts/ar" element={<AccountsReceivableView />} />
             <Route path="accounts/summary-report" element={<PaymentsSummaryReport />} />
             <Route path="accounts/invoices" element={<InvoicesView />} />
@@ -734,6 +737,7 @@ export default function AppRoutes() {
             <Route path="accounts/imprest/create" element={<CreateImprestRequest />} />
             <Route path="dashboard/account/credit-notes/:id" element={<CreditNotesView />} />
             <Route path="dashboard/account/create-credit-note/:id" element={<CreateCreditNote />} />
+            <Route path="credit-note-view/:id" element={<CreditNoteView />} />
             <Route path="/client-overview/:id" element={<ClientOverview1 />} />
             <Route path="/client-contacts/:id" element={<ClientContacts />} />
             <Route path="/add-team-members/:id" element={<AddTeamMembersAdmin />} />

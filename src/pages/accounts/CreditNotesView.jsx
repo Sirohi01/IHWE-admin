@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FileText, Download, Search, Plus, Eye, Filter, CheckCircle2, AlertTriangle, RefreshCcw, Activity, Calendar, BarChart2, FilePlus, ChevronRight, ChevronDown, Building2 } from 'lucide-react';
+import { FileText, Download, Search, Plus, Eye, Filter, CheckCircle2, AlertTriangle, RefreshCcw, Activity, Calendar, BarChart2, FilePlus, ChevronRight, ChevronDown, Building2, SquarePen } from 'lucide-react';
 import api from '../../lib/api';
 import toast from 'react-hot-toast';
 import Select from 'react-select';
@@ -687,6 +687,12 @@ const CreditNotesView = () => {
                                                     </td>
                                                     <td className="py-1 px-2 text-center">
                                                         <div className="flex items-center justify-center gap-1.5">
+                                                            {note._source === 'creditnote' && (
+                                                                <>
+                                                                    <button onClick={() => navigate(`/credit-note-view/${note._id}`)} className="w-6 h-6 flex items-center justify-center text-emerald-600 bg-emerald-50/50 border border-emerald-100 rounded hover:bg-emerald-100 transition-colors" title="View / print credit note"><FileText className="w-3.5 h-3.5" /></button>
+                                                                    <button onClick={() => navigate(`/dashboard/account/create-credit-note/${note.companyId}?edit=${note._id}`)} className="w-6 h-6 flex items-center justify-center text-amber-600 bg-amber-50/50 border border-amber-100 rounded hover:bg-amber-100 transition-colors" title="Edit credit note"><SquarePen className="w-3.5 h-3.5" /></button>
+                                                                </>
+                                                            )}
                                                             <button onClick={() => navigate(`/dashboard/account/client-ledger/${note.companyId}`)} className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors" title="View client ledger"><Eye className="w-3.5 h-3.5" /></button>
                                                         </div>
                                                     </td>

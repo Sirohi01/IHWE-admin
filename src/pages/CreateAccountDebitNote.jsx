@@ -4,7 +4,7 @@ import { FileText, Plus, Trash2, Upload, X, CheckCircle2, Loader2, AlertCircle }
 import api from '../lib/api';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
-import { getCurrentUserName } from '../utils/currentUser';
+import { getCurrentUserName, getCurrentUsername } from '../utils/currentUser';
 
 const warn = (title, text) => Swal.fire({ icon: 'warning', title, text, confirmButtonColor: '#2563eb' });
 
@@ -36,7 +36,11 @@ const CreateAccountDebitNote = () => {
     const [searchParams] = useSearchParams();
     const viewId = searchParams.get('view');
 
-    const readOnly = Boolean(viewId);
+    const isEdit = Boolean(viewId);
+    // Editing an existing debit note is now fully allowed (not just viewing) — kept
+    // as a constant `false` so every `disabled={readOnly}` / `{!readOnly && ...}`
+    // usage below stays enabled without having to touch each one individually.
+    const readOnly = false;
 
     const [loading, setLoading] = useState(true);
     const [context, setContext] = useState(null);
@@ -55,6 +59,11 @@ const CreateAccountDebitNote = () => {
     const [adjustmentCreditNote, setAdjustmentCreditNote] = useState(0);
     const [remarks, setRemarks] = useState('');
     const [attachmentFile, setAttachmentFile] = useState(null);
+    const [proformaInvoiceNo, setProformaInvoiceNo] = useState('');
+    const [preparedByName, setPreparedByName] = useState('');
+    const [preparedByDesignation, setPreparedByDesignation] = useState('');
+    const [reviewedByName, setReviewedByName] = useState('');
+    const [reviewedByDesignation, setReviewedByDesignation] = useState('');
 
     useEffect(() => {
         const fetchAll = async () => {
@@ -77,6 +86,15 @@ const CreateAccountDebitNote = () => {
                         setRemarks(note.remarks || '');
                         setTdsDeduction(note.tdsDeduction || 0);
                         setAdjustmentCreditNote(note.adjustmentCreditNote || 0);
+                        setProformaInvoiceNo(note.proforma_invoice_no || '');
+                        // Only apply the note's own saved values when it actually has them —
+                        // older notes saved before this field existed leave these untouched
+                        // so the auto-fill effect below can fill them from the logged-in
+                        // admin's profile instead of showing permanently blank fields.
+                        if (note.preparedBy?.name) setPreparedByName(note.preparedBy.name);
+                        if (note.preparedBy?.designation) setPreparedByDesignation(note.preparedBy.designation);
+                        if (note.reviewedBy?.name) setReviewedByName(note.reviewedBy.name);
+                        if (note.reviewedBy?.designation) setReviewedByDesignation(note.reviewedBy.designation);
                         setViewedStatus(note.status || 'active');
                         setItems((note.items || []).length ? note.items.map((it) => ({ ...it, id: `${Date.now()}-${Math.random()}` })) : [newItem()]);
                         const map = {};
@@ -96,6 +114,34 @@ const CreateAccountDebitNote = () => {
         };
         fetchAll();
     }, [id, viewId]);
+
+    // Prepared By / Reviewed By auto-fill from the logged-in admin's own profile
+    // (designation + their HOD's name/designation) — editable afterwards. Runs for
+    // both new notes and edits of older notes that never had these fields saved;
+    // every set-call below uses the "only fill if still empty" pattern so a note's
+    // own saved values (loaded above, when present) always take priority.
+    useEffect(() => {
+        // Name is always available from the login payload — set it immediately so
+        // it's never blank even if the enrichment fetch below fails or 404s.
+        setPreparedByName(prev => prev || getCurrentUserName());
+
+        const username = getCurrentUsername();
+        if (!username) return;
+        api.get(`/api/admin/by-username/${encodeURIComponent(username)}`)
+            .then(res => {
+                const user = res.data?.data;
+                if (!user) {
+                    console.warn('Prepared By auto-fill: no admin user found for username', username);
+                    return;
+                }
+                setPreparedByName(prev => prev || user.fullName || '');
+                setPreparedByDesignation(prev => prev || user.designation || '');
+                setReviewedByName(prev => prev || user.hodName || user.reportingToName || '');
+                setReviewedByDesignation(prev => prev || user.hodDesignation || user.reportingToDesignation || '');
+            })
+            .catch((err) => console.warn('Prepared By auto-fill failed', err));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const invoices = useMemo(() => context?.invoices || [], [context]);
     const selectedInvoice = invoices.find((inv) => inv.id === selectedInvoiceId);
@@ -201,6 +247,9 @@ const CreateAccountDebitNote = () => {
                 debitNoteType,
                 reason,
                 clientName: context?.companyInfo?.name || '',
+                proforma_invoice_no: proformaInvoiceNo,
+                preparedBy: { name: preparedByName, designation: preparedByDesignation },
+                reviewedBy: { name: reviewedByName, designation: reviewedByDesignation },
                 items: items.map((it) => ({
                     description: it.description, hsn: it.hsn, qty: it.qty, unit: it.unit,
                     rate: it.rate, amount: it.amount, gstPct: it.gstPct, gstAmount: it.gstAmount, total: it.total,
@@ -217,31 +266,34 @@ const CreateAccountDebitNote = () => {
             };
 
             let res;
+            const url = isEdit ? `/api/account-debit-notes/${viewId}` : '/api/account-debit-notes';
             if (attachmentFile) {
                 const formData = new FormData();
                 Object.entries(payload).forEach(([key, value]) => {
                     formData.append(key, typeof value === 'object' ? JSON.stringify(value) : value);
                 });
                 formData.append('attachment', attachmentFile);
-                res = await api.post('/api/account-debit-notes', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                res = isEdit
+                    ? await api.put(url, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+                    : await api.post(url, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
             } else {
-                res = await api.post('/api/account-debit-notes', payload);
+                res = isEdit ? await api.put(url, payload) : await api.post(url, payload);
             }
 
             if (res.data?.success) {
                 await Swal.fire({
                     icon: 'success',
-                    title: status === 'draft' ? 'Saved as Draft' : 'Debit Note Created',
+                    title: isEdit ? 'Debit Note Updated' : (status === 'draft' ? 'Saved as Draft' : 'Debit Note Created'),
                     text: `${res.data.data?.debit_note_no || debitNoteNo} has been saved successfully.`,
                     timer: 1600,
                     showConfirmButton: false,
                 });
                 navigate(`/account-debit-notes/${id}`);
             } else {
-                Swal.fire({ icon: 'error', title: 'Could Not Save', text: res.data?.message || 'Failed to create debit note.' });
+                Swal.fire({ icon: 'error', title: 'Could Not Save', text: res.data?.message || 'Failed to save debit note.' });
             }
         } catch (err) {
-            Swal.fire({ icon: 'error', title: 'Could Not Save', text: err.response?.data?.message || 'Failed to create debit note.' });
+            Swal.fire({ icon: 'error', title: 'Could Not Save', text: err.response?.data?.message || 'Failed to save debit note.' });
         } finally {
             setSubmitting(false);
         }
@@ -272,17 +324,13 @@ const CreateAccountDebitNote = () => {
                 <span>Accounts</span> / <span>Exhibitor Account</span> / <span className="text-blue-600 font-bold">Debit Notes</span>
             </div>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-3">
-                <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">{readOnly ? 'View Debit Note' : 'Create Debit Note'}</h1>
+                <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">{isEdit ? 'Edit Debit Note' : 'Create Debit Note'}</h1>
                 <div className="flex items-center gap-2">
-                    <button onClick={() => navigate(-1)} className="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50">{readOnly ? 'Back' : 'Cancel'}</button>
-                    {!readOnly && (
-                        <>
-                            <button onClick={() => handleSubmit('draft')} disabled={submitting} className="px-4 py-2 bg-white border border-blue-300 text-blue-600 rounded-lg text-xs font-bold shadow-sm hover:bg-blue-50 disabled:opacity-50">Save Draft</button>
-                            <button onClick={() => handleSubmit('active')} disabled={submitting} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-sm disabled:opacity-50 flex items-center gap-1.5">
-                                {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save &amp; Send for Approval
-                            </button>
-                        </>
-                    )}
+                    <button onClick={() => navigate(-1)} className="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50">Cancel</button>
+                    {!isEdit && <button onClick={() => handleSubmit('draft')} disabled={submitting} className="px-4 py-2 bg-white border border-blue-300 text-blue-600 rounded-lg text-xs font-bold shadow-sm hover:bg-blue-50 disabled:opacity-50">Save Draft</button>}
+                    <button onClick={() => handleSubmit(isEdit ? (viewedStatus || 'active') : 'active')} disabled={submitting} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-sm disabled:opacity-50 flex items-center gap-1.5">
+                        {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />} {isEdit ? 'Save Changes' : 'Save & Send for Approval'}
+                    </button>
                 </div>
             </div>
 
@@ -370,6 +418,33 @@ const CreateAccountDebitNote = () => {
                             <div>
                                 <label className="block text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-1">GSTIN</label>
                                 <div className="w-full border border-slate-200 bg-slate-50 rounded-md px-2.5 py-1.5 text-[12px] text-slate-600">{selectedInvoice?.gstNo || context.companyInfo.gstNo || 'N/A'}</div>
+                            </div>
+                            <div>
+                                <label className="block text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-1">Proforma Invoice No.</label>
+                                <input disabled={readOnly} type="text" value={proformaInvoiceNo} onChange={(e) => setProformaInvoiceNo(e.target.value)} placeholder="e.g. NGW/26-27/PI/031" className="w-full border border-slate-300 rounded-md px-2.5 py-1.5 text-[12px] focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-50" />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="block text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-1">Prepared By — Name</label>
+                                    <input disabled={readOnly} type="text" value={preparedByName} onChange={(e) => setPreparedByName(e.target.value)} placeholder="e.g. Vansh Chaudhary" className="w-full border border-slate-300 rounded-md px-2.5 py-1.5 text-[12px] focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-50" />
+                                </div>
+                                <div>
+                                    <label className="block text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-1">Designation</label>
+                                    <input disabled={readOnly} type="text" value={preparedByDesignation} onChange={(e) => setPreparedByDesignation(e.target.value)} placeholder="e.g. Accounts Executive" className="w-full border border-slate-300 rounded-md px-2.5 py-1.5 text-[12px] focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-50" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="block text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-1">Reviewed By — Name</label>
+                                    <input disabled={readOnly} type="text" value={reviewedByName} onChange={(e) => setReviewedByName(e.target.value)} placeholder="e.g. Neha Singh" className="w-full border border-slate-300 rounded-md px-2.5 py-1.5 text-[12px] focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-50" />
+                                </div>
+                                <div>
+                                    <label className="block text-slate-700 font-bold text-[8px] uppercase tracking-wider mb-1">Designation</label>
+                                    <input disabled={readOnly} type="text" value={reviewedByDesignation} onChange={(e) => setReviewedByDesignation(e.target.value)} placeholder="e.g. Accounts Manager" className="w-full border border-slate-300 rounded-md px-2.5 py-1.5 text-[12px] focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-50" />
+                                </div>
                             </div>
                         </div>
 

@@ -643,7 +643,8 @@ const DebitNotesView = () => {
                                             </td>
                                             <td className="px-2 py-2 align-top">
                                                 <div className="flex items-center justify-center gap-1.5">
-                                                    <button onClick={() => navigate(`/create-account-debit-note/${note.companyId}?view=${note._id}`)} title="View" className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors"><Eye className="w-3.5 h-3.5" /></button>
+                                                    <button onClick={() => navigate(`/debit-note-view-account/${note._id}`)} title="View / print debit note" className="w-6 h-6 flex items-center justify-center text-emerald-600 bg-emerald-50/50 border border-emerald-100 rounded hover:bg-emerald-100 transition-colors"><FileText className="w-3.5 h-3.5" /></button>
+                                                    <button onClick={() => navigate(`/create-account-debit-note/${note.companyId}?view=${note._id}`)} title="Edit" className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors"><Eye className="w-3.5 h-3.5" /></button>
                                                     <button
                                                         title={note.attachmentUrl ? 'Download supporting attachment' : 'No attachment uploaded for this debit note'}
                                                         disabled={!note.attachmentUrl}
