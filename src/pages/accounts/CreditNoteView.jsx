@@ -344,17 +344,17 @@ const CreditNotePrintTemplate = ({ note, company, settings }) => {
       <table className="avoid-break" style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ccc' }}>
         <thead>
           <tr>
-            <th style={{ width: '35%', border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#f8fafc', textAlign: 'center' }}>
+            <th style={{ width: '35%', border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '4px 6px', background: '#f8fafc', textAlign: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: NAVY, fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
                 <SquarePen size={14} strokeWidth={2} /> Prepared By
               </div>
             </th>
-            <th style={{ width: '35%', border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#f8fafc', textAlign: 'center' }}>
+            <th style={{ width: '35%', border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '4px 6px', background: '#f8fafc', textAlign: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: NAVY, fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
                 <SquarePen size={14} strokeWidth={2} /> Reviewed By
               </div>
             </th>
-            <th style={{ width: '30%', border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#f8fafc', textAlign: 'center' }}>
+            <th style={{ width: '30%', border: 'none', borderBottom: '1px solid #ccc', padding: '4px 6px', background: '#f8fafc', textAlign: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: NAVY, fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
                 <SquarePen size={14} strokeWidth={2} /> For {settings?.companyName || 'Namo Gange Wellness Pvt. Ltd.'}
               </div>
