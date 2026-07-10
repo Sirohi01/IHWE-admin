@@ -281,6 +281,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
     const [fetchingCompany, setFetchingCompany] = useState(false);
     const [bankDetails, setBankDetails] = useState(null);
     const [settings, setSettings] = useState(null);
+    const [estimateTerms, setEstimateTerms] = useState(null);
     const [relatedInvoiceStatus, setRelatedInvoiceStatus] = useState({ hasCancelled: false, hasActive: false });
     const [relatedInvoicePoNo, setRelatedInvoicePoNo] = useState('');
 
@@ -310,8 +311,20 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
             }
         };
 
+        const fetchEstimateTerms = async () => {
+            try {
+                const res = await api.get('/api/estimate-terms-config/performa');
+                if (res.data?.success && res.data?.data) {
+                    setEstimateTerms(res.data.data);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
         fetchBankDetails();
         fetchSettings();
+        fetchEstimateTerms();
     }, []);
 
     useEffect(() => {
@@ -950,12 +963,9 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                     }
                     .invoice-title-bar {
                         margin-bottom: 0 !important;
-                        padding-top: 0 !important;
-                        padding-bottom: 0 !important;
                     }
                     .invoice-copy-label {
                         right: 8px !important;
-                        font-size: 8.2px !important;
                         line-height: 1 !important;
                         letter-spacing: -0.4px !important;
                         max-width: 44% !important;
@@ -1279,16 +1289,30 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                         <tr>
                                             <td style={{ width: '60%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
                                                 <div style={{ fontWeight: 700, marginBottom: 2 }}>Terms and Conditions:</div>
-                                                <div>1. Payment must be made in favor of Namo Gange Wellness Pvt. Ltd. via Cheque / DD / RTGS / NEFT / UPI only.</div>
-                                                <div>2. Full payment is due within the stipulated invoice period.</div>
-                                                <div>3. Delay in payment shall attract interest @24% per annum.</div>
-                                                <div>4. Booking / services shall be confirmed only after receipt of payment.</div>
-                                                <div>5. Cancellation or amendments shall be subject to company policy and management approval.</div>
-                                                <div>6. All disputes are subject to Delhi Jurisdiction only.</div>
+                                                <div style={{ whiteSpace: 'pre-wrap' }}>
+                                                    {estimateTerms?.termsAndConditions?.length ? (
+                                                        estimateTerms.termsAndConditions.map((t, i) => <div key={i}>{i + 1}. {t}</div>)
+                                                    ) : (
+                                                        <>
+                                                            <div>1. Payment must be made in favor of Namo Gange Wellness Pvt. Ltd. via Cheque / DD / RTGS / NEFT / UPI only.</div>
+                                                            <div>2. Full payment is due within the stipulated invoice period.</div>
+                                                            <div>3. Delay in payment shall attract interest @24% per annum.</div>
+                                                            <div>4. Booking / services shall be confirmed only after receipt of payment.</div>
+                                                            <div>5. Cancellation or amendments shall be subject to company policy and management approval.</div>
+                                                            <div>6. All disputes are subject to Delhi Jurisdiction only.</div>
+                                                        </>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
                                                 <div style={{ fontWeight: 700, marginBottom: 2 }}>Payment Conditions:</div>
-                                                <div style={{ fontWeight: 700 }}>1. 100% Advance Payment.</div>
+                                                <div style={{ whiteSpace: 'pre-wrap' }}>
+                                                    {estimateTerms?.paymentConditions?.length ? (
+                                                        estimateTerms.paymentConditions.map((t, i) => <div key={i} style={{ fontWeight: 700 }}>{i + 1}. {t}</div>)
+                                                    ) : (
+                                                        <div style={{ fontWeight: 700 }}>1. 100% Advance Payment.</div>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     </tbody>

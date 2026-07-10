@@ -728,11 +728,11 @@ const forceDelhiGstin = (value) => {
   return /^\d{2}[0-9A-Z]{13}$/.test(text) ? `07${text.slice(2)}` : text;
 };
 
-const DeliveryChallanPrint = ({ challan, settings, bankDetails, copyLabel = DEFAULT_CHALLAN_COPY }) => {
+const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, copyLabel = DEFAULT_CHALLAN_COPY }) => {
   const challanCopyType = String(copyLabel || "")
     .replace(/\s*DELIVERY\s+CHALLAN\s*/gi, "")
     .trim();
-  const challanCopyLabel = challanCopyType ? `${challanCopyType} INVOICE` : copyLabel;
+  const challanCopyLabel = challanCopyType ? `${challanCopyType} COPY` : copyLabel;
 
   const fmtNum = (value, decimals = 0) => {
     const number = Number(value);
@@ -973,39 +973,9 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, copyLabel = DEFA
         </div>
         <div className="challan-page-body">
 
-          <div
-            className="invoice-title-bar challan-title-bar"
-            style={{
-              position: "relative",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minHeight: 22,
-              marginBottom: 0,
-              paddingTop: 10,
-              paddingBottom: 4,
-              color: "#0d1f3c",
-              textTransform: "uppercase",
-            }}
-          >
+          <div className="invoice-title-bar" style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 22, marginBottom: 0, paddingTop: 10, paddingBottom: 4, color: "#0d1f3c", textTransform: "uppercase" }}>
             <div style={{ fontWeight: 500, fontSize: 18, lineHeight: 1, textAlign: "center" }}>DELIVERY CHALLAN</div>
-            <div
-              className="challan-copy-label"
-              style={{
-                position: "absolute",
-                right: 0,
-                bottom: 3,
-                fontWeight: 600,
-                fontSize: 11,
-                lineHeight: 1,
-                paddingRight: 2,
-                whiteSpace: "nowrap",
-                textAlign: "right",
-                letterSpacing: "-0.35px",
-              }}
-            >
-              {challanCopyLabel}
-            </div>
+            <div className="invoice-copy-label" style={{ position: "absolute", right: 0, bottom: 3, fontWeight: 600, fontSize: 11, lineHeight: 1, paddingRight: 2, whiteSpace: "nowrap", textAlign: "right", letterSpacing: "-0.35px" }}>{challanCopyLabel}</div>
           </div>
 
           <table className="challan-summary-table" style={{ width: "100%", borderCollapse: "collapse", marginBottom: 8, tableLayout: "fixed" }}>
@@ -1206,24 +1176,36 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, copyLabel = DEFA
               <tr>
                 <td style={{ ...td, width: '50%', verticalAlign: 'top', background: '#fafafa' }}>
                   <div style={{ fontWeight: 800, marginBottom: 4 }}>Terms and Conditions:</div>
-                  <div style={{ marginLeft: 4 }}>
-                    <div>1. Goods once delivered will not be taken back.</div>
-                    <div>2. Please check the goods in presence of our delivery executive.</div>
-                    <div>3. Any discrepancy should be reported within 24 hours.</div>
-                    <div>4. Goods are delivered in good condition.</div>
-                    <div>5. Subject to Delhi Jurisdiction only.</div>
+                  <div style={{ marginLeft: 4, whiteSpace: 'pre-wrap' }}>
+                    {estimateTerms?.termsAndConditions?.length ? (
+                        estimateTerms.termsAndConditions.map((t, i) => <div key={i}>{i + 1}. {t}</div>)
+                    ) : (
+                        <>
+                            <div>1. Goods once delivered will not be taken back.</div>
+                            <div>2. Please check the goods in presence of our delivery executive.</div>
+                            <div>3. Any discrepancy should be reported within 24 hours.</div>
+                            <div>4. Goods are delivered in good condition.</div>
+                            <div>5. Subject to Delhi Jurisdiction only.</div>
+                        </>
+                    )}
                   </div>
                 </td>
                 <td style={{ ...td, width: '50%', verticalAlign: 'top', background: '#fafafa' }}>
                   <div style={{ fontWeight: 800, marginBottom: 4 }}>Delivery Notes:</div>
-                  <div style={{ marginLeft: 4 }}>
-                    <div>1. Goods delivered as per Purchase Order.</div>
-                    <div>2. For any queries, please contact our office.</div>
+                  <div style={{ marginLeft: 4, whiteSpace: 'pre-wrap' }}>
+                    {estimateTerms?.deliveryNotes?.length ? (
+                        estimateTerms.deliveryNotes.map((t, i) => <div key={i}>{i + 1}. {t}</div>)
+                    ) : (
+                        <>
+                            <div>1. Goods delivered as per Purchase Order.</div>
+                            <div>2. For any queries, please contact our office.</div>
+                        </>
+                    )}
                   </div>
-                  {challan.remarks && (
+                  {(estimateTerms?.specialRemark || challan.remarks) && (
                     <>
                       <div style={{ fontWeight: 800, marginTop: 8, marginBottom: 4 }}>Special Remark:</div>
-                      <div style={{ marginLeft: 4 }}>{challan.remarks}</div>
+                      <div style={{ marginLeft: 4, whiteSpace: 'pre-wrap' }}>{estimateTerms?.specialRemark || challan.remarks}</div>
                     </>
                   )}
                 </td>
@@ -1342,6 +1324,7 @@ const DeliveryChallanManager = () => {
   const [commModal, setCommModal] = useState({ isOpen: false, type: "whatsapp", docId: "" });
   const [accountName, setAccountName] = useState("");
   const [challanCopies, setChallanCopies] = useState([DEFAULT_CHALLAN_COPY]);
+  const [estimateTerms, setEstimateTerms] = useState(null);
 
   const selectedProforma = useMemo(
     () => proformas.find((item) => item._id === form.source_estimate_id),
@@ -1369,18 +1352,22 @@ const DeliveryChallanManager = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [challanRes, proformaRes, settingsRes, accountRes, bankRes] = await Promise.all([
+      const [challanRes, proformaRes, settingsRes, accountRes, bankRes, termsRes] = await Promise.all([
         api.get(`/api/delivery-challans?companyId=${id}`),
         api.get(`/api/delivery-challans/proformas/${id}`),
         api.get("/api/settings"),
         api.get(`/api/account-overview/${id}`).catch(() => ({ data: {} })),
         api.get("/api/banks").catch(() => ({ data: [] })),
+        api.get("/api/estimate-terms-config/delivery-challan").catch(() => null)
       ]);
       setChallans(Array.isArray(challanRes.data) ? challanRes.data : []);
       setProformas(Array.isArray(proformaRes.data) ? proformaRes.data : []);
       setSettings(settingsRes.data?.data || settingsRes.data || null);
       setBanks(Array.isArray(bankRes.data) ? bankRes.data : []);
       if (accountRes.data?.success) setAccountName(accountRes.data.data?.companyInfo?.name || "");
+      if (termsRes?.data?.success && termsRes.data.data) {
+        setEstimateTerms(termsRes.data.data);
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || "Unable to load delivery challans");
     } finally {
@@ -1798,6 +1785,7 @@ const DeliveryChallanManager = () => {
               challan={form}
               settings={settings}
               bankDetails={banks.find((bank) => String(bank.status || "").toLowerCase() === "active") || banks[0]}
+              estimateTerms={estimateTerms}
               copyLabel={copyLabel}
             />
             <div className="print-copy-page-label" style={{ display: "none" }}>1/1</div>
@@ -1926,16 +1914,13 @@ const DeliveryChallanManager = () => {
           .challan-title-bar {
             margin-top: 0 !important;
             margin-bottom: 0 !important;
-            padding-top: 0 !important;
-            padding-bottom: 0 !important;
             line-height: normal !important;
-            min-height: 20px !important;
+            min-height: 22px !important;
           }
 
           .challan-copy-label {
             right: 0 !important;
-            font-size: 8.8px !important;
-            letter-spacing: -0.25px !important;
+            letter-spacing: -0.35px !important;
             white-space: nowrap !important;
             max-width: 44% !important;
             overflow: visible !important;

@@ -35,6 +35,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
     const [company, setCompany] = useState(null);
     const [bankDetails, setBankDetails] = useState(null);
     const [settings, setSettings] = useState(null);
+    const [estimateTerms, setEstimateTerms] = useState(null);
 
     useEffect(() => {
         const fetchBankDetails = async () => {
@@ -53,8 +54,17 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                 setSettings(res.data?.data || res.data);
             } catch (err) { }
         };
+        const fetchEstimateTerms = async () => {
+            try {
+                const res = await api.get('/api/estimate-terms-config/tax-invoice');
+                if (res.data?.success && res.data?.data) {
+                    setEstimateTerms(res.data.data);
+                }
+            } catch (err) { }
+        };
         fetchBankDetails();
         fetchSettings();
+        fetchEstimateTerms();
     }, []);
 
     useEffect(() => {
@@ -1016,14 +1026,11 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                     }
                     .invoice-title-bar {
                         margin-bottom: 0 !important;
-                        padding-top: 0 !important;
-                        padding-bottom: 0 !important;
                     }
                     .invoice-copy-label {
                         right: 0 !important;
-                        font-size: 8.8px !important;
                         line-height: 1 !important;
-                        letter-spacing: -0.25px !important;
+                        letter-spacing: -0.35px !important;
                         max-width: 44% !important;
                         white-space: nowrap !important;
                         overflow: visible !important;
@@ -1139,20 +1146,19 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                     justifyContent: 'center',
                                     minHeight: 22,
                                     marginBottom: 0,
-                                    paddingTop: 0,
-                                    paddingBottom: 0,
+                                    paddingTop: 10,
+                                    paddingBottom: 4,
                                     color: '#0d1f3c',
                                     textTransform: 'uppercase',
                                 }}
                             >
-                                <div style={{ fontWeight: 500, fontSize: 15, lineHeight: 1, textAlign: 'center' }}>{heading || 'TAX INVOICE'}</div>
+                                <div style={{ fontWeight: 500, fontSize: 18, lineHeight: 1, textAlign: 'center' }}>{heading || 'TAX INVOICE'}</div>
                                 <div
                                     className="invoice-copy-label"
                                     style={{
                                         position: 'absolute',
                                         right: 0,
-                                        top: '50%',
-                                        transform: 'translateY(-50%)',
+                                        bottom: 3,
                                         fontWeight: 600,
                                         fontSize: 11,
                                         lineHeight: 1,
@@ -1458,16 +1464,33 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                     <tr>
                                         <td style={{ width: '60%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
                                             <div style={{ fontWeight: 700, marginBottom: 2 }}>Terms and Conditions:</div>
-                                            <div>1. Payment must be made in favor of Namo Gange Wellness Pvt. Ltd. via Cheque / DD / RTGS / NEFT / UPI only.</div>
-                                            <div>2. Full payment is due within the stipulated invoice period.</div>
-                                            <div>3. Delay in payment shall attract interest @24% per annum.</div>
-                                            <div>4. Booking / services shall be confirmed only after receipt of payment.</div>
-                                            <div>5. Cancellation or amendments shall be subject to company policy and management approval.</div>
-                                            <div>6. All disputes are subject to Delhi Jurisdiction only.</div>
+                                            <div style={{ whiteSpace: 'pre-wrap' }}>
+                                                {estimateTerms?.termsAndConditions?.length ? (
+                                                    estimateTerms.termsAndConditions.map((t, i) => <div key={i}>{i + 1}. {t}</div>)
+                                                ) : (
+                                                    <>
+                                                        <div>1. Payment must be made in favor of Namo Gange Wellness Pvt. Ltd. via Cheque / DD / RTGS / NEFT / UPI only.</div>
+                                                        <div>2. Full payment is due within the stipulated invoice period.</div>
+                                                        <div>3. Delay in payment shall attract interest @24% per annum.</div>
+                                                        <div>4. Booking / services shall be confirmed only after receipt of payment.</div>
+                                                        <div>5. Cancellation or amendments shall be subject to company policy and management approval.</div>
+                                                        <div>6. All disputes are subject to Delhi Jurisdiction only.</div>
+                                                    </>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
                                             <div style={{ fontWeight: 700, marginBottom: 2 }}>Payment Conditions:</div>
-                                            <div style={{ fontWeight: 700 }}>1. 100% Advance Payment.</div>
+                                            <div style={{ whiteSpace: 'pre-wrap' }}>
+                                                {estimateTerms?.paymentConditions?.length ? (
+                                                    estimateTerms.paymentConditions.map((t, i) => <div key={i}>{i + 1}. {t}</div>)
+                                                ) : (
+                                                    <>
+                                                        <div style={{ fontWeight: 700 }}>1. 100% Advance Payment.</div>
+                                                        <div>2. Applicable TDS, if deducted, must be supported with TDS certificate / Form 16A.</div>
+                                                    </>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>
