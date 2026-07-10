@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Download, Upload, Trash2, Plus, Save, Calendar, UserCheck, Utensils, Car, Info, AlertCircle, ShieldCheck, Loader2, CheckCircle } from 'lucide-react';
 import Swal from 'sweetalert2';
@@ -15,6 +15,20 @@ const normalizeIndianMobile = (value = '') => {
 const isValidIndianMobile = (value = '') => /^[6-9]\d{9}$/.test(normalizeIndianMobile(value));
 const isValidEmail = (value = '') => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value).trim());
 const shouldShowOtpControls = (rowIndex) => rowIndex < 2;
+const ROLE_AT_EXHIBITION_OPTIONS = [
+    'Primary Contact',
+    'Stall Incharge',
+    'Sales Team',
+    'Marketing Team',
+    'Product Demonstrator',
+    'Technical Support',
+    'Reception / Hospitality',
+    'Registration Coordinator',
+    'Logistics Coordinator',
+    'Operations Coordinator',
+    'Business Development',
+    'Management / Owner'
+];
 
 const AddTeamMembersAdmin = () => {
     const { id } = useParams();
@@ -43,6 +57,23 @@ const AddTeamMembersAdmin = () => {
     };
     const [rows, setRows] = useState(Array(3).fill().map(() => ({ ...emptyRow })));
     const [isSaving, setIsSaving] = useState(false);
+    const [roleOptions, setRoleOptions] = useState(ROLE_AT_EXHIBITION_OPTIONS);
+
+    useEffect(() => {
+        const fetchRoleOptions = async () => {
+            try {
+                const response = await api.get('/api/exhibition-roles?status=active');
+                const roles = Array.isArray(response.data)
+                    ? response.data.map((item) => item?.name).filter(Boolean)
+                    : [];
+                if (roles.length) setRoleOptions(roles);
+            } catch (error) {
+                console.error('Error fetching exhibition roles:', error);
+            }
+        };
+
+        fetchRoleOptions();
+    }, []);
 
     const updateRow = (index, patch) => {
         setRows((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, ...patch } : row)));
@@ -468,21 +499,34 @@ const AddTeamMembersAdmin = () => {
                                         <td className="p-1">
                                             <div className="min-w-[170px] flex items-center justify-center">
                                                 {row.useCustomRole ? (
-                                                    <input
-                                                        type="text"
-                                                        value={row.roleAtExhibition}
-                                                        onChange={(e) => handleFieldChange(index, 'roleAtExhibition', e.target.value)}
-                                                        placeholder="Type role at exhibition"
-                                                        className="w-full h-8 px-2 rounded-md border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700 bg-white"
-                                                    />
+                                                    <div className="flex w-full items-center gap-1">
+                                                        <input
+                                                            type="text"
+                                                            value={row.roleAtExhibition}
+                                                            onChange={(e) => handleFieldChange(index, 'roleAtExhibition', e.target.value)}
+                                                            placeholder="Type role"
+                                                            className="min-w-0 flex-1 h-8 px-2 rounded-md border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700 bg-white"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => updateRow(index, { useCustomRole: false, roleAtExhibition: '' })}
+                                                            className="h-8 px-2 rounded-md border border-slate-200 bg-white text-[11px] font-semibold text-slate-600 hover:bg-slate-50"
+                                                        >
+                                                            Select
+                                                        </button>
+                                                    </div>
                                                 ) : (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRolePreset(index, 'Other')}
-                                                        className="h-8 w-full rounded-md border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors bg-white"
+                                                    <select
+                                                        value={row.roleAtExhibition}
+                                                        onChange={(e) => handleRolePreset(index, e.target.value)}
+                                                        className="w-full h-8 px-2 rounded-md border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700 bg-white"
                                                     >
-                                                        Other
-                                                    </button>
+                                                        <option value="">Select</option>
+                                                        {roleOptions.map((role) => (
+                                                            <option key={role} value={role}>{role}</option>
+                                                        ))}
+                                                        <option value="Other">Other</option>
+                                                    </select>
                                                 )}
                                             </div>
                                         </td>

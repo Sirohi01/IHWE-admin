@@ -9,6 +9,7 @@ import dataSourceReducer from "../features/add_by_admin/dataSource/dataSourceSli
 import crmEventReducer from "../features/crmEvent/crmEventSlice";
 import companyReducer from "../features/company/companySlice";
 import statusOptionReducer from "../features/add_by_admin/statusOption/statusOptionSlice";
+import exhibitionRoleReducer from "../features/add_by_admin/exhibitionRole/exhibitionRoleSlice";
 import bankReducer from "../features/add_by_admin/banks/bankSlice";
 import crmMessageReducer from "../features/add_by_admin/crm_wat_mess/CrmWatMessage";
 import authReducer from "../features/auth/authSlice";
@@ -47,6 +48,7 @@ export const store = configureStore({
     crmEvents: crmEventReducer,
     companies: companyReducer,
     statusOptions: statusOptionReducer,
+    exhibitionRoles: exhibitionRoleReducer,
     banks: bankReducer,
     crmMessages: crmMessageReducer,
     auth: authReducer,
