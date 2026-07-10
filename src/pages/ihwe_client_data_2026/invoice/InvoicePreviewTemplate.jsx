@@ -870,7 +870,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                 <tbody>
                     <tr>
                         <td style={{ width: '60%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                            <div style={{ fontWeight: 700, marginBottom: 2 }}>Terms and Conditions:</div>
+                            <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Terms and Conditions:</div>
                             <div>1. Payment must be made in favor of Namo Gange Wellness Pvt. Ltd. via Cheque / DD / RTGS / NEFT / UPI only.</div>
                             <div>2. Full payment is due within the stipulated invoice period.</div>
                             <div>3. Delay in payment shall attract interest @24% per annum.</div>
@@ -879,7 +879,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                             <div>6. All disputes are subject to Delhi Jurisdiction only.</div>
                         </td>
                         <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                            <div style={{ fontWeight: 700, marginBottom: 2 }}>Payment Conditions:</div>
+                            <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment Conditions:</div>
                             <div style={{ fontWeight: 700 }}>1. 100% Advance Payment.</div>
                         </td>
                     </tr>
@@ -1463,7 +1463,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                 <tbody>
                                     <tr>
                                         <td style={{ width: '60%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                                            <div style={{ fontWeight: 700, marginBottom: 2 }}>Terms and Conditions:</div>
+                                            <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Terms and Conditions:</div>
                                             <div style={{ whiteSpace: 'pre-wrap' }}>
                                                 {estimateTerms?.termsAndConditions?.length ? (
                                                     estimateTerms.termsAndConditions.map((t, i) => <div key={i}>{i + 1}. {t}</div>)
@@ -1480,7 +1480,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                             </div>
                                         </td>
                                         <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                                            <div style={{ fontWeight: 700, marginBottom: 2 }}>Payment Conditions:</div>
+                                            <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment Conditions:</div>
                                             <div style={{ whiteSpace: 'pre-wrap' }}>
                                                 {estimateTerms?.paymentConditions?.length ? (
                                                     estimateTerms.paymentConditions.map((t, i) => <div key={i}>{i + 1}. {t}</div>)
@@ -1505,17 +1505,17 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                 <thead>
                                     <tr style={{ background: '#fafafa' }}>
                                         <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
                                                 <Landmark size={14} strokeWidth={2} /> NGWPL Bank Details
                                             </div>
                                         </th>
                                         <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
                                                 <SquarePen size={14} strokeWidth={2} /> Receiver's Acknowledgement
                                             </div>
                                         </th>
                                         <th style={{ border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
                                                 <SquarePen size={14} strokeWidth={2} /> For {companyName}
                                             </div>
                                         </th>
@@ -1554,8 +1554,8 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                                 </tbody>
                                             </table>
                                         </td>
-                                        <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
-                                            <span style={{ fontSize: 10 }}>Received the above goods / services in good condition.</span>
+                                        <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '2px 8px 8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
+                                            <span style={{ fontSize: 9, whiteSpace: 'nowrap' }}>Received the above goods / services in good condition.</span>
                                         </td>
                                         <td style={{ border: 'none', padding: '8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
                                             <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
