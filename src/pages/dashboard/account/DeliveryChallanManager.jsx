@@ -1254,7 +1254,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
                           <tr key={label}>
                             <td style={labelCell}>{label}</td>
                             <td style={colonCell}>:</td>
-                            <td style={{ ...valueCell, wordBreak: 'break-word', whiteSpace: label === 'Branch Name' ? 'normal' : 'nowrap', ...(label === 'IFSC Code' ? { fontWeight: 700, color: '#0d1f3c' } : {}) }}>{value}</td>
+                            <td style={{ ...valueCell, wordBreak: 'break-word', whiteSpace: label === 'Branch Name' ? 'normal' : 'nowrap' }}>{value}</td>
                           </tr>
                         ))}
                       </tbody>

@@ -1544,7 +1544,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                                     <tr>
                                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>IFSC Code</td>
                                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0' }}>:</td>
-                                                        <td style={{ border: 'none', whiteSpace: 'nowrap', padding: '1px 0', fontWeight: 700, color: '#0d1f3c' }}>{bankDetails?.ifsccode || 'KKBK0004584'}</td>
+                                                        <td style={{ border: 'none', whiteSpace: 'nowrap', padding: '1px 0' }}>{bankDetails?.ifsccode || 'KKBK0004584'}</td>
                                                     </tr>
                                                     <tr>
                                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>Branch Name</td>
