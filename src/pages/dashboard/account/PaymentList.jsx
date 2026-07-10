@@ -155,8 +155,27 @@ const PaymentList = () => {
         return lines.length ? lines : ['N/A'];
     };
 
-    const openReceipt = (pmt) => {
-        window.open(`${SERVER_URL}/api/payments/${pmt._id}/receipt`, '_blank', 'noopener,noreferrer');
+    const openReceipt = async (pmt) => {
+        const receiptWindow = window.open('', '_blank', 'noopener,noreferrer');
+
+        try {
+            const res = await api.get(`/api/payments/${pmt._id}/receipt`, {
+                responseType: 'blob',
+            });
+            const blobUrl = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+
+            if (receiptWindow) {
+                receiptWindow.location.href = blobUrl;
+            } else {
+                window.open(blobUrl, '_blank', 'noopener,noreferrer');
+            }
+
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 60 * 1000);
+        } catch (err) {
+            if (receiptWindow) receiptWindow.close();
+            console.error(err);
+            toast.error(err.response?.data?.message || 'Error opening payment receipt');
+        }
     };
 
     const filteredPayments = payments.filter(pmt => {

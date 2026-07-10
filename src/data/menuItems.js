@@ -780,6 +780,7 @@ export const menuItems = [
     children: [
       { label: "Payments", path: "/accounts/payments" },
       { label: "Receipts", path: "/accounts/receipts" },
+      { label: "Payment Management", path: "/accounts/payment-management" },
       { label: "Accounts Receivable", path: "/accounts/ar" },
       { label: "Client Ledger", path: "/accounts/client-ledger" },
       { label: "Imprest / Reimbursement", path: "/accounts/imprest" },

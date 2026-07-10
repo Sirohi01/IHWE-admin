@@ -6,7 +6,7 @@ import {
     Mail, MessageCircleMore, Loader2, MoreVertical, Users, TrendingUp, Bell, RefreshCw,
     IndianRupee, Calculator, ClipboardList, ArrowDownLeft, CalendarCheck
 } from 'lucide-react';
-import api, { SERVER_URL } from '../../lib/api';
+import api from '../../lib/api';
 import toast from 'react-hot-toast';
 import Select from 'react-select';
 import ExcelJS from 'exceljs';
@@ -237,8 +237,27 @@ const ReceiptsView = () => {
         );
     };
 
-    const openReceipt = (pmt) => {
-        window.open(`${SERVER_URL}/api/payments/${pmt._id}/receipt`, '_blank', 'noopener,noreferrer');
+    const openReceipt = async (pmt) => {
+        const receiptWindow = window.open('', '_blank', 'noopener,noreferrer');
+
+        try {
+            const res = await api.get(`/api/payments/${pmt._id}/receipt`, {
+                responseType: 'blob',
+            });
+            const blobUrl = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+
+            if (receiptWindow) {
+                receiptWindow.location.href = blobUrl;
+            } else {
+                window.open(blobUrl, '_blank', 'noopener,noreferrer');
+            }
+
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 60 * 1000);
+        } catch (err) {
+            if (receiptWindow) receiptWindow.close();
+            console.error(err);
+            toast.error(err.response?.data?.message || 'Error opening payment receipt');
+        }
     };
 
     const downloadReceipt = async (pmt) => {
