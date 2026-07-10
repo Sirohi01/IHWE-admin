@@ -150,10 +150,10 @@ const CreditNotePrintTemplate = ({ note, company, settings }) => {
 
       <div
         className="invoice-title-bar"
-        style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 22, marginBottom: 0, paddingTop: 0, paddingBottom: 0, color: NAVY, textTransform: 'uppercase' }}
+        style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 22, marginBottom: 0, paddingTop: 10, paddingBottom: 4, color: NAVY, textTransform: 'uppercase' }}
       >
-        <div style={{ fontWeight: 500, fontSize: 15, lineHeight: 1, textAlign: 'center' }}>CREDIT NOTE</div>
-        <div className="invoice-copy-label" style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', fontWeight: 600, fontSize: 11, lineHeight: 1, paddingRight: 2, whiteSpace: 'nowrap', textAlign: 'right', letterSpacing: '-0.35px' }}>ORIGINAL COPY</div>
+        <div style={{ fontWeight: 500, fontSize: 18, lineHeight: 1, textAlign: 'center' }}>CREDIT NOTE</div>
+        <div className="invoice-copy-label" style={{ position: 'absolute', right: 0, bottom: 3, fontWeight: 600, fontSize: 11, lineHeight: 1, paddingRight: 2, whiteSpace: 'nowrap', textAlign: 'right', letterSpacing: '-0.35px' }}>ORIGINAL COPY</div>
       </div>
 
       {/* Billed To + Credit Note Details + Reason */}
@@ -385,7 +385,8 @@ const CreditNotePrintTemplate = ({ note, company, settings }) => {
                 {sigUrl && <img src={sigUrl} alt="Signature" style={{ maxHeight: 55, maxWidth: 120 }} />}
                 {stampUrl && <img src={stampUrl} alt="Stamp" style={{ maxHeight: 55, maxWidth: 55 }} />}
               </div>
-              <div style={{ borderTop: '1px solid #ccc', marginTop: 20, paddingTop: 4, textAlign: 'center', color: '#888', fontStyle: 'italic', fontSize: 9, width: '60%', marginLeft: 'auto', marginRight: 'auto' }}>(Authorized Signatory)</div>
+              <div style={{ borderTop: '1px solid #ccc', margin: '35px 10px 8px' }}></div>
+              <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 10, marginTop: 6 }}>Authorized Signatory.</div>
             </td>
           </tr>
         </tbody>

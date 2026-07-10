@@ -685,7 +685,6 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
             <div className="invoice-header-image" style={{ marginBottom: 0, textAlign: 'center' }}>
                 <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
             </div>
-
             <div
                 className="invoice-title-bar"
                 style={{
@@ -695,20 +694,19 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                     justifyContent: 'center',
                     minHeight: 22,
                     marginBottom: 0,
-                    paddingTop: 0,
-                    paddingBottom: 0,
+                    paddingTop: 10,
+                    paddingBottom: 4,
                     color: '#0d1f3c',
                     textTransform: 'uppercase',
                 }}
             >
-                <div style={{ fontWeight: 500, fontSize: 15, lineHeight: 1, textAlign: 'center' }}>PROFORMA INVOICE</div>
+                <div style={{ fontWeight: 500, fontSize: 18, lineHeight: 1, textAlign: 'center' }}>PROFORMA INVOICE</div>
                 <div
                     className="invoice-copy-label"
                     style={{
                         position: 'absolute',
                         right: 0,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
+                        bottom: 3,
                         fontWeight: 600,
                         fontSize: 11,
                         lineHeight: 1,
