@@ -415,7 +415,7 @@ const NewTestimonialsManagement = () => {
                     onClick={() => document.getElementById('heroBg').click()}
                   >
                     {heroBgPreview ? (
-                      <img src={heroBgPreview} alt="Preview" className="w-full h-full object-cover" />
+                      <img loading="lazy" decoding="async" src={heroBgPreview} alt="Preview" className="w-full h-full object-cover" />
                     ) : (
                       <>
                         <ImageIcon className="w-10 h-10 text-gray-300 mb-2 group-hover:text-[#23471d] transition-colors" />
@@ -558,7 +558,7 @@ const NewTestimonialsManagement = () => {
                         onClick={() => document.getElementById('cardLogo').click()}
                       >
                         {cardLogoPreview ? (
-                          <img src={cardLogoPreview} alt="Preview" className="w-full h-full object-contain p-2" />
+                          <img loading="lazy" decoding="async" src={cardLogoPreview} alt="Preview" className="w-full h-full object-contain p-2" />
                         ) : (
                           <Plus className="w-6 h-6 text-gray-300 group-hover:text-[#d26019]" />
                         )}
@@ -575,7 +575,7 @@ const NewTestimonialsManagement = () => {
                         onClick={() => document.getElementById('cardBottom').click()}
                       >
                         {cardBottomPreview ? (
-                          <img src={cardBottomPreview} alt="Preview" className="w-full h-full object-contain" />
+                          <img loading="lazy" decoding="async" src={cardBottomPreview} alt="Preview" className="w-full h-full object-contain" />
                         ) : (
                           <ImageIcon className="w-6 h-6 text-gray-300 group-hover:text-[#d26019]" />
                         )}
@@ -645,7 +645,7 @@ const NewTestimonialsManagement = () => {
                       <div key={card._id} className="p-6 hover:bg-gray-50 transition-colors group relative">
                         <div className="flex gap-6 items-start">
                           <div className="w-16 h-16 rounded-xl border border-gray-100 flex items-center justify-center bg-white shadow-sm overflow-hidden shrink-0">
-                            {card.logo ? <img src={`${SERVER_URL}${card.logo}`} className="w-full h-full object-contain p-2" /> : <Quote size={24} className="text-gray-200" />}
+                            {card.logo ? <img loading="lazy" decoding="async" src={`${SERVER_URL}${card.logo}`} className="w-full h-full object-contain p-2" /> : <Quote size={24} className="text-gray-200" />}
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
@@ -802,7 +802,7 @@ const NewTestimonialsManagement = () => {
                       className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg outline-none font-bold text-xs"
                       accept="image/*"
                     />
-                    {thumbnailPreview && <img src={thumbnailPreview} className="mt-2 w-20 h-20 object-cover rounded-lg border" alt="Preview" />}
+                    {thumbnailPreview && <img loading="lazy" decoding="async" src={thumbnailPreview} className="mt-2 w-20 h-20 object-cover rounded-lg border" alt="Preview" />}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -851,9 +851,9 @@ const NewTestimonialsManagement = () => {
                       <div key={vid._id} className="p-5 hover:bg-gray-50 transition-colors flex items-center gap-5 group">
                         <div className="w-24 h-16 bg-black rounded-lg flex items-center justify-center overflow-hidden shrink-0 relative">
                           {vid.thumbnail ? (
-                            <img src={`${SERVER_URL}${vid.thumbnail}`} className="w-full h-full object-cover" alt="" />
+                            <img loading="lazy" decoding="async" src={`${SERVER_URL}${vid.thumbnail}`} className="w-full h-full object-cover" alt="" />
                           ) : getYouTubeThumbnail(vid.videoUrl) ? (
-                            <img src={getYouTubeThumbnail(vid.videoUrl)} className="w-full h-full object-cover" alt="" />
+                            <img loading="lazy" decoding="async" src={getYouTubeThumbnail(vid.videoUrl)} className="w-full h-full object-cover" alt="" />
                           ) : (
                             <>
                               <Play size={20} className="text-white opacity-40" />

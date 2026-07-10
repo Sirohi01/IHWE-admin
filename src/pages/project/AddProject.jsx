@@ -184,8 +184,7 @@ const AddProject = () => {
                   {previewImage ? (
                     <div className="flex flex-col items-center">
                       <div className="relative mb-3">
-                        <img
-                          src={previewImage}
+                        <img loading="lazy" decoding="async"                           src={previewImage}
                           alt="preview"
                           className="w-32 h-32 object-cover border"
                         />

@@ -187,7 +187,7 @@ const MediaCategoryManagement = () => {
                                 </label>
                                 {imagePreview ? (
                                     <div className="relative h-36 border-2 border-gray-200 overflow-hidden mb-2">
-                                        <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
+                                        <img loading="lazy" decoding="async" src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
                                         <button
                                             onClick={() => {
                                                 setImageFile(null);
@@ -285,8 +285,7 @@ const MediaCategoryManagement = () => {
                                             <td className="py-3 px-4 text-gray-500 font-bold">{idx + 1}</td>
                                             <td className="py-3 px-4">
                                                 {item.image ? (
-                                                    <img
-                                                        src={`${SERVER_URL}${item.image}`}
+                                                    <img loading="lazy" decoding="async"                                                         src={`${SERVER_URL}${item.image}`}
                                                         alt={item.imageAlt}
                                                         className="w-16 h-11 object-cover rounded border border-gray-200"
                                                         onError={(e) => { e.target.src = 'https://placehold.co/64x44?text=No+Img'; }}

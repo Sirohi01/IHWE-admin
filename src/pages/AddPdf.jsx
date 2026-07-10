@@ -254,8 +254,7 @@ const AddPdf = () => {
         <>
             <div className="relative w-full h-64 overflow-hidden rounded ">
                 {/* Background Image */}
-                <img
-                    src="/home.png"
+                <img loading="lazy" decoding="async"                     src="/home.png"
                     alt="banner"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />
@@ -437,7 +436,7 @@ const AddPdf = () => {
                                     <div className="border-2 border-dashed border-gray-300 hover:border-[#23471d] transition-colors p-4 flex flex-col items-center gap-2">
                                         {cardForm.image ? (
                                             <div className="relative w-full aspect-video border border-gray-200 overflow-hidden">
-                                                <img src={`${SERVER_URL}${cardForm.image}`} className="w-full h-full object-cover" alt="Cover Preview" />
+                                                <img loading="lazy" decoding="async" src={`${SERVER_URL}${cardForm.image}`} className="w-full h-full object-cover" alt="Cover Preview" />
                                                 <button
                                                     onClick={() => setCardForm({ ...cardForm, image: '' })}
                                                     className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full shadow-lg"
@@ -558,8 +557,7 @@ const AddPdf = () => {
                                                     <td className="px-6 py-4 font-bold text-[#23471d]">{index + 1}</td>
                                                     <td className="px-6 py-4">
                                                         <div className="w-14 h-10 bg-gray-100 border border-gray-200 overflow-hidden shadow-sm">
-                                                            <img
-                                                                src={`${SERVER_URL}${card.image}`}
+                                                            <img loading="lazy" decoding="async"                                                                 src={`${SERVER_URL}${card.image}`}
                                                                 alt={card.title}
                                                                 className="w-full h-full object-cover"
                                                             />

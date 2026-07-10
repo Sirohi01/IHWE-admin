@@ -482,7 +482,7 @@ export default function Sidebar({
 
         {/* Copied exhibition image matching Exhibitor Sidebar */}
         <div className="absolute inset-x-0 bottom-8 h-52 opacity-55 z-0 pointer-events-none flex items-end justify-center">
-          <img src="/exhibition/1.png" alt="" className="w-full object-contain" />
+          <img loading="lazy" decoding="async" src="/exhibition/1.png" alt="" className="w-full object-contain" />
         </div>
 
         <div className="sb-header relative z-10 flex py-2 items-center justify-center px-4 border-b border-white/10">
@@ -498,8 +498,7 @@ export default function Sidebar({
             <div className="absolute top-5 right-6 w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_2px_rgba(255,255,255,1)] animate-pulse" style={{ animationDelay: '500ms' }} />
             <div className="absolute bottom-4 left-6 w-2 h-2 bg-white rounded-full shadow-[0_0_10px_3px_rgba(255,255,255,1)] animate-pulse" style={{ animationDelay: '800ms' }} />
           </div>
-          <img
-            src={namogangelogo}
+          <img loading="lazy" decoding="async"             src={namogangelogo}
             alt="IHWE 2026"
             className="relative h-[65px] w-full object-contain z-10 my-1"
             style={{ filter: "drop-shadow(0 0 2px rgba(255,255,255,0.8))" }}
@@ -569,7 +568,7 @@ export default function Sidebar({
                 <div className="relative">
                   <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#06d6a0] bg-slate-800 flex items-center justify-center shadow-lg">
                     {fullProfile?.profileImage ? (
-                      <img src={fullProfile.profileImage} alt="" className="w-full h-full object-cover" />
+                      <img loading="lazy" decoding="async" src={fullProfile.profileImage} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <span className="text-white text-lg font-bold uppercase">
                         {currentUser.username ? currentUser.username[0] : 'A'}

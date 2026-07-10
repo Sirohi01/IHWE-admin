@@ -304,7 +304,7 @@ const SponsorComparisonManage = () => {
                             {cards.map((card, idx) => (
                                 <div key={idx} className="bg-white border-2 border-slate-100 p-4 rounded-xl shadow-sm relative group hover:border-slate-300 transition-all flex flex-col">
                                     <div className="w-12 h-12 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden mb-3">
-                                        <img 
+                                        <img loading="lazy" decoding="async" 
                                             src={card.image.startsWith('http') || card.image.startsWith('/uploads') ? (card.image.startsWith('http') ? card.image : `${SERVER_URL}${card.image}`) : card.image} 
                                             alt="" 
                                             className="w-8 h-8 object-contain" 
@@ -338,7 +338,7 @@ const SponsorComparisonManage = () => {
                                 <div>
                                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Upload Icon / Graphic</label>
                                     <div className="relative h-28 w-full border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden group">
-                                        {cardPreview ? <img src={cardPreview} className="w-full h-full object-contain p-2" /> : <ImageIcon className="text-slate-300" size={28} />}
+                                        {cardPreview ? <img loading="lazy" decoding="async" src={cardPreview} className="w-full h-full object-contain p-2" /> : <ImageIcon className="text-slate-300" size={28} />}
                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Plus className="text-white" /></div>
                                         <input type="file" onChange={handleCardFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
                                     </div>

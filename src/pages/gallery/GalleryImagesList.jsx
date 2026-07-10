@@ -133,8 +133,7 @@ const GalleryImagesList = () => {
                         {[...Array(6)].map((_, i) => (
                             <div key={i} className={`w-6 h-6 rounded-full border-2 border-white shadow-sm overflow-hidden transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-0.5 ${i < imageCount ? 'bg-blue-100' : 'bg-gray-100'}`}>
                                 {i < imageCount ? (
-                                    <img
-                                        src={`${SERVER_URL}${gallery.images[i].url}`}
+                                    <img loading="lazy" decoding="async"                                         src={`${SERVER_URL}${gallery.images[i].url}`}
                                         className="w-full h-full object-cover"
                                         alt="Gallery"
                                     />
@@ -277,8 +276,7 @@ const GalleryImagesList = () => {
                                             exit={{ opacity: 0, x: -20 }}
                                             className="relative z-10 w-full aspect-video rounded-xl overflow-hidden shadow-2xl border border-white/10"
                                         >
-                                            <img
-                                                src={`${SERVER_URL}${selectedGallery.images[0].url}`}
+                                            <img loading="lazy" decoding="async"                                                 src={`${SERVER_URL}${selectedGallery.images[0].url}`}
                                                 alt="Main Preview"
                                                 className="w-full h-full object-contain"
                                             />
@@ -305,8 +303,7 @@ const GalleryImagesList = () => {
                                     <div className="grid grid-cols-2 gap-4">
                                         {selectedGallery.images.map((img, idx) => (
                                             <div key={idx} className="group relative aspect-square rounded-xl overflow-hidden border shadow-sm hover:shadow-xl transition-all duration-500">
-                                                <img
-                                                    src={`${SERVER_URL}${img.url}`}
+                                                <img loading="lazy" decoding="async"                                                     src={`${SERVER_URL}${img.url}`}
                                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                                     alt={img.altText}
                                                 />

@@ -279,7 +279,7 @@ const DelegatePasses = () => {
                 <td className="px-2 py-3">
                   <div className="flex items-center gap-2.5">
                     <div className="w-10 h-10 rounded-full bg-slate-200 shrink-0 overflow-hidden border border-slate-300">
-                      <img src={row.profileImage ? `${API_URL.replace('/api', '')}${row.profileImage}` : getAvatar(row.fullName)} alt={row.fullName} className="w-full h-full object-cover" />
+                      <img loading="lazy" decoding="async" src={row.profileImage ? `${API_URL.replace('/api', '')}${row.profileImage}` : getAvatar(row.fullName)} alt={row.fullName} className="w-full h-full object-cover" />
                     </div>
                     <div>
                       <div className="text-[11px] font-semibold" style={{ color: '#093C5D' }}>{row.title} {row.fullName}</div>

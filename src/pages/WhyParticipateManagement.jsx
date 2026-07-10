@@ -297,7 +297,7 @@ const WhyParticipateManagement = () => {
                   onClick={() => document.getElementById('participateImage').click()}
                 >
                   {imagePreview ? (
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    <img loading="lazy" decoding="async" src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                   ) : (
                     <>
                       <ImageIcon className="w-12 h-12 text-gray-400 mb-2 group-hover:text-[#23471d]" />

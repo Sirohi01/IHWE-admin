@@ -176,8 +176,7 @@ export default function WhatsAppRightSidebar({ statsData, recentLogs, onLogAdded
           />
           <div className="flex items-center gap-2">
             <div className="relative flex items-center rounded-lg border border-slate-200 bg-white">
-              <img
-                src={`https://flagcdn.com/w20/${countryCodes.find((country) => country.code === waCountryCode)?.flag || 'in'}.png`}
+              <img loading="lazy" decoding="async"                 src={`https://flagcdn.com/w20/${countryCodes.find((country) => country.code === waCountryCode)?.flag || 'in'}.png`}
                 alt=""
                 className="ml-2 h-3 w-5"
               />

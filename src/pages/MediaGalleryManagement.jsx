@@ -274,8 +274,7 @@ const MediaGalleryManagement = () => {
 
                                 {isEditing && form.image && images.length === 0 ? (
                                     <div className="relative h-48 border-2 border-gray-200 overflow-hidden mb-2 bg-gray-50">
-                                        <img
-                                            src={`${SERVER_URL}${form.image}`}
+                                        <img loading="lazy" decoding="async"                                             src={`${SERVER_URL}${form.image}`}
                                             className="w-full h-full object-contain"
                                             alt="Current"
                                         />
@@ -324,8 +323,7 @@ const MediaGalleryManagement = () => {
                                             )}
                                             <div className="flex gap-4">
                                                 <div className="w-20 h-20 bg-white border border-gray-200 flex-shrink-0 overflow-hidden">
-                                                    <img
-                                                        src={URL.createObjectURL(file)}
+                                                    <img loading="lazy" decoding="async"                                                         src={URL.createObjectURL(file)}
                                                         className="w-full h-full object-cover"
                                                         alt="preview"
                                                     />
@@ -416,8 +414,7 @@ const MediaGalleryManagement = () => {
                                             <td className="py-3 px-4 text-center font-black text-gray-300">{idx + 1}</td>
                                             <td className="py-3 px-4">
                                                 <div className="w-16 h-12 bg-gray-100 border border-gray-200 rounded overflow-hidden">
-                                                    <img
-                                                        src={`${SERVER_URL}${item.image}`}
+                                                    <img loading="lazy" decoding="async"                                                         src={`${SERVER_URL}${item.image}`}
                                                         alt={item.imageAlt}
                                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                                     />

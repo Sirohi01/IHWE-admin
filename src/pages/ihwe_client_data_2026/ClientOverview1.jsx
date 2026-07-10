@@ -94,7 +94,7 @@ const SecureImage = ({ src, alt, className }) => {
   }, [src]);
 
   if (!imgSrc) return null;
-  return <img src={imgSrc} alt={alt || ""} className={className} />;
+  return <img loading="lazy" decoding="async" src={imgSrc} alt={alt || ""} className={className} />;
 };
 
 const ClientOverview1 = () => {
@@ -833,8 +833,7 @@ const ClientOverview1 = () => {
 
               <div className="border border-gray-300 rounded-2xl p-1 flex items-center justify-center w-fit h-fit min-h-[110px] min-w-[130px] flex-shrink-0 overflow-hidden bg-white">
                 {(companyLogoSrc || company.companyLogoUrl || company.companyLogo) ? (
-                  <img
-                    src={companyLogoSrc || getMediaUrl(company.companyLogoUrl || company.companyLogo)}
+                  <img loading="lazy" decoding="async"                     src={companyLogoSrc || getMediaUrl(company.companyLogoUrl || company.companyLogo)}
                     alt="Logo"
                     className="max-w-[160px] max-h-[130px] w-auto h-auto object-contain rounded-xl"
                   />
@@ -1272,7 +1271,7 @@ const ClientOverview1 = () => {
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Company Logo <span className="text-red-500">*</span></label>
                   <div className="flex items-center gap-4">
                     {logoPreview && (
-                      <img src={getMediaUrl(logoPreview)} alt="Logo Preview" className="max-w-16 max-h-16 w-auto h-auto rounded-xl border border-gray-200 bg-gray-50" />
+                      <img loading="lazy" decoding="async" src={getMediaUrl(logoPreview)} alt="Logo Preview" className="max-w-16 max-h-16 w-auto h-auto rounded-xl border border-gray-200 bg-gray-50" />
                     )}
                     <label className="flex-1 h-10 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 hover:border-green-500 cursor-pointer text-sm text-gray-500 hover:text-green-600 transition-colors">
                       <input type="file" accept="image/*" onChange={handleLogoFileChange} className="hidden" />

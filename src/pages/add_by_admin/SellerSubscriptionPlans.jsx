@@ -160,7 +160,7 @@ const SellerSubscriptionPlans = () => {
                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
                                     {imagePreview ? (
                                         <div className="relative">
-                                            <img src={imagePreview} alt="Preview" className="w-full h-32 object-cover rounded" />
+                                            <img loading="lazy" decoding="async" src={imagePreview} alt="Preview" className="w-full h-32 object-cover rounded" />
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded">
                                                 <ImageIcon className="text-white w-6 h-6" />
                                             </div>
@@ -289,7 +289,7 @@ const SellerSubscriptionPlans = () => {
                                             <td className="py-3 px-3">
                                                 <div className="flex items-center gap-2">
                                                     {plan.imageUrl && (
-                                                        <img src={plan.imageUrl.startsWith('http') ? plan.imageUrl : `${SERVER_URL}${plan.imageUrl}`}
+                                                        <img loading="lazy" decoding="async" src={plan.imageUrl.startsWith('http') ? plan.imageUrl : `${SERVER_URL}${plan.imageUrl}`}
                                                             alt={plan.name} className="w-8 h-8 object-cover rounded border border-gray-200" />
                                                     )}
                                                     <div>

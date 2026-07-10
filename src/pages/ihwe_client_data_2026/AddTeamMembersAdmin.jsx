@@ -388,7 +388,7 @@ const AddTeamMembersAdmin = () => {
                                                         <span className="text-[9px] font-semibold text-blue-600 uppercase text-center leading-none mt-1">Uploading...</span>
                                                     </div>
                                                 ) : row.photoPreview ? (
-                                                    <img src={row.photoPreview} alt="" className="w-full h-full object-cover" />
+                                                    <img loading="lazy" decoding="async" src={row.photoPreview} alt="" className="w-full h-full object-cover" />
                                                 ) : (
                                                     <>
                                                         <Upload size={14} className="text-blue-500 mb-1 group-hover:scale-110 transition-transform" />

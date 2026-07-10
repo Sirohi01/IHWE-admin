@@ -174,7 +174,7 @@ function SellerKycSection({ reg, id, onRefresh }) {
                                                 <span className="text-[8px] font-bold text-gray-400 uppercase">PDF</span>
                                             </div>
                                         ) : resolvedUrl ? (
-                                            <img src={resolvedUrl} alt={label} className="w-full h-full object-cover" />
+                                            <img loading="lazy" decoding="async" src={resolvedUrl} alt={label} className="w-full h-full object-cover" />
                                         ) : (
                                             <div className="flex flex-col items-center gap-1 text-gray-300">
                                                 <FileText size={24} />
@@ -593,7 +593,7 @@ function OverviewTab({ reg, fmt, id, onRefresh }) {
                 {reg.companyLogoUrl && (
                     <div className="px-4 py-3 border-t border-gray-100 bg-slate-50/50 flex items-center gap-3">
                         <div className="w-12 h-12 bg-white border border-gray-200 rounded-sm overflow-hidden flex items-center justify-center">
-                            <img src={fixUrl(reg.companyLogoUrl)} alt="Logo" className="w-full h-full object-cover" />
+                            <img loading="lazy" decoding="async" src={fixUrl(reg.companyLogoUrl)} alt="Logo" className="w-full h-full object-cover" />
                         </div>
                         <div>
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Company Logo</p>
@@ -795,8 +795,7 @@ function KycDocCard({ label, field, regId, currentUrl, onRefresh }) {
                         <span className="text-[8px] font-bold text-gray-400 uppercase">PDF</span>
                     </div>
                 ) : currentUrl ? (
-                    <img
-                        src={`${resolvedUrl}${resolvedUrl.includes('?') ? '&' : '?'}v=${new Date().getTime()}`}
+                    <img loading="lazy" decoding="async"                         src={`${resolvedUrl}${resolvedUrl.includes('?') ? '&' : '?'}v=${new Date().getTime()}`}
                         alt={label}
                         className="w-full h-full object-cover"
                     />
@@ -1413,7 +1412,7 @@ function DocumentsTab({ reg, id, onRefresh }) {
                                                 <span className="text-[8px] font-bold text-gray-400 uppercase">PDF</span>
                                             </div>
                                         ) : (
-                                            <img src={url} alt={label} className="w-full h-full object-cover" />
+                                            <img loading="lazy" decoding="async" src={url} alt={label} className="w-full h-full object-cover" />
                                         )}
                                     </div>
                                 </div>

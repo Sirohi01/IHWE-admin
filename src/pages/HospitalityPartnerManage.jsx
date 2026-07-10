@@ -205,7 +205,7 @@ const HospitalityPartnerManage = () => {
                                 <div className="col-span-full p-4 bg-gray-50 border border-gray-200 rounded-lg">
                                     <label className={labelClass}>Hero Top Image</label>
                                     <input type="file" accept="image/*" onChange={handleTopImageUpload} className="mb-4 text-sm w-full" />
-                                    {heroImagePreview && <img src={heroImagePreview} alt="hero" className="h-40 object-cover rounded border border-gray-300" />}
+                                    {heroImagePreview && <img loading="lazy" decoding="async" src={heroImagePreview} alt="hero" className="h-40 object-cover rounded border border-gray-300" />}
                                 </div>
                             </div>
                         </div>
@@ -438,7 +438,7 @@ const HospitalityPartnerManage = () => {
                                 <div className="col-span-full p-4 bg-gray-50 border border-gray-200 rounded-lg">
                                     <label className={labelClass}>Footer Bottom Image</label>
                                     <input type="file" accept="image/*" onChange={handleFooterImageUpload} className="mb-4 text-sm w-full" />
-                                    {footerImagePreview && <img src={footerImagePreview} alt="footer" className="h-40 object-cover rounded border border-gray-300" />}
+                                    {footerImagePreview && <img loading="lazy" decoding="async" src={footerImagePreview} alt="footer" className="h-40 object-cover rounded border border-gray-300" />}
                                 </div>
                             </div>
                         </div>

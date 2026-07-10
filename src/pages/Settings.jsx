@@ -705,7 +705,7 @@ const Settings = () => {
                                     {logoPreview ? (
                                         <div className="relative w-full h-full flex flex-col items-center justify-center">
                                             <div className="w-24 h-24 mb-2 p-2 border border-gray-100 bg-white rounded flex items-center justify-center">
-                                                <img src={logoPreview.startsWith('http') || logoPreview.startsWith('data:') || logoPreview.startsWith('blob:') ? logoPreview : `${SERVER_URL}${logoPreview}`} alt="Preview" className="max-w-full max-h-full object-contain" />
+                                                <img loading="lazy" decoding="async" src={logoPreview.startsWith('http') || logoPreview.startsWith('data:') || logoPreview.startsWith('blob:') ? logoPreview : `${SERVER_URL}${logoPreview}`} alt="Preview" className="max-w-full max-h-full object-contain" />
                                             </div>
                                             <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded pointer-events-none">
                                                 <span className="text-xs font-bold text-gray-600 bg-white/90 px-2 py-1 rounded shadow-sm">Change Logo</span>
@@ -735,7 +735,7 @@ const Settings = () => {
                                     {emailLogoPreview ? (
                                         <div className="relative w-full h-full flex flex-col items-center justify-center">
                                             <div className="w-24 h-24 mb-2 p-2 border border-orange-100 bg-white rounded flex items-center justify-center">
-                                                <img src={emailLogoPreview.startsWith('http') || emailLogoPreview.startsWith('data:') || emailLogoPreview.startsWith('blob:') ? emailLogoPreview : `${SERVER_URL}${emailLogoPreview}`} alt="Email Logo Preview" className="max-w-full max-h-full object-contain" />
+                                                <img loading="lazy" decoding="async" src={emailLogoPreview.startsWith('http') || emailLogoPreview.startsWith('data:') || emailLogoPreview.startsWith('blob:') ? emailLogoPreview : `${SERVER_URL}${emailLogoPreview}`} alt="Email Logo Preview" className="max-w-full max-h-full object-contain" />
                                             </div>
                                             <p className="text-[9px] font-semibold text-orange-500 uppercase tracking-widest mt-1">Email Logo Set ✓</p>
                                             <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded pointer-events-none">
@@ -1013,7 +1013,7 @@ const Settings = () => {
                                         />
                                         {signaturePreview ? (
                                             <div className="flex flex-col items-center">
-                                                <img src={signaturePreview} alt="Signature" className="h-12 object-contain" />
+                                                <img loading="lazy" decoding="async" src={signaturePreview} alt="Signature" className="h-12 object-contain" />
                                                 <p className="text-[8px] font-bold text-gray-400 mt-1 uppercase">Signature Added</p>
                                             </div>
                                         ) : (
@@ -1037,7 +1037,7 @@ const Settings = () => {
                                         />
                                         {stampPreview ? (
                                             <div className="flex flex-col items-center">
-                                                <img src={stampPreview} alt="Stamp" className="h-12 object-contain" />
+                                                <img loading="lazy" decoding="async" src={stampPreview} alt="Stamp" className="h-12 object-contain" />
                                                 <p className="text-[8px] font-bold text-gray-400 mt-1 uppercase">Stamp Added</p>
                                             </div>
                                         ) : (

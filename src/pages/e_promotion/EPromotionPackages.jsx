@@ -302,7 +302,7 @@ export default function EPromotionPackages() {
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-10 bg-gray-50 border border-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                                                 {pkg.backgroundImage ? (
-                                                    <img src={pkg.backgroundImage.startsWith('http') || pkg.backgroundImage.startsWith('/') ? pkg.backgroundImage : `${SERVER_URL}${pkg.backgroundImage}`} className="w-full h-full object-cover" alt="" />
+                                                    <img loading="lazy" decoding="async" src={pkg.backgroundImage.startsWith('http') || pkg.backgroundImage.startsWith('/') ? pkg.backgroundImage : `${SERVER_URL}${pkg.backgroundImage}`} className="w-full h-full object-cover" alt="" />
                                                 ) : (
                                                     <ImageIcon className="w-4 h-4 text-gray-300" />
                                                 )}

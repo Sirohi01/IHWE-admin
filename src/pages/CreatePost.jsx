@@ -383,8 +383,7 @@ const Post = () => {
                 >
                   {formData.imagePreview ? (
                     <div className="relative">
-                      <img
-                        src={formData.imagePreview}
+                      <img loading="lazy" decoding="async"                         src={formData.imagePreview}
                         alt="Preview"
                         className="w-48 h-48 mx-auto object-cover rounded-lg"
                       />

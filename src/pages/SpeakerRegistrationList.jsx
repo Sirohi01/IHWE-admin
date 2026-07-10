@@ -118,8 +118,7 @@ const SpeakerRegistrationList = () => {
             {/* Hero Banner */}
             <div className="relative w-full h-64 overflow-hidden rounded ">
                 {/* Background Image */}
-                <img
-                    src="/dashbordBan.png"
+                <img loading="lazy" decoding="async"                     src="/dashbordBan.png"
                     alt="Speaker Registrations Banner"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />
@@ -238,8 +237,7 @@ const SpeakerRegistrationList = () => {
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center">
                                                     {speaker.speakerPhotoUrl && (
-                                                        <img
-                                                            src={speaker.speakerPhotoUrl}
+                                                        <img loading="lazy" decoding="async"                                                             src={speaker.speakerPhotoUrl}
                                                             alt={speaker.fullName}
                                                             className="w-10 h-10 rounded-full object-cover mr-3"
                                                         />

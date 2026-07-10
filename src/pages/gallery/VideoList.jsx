@@ -188,7 +188,7 @@ const VideoList = () => {
                                             <div className="flex items-center gap-3">
                                                 <div className="w-20 h-12 rounded overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center text-[#23471d] relative flex-shrink-0">
                                                     {thumb ? (
-                                                        <img src={thumb} className="w-full h-full object-cover" alt={video.title}
+                                                        <img loading="lazy" decoding="async" src={thumb} className="w-full h-full object-cover" alt={video.title}
                                                             onError={(e) => { e.target.src = "https://placehold.co/80x48?text=Video"; }} />
                                                     ) : !youtube && video.videoUrl ? (
                                                         <video src={`${SERVER_URL}${video.videoUrl}#t=0.5`} className="w-full h-full object-cover" preload="metadata" muted playsInline />

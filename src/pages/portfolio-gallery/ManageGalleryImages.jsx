@@ -181,7 +181,7 @@ const ManageGalleryImages = () => {
                         ) : (
                             <div className="space-y-4">
                                 <div className="h-48 border-2 border-gray-200 rounded-lg overflow-hidden relative group">
-                                    <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
+                                    <img loading="lazy" decoding="async" src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
                                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity gap-4">
                                         <button
                                             onClick={handleReplaceClick}
@@ -289,8 +289,7 @@ const ManageGalleryImages = () => {
                                             <td className="py-4 px-4">
                                                 {img.videoUrl ? (
                                                     img.videoUrl.includes('youtube.com') || img.videoUrl.includes('youtu.be') ? (
-                                                        <img
-                                                            src={`https://img.youtube.com/vi/${img.videoUrl.split('v=')[1]?.split('&')[0] || img.videoUrl.split('youtu.be/')[1]?.split('?')[0]}/hqdefault.jpg`}
+                                                        <img loading="lazy" decoding="async"                                                             src={`https://img.youtube.com/vi/${img.videoUrl.split('v=')[1]?.split('&')[0] || img.videoUrl.split('youtu.be/')[1]?.split('?')[0]}/hqdefault.jpg`}
                                                             className="w-20 h-14 object-cover rounded shadow-sm border border-gray-200"
                                                             alt={img.title}
                                                         />
@@ -298,8 +297,7 @@ const ManageGalleryImages = () => {
                                                         <video src={`${SERVER_URL}${img.videoUrl}#t=0.5`} className="w-20 h-14 object-cover rounded shadow-sm border border-gray-200" preload="metadata" muted playsInline />
                                                     )
                                                 ) : (
-                                                    <img
-                                                        src={`${SERVER_URL}${img.image}`}
+                                                    <img loading="lazy" decoding="async"                                                         src={`${SERVER_URL}${img.image}`}
                                                         className="w-20 h-14 object-cover rounded shadow-sm border border-gray-200"
                                                         alt={img.imageAlt}
                                                     />

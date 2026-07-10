@@ -206,7 +206,7 @@ const PerformaInvoiceDetails = () => {
 
         <div className="bg-gray-100 p-6 min-h-screen ">
           <div ref={sameRef} className="max-w-8xl mx-auto bg-white px-6 py-0.5">
-            <img className=" my-6" src={mainpic} alt="" />
+            <img loading="lazy" decoding="async" className=" my-6" src={mainpic} alt="" />
 
             {/* Client + Invoice Info */}
             <table className="w-full border-collapse border mb-3">
@@ -402,8 +402,8 @@ const PerformaInvoiceDetails = () => {
                             </td>
                             <td style={{ border: 'none', padding: '2px 8px 8px', textAlign: 'center', verticalAlign: 'bottom' }}>
                                 <div style={{ height: 55, marginTop: 15, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-                                    {sigUrl && <img src={sigUrl} alt="Signature" style={{ maxHeight: 55, maxWidth: 120 }} />}
-                                    {stampUrl && <img src={stampUrl} alt="Stamp" style={{ maxHeight: 55, maxWidth: 55 }} />}
+                                    {sigUrl && <img loading="lazy" decoding="async" src={sigUrl} alt="Signature" style={{ maxHeight: 55, maxWidth: 120 }} />}
+                                    {stampUrl && <img loading="lazy" decoding="async" src={stampUrl} alt="Stamp" style={{ maxHeight: 55, maxWidth: 55 }} />}
                                 </div>
                                 <div style={{ borderTop: '1px solid #ccc', margin: '35px 10px 8px' }}></div>
                                 <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 10, marginTop: 6 }}>Authorized Signatory.</div>

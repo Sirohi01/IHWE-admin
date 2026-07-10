@@ -115,8 +115,7 @@ const HeroCarousel = () => {
             animate={{ scale: 1 }}
             transition={{ duration: 7, ease: "easeOut" }}
           >
-            <img
-              src={getImageUrl(slides[current].image)}
+            <img loading="lazy" decoding="async"               src={getImageUrl(slides[current].image)}
               alt={slides[current].title}
               className="w-full h-full object-cover"
             />

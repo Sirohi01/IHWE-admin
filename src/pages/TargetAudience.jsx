@@ -140,8 +140,7 @@ const TargetAudience = () => {
         <>
             <div className="relative w-full h-64 overflow-hidden rounded ">
                 {/* Background Image */}
-                <img
-                    src="/home.png"
+                <img loading="lazy" decoding="async"                     src="/home.png"
                     alt="banner"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />
@@ -245,7 +244,7 @@ const TargetAudience = () => {
                                     <div className="mt-1 flex flex-col items-center gap-4">
                                         {previewUrl && (
                                             <div className="w-full h-40 border-2 border-dashed border-gray-200 relative group overflow-hidden">
-                                                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                                                <img loading="lazy" decoding="async" src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                     <p className="text-white text-xs font-bold">Change Image</p>
                                                 </div>

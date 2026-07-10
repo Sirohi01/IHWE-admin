@@ -273,8 +273,7 @@ const AdvisoryManagement = () => {
 
                                     {imagePreview ? (
                                         <div className="relative h-48 group">
-                                            <img
-                                                src={imagePreview.startsWith('blob:') ? imagePreview : `${SERVER_URL}${imagePreview}`}
+                                            <img loading="lazy" decoding="async"                                                 src={imagePreview.startsWith('blob:') ? imagePreview : `${SERVER_URL}${imagePreview}`}
                                                 className="w-full h-full object-cover border-2 border-gray-200 shadow-sm object-top"
                                                 alt="Preview"
                                             />
@@ -358,7 +357,7 @@ const AdvisoryManagement = () => {
                                             <td className="py-3 px-4 text-gray-500 font-bold">{idx + 1}</td>
                                             <td className="py-3 px-4">
                                                 {member.image ? (
-                                                    <img src={`${SERVER_URL}${member.image}`} alt={member.imageAlt} className="w-10 h-12 object-cover border border-gray-200 object-top" />
+                                                    <img loading="lazy" decoding="async" src={`${SERVER_URL}${member.image}`} alt={member.imageAlt} className="w-10 h-12 object-cover border border-gray-200 object-top" />
                                                 ) : (
                                                     <div className="w-10 h-12 bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400">
                                                         <ImageIcon size={14} />

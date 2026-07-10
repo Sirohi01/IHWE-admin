@@ -217,7 +217,7 @@ const WhyExhibitManage = () => {
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Parallax Background Image</label>
                                 <div className="relative h-24 w-full border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden group">
-                                    {ctaPreview ? <img src={ctaPreview} className="w-full h-full object-cover" /> : <ImageIcon className="text-slate-300" size={24} />}
+                                    {ctaPreview ? <img loading="lazy" decoding="async" src={ctaPreview} className="w-full h-full object-cover" /> : <ImageIcon className="text-slate-300" size={24} />}
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Plus className="text-white" /></div>
                                     <input type="file" onChange={handleCtaFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
                                 </div>
@@ -294,7 +294,7 @@ const WhyExhibitManage = () => {
                                             <td className="px-6 py-4 text-xs font-bold text-[#23471d]">{idx + 1}</td>
                                             <td className="px-6 py-4">
                                                 <div className="w-20 h-12 bg-slate-100 rounded overflow-hidden shadow-sm">
-                                                    {card.image && <img src={`${SERVER_URL}${card.image}`} alt={card.title} className="w-full h-full object-cover" />}
+                                                    {card.image && <img loading="lazy" decoding="async" src={`${SERVER_URL}${card.image}`} alt={card.title} className="w-full h-full object-cover" />}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
@@ -385,7 +385,7 @@ const WhyExhibitManage = () => {
                                 <div>
                                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Card Image</label>
                                     <div className="relative h-32 w-full border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden group">
-                                        {previewUrl ? <img src={previewUrl} className="w-full h-full object-cover" /> : <ImageIcon className="text-slate-300" size={32} />}
+                                        {previewUrl ? <img loading="lazy" decoding="async" src={previewUrl} className="w-full h-full object-cover" /> : <ImageIcon className="text-slate-300" size={32} />}
                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Plus className="text-white" /></div>
                                         <input type="file" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
                                     </div>

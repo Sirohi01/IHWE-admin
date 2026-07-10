@@ -88,7 +88,7 @@ const LogoUpload = ({ label, preview, onChange, alt, helper }) => (
         <div className="flex h-[58px] items-center gap-5 rounded-md border border-[#dbe4ef] bg-white px-3">
             <div className="flex h-11 w-32 items-center justify-center overflow-hidden rounded border border-[#e1e8f0] bg-[#f8fafc]">
                 {preview ? (
-                    <img src={preview} alt={alt} className="max-h-full max-w-full object-contain" />
+                    <img loading="lazy" decoding="async" src={preview} alt={alt} className="max-h-full max-w-full object-contain" />
                 ) : (
                     <ImageIcon size={20} className="text-[#9aa8ba]" />
                 )}

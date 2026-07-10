@@ -192,8 +192,7 @@ const AwardsGalleryManage = () => {
             {/* Hero Banner */}
             <div className="relative w-full h-64 overflow-hidden rounded ">
                 {/* Background Image */}
-                <img
-                    src="/activity_log.png"
+                <img loading="lazy" decoding="async"                     src="/activity_log.png"
                     alt="Awards Gallery Banner"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />
@@ -300,7 +299,7 @@ const AwardsGalleryManage = () => {
                                     />
                                     <label htmlFor="imageUpload" className="cursor-pointer">
                                         {imagePreview ? (
-                                            <img src={imagePreview} alt="Preview" className="max-h-40 mx-auto rounded" />
+                                            <img loading="lazy" decoding="async" src={imagePreview} alt="Preview" className="max-h-40 mx-auto rounded" />
                                         ) : (
                                             <div className="flex flex-col items-center">
                                                 <ImageIcon className="w-12 h-12 text-slate-300 mb-2" />
@@ -394,8 +393,7 @@ const AwardsGalleryManage = () => {
                                     <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
                                         {bulkPreviews.map((preview, index) => (
                                             <div key={index} className="relative group">
-                                                <img
-                                                    src={preview}
+                                                <img loading="lazy" decoding="async"                                                     src={preview}
                                                     alt={`Preview ${index + 1}`}
                                                     className="w-full h-24 object-cover rounded-lg border border-slate-200"
                                                 />
@@ -452,8 +450,7 @@ const AwardsGalleryManage = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             {items.map((item) => (
                                 <div key={item._id} className="group relative rounded-lg overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-all">
-                                    <img
-                                        src={`${SERVER_URL}${item.image}`}
+                                    <img loading="lazy" decoding="async"                                         src={`${SERVER_URL}${item.image}`}
                                         alt={item.title}
                                         className="w-full h-48 object-cover"
                                     />

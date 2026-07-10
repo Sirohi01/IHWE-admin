@@ -97,8 +97,7 @@ const ParallaxManage = () => {
     <>
       <div className="relative w-full h-64 overflow-hidden rounded ">
         {/* Background Image */}
-        <img
-          src="/home.png"
+        <img loading="lazy" decoding="async"           src="/home.png"
           alt="banner"
           className="absolute inset-0 w-full h-full object-cover z-0"
         />
@@ -292,8 +291,7 @@ const ParallaxManage = () => {
                 <div className="border-2 border-dashed border-gray-300 hover:border-[#23471d] transition-all p-8 flex flex-col items-center gap-4 group">
                   {imagePreview ? (
                     <div className="relative w-full aspect-video border-4 border-white shadow-2xl bg-gray-100 flex items-center justify-center overflow-hidden">
-                      <img
-                        src={`${SERVER_URL}${imagePreview}`}
+                      <img loading="lazy" decoding="async"                         src={`${SERVER_URL}${imagePreview}`}
                         className="w-full h-full object-cover"
                         alt="Current Background"
                       />

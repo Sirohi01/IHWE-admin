@@ -180,8 +180,7 @@ const StatsManage = () => {
         <>
             <div className="relative w-full h-64 overflow-hidden rounded ">
                 {/* Background Image */}
-                <img
-                    src="/home.png"
+                <img loading="lazy" decoding="async"                     src="/home.png"
                     alt="banner"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />
@@ -319,7 +318,7 @@ const StatsManage = () => {
                                     <div className="space-y-3">
                                         {preview && (
                                             <div className="relative w-full h-32 border-2 border-dashed border-gray-300 overflow-hidden group">
-                                                <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                                                <img loading="lazy" decoding="async" src={preview} alt="Preview" className="w-full h-full object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <label className="cursor-pointer text-white text-xs font-bold underline">Change</label>
                                                 </div>
@@ -434,7 +433,7 @@ const StatsManage = () => {
                                                     </td>
                                                     <td className="py-4 px-4">
                                                         <div className="w-16 h-10 rounded-lg overflow-hidden border border-gray-200">
-                                                            <img src={`${SERVER_URL}${item.bg}`} alt={item.altText} className="w-full h-full object-cover" />
+                                                            <img loading="lazy" decoding="async" src={`${SERVER_URL}${item.bg}`} alt={item.altText} className="w-full h-full object-cover" />
                                                         </div>
                                                     </td>
                                                     <td className="py-4 px-4">

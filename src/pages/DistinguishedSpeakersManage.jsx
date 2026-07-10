@@ -292,7 +292,7 @@ const DistinguishedSpeakersManage = () => {
                   onClick={() => document.getElementById('speakerImage').click()}
                 >
                   {imagePreview ? (
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    <img loading="lazy" decoding="async" src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                   ) : (
                     <>
                       <ImageIcon className="w-8 h-8 text-gray-300 mb-1 group-hover:text-[#0B2C66]" />
@@ -362,7 +362,7 @@ const DistinguishedSpeakersManage = () => {
                       {/* Photo */}
                       <div className="w-14 h-14 rounded-full border-2 border-gray-100 flex items-center justify-center bg-gray-50 shadow-sm overflow-hidden shrink-0">
                         {speaker.image ? (
-                          <img src={speaker.image.startsWith('http') ? speaker.image : `${SERVER_URL}${speaker.image}`} className="w-full h-full object-cover" />
+                          <img loading="lazy" decoding="async" src={speaker.image.startsWith('http') ? speaker.image : `${SERVER_URL}${speaker.image}`} className="w-full h-full object-cover" />
                         ) : (
                           <User size={24} className="text-gray-200" />
                         )}

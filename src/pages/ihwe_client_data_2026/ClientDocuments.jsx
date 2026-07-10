@@ -343,7 +343,7 @@ const ClientDocuments = () => {
             {/* Banner Section */}
             <div className="w-full -mt-1.5">
                 <div className="w-full relative flex flex-col justify-center rounded-none shadow-sm mb-1">
-                    <img src={docBanner} alt="Documents Banner" className="w-full h-[90px] md:h-[110px] lg:h-[130px] object-cover object-center rounded-none block" />
+                    <img loading="lazy" decoding="async" src={docBanner} alt="Documents Banner" className="w-full h-[90px] md:h-[110px] lg:h-[130px] object-cover object-center rounded-none block" />
                 </div>
             </div>
 
@@ -508,7 +508,7 @@ const ClientDocuments = () => {
                                         {selectedDocument.previewUrl ? (
                                             selectedDocument.isImage || selectedDocument.fileType === 'PDF' ? (
                                                 <div className="w-full h-full flex flex-col relative">
-                                                    <img src={selectedDocument.previewUrl} alt="Preview" className="max-w-full h-full object-contain bg-white" />
+                                                    <img loading="lazy" decoding="async" src={selectedDocument.previewUrl} alt="Preview" className="max-w-full h-full object-contain bg-white" />
                                                     {selectedDocument.fileType === 'PDF' && (
                                                         <div className="absolute top-2 right-2 flex gap-2">
                                                             <a href={selectedDocument.proxyViewUrl || selectedDocument.originalPdfUrl} target="_blank" rel="noopener noreferrer" className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] px-2 py-1 rounded shadow-sm font-semibold flex items-center gap-1 z-10">
@@ -530,7 +530,7 @@ const ClientDocuments = () => {
                                             )
                                         ) : (
                                             <div className="w-full h-full border border-gray-100 flex flex-col items-center p-6 text-center opacity-80" style={{ background: 'repeating-linear-gradient(45deg, #f9fafb, #f9fafb 10px, #ffffff 10px, #ffffff 20px)' }}>
-                                                <img src="/logo.png" alt="Logo" className="w-16 mb-4 grayscale opacity-50" />
+                                                <img loading="lazy" decoding="async" src="/logo.png" alt="Logo" className="w-16 mb-4 grayscale opacity-50" />
                                                 <h5 className="font-bold text-gray-800 text-sm mb-1 uppercase tracking-wide">{selectedDocument.fullName}</h5>
                                                 <div className="w-12 h-0.5 bg-gray-300 mx-auto mb-4"></div>
                                                 <div className="w-full space-y-2">

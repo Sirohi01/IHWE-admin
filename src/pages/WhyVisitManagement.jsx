@@ -267,7 +267,7 @@ const WhyVisitManagement = () => {
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Card Image</label>
                                 {imagePreview ? (
                                     <div className="relative h-32 border-2 border-gray-200 overflow-hidden mb-2">
-                                        <img src={imagePreview.startsWith('blob:') ? imagePreview : `${SERVER_URL}${imagePreview}`} className="w-full h-full object-cover" />
+                                        <img loading="lazy" decoding="async" src={imagePreview.startsWith('blob:') ? imagePreview : `${SERVER_URL}${imagePreview}`} className="w-full h-full object-cover" />
                                         <button onClick={() => { setImageFile(null); setImagePreview(''); setCardForm({ ...cardForm, image: '' }); }} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full"><Trash2 size={12} /></button>
                                     </div>
                                 ) : (
@@ -324,7 +324,7 @@ const WhyVisitManagement = () => {
                                         data.reasons.map((card, idx) => (
                                             <tr key={card._id} className="border-b border-gray-100 hover:bg-gray-50">
                                                 <td className="py-3 px-4">
-                                                    {card.image ? <img src={`${SERVER_URL}${card.image}`} className="w-14 h-10 object-cover rounded border" /> : <div className="w-14 h-10 bg-gray-100 flex items-center justify-center border"><ImageIcon size={14} className="text-gray-400" /></div>}
+                                                    {card.image ? <img loading="lazy" decoding="async" src={`${SERVER_URL}${card.image}`} className="w-14 h-10 object-cover rounded border" /> : <div className="w-14 h-10 bg-gray-100 flex items-center justify-center border"><ImageIcon size={14} className="text-gray-400" /></div>}
                                                 </td>
                                                 <td className="py-3 px-4 font-bold text-gray-800">{card.title}</td>
                                                 <td className="py-3 px-4"><div className="flex items-center gap-2"><IconComponent name={card.icon} size={16} style={{ color: card.accent }} /><span className="text-xs text-gray-500">{card.icon}</span></div></td>

@@ -412,7 +412,7 @@ const VideoGalleryManagement = () => {
                                 </label>
                                 {coverImagePreview ? (
                                     <div className="relative h-28 border-2 border-gray-200 overflow-hidden mb-2">
-                                        <img src={coverImagePreview} className="w-full h-full object-cover" alt="Cover Preview" />
+                                        <img loading="lazy" decoding="async" src={coverImagePreview} className="w-full h-full object-cover" alt="Cover Preview" />
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -515,14 +515,12 @@ const VideoGalleryManagement = () => {
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-16 h-10 rounded-lg overflow-hidden bg-gray-100 border border-gray-100 flex items-center justify-center text-[#23471d] relative group/preview">
                                                         {item.image ? (
-                                                            <img
-                                                                src={`${SERVER_URL}${item.image}`}
+                                                            <img loading="lazy" decoding="async"                                                                 src={`${SERVER_URL}${item.image}`}
                                                                 className="w-full h-full object-cover"
                                                                 alt={item.title}
                                                             />
                                                         ) : item.videoUrl && (item.videoUrl.includes('youtube.com') || item.videoUrl.includes('youtu.be')) ? (
-                                                            <img
-                                                                src={getYouTubeThumbnail(item.videoUrl)}
+                                                            <img loading="lazy" decoding="async"                                                                 src={getYouTubeThumbnail(item.videoUrl)}
                                                                 className="w-full h-full object-cover"
                                                                 alt={item.title}
                                                                 onError={(e) => { e.target.src = "https://placehold.co/64x40?text=NA"; }}

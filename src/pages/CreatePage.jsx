@@ -464,7 +464,7 @@ const CreatePage = () => {
                                                     accept="image/*"
                                                 />
                                                 {formData.ogImagePreview ? (
-                                                    <img src={formData.ogImagePreview} alt="OG Preview" className="h-16 w-full object-cover rounded" />
+                                                    <img loading="lazy" decoding="async" src={formData.ogImagePreview} alt="OG Preview" className="h-16 w-full object-cover rounded" />
                                                 ) : (
                                                     <div className="py-2">
                                                         <ImageIcon className="w-4 h-4 text-gray-300 mx-auto" />
@@ -613,7 +613,7 @@ const CreatePage = () => {
                                             />
                                             {formData.imagePreview ? (
                                                 <div className="relative w-full h-full">
-                                                    <img src={formData.imagePreview} alt="Preview" className="w-full h-40 object-cover rounded shadow-sm" />
+                                                    <img loading="lazy" decoding="async" src={formData.imagePreview} alt="Preview" className="w-full h-40 object-cover rounded shadow-sm" />
                                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded z-10">
                                                         <span className="text-white text-xs font-bold uppercase tracking-wider">Replace Image</span>
                                                     </div>
@@ -660,7 +660,7 @@ const CreatePage = () => {
                                                 <div className="h-28 w-full rounded flex items-center justify-center overflow-hidden bg-white">
                                                     {img.preview ? (
                                                         <div className="relative w-full h-full">
-                                                            <img src={img.preview} alt={`Gallery ${index}`} className="w-full h-full object-cover" />
+                                                            <img loading="lazy" decoding="async" src={img.preview} alt={`Gallery ${index}`} className="w-full h-full object-cover" />
                                                             <button
                                                                 type="button"
                                                                 onClick={() => removeMultiImage(index)}

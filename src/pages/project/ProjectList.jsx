@@ -66,8 +66,7 @@ const ProjectList = () => {
       label: "Photo",
       render: (row) =>
         row.photo ? (
-          <img
-            src={row.photo}
+          <img loading="lazy" decoding="async"             src={row.photo}
             alt="Project"
             className="w-10 h-10 rounded-md object-cover border"
           />

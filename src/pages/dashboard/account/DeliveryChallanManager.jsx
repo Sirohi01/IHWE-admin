@@ -969,7 +969,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, copyLabel = DEFA
         {challan.status === "cancelled" && <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 -rotate-12 border-[5px] border-red-600/70 px-7 py-2 text-4xl font-black uppercase tracking-widest text-red-600/70">Cancelled</div>}
 
         <div className="challan-page-header" style={{ marginBottom: 0, textAlign: "center" }}>
-          <img src={invoiceHeader} alt="Namo Gange Design House" style={{ width: "100%", maxWidth: "100%", display: "block" }} />
+          <img loading="lazy" decoding="async" src={invoiceHeader} alt="Namo Gange Design House" style={{ width: "100%", maxWidth: "100%", display: "block" }} />
         </div>
         <div className="challan-page-body">
 
@@ -1285,8 +1285,8 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, copyLabel = DEFA
                   </td>
                   <td style={{ border: 'none', padding: '2px 8px 8px', textAlign: 'center', verticalAlign: 'bottom' }}>
                     <div style={{ height: 55, marginTop: 15, display: "flex", alignItems: "center", justifyContent: "center", gap: 12, overflow: "hidden" }}>
-                      {settings?.authorizedSignature && <img src={mediaUrl(settings.authorizedSignature)} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} style={{ maxHeight: 55, maxWidth: 120, objectFit: "contain" }} />}
-                      {settings?.companyStamp && <img src={mediaUrl(settings.companyStamp)} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} style={{ maxHeight: 55, maxWidth: 55, objectFit: "contain" }} />}
+                      {settings?.authorizedSignature && <img loading="lazy" decoding="async" src={mediaUrl(settings.authorizedSignature)} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} style={{ maxHeight: 55, maxWidth: 120, objectFit: "contain" }} />}
+                      {settings?.companyStamp && <img loading="lazy" decoding="async" src={mediaUrl(settings.companyStamp)} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} style={{ maxHeight: 55, maxWidth: 55, objectFit: "contain" }} />}
                     </div>
                     <div style={{ borderTop: '1px solid #ccc', margin: '35px 10px 8px' }}></div>
                     <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 10, marginTop: 6 }}>Authorized Signatory.</div>

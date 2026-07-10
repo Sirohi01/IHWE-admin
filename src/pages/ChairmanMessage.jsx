@@ -169,8 +169,7 @@ const ChairmanMessage = () => {
     <>
       <div className="relative w-full h-64 overflow-hidden rounded ">
         {/* Background Image */}
-        <img
-          src="/home.png"
+        <img loading="lazy" decoding="async"           src="/home.png"
           alt="banner"
           className="absolute inset-0 w-full h-full object-cover z-0"
         />
@@ -250,8 +249,7 @@ const ChairmanMessage = () => {
 
                   <div className="relative aspect-[3/4] bg-slate-100 flex items-center justify-center group overflow-hidden">
                     {preview ? (
-                      <img
-                        src={preview}
+                      <img loading="lazy" decoding="async"                         src={preview}
                         className="w-full h-full object-cover"
                         alt="preview"
                       />

@@ -574,8 +574,7 @@ const EPromotionWebManagement = () => {
                                                             : 'border-gray-200 hover:border-gray-300'
                                                         }`}
                                                 >
-                                                    <img
-                                                        src={`${FRONTEND_URL}${img.value}`}
+                                                    <img loading="lazy" decoding="async"                                                         src={`${FRONTEND_URL}${img.value}`}
                                                         alt={img.label}
                                                         className="w-full h-12 object-cover rounded mb-1.5 border border-gray-100"
                                                         onError={(e) => {

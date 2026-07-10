@@ -721,7 +721,7 @@ export default function AdminUser() {
                                     <div className="flex items-center gap-3 h-8">
                                         {form.hodImage ? (
                                             <div className="w-8 h-8 rounded-full border overflow-hidden shadow-sm">
-                                                <img src={form.hodImage} alt="HOD" className="w-full h-full object-cover" />
+                                                <img loading="lazy" decoding="async" src={form.hodImage} alt="HOD" className="w-full h-full object-cover" />
                                             </div>
                                         ) : (
                                             <div className="w-8 h-8 rounded-full border bg-gray-100 flex items-center justify-center text-gray-400 text-xs shadow-sm">N/A</div>
@@ -762,7 +762,7 @@ export default function AdminUser() {
                                     <div className="flex items-center gap-3 h-8">
                                         {form.reportingToImage ? (
                                             <div className="w-8 h-8 rounded-full border overflow-hidden shadow-sm">
-                                                <img src={form.reportingToImage} alt="Reporting To" className="w-full h-full object-cover" />
+                                                <img loading="lazy" decoding="async" src={form.reportingToImage} alt="Reporting To" className="w-full h-full object-cover" />
                                             </div>
                                         ) : (
                                             <div className="w-8 h-8 rounded-full border bg-gray-100 flex items-center justify-center text-gray-400 text-xs shadow-sm">N/A</div>

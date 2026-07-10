@@ -25,7 +25,7 @@ export default function SalesLeaderboard({ leaderboard, currentUser }) {
                   isActiveUser ? 'border-2 border-emerald-400' : 'bg-slate-100'
                 }`}>
                   {item.profileImage ? (
-                    <img src={item.profileImage} alt="" className="w-full h-full object-cover" />
+                    <img loading="lazy" decoding="async" src={item.profileImage} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-[10px] font-bold uppercase">{item.name?.[0] || 'S'}</span>
                   )}

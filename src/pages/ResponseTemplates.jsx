@@ -255,10 +255,10 @@ const ResponseTemplates = () => {
 
     const renderEmailPreview = () => {
         const headerSection = headerImagePreview
-            ? `<div style="line-height:0;"><img src="${headerImagePreview}" alt="Header" style="width:100%;display:block;" /></div>`
+            ? `<div style="line-height:0;"><img loading="lazy" decoding="async" src="${headerImagePreview}" alt="Header" style="width:100%;display:block;" /></div>`
             : `<div style="background:linear-gradient(135deg,#23471d,#3d6b33);padding:30px;text-align:center;color:white;"><h1 style="margin:0;font-size:22px;">IHWE 2026</h1></div>`;
         const footerSection = footerImagePreview
-            ? `<div style="line-height:0;"><img src="${footerImagePreview}" alt="Footer" style="width:100%;display:block;" /></div>`
+            ? `<div style="line-height:0;"><img loading="lazy" decoding="async" src="${footerImagePreview}" alt="Footer" style="width:100%;display:block;" /></div>`
             : `<div style="background:#f9fafb;padding:20px;text-align:center;font-size:12px;color:#6b7280;border-top:1px solid #f3f4f6;"><p>&copy; 2026 IHWE | Global Health Connect. All rights reserved.</p></div>`;
 
         const shell = `
@@ -281,7 +281,7 @@ const ResponseTemplates = () => {
                     ${headerSection}
                     <div class="content">
                         ${template.emailBody || '<p style="color: #999; font-style: italic;">No body content defined...</p>'}
-                        ${smallLogoPreview ? `<div><img src="${smallLogoPreview}" alt="Logo" width="200" style="display:block; max-width:200px; height:auto; border:0;" /></div>` : ''}
+                        ${smallLogoPreview ? `<div><img loading="lazy" decoding="async" src="${smallLogoPreview}" alt="Logo" width="200" style="display:block; max-width:200px; height:auto; border:0;" /></div>` : ''}
                         ${(selectedType === 'corporate-visitor' || selectedType === 'general-visitor') ? `<div class="qr-section"><p style="font-weight:700;color:#23471d;margin:0 0 12px;font-size:14px;text-transform:uppercase;letter-spacing:1px;">QR Code will appear here</p><div style="width:120px;height:120px;background:#f3f4f6;border:2px dashed #d1d5db;margin:0 auto;display:flex;align-items:center;justify-content:center;border-radius:8px;"><span style="font-size:11px;color:#9ca3af;">QR CODE</span></div><p style="margin:10px 0 0;font-size:12px;color:#6b7280;">Registration ID: NGT/IHWE/CV/100001</p></div>` : ''}
                     </div>
                     ${footerSection}
@@ -371,7 +371,7 @@ const ResponseTemplates = () => {
                                 <div className="border-2 border-dashed border-gray-200 rounded p-3 relative group hover:border-blue-400 transition-colors">
                                     {headerImagePreview ? (
                                         <div className="relative">
-                                            <img src={headerImagePreview} alt="Header" className="w-full h-20 object-cover rounded" />
+                                            <img loading="lazy" decoding="async" src={headerImagePreview} alt="Header" className="w-full h-20 object-cover rounded" />
                                             <button
                                                 type="button"
                                                 onClick={() => handleRemoveImage('header')}
@@ -401,7 +401,7 @@ const ResponseTemplates = () => {
                                 <div className="border-2 border-dashed border-gray-200 rounded p-3 relative group hover:border-orange-400 transition-colors">
                                     {footerImagePreview ? (
                                         <div className="relative">
-                                            <img src={footerImagePreview} alt="Footer" className="w-full h-20 object-cover rounded" />
+                                            <img loading="lazy" decoding="async" src={footerImagePreview} alt="Footer" className="w-full h-20 object-cover rounded" />
                                             <button
                                                 type="button"
                                                 onClick={() => handleRemoveImage('footer')}
@@ -431,7 +431,7 @@ const ResponseTemplates = () => {
                                 <div className="border-2 border-dashed border-gray-200 rounded p-3 relative group hover:border-blue-400 transition-colors">
                                     {smallLogoPreview ? (
                                         <div className="relative">
-                                            <img src={smallLogoPreview} alt="Small Logo" className="w-auto h-20 object-contain rounded" />
+                                            <img loading="lazy" decoding="async" src={smallLogoPreview} alt="Small Logo" className="w-auto h-20 object-contain rounded" />
                                             <button
                                                 type="button"
                                                 onClick={() => handleRemoveImage('smallLogo')}

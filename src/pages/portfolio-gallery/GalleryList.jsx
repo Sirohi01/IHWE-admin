@@ -191,8 +191,7 @@ const GalleryList = () => {
             key: "mainImage",
             label: "MAIN IMAGE",
             render: (row) => (
-                <img
-                    src={`${apiUrl}${row.coverImage || row.images[0]?.image}`} // Use coverImage if available
+                <img loading="lazy" decoding="async"                     src={`${apiUrl}${row.coverImage || row.images[0]?.image}`} // Use coverImage if available
                     alt={row.title}
                     className="w-16 h-10 object-cover rounded-md border border-gray-200"
                     onError={(e) => {
@@ -211,8 +210,7 @@ const GalleryList = () => {
                     onClick={() => openImageModal(row)}
                 >
                     {row.images?.slice(0, 4).map((img, i) => ( // Use row.images
-                        <img
-                            key={i}
+                        <img loading="lazy" decoding="async"                             key={i}
                             src={`${apiUrl}${img.image}`}
                             className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
                             alt=""
@@ -341,8 +339,7 @@ const GalleryList = () => {
                             {paginatedGalleries.map((gallery) => ( // Changed row to gallery for clarity
                                 <div key={gallery._id} className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden group hover:shadow-2xl transition-all duration-300">
                                     <div className="relative aspect-video overflow-hidden">
-                                        <img
-                                            src={`${SERVER_URL}${gallery.coverImage || gallery.images[0]?.image || gallery.mainImage}`}
+                                        <img loading="lazy" decoding="async"                                             src={`${SERVER_URL}${gallery.coverImage || gallery.images[0]?.image || gallery.mainImage}`}
                                             alt={gallery.title}
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                             onError={(e) => { e.target.src = "https://placehold.co/400x225?text=No+Preview"; }}
@@ -446,8 +443,7 @@ const GalleryList = () => {
                         <div className="p-6 overflow-y-auto grid grid-cols-2 md:grid-cols-4 gap-4">
                             {currentGalleryImages.map((img, i) => (
                                 <div key={i} className="group relative">
-                                    <img
-                                        src={`${apiUrl}${img.image}`}
+                                    <img loading="lazy" decoding="async"                                         src={`${apiUrl}${img.image}`}
                                         className="w-full h-32 object-cover rounded-lg shadow-sm border border-gray-100"
                                         alt={img.altText}
                                         onError={(e) => {

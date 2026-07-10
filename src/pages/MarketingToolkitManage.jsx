@@ -225,7 +225,7 @@ const MarketingToolkitManage = () => {
                             {tpl.category === 'Video' ? (
                                 <video src={`${SERVER_URL}${tpl.templateUrl}`} className="w-full h-full object-contain" muted />
                             ) : (
-                                <img src={`${SERVER_URL}${tpl.templateUrl}`} alt={tpl.name} className="w-full h-full object-contain" />
+                                <img loading="lazy" decoding="async" src={`${SERVER_URL}${tpl.templateUrl}`} alt={tpl.name} className="w-full h-full object-contain" />
                             )}
                             <div className="absolute top-2 right-2 flex gap-1">
                                 <span className={`px-2 py-0.5 text-[8px] font-black uppercase tracking-tighter ${tpl.isActive ? 'bg-green-500' : 'bg-gray-400'} text-white`}>
@@ -379,7 +379,7 @@ const MarketingToolkitManage = () => {
                                                             {p.is_video ? (
                                                                 <video src={p.url} className="w-full h-full object-contain" />
                                                             ) : (
-                                                                <img src={p.url} className="w-full h-full object-contain" alt="Preview" />
+                                                                <img loading="lazy" decoding="async" src={p.url} className="w-full h-full object-contain" alt="Preview" />
                                                             )}
                                                         </div>
                                                     ))}

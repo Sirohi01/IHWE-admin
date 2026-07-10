@@ -357,7 +357,7 @@ const TravelAccommodationManage = () => {
                                 <label className="block text-[10px] font-black text-[#d26019] uppercase mb-1">Hotel Photo [1920x1080]</label>
                                 {hotelImagePreview ? (
                                     <div className="relative h-40 border rounded overflow-hidden group">
-                                        <img src={hotelImagePreview} alt="Preview" className="w-full h-full object-cover" />
+                                        <img loading="lazy" decoding="async" src={hotelImagePreview} alt="Preview" className="w-full h-full object-cover" />
                                         <button onClick={()=>{setHotelImageFile(null); setHotelImagePreview('');}} className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                                             <Trash2 size={14} />
                                         </button>
@@ -399,7 +399,7 @@ const TravelAccommodationManage = () => {
                                     {data.hotelOptions?.map((hotel, idx) => (
                                         <tr key={idx} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-3 py-2">
-                                                <img src={hotel.image.startsWith('http') ? hotel.image : `${SERVER_URL}${hotel.image}`} alt={hotel.alt} className="w-16 h-12 object-cover rounded shadow-sm border border-gray-200" />
+                                                <img loading="lazy" decoding="async" src={hotel.image.startsWith('http') ? hotel.image : `${SERVER_URL}${hotel.image}`} alt={hotel.alt} className="w-16 h-12 object-cover rounded shadow-sm border border-gray-200" />
                                             </td>
                                             <td className="px-3 py-2">
                                                 <div className="font-bold text-gray-800">{hotel.title}</div>

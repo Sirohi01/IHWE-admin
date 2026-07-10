@@ -137,8 +137,7 @@ export default function CallsRightSidebar({ statsData, recentLogs }) {
         <h3 className="text-[16px] font-medium text-[#0F172A] mb-2">Quick Dial</h3>
         <div className="flex items-center gap-2 mb-2">
           <div className="relative flex items-center rounded-lg border border-slate-200 bg-white">
-            <img
-              src={`https://flagcdn.com/w20/${countryCodes.find((country) => country.code === dialCountryCode)?.flag || 'in'}.png`}
+            <img loading="lazy" decoding="async"               src={`https://flagcdn.com/w20/${countryCodes.find((country) => country.code === dialCountryCode)?.flag || 'in'}.png`}
               alt=""
               className="ml-2 h-3 w-5"
             />

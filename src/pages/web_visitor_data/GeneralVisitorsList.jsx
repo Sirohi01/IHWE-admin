@@ -278,7 +278,7 @@ const GeneralVisitorsList = () => {
     {
       label: "QR Code",
       accessor: "qrCode.image",
-      render: (img) => img ? <img src={img} alt="QR Code" className="w-12 h-12 cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setModalQrCode(img); }} /> : <span className="text-gray-400">N/A</span>
+      render: (img) => img ? <img loading="lazy" decoding="async" src={img} alt="QR Code" className="w-12 h-12 cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setModalQrCode(img); }} /> : <span className="text-gray-400">N/A</span>
     },
     { label: "Created By", accessor: "meta.createdBy" },
     { label: "Updated By", accessor: "meta.updatedBy" },
@@ -404,7 +404,7 @@ const GeneralVisitorsList = () => {
           <div className="bg-white p-4 rounded-lg shadow-lg relative" onClick={(e) => e.stopPropagation()}>
             <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-xl" onClick={(e) => { e.stopPropagation(); setModalQrCode(null); }}>✕</button>
             <h3 className="text-lg font-medium text-center mb-4 mt-2">Visitor QR Code</h3>
-            <img src={modalQrCode} alt="Enlarged QR Code" className="w-64 h-64 object-contain" />
+            <img loading="lazy" decoding="async" src={modalQrCode} alt="Enlarged QR Code" className="w-64 h-64 object-contain" />
           </div>
         </div>
       )}

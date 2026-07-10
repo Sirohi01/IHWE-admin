@@ -110,8 +110,7 @@ const ApprovedSpeakersList = () => {
       {/* Hero Banner */}
       <div className="relative w-full h-64 overflow-hidden rounded ">
         {/* Background Image */}
-        <img
-          src="/dashbordBan.png"
+        <img loading="lazy" decoding="async"           src="/dashbordBan.png"
           alt="Approved Speakers Banner"
           className="absolute inset-0 w-full h-full object-cover z-0"
         />

@@ -830,7 +830,7 @@ const BuyerRegistration = () => {
 
             <div className="overflow-hidden border border-slate-200 bg-white ">
                 <div className="relative">
-                    {heroImage ? <img src={heroImage} alt={heroData?.imageAltText || "Buyer registration"} className="h-[180px] w-full object-cover" /> : <div className="h-[280px] w-full bg-[radial-gradient(circle_at_top_left,_#f0fdf4,_#dcfce7_35%,_#ffffff_78%)]" />}
+                    {heroImage ? <img loading="lazy" decoding="async" src={heroImage} alt={heroData?.imageAltText || "Buyer registration"} className="h-[180px] w-full object-cover" /> : <div className="h-[280px] w-full bg-[radial-gradient(circle_at_top_left,_#f0fdf4,_#dcfce7_35%,_#ffffff_78%)]" />}
                     <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/55 to-[#23471d]/35" />
                     <div className="absolute inset-0 flex items-end">
                         <div className="max-w-4xl p-8 text-white md:p-10">

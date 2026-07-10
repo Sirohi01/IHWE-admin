@@ -173,8 +173,7 @@ const ConferenceTestimonialsManage = () => {
         <>
             <div className="relative w-full h-64 overflow-hidden rounded ">
                 {/* Background Image */}
-                <img
-                    src="/home.png"
+                <img loading="lazy" decoding="async"                     src="/home.png"
                     alt="banner"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />
@@ -329,7 +328,7 @@ const ConferenceTestimonialsManage = () => {
                                         <div className="relative w-16 h-16 border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden group">
                                             {imagePreview ? (
                                                 <>
-                                                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                                                    <img loading="lazy" decoding="async" src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                                                     <button
                                                         onClick={removeImage}
                                                         className="absolute inset-0 bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -435,8 +434,7 @@ const ConferenceTestimonialsManage = () => {
                                                 <td className="py-3 px-4 text-gray-500 font-bold">{idx + 1}</td>
                                                 <td className="py-3 px-4">
                                                     {card.image ? (
-                                                        <img
-                                                            src={`${SERVER_URL}${card.image}`}
+                                                        <img loading="lazy" decoding="async"                                                             src={`${SERVER_URL}${card.image}`}
                                                             alt={card.name}
                                                             className="w-10 h-10 rounded-full object-cover border-2 border-gray-100"
                                                         />

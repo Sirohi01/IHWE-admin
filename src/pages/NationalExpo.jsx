@@ -175,7 +175,7 @@ const NationalExpo = () => {
                     className="relative border-2 border-dashed border-gray-300 h-32 flex items-center justify-center bg-gray-50 cursor-pointer overflow-hidden"
                     onClick={() => document.getElementById('bgFile').click()}
                   >
-                    {previewUrl ? <img src={previewUrl} className="w-full h-full object-contain opacity-50" /> : <ImageIcon className="text-gray-400" />}
+                    {previewUrl ? <img loading="lazy" decoding="async" src={previewUrl} className="w-full h-full object-contain opacity-50" /> : <ImageIcon className="text-gray-400" />}
                     <input type="file" id="bgFile" className="hidden" onChange={(e) => {
                       const f = e.target.files[0];
                       if (f) { setBgFile(f); setPreviewUrl(URL.createObjectURL(f)); }

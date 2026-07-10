@@ -273,8 +273,7 @@ const HeroImages = () => {
             label: "IMAGE",
             render: (row) => (
                 <div className="w-20 h-10 border-2 border-gray-200 overflow-hidden bg-gray-50 rounded">
-                    <img
-                        src={`${SERVER_URL}${row.backgroundImage}`}
+                    <img loading="lazy" decoding="async"                         src={`${SERVER_URL}${row.backgroundImage}`}
                         alt={row.imageAltText || row.pageName}
                         className="w-full h-full object-cover"
                     />
@@ -690,7 +689,7 @@ const HeroImages = () => {
                                     {imagePreview ? (
                                         <div className="relative group overflow-hidden">
                                             <div className={`w-full overflow-hidden border-2 border-gray-200 shadow-sm ${isRegistrationPage(formData.pageName) ? 'aspect-[16/5]' : 'aspect-[16/4]'}`}>
-                                                <img src={imagePreview} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Preview" />
+                                                <img loading="lazy" decoding="async" src={imagePreview} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Preview" />
                                             </div>
                                             <div className="absolute top-3 left-3 bg-[#23471d] text-white text-[10px] font-black px-3 py-1 uppercase tracking-[0.2em] shadow-lg">
                                                 {imageFile ? 'New Selection' : 'Current Hero'}
