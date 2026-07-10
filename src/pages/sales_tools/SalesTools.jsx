@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { FileText, ClipboardList, Users } from 'lucide-react';
 import axios from 'axios';
+import api from '../../lib/api';
 import SalesSummaryCards from './components/SalesSummaryCards';
 import ProposalsTable from './components/ProposalsTable';
 import QuotationsTable from './components/QuotationsTable';
@@ -22,8 +23,7 @@ export default function SalesTools() {
   useEffect(() => {
     const fetchEstimates = async () => {
       try {
-        const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        const res = await axios.get(`${BASE_URL}/api/estimates`);
+        const res = await api.get(`/api/estimates`);
         setEstimates(res.data.data || []);
       } catch (error) {
         console.error("Error fetching estimates:", error);

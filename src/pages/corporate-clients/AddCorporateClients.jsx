@@ -20,6 +20,7 @@ import {
   PhoneCall,
 } from "lucide-react";
 import PageHeader from '../../components/PageHeader';
+import api from '../../lib/api';
 
 
 const AddCorporateClients = () => {
@@ -247,14 +248,6 @@ const AddCorporateClients = () => {
       newErrors.address = 'Address is required';
     }
 
-    if (!formData.taxId.trim()) {
-      newErrors.taxId = 'Tax ID is required';
-    }
-
-    if (formData.creditLimit && isNaN(formData.creditLimit)) {
-      newErrors.creditLimit = 'Credit limit must be a number';
-    }
-
     return newErrors;
   };
 
@@ -277,6 +270,7 @@ const AddCorporateClients = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setErrors({});
 
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
@@ -285,25 +279,60 @@ const AddCorporateClients = () => {
       return;
     }
 
-    const newClient = {
-      id: Date.now(),
-      ...formData,
-      createdAt: new Date().toISOString(),
+    // Build the contacts[] the Company model actually expects (email + mobile are
+    // required per contact) — only include contact 2/3 if they were filled in.
+    const contacts = [
+      {
+        name: formData.contactName1,
+        designation: formData.designation1,
+        email: formData.email1,
+        mobile: formData.mobile1,
+        alternate: formData.landline1,
+        isPrimary: true,
+      },
+      ...(formData.contactName2 && formData.email2 && formData.mobile2 ? [{
+        name: formData.contactName2,
+        designation: formData.designation2,
+        email: formData.email2,
+        mobile: formData.mobile2,
+        alternate: formData.landline2,
+      }] : []),
+      ...(formData.contactName3 && formData.email3 && formData.mobile3 ? [{
+        name: formData.contactName3,
+        designation: formData.designation3,
+        email: formData.email3,
+        mobile: formData.mobile3,
+        alternate: formData.landline3,
+      }] : []),
+    ];
+
+    const payload = {
+      companyName: formData.companyName,
+      email: formData.email1,
+      category: formData.category,
+      businessNature: formData.natureOfBusiness,
+      address: formData.address,
+      country: formData.country,
+      state: formData.state,
+      city: formData.city,
+      pincode: formData.pincode,
+      dataSource: formData.dataSource,
+      companyDescription: formData.notes,
+      contacts,
     };
 
-    const existing =
-      JSON.parse(localStorage.getItem("corporateClients")) || [];
-
-    localStorage.setItem(
-      "corporateClients",
-      JSON.stringify([newClient, ...existing])
-    );
-
-    setSuccess(true);
-    resetForm();
-    setLoading(false);
-
-    setTimeout(() => setSuccess(false), 3000);
+    try {
+      await api.post('/api/companies', payload);
+      setSuccess(true);
+      resetForm();
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err) {
+      setErrors({
+        submit: err?.response?.data?.message || 'Failed to save corporate client. Please try again.',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const resetForm = () => {
@@ -368,6 +397,13 @@ const AddCorporateClients = () => {
           <span className="text-green-800 font-medium">
             Corporate client added successfully! The client has been saved to the database.
           </span>
+        </div>
+      )}
+
+      {errors.submit && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center">
+          <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
+          <span className="text-red-800 font-medium">{errors.submit}</span>
         </div>
       )}
 
