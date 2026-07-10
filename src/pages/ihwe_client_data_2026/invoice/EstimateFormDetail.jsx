@@ -1345,7 +1345,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                                         <tr>
                                                             <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>IFSC Code</td>
                                                             <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0' }}>:</td>
-                                                            <td style={{ border: 'none', padding: '1px 0', fontWeight: 700, color: '#0d1f3c', wordBreak: 'break-word' }}>{bankDetails?.ifsccode || 'KKBK0004584'}</td>
+                                                            <td style={{ border: 'none', padding: '1px 0', wordBreak: 'break-word' }}>{bankDetails?.ifsccode || 'KKBK0004584'}</td>
                                                         </tr>
                                                         <tr>
                                                             <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>Branch Name</td>
