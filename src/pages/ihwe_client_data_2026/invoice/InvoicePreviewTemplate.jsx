@@ -513,20 +513,19 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                     justifyContent: 'center',
                     minHeight: 22,
                     marginBottom: 0,
-                    paddingTop: 0,
-                    paddingBottom: 0,
+                    paddingTop: 10,
+                    paddingBottom: 4,
                     color: '#0d1f3c',
                     textTransform: 'uppercase',
                 }}
             >
-                <div style={{ fontWeight: 500, fontSize: 15, lineHeight: 1, textAlign: 'center' }}>{heading || 'TAX INVOICE'}</div>
+                <div style={{ fontWeight: 500, fontSize: 18, lineHeight: 1, textAlign: 'center' }}>{heading || 'TAX INVOICE'}</div>
                 <div
                     className="invoice-copy-label"
                     style={{
                         position: 'absolute',
                         right: 0,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
+                        bottom: 2,
                         fontWeight: 600,
                         fontSize: 11,
                         lineHeight: 1,
