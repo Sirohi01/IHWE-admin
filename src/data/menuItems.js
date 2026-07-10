@@ -66,10 +66,10 @@ export const menuItems = [
           { label: "Follow-Ups", path: "/ihweClientData2026/warmClientList" },
           { label: "Hot Leads", path: "/ihweClientData2026/hotClientList" },
           { label: "Proposal Sent", path: "/ihweClientData2026/proposalSentList" },
-         
+
           { label: "Lost Leads", path: "/ihweClientData2026/coldClientList" },
           { label: "All Leads", path: "/ihweClientData2026/allLeadsList" },
-           { label: "Converted", path: "/ihweClientData2026/convertedList" },
+          { label: "Converted", path: "/ihweClientData2026/convertedList" },
         ]
       },
       // { label: "Master Data", path: "/ihweClientData2026/masterData" },
@@ -782,7 +782,7 @@ export const menuItems = [
     children: [
       { label: "Payments", path: "/accounts/payments" },
       { label: "Receipts", path: "/accounts/receipts" },
-      { label: "Payment Management", path: "/accounts/payment-management" },
+      { label: "Receipt Configuration", path: "/accounts/payment-management" },
       { label: "Accounts Receivable", path: "/accounts/ar" },
       { label: "Client Ledger", path: "/accounts/client-ledger" },
       { label: "Imprest / Reimbursement", path: "/accounts/imprest" },
