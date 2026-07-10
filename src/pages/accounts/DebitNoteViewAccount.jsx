@@ -94,14 +94,16 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
 
   return (
     <div className="bg-white border border-slate-300 p-6 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', maxWidth: '1000px', margin: '0 auto' }}>
-      <div style={{ marginBottom: 2, textAlign: 'center' }}>
+      <div className="invoice-header-image" style={{ marginBottom: 0, textAlign: 'center' }}>
         <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', marginTop: 0, marginBottom: 2, color: NAVY, textTransform: 'uppercase' }}>
-        <span aria-hidden="true" />
-        <div style={{ fontWeight: 400, fontSize: 18, lineHeight: 1 }}>DEBIT NOTE</div>
-        <div style={{ justifySelf: 'end', fontWeight: 700, fontSize: 11, lineHeight: 1 }}>ORIGINAL COPY</div>
+      <div
+        className="invoice-title-bar"
+        style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 22, marginBottom: 0, paddingTop: 0, paddingBottom: 0, color: NAVY, textTransform: 'uppercase' }}
+      >
+        <div style={{ fontWeight: 500, fontSize: 15, lineHeight: 1, textAlign: 'center' }}>DEBIT NOTE</div>
+        <div className="invoice-copy-label" style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', fontWeight: 600, fontSize: 11, lineHeight: 1, paddingRight: 2, whiteSpace: 'nowrap', textAlign: 'right', letterSpacing: '-0.35px' }}>ORIGINAL COPY</div>
       </div>
 
       {/* Billed To + Debit Note Details + Reason */}

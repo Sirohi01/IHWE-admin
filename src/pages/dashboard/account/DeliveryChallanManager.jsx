@@ -968,7 +968,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, copyLabel = DEFA
       <div style={{ position: "relative" }}>
         {challan.status === "cancelled" && <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 -rotate-12 border-[5px] border-red-600/70 px-7 py-2 text-4xl font-black uppercase tracking-widest text-red-600/70">Cancelled</div>}
 
-        <div className="challan-page-header" style={{ marginBottom: 2, textAlign: "center" }}>
+        <div className="challan-page-header" style={{ marginBottom: 0, textAlign: "center" }}>
           <img src={invoiceHeader} alt="Namo Gange Design House" style={{ width: "100%", maxWidth: "100%", display: "block" }} />
         </div>
         <div className="challan-page-body">
@@ -981,14 +981,14 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, copyLabel = DEFA
               alignItems: "center",
               justifyContent: "center",
               minHeight: 22,
-              marginBottom: 4,
-              paddingTop: 2,
-              paddingBottom: 2,
+              marginBottom: 0,
+              paddingTop: 0,
+              paddingBottom: 0,
               color: "#0d1f3c",
               textTransform: "uppercase",
             }}
           >
-            <div style={{ fontWeight: 400, fontSize: 18, lineHeight: 1.1, textAlign: "center" }}>DELIVERY CHALLAN</div>
+            <div style={{ fontWeight: 500, fontSize: 15, lineHeight: 1, textAlign: "center" }}>DELIVERY CHALLAN</div>
             <div
               className="challan-copy-label"
               style={{
@@ -996,13 +996,13 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, copyLabel = DEFA
                 right: 0,
                 top: "50%",
                 transform: "translateY(-50%)",
-                fontWeight: 700,
-                fontSize: 9.2,
+                fontWeight: 600,
+                fontSize: 11,
                 lineHeight: 1,
                 paddingRight: 2,
                 whiteSpace: "nowrap",
                 textAlign: "right",
-                letterSpacing: "-0.2px",
+                letterSpacing: "-0.35px",
               }}
             >
               {challanCopyLabel}
@@ -1052,12 +1052,12 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, copyLabel = DEFA
                       ].map(([label, value]) => {
                         const isCompanyGstRow = label === "GSTIN";
                         return (
-                        <tr key={label}>
-                          <td style={labelCell}>{isCompanyGstRow ? "GST" : label}</td>
-                          <td style={colonCell}>:</td>
-                          <td style={isCompanyGstRow ? { ...valueCell, whiteSpace: "nowrap", wordBreak: "keep-all", overflowWrap: "normal", fontSize: 10.5 } : valueCell}>{value}</td>
-                        </tr>
-                      );
+                          <tr key={label}>
+                            <td style={labelCell}>{isCompanyGstRow ? "GST" : label}</td>
+                            <td style={colonCell}>:</td>
+                            <td style={isCompanyGstRow ? { ...valueCell, whiteSpace: "nowrap", wordBreak: "keep-all", overflowWrap: "normal", fontSize: 10.5 } : valueCell}>{value}</td>
+                          </tr>
+                        );
                       })}
                     </tbody>
                   </table>
@@ -1206,27 +1206,27 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, copyLabel = DEFA
             <tbody>
               <tr>
                 <td style={{ ...td, width: '50%', verticalAlign: 'top', background: '#fafafa' }}>
-                    <div style={{ fontWeight: 800, marginBottom: 4 }}>Terms and Conditions:</div>
-                    <div style={{ marginLeft: 4 }}>
-                        <div>1. Goods once delivered will not be taken back.</div>
-                        <div>2. Please check the goods in presence of our delivery executive.</div>
-                        <div>3. Any discrepancy should be reported within 24 hours.</div>
-                        <div>4. Goods are delivered in good condition.</div>
-                        <div>5. Subject to Delhi Jurisdiction only.</div>
-                    </div>
+                  <div style={{ fontWeight: 800, marginBottom: 4 }}>Terms and Conditions:</div>
+                  <div style={{ marginLeft: 4 }}>
+                    <div>1. Goods once delivered will not be taken back.</div>
+                    <div>2. Please check the goods in presence of our delivery executive.</div>
+                    <div>3. Any discrepancy should be reported within 24 hours.</div>
+                    <div>4. Goods are delivered in good condition.</div>
+                    <div>5. Subject to Delhi Jurisdiction only.</div>
+                  </div>
                 </td>
                 <td style={{ ...td, width: '50%', verticalAlign: 'top', background: '#fafafa' }}>
-                    <div style={{ fontWeight: 800, marginBottom: 4 }}>Delivery Notes:</div>
-                    <div style={{ marginLeft: 4 }}>
-                        <div>1. Goods delivered as per Purchase Order.</div>
-                        <div>2. For any queries, please contact our office.</div>
-                    </div>
-                    {challan.remarks && (
-                        <>
-                            <div style={{ fontWeight: 800, marginTop: 8, marginBottom: 4 }}>Special Remark:</div>
-                            <div style={{ marginLeft: 4 }}>{challan.remarks}</div>
-                        </>
-                    )}
+                  <div style={{ fontWeight: 800, marginBottom: 4 }}>Delivery Notes:</div>
+                  <div style={{ marginLeft: 4 }}>
+                    <div>1. Goods delivered as per Purchase Order.</div>
+                    <div>2. For any queries, please contact our office.</div>
+                  </div>
+                  {challan.remarks && (
+                    <>
+                      <div style={{ fontWeight: 800, marginTop: 8, marginBottom: 4 }}>Special Remark:</div>
+                      <div style={{ marginLeft: 4 }}>{challan.remarks}</div>
+                    </>
+                  )}
                 </td>
               </tr>
             </tbody>
@@ -1240,18 +1240,18 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, copyLabel = DEFA
                 <col style={{ width: '34%' }} />
               </colgroup>
               <thead>
-                <tr>
-                  <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fff', textAlign: 'center' }}>
+                <tr style={{ background: '#fafafa' }}>
+                  <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
                       <Landmark size={14} strokeWidth={2} /> NGWPL Bank Details
                     </div>
                   </th>
-                  <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fff', textAlign: 'center' }}>
+                  <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
                       <SquarePen size={14} strokeWidth={2} /> Receiver's Acknowledgement
                     </div>
                   </th>
-                  <th style={{ border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fff', textAlign: 'center' }}>
+                  <th style={{ border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
                       <SquarePen size={14} strokeWidth={2} /> For {companyName}
                     </div>
@@ -1289,7 +1289,8 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, copyLabel = DEFA
                       {settings?.authorizedSignature && <img src={mediaUrl(settings.authorizedSignature)} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} style={{ maxHeight: 55, maxWidth: 120, objectFit: "contain" }} />}
                       {settings?.companyStamp && <img src={mediaUrl(settings.companyStamp)} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} style={{ maxHeight: 55, maxWidth: 55, objectFit: "contain" }} />}
                     </div>
-                    <div style={{ borderTop: '1px solid #ccc', marginTop: 20, paddingTop: 4, fontWeight: 700, width: '60%', marginLeft: 'auto', marginRight: 'auto' }}>Auth. Sign.</div>
+                    <div style={{ borderTop: '1px solid #ccc', margin: '35px 10px 8px' }}></div>
+                    <div style={{ textAlign: 'center', fontWeight: 700 }}>Authorized Signatory.</div>
                   </td>
                 </tr>
               </tbody>
