@@ -732,6 +732,8 @@ export const menuItems = [
       { label: "Add Next Action", path: "/ihweClientData2026/AddNextAction" },
       { label: "Add Remark Length Fixed", path: "/ihweClientData2026/AddRemarkLengthFixed" },
       { label: "Add Lead Status", path: "/ihweClientData2026/AddStatus" },
+      { label: "Role at Exhibition", path: "/ihweClientData2026/AddExhibitionRole" },
+      { label: "Estimate Terms Config", path: "/ihweClientData2026/EstimateTermsConfig" },
       { label: "USER TARGET", path: "/ihweClientData2026/AddTarget" },
       { label: "Buyer Registration Config", path: "/buyer-registration-config" },
       { label: "International Registration Config", path: "/international-buyer-registration-config" },

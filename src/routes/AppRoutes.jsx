@@ -178,6 +178,8 @@ const AddNatureOfBusiness = lazy(() => import("../pages/add_by_admin/AddNatureOf
 const AddNextAction = lazy(() => import("../pages/add_by_admin/AddNextAction"));
 const AddRemarkLengthFixed = lazy(() => import("../pages/add_by_admin/AddRemarkLengthFixed"));
 const AddStatus = lazy(() => import("../pages/add_by_admin/AddStatus"));
+const AddExhibitionRole = lazy(() => import("../pages/add_by_admin/AddExhibitionRole"));
+const EstimateTermsConfig = lazy(() => import("../pages/add_by_admin/EstimateTermsConfig"));
 const AddTarget = lazy(() => import("../pages/add_by_admin/AddTarget"));
 const VisitorReviewLogs = lazy(() => import("../pages/web_visitor_data/VisitorReviewLogs"));
 const ClientOverview1 = lazy(() => import("../pages/ihwe_client_data_2026/ClientOverview1"));
@@ -717,6 +719,8 @@ export default function AppRoutes() {
               element={<AddRemarkLengthFixed />}
             />
             <Route path="ihweClientData2026/AddStatus" element={<AddStatus />} />
+            <Route path="ihweClientData2026/AddExhibitionRole" element={<AddExhibitionRole />} />
+            <Route path="ihweClientData2026/EstimateTermsConfig" element={<EstimateTermsConfig />} />
             <Route path="ihweClientData2026/AddTarget" element={<AddTarget />} />
             <Route path="ihweClientData2026/AddNextAction" element={<AddNextAction />} />
             <Route path="accounts/salesreport" element={<SalesReport />} />
