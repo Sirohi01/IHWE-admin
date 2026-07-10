@@ -698,39 +698,9 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
             <div className="invoice-header-image" style={{ marginBottom: 0, textAlign: 'center' }}>
                 <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
             </div>
-            <div
-                className="invoice-title-bar"
-                style={{
-                    position: 'relative',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minHeight: 22,
-                    marginBottom: 0,
-                    paddingTop: 10,
-                    paddingBottom: 4,
-                    color: '#0d1f3c',
-                    textTransform: 'uppercase',
-                }}
-            >
+            <div className="invoice-title-bar" style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 22, marginBottom: 0, paddingTop: 10, paddingBottom: 4, color: '#0d1f3c', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                 <div style={{ fontWeight: 500, fontSize: 18, lineHeight: 1, textAlign: 'center' }}>PROFORMA INVOICE</div>
-                <div
-                    className="invoice-copy-label"
-                    style={{
-                        position: 'absolute',
-                        right: 0,
-                        bottom: 3,
-                        fontWeight: 600,
-                        fontSize: 11,
-                        lineHeight: 1,
-                        paddingRight: 2,
-                        whiteSpace: 'nowrap',
-                        textAlign: 'right',
-                        letterSpacing: '-0.35px',
-                    }}
-                >
-                    {piCopyLabel}
-                </div>
+                <div className="invoice-copy-label" style={{ position: 'absolute', right: 0, bottom: 0, fontWeight: 600, fontSize: 11, lineHeight: 1, paddingRight: 2, whiteSpace: 'nowrap', textAlign: 'right', letterSpacing: '-0.35px' }}>{piCopyLabel}</div>
             </div>
 
             <table className="invoice-avoid-break" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
@@ -965,9 +935,10 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                         margin-bottom: 0 !important;
                     }
                     .invoice-copy-label {
-                        right: 8px !important;
+                        right: 0 !important;
+                        bottom: 0 !important;
                         line-height: 1 !important;
-                        letter-spacing: -0.4px !important;
+                        letter-spacing: -0.35px !important;
                         max-width: 44% !important;
                         white-space: nowrap !important;
                         overflow: visible !important;
@@ -1327,17 +1298,17 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                     <thead>
                                         <tr style={{ background: '#fafafa' }}>
                                             <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                                                     <Landmark size={14} strokeWidth={2} /> NGWPL Bank Details
                                                 </div>
                                             </th>
                                             <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                                                     <SquarePen size={14} strokeWidth={2} /> Receiver's Acknowledgement
                                                 </div>
                                             </th>
                                             <th style={{ border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                                                     <SquarePen size={14} strokeWidth={2} /> For {companyName}
                                                 </div>
                                             </th>
