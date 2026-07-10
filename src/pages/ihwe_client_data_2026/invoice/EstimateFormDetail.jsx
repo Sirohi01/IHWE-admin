@@ -1267,7 +1267,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                     <tbody>
                                         <tr>
                                             <td style={{ width: '60%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                                                <div style={{ fontWeight: 700, marginBottom: 2 }}>Terms and Conditions:</div>
+                                                <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Terms and Conditions:</div>
                                                 <div style={{ whiteSpace: 'pre-wrap' }}>
                                                     {estimateTerms?.termsAndConditions?.length ? (
                                                         estimateTerms.termsAndConditions.map((t, i) => <div key={i}>{i + 1}. {t}</div>)
@@ -1284,7 +1284,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                                 </div>
                                             </td>
                                             <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                                                <div style={{ fontWeight: 700, marginBottom: 2 }}>Payment Conditions:</div>
+                                                <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment Conditions:</div>
                                                 <div style={{ whiteSpace: 'pre-wrap' }}>
                                                     {estimateTerms?.paymentConditions?.length ? (
                                                         estimateTerms.paymentConditions.map((t, i) => <div key={i} style={{ fontWeight: 700 }}>{i + 1}. {t}</div>)

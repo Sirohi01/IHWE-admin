@@ -870,7 +870,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                 <tbody>
                     <tr>
                         <td style={{ width: '60%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                            <div style={{ fontWeight: 700, marginBottom: 2 }}>Terms and Conditions:</div>
+                            <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Terms and Conditions:</div>
                             <div>1. Payment must be made in favor of Namo Gange Wellness Pvt. Ltd. via Cheque / DD / RTGS / NEFT / UPI only.</div>
                             <div>2. Full payment is due within the stipulated invoice period.</div>
                             <div>3. Delay in payment shall attract interest @24% per annum.</div>
@@ -879,7 +879,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                             <div>6. All disputes are subject to Delhi Jurisdiction only.</div>
                         </td>
                         <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                            <div style={{ fontWeight: 700, marginBottom: 2 }}>Payment Conditions:</div>
+                            <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment Conditions:</div>
                             <div style={{ fontWeight: 700 }}>1. 100% Advance Payment.</div>
                         </td>
                     </tr>
@@ -1463,7 +1463,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                 <tbody>
                                     <tr>
                                         <td style={{ width: '60%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                                            <div style={{ fontWeight: 700, marginBottom: 2 }}>Terms and Conditions:</div>
+                                            <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Terms and Conditions:</div>
                                             <div style={{ whiteSpace: 'pre-wrap' }}>
                                                 {estimateTerms?.termsAndConditions?.length ? (
                                                     estimateTerms.termsAndConditions.map((t, i) => <div key={i}>{i + 1}. {t}</div>)
@@ -1480,7 +1480,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                             </div>
                                         </td>
                                         <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                                            <div style={{ fontWeight: 700, marginBottom: 2 }}>Payment Conditions:</div>
+                                            <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment Conditions:</div>
                                             <div style={{ whiteSpace: 'pre-wrap' }}>
                                                 {estimateTerms?.paymentConditions?.length ? (
                                                     estimateTerms.paymentConditions.map((t, i) => <div key={i}>{i + 1}. {t}</div>)
