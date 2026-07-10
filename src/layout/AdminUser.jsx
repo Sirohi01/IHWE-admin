@@ -26,6 +26,7 @@ const EMPTY_FORM = {
     reportingToDesignation: '',
     reportingToImage: '',
     profileImage: '',
+    signatureImage: '',
     role: '',
     status: 'Active'
 };
@@ -195,17 +196,18 @@ export default function AdminUser() {
 
         if (!cleaned.password) delete cleaned.password;
 
-        const hasFiles = isFile(cleaned.profileImage); // Only user photo can be uploaded here now
+        const hasFiles = isFile(cleaned.profileImage) || isFile(cleaned.signatureImage);
 
         if (!hasFiles) {
             if (!editId || typeof cleaned.profileImage !== 'string') delete cleaned.profileImage;
+            if (!editId || typeof cleaned.signatureImage !== 'string') delete cleaned.signatureImage;
             return cleaned;
         }
 
         const fd = new FormData();
         Object.entries(cleaned).forEach(([key, value]) => {
             if (value === undefined || value === null) return;
-            if (key === 'profileImage') {
+            if (key === 'profileImage' || key === 'signatureImage') {
                 if (isFile(value)) {
                     fd.append(key, value);
                 } else if (typeof value === 'string' && value) {
@@ -595,6 +597,20 @@ export default function AdminUser() {
                                             View current photo
                                         </a>
                                     )}
+                                </div>
+                                <div>
+                                    <label className={lCls}>Signature</label>
+                                    <label className="w-full flex items-center gap-2 px-2.5 py-1 border border-dashed border-gray-300 rounded-[2px] h-8 bg-gray-50 text-gray-400 text-[10px] cursor-pointer hover:border-[#1e4018] hover:text-[#1e4018] transition-colors">
+                                        <Upload size={12} />
+                                        {isFile(form.signatureImage) ? form.signatureImage.name : 'Upload signature'}
+                                        <input type="file" accept="image/*" className="hidden" onChange={e => inp('signatureImage', e.target.files?.[0] || '')} />
+                                    </label>
+                                    {typeof form.signatureImage === 'string' && form.signatureImage && (
+                                        <a href={form.signatureImage} target="_blank" rel="noreferrer" className="mt-1 inline-flex text-[10px] font-semibold text-[#1e4018] hover:underline">
+                                            View current signature
+                                        </a>
+                                    )}
+                                    <p className="mt-1 text-[9px] text-gray-400">Used on Prepared By / Reviewed By in generated PDFs.</p>
                                 </div>
                                 <div>
                                     <label className={lCls}>Department <span className="text-red-500">*</span></label>
