@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import api, { SERVER_URL } from '../../lib/api';
-import { Save, Eye, Plus, Trash2, Image as ImageIcon } from 'lucide-react';
-import PageHeader from '../../components/PageHeader';
+import { Save, Eye, Plus, Trash2, Image as ImageIcon, Building2, Palette, Tags, List, Ruler, Info, GripVertical } from 'lucide-react';
 
 const EMPTY_FORM = {
     organiserBandColor: '#0b3974',
@@ -35,31 +34,68 @@ const mediaUrl = (value) => {
     return `${SERVER_URL}${value.startsWith('/') ? '' : '/'}${value}`;
 };
 
+const Section = ({ icon: Icon, title, children, action }) => (
+    <section className="rounded-lg border border-[#dbe4ef] bg-white px-5 py-4 shadow-sm">
+        <div className="mb-5 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[#e9f7ec] text-[#14752f]">
+                    <Icon size={18} strokeWidth={2.1} />
+                </span>
+                <h2 className="text-[19px] font-bold text-[#17213d]">{title}</h2>
+            </div>
+            {action}
+        </div>
+        {children}
+    </section>
+);
+
 const ColorField = ({ label, name, value, onChange }) => (
     <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1">{label}</label>
-        <div className="flex items-center gap-2">
-            <input type="color" name={name} value={value} onChange={onChange} className="w-12 h-9 p-1 border-2 border-slate-200 rounded cursor-pointer" />
-            <input type="text" name={name} value={value} onChange={onChange} className="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-sm" />
+        <label className="mb-2 block text-[13px] font-semibold text-[#17213d]">{label}</label>
+        <div className="flex h-11 overflow-hidden rounded-md border border-[#cfd9e6] bg-white">
+            <div className="flex w-14 items-center justify-center border-r border-[#dfe6ef] bg-white">
+                <input type="color" name={name} value={value} onChange={onChange} className="h-7 w-7 cursor-pointer rounded border-0 bg-transparent p-0" />
+            </div>
+            <input type="text" name={name} value={value} onChange={onChange} className="min-w-0 flex-1 px-3 text-[14px] font-medium text-[#17213d] outline-none" />
         </div>
     </div>
 );
 
 const TextField = ({ label, name, value, onChange, textarea }) => (
     <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1">{label}</label>
+        <label className="mb-2 block text-[13px] font-semibold text-[#17213d]">{label}</label>
         {textarea ? (
-            <textarea name={name} value={value} onChange={onChange} rows={2} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+            <textarea name={name} value={value} onChange={onChange} rows={3} className="min-h-[92px] w-full rounded-md border border-[#cfd9e6] bg-white px-4 py-3 text-[15px] font-medium leading-6 text-[#17213d] outline-none transition focus:border-[#1a7a3c] focus:ring-2 focus:ring-[#1a7a3c]/10" />
         ) : (
-            <input type="text" name={name} value={value} onChange={onChange} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+            <input type="text" name={name} value={value} onChange={onChange} className="h-12 w-full rounded-md border border-[#cfd9e6] bg-white px-4 text-[15px] font-medium text-[#17213d] outline-none transition focus:border-[#1a7a3c] focus:ring-2 focus:ring-[#1a7a3c]/10" />
         )}
     </div>
 );
 
 const NumberField = ({ label, name, value, onChange, min, max }) => (
     <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1">{label} (pt)</label>
-        <input type="number" name={name} min={min} max={max} value={value} onChange={onChange} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+        <label className="mb-2 block text-[12px] font-semibold text-[#17213d]">{label} (pt)</label>
+        <div className="flex h-10 overflow-hidden rounded-md border border-[#cfd9e6] bg-white">
+            <input type="number" name={name} min={min} max={max} value={value} onChange={onChange} className="min-w-0 flex-1 px-3 text-[14px] font-medium text-[#17213d] outline-none" />
+            <span className="flex w-10 items-center justify-center border-l border-[#dfe6ef] bg-[#f8fafc] text-[13px] font-semibold text-[#17213d]">pt</span>
+        </div>
+    </div>
+);
+
+const LogoUpload = ({ label, preview, onChange, alt, helper }) => (
+    <div>
+        <label className="mb-1 block text-[13px] font-semibold text-[#17213d]">{label}</label>
+        <div className="flex h-[58px] items-center gap-5 rounded-md border border-[#dbe4ef] bg-white px-3">
+            <div className="flex h-11 w-32 items-center justify-center overflow-hidden rounded border border-[#e1e8f0] bg-[#f8fafc]">
+                {preview ? (
+                    <img src={preview} alt={alt} className="max-h-full max-w-full object-contain" />
+                ) : (
+                    <ImageIcon size={20} className="text-[#9aa8ba]" />
+                )}
+            </div>
+            <input type="file" accept="image/*" onChange={onChange} className="text-[13px] font-medium text-[#17213d] file:mr-4 file:rounded-md file:border file:border-[#cfd9e6] file:bg-white file:px-4 file:py-2 file:text-[13px] file:font-medium file:text-[#17213d] hover:file:bg-[#f8fafc]" />
+        </div>
+        <p className="mt-2 max-w-[620px] text-[13px] font-medium leading-5 text-[#7b88a1]">{helper}</p>
     </div>
 );
 
@@ -202,150 +238,146 @@ const PaymentManagement = () => {
     };
 
     return (
-        <div className="bg-white shadow-md p-6 min-h-screen">
-            <PageHeader
-                title="Payment Management"
-                description="Customize how the Payment Receipt PDF looks — labels, band colors, logo and section sizing."
-            >
-                <button
-                    onClick={handlePreview}
-                    disabled={isPreviewing}
-                    className="flex items-center gap-2 bg-[#0b3974] text-white px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wide hover:bg-[#0b3974]/90 disabled:opacity-50"
-                >
-                    <Eye size={15} /> {isPreviewing ? 'Generating...' : 'Preview'}
-                </button>
-                <button
-                    onClick={handleSubmit}
-                    disabled={isLoading}
-                    className="flex items-center gap-2 bg-[#23471d] text-white px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wide hover:bg-[#23471d]/90 disabled:opacity-50"
-                >
-                    <Save size={15} /> Save Changes
-                </button>
-            </PageHeader>
-
-            {/* Read-only company info, sourced from Settings */}
-            {companyInfo && (
-                <div className="mt-4 mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                    <h3 className="text-sm font-bold text-gray-700 mb-2">Company Info (from Settings — edit under Settings &gt; Company)</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-gray-600">
-                        <div><span className="font-semibold">Name:</span> {companyInfo.companyName || 'N/A'}</div>
-                        <div><span className="font-semibold">GSTIN:</span> {companyInfo.companyGst || 'N/A'}</div>
-                        <div><span className="font-semibold">CIN:</span> {companyInfo.companyCin || 'N/A'}</div>
-                        <div><span className="font-semibold">Email:</span> {companyInfo.contactEmail || 'N/A'}</div>
-                        <div className="col-span-2 md:col-span-4"><span className="font-semibold">Address:</span> {companyInfo.companyAddress || 'N/A'}</div>
+        <div className="min-h-screen bg-[#f8fafc] p-5 text-[#17213d]">
+            <div className="mx-auto max-w-[1280px]">
+                <div className="mb-1 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <h1 className="text-[26px] font-bold leading-tight tracking-tight text-[#17213d]">Payment Receipt Settings</h1>
+                        <p className="mt-1 text-[12px] font-medium text-[#7b88a1]">Customize the appearance and content of your payment receipts</p>
                     </div>
-                </div>
-            )}
-
-            <div className="space-y-8">
-                {/* Colors */}
-                <section>
-                    <h2 className="text-lg font-semibold text-[#23471d] mb-3">Band Colors</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <ColorField label="Organiser Band (FROM)" name="organiserBandColor" value={formData.organiserBandColor} onChange={handleChange} />
-                        <ColorField label="Exhibitor Band (TO)" name="exhibitorBandColor" value={formData.exhibitorBandColor} onChange={handleChange} />
-                        <ColorField label="Accent (headers/tables/footer bar)" name="accentColor" value={formData.accentColor} onChange={handleChange} />
-                        <ColorField label="Important Note Band" name="noteColor" value={formData.noteColor} onChange={handleChange} />
-                    </div>
-                </section>
-
-                {/* Labels */}
-                <section>
-                    <h2 className="text-lg font-semibold text-[#23471d] mb-3">Labels</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <TextField label="Head Office Label" name="headOfficeLabel" value={formData.headOfficeLabel} onChange={handleChange} />
-                        <TextField label="Receipt Title" name="receiptTitleLabel" value={formData.receiptTitleLabel} onChange={handleChange} />
-                        <TextField label="Receipt Number Prefix" name="receiptNumberPrefix" value={formData.receiptNumberPrefix} onChange={handleChange} />
-                        <TextField label="FROM Box Label" name="fromLabel" value={formData.fromLabel} onChange={handleChange} />
-                        <TextField label="TO Box Label" name="toLabel" value={formData.toLabel} onChange={handleChange} />
-                        <TextField label="Invoice Details Label" name="invoiceDetailsLabel" value={formData.invoiceDetailsLabel} onChange={handleChange} />
-                        <TextField label="Payment Details Label" name="paymentDetailsLabel" value={formData.paymentDetailsLabel} onChange={handleChange} />
-                        <TextField label="Exhibitor Details Label" name="exhibitorDetailsLabel" value={formData.exhibitorDetailsLabel} onChange={handleChange} />
-                        <TextField label="Important Note Label" name="importantNoteLabel" value={formData.importantNoteLabel} onChange={handleChange} />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                        <TextField label="Footer Thank-You Text" name="footerThankYouText" value={formData.footerThankYouText} onChange={handleChange} textarea />
-                        <TextField label="Footer Disclaimer Text" name="footerDisclaimerText" value={formData.footerDisclaimerText} onChange={handleChange} textarea />
-                    </div>
-                </section>
-
-                {/* Important Note Items */}
-                <section>
-                    <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-lg font-semibold text-[#23471d]">Important Note — Bullet Points</h2>
-                        <button onClick={addNoteItem} className="flex items-center gap-1 text-xs font-semibold text-[#23471d] border border-[#23471d] rounded-md px-3 py-1.5 hover:bg-[#23471d] hover:text-white transition-colors">
-                            <Plus size={14} /> Add Point
+                    <div className="flex flex-wrap gap-4">
+                        <button
+                            onClick={handlePreview}
+                            disabled={isPreviewing}
+                            className="flex h-12 min-w-[180px] items-center justify-center gap-2 rounded-md border border-[#178337] bg-white px-5 text-[14px] font-bold text-[#087224] shadow-sm transition hover:bg-[#f0fbf3] disabled:opacity-50"
+                        >
+                            <Eye size={17} /> {isPreviewing ? 'Generating...' : 'Preview Receipt'}
+                        </button>
+                        <button
+                            onClick={handleSubmit}
+                            disabled={isLoading}
+                            className="flex h-12 min-w-[170px] items-center justify-center gap-2 rounded-md bg-[#0c7f24] px-5 text-[14px] font-bold text-white shadow-sm transition hover:bg-[#096a1d] disabled:opacity-50"
+                        >
+                            <Save size={17} /> Save Settings
                         </button>
                     </div>
-                    <div className="space-y-2">
-                        {formData.importantNoteItems.map((item, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                                <span className="text-xs font-semibold text-gray-400 w-5">{index + 1}.</span>
-                                <input
-                                    type="text"
-                                    value={item}
-                                    onChange={(e) => handleNoteItemChange(index, e.target.value)}
-                                    className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm"
-                                />
-                                <button onClick={() => removeNoteItem(index)} className="text-red-500 hover:text-red-700">
-                                    <Trash2 size={16} />
-                                </button>
-                            </div>
-                        ))}
-                        {formData.importantNoteItems.length === 0 && (
-                            <p className="text-xs text-gray-400">No bullet points yet — click "Add Point".</p>
-                        )}
-                    </div>
-                </section>
+                </div>
 
-                {/* Logos */}
-                <section>
-                    <h2 className="text-lg font-semibold text-[#23471d] mb-3">Logos</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1">Header Image (full top banner)</label>
-                            <div className="flex items-center gap-4">
-                                <div className="w-32 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden bg-gray-50">
-                                    {headerLogoPreview ? (
-                                        <img src={headerLogoPreview} alt="Header banner" className="max-w-full max-h-full object-contain" />
-                                    ) : (
-                                        <ImageIcon size={24} className="text-gray-300" />
-                                    )}
-                                </div>
-                                <input type="file" accept="image/*" onChange={handleHeaderLogoChange} className="text-sm" />
+                {companyInfo && (
+                    <div className="mb-1 rounded-lg border border-[#dbe4ef] border-l-[4px] border-l-[#1a7a3c] bg-white px-5 py-6 shadow-sm">
+                        <div className="grid grid-cols-1 gap-5 md:grid-cols-[80px_1fr_1fr] md:items-center">
+                            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e7f6e9] text-[#14752f] md:mx-auto">
+                                <Building2 size={32} strokeWidth={1.8} />
                             </div>
-                            <p className="text-xs text-gray-400 mt-1">Replaces the entire top strip (wordmark, contact info, GSTIN/CIN, Head Office) with this one image. Leave empty to use the field-driven header (company info from Settings) instead.</p>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1">Event Logo (receipt's event banner)</label>
-                            <div className="flex items-center gap-4">
-                                <div className="w-32 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden bg-gray-50">
-                                    {eventLogoPreview ? (
-                                        <img src={eventLogoPreview} alt="Event logo" className="max-w-full max-h-full object-contain" />
-                                    ) : (
-                                        <ImageIcon size={24} className="text-gray-300" />
-                                    )}
+                            <div>
+                                <h2 className="mb-1 text-[15px] font-bold text-[#17213d]">Company Info (from Settings - edit under Settings &gt; Company)</h2>
+                                <div className="space-y-3 text-[13px] font-medium text-[#17213d]">
+                                    <div><span className="font-extrabold">Name:</span> <span className="ml-1">{companyInfo.companyName || 'N/A'}</span></div>
+                                    <div><span className="font-extrabold">Address:</span> <span className="ml-1">{companyInfo.companyAddress || 'N/A'}</span></div>
                                 </div>
-                                <input type="file" accept="image/*" onChange={handleEventLogoChange} className="text-sm" />
                             </div>
-                            <p className="text-xs text-gray-400 mt-1">Falls back to plain event-name text if none is uploaded.</p>
+                            <div className="space-y-3 text-[13px] font-medium text-[#17213d] md:pt-1">
+                                <div><span className="font-extrabold">GSTIN:</span> <span className="ml-1">{companyInfo.companyGst || 'N/A'}</span></div>
+                                <div><span className="font-extrabold">CIN:</span> <span className="ml-1">{companyInfo.companyCin || 'N/A'}</span></div>
+                                <div><span className="font-extrabold">Email:</span> <span className="ml-1">{companyInfo.contactEmail || 'N/A'}</span></div>
+                            </div>
                         </div>
                     </div>
-                </section>
+                )}
 
-                {/* Band Sizing */}
-                <section>
-                    <h2 className="text-lg font-semibold text-[#23471d] mb-3">Band Height, Gaps &amp; Page Margin</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-                        <NumberField label="Header Band" name="headerBandHeight" value={formData.headerBandHeight} onChange={handleChange} min={70} max={140} />
-                        <NumberField label="Event Band" name="eventBandHeight" value={formData.eventBandHeight} onChange={handleChange} min={60} max={120} />
-                        <NumberField label="From/To Band" name="infoBandHeight" value={formData.infoBandHeight} onChange={handleChange} min={80} max={160} />
-                        <NumberField label="Footer Band" name="footerBandHeight" value={formData.footerBandHeight} onChange={handleChange} min={60} max={110} />
-                        <NumberField label="Page Side Margin" name="pageMarginX" value={formData.pageMarginX} onChange={handleChange} min={15} max={50} />
-                        <NumberField label="Gap Between Sections" name="sectionGap" value={formData.sectionGap} onChange={handleChange} min={0} max={30} />
-                    </div>
-                    <p className="text-xs text-gray-400 mt-2">Values are clamped server-side to a safe range so the receipt always fits on a single A4 page. "Gap Between Sections" controls the whitespace between each block (header, event, from/to, invoice details, payment details, exhibitor/note, footer).</p>
-                </section>
+                <div className="space-y-1">
+                    <Section icon={Palette} title="Band Colors">
+                        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+                            <ColorField label="Organiser Band (FROM)" name="organiserBandColor" value={formData.organiserBandColor} onChange={handleChange} />
+                            <ColorField label="Exhibitor Band (TO)" name="exhibitorBandColor" value={formData.exhibitorBandColor} onChange={handleChange} />
+                            <ColorField label="Accent (headers/tables/footer bar)" name="accentColor" value={formData.accentColor} onChange={handleChange} />
+                            <ColorField label="Important Note Band" name="noteColor" value={formData.noteColor} onChange={handleChange} />
+                        </div>
+                    </Section>
+
+                    <Section icon={Tags} title="Labels">
+                        <div className="grid grid-cols-1 gap-x-6 gap-y-7 md:grid-cols-3">
+                            <TextField label="Head Office Label" name="headOfficeLabel" value={formData.headOfficeLabel} onChange={handleChange} />
+                            <TextField label="Receipt Title" name="receiptTitleLabel" value={formData.receiptTitleLabel} onChange={handleChange} />
+                            <TextField label="Receipt Number Prefix" name="receiptNumberPrefix" value={formData.receiptNumberPrefix} onChange={handleChange} />
+                            <TextField label="FROM Box Label" name="fromLabel" value={formData.fromLabel} onChange={handleChange} />
+                            <TextField label="TO Box Label" name="toLabel" value={formData.toLabel} onChange={handleChange} />
+                            <TextField label="Invoice Details Label" name="invoiceDetailsLabel" value={formData.invoiceDetailsLabel} onChange={handleChange} />
+                            <TextField label="Payment Details Label" name="paymentDetailsLabel" value={formData.paymentDetailsLabel} onChange={handleChange} />
+                            <TextField label="Exhibitor Details Label" name="exhibitorDetailsLabel" value={formData.exhibitorDetailsLabel} onChange={handleChange} />
+                            <TextField label="Important Note Label" name="importantNoteLabel" value={formData.importantNoteLabel} onChange={handleChange} />
+                        </div>
+                        <div className="mt-7 grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <TextField label="Footer Thank-You Text" name="footerThankYouText" value={formData.footerThankYouText} onChange={handleChange} textarea />
+                            <TextField label="Footer Disclaimer Text" name="footerDisclaimerText" value={formData.footerDisclaimerText} onChange={handleChange} textarea />
+                        </div>
+                    </Section>
+
+                    <Section
+                        icon={List}
+                        title="Important Note - Bullet Points"
+                        action={
+                            <button onClick={addNoteItem} className="flex h-10 items-center gap-2 rounded-md border border-[#178337] bg-white px-4 text-[13px] font-bold text-[#087224] transition hover:bg-[#f0fbf3]">
+                                <Plus size={16} /> Add Point
+                            </button>
+                        }
+                    >
+                        <div className="space-y-4">
+                            {formData.importantNoteItems.map((item, index) => (
+                                <div key={index} className="grid grid-cols-[22px_28px_1fr_28px] items-center gap-4">
+                                    <GripVertical size={17} className="text-[#9aa8ba]" />
+                                    <span className="text-[15px] font-bold text-[#17213d]">{index + 1}.</span>
+                                    <input
+                                        type="text"
+                                        value={item}
+                                        onChange={(e) => handleNoteItemChange(index, e.target.value)}
+                                        className="h-12 rounded-md border border-[#dbe4ef] bg-white px-5 text-[14px] font-medium text-[#17213d] outline-none transition focus:border-[#1a7a3c] focus:ring-2 focus:ring-[#1a7a3c]/10"
+                                    />
+                                    <button onClick={() => removeNoteItem(index)} className="flex h-8 w-8 items-center justify-center rounded text-red-500 transition hover:bg-red-50 hover:text-red-700">
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
+                            ))}
+                            {formData.importantNoteItems.length === 0 && (
+                                <p className="text-[13px] font-medium text-[#7b88a1]">No bullet points yet - click "Add Point".</p>
+                            )}
+                        </div>
+                    </Section>
+
+                    <Section icon={ImageIcon} title="Logos">
+                        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                            <LogoUpload
+                                label="Header Image (full top banner)"
+                                preview={headerLogoPreview}
+                                onChange={handleHeaderLogoChange}
+                                alt="Header banner"
+                                helper="Replaces the entire top strip (wordmark, contact info, GSTIN/CIN, Head Office) with this one image. Leave empty to use the field-driven header (company info from Settings) instead."
+                            />
+                            <LogoUpload
+                                label="Event Logo (receipt's event banner)"
+                                preview={eventLogoPreview}
+                                onChange={handleEventLogoChange}
+                                alt="Event logo"
+                                helper="Falls back to plain event-name text if none is uploaded."
+                            />
+                        </div>
+                    </Section>
+
+                    <Section icon={Ruler} title="Band Height, Gaps & Page Margin">
+                        <div className="grid grid-cols-2 gap-5 md:grid-cols-3 xl:grid-cols-6">
+                            <NumberField label="Header Band" name="headerBandHeight" value={formData.headerBandHeight} onChange={handleChange} min={70} max={140} />
+                            <NumberField label="Event Band" name="eventBandHeight" value={formData.eventBandHeight} onChange={handleChange} min={60} max={120} />
+                            <NumberField label="From/To Band" name="infoBandHeight" value={formData.infoBandHeight} onChange={handleChange} min={80} max={160} />
+                            <NumberField label="Footer Band" name="footerBandHeight" value={formData.footerBandHeight} onChange={handleChange} min={60} max={110} />
+                            <NumberField label="Page Side Margin" name="pageMarginX" value={formData.pageMarginX} onChange={handleChange} min={15} max={50} />
+                            <NumberField label="Gap Between Sections" name="sectionGap" value={formData.sectionGap} onChange={handleChange} min={0} max={30} />
+                        </div>
+                        <div className="mt-4 flex gap-3 text-[13px] font-medium leading-5 text-[#7b88a1]">
+                            <Info size={20} className="mt-0.5 shrink-0 text-[#1687d9]" />
+                            <p>Values are clamped server-side to a safe range so the receipt always fits on a single A4 page. "Gap Between Sections" controls the whitespace between each block (header, event, from/to, invoice details, payment details, exhibitor/note, footer).</p>
+                        </div>
+                    </Section>
+                </div>
             </div>
         </div>
     );
