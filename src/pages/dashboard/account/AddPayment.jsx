@@ -24,6 +24,20 @@ const nowLocalDate = () => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 const isCancelled = (doc) => String(doc?.status || "").toLowerCase() === "cancelled";
+const getDocumentNo = (doc, docType) => docType === "Invoice" ? doc.invoice_no : doc.est_no;
+const getDocumentPartyName = (doc, fallbackName) => (
+  doc.company_name ||
+  doc.consignee_name ||
+  doc.clientName ||
+  doc.companyName ||
+  fallbackName ||
+  ""
+);
+const getDocumentLabel = (doc, docType, fallbackName) => [
+  getDocumentNo(doc, docType),
+  getDocumentPartyName(doc, fallbackName),
+  formatCurrency(doc.finalAmount),
+].filter(Boolean).join(" • ");
 
 const AddPayment = () => {
   const { id } = useParams();
@@ -311,7 +325,7 @@ const AddPayment = () => {
                   <option value="" disabled>Select {docType}</option>
                   {documentOptions.map((doc) => (
                     <option key={doc._id} value={doc._id}>
-                      {docType === "Invoice" ? doc.invoice_no : doc.est_no} • {doc.clientName || 'N/A'} • ₹{doc.finalAmount}
+                      {getDocumentLabel(doc, docType, companyInfo?.name)}
                     </option>
                   ))}
                 </select>
