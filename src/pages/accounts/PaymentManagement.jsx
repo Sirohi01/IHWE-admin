@@ -26,6 +26,8 @@ const EMPTY_FORM = {
     footerBandHeight: 85,
     pageMarginX: 30,
     sectionGap: 8,
+    showSignatureStamp: false,
+    signatureLabel: 'Authorized Signatory',
 };
 
 const mediaUrl = (value) => {
@@ -82,7 +84,7 @@ const NumberField = ({ label, name, value, onChange, min, max }) => (
     </div>
 );
 
-const LogoUpload = ({ label, preview, onChange, alt, helper }) => (
+const LogoUpload = ({ label, preview, onChange, onRemove, alt, helper }) => (
     <div>
         <label className="mb-1 block text-[13px] font-semibold text-[#17213d]">{label}</label>
         <div className="flex h-[58px] items-center gap-5 rounded-md border border-[#dbe4ef] bg-white px-3">
@@ -93,7 +95,14 @@ const LogoUpload = ({ label, preview, onChange, alt, helper }) => (
                     <ImageIcon size={20} className="text-[#9aa8ba]" />
                 )}
             </div>
-            <input type="file" accept="image/*" onChange={onChange} className="text-[13px] font-medium text-[#17213d] file:mr-4 file:rounded-md file:border file:border-[#cfd9e6] file:bg-white file:px-4 file:py-2 file:text-[13px] file:font-medium file:text-[#17213d] hover:file:bg-[#f8fafc]" />
+            <div className="flex items-center gap-2">
+                <input type="file" accept="image/*" onChange={onChange} className="text-[13px] font-medium text-[#17213d] file:mr-4 file:rounded-md file:border file:border-[#cfd9e6] file:bg-white file:px-4 file:py-2 file:text-[13px] file:font-medium file:text-[#17213d] hover:file:bg-[#f8fafc]" />
+                {preview && onRemove && (
+                    <button type="button" onClick={onRemove} className="text-[13px] font-semibold text-red-500 transition hover:text-red-700">
+                        Remove
+                    </button>
+                )}
+            </div>
         </div>
         <p className="mt-2 max-w-[620px] text-[13px] font-medium leading-5 text-[#7b88a1]">{helper}</p>
     </div>
@@ -106,6 +115,17 @@ const PaymentManagement = () => {
     const [eventLogoPreview, setEventLogoPreview] = useState(null);
     const [headerLogoFile, setHeaderLogoFile] = useState(null);
     const [headerLogoPreview, setHeaderLogoPreview] = useState(null);
+    const [stampFile, setStampFile] = useState(null);
+    const [stampPreview, setStampPreview] = useState(null);
+    const [signatureFile, setSignatureFile] = useState(null);
+    const [signaturePreview, setSignaturePreview] = useState(null);
+    
+    // Deletion flags
+    const [removeEventLogo, setRemoveEventLogo] = useState(false);
+    const [removeHeaderLogo, setRemoveHeaderLogo] = useState(false);
+    const [removeStamp, setRemoveStamp] = useState(false);
+    const [removeSignature, setRemoveSignature] = useState(false);
+
     const [isLoading, setIsLoading] = useState(false);
     const [isPreviewing, setIsPreviewing] = useState(false);
 
@@ -143,9 +163,18 @@ const PaymentManagement = () => {
                     footerBandHeight: d.footerBandHeight ?? EMPTY_FORM.footerBandHeight,
                     pageMarginX: d.pageMarginX ?? EMPTY_FORM.pageMarginX,
                     sectionGap: d.sectionGap ?? EMPTY_FORM.sectionGap,
+                    showSignatureStamp: d.showSignatureStamp ?? false,
+                    signatureLabel: d.signatureLabel ?? 'Authorized Signatory',
                 });
                 setEventLogoPreview(mediaUrl(d.eventLogoImage));
                 setHeaderLogoPreview(mediaUrl(d.headerLogoImage));
+                setStampPreview(mediaUrl(d.stampImage));
+                setSignaturePreview(mediaUrl(d.signatureImage));
+                // Reset flags on fetch
+                setRemoveEventLogo(false);
+                setRemoveHeaderLogo(false);
+                setRemoveStamp(false);
+                setRemoveSignature(false);
             }
             if (settingsRes.data?.success) {
                 setCompanyInfo(settingsRes.data.data);
@@ -158,8 +187,8 @@ const PaymentManagement = () => {
     };
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        const { name, value, type, checked } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     };
 
     const handleNoteItemChange = (index, value) => {
@@ -192,6 +221,26 @@ const PaymentManagement = () => {
         setHeaderLogoPreview(URL.createObjectURL(file));
     };
 
+    const handleStampChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setStampFile(file);
+        setStampPreview(URL.createObjectURL(file));
+    };
+
+    const handleSignatureChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setSignatureFile(file);
+        setSignaturePreview(URL.createObjectURL(file));
+        setRemoveSignature(false);
+    };
+
+    const handleRemoveEventLogo = () => { setEventLogoFile(null); setEventLogoPreview(null); setRemoveEventLogo(true); };
+    const handleRemoveHeaderLogo = () => { setHeaderLogoFile(null); setHeaderLogoPreview(null); setRemoveHeaderLogo(true); };
+    const handleRemoveStamp = () => { setStampFile(null); setStampPreview(null); setRemoveStamp(true); };
+    const handleRemoveSignature = () => { setSignatureFile(null); setSignaturePreview(null); setRemoveSignature(true); };
+
     const handleSubmit = async () => {
         setIsLoading(true);
         try {
@@ -205,6 +254,13 @@ const PaymentManagement = () => {
             });
             if (eventLogoFile) payload.append('eventLogoImage', eventLogoFile);
             if (headerLogoFile) payload.append('headerLogoImage', headerLogoFile);
+            if (stampFile) payload.append('stampImage', stampFile);
+            if (signatureFile) payload.append('signatureImage', signatureFile);
+
+            if (removeEventLogo) payload.append('removeEventLogo', 'true');
+            if (removeHeaderLogo) payload.append('removeHeaderLogo', 'true');
+            if (removeStamp) payload.append('removeStamp', 'true');
+            if (removeSignature) payload.append('removeSignature', 'true');
 
             await api.put('/api/payment-receipt-settings', payload, {
                 headers: { 'Content-Type': 'multipart/form-data' },
@@ -213,6 +269,8 @@ const PaymentManagement = () => {
             Swal.fire({ icon: 'success', title: 'Payment Receipt settings updated!', timer: 1500, showConfirmButton: false });
             setEventLogoFile(null);
             setHeaderLogoFile(null);
+            setStampFile(null);
+            setSignatureFile(null);
             fetchData();
         } catch (error) {
             console.error('Error saving payment receipt settings:', error);
@@ -350,6 +408,7 @@ const PaymentManagement = () => {
                                 label="Header Image (full top banner)"
                                 preview={headerLogoPreview}
                                 onChange={handleHeaderLogoChange}
+                                onRemove={handleRemoveHeaderLogo}
                                 alt="Header banner"
                                 helper="Replaces the entire top strip (wordmark, contact info, GSTIN/CIN, Head Office) with this one image. Leave empty to use the field-driven header (company info from Settings) instead."
                             />
@@ -357,10 +416,49 @@ const PaymentManagement = () => {
                                 label="Event Logo (receipt's event banner)"
                                 preview={eventLogoPreview}
                                 onChange={handleEventLogoChange}
+                                onRemove={handleRemoveEventLogo}
                                 alt="Event logo"
                                 helper="Falls back to plain event-name text if none is uploaded."
                             />
                         </div>
+                    </Section>
+
+                    <Section icon={ImageIcon} title="Signature & Stamp">
+                        <div className="mb-8 flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                name="showSignatureStamp"
+                                checked={formData.showSignatureStamp}
+                                onChange={handleChange}
+                                id="showSignatureStamp"
+                                className="h-5 w-5 cursor-pointer accent-[#1a7a3c]"
+                            />
+                            <label htmlFor="showSignatureStamp" className="cursor-pointer text-[15px] font-semibold text-[#17213d]">
+                                Enable Digital Signature & Stamp
+                            </label>
+                        </div>
+                        {formData.showSignatureStamp && (
+                            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                                <TextField label="Signature Label (e.g. Authorized Signatory)" name="signatureLabel" value={formData.signatureLabel} onChange={handleChange} />
+                                <div className="hidden md:block" />
+                                <LogoUpload
+                                    label="Company Stamp Image"
+                                    preview={stampPreview}
+                                    onChange={handleStampChange}
+                                    onRemove={handleRemoveStamp}
+                                    alt="Stamp logo"
+                                    helper="Appears faded behind the signature on the receipt."
+                                />
+                                <LogoUpload
+                                    label="Signature Image"
+                                    preview={signaturePreview}
+                                    onChange={handleSignatureChange}
+                                    onRemove={handleRemoveSignature}
+                                    alt="Signature logo"
+                                    helper="Upload a transparent PNG signature."
+                                />
+                            </div>
+                        )}
                     </Section>
 
                     <Section icon={Ruler} title="Band Height, Gaps & Page Margin">
