@@ -720,7 +720,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
 
                 <tbody>
                     <tr>
-                        <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
+                        <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 9.5, lineHeight: '1.2' }}>
                             <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{clientContactPerson !== '—' ? clientContactPerson : clientCompanyName}</div>
                             <div style={{ marginTop: 2, textTransform: 'uppercase' }}>{clientCompanyName}</div>
                             <div style={{ marginTop: 2, textTransform: 'capitalize' }}>{clientCompanyAddress || '—'}</div>
@@ -753,7 +753,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                             </table>
                         </td>
 
-                        <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
+                        <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 9.5, lineHeight: '1.2' }}>
                             <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{eventName}</div>
                             <div style={{ marginTop: 2 }}>{shipmentAddress || '—'}</div>
 
@@ -783,7 +783,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                             </table>
                         </td>
 
-                        <td className="invoice-details-content" style={{ border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 11 }}>
+                        <td className="invoice-details-content" style={{ border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 9.5 }}>
                             <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%' }}>
                                 <tbody>
                                     <tr>
@@ -950,6 +950,9 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                         break-inside: avoid !important;
                         page-break-inside: avoid !important;
                     }
+                    .invoice-avoid-break td {
+                        font-size: 10px !important;
+                    }
                     .invoice-footer-section {
                         break-inside: avoid;
                         page-break-inside: avoid;
@@ -985,6 +988,11 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                     .invoice-items-table td:nth-child(7) {
                         white-space: nowrap !important;
                         word-break: keep-all !important;
+                    }
+                    .invoice-items-table td:nth-child(8),
+                    .invoice-items-table td:nth-child(10) {
+                        font-size: 11px !important;
+                        font-weight: 700 !important;
                     }
                     .invoice-tax-table th,
                     .invoice-tax-table td {
@@ -1138,7 +1146,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                                     {fmtNum(discountPercent)}%
                                                 </td>
 
-                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontWeight: 700, fontSize: 10 }}>
+                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontWeight: 800, fontSize: 12 }}>
                                                     {fmtNum(itemTaxable)}
                                                 </td>
                                             </tr>
@@ -1249,7 +1257,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                         <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>Amount in Words (INR)</td>
                                         <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center' }}>{toWords(Math.round(grandTotal))}</td>
                                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>Grand Total</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', fontSize: 13, color: '#000' }}>{fmtNum(grandTotal)}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 800, textAlign: 'center', fontSize: 15, color: '#000' }}>{fmtNum(grandTotal)}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1348,7 +1356,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                                 </table>
                                             </td>
                                             <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '2px 8px 8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
-                                                <span style={{ fontSize: 10 }}>Received the above goods / services in good condition.</span>
+                                                <span style={{ fontSize: 9, whiteSpace: 'nowrap' }}>Received the above goods / services in good condition.</span>
                                             </td>
                                             <td style={{ border: 'none', padding: '8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
                                                 <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
