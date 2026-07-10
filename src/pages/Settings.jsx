@@ -62,6 +62,8 @@ const Settings = () => {
     const [receiptContactPhone, setReceiptContactPhone] = useState("+91 96549 00525");
     const [receiptContactEmail, setReceiptContactEmail] = useState("info@namogangewellness.com");
     const [receiptContactWebsite, setReceiptContactWebsite] = useState("www.namogangewellness.com");
+    const [receiptContactPerson, setReceiptContactPerson] = useState("Vijay Sharma");
+    const [receiptContactDesignation, setReceiptContactDesignation] = useState("Managing Director");
     const [fullPaymentDiscount, setFullPaymentDiscount] = useState(5);
     const [availableTdsRates, setAvailableTdsRates] = useState([1, 2, 10]);
     const [signatureFile, setSignatureFile] = useState(null);
@@ -154,6 +156,7 @@ const Settings = () => {
                     marqueeText: savedMarquee, topbarDate: savedDate, supportDeskText: savedSupportDeskText,
                     companyName: sName, companyAddress: sAddress, companyGst: sGst, companyCin: sCin,
                     contactPhone: sContactPhone, contactEmail: sContactEmail, contactWebsite: sContactWebsite,
+                    contactPerson: sContactPerson, contactDesignation: sContactDesignation,
                     fullPaymentDiscount: sDisc, availableTdsRates: sTds, authorizedSignature, companyStamp,
                     showBrochurePopUp: sShowPopUp, brochurePopUpDelay: sPopUpDelay, showGovtPmsScheme: sShowPms,
                     downloadBrochurePdf
@@ -205,6 +208,8 @@ const Settings = () => {
                 if (sContactPhone) setReceiptContactPhone(sContactPhone);
                 if (sContactEmail) setReceiptContactEmail(sContactEmail);
                 if (sContactWebsite) setReceiptContactWebsite(sContactWebsite);
+                if (sContactPerson) setReceiptContactPerson(sContactPerson);
+                if (sContactDesignation) setReceiptContactDesignation(sContactDesignation);
                 if (sDisc !== undefined) setFullPaymentDiscount(sDisc);
                 if (sTds) setAvailableTdsRates(sTds);
                 if (authorizedSignature) setSignaturePreview(`${SERVER_URL}${authorizedSignature}`);
@@ -307,6 +312,8 @@ const Settings = () => {
             formData.append('contactPhone', receiptContactPhone);
             formData.append('contactEmail', receiptContactEmail);
             formData.append('contactWebsite', receiptContactWebsite);
+            formData.append('contactPerson', receiptContactPerson);
+            formData.append('contactDesignation', receiptContactDesignation);
             formData.append('fullPaymentDiscount', fullPaymentDiscount);
             formData.append('availableTdsRates', JSON.stringify(availableTdsRates));
             if (signatureFile) formData.append('authorizedSignature', signatureFile);
@@ -984,6 +991,28 @@ const Settings = () => {
                                         value={receiptContactEmail}
                                         onChange={(e) => setReceiptContactEmail(e.target.value)}
                                         className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 mt-3">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Contact Person Name</label>
+                                    <input
+                                        type="text"
+                                        value={receiptContactPerson}
+                                        onChange={(e) => setReceiptContactPerson(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                        placeholder="e.g. John Doe"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Contact Designation</label>
+                                    <input
+                                        type="text"
+                                        value={receiptContactDesignation}
+                                        onChange={(e) => setReceiptContactDesignation(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                        placeholder="e.g. Sales Manager"
                                     />
                                 </div>
                             </div>
