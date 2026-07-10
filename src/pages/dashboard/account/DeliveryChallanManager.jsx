@@ -1260,7 +1260,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
                       </tbody>
                     </table>
                   </td>
-                  <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
+                  <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '2px 8px 8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
                     <span style={{ fontSize: 10 }}>Received the above goods / services in good condition.</span>
                   </td>
                   <td style={{ border: 'none', padding: '8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
