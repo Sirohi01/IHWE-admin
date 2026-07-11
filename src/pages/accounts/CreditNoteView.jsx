@@ -90,11 +90,11 @@ const CompactDetailRows = ({ rows }) => (
 );
 
 const InlineSignatoryDetails = ({ name, designation, date }) => (
-  <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: 10, rowGap: 2, alignItems: 'center', lineHeight: 1.25 }}>
+  <div style={{ display: 'flex', flexWrap: 'nowrap', columnGap: 4, alignItems: 'center', lineHeight: 1.25, fontSize: 9 }}>
     {[name, designation, formatDate(date)].map((value, index) => (
       <React.Fragment key={index}>
-        {index > 0 && <span>|</span>}
-        <span style={{ whiteSpace: 'nowrap' }}>{value || '—'}</span>
+        {index > 0 && <span style={{ color: '#888' }}>|</span>}
+        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value || '—'}</span>
       </React.Fragment>
     ))}
   </div>
