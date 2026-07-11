@@ -11,7 +11,7 @@ const PageHeader = ({
   const navigate = useNavigate();
 
   return (
-    <div className="mb-2 px-4 border-b-2 border-[#23471d]/60">
+    <div className="mb-2 px-4 border-b border-gray-300 border-[#23471d]/60">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         {/* Left Content */}
         <div>
