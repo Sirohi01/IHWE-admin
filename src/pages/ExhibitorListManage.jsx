@@ -406,8 +406,7 @@ const ExhibitorListManage = () => {
             {/* Hero Banner */}
             <div className="relative w-full h-64 overflow-hidden rounded-b-xl pt-2">
                 {/* Background Image */}
-                <img
-                    src="/bann.png"
+                <img loading="lazy" decoding="async"                     src="/bann.png"
                     alt="Exhibitor Management Banner"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />
@@ -522,7 +521,7 @@ const ExhibitorListManage = () => {
                                                 />
                                                 {preview ? (
                                                     <div className="relative w-full aspect-video flex items-center justify-center">
-                                                        <img src={preview} alt="Preview" className="max-h-full max-w-full object-contain" />
+                                                        <img loading="lazy" decoding="async" src={preview} alt="Preview" className="max-h-full max-w-full object-contain" />
                                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-lg">
                                                             <ImageIcon className="text-white w-8 h-8" />
                                                         </div>
@@ -775,8 +774,7 @@ const ExhibitorListManage = () => {
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-4">
                                                         <div className="w-14 h-10 bg-white border border-gray-100 rounded-lg p-1.5 flex items-center justify-center overflow-hidden shadow-sm">
-                                                            <img
-                                                                src={ex.image.startsWith('http') ? ex.image : `${SERVER_URL}${ex.image}`}
+                                                            <img loading="lazy" decoding="async"                                                                 src={ex.image.startsWith('http') ? ex.image : `${SERVER_URL}${ex.image}`}
                                                                 alt={ex.altText}
                                                                 className="max-w-full max-h-full object-contain"
                                                             />

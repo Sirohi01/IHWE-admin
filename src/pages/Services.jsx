@@ -222,8 +222,7 @@ const Services = () => {
         <>
             <div className="relative w-full h-64 overflow-hidden rounded ">
                 {/* Background Image */}
-                <img
-                    src="/home.png"
+                <img loading="lazy" decoding="async"                     src="/home.png"
                     alt="banner"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />
@@ -461,7 +460,7 @@ const Services = () => {
 
                                         {imagePreview ? (
                                             <div className="relative h-48 group">
-                                                <img src={imagePreview} className="w-full h-full object-cover border-2 border-gray-200 shadow-sm" alt="Preview" />
+                                                <img loading="lazy" decoding="async" src={imagePreview} className="w-full h-full object-cover border-2 border-gray-200 shadow-sm" alt="Preview" />
                                                 <div className="absolute top-2 right-2 bg-green-600 text-[10px] text-white px-2 py-0.5 font-black uppercase tracking-widest shadow-md">
                                                     {imageFile ? 'New Image' : 'Current Image'}
                                                 </div>
@@ -570,7 +569,7 @@ const Services = () => {
                                                 <td className="py-3 px-4 text-gray-500 font-bold">{idx + 1}</td>
                                                 <td className="py-3 px-4">
                                                     {card.image ? (
-                                                        <img src={`${SERVER_URL}${card.image}`} alt={card.imageAlt} className="w-14 h-10 object-cover rounded-none border border-gray-200" />
+                                                        <img loading="lazy" decoding="async" src={`${SERVER_URL}${card.image}`} alt={card.imageAlt} className="w-14 h-10 object-cover rounded-none border border-gray-200" />
                                                     ) : (
                                                         <div className="w-14 h-10 bg-gray-100 rounded border border-gray-200 flex items-center justify-center">
                                                             <ImageIcon size={14} className="text-gray-400" />

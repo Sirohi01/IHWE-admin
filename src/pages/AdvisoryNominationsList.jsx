@@ -181,8 +181,7 @@ const AdvisoryNominationsList = () => {
     <>
       {/* Hero Banner */}
       <div className="relative w-full h-64 overflow-hidden rounded ">
-        <img
-          src="/dashbordBan.png"
+        <img loading="lazy" decoding="async"           src="/dashbordBan.png"
           alt="Advisory Nominations Banner"
           className="absolute inset-0 w-full h-full object-cover z-0"
         />

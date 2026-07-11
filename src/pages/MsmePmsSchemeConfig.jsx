@@ -38,7 +38,7 @@ const ImageUploadField = ({ label, value, onChange }) => {
       <span className="text-[10px] text-gray-500 uppercase font-black absolute top-2 left-3">{label}</span>
       {value ? (
         <div className="flex flex-col items-center gap-2 mt-4 text-center">
-          <img src={value} alt={label} className="h-16 max-w-[150px] object-contain filter drop-shadow-md rounded" />
+          <img loading="lazy" decoding="async" src={value} alt={label} className="h-16 max-w-[150px] object-contain filter drop-shadow-md rounded" />
           <span className="text-[8px] text-gray-400 max-w-[180px] truncate font-mono">{value}</span>
         </div>
       ) : (
@@ -228,8 +228,7 @@ const MsmePmsSchemeConfig = () => {
   return (
     <>
       <div className="relative w-full h-64 overflow-hidden rounded ">
-        <img
-          src="/home.png"
+        <img loading="lazy" decoding="async"           src="/home.png"
           alt="banner"
           className="absolute inset-0 w-full h-full object-cover z-0"
         />

@@ -206,7 +206,7 @@ const PerformaInvoiceDetails = () => {
 
         <div className="bg-gray-100 p-6 min-h-screen ">
           <div ref={sameRef} className="max-w-8xl mx-auto bg-white px-6 py-0.5">
-            <img className=" my-6" src={mainpic} alt="" />
+            <img loading="lazy" decoding="async" className=" my-6" src={mainpic} alt="" />
 
             {/* Client + Invoice Info */}
             <table className="w-full border-collapse border mb-3">

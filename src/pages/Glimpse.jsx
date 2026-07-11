@@ -429,8 +429,7 @@ const Glimpse = () => {
                 <div className="border-2 border-dashed border-gray-300 hover:border-[#23471d] transition-colors p-4 flex flex-col items-center gap-2 bg-gray-50">
                   {imagePreview ? (
                     <div className="relative w-full aspect-[3/2] border-2 border-white shadow-md overflow-hidden bg-white">
-                      <img
-                        src={imagePreview.startsWith('http') || imagePreview.startsWith('/uploads') ? (imagePreview.startsWith('http') ? imagePreview : `${SERVER_URL}${imagePreview}`) : imagePreview}
+                      <img loading="lazy" decoding="async"                         src={imagePreview.startsWith('http') || imagePreview.startsWith('/uploads') ? (imagePreview.startsWith('http') ? imagePreview : `${SERVER_URL}${imagePreview}`) : imagePreview}
                         className="w-full h-full object-cover"
                         alt="Preview"
                       />
@@ -518,8 +517,7 @@ const Glimpse = () => {
                         <td className="px-6 py-4 font-bold text-[#23471d]">{index + 1}</td>
                         <td className="px-6 py-4">
                           <div className="w-14 h-10 bg-gray-100 border border-gray-200 overflow-hidden shadow-sm">
-                            <img
-                              src={`${SERVER_URL}${img.url}`}
+                            <img loading="lazy" decoding="async"                               src={`${SERVER_URL}${img.url}`}
                               alt={img.title}
                               className="w-full h-full object-cover"
                             />

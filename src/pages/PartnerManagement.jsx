@@ -367,7 +367,7 @@ const PartnerManagement = () => {
                                                     >
                                                         {partnerForm.groupId === group._id && imagePreview ? (
                                                             <div className="flex items-center gap-2">
-                                                                <img src={imagePreview} className="w-6 h-6 object-contain rounded" />
+                                                                <img loading="lazy" decoding="async" src={imagePreview} className="w-6 h-6 object-contain rounded" />
                                                                 <span className="text-[#23471d]">Image Selected</span>
                                                             </div>
                                                         ) : (
@@ -422,7 +422,7 @@ const PartnerManagement = () => {
                                                     <td className="py-3 px-4 font-bold text-slate-400">{pIdx + 1}</td>
                                                     <td className="py-3 px-4">
                                                         <div className="w-20 h-12 bg-white border border-slate-200 p-1 flex items-center justify-center rounded">
-                                                            <img src={`${SERVER_URL}${partner.logo}`} className="max-h-full max-w-full object-contain" />
+                                                            <img loading="lazy" decoding="async" src={`${SERVER_URL}${partner.logo}`} className="max-h-full max-w-full object-contain" />
                                                         </div>
                                                     </td>
                                                     <td className="py-3 px-4 font-semibold text-slate-700">

@@ -257,7 +257,7 @@ const MsmeLogosManager = ({ msmeLogos, setMsmeLogos, isMsmeLogoActive, setIsMsme
                             {newLogo.preview ? (
                                 <div className="flex flex-col items-center">
                                     <div className="w-20 h-20 mb-2 border border-gray-200 rounded flex items-center justify-center bg-gray-50">
-                                        <img src={newLogo.preview} alt="Preview" className="max-w-full max-h-full object-contain p-2" />
+                                        <img loading="lazy" decoding="async" src={newLogo.preview} alt="Preview" className="max-w-full max-h-full object-contain p-2" />
                                     </div>
                                     <p className="text-[10px] font-semibold text-green-600">✓ Image Selected</p>
                                     <p className="text-[9px] text-gray-400 mt-0.5">Click to change</p>
@@ -288,8 +288,7 @@ const MsmeLogosManager = ({ msmeLogos, setMsmeLogos, isMsmeLogoActive, setIsMsme
                         <div key={logo.id || index} className="bg-white border border-gray-200 rounded-lg p-3 flex items-center gap-3 hover:shadow-sm transition-shadow">
                             {/* Logo Preview */}
                             <div className="w-16 h-16 border border-gray-200 rounded flex items-center justify-center bg-gray-50 flex-shrink-0">
-                                <img
-                                    src={logo.preview || `${SERVER_URL}${logo.imageUrl}`}
+                                <img loading="lazy" decoding="async"                                     src={logo.preview || `${SERVER_URL}${logo.imageUrl}`}
                                     alt={logo.title}
                                     className="max-w-full max-h-full object-contain p-1"
                                 />

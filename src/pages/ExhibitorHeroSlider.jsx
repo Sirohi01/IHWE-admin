@@ -175,7 +175,7 @@ const ExhibitorHeroSlider = () => {
 
                                     {imagePreview ? (
                                         <div className="relative h-40 group">
-                                            <img src={imagePreview} className="w-full h-full object-cover border-2 border-gray-200 shadow-sm" alt="Preview" />
+                                            <img loading="lazy" decoding="async" src={imagePreview} className="w-full h-full object-cover border-2 border-gray-200 shadow-sm" alt="Preview" />
                                             <button
                                                 onClick={() => { setImageFile(null); setImagePreview(''); setCardForm({ ...cardForm, image: '' }); if (fileInputRef.current) fileInputRef.current.value = ''; }}
                                                 className="absolute bottom-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg"
@@ -277,7 +277,7 @@ const ExhibitorHeroSlider = () => {
                                             <td className="py-3 px-4 text-gray-500 font-bold">{idx + 1}</td>
                                             <td className="py-3 px-4">
                                                 {image.image ? (
-                                                    <img src={`${SERVER_URL}${image.image}`} alt={image.imageAlt} className="w-20 h-10 object-cover border border-gray-200" />
+                                                    <img loading="lazy" decoding="async" src={`${SERVER_URL}${image.image}`} alt={image.imageAlt} className="w-20 h-10 object-cover border border-gray-200" />
                                                 ) : (
                                                     <div className="w-20 h-10 bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400">
                                                         <ImageIcon size={14} />

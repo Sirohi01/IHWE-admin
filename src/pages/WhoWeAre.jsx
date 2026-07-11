@@ -148,8 +148,7 @@ const WhoWeAre = () => {
         <>
             <div className="relative w-full h-64 overflow-hidden rounded ">
                 {/* Background Image */}
-                <img
-                    src="/home.png"
+                <img loading="lazy" decoding="async"                     src="/home.png"
                     alt="banner"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />
@@ -316,7 +315,7 @@ const WhoWeAre = () => {
 
                                         {img.url ? (
                                             <div className={`relative ${imageSlots[idx].aspect} rounded overflow-hidden border-2 border-white shadow-sm bg-white`}>
-                                                <img src={`${SERVER_URL}${img.url}`} className="w-full h-full object-cover" alt="Preview" />
+                                                <img loading="lazy" decoding="async" src={`${SERVER_URL}${img.url}`} className="w-full h-full object-cover" alt="Preview" />
                                             </div>
                                         ) : (
                                             <div className={`relative ${imageSlots[idx].aspect} rounded border-2 border-dashed border-gray-200 bg-white flex flex-col items-center justify-center group hover:border-[#23471d] transition-all`}>

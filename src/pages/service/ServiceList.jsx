@@ -111,8 +111,7 @@ const ServiceList = () => {
             render: (row) => (
                 <div className="h-14 w-24 rounded border border-gray-200 overflow-hidden bg-gray-50">
                     {row.heroImage ? (
-                        <img
-                            src={`${SERVER_URL}${row.heroImage}`}
+                        <img loading="lazy" decoding="async"                             src={`${SERVER_URL}${row.heroImage}`}
                             alt={row.heroImageAlt}
                             className="h-full w-full object-cover"
                         />

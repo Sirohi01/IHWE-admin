@@ -261,8 +261,7 @@ const AddClients = () => {
             <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 shadow-sm">
               {imagePreview ? (
                 <div className="relative">
-                    <img
-                      src={imagePreview}
+                    <img loading="lazy" decoding="async"                       src={imagePreview}
                       alt="preview"
                     className="w-full h-48 object-contain rounded-md bg-white p-4 border-2 border-gray-200"
                   />

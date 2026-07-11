@@ -278,7 +278,7 @@ export default function ConferenceTrackManage() {
                             <input type="file" onChange={handleImageChange} className="w-full text-sm" accept="image/*" />
                             {imagePreview && (
                                 <div className="mt-2 relative inline-block">
-                                    <img src={imagePreview} className="h-20 w-32 object-cover rounded-lg border" alt="Preview" />
+                                    <img loading="lazy" decoding="async" src={imagePreview} className="h-20 w-32 object-cover rounded-lg border" alt="Preview" />
                                     <button
                                         type="button"
                                         onClick={() => { setImageFile(null); setImagePreview(null); }}
@@ -355,7 +355,7 @@ export default function ConferenceTrackManage() {
                                 <td className="p-4">
                                     <div className="flex items-center gap-3">
                                         <div className="w-20 h-14 bg-gray-100 rounded overflow-hidden flex-shrink-0 border">
-                                            {track.image && <img src={`${SERVER_URL}${track.image}`} className="w-full h-full object-cover" alt="" />}
+                                            {track.image && <img loading="lazy" decoding="async" src={`${SERVER_URL}${track.image}`} className="w-full h-full object-cover" alt="" />}
                                         </div>
                                         <div>
                                             <p className="text-xs font-bold text-[#d26019]">{track.day} - {track.date}</p>

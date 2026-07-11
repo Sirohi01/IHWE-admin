@@ -732,19 +732,19 @@ const BookAStand = () => {
                                         {[
                                             {
                                                 num: '', label: '8,000+\nHealthcare\nProfessionals',
-                                                icon: <img src="/exhibition/b1.png" alt="" className="w-10 h-10 md:w-12 md:h-12 object-contain" />
+                                                icon: <img loading="lazy" decoding="async" src="/exhibition/b1.png" alt="" className="w-10 h-10 md:w-12 md:h-12 object-contain" />
                                             },
                                             {
                                                 num: '', label: 'Custom\nStall\nSolutions',
-                                                icon: <img src="/exhibition/b2.png" alt="" className="w-10 h-10 md:w-12 md:h-12 object-contain" />,
+                                                icon: <img loading="lazy" decoding="async" src="/exhibition/b2.png" alt="" className="w-10 h-10 md:w-12 md:h-12 object-contain" />,
                                             },
                                             {
                                                 num: '', label: 'Maximum\nBrand\nVisibility',
-                                                icon: <img src="/exhibition/b3.png" alt="" className="w-10 h-10 md:w-12 md:h-12 object-contain" />,
+                                                icon: <img loading="lazy" decoding="async" src="/exhibition/b3.png" alt="" className="w-10 h-10 md:w-12 md:h-12 object-contain" />,
                                             },
                                             {
                                                 num: '', label: 'High-Value\nBusiness\nConnections',
-                                                icon: <img src="/exhibition/b4.png" alt="" className="w-10 h-10 md:w-12 md:h-12 object-contain" />,
+                                                icon: <img loading="lazy" decoding="async" src="/exhibition/b4.png" alt="" className="w-10 h-10 md:w-12 md:h-12 object-contain" />,
                                             },
                                         ].map((stat, i, arr) => (
                                             <div key={i} className="flex items-center md:contents">
@@ -816,7 +816,7 @@ const BookAStand = () => {
                                     className={`cursor-pointer transition-all duration-300 rounded-xl px-5 pt-2 pb-4 flex flex-col items-center text-center gap-2 border-2 ${exhibitorType === 'domestic' ? 'bg-[#f0f7e6] border-[#4a8f2f] shadow-lg scale-[1.02]' : 'bg-[#f0f7e6]/50 border-[#4a8f2f]/5 hover:border-[#c8e6a0] hover:bg-[#f0f7e6]'}`}
                                 >
                                     <div className="flex items-center justify-center">
-                                        <img src="/exhibition/dom.png" alt="Domestic" className="w-18 h-16 object-contain" />
+                                        <img loading="lazy" decoding="async" src="/exhibition/dom.png" alt="Domestic" className="w-18 h-16 object-contain" />
                                     </div>
                                     <div>
                                         <p className="text-gray-800 font-bold text-base mb-1">Domestic Exhibitor</p>
@@ -841,7 +841,7 @@ const BookAStand = () => {
                                     className={`cursor-pointer transition-all duration-300 rounded-xl px-5 pt-2 pb-4 flex flex-col items-center text-center gap-2 border-2 ${exhibitorType === 'international' ? 'bg-[#fff7f0] border-[#d26019] shadow-lg scale-[1.02]' : 'bg-[#fff7f0]/50 border-[#d26019]/5 hover:border-[#f5d5b0] hover:bg-[#fff7f0]'}`}
                                 >
                                     <div className="flex items-center justify-center">
-                                        <img src="/exhibition/int.png" alt="International" className="w-18 h-16 object-contain" />
+                                        <img loading="lazy" decoding="async" src="/exhibition/int.png" alt="International" className="w-18 h-16 object-contain" />
                                     </div>
                                     <div>
                                         <p className="text-gray-800 font-bold text-base mb-1">International Exhibitor</p>
@@ -1254,7 +1254,7 @@ const BookAStand = () => {
 
                             {/* Right Side: Image Banner */}
                             <div className="w-full lg:w-[28%] relative rounded-lg overflow-hidden border border-slate-200 shadow-sm hidden lg:block">
-                                <img src={arenaImg} alt="Exhibition Arena" className="absolute inset-0 w-full h-full object-cover" />
+                                <img loading="lazy" decoding="async" src={arenaImg} alt="Exhibition Arena" className="absolute inset-0 w-full h-full object-cover" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                                 <div className="absolute bottom-3 left-3 right-3">
                                     <h4 className="text-white font-bold text-[11px] uppercase tracking-wide">Exhibition Arena</h4>

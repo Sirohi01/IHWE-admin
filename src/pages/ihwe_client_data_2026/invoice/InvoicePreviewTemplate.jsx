@@ -511,7 +511,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
     const renderInvoiceHeader = () => (
         <>
             <div className="invoice-header-image" style={{ marginBottom: 0, textAlign: 'center' }}>
-                <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
+                <img loading="lazy" decoding="async" src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
             </div>
 
             <div
@@ -912,8 +912,8 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                         </td>
                         <td style={{ border: '1px solid #ccc', padding: '6px 8px', textAlign: 'center', verticalAlign: 'bottom' }}>
                             <div style={{ height: 80, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-                                {sigUrl && <img src={sigUrl} alt="Signature" style={{ maxHeight: 60, maxWidth: 130 }} />}
-                                {stampUrl && <img src={stampUrl} alt="Stamp" style={{ maxHeight: 60, maxWidth: 60 }} />}
+                                {sigUrl && <img loading="lazy" decoding="async" src={sigUrl} alt="Signature" style={{ maxHeight: 60, maxWidth: 130 }} />}
+                                {stampUrl && <img loading="lazy" decoding="async" src={stampUrl} alt="Stamp" style={{ maxHeight: 60, maxWidth: 60 }} />}
                             </div>
                             <div style={{ borderTop: '1px solid #ccc', paddingTop: 4, fontWeight: 700, width: '60%', margin: '0 auto' }}>Auth Signatory</div>
                         </td>
@@ -1134,7 +1134,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                     <tr>
                         <td style={{ border: 0, padding: 0 }}>
                             <div className="invoice-header-image" style={{ marginBottom: 0, textAlign: 'center' }}>
-                                <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
+                                <img loading="lazy" decoding="async" src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
                             </div>
 
                             <div

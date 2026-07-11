@@ -129,8 +129,7 @@ const OurJourneyManagement = () => {
         <>
             <div className="relative w-full h-64 overflow-hidden rounded ">
                 {/* Background Image */}
-                <img
-                    src="/about.png"
+                <img loading="lazy" decoding="async"                     src="/about.png"
                     alt="banner"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />

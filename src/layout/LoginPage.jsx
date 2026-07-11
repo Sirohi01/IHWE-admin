@@ -273,8 +273,7 @@ export default function LoginPage() {
                     {/* TOP: Logo + Branding */}
                     <div className="mt-8 mb-8">
                       {logo ? (
-                        <img
-                          // src={`${SERVER_URL}${logo}`}
+                        <img loading="lazy" decoding="async"                           // src={`${SERVER_URL}${logo}`}
                           src="/logo.png"
                           className="h-20 w-auto object-contain -ml-2"
                           alt="IHWE Logo"

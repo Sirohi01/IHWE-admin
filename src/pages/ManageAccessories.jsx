@@ -192,7 +192,7 @@ export default function ManageAccessories() {
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded border border-gray-100 bg-gray-50 flex-shrink-0 flex items-center justify-center overflow-hidden">
                                                     {item.imageUrl
-                                                        ? <img src={item.imageUrl.startsWith('http') ? item.imageUrl : `${SERVER_URL}${item.imageUrl}`} alt="" className="w-full h-full object-cover" />
+                                                        ? <img loading="lazy" decoding="async" src={item.imageUrl.startsWith('http') ? item.imageUrl : `${SERVER_URL}${item.imageUrl}`} alt="" className="w-full h-full object-cover" />
                                                         : <Package size={16} className="text-gray-300" />}
                                                 </div>
                                                 <div className="min-w-0">
@@ -312,7 +312,7 @@ export default function ManageAccessories() {
                                         <div className="relative aspect-square w-full border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center group overflow-hidden rounded-sm hover:border-[#23471d]/30 transition-colors">
                                             {previewUrl ? (
                                                 <>
-                                                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                                                    <img loading="lazy" decoding="async" src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
                                                         <button type="button" onClick={() => document.getElementById('accImg').click()} className="p-2 bg-white rounded-full text-[#23471d] shadow-lg">
                                                             <ImageIcon size={18} />

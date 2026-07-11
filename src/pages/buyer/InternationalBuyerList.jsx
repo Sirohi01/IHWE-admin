@@ -303,7 +303,7 @@ const InternationalBuyerList = () => {
                         <div className="p-6 flex flex-col items-center justify-center bg-white">
                             <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 mb-4">
                                 {selectedQR.qrCode ? (
-                                    <img src={selectedQR.qrCode} alt="QR Code" className="w-48 h-48 object-contain" />
+                                    <img loading="lazy" decoding="async" src={selectedQR.qrCode} alt="QR Code" className="w-48 h-48 object-contain" />
                                 ) : (
                                     <QRCode value={selectedQR.registrationId || selectedQR._id} size={192} />
                                 )}

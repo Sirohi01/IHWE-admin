@@ -222,8 +222,7 @@ export default function ExhibitorProductsProfile() {
                                     <div className="flex items-center gap-4">
                                         <div className="w-14 h-14 bg-[#23471d] text-white rounded flex items-center justify-center text-xl font-black overflow-hidden border border-gray-100 shadow-sm">
                                             {selectedExhibitor.companyLogoUrl ? (
-                                                <img
-                                                    src={selectedExhibitor.companyLogoUrl.startsWith('http') ? selectedExhibitor.companyLogoUrl : `${backendBaseUrl}${selectedExhibitor.companyLogoUrl}`}
+                                                <img loading="lazy" decoding="async"                                                     src={selectedExhibitor.companyLogoUrl.startsWith('http') ? selectedExhibitor.companyLogoUrl : `${backendBaseUrl}${selectedExhibitor.companyLogoUrl}`}
                                                     className="w-full h-full object-contain bg-white"
                                                     alt={selectedExhibitor.title}
                                                     onError={(e) => {
@@ -287,8 +286,7 @@ export default function ExhibitorProductsProfile() {
                                                     >
                                                         <div className="aspect-square bg-gray-50 relative">
                                                             {p.images?.[0] ? (
-                                                                <img
-                                                                    src={p.images[0].startsWith('http') ? p.images[0] : `${backendBaseUrl}${p.images[0]}`}
+                                                                <img loading="lazy" decoding="async"                                                                     src={p.images[0].startsWith('http') ? p.images[0] : `${backendBaseUrl}${p.images[0]}`}
                                                                     className="w-full h-full object-contain"
                                                                     onError={(e) => e.target.src = 'https://placehold.co/400x400?text=No+Image'}
                                                                 />
@@ -350,8 +348,7 @@ export default function ExhibitorProductsProfile() {
                                                             <td className="py-3 flex items-center gap-3">
                                                                 <div className="w-10 h-10 border rounded overflow-hidden bg-gray-50 flex">
                                                                     {p.images?.[0] ? (
-                                                                        <img
-                                                                            src={p.images[0].startsWith('http') ? p.images[0] : `${backendBaseUrl}${p.images[0]}`}
+                                                                        <img loading="lazy" decoding="async"                                                                             src={p.images[0].startsWith('http') ? p.images[0] : `${backendBaseUrl}${p.images[0]}`}
                                                                             className="w-full h-full object-contain"
                                                                             onError={(e) => e.target.src = 'https://placehold.co/100x100?text=NA'}
                                                                         />
@@ -419,7 +416,7 @@ export default function ExhibitorProductsProfile() {
                                                 onClick={() => setActiveModalImage(idx)}
                                                 className={`w-16 h-16 rounded border-2 transition-all overflow-hidden shrink-0 ${activeModalImage === idx ? 'border-[#23471d] scale-110 shadow-md' : 'border-transparent opacity-50 hover:opacity-100'}`}
                                             >
-                                                <img src={img.startsWith('http') ? img : `${backendBaseUrl}${img}`} className="w-full h-full object-cover" />
+                                                <img loading="lazy" decoding="async" src={img.startsWith('http') ? img : `${backendBaseUrl}${img}`} className="w-full h-full object-cover" />
                                             </button>
                                         ))}
                                     </div>
@@ -507,7 +504,7 @@ export default function ExhibitorProductsProfile() {
                                         <div className="grid grid-cols-4 gap-4">
                                             {imagePreviews.map((src, i) => (
                                                 <div key={i} className="aspect-square rounded border relative group bg-gray-50 flex overflow-hidden">
-                                                    <img src={src} className="w-full h-full object-contain m-auto" />
+                                                    <img loading="lazy" decoding="async" src={src} className="w-full h-full object-contain m-auto" />
                                                     <button type="button" onClick={() => {
                                                         setSelectedImages(prev => prev.filter((_, idx) => idx !== i));
                                                         setImagePreviews(prev => prev.filter((_, idx) => idx !== i));

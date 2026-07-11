@@ -277,7 +277,7 @@ const SpeakerRegistrationDetail = () => {
                             {speaker.speakerPhotoUrl && (
                                 <div>
                                     <p className="text-xs font-semibold text-slate-600 mb-2">Speaker Photo</p>
-                                    <img 
+                                    <img loading="lazy" decoding="async" 
                                         src={speaker.speakerPhotoUrl} 
                                         alt="Speaker" 
                                         className="w-full h-48 object-cover rounded border border-slate-200"
@@ -287,7 +287,7 @@ const SpeakerRegistrationDetail = () => {
                             {speaker.companyLogoUrl && (
                                 <div>
                                     <p className="text-xs font-semibold text-slate-600 mb-2">Company Logo</p>
-                                    <img 
+                                    <img loading="lazy" decoding="async" 
                                         src={speaker.companyLogoUrl} 
                                         alt="Company Logo" 
                                         className="w-full h-48 object-contain rounded border border-slate-200 bg-white p-4"

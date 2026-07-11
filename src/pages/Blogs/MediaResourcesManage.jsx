@@ -133,8 +133,7 @@ const MediaResourcesManage = () => {
         <div className="bg-[#f8f9fa] min-h-screen">
             {/* Hero Banner */}
             <div className="relative w-full h-64 overflow-hidden rounded-b-xl pt-2">
-                <img
-                    src="/bann.png"
+                <img loading="lazy" decoding="async"                     src="/bann.png"
                     alt="Media Resources Banner"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />

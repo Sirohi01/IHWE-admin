@@ -279,7 +279,7 @@ const UpcomingBrands = () => {
                 />
                 {previewImage && (
                   <div className="mt-2 p-2 border border-gray-200 rounded flex justify-center bg-gray-50">
-                    <img src={previewImage} alt="Preview" className="h-16 object-contain" />
+                    <img loading="lazy" decoding="async" src={previewImage} alt="Preview" className="h-16 object-contain" />
                   </div>
                 )}
               </div>
@@ -416,7 +416,7 @@ const UpcomingBrands = () => {
                         <td className="px-6 py-4 font-bold text-[#23471d]">{index + 1}</td>
                         <td className="px-6 py-4 text-center">
                           <div className="w-16 h-10 mx-auto rounded bg-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden">
-                            <img src={getImageUrl(item.logo)} alt={item.altText} className="max-h-full max-w-full object-contain" />
+                            <img loading="lazy" decoding="async" src={getImageUrl(item.logo)} alt={item.altText} className="max-h-full max-w-full object-contain" />
                           </div>
                         </td>
                         <td className="px-6 py-4 font-bold text-gray-900 text-sm">{item.logoName || item.altText || '-'}</td>

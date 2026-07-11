@@ -191,8 +191,7 @@ const Clients = () => {
     <>
       <div className="relative w-full h-64 overflow-hidden rounded ">
         {/* Background Image */}
-        <img
-          src="/home.png"
+        <img loading="lazy" decoding="async"           src="/home.png"
           alt="banner"
           className="absolute inset-0 w-full h-full object-cover z-0"
         />
@@ -328,8 +327,7 @@ const Clients = () => {
                   <div className="border-2 border-dashed border-gray-300 hover:border-[#23471d] transition-colors p-4 flex flex-col items-center gap-2">
                     {imagePreview ? (
                       <div className="relative w-full h-32 border border-gray-200 bg-gray-50 flex items-center justify-center p-2">
-                        <img
-                          src={imagePreview.startsWith('data:') || imagePreview.startsWith('/uploads') ? `${imagePreview.startsWith('data:') ? '' : SERVER_URL}${imagePreview}` : `${SERVER_URL}${imagePreview}`}
+                        <img loading="lazy" decoding="async"                           src={imagePreview.startsWith('data:') || imagePreview.startsWith('/uploads') ? `${imagePreview.startsWith('data:') ? '' : SERVER_URL}${imagePreview}` : `${SERVER_URL}${imagePreview}`}
                           className="max-w-full max-h-full object-contain"
                           alt="Preview"
                         />
@@ -412,8 +410,7 @@ const Clients = () => {
                           <td className="px-6 py-4 font-bold text-[#23471d]">{index + 1}</td>
                           <td className="px-6 py-4">
                             <div className="w-16 h-12 bg-white border border-gray-200 overflow-hidden shadow-sm flex items-center justify-center p-1">
-                              <img
-                                src={`${SERVER_URL}${img.url}`}
+                              <img loading="lazy" decoding="async"                                 src={`${SERVER_URL}${img.url}`}
                                 alt={img.altText}
                                 className="max-w-full max-h-full object-contain"
                               />

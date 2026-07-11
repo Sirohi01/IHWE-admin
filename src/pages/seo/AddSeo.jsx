@@ -660,7 +660,7 @@ const AddSeo = () => {
                                 />
                                 {formData.ogImagePreview ? (
                                     <div className="relative w-full">
-                                        <img src={formData.ogImagePreview} alt="OG Preview" className="h-24 w-full object-cover rounded shadow-sm" />
+                                        <img loading="lazy" decoding="async" src={formData.ogImagePreview} alt="OG Preview" className="h-24 w-full object-cover rounded shadow-sm" />
                                         <button
                                             type="button"
                                             onClick={removeImage}

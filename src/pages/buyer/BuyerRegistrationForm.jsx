@@ -128,7 +128,7 @@ const BuyerRegistrationForm = () => {
                                 className={`cursor-pointer transition-all duration-300 rounded-xl px-5 pt-2 pb-4 flex flex-col items-center text-center gap-2 border-2  ${buyerType === 'domestic' ? 'bg-[#f0f7e6] border-[#4a8f2f] shadow-lg scale-[1.02]' : 'bg-[#f0f7e6]/50 border-[#4a8f2f]/5 hover:border-[#c8e6a0] hover:bg-[#f0f7e6]'}`}
                             >
                                 <div className="flex items-center justify-center">
-                                    <img src="/exhibition/dom.png" alt="Domestic" className="w-18 h-16 object-contain" />
+                                    <img loading="lazy" decoding="async" src="/exhibition/dom.png" alt="Domestic" className="w-18 h-16 object-contain" />
                                 </div>
                                 <div>
                                     <p className="text-gray-800 font-bold text-base mb-1">Domestic Buyer</p>
@@ -153,7 +153,7 @@ const BuyerRegistrationForm = () => {
                                 className={`cursor-pointer transition-all duration-300 rounded-xl px-5 pt-2 pb-4 flex flex-col items-center text-center gap-2 border-2 ${buyerType === 'international' ? 'bg-[#fff7f0] border-[#d26019] shadow-lg scale-[1.02]' : 'bg-[#fff7f0]/50 border-[#d26019]/5 hover:border-[#f5d5b0] hover:bg-[#fff7f0]'}`}
                             >
                                 <div className="flex items-center justify-center">
-                                    <img src="/exhibition/int.png" alt="International" className="w-18 h-16 object-contain" />
+                                    <img loading="lazy" decoding="async" src="/exhibition/int.png" alt="International" className="w-18 h-16 object-contain" />
                                 </div>
                                 <div>
                                     <p className="text-gray-800 font-bold text-base mb-1">International Buyer</p>

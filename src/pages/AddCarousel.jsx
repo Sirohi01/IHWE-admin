@@ -160,8 +160,7 @@ const AddCarousel = () => {
                   <div className="aspect-[16/9] bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl border-2 border-dashed border-purple-200 flex flex-col items-center justify-center p-4">
                     {imagePreviews[index] ? (
                       <div className="relative w-full h-full">
-                        <img
-                          src={imagePreviews[index]}
+                        <img loading="lazy" decoding="async"                           src={imagePreviews[index]}
                           alt={`Slide ${index + 1}`}
                           className="w-full h-full object-cover rounded-lg"
                         />

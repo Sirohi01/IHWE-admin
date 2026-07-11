@@ -465,7 +465,7 @@ const ConferenceDayManagement = () => {
                 <div className="relative group aspect-video bg-white rounded-lg overflow-hidden border-2 border-gray-100 flex items-center justify-center">
                   {content.hero.backgroundImage ? (
                     <>
-                      <img src={content.hero.backgroundImage.startsWith('http') ? content.hero.backgroundImage : `${SERVER_URL}${content.hero.backgroundImage}`} alt="Hero BG" className="w-full h-full object-cover" />
+                      <img loading="lazy" decoding="async" src={content.hero.backgroundImage.startsWith('http') ? content.hero.backgroundImage : `${SERVER_URL}${content.hero.backgroundImage}`} alt="Hero BG" className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <label className="cursor-pointer bg-white p-2 rounded-full shadow-lg">
                           <Upload className="text-[#0B2C66] w-5 h-5" />
@@ -677,7 +677,7 @@ const ConferenceDayManagement = () => {
                       <div className="flex gap-2 items-start">
                         <div className="relative w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full overflow-hidden border-2 border-gray-100 group">
                           {session.speaker?.image ? (
-                            <img src={session.speaker.image.startsWith('http') ? session.speaker.image : `${SERVER_URL}${session.speaker.image}`} alt="Speaker" className="w-full h-full object-cover" />
+                            <img loading="lazy" decoding="async" src={session.speaker.image.startsWith('http') ? session.speaker.image : `${SERVER_URL}${session.speaker.image}`} alt="Speaker" className="w-full h-full object-cover" />
                           ) : <Users className="w-full h-full p-2 text-gray-300" />}
                           <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
                             <Upload className="text-white w-4 h-4" />
@@ -727,7 +727,7 @@ const ConferenceDayManagement = () => {
 
                   <div className="relative aspect-square w-24 mx-auto rounded-full overflow-hidden border-4 border-white shadow-md group/img">
                     {speaker.image ? (
-                      <img src={speaker.image.startsWith('http') ? speaker.image : `${SERVER_URL}${speaker.image}`} alt="Speaker" className="w-full h-full object-cover" />
+                      <img loading="lazy" decoding="async" src={speaker.image.startsWith('http') ? speaker.image : `${SERVER_URL}${speaker.image}`} alt="Speaker" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300"><Users size={32} /></div>
                     )}
@@ -790,7 +790,7 @@ const ConferenceDayManagement = () => {
 
                   <div className="relative aspect-square w-24 mx-auto rounded-full overflow-hidden border-4 border-white shadow-md group/img">
                     {speaker.image ? (
-                      <img src={speaker.image.startsWith('http') ? speaker.image : `${SERVER_URL}${speaker.image}`} alt="Speaker" className="w-full h-full object-cover" />
+                      <img loading="lazy" decoding="async" src={speaker.image.startsWith('http') ? speaker.image : `${SERVER_URL}${speaker.image}`} alt="Speaker" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300"><Users size={32} /></div>
                     )}
@@ -886,7 +886,7 @@ const ConferenceDayManagement = () => {
                 <div key={idx} className="relative group aspect-square bg-gray-50 border-2 border-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
                   <button type="button" onClick={() => handleRemoveAssociate(idx)} className="absolute top-1 right-1 z-10 text-red-400 bg-white/90 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={12} /></button>
                   {logo ? (
-                    <img src={logo.startsWith('http') ? logo : `${SERVER_URL}${logo}`} alt={`Associate ${idx + 1}`} className="w-full h-full object-contain p-3" />
+                    <img loading="lazy" decoding="async" src={logo.startsWith('http') ? logo : `${SERVER_URL}${logo}`} alt={`Associate ${idx + 1}`} className="w-full h-full object-contain p-3" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-300"><ImageIcon size={28} /></div>
                   )}

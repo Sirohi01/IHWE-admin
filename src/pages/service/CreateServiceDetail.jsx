@@ -245,7 +245,7 @@ const CreateServiceDetail = () => {
                                 {formData.heroImagePreview ? (
                                     <div className="relative w-full h-full">
                                         <div className="relative">
-                                            <img src={formData.heroImagePreview} alt="Hero Preview" className="h-32 w-full object-cover rounded shadow-md border-2 border-white" />
+                                            <img loading="lazy" decoding="async" src={formData.heroImagePreview} alt="Hero Preview" className="h-32 w-full object-cover rounded shadow-md border-2 border-white" />
                                             {/* Overlay Preview */}
                                             <div
                                                 className="absolute inset-0 bg-black rounded"

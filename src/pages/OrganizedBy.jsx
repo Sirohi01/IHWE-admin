@@ -75,8 +75,7 @@ const OrganizedBy = () => {
         <>
             <div className="relative w-full h-64 overflow-hidden rounded ">
                 {/* Background Image */}
-                <img
-                    src="/home.png"
+                <img loading="lazy" decoding="async"                     src="/home.png"
                     alt="banner"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />
@@ -221,7 +220,7 @@ const OrganizedBy = () => {
                             <div className="mt-1 flex flex-col items-center gap-4">
                                 <div className="w-full h-64 border-2 border-dashed border-gray-200 relative group overflow-hidden bg-gray-50 flex items-center justify-center p-8">
                                     {previewUrl ? (
-                                        <img src={previewUrl} alt="Logo Preview" className="max-w-full max-h-full object-contain filter drop-shadow-md" />
+                                        <img loading="lazy" decoding="async" src={previewUrl} alt="Logo Preview" className="max-w-full max-h-full object-contain filter drop-shadow-md" />
                                     ) : (
                                         <div className="text-center">
                                             <ImageIcon className="mx-auto w-12 h-12 text-gray-300 mb-2" />

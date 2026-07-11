@@ -63,7 +63,7 @@ const CompanyLogo = ({ logo, name }) => {
   if (logoSrc) {
     return (
       <div className="w-24 h-24 rounded-xl overflow-hidden border border-gray-100 shrink-0 bg-white">
-        <img src={logoSrc} alt={name || "Company logo"} className="w-full h-full object-contain" />
+        <img loading="lazy" decoding="async" src={logoSrc} alt={name || "Company logo"} className="w-full h-full object-contain" />
       </div>
     );
   }

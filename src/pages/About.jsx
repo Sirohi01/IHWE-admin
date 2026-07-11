@@ -191,8 +191,7 @@ const About = () => {
     <>
       <div className="relative w-full h-64 overflow-hidden rounded ">
         {/* Background Image */}
-        <img
-          src="/home.png"
+        <img loading="lazy" decoding="async"           src="/home.png"
           alt="banner"
           className="absolute inset-0 w-full h-full object-cover z-0"
         />
@@ -286,8 +285,7 @@ const About = () => {
 
                       <div className={`relative ${item.aspect} bg-slate-100 flex items-center justify-center group`}>
                         {previews[item.id] ? (
-                          <img
-                            src={previews[item.id]}
+                          <img loading="lazy" decoding="async"                             src={previews[item.id]}
                             className="w-full h-full object-cover"
                             alt="preview"
                           />

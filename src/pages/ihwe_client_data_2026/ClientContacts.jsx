@@ -51,7 +51,7 @@ const SecureImage = ({ src, alt, className }) => {
         };
     }, [src]);
 
-    return <img src={imgSrc || src} alt={alt} className={className} />;
+    return <img loading="lazy" decoding="async" src={imgSrc || src} alt={alt} className={className} />;
 };
 
 const ClientContacts = () => {

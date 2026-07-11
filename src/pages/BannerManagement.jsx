@@ -227,7 +227,7 @@ export default function BannerManagement() {
                             {banners.map(b => (
                                 <div key={b._id} className="bg-white border-2 border-slate-100 rounded-xl overflow-hidden group hover:border-[#23471d] transition-all">
                                     <div className="relative h-32 overflow-hidden">
-                                        <img src={`${SERVER_URL}${b.imageUrl}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                        <img loading="lazy" decoding="async" src={`${SERVER_URL}${b.imageUrl}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                         <div className="absolute inset-0 bg-black/40 p-4 flex flex-col justify-end">
                                             <span className="inline-block self-start px-2 py-0.5 bg-[#d26019] text-white text-[8px] font-black uppercase rounded mb-1">{b.type}</span>
                                             <h4 className="text-white font-black uppercase text-sm leading-none">{b.title || b.pageId}</h4>

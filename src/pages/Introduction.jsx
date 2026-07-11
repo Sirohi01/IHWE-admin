@@ -252,7 +252,7 @@ const Introduction = () => {
                     onClick={() => document.getElementById('introImage').click()}
                   >
                     {previewUrl ? (
-                      <img src={previewUrl} alt="Preview" className="w-full h-full object-contain" />
+                      <img loading="lazy" decoding="async" src={previewUrl} alt="Preview" className="w-full h-full object-contain" />
                     ) : (
                       <>
                         <ImageIcon className="w-10 h-10 text-gray-400 mb-2 group-hover:text-[#23471d]" />

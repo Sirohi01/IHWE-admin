@@ -226,8 +226,7 @@ const EventHighlightsPage = () => {
 
             <div className="relative w-full h-64 overflow-hidden rounded ">
                 {/* Background Image */}
-                <img
-                    src="/home.png"
+                <img loading="lazy" decoding="async"                     src="/home.png"
                     alt="banner"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />
@@ -357,7 +356,7 @@ const EventHighlightsPage = () => {
                             <div>
                                 {imagePreview ? (
                                     <div className="relative">
-                                        <img src={imagePreview} alt="Preview" className="w-full h-56 object-cover border-2 border-gray-200" />
+                                        <img loading="lazy" decoding="async" src={imagePreview} alt="Preview" className="w-full h-56 object-cover border-2 border-gray-200" />
                                         <div className="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 font-semibold">
                                             {imageFile ? 'New Image' : 'Current Image'}
                                         </div>

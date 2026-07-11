@@ -128,7 +128,7 @@ const LogisticPartnerManage = () => {
                                         <div className="flex gap-4 items-center">
                                             <div className="w-48 h-24 bg-slate-50 border-2 border-dashed border-slate-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
                                                 {data.hero.bgImage ? (
-                                                    <img src={formatUrl(data.hero.bgImage)} className="w-full h-full object-cover" alt="bg" />
+                                                    <img loading="lazy" decoding="async" src={formatUrl(data.hero.bgImage)} className="w-full h-full object-cover" alt="bg" />
                                                 ) : (
                                                     <ImageIcon className="text-slate-300 w-8 h-8" />
                                                 )}

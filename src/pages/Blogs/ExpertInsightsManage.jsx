@@ -107,8 +107,7 @@ const ExpertInsightsManage = () => {
         <div className="bg-[#f8f9fa] min-h-screen">
             {/* Hero Banner */}
             <div className="relative w-full h-64 overflow-hidden rounded-b-xl pt-2">
-                <img
-                    src="/bann.png"
+                <img loading="lazy" decoding="async"                     src="/bann.png"
                     alt="Expert Insights Banner"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />
@@ -141,7 +140,7 @@ const ExpertInsightsManage = () => {
                     {experts.map((expert) => (
                         <div key={expert._id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden group hover:shadow-md transition-all">
                             <div className="p-6 flex items-start gap-4">
-                                <img 
+                                <img loading="lazy" decoding="async" 
                                     src={`${SERVER_URL}${expert.image}`} 
                                     alt={expert.name}
                                     className="w-16 h-16 rounded-full object-cover border-2 border-slate-50 shadow-sm"
@@ -178,7 +177,7 @@ const ExpertInsightsManage = () => {
                                     <div className="relative group">
                                         <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-slate-100 bg-slate-50">
                                             {previewUrl ? (
-                                                <img src={previewUrl} className="w-full h-full object-cover" />
+                                                <img loading="lazy" decoding="async" src={previewUrl} className="w-full h-full object-cover" />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-slate-300"><Plus size={40} /></div>
                                             )}

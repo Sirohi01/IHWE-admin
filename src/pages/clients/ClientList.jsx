@@ -167,8 +167,7 @@ const ClientList = () => {
       label: "LOGO",
       render: (row) => (
         <div className="w-28 h-14 bg-white border border-gray-200 flex items-center justify-center rounded">
-          <img
-            src={`${SERVER_URL}${row.image}`}
+          <img loading="lazy" decoding="async"             src={`${SERVER_URL}${row.image}`}
             alt={row.name}
             className="max-h-12 max-w-[90px] object-contain"
           />

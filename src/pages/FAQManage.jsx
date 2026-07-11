@@ -217,8 +217,7 @@ const FAQManage = () => {
         <>
             <div className="relative w-full h-64 overflow-hidden rounded ">
                 {/* Background Image */}
-                <img
-                    src="/home.png"
+                <img loading="lazy" decoding="async"                     src="/home.png"
                     alt="banner"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />
@@ -335,7 +334,7 @@ const FAQManage = () => {
 
                                     {defaultImagePreview ? (
                                         <div className="relative aspect-[4/3] border-2 border-white overflow-hidden mb-2 shadow-md bg-white">
-                                            <img src={defaultImagePreview} className="w-full h-full object-cover" alt="Default Visual Preview" />
+                                            <img loading="lazy" decoding="async" src={defaultImagePreview} className="w-full h-full object-cover" alt="Default Visual Preview" />
                                             <button
                                                 onClick={() => { setDefaultImageFile(null); setDefaultImagePreview(''); setData({ ...data, defaultImage: '' }); if (defaultFileInputRef.current) defaultFileInputRef.current.value = ''; }}
                                                 className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full shadow-lg"
@@ -408,7 +407,7 @@ const FAQManage = () => {
                                     </label>
                                     {imagePreview ? (
                                         <div className="relative aspect-[4/3] border-2 border-white overflow-hidden mb-2 shadow-md bg-white">
-                                            <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
+                                            <img loading="lazy" decoding="async" src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
                                             <button
                                                 onClick={() => { setImageFile(null); setImagePreview(''); setItemForm({ ...itemForm, image: '' }); if (fileInputRef.current) fileInputRef.current.value = ''; }}
                                                 className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full shadow-lg"
@@ -489,7 +488,7 @@ const FAQManage = () => {
                                                 <td className="py-3 px-4 text-gray-500 font-bold">{idx + 1}</td>
                                                 <td className="py-3 px-4">
                                                     {item.image ? (
-                                                        <img src={`${SERVER_URL}${item.image}`} alt={item.imageAlt} className="w-14 h-10 object-cover rounded border border-gray-200" />
+                                                        <img loading="lazy" decoding="async" src={`${SERVER_URL}${item.image}`} alt={item.imageAlt} className="w-14 h-10 object-cover rounded border border-gray-200" />
                                                     ) : (
                                                         <div className="w-14 h-10 bg-gray-100 rounded border border-gray-200 flex items-center justify-center">
                                                             <ImageIcon size={14} className="text-gray-400" />

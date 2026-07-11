@@ -430,7 +430,7 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
           >
             <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#06d6a0] bg-slate-800 flex items-center justify-center shadow-sm flex-shrink-0">
               {fullProfile?.profileImage ? (
-                <img src={fullProfile.profileImage} alt="" className="w-full h-full object-cover" />
+                <img loading="lazy" decoding="async" src={fullProfile.profileImage} alt="" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-[12px] font-black uppercase">
                   {adminData.username ? adminData.username[0] : 'A'}

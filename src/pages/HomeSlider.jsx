@@ -449,8 +449,7 @@ const HeroSlider = () => {
       label: "IMAGE",
       render: (row) => (
         <div className="overflow-hidden border-2 border-gray-300 shadow-lg" style={{ width: '128px', aspectRatio: '16/6' }}>
-          <img
-            src={`${SERVER_URL}${row.image}`}
+          <img loading="lazy" decoding="async"             src={`${SERVER_URL}${row.image}`}
             alt={row.title}
             className="w-full h-full object-cover"
           />
@@ -550,8 +549,7 @@ const HeroSlider = () => {
     <>
       <div className="relative w-full h-64 overflow-hidden rounded ">
         {/* Background Image */}
-        <img
-          src="/home.png"
+        <img loading="lazy" decoding="async"           src="/home.png"
           alt="banner"
           className="absolute inset-0 w-full h-full object-cover z-0"
         />
@@ -872,7 +870,7 @@ const HeroSlider = () => {
                 />
                 {imagePreview && (
                   <div className="mt-3 w-full border-2 border-[#23471d] shadow-lg overflow-hidden" style={{ aspectRatio: '16/6' }}>
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    <img loading="lazy" decoding="async" src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                   </div>
                 )}
               </div>
@@ -1055,8 +1053,7 @@ const HeroSlider = () => {
                     <Image className="w-5 h-5" />
                     Hero Image
                   </h4>
-                  <img
-                    src={`${API_URL}${viewData.image}`}
+                  <img loading="lazy" decoding="async"                     src={`${API_URL}${viewData.image}`}
                     alt={viewData.title}
                     className="w-full h-80 object-cover border-2 border-gray-300 shadow-lg"
                   />

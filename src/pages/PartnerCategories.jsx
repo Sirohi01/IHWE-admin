@@ -296,7 +296,7 @@ const PartnerCategories = () => {
 
                                     {/* Icon Placement */}
                                     <div className="absolute -bottom-5 left-5 w-12 h-12 rounded-full bg-white shadow-md border-2 border-white flex items-center justify-center p-2.5 overflow-hidden">
-                                        <img src={formatUrl(card.icon)} alt="" className="w-full h-full object-contain" />
+                                        <img loading="lazy" decoding="async" src={formatUrl(card.icon)} alt="" className="w-full h-full object-contain" />
                                     </div>
                                 </div>
 
@@ -386,7 +386,7 @@ const PartnerCategories = () => {
                                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Banner Background</label>
                                     <div className="relative h-28 w-full border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden rounded-xl group">
                                         {imagePreview ? (
-                                            <img src={imagePreview} className="w-full h-full object-cover" />
+                                            <img loading="lazy" decoding="async" src={imagePreview} className="w-full h-full object-cover" />
                                         ) : (
                                             <ImageIcon className="text-slate-300" size={24} />
                                         )}
@@ -401,7 +401,7 @@ const PartnerCategories = () => {
                                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Upload Card Icon</label>
                                     <div className="relative h-28 w-full border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden rounded-xl group">
                                         {iconPreview ? (
-                                            <img src={iconPreview} className="w-full h-full object-contain p-4" />
+                                            <img loading="lazy" decoding="async" src={iconPreview} className="w-full h-full object-contain p-4" />
                                         ) : (
                                             <ImageIcon className="text-slate-300" size={24} />
                                         )}

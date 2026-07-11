@@ -426,8 +426,7 @@ const ManageRegistrations = () => {
                 <div className="flex items-center gap-3 font-inter">
                     <div className="w-10 h-10 rounded-sm border border-slate-200 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
                         {row.companyLogoUrl ? (
-                            <img
-                                src={fixUrl(row.companyLogoUrl)}
+                            <img loading="lazy" decoding="async"                                 src={fixUrl(row.companyLogoUrl)}
                                 alt={row.exhibitorName}
                                 className="w-full h-full object-cover"
                                 onError={(e) => { e.target.src = "https://placehold.co/100x100?text=LOGO"; }}

@@ -969,7 +969,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
         {challan.status === "cancelled" && <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 -rotate-12 border-[5px] border-red-600/70 px-7 py-2 text-4xl font-black uppercase tracking-widest text-red-600/70">Cancelled</div>}
 
         <div className="challan-page-header" style={{ marginBottom: 0, textAlign: "center" }}>
-          <img src={invoiceHeader} alt="Namo Gange Design House" style={{ width: "100%", maxWidth: "100%", display: "block" }} />
+          <img loading="lazy" decoding="async" src={invoiceHeader} alt="Namo Gange Design House" style={{ width: "100%", maxWidth: "100%", display: "block" }} />
         </div>
         <div className="challan-page-body">
 

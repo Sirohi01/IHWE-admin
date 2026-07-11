@@ -467,7 +467,7 @@ export default function AiVerificationSettings() {
 
                             {testDocPreview && (
                                 <div className="flex items-start gap-4">
-                                    <img src={testDocPreview} alt="Preview" className="w-20 h-20 object-cover rounded-xl border border-gray-200 shrink-0" />
+                                    <img loading="lazy" decoding="async" src={testDocPreview} alt="Preview" className="w-20 h-20 object-cover rounded-xl border border-gray-200 shrink-0" />
                                     <button
                                         onClick={handleRunDocTest}
                                         disabled={isBusy}

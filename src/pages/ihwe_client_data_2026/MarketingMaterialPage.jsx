@@ -350,7 +350,7 @@ const MarketingMaterialPage = () => {
           >
             <FaChevronLeft />
           </button>
-          <img src={pragatiMaidan} alt="Banner" className="w-full h-auto" />
+          <img loading="lazy" decoding="async" src={pragatiMaidan} alt="Banner" className="w-full h-auto" />
         </div>
 
         {/* MAIN ROW: Library and Preview */}
@@ -483,7 +483,7 @@ const MarketingMaterialPage = () => {
 
                 <div className="w-full h-[210px] 2xl:h-[240px] custom-preview-height bg-white rounded-lg mb-1 flex items-center justify-center overflow-hidden border border-gray-100 relative group mt-2">
                   {selectedMaterial.fileType === "Image" ? (
-                    <img src={selectedMaterial.fileUrl} alt={selectedMaterial.title} className="max-w-full max-h-full object-contain mx-auto shadow-sm" />
+                    <img loading="lazy" decoding="async" src={selectedMaterial.fileUrl} alt={selectedMaterial.title} className="max-w-full max-h-full object-contain mx-auto shadow-sm" />
                   ) : selectedMaterial.fileType === "Video" ? (
                     <video src={selectedMaterial.fileUrl} controls className="w-full h-full" />
                   ) : selectedMaterial.fileType === "Location" ? (
@@ -586,7 +586,7 @@ const MarketingMaterialPage = () => {
               </>
             ) : (
               <div className="w-full min-h-[200px] rounded-lg overflow-hidden relative flex-1">
-                <img src={sideImage} alt="Select Material" className="absolute inset-0 w-full h-full object-cover" />
+                <img loading="lazy" decoding="async" src={sideImage} alt="Select Material" className="absolute inset-0 w-full h-full object-cover" />
               </div>
             )}
           </div>
@@ -762,7 +762,7 @@ const MarketingMaterialPage = () => {
               <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-xl border border-gray-200 overflow-hidden relative p-4">
                 {selectedMaterial ? (
                   selectedMaterial.fileType === "Image" ? (
-                    <img src={selectedMaterial.fileUrl} alt={selectedMaterial.title} className="max-w-full max-h-full object-contain rounded shadow-sm" />
+                    <img loading="lazy" decoding="async" src={selectedMaterial.fileUrl} alt={selectedMaterial.title} className="max-w-full max-h-full object-contain rounded shadow-sm" />
                   ) : selectedMaterial.fileType === "Video" ? (
                     <video src={selectedMaterial.fileUrl} controls className="max-w-full max-h-full rounded shadow-sm" />
                   ) : selectedMaterial.fileType === "Location" ? (

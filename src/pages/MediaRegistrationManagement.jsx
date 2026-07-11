@@ -412,7 +412,7 @@ const MediaRegistrationManagement = () => {
              file:text-sm file:font-semibold
              file:bg-black file:text-white
              hover:file:bg-gray-800" />
-                                            {coverageForm.logo && <img src={`${SERVER_URL}${coverageForm.logo}`} className="h-10 mt-2 object-contain" />}
+                                            {coverageForm.logo && <img loading="lazy" decoding="async" src={`${SERVER_URL}${coverageForm.logo}`} className="h-10 mt-2 object-contain" />}
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Featured Image</label>
@@ -422,7 +422,7 @@ const MediaRegistrationManagement = () => {
              file:text-sm file:font-semibold
              file:bg-black file:text-white
              hover:file:bg-gray-800" />
-                                            {coverageForm.image && <img src={`${SERVER_URL}${coverageForm.image}`} className="h-20 mt-2 object-contain" />}
+                                            {coverageForm.image && <img loading="lazy" decoding="async" src={`${SERVER_URL}${coverageForm.image}`} className="h-20 mt-2 object-contain" />}
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">News Link</label>
@@ -669,7 +669,7 @@ const MediaRegistrationManagement = () => {
                                                     <td className="px-6 py-4">
                                                         <div className="w-20 h-14 bg-gray-100 rounded overflow-hidden border border-gray-200 flex items-center justify-center">
                                                             {(item.image || item.logo || item.thumbnail) ? (
-                                                                <img src={`${SERVER_URL}${item.image || item.logo || item.thumbnail}`} className="w-full h-full object-contain" />
+                                                                <img loading="lazy" decoding="async" src={`${SERVER_URL}${item.image || item.logo || item.thumbnail}`} className="w-full h-full object-contain" />
                                                             ) : (
                                                                 <div className="text-gray-300"><ImageIcon size={24} /></div>
                                                             )}

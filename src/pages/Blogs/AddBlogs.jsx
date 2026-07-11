@@ -483,7 +483,7 @@ const AddBlogs = () => {
                     />
                     {ogImagePreview ? (
                       <div className="relative">
-                        <img src={ogImagePreview} alt="OG Preview" className="h-24 w-full object-cover rounded" />
+                        <img loading="lazy" decoding="async" src={ogImagePreview} alt="OG Preview" className="h-24 w-full object-cover rounded" />
                         <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded">
                           <EyeIcon className="text-white w-6 h-6" />
                         </div>
@@ -666,7 +666,7 @@ const AddBlogs = () => {
                     <div className="aspect-[16/5] flex items-center justify-center border-2 border-dashed border-gray-200 bg-white rounded-xl relative group overflow-hidden shadow-sm">
                       {imagePreview ? (
                         <>
-                          <img src={imagePreview} alt="Blog main preview" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                          <img loading="lazy" decoding="async" src={imagePreview} alt="Blog main preview" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                           <button
                             type="button"
                             onClick={() => { setImageFile(null); setImagePreview(null); }}

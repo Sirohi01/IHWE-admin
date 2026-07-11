@@ -696,7 +696,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
     const renderHeaderDetails = () => (
         <>
             <div className="invoice-header-image" style={{ marginBottom: 0, textAlign: 'center' }}>
-                <img src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
+                <img loading="lazy" decoding="async" src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
             </div>
             <div
                 className="invoice-title-bar"

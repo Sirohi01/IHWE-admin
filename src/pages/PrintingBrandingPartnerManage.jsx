@@ -197,7 +197,7 @@ const PrintingBrandingPartnerManage = () => {
                                             onChange={(e) => setData({ ...data, hero: { ...data.hero, bgImage: e.target.value } })}
                                         />
                                         <div className="w-24 h-16 bg-slate-50 border border-slate-200 rounded-lg overflow-hidden flex items-center justify-center">
-                                            {data.hero.bgImage ? <img src={formatUrl(data.hero.bgImage)} alt="hero" className="w-full h-full object-cover" /> : <ImageIcon className="text-slate-300 w-6 h-6" />}
+                                            {data.hero.bgImage ? <img loading="lazy" decoding="async" src={formatUrl(data.hero.bgImage)} alt="hero" className="w-full h-full object-cover" /> : <ImageIcon className="text-slate-300 w-6 h-6" />}
                                         </div>
                                     </div>
                                     <div className="mt-3">

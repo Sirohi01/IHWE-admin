@@ -124,8 +124,7 @@ const AboutOrganizerManagement = () => {
         <>
             <div className="relative w-full h-64 overflow-hidden rounded ">
                 {/* Background Image */}
-                <img
-                    src="/about.png"
+                <img loading="lazy" decoding="async"                     src="/about.png"
                     alt="banner"
                     className="absolute inset-0 w-full h-full object-cover z-0"
                 />
@@ -287,7 +286,7 @@ const AboutOrganizerManagement = () => {
                                     <label className="block text-[10px] font-bold text-gray-500 mb-2 uppercase tracking-tighter">Organizer Image</label>
                                     {data.imageUrl ? (
                                         <div className="relative aspect-video rounded overflow-hidden border-2 border-white shadow-sm bg-white group">
-                                            <img src={`${SERVER_URL}${data.imageUrl}`} className="w-full h-full object-cover" alt="Preview" />
+                                            <img loading="lazy" decoding="async" src={`${SERVER_URL}${data.imageUrl}`} className="w-full h-full object-cover" alt="Preview" />
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                 <button
                                                     onClick={() => handleInputChange('imageUrl', '')}

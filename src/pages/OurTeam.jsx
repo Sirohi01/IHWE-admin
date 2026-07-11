@@ -219,8 +219,7 @@ const OurTeam = () => {
             key: "image",
             label: "PHOTO",
             render: (row) => (
-                <img
-                    src={`${SERVER_URL}${row.image}`}
+                <img loading="lazy" decoding="async"                     src={`${SERVER_URL}${row.image}`}
                     alt={row.name}
                     className="w-12 h-12 rounded-full object-cover border border-gray-200 shadow-sm"
                 />
@@ -442,7 +441,7 @@ const OurTeam = () => {
                                             />
                                             {memberImagePreview ? (
                                                 <div className="relative w-full">
-                                                    <img src={memberImagePreview} alt="Preview" className="w-full h-28 object-cover rounded shadow-sm" />
+                                                    <img loading="lazy" decoding="async" src={memberImagePreview} alt="Preview" className="w-full h-28 object-cover rounded shadow-sm" />
                                                     <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded">
                                                         <span className="text-white text-[10px] font-bold uppercase tracking-wider">Change Photo</span>
                                                     </div>

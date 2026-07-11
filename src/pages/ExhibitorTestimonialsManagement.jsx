@@ -225,7 +225,7 @@ const ExhibitorTestimonialsManagement = () => {
 
                                     {imagePreview ? (
                                         <div className="relative h-40 group">
-                                            <img src={imagePreview} className="w-full h-full object-cover border-2 border-gray-200 shadow-sm rounded-lg" alt="Preview" />
+                                            <img loading="lazy" decoding="async" src={imagePreview} className="w-full h-full object-cover border-2 border-gray-200 shadow-sm rounded-lg" alt="Preview" />
                                             <button
                                                 onClick={() => { setImageFile(null); setImagePreview(''); setCardForm({ ...cardForm, image: '' }); if (fileInputRef.current) fileInputRef.current.value = ''; }}
                                                 className="absolute bottom-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg"
@@ -355,7 +355,7 @@ const ExhibitorTestimonialsManagement = () => {
                                             <td className="py-4 px-4">
                                                 <div className="flex items-center gap-3">
                                                     {card.image ? (
-                                                        <img src={`${SERVER_URL}${card.image}`} alt={card.imageAlt} className="w-12 h-12 object-cover border-2 border-gray-100 rounded-full shadow-sm" />
+                                                        <img loading="lazy" decoding="async" src={`${SERVER_URL}${card.image}`} alt={card.imageAlt} className="w-12 h-12 object-cover border-2 border-gray-100 rounded-full shadow-sm" />
                                                     ) : (
                                                         <div className="w-12 h-12 bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 rounded-full shadow-inner">
                                                             <ImageIcon size={16} />

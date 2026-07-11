@@ -301,7 +301,7 @@ const HotelStayPartnerManage = () => {
                                 <div className="md:col-span-2 p-4 bg-gray-50 border border-gray-200 rounded-lg">
                                     <label className={labelClass}>Background Image</label>
                                     <input type="file" accept="image/*" onChange={e => handleImageChange(e, 'hero')} className="mb-4 text-sm" />
-                                    {heroImagePreview && <img src={heroImagePreview} alt="Hero Preview" className="h-40 object-cover rounded border border-gray-300" />}
+                                    {heroImagePreview && <img loading="lazy" decoding="async" src={heroImagePreview} alt="Hero Preview" className="h-40 object-cover rounded border border-gray-300" />}
                                 </div>
                             </div>
 
@@ -592,7 +592,7 @@ const HotelStayPartnerManage = () => {
                                 <div className="md:col-span-2 p-4 bg-gray-50 border border-gray-200 rounded-lg">
                                     <label className={labelClass}>Footer Badge Image</label>
                                     <input type="file" accept="image/*" onChange={e => handleImageChange(e, 'footer')} className="mb-4 text-sm" />
-                                    {footerImagePreview && <img src={footerImagePreview} alt="Footer Preview" className="h-24 object-contain bg-[#103D1A] p-2 rounded border border-gray-300" />}
+                                    {footerImagePreview && <img loading="lazy" decoding="async" src={footerImagePreview} alt="Footer Preview" className="h-24 object-contain bg-[#103D1A] p-2 rounded border border-gray-300" />}
                                 </div>
                             </div>
 
