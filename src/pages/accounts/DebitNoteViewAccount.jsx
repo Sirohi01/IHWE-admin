@@ -8,6 +8,7 @@ import api, { SERVER_URL } from '../../lib/api';
 
 const PLACE_OF_SUPPLY = 'Delhi (07)';
 const NAVY = '#0d1f3c';
+const BAND_HEIGHT = 24;
 
 const formatDate = (date) => {
   if (!date) return '—';
@@ -56,13 +57,40 @@ const CompactDetailRows = ({ rows }) => (
   </table>
 );
 
+const InlineSignatoryDetails = ({ name, designation, date }) => (
+  <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: 10, rowGap: 2, alignItems: 'center', lineHeight: 1.25 }}>
+    {[name, designation, formatDate(date)].map((value, index) => (
+      <React.Fragment key={index}>
+        {index > 0 && <span>|</span>}
+        <span style={{ whiteSpace: 'nowrap' }}>{value || '—'}</span>
+      </React.Fragment>
+    ))}
+  </div>
+);
+
+const SignatoryCell = ({ name, designation, date, signatureUrl }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <InlineSignatoryDetails name={name} designation={designation} date={date} />
+    {signatureUrl && (
+      <img
+        loading="lazy"
+        decoding="async"
+        src={signatureUrl}
+        alt=""
+        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+        style={{ maxHeight: 30, maxWidth: 95, objectFit: 'contain', alignSelf: 'center' }}
+      />
+    )}
+  </div>
+);
+
 const WhatsAppIcon = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
 );
 
 const FooterBlock = ({ settings }) => (
-  <div className="avoid-break" style={{ position: 'relative', height: 82, overflow: 'hidden', border: '1px solid #ccc', borderTop: 'none' }}>
-    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 34, background: NAVY, zIndex: 0 }} />
+  <div className="avoid-break" style={{ position: 'relative', height: 72, overflow: 'hidden', border: '1px solid #ccc', borderTop: 'none' }}>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 24, background: NAVY, zIndex: 0 }} />
     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, fontSize: 11, fontWeight: 500, color: NAVY, zIndex: 2 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><WhatsAppIcon /> {settings?.contactPhone || '+91 96549 00525'}</div>
       <div style={{ width: 1, height: 12, background: '#ccc' }} />
@@ -73,14 +101,14 @@ const FooterBlock = ({ settings }) => (
     <div style={{ position: 'absolute', top: 28, left: 0, right: 0, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#666', zIndex: 2, background: '#fff' }}>
       <span><b style={{ color: '#333' }}>Note:</b> Applicable TDS, if deducted, must be supported with TDS certificate / Form 16A.</span>
     </div>
-    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10.5, zIndex: 2 }}>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10.5, zIndex: 2 }}>
       <span>This is a computer generated document and does not require a physical signature.</span>
     </div>
   </div>
 );
 
 const SectionIconHeader = ({ icon: Icon, label }) => (
-  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: NAVY, color: '#fff', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', padding: '4px 6px' }}>
+  <div style={{ height: BAND_HEIGHT, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: NAVY, color: '#fff', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', padding: '0 6px' }}>
     {Icon && <Icon size={14} strokeWidth={2} />}
     {label}
   </div>
@@ -107,7 +135,7 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
   const stampUrl = mediaUrl(settings?.companyStamp);
 
   return (
-    <div className="bg-white border border-slate-300 p-6 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', maxWidth: '1000px', margin: '0 auto' }}>
+    <div className="bg-white border border-slate-300 p-6 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', fontSize: 11, maxWidth: '1000px', margin: '0 auto' }}>
       <div className="invoice-header-image" style={{ marginBottom: 0, textAlign: 'center' }}>
         <img loading="lazy" decoding="async" src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
       </div>
@@ -122,7 +150,7 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
 
       {/* Billed To + Debit Note Details + Reason */}
       <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 4, border: '1px solid #ccc' }}>
-        <colgroup><col style={{ width: '38%' }} /><col style={{ width: '38%' }} /><col style={{ width: '24%' }} /></colgroup>
+        <colgroup><col style={{ width: '36%' }} /><col style={{ width: '35%' }} /><col style={{ width: '29%' }} /></colgroup>
         <thead>
           <tr>
             <th style={{ border: 'none', borderRight: '1px solid #fff', padding: 0 }}><SectionIconHeader icon={SquarePen} label="Billed To (Customer Details)" /></th>
@@ -133,9 +161,9 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
         <tbody>
           <tr>
             <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '8px', verticalAlign: 'top' }}>
-              <div style={{ fontWeight: 700, fontSize: 13, textTransform: 'uppercase', marginBottom: 2 }}>{companyName}</div>
+              <div style={{ fontWeight: 700, textTransform: 'uppercase', marginBottom: 2 }}>{companyName}</div>
               <div style={{ marginBottom: 12 }}>{address || '—'}</div>
-              <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: 1.5, width: '100%' }}>
+              <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: 1.3, width: '100%' }}>
                 <tbody>
                   {detailRow('Contact Person', [c1.title, c1.firstName, c1.surname].filter(Boolean).join(' '))}
                   {detailRow('Contact No.', c1.mobile || company?.landline)}
@@ -144,8 +172,8 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
                 </tbody>
               </table>
             </td>
-            <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '8px', verticalAlign: 'top' }}>
-              <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: 1.5, width: '100%' }}>
+            <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '6px 7px', verticalAlign: 'top' }}>
+              <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: 1.25, width: 'auto' }}>
                 <tbody>
                   {detailRow('Debit Note No.', note.debit_note_no)}
                   {detailRow('Debit Note Date', formatDate(note.debit_note_date))}
@@ -155,7 +183,7 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
                 </tbody>
               </table>
             </td>
-            <td style={{ border: 'none', padding: '8px', verticalAlign: 'top', whiteSpace: 'pre-wrap' }}>
+            <td style={{ border: 'none', padding: '6px 8px', verticalAlign: 'top', whiteSpace: 'pre-wrap' }}>
               <div style={{ fontWeight: 700, marginBottom: 4 }}>
                 {note.debitNoteType
                   ? note.debitNoteType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
@@ -180,7 +208,7 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
               { label: 'Rate', width: '13%' },
               { label: 'Total', width: '14%' },
             ].map((h) => (
-              <th key={h.label} style={{ border: `1px solid ${NAVY}`, padding: '3px 2px', textAlign: 'center', fontSize: 10, background: NAVY, color: '#fff', fontWeight: 'bold', width: h.width }}>{h.label}</th>
+              <th key={h.label} style={{ border: `1px solid ${NAVY}`, height: BAND_HEIGHT, padding: '0 2px', textAlign: 'center', fontSize: 10, background: NAVY, color: '#fff', fontWeight: 'bold', width: h.width }}>{h.label}</th>
             ))}
           </tr>
         </thead>
@@ -245,7 +273,7 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
             <td style={{ width: '2%', border: 'none' }} />
             <td style={{ width: '46%', verticalAlign: 'top', padding: 0, border: 'none' }}>
               <table style={{ width: '100%', height: '100%', borderCollapse: 'collapse', border: '1px solid #ccc' }}>
-                <thead><tr><th style={{ border: 'none', padding: 0 }}><SectionIconHeader label="Amount Summary" /></th></tr></thead>
+                <thead><tr><th colSpan={2} style={{ border: 'none', padding: 0 }}><SectionIconHeader label="Amount Summary" /></th></tr></thead>
                 <tbody>
                   {[
                     ['Debit Amount (Before Tax)', fmtNum(totalTaxable), false],
@@ -292,10 +320,10 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
             <td style={{ width: '70%', border: '1px solid #ccc', padding: '4px 6px', verticalAlign: 'middle' }}>
               <span style={{ fontWeight: 700 }}>Amount in Words: </span>{toWords(grandTotal)}
             </td>
-            <td style={{ width: '30%', border: '1px solid #ccc', background: NAVY, color: '#fff', padding: '4px 6px', verticalAlign: 'middle' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <td style={{ width: '30%', height: BAND_HEIGHT, border: '1px solid #ccc', background: NAVY, color: '#fff', padding: '0 6px', verticalAlign: 'middle' }}>
+              <div style={{ height: BAND_HEIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>Debit Note Value</span>
-                <span style={{ fontSize: 15, fontWeight: 700 }}>₹ {fmtNum(grandTotal)}</span>
+                <span style={{ fontSize: 13, fontWeight: 700 }}>₹ {fmtNum(grandTotal)}</span>
               </div>
             </td>
           </tr>
@@ -309,36 +337,32 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
           <col style={{ width: '34%' }} />
         </colgroup>
         <thead>
-          <tr style={{ background: '#fafafa' }}>
-            <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: NAVY, fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
+          <tr style={{ background: NAVY, height: BAND_HEIGHT }}>
+            <th style={{ border: 'none', borderRight: '1px solid #fff', borderBottom: '1px solid #ccc', height: BAND_HEIGHT, padding: '0 8px', background: NAVY, textAlign: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#fff', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
                 <SquarePen size={14} strokeWidth={2} /> Prepared By
               </div>
             </th>
-            <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: NAVY, fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
+            <th style={{ border: 'none', borderRight: '1px solid #fff', borderBottom: '1px solid #ccc', height: BAND_HEIGHT, padding: '0 8px', background: NAVY, textAlign: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#fff', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
                 <SquarePen size={14} strokeWidth={2} /> Reviewed By
               </div>
             </th>
-            <th style={{ border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: NAVY, fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
+            <th style={{ border: 'none', borderBottom: '1px solid #ccc', height: BAND_HEIGHT, padding: '0 8px', background: NAVY, textAlign: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#fff', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
                 <SquarePen size={14} strokeWidth={2} /> For {settings?.companyName || 'Namo Gange Wellness Pvt. Ltd.'}
               </div>
             </th>
           </tr>
         </thead>
         <tbody>
-          <tr>
+          <tr style={{ height: 61 }}>
             {[
-              { label: 'Prepared By', name: note.preparedBy?.name, designation: note.preparedBy?.designation, date: note.debit_note_date },
-              { label: 'Reviewed By', name: note.reviewedBy?.name, designation: note.reviewedBy?.designation, date: note.debit_note_date },
+              { name: note.preparedBy?.name, designation: note.preparedBy?.designation, date: note.debit_note_date, signatureUrl: mediaUrl(note.preparedBy?.signatureImage) },
+              { name: note.reviewedBy?.name, designation: note.reviewedBy?.designation, date: note.debit_note_date, signatureUrl: mediaUrl(note.reviewedBy?.signatureImage) },
             ].map((col, idx) => (
-              <td key={idx} style={{ border: 'none', borderRight: '1px solid #ccc', padding: '2px 8px 8px', verticalAlign: 'top', fontSize: 10, width: '33.33%' }}>
-                <CompactDetailRows rows={[
-                  ['Name', col.name],
-                  ['Designation', col.designation],
-                  ['Date', formatDate(col.date)],
-                ]} />
+              <td key={idx} style={{ border: 'none', borderRight: '1px solid #ccc', padding: '4px 8px 8px', verticalAlign: 'top', fontSize: 10, width: '33.33%' }}>
+                <SignatoryCell name={col.name} designation={col.designation} date={col.date} signatureUrl={col.signatureUrl} />
               </td>
             ))}
             <td style={{ border: 'none', padding: '8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
@@ -348,7 +372,7 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
               </div>
             </td>
           </tr>
-          <tr>
+          <tr style={{ height: 19 }}>
             <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '0 8px 2px', verticalAlign: 'bottom' }}>
               <div style={{ borderTop: '1px solid #ccc', margin: '0 2px 4px' }}></div>
               <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 10 }}>(Signature)</div>
