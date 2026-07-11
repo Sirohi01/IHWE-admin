@@ -51,3 +51,6 @@ coverage/
 
 # Lock files
 package-lock.json
+
+# Webpack Bundle Analyzer
+stats.html
