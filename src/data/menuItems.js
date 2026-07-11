@@ -737,6 +737,7 @@ export const menuItems = [
       { label: "USER TARGET", path: "/ihweClientData2026/AddTarget" },
       { label: "Buyer Registration Config", path: "/buyer-registration-config" },
       { label: "International Registration Config", path: "/international-buyer-registration-config" },
+      { label: "Receipt Configuration", path: "/accounts/payment-management" },
     ],
   },
   {
@@ -782,7 +783,6 @@ export const menuItems = [
     children: [
       { label: "Payments", path: "/accounts/payments" },
       { label: "Receipts", path: "/accounts/receipts" },
-      { label: "Receipt Configuration", path: "/accounts/payment-management" },
       { label: "Accounts Receivable", path: "/accounts/ar" },
       { label: "Client Ledger", path: "/accounts/client-ledger" },
       { label: "Imprest / Reimbursement", path: "/accounts/imprest" },
