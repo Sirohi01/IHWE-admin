@@ -69,9 +69,39 @@ const ListEditor = ({ title, icon: Icon, items, onChange, placeholder }) => {
   );
 };
 
+const PreviewList = ({ title, icon: Icon, items, emptyText }) => (
+  <div className="overflow-hidden rounded-lg border border-gray-300 bg-white">
+    <div className="flex items-center gap-2 border-b border-gray-300 bg-gray-100 px-3 py-2">
+      <Icon className="h-4 w-4 text-[#23471d]" />
+      <h2 className="text-sm font-bold uppercase text-gray-800">{title}</h2>
+    </div>
+    {items?.length ? (
+      <table className="w-full border-collapse text-sm">
+        <thead>
+          <tr className="bg-gray-50 text-xs uppercase text-gray-500">
+            <th className="w-14 border border-gray-300 px-2 py-2 text-center">S.No.</th>
+            <th className="border border-gray-300 px-2 py-2 text-left">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item, index) => (
+            <tr key={`${title}-${index}`} className="hover:bg-gray-50">
+              <td className="border border-gray-300 px-2 py-1.5 text-center font-semibold text-gray-700">{index + 1}</td>
+              <td className="border border-gray-300 px-2 py-1.5 font-medium text-gray-700">{item}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    ) : (
+      <div className="px-3 py-4 text-sm font-medium text-gray-500">{emptyText}</div>
+    )}
+  </div>
+);
+
 const EstimateTermsConfig = () => {
   const [configs, setConfigs] = useState([]);
   const [form, setForm] = useState(emptyForm);
+  const [activeType, setActiveType] = useState("performa");
   const [editingType, setEditingType] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -98,7 +128,18 @@ const EstimateTermsConfig = () => {
     return [...configs].sort((a, b) => order.indexOf(a.documentType) - order.indexOf(b.documentType));
   }, [configs]);
 
+  const activeConfig = useMemo(() => (
+    sortedConfigs.find((config) => config.documentType === activeType) || sortedConfigs[0]
+  ), [activeType, sortedConfigs]);
+
+  useEffect(() => {
+    if (sortedConfigs.length && !sortedConfigs.some((config) => config.documentType === activeType)) {
+      setActiveType(sortedConfigs[0].documentType);
+    }
+  }, [activeType, sortedConfigs]);
+
   const startEdit = (config) => {
+    setActiveType(config.documentType);
     setEditingType(config.documentType);
     setForm({
       documentType: config.documentType,
@@ -117,7 +158,14 @@ const EstimateTermsConfig = () => {
     setForm(emptyForm);
   };
 
+  const handleTabChange = (documentType) => {
+    setActiveType(documentType);
+    if (editingType !== documentType) closeEdit();
+  };
+
   const handleSave = async () => {
+    if (saving) return;
+
     const termsAndConditions = form.termsAndConditions.map((item) => item.trim()).filter(Boolean);
     const paymentConditions = form.paymentConditions.map((item) => item.trim()).filter(Boolean);
     const deliveryNotes = form.deliveryNotes.map((item) => item.trim()).filter(Boolean);
@@ -131,7 +179,7 @@ const EstimateTermsConfig = () => {
 
     try {
       setSaving(true);
-      await api.put(`/api/estimate-terms-config/${form.documentType}`, {
+      const response = await api.put(`/api/estimate-terms-config/${form.documentType}`, {
         ...form,
         termsAndConditions,
         paymentConditions,
@@ -139,9 +187,14 @@ const EstimateTermsConfig = () => {
         specialRemark: form.specialRemark.trim(),
         updatedBy: getAdminName(),
       });
+      const updatedConfig = response.data?.data;
+      if (updatedConfig?.documentType) {
+        setConfigs((previous) => previous.map((config) => (
+          config.documentType === updatedConfig.documentType ? updatedConfig : config
+        )));
+      }
       Swal.fire({ icon: "success", title: "Saved", text: `${form.displayName} config updated successfully`, timer: 1400, showConfirmButton: false });
       closeEdit();
-      fetchConfigs();
     } catch (error) {
       Swal.fire("Error", error.response?.data?.message || "Failed to save document terms config", "error");
     } finally {
@@ -156,46 +209,89 @@ const EstimateTermsConfig = () => {
         description="Manage Terms and Payment Conditions for Performa, Tax Invoice and Delivery Challan"
       />
 
-      <div className="mt-6 overflow-x-auto rounded-lg border border-gray-300">
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="bg-gray-100 text-xs uppercase text-gray-600">
-              <th className="w-16 border border-gray-300 px-3 py-2 text-center">S.No.</th>
-              <th className="border border-gray-300 px-3 py-2 text-left">Name</th>
-              <th className="border border-gray-300 px-3 py-2 text-left">Config Title</th>
-              <th className="w-28 border border-gray-300 px-3 py-2 text-center">Status</th>
-              <th className="w-36 border border-gray-300 px-3 py-2 text-center">Updated By</th>
-              <th className="w-24 border border-gray-300 px-3 py-2 text-center">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan="6" className="border border-gray-300 px-3 py-6 text-center text-gray-500">Loading...</td></tr>
-            ) : sortedConfigs.length ? (
-              sortedConfigs.map((config, index) => (
-                <tr key={config.documentType} className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-3 py-1.5 text-center font-semibold">{index + 1}</td>
-                  <td className="border border-gray-300 px-3 py-1.5 font-bold text-[#23471d]">{config.displayName}</td>
-                  <td className="border border-gray-300 px-3 py-1.5 font-medium text-gray-700">{config.title}</td>
-                  <td className="border border-gray-300 px-3 py-1.5 text-center">
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold capitalize ${config.status === "active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{config.status}</span>
-                  </td>
-                  <td className="border border-gray-300 px-3 py-1.5 text-center text-xs text-gray-500">{config.updatedBy || "System"}</td>
-                  <td className="border border-gray-300 px-3 py-1.5 text-center">
-                    <button type="button" onClick={() => startEdit(config)} className="inline-flex items-center gap-1 rounded bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700 hover:bg-blue-100">
-                      <Edit className="h-3.5 w-3.5" /> Edit
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr><td colSpan="6" className="border border-gray-300 px-3 py-6 text-center text-gray-500">No configs found</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {loading ? (
+        <div className="mt-6 rounded-lg border border-gray-300 px-3 py-8 text-center text-sm font-medium text-gray-500">Loading...</div>
+      ) : sortedConfigs.length ? (
+        <>
+          <div className="mt-6 flex flex-wrap gap-2 border-b border-gray-300">
+            {sortedConfigs.map((config) => (
+              <button
+                key={config.documentType}
+                type="button"
+                onClick={() => handleTabChange(config.documentType)}
+                className={`-mb-px inline-flex items-center gap-2 rounded-t-lg border px-4 py-2 text-sm font-bold ${
+                  activeConfig?.documentType === config.documentType
+                    ? "border-gray-300 border-b-white bg-white text-[#23471d]"
+                    : "border-transparent bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                <FileText className="h-4 w-4" />
+                {config.displayName}
+              </button>
+            ))}
+          </div>
 
-      {editingType && (
+          {activeConfig && (
+            <div className="rounded-b-lg border border-t-0 border-gray-300 bg-white p-4">
+              <div className="overflow-x-auto rounded-lg border border-gray-300">
+                <table className="w-full border-collapse text-sm">
+                  <thead>
+                    <tr className="bg-gray-100 text-xs uppercase text-gray-600">
+                      <th className="w-16 border border-gray-300 px-3 py-2 text-center">S.No.</th>
+                      <th className="border border-gray-300 px-3 py-2 text-left">Name</th>
+                      <th className="border border-gray-300 px-3 py-2 text-left">Config Title</th>
+                      <th className="w-28 border border-gray-300 px-3 py-2 text-center">Status</th>
+                      <th className="w-36 border border-gray-300 px-3 py-2 text-center">Updated By</th>
+                      <th className="w-24 border border-gray-300 px-3 py-2 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="hover:bg-gray-50">
+                      <td className="border border-gray-300 px-3 py-1.5 text-center font-semibold">1</td>
+                      <td className="border border-gray-300 px-3 py-1.5 font-bold text-[#23471d]">{activeConfig.displayName}</td>
+                      <td className="border border-gray-300 px-3 py-1.5 font-medium text-gray-700">{activeConfig.title}</td>
+                      <td className="border border-gray-300 px-3 py-1.5 text-center">
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold capitalize ${activeConfig.status === "active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{activeConfig.status}</span>
+                      </td>
+                      <td className="border border-gray-300 px-3 py-1.5 text-center text-xs text-gray-500">{activeConfig.updatedBy || "System"}</td>
+                      <td className="border border-gray-300 px-3 py-1.5 text-center">
+                        <button type="button" onClick={() => startEdit(activeConfig)} className="inline-flex items-center gap-1 rounded bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700 hover:bg-blue-100">
+                          <Edit className="h-3.5 w-3.5" /> Edit
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {editingType !== activeConfig.documentType && (
+                <div className="mt-4 grid gap-4">
+                  <PreviewList title="Terms and Conditions" icon={FileText} items={activeConfig.termsAndConditions || []} emptyText="No terms added" />
+                  {activeConfig.documentType === "delivery-challan" ? (
+                    <>
+                      <PreviewList title="Delivery Notes" icon={CreditCard} items={activeConfig.deliveryNotes || []} emptyText="No delivery notes added" />
+                      <div className="overflow-hidden rounded-lg border border-gray-300 bg-white">
+                        <div className="border-b border-gray-300 bg-gray-100 px-3 py-2">
+                          <h2 className="text-sm font-bold uppercase text-gray-800">Special Remark</h2>
+                        </div>
+                        <div className="px-3 py-3 text-sm font-medium leading-6 text-gray-700">
+                          {activeConfig.specialRemark || "No special remark added"}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <PreviewList title="Payment Conditions" icon={CreditCard} items={activeConfig.paymentConditions || []} emptyText="No payment conditions added" />
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="mt-6 rounded-lg border border-gray-300 px-3 py-8 text-center text-sm font-medium text-gray-500">No configs found</div>
+      )}
+
+      {editingType && activeConfig?.documentType === editingType && (
         <div className="mt-6 rounded-lg border border-gray-300 bg-gray-50 p-4">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-bold uppercase text-gray-800">Edit {form.displayName}</h2>
