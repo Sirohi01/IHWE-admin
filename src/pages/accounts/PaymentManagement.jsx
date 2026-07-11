@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import api, { SERVER_URL } from '../../lib/api';
-import { Save, Eye, Plus, Trash2, Image as ImageIcon, Building2, Palette, Tags, List, Ruler, Info, GripVertical } from 'lucide-react';
+import { Save, Eye, Image as ImageIcon, Building2, Palette, Tags, Ruler, Info } from 'lucide-react';
 
 const EMPTY_FORM = {
     organiserBandColor: '#0b3974',
@@ -14,12 +14,9 @@ const EMPTY_FORM = {
     toLabel: 'TO (EXHIBITOR)',
     invoiceDetailsLabel: 'INVOICE DETAILS',
     paymentDetailsLabel: 'PAYMENT DETAILS',
-    exhibitorDetailsLabel: 'EXHIBITOR DETAILS',
-    importantNoteLabel: 'IMPORTANT NOTE',
     footerThankYouText: '',
     footerDisclaimerText: '',
     receiptNumberPrefix: 'PAY-RCPT-',
-    importantNoteItems: [],
     headerBandHeight: 95,
     eventBandHeight: 85,
     infoBandHeight: 115,
@@ -151,12 +148,9 @@ const PaymentManagement = () => {
                     toLabel: d.toLabel || '',
                     invoiceDetailsLabel: d.invoiceDetailsLabel || '',
                     paymentDetailsLabel: d.paymentDetailsLabel || '',
-                    exhibitorDetailsLabel: d.exhibitorDetailsLabel || '',
-                    importantNoteLabel: d.importantNoteLabel || '',
                     footerThankYouText: d.footerThankYouText || '',
                     footerDisclaimerText: d.footerDisclaimerText || '',
                     receiptNumberPrefix: d.receiptNumberPrefix || '',
-                    importantNoteItems: Array.isArray(d.importantNoteItems) ? d.importantNoteItems : [],
                     headerBandHeight: d.headerBandHeight ?? EMPTY_FORM.headerBandHeight,
                     eventBandHeight: d.eventBandHeight ?? EMPTY_FORM.eventBandHeight,
                     infoBandHeight: d.infoBandHeight ?? EMPTY_FORM.infoBandHeight,
@@ -189,22 +183,6 @@ const PaymentManagement = () => {
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-    };
-
-    const handleNoteItemChange = (index, value) => {
-        setFormData((prev) => {
-            const items = [...prev.importantNoteItems];
-            items[index] = value;
-            return { ...prev, importantNoteItems: items };
-        });
-    };
-
-    const addNoteItem = () => {
-        setFormData((prev) => ({ ...prev, importantNoteItems: [...prev.importantNoteItems, ''] }));
-    };
-
-    const removeNoteItem = (index) => {
-        setFormData((prev) => ({ ...prev, importantNoteItems: prev.importantNoteItems.filter((_, i) => i !== index) }));
     };
 
     const handleEventLogoChange = (e) => {
@@ -246,11 +224,7 @@ const PaymentManagement = () => {
         try {
             const payload = new FormData();
             Object.entries(formData).forEach(([key, value]) => {
-                if (key === 'importantNoteItems') {
-                    payload.append(key, JSON.stringify(value));
-                } else {
-                    payload.append(key, value);
-                }
+                payload.append(key, value);
             });
             if (eventLogoFile) payload.append('eventLogoImage', eventLogoFile);
             if (headerLogoFile) payload.append('headerLogoImage', headerLogoFile);
@@ -349,7 +323,7 @@ const PaymentManagement = () => {
                             <ColorField label="Organiser Band (FROM)" name="organiserBandColor" value={formData.organiserBandColor} onChange={handleChange} />
                             <ColorField label="Exhibitor Band (TO)" name="exhibitorBandColor" value={formData.exhibitorBandColor} onChange={handleChange} />
                             <ColorField label="Accent (headers/tables/footer bar)" name="accentColor" value={formData.accentColor} onChange={handleChange} />
-                            <ColorField label="Important Note Band" name="noteColor" value={formData.noteColor} onChange={handleChange} />
+                            <ColorField label="Footer Thank-You Text" name="noteColor" value={formData.noteColor} onChange={handleChange} />
                         </div>
                     </Section>
 
@@ -362,43 +336,10 @@ const PaymentManagement = () => {
                             <TextField label="TO Box Label" name="toLabel" value={formData.toLabel} onChange={handleChange} />
                             <TextField label="Invoice Details Label" name="invoiceDetailsLabel" value={formData.invoiceDetailsLabel} onChange={handleChange} />
                             <TextField label="Payment Details Label" name="paymentDetailsLabel" value={formData.paymentDetailsLabel} onChange={handleChange} />
-                            <TextField label="Exhibitor Details Label" name="exhibitorDetailsLabel" value={formData.exhibitorDetailsLabel} onChange={handleChange} />
-                            <TextField label="Important Note Label" name="importantNoteLabel" value={formData.importantNoteLabel} onChange={handleChange} />
                         </div>
                         <div className="mt-7 grid grid-cols-1 gap-6 md:grid-cols-2">
                             <TextField label="Footer Thank-You Text" name="footerThankYouText" value={formData.footerThankYouText} onChange={handleChange} textarea />
                             <TextField label="Footer Disclaimer Text" name="footerDisclaimerText" value={formData.footerDisclaimerText} onChange={handleChange} textarea />
-                        </div>
-                    </Section>
-
-                    <Section
-                        icon={List}
-                        title="Important Note - Bullet Points"
-                        action={
-                            <button onClick={addNoteItem} className="flex h-10 items-center gap-2 rounded-md border border-[#178337] bg-white px-4 text-[13px] font-bold text-[#087224] transition hover:bg-[#f0fbf3]">
-                                <Plus size={16} /> Add Point
-                            </button>
-                        }
-                    >
-                        <div className="space-y-4">
-                            {formData.importantNoteItems.map((item, index) => (
-                                <div key={index} className="grid grid-cols-[22px_28px_1fr_28px] items-center gap-4">
-                                    <GripVertical size={17} className="text-[#9aa8ba]" />
-                                    <span className="text-[15px] font-bold text-[#17213d]">{index + 1}.</span>
-                                    <input
-                                        type="text"
-                                        value={item}
-                                        onChange={(e) => handleNoteItemChange(index, e.target.value)}
-                                        className="h-12 rounded-md border border-[#dbe4ef] bg-white px-5 text-[14px] font-medium text-[#17213d] outline-none transition focus:border-[#1a7a3c] focus:ring-2 focus:ring-[#1a7a3c]/10"
-                                    />
-                                    <button onClick={() => removeNoteItem(index)} className="flex h-8 w-8 items-center justify-center rounded text-red-500 transition hover:bg-red-50 hover:text-red-700">
-                                        <Trash2 size={18} />
-                                    </button>
-                                </div>
-                            ))}
-                            {formData.importantNoteItems.length === 0 && (
-                                <p className="text-[13px] font-medium text-[#7b88a1]">No bullet points yet - click "Add Point".</p>
-                            )}
                         </div>
                     </Section>
 
@@ -472,7 +413,7 @@ const PaymentManagement = () => {
                         </div>
                         <div className="mt-4 flex gap-3 text-[13px] font-medium leading-5 text-[#7b88a1]">
                             <Info size={20} className="mt-0.5 shrink-0 text-[#1687d9]" />
-                            <p>Values are clamped server-side to a safe range so the receipt always fits on a single A4 page. "Gap Between Sections" controls the whitespace between each block (header, event, from/to, invoice details, payment details, exhibitor/note, footer).</p>
+                            <p>Values are clamped server-side to a safe range so the receipt always fits on a single A4 page. "Gap Between Sections" controls the whitespace between each block (header, event, from/to, invoice details, payment details, signature block, footer).</p>
                         </div>
                     </Section>
                 </div>
