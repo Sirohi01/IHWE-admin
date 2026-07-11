@@ -8,6 +8,13 @@ const EMPTY_FORM = {
     exhibitorBandColor: '#1a7a3c',
     accentColor: '#0b3974',
     noteColor: '#c2410c',
+    sectionBandColor: '#94a3b8',
+    sectionBandTextColor: '#ffffff',
+    authBandColor: '#94a3b8',
+    authBandTextColor: '#0b3974',
+    footerBarColor: '#0b3974',
+    footerBarTextColor: '#ffffff',
+    receiptTitleBandColor: '#ffffff',
     headOfficeLabel: 'Head Office:',
     receiptTitleLabel: 'PAYMENT RECEIPT',
     fromLabel: 'FROM (ORGANISER)',
@@ -142,6 +149,13 @@ const PaymentManagement = () => {
                     exhibitorBandColor: d.exhibitorBandColor || EMPTY_FORM.exhibitorBandColor,
                     accentColor: d.accentColor || EMPTY_FORM.accentColor,
                     noteColor: d.noteColor || EMPTY_FORM.noteColor,
+                    sectionBandColor: d.sectionBandColor || EMPTY_FORM.sectionBandColor,
+                    sectionBandTextColor: d.sectionBandTextColor || EMPTY_FORM.sectionBandTextColor,
+                    authBandColor: d.authBandColor || EMPTY_FORM.authBandColor,
+                    authBandTextColor: d.authBandTextColor || EMPTY_FORM.authBandTextColor,
+                    footerBarColor: d.footerBarColor || EMPTY_FORM.footerBarColor,
+                    footerBarTextColor: d.footerBarTextColor || EMPTY_FORM.footerBarTextColor,
+                    receiptTitleBandColor: d.receiptTitleBandColor || EMPTY_FORM.receiptTitleBandColor,
                     headOfficeLabel: d.headOfficeLabel || '',
                     receiptTitleLabel: d.receiptTitleLabel || '',
                     fromLabel: d.fromLabel || '',
@@ -324,6 +338,13 @@ const PaymentManagement = () => {
                             <ColorField label="Exhibitor Band (TO)" name="exhibitorBandColor" value={formData.exhibitorBandColor} onChange={handleChange} />
                             <ColorField label="Accent (headers/tables/footer bar)" name="accentColor" value={formData.accentColor} onChange={handleChange} />
                             <ColorField label="Footer Thank-You Text" name="noteColor" value={formData.noteColor} onChange={handleChange} />
+                            <ColorField label="Divider Bands (Payment Against.../Received Payment Details)" name="sectionBandColor" value={formData.sectionBandColor} onChange={handleChange} />
+                            <ColorField label="Divider Bands Text" name="sectionBandTextColor" value={formData.sectionBandTextColor} onChange={handleChange} />
+                            <ColorField label="Prepared/Reviewed By Header Band" name="authBandColor" value={formData.authBandColor} onChange={handleChange} />
+                            <ColorField label="Prepared/Reviewed By Header Text" name="authBandTextColor" value={formData.authBandTextColor} onChange={handleChange} />
+                            <ColorField label="Bottom Disclaimer Bar" name="footerBarColor" value={formData.footerBarColor} onChange={handleChange} />
+                            <ColorField label="Bottom Disclaimer Bar Text" name="footerBarTextColor" value={formData.footerBarTextColor} onChange={handleChange} />
+                            <ColorField label="Payment Receipt Title Band (leave white for none)" name="receiptTitleBandColor" value={formData.receiptTitleBandColor} onChange={handleChange} />
                         </div>
                     </Section>
 
