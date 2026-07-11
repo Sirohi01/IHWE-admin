@@ -632,32 +632,32 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                     <tr>
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Invoice Date</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{invoiceDate}</td>
+                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{invoiceDate}</td>
                                     </tr>
                                     <tr>
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>PO No.</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{matchedInvoice?.po_no || form?.poNo || '—'}</td>
+                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{matchedInvoice?.po_no || form?.poNo || '—'}</td>
                                     </tr>
                                     <tr>
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Supply Date</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{supplyDateTime || '—'}</td>
+                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{supplyDateTime || '—'}</td>
                                     </tr>
                                     <tr>
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>E-way Bill No.</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{ewayBillNo || '—'}</td>
+                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{ewayBillNo || '—'}</td>
                                     </tr>
                                     <tr>
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created Date</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{createdDateTime}</td>
+                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{createdDateTime}</td>
                                     </tr>
                                     <tr>
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created By</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', textTransform: 'capitalize' }}>{matchedInvoice?.added_by || 'Admin'}</td>
+                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', textTransform: 'capitalize', whiteSpace: 'nowrap' }}>{matchedInvoice?.added_by || 'Admin'}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -870,7 +870,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                 <tbody>
                     <tr>
                         <td style={{ width: '60%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                            <div style={{ fontWeight: 700, marginBottom: 2 }}>Terms and Conditions:</div>
+                            <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Terms and Conditions:</div>
                             <div>1. Payment must be made in favor of Namo Gange Wellness Pvt. Ltd. via Cheque / DD / RTGS / NEFT / UPI only.</div>
                             <div>2. Full payment is due within the stipulated invoice period.</div>
                             <div>3. Delay in payment shall attract interest @24% per annum.</div>
@@ -879,7 +879,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                             <div>6. All disputes are subject to Delhi Jurisdiction only.</div>
                         </td>
                         <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                            <div style={{ fontWeight: 700, marginBottom: 2 }}>Payment Conditions:</div>
+                            <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment Conditions:</div>
                             <div style={{ fontWeight: 700 }}>1. 100% Advance Payment.</div>
                         </td>
                     </tr>
@@ -1257,27 +1257,27 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                                     <tr>
                                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Invoice Date</td>
                                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{invoiceDate}</td>
+                                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{invoiceDate}</td>
                                                     </tr>
                                                     <tr>
                                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>PO No.</td>
                                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{matchedInvoice?.po_no || form?.poNo || '—'}</td>
+                                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{matchedInvoice?.po_no || form?.poNo || '—'}</td>
                                                     </tr>
                                                     <tr>
                                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Supply Date</td>
                                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{supplyDateTime || '—'}</td>
+                                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{supplyDateTime || '—'}</td>
                                                     </tr>
                                                     <tr>
                                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>E-way Bill No.</td>
                                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{ewayBillNo || '—'}</td>
+                                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{ewayBillNo || '—'}</td>
                                                     </tr>
                                                     <tr>
                                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created Date</td>
                                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{createdDateTime}</td>
+                                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{createdDateTime}</td>
                                                     </tr>
                                                     <tr>
                                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created By</td>
@@ -1463,7 +1463,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                 <tbody>
                                     <tr>
                                         <td style={{ width: '60%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                                            <div style={{ fontWeight: 700, marginBottom: 2 }}>Terms and Conditions:</div>
+                                            <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Terms and Conditions:</div>
                                             <div style={{ whiteSpace: 'pre-wrap' }}>
                                                 {estimateTerms?.termsAndConditions?.length ? (
                                                     estimateTerms.termsAndConditions.map((t, i) => <div key={i}>{i + 1}. {t}</div>)
@@ -1480,7 +1480,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                             </div>
                                         </td>
                                         <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                                            <div style={{ fontWeight: 700, marginBottom: 2 }}>Payment Conditions:</div>
+                                            <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment Conditions:</div>
                                             <div style={{ whiteSpace: 'pre-wrap' }}>
                                                 {estimateTerms?.paymentConditions?.length ? (
                                                     estimateTerms.paymentConditions.map((t, i) => <div key={i}>{i + 1}. {t}</div>)
@@ -1505,17 +1505,17 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                 <thead>
                                     <tr style={{ background: '#fafafa' }}>
                                         <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
                                                 <Landmark size={14} strokeWidth={2} /> NGWPL Bank Details
                                             </div>
                                         </th>
                                         <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
                                                 <SquarePen size={14} strokeWidth={2} /> Receiver's Acknowledgement
                                             </div>
                                         </th>
                                         <th style={{ border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
                                                 <SquarePen size={14} strokeWidth={2} /> For {companyName}
                                             </div>
                                         </th>
@@ -1544,7 +1544,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                                     <tr>
                                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>IFSC Code</td>
                                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0' }}>:</td>
-                                                        <td style={{ border: 'none', whiteSpace: 'nowrap', padding: '1px 0', fontWeight: 700, color: '#0d1f3c' }}>{bankDetails?.ifsccode || 'KKBK0004584'}</td>
+                                                        <td style={{ border: 'none', whiteSpace: 'nowrap', padding: '1px 0' }}>{bankDetails?.ifsccode || 'KKBK0004584'}</td>
                                                     </tr>
                                                     <tr>
                                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>Branch Name</td>
@@ -1554,8 +1554,8 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                                 </tbody>
                                             </table>
                                         </td>
-                                        <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
-                                            <span style={{ fontSize: 10 }}>Received the above goods / services in good condition.</span>
+                                        <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '2px 8px 8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
+                                            <span style={{ fontSize: 9, whiteSpace: 'nowrap' }}>Received the above goods / services in good condition.</span>
                                         </td>
                                         <td style={{ border: 'none', padding: '8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
                                             <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>

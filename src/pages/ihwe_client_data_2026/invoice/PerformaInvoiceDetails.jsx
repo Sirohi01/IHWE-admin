@@ -366,17 +366,17 @@ const PerformaInvoiceDetails = () => {
                 <thead>
                   <tr style={{ background: '#fafafa' }}>
                     <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
                         <Landmark size={14} strokeWidth={2} /> NGWPL Bank Details
                       </div>
                     </th>
                     <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
                         <SquarePen size={14} strokeWidth={2} /> Receiver's Acknowledgement
                       </div>
                     </th>
                     <th style={{ border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
                         <SquarePen size={14} strokeWidth={2} /> For Namo Gange Wellness Pvt. Ltd.
                       </div>
                     </th>
@@ -395,8 +395,8 @@ const PerformaInvoiceDetails = () => {
                         </tbody>
                       </table>
                     </td>
-                    <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
-                        <span style={{ fontSize: 10 }}>Received the above goods / services in good condition.</span>
+                    <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '2px 8px 8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
+                        <span style={{ fontSize: 9, whiteSpace: 'nowrap' }}>Received the above goods / services in good condition.</span>
                     </td>
                     <td style={{ border: 'none', padding: '8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
                         <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
