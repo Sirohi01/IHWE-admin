@@ -950,7 +950,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
   const deliveryChallanNo = challan.challan_no || "-";
   const deliveryChallanDate = fmtDateOnly(challan.challan_date);
 
-  const th = { border: "1px solid #0d1f3c", background: "#0d1f3c", color: "#fff", padding: "3px 2px", fontSize: 10, lineHeight: 1.1, fontWeight: 700, textAlign: "center", textTransform: "uppercase" };
+  const th = { border: "1px solid #0d1f3c", background: "#0d1f3c", color: "#fff", padding: "3px 2px", fontSize: 10, lineHeight: 1.1, fontWeight: 700, textAlign: "center", textTransform: "uppercase", whiteSpace: "nowrap" };
   const td = { border: "1px solid #ccc", padding: "6px", fontSize: 11, lineHeight: 1.2, verticalAlign: "top" };
   const topTh = { ...th };
   const topTd = { ...td, padding: "4px 8px" };
