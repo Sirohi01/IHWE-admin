@@ -253,6 +253,7 @@ const CreateAccountDebitNote = () => {
                 items: items.map((it) => ({
                     description: it.description, hsn: it.hsn, qty: it.qty, unit: it.unit,
                     rate: it.rate, amount: it.amount, gstPct: it.gstPct, gstAmount: it.gstAmount, total: it.total,
+                    area: it.area || '', size: it.size || '', discountPct: it.discountPct,
                 })),
                 taxableAmount,
                 gstAmount,

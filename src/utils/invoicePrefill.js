@@ -141,6 +141,9 @@ export const estimateItemsToDebitNoteItems = (estimateItems = []) => {
     gstPct: item.gstPct,
     gstAmount: item.gstAmount,
     total: item.total,
+    area: item.area,
+    size: item.size,
+    discountPct: item.discountPct,
   }));
 };
 

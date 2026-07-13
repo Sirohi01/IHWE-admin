@@ -23,7 +23,7 @@ const fmtNum = (value) => Math.round(Number(value || 0)).toLocaleString('en-IN')
 const formatSize = (value) => {
   if (!value) return '-';
   const valStr = String(value).toLowerCase().replace(/m$/, '').trim();
-  return `${valStr.replace(/\s*[xX*]\s*/g, 'X').trim()} m`;
+  return `${valStr.replace(/\s*[xX*]\s*/g, ' × ').trim()} m`;
 };
 
 const formatArea = (value) => {
@@ -324,7 +324,7 @@ const CreditNotePrintTemplate = ({ note, company, settings, receiptSettings }) =
       </div>
 
       {/* Billed To + Credit Note Details + Reason */}
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 5 }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 5, tableLayout: 'fixed' }}>
         <colgroup><col style={{ width: '32%' }} /><col style={{ width: '33%' }} /><col style={{ width: '35%' }} /></colgroup>
         <thead>
           <tr>
@@ -385,30 +385,27 @@ const CreditNotePrintTemplate = ({ note, company, settings, receiptSettings }) =
               { label: 'Discount', width: '8%' },
               { label: 'Total', width: '10%' },
             ].map((h) => (
-              <th key={h.label} style={{ border: `1px solid ${NAVY}`, padding: h.compact ? '3px 1px' : '3px 2px', textAlign: 'center', fontSize: h.compact ? '8.5px' : 10, background: NAVY, color: '#fff', fontWeight: 'bold', width: h.width, whiteSpace: 'nowrap' }}>{h.label}</th>
+              <th key={h.label} style={{ border: `1px solid ${NAVY}`, padding: h.compact ? '3px 1px' : '3px 2px', textAlign: 'center', fontSize: 10, background: NAVY, color: '#fff', fontWeight: 700, width: h.width, whiteSpace: 'nowrap' }}>{h.label}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {items.map((item, i) => (
             <tr key={i}>
-              <td style={{ border: '1px solid #ccc', padding: '6px 2px', textAlign: 'center', fontSize: 10 }}>{i + 1}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px' }}>
-                <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{EVENT_TITLE}</div>
-                <div style={{ fontSize: 10, color: '#555', whiteSpace: 'pre-wrap' }}>{item.description}</div>
-              </td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center', whiteSpace: 'nowrap' }}>{item.hsn || '—'}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item.qty}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center', whiteSpace: 'nowrap' }}>{formatSize(item.area)}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center', whiteSpace: 'nowrap' }}>{formatArea(item.size)}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item.unit}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(item.rate)}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{Math.round(item.discountPct || 0)}%</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right', fontWeight: 700 }}>{fmtNum(item.amount)}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{i + 1}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, fontWeight: 700, lineHeight: 1.15, whiteSpace: 'normal' }}>{item.description || '—'}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{item.hsn || '—'}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{item.qty}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{formatSize(item.area)}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{formatArea(item.size)}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{item.unit}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{fmtNum(item.rate)}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{Math.round(item.discountPct || 0)}%</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}>{fmtNum(item.amount)}</td>
             </tr>
           ))}
           <tr style={{ background: '#f8fafc' }}>
-            <td colSpan={9} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right', textTransform: 'uppercase' }}>Taxable Value</td>
+            <td colSpan={9} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right', textTransform: 'uppercase' }}>Total Before Tax</td>
             <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right' }}>{fmtNum(totalTaxable)}</td>
           </tr>
         </tbody>

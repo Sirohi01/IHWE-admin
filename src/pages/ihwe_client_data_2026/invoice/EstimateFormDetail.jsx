@@ -1165,47 +1165,47 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
 
                                         return (
                                             <tr key={item?._id || index}>
-                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center' }}>{index + 1}</td>
+                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{index + 1}</td>
 
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 5px' }}>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, lineHeight: 1.15 }}>
                                                     <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>
                                                         {item?.title || item?.item_name || PROFORMA_EVENT_NAME.toUpperCase()}
                                                     </div>
-                                                    <div style={{ fontSize: 11, color: '#555', whiteSpace: 'pre-wrap' }}>
+                                                    <div style={{ fontSize: 10, fontWeight: 500, color: '#555', whiteSpace: 'pre-wrap' }}>
                                                         {item?.description}
                                                         {item?.remarks ? `\n${item.remarks}` : ''}
                                                     </div>
                                                 </td>
 
-                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 11 }}>
+                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>
                                                     {item?.hsn || item?.hsnCode || item?.hsn_code || '—'}
                                                 </td>
 
-                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 11 }}>
+                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>
                                                     {item?.qty ?? item?.quantity ?? '—'}
                                                 </td>
 
-                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 11 }}>
+                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>
                                                     {formatSize(item?.area)}
                                                 </td>
 
-                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 11 }}>
+                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>
                                                     {formatArea(item?.size)}
                                                 </td>
 
-                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 11 }}>
+                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>
                                                     Nos
                                                 </td>
 
-                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', whiteSpace: 'nowrap', fontSize: 11 }}>
+                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>
                                                     {fmtNum(item?.rate || item?.unit_rate || item?.price)}
                                                 </td>
 
-                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 11 }}>
+                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>
                                                     {fmtNum(discountPercent)}%
                                                 </td>
 
-                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontWeight: 800, fontSize: 11 }}>
+                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontWeight: 700, fontSize: 10 }}>
                                                     {fmtNum(itemTaxable)}
                                                 </td>
                                             </tr>
@@ -1226,7 +1226,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                                 padding: '4px 6px',
                                                 fontWeight: 700,
                                                 background: '#f8fafc',
-                                                fontSize: 11,
+                                                fontSize: 10,
                                                 lineHeight: '1.2',
                                                 whiteSpace: 'nowrap',
                                             }}
@@ -1240,7 +1240,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                                 fontWeight: 700,
                                                 background: '#f8fafc',
                                                 textAlign: 'right',
-                                                fontSize: 11,
+                                                fontSize: 10,
                                                 lineHeight: '1.2',
                                                 whiteSpace: 'nowrap',
                                             }}
@@ -1254,7 +1254,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                                 fontWeight: 700,
                                                 background: '#f8fafc',
                                                 textAlign: 'center',
-                                                fontSize: 11,
+                                                fontSize: 10,
                                                 lineHeight: '1.2',
                                                 whiteSpace: 'nowrap',
                                             }}
@@ -1316,7 +1316,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                         <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>Amount in Words (INR)</td>
                                         <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center', background: 'rgb(241, 245, 249)' }}>{toWords(Math.round(grandTotal))}</td>
                                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>Grand Total</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 800, textAlign: 'center', fontSize: 11, color: '#000', background: 'rgb(241, 245, 249)' }}>{fmtNum(grandTotal)}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', fontSize: 10, color: '#000', background: 'rgb(241, 245, 249)' }}>{fmtNum(grandTotal)}</td>
                                     </tr>
                                 </tbody>
                             </table>

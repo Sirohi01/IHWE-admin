@@ -19,6 +19,18 @@ const formatDate = (date) => {
 
 const fmtNum = (value) => Math.round(Number(value || 0)).toLocaleString('en-IN');
 
+const formatSize = (value) => {
+  if (!value) return '-';
+  const valStr = String(value).toLowerCase().replace(/m$/, '').trim();
+  return `${valStr.replace(/\s*[xX*]\s*/g, ' × ').trim()} m`;
+};
+
+const formatArea = (value) => {
+  if (!value) return '-';
+  const valStr = String(value).toLowerCase().replace(/sqm$/, '').replace(/sq\.m$/, '').trim();
+  return `${valStr} sqm`;
+};
+
 const toWords = (n) => {
   const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
     'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
@@ -39,6 +51,14 @@ const detailRow = (label, value, opts = {}) => (
   <tr key={label}>
     <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>{label}</td>
     <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0' }}>:</td>
+    <td style={{ border: 'none', padding: '1px 0', ...(opts.style || {}) }}>{value || '—'}</td>
+  </tr>
+);
+
+const plainDetailRow = (label, value, opts = {}) => (
+  <tr key={label}>
+    <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>{label}</td>
+    <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
     <td style={{ border: 'none', padding: '1px 0', ...(opts.style || {}) }}>{value || '—'}</td>
   </tr>
 );
@@ -174,9 +194,8 @@ const FooterBlock = ({ settings, receiptSettings }) => {
   );
 };
 
-const SectionIconHeader = ({ icon: Icon, label }) => (
-  <div style={{ height: BAND_HEIGHT, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: NAVY, color: '#fff', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', padding: '0 6px' }}>
-    {Icon && <Icon size={14} strokeWidth={2} />}
+const SectionIconHeader = ({ label }) => (
+  <div className="section-header-text" style={{ boxSizing: 'border-box', background: NAVY, color: '#fff', fontWeight: 'bold', fontSize: 10, textTransform: 'uppercase', padding: '3px 2px', textAlign: 'center', lineHeight: 'normal' }}>
     {label}
   </div>
 );
@@ -203,45 +222,111 @@ const DebitNotePrintTemplate = ({ note, company, settings, receiptSettings }) =>
   const mediaUrl = (val) => !val ? null : (val.startsWith('http') ? val : `${SERVER_URL}${val}`);
 
   return (
-    <div className="bg-white border border-slate-300 p-6 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', fontSize: 11, maxWidth: '1000px', margin: '0 auto' }}>
+    <div className="debit-note-print bg-white border border-slate-300 p-6 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', fontSize: 11, lineHeight: 'normal', maxWidth: '1000px', margin: '0 auto 24px' }}>
+      <style>{`
+        .debit-note-print,
+        .debit-note-print * {
+          box-sizing: border-box;
+          font-family: Calibri, Arial, sans-serif !important;
+        }
+        .debit-note-print table {
+          max-width: 100%;
+        }
+        .debit-note-print th {
+          font-size: 10px !important;
+        }
+        .debit-note-print .item-details-table {
+          table-layout: fixed;
+          width: 100%;
+        }
+        .debit-note-print .item-details-table th,
+        .debit-note-print .item-details-table td {
+          overflow-wrap: anywhere;
+          word-break: break-word;
+        }
+        .debit-note-print .invoice-title-text {
+          font-size: 18px !important;
+          font-weight: 500 !important;
+          line-height: 1 !important;
+        }
+        .debit-note-print .invoice-copy-label {
+          right: 0 !important;
+          bottom: 3px !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          line-height: 1 !important;
+          letter-spacing: -0.35px !important;
+          max-width: none !important;
+          white-space: nowrap !important;
+          overflow: visible !important;
+          text-align: right !important;
+          transform: none !important;
+          transform-origin: initial !important;
+        }
+        .debit-note-print .section-header-text {
+          font-size: 10px !important;
+          font-weight: 700 !important;
+        }
+        @media print {
+          .debit-note-print {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+          }
+          .debit-note-print .invoice-copy-label {
+            right: 0 !important;
+            bottom: 3px !important;
+            font-family: Calibri, Arial, sans-serif !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            line-height: 1 !important;
+            letter-spacing: -0.35px !important;
+            padding-right: 2px !important;
+            white-space: nowrap !important;
+            text-align: right !important;
+            transform: none !important;
+            zoom: 1 !important;
+          }
+        }
+      `}</style>
       <div className="invoice-header-image" style={{ marginBottom: 0, textAlign: 'center' }}>
         <img loading="lazy" decoding="async" src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
       </div>
 
       <div
         className="invoice-title-bar"
-        style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 22, marginBottom: 0, paddingTop: 10, paddingBottom: 4, color: NAVY, textTransform: 'uppercase' }}
+        style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 22, marginBottom: 0, paddingTop: 10, paddingBottom: 4, color: NAVY, textTransform: 'uppercase', whiteSpace: 'nowrap' }}
       >
-        <div style={{ fontWeight: 500, fontSize: 18, lineHeight: 1, textAlign: 'center' }}>DEBIT NOTE</div>
-        <div className="invoice-copy-label" style={{ position: 'absolute', right: 0, bottom: 3, fontWeight: 600, fontSize: 11, lineHeight: 1, paddingRight: 2, whiteSpace: 'nowrap', textAlign: 'right', letterSpacing: '-0.35px' }}>ORIGINAL COPY</div>
+        <div className="invoice-title-text" style={{ fontWeight: 500, fontSize: 18, lineHeight: 1, textAlign: 'center' }}>DEBIT NOTE</div>
+        <div className="invoice-copy-label" style={{ position: 'absolute', right: 0, bottom: 3, fontWeight: 600, fontSize: 11, lineHeight: 1, paddingRight: 2, whiteSpace: 'nowrap', textAlign: 'right', letterSpacing: '-0.35px', transform: 'none' }}>ORIGINAL COPY</div>
       </div>
 
       {/* Billed To + Debit Note Details + Reason */}
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 4, border: '1px solid #ccc' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 5 }}>
         <colgroup><col style={{ width: '32%' }} /><col style={{ width: '33%' }} /><col style={{ width: '35%' }} /></colgroup>
         <thead>
           <tr>
-            <th style={{ border: 'none', borderRight: '1px solid #fff', padding: 0 }}><SectionIconHeader icon={SquarePen} label="Billed To (Customer Details)" /></th>
-            <th style={{ border: 'none', borderRight: '1px solid #fff', padding: 0 }}><SectionIconHeader icon={SquarePen} label="Debit Note Details" /></th>
-            <th style={{ border: 'none', padding: 0 }}><SectionIconHeader icon={SquarePen} label="Reason for Debit Note" /></th>
+            <th style={{ background: NAVY, color: '#fff', border: `1px solid ${NAVY}`, padding: 0, width: '32%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}><SectionIconHeader label="Billed To (Customer Details)" /></th>
+            <th style={{ background: NAVY, color: '#fff', border: `1px solid ${NAVY}`, padding: 0, width: '33%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}><SectionIconHeader label="Debit Note Details" /></th>
+            <th style={{ background: NAVY, color: '#fff', border: `1px solid ${NAVY}`, padding: 0, width: '35%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}><SectionIconHeader label="Reason for Debit Note" /></th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '8px', verticalAlign: 'top' }}>
-              <div style={{ fontWeight: 700, textTransform: 'uppercase', marginBottom: 2 }}>{companyName}</div>
-              <div style={{ marginBottom: 12 }}>{address || '—'}</div>
-              <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: 1.3, width: '100%' }}>
+            <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
+              <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{companyName}</div>
+              <div style={{ marginTop: 2, textTransform: 'capitalize' }}>{address || '—'}</div>
+              <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: 1.3, width: '100%', marginTop: 4 }}>
                 <tbody>
-                  {detailRow('Contact Person', contactPersonDisplay)}
-                  {detailRow('Contact No.', c1.mobile || company?.landline)}
-                  {detailRow('Email', c1.email || company?.email)}
-                  {detailRow('GSTIN/PAN', company?.gstNumber)}
+                  {plainDetailRow('Contact Person', contactPersonDisplay)}
+                  {plainDetailRow('Contact No.', c1.mobile || company?.landline)}
+                  {plainDetailRow('Email', c1.email || company?.email)}
+                  {plainDetailRow('GSTIN/PAN', note.gstin || company?.gstNumber)}
                 </tbody>
               </table>
             </td>
-            <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '6px 6px', verticalAlign: 'top' }}>
-              <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: 1.2, width: '100%' }}>
+            <td style={{ border: '1px solid #ccc', padding: '4px 6px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
+              <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: 1.2, width: '100%', marginTop: 0 }}>
                 <tbody>
                   {detailRow('Against Invoice No.', firstAllocation?.invoiceNo)}
                   {detailRow('Against Invoice Date', formatDate(firstAllocation?.invoiceDate))}
@@ -254,7 +339,7 @@ const DebitNotePrintTemplate = ({ note, company, settings, receiptSettings }) =>
                 </tbody>
               </table>
             </td>
-            <td style={{ border: 'none', padding: '6px 8px', verticalAlign: 'top', whiteSpace: 'pre-wrap' }}>
+            <td style={{ border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', whiteSpace: 'pre-wrap', fontSize: 11 }}>
               <div style={{ fontWeight: 700, marginBottom: 4 }}>
                 {note.debitNoteType
                   ? note.debitNoteType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
@@ -267,36 +352,54 @@ const DebitNotePrintTemplate = ({ note, company, settings, receiptSettings }) =>
       </table>
 
       {/* Item Details */}
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 4 }}>
+      <table className="item-details-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 5, tableLayout: 'fixed' }}>
+        <colgroup>
+          <col style={{ width: '4%' }} />
+          <col style={{ width: '39%' }} />
+          <col style={{ width: '8%' }} />
+          <col style={{ width: '5%' }} />
+          <col style={{ width: '7%' }} />
+          <col style={{ width: '7%' }} />
+          <col style={{ width: '6%' }} />
+          <col style={{ width: '8%' }} />
+          <col style={{ width: '7%' }} />
+          <col style={{ width: '9%' }} />
+        </colgroup>
         <thead>
           <tr style={{ background: NAVY, color: '#fff', textTransform: 'uppercase' }}>
             {[
               { label: 'S.No.', width: '4%', compact: true },
-              { label: 'Item Description', width: '43%' },
-              { label: 'HSN Code', width: '10%' },
-              { label: 'Qty.', width: '8%' },
-              { label: 'Unit', width: '8%' },
-              { label: 'Rate', width: '13%' },
-              { label: 'Total', width: '14%' },
+              { label: 'Item Description', width: '39%' },
+              { label: 'HSN Code', width: '8%' },
+              { label: 'Qty.', width: '5%' },
+              { label: 'Size', width: '7%' },
+              { label: 'Area', width: '7%' },
+              { label: 'Unit', width: '6%' },
+              { label: 'Rate', width: '8%' },
+              { label: 'Discount', width: '7%' },
+              { label: 'Total', width: '9%' },
             ].map((h) => (
-              <th key={h.label} style={{ border: `1px solid ${NAVY}`, height: BAND_HEIGHT, padding: h.compact ? '0 1px' : '0 2px', textAlign: 'center', fontSize: h.compact ? 8.5 : 10, background: NAVY, color: '#fff', fontWeight: 'bold', width: h.width, whiteSpace: 'nowrap' }}>{h.label}</th>
+              <th key={h.label} style={{ border: `1px solid ${NAVY}`, padding: h.compact ? '3px 1px' : '3px 2px', textAlign: 'center', fontSize: 10, background: NAVY, color: '#fff', fontWeight: 700, width: h.width, whiteSpace: 'nowrap' }}>{h.label}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {items.map((item, i) => (
             <tr key={i}>
-              <td style={{ border: '1px solid #ccc', padding: '6px 2px', textAlign: 'center', fontSize: 10 }}>{i + 1}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', fontWeight: 700 }}>{item.description}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item.hsn || '—'}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item.qty}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item.unit}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(item.rate)}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right', fontWeight: 700 }}>{fmtNum(item.amount)}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{i + 1}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, fontWeight: 700, lineHeight: 1.15, whiteSpace: 'normal' }}>{item.description || '—'}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{item.hsn || '—'}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{item.qty}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{formatSize(item.area)}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{formatArea(item.size)}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{item.unit}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{fmtNum(item.rate)}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{Math.round(Number(item.discountPct || 0))}%</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}>{fmtNum(item.amount)}</td>
             </tr>
           ))}
           <tr style={{ background: '#f8fafc' }}>
-            <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right', textTransform: 'uppercase' }}>Total Before Tax</td>
+            <td colSpan={9} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right', textTransform: 'uppercase' }}>Total Before Tax</td>
             <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right' }}>{fmtNum(totalTaxable)}</td>
           </tr>
         </tbody>
