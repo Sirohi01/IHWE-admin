@@ -1,5 +1,6 @@
 import React, { useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import * as XLSX from "xlsx";
 
 // Helper function to access nested object properties
 const getValue = (obj, path) =>
@@ -14,6 +15,25 @@ const VisitorGloballytable = ({ rows = [], colomns = [], onRowClick }) => {
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const tableContainerRef = useRef();
+
+  const exportToExcel = () => {
+    const dataToExport = sortedRows.map((row, index) => {
+      const rowData = { "S.No.": index + 1 };
+      colomns.forEach((col) => {
+        if (col.label !== "Action" && col.label !== "QR Code") {
+          const value = getValue(row, col.accessor);
+          // Clean up formatting slightly if needed, but the basic string value is fine
+          rowData[col.label] = value || "";
+        }
+      });
+      return rowData;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Visitors");
+    XLSX.writeFile(workbook, "Corporate_Visitors.xlsx");
+  };
 
   const handleFilterChange = (accessor, value) => {
     setFilters((prev) => ({ ...prev, [accessor]: value.toLowerCase() }));
@@ -330,6 +350,12 @@ const VisitorGloballytable = ({ rows = [], colomns = [], onRowClick }) => {
         </div>
 
         <div className="flex flex-col md:flex-row items-center gap-2">
+          <button
+            onClick={exportToExcel}
+            className="px-4 py-1 text-xs text-white rounded mr-2 bg-green-600 hover:bg-green-700"
+          >
+            Export Excel
+          </button>
           <div className="flex items-center w-full md:w-50">
             <label className="pt-1 text-[#2f353b] text-sm" htmlFor="Search">
               Search:
