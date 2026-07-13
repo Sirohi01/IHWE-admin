@@ -9,6 +9,7 @@ import api, { SERVER_URL } from '../../lib/api';
 const PLACE_OF_SUPPLY = 'Delhi (07)';
 const NAVY = '#0d1f3c';
 const BAND_HEIGHT = 22;
+const FOOTER_BAND_HEIGHT = BAND_HEIGHT;
 const EVENT_TITLE = '9TH EDITION OF INTERNATIONAL HEALTH & WELLNESS EXPO (IHWE GLOBAL EDITION)';
 
 const formatDate = (date) => {
@@ -47,10 +48,6 @@ const toWords = (n) => {
   };
   return `Rupees ${convert(Math.round(Number(n || 0)))} Only.`;
 };
-
-// Safety net for records saved while preparedBy/reviewedBy were briefly stored as a
-// raw JSON string instead of a real object (fixed server-side, but old records may
-// still have the string form until they're re-saved).
 const asNamedPerson = (value) => {
   if (value && typeof value === 'object') return value;
   if (typeof value === 'string' && value.trim()) {
@@ -192,7 +189,7 @@ const ReceiptSignatureBlock = ({ note, settings, receiptSettings, mediaUrl }) =>
 
 const FooterBlock = ({ settings, receiptSettings }) => {
   return (
-    <div className="avoid-break" style={{ position: 'relative', height: 58, overflow: 'hidden' }}>
+    <div className="avoid-break" style={{ position: 'relative', height: 50, overflow: 'hidden', border: '1px solid #ccc', borderTop: 'none' }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, fontSize: 11, fontWeight: 500, color: '#111827', zIndex: 2 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><WhatsAppIcon /> {settings?.contactPhone || '+91 96549 00525'}</div>
         <div style={{ width: 1, height: 12, background: '#ccc' }} />
@@ -200,9 +197,9 @@ const FooterBlock = ({ settings, receiptSettings }) => {
         <div style={{ width: 1, height: 12, background: '#ccc' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Globe size={12} /> {settings?.contactWebsite || 'www.namogangewellness.com'}</div>
       </div>
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: BAND_HEIGHT, background: NAVY, color: '#fff', fontSize: 10, fontWeight: 500, zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: FOOTER_BAND_HEIGHT, background: NAVY, color: '#fff', fontSize: 10, fontWeight: 500, zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>{receiptSettings?.footerDisclaimerText || 'This is a computer generated document and does not require a physical signature.'}</div>
-        <div style={{ position: 'absolute', right: 10, top: 4, width: 60, textAlign: 'right' }}>Page 1 of 1</div>
+        <div style={{ position: 'absolute', right: 10, top: 6, width: 60, textAlign: 'right' }}>Page 1 of 1</div>
       </div>
     </div>
   );
@@ -398,7 +395,7 @@ const CreditNotePrintTemplate = ({ note, company, settings, receiptSettings }) =
               <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{item.qty}</td>
               <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{formatSize(item.area)}</td>
               <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{formatArea(item.size)}</td>
-              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{item.unit}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>Nos</td>
               <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{fmtNum(item.rate)}</td>
               <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{Math.round(item.discountPct || 0)}%</td>
               <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}>{fmtNum(item.amount)}</td>
