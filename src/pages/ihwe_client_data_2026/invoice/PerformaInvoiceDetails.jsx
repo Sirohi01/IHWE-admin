@@ -205,14 +205,36 @@ const PerformaInvoiceDetails = () => {
         </div>
 
         <div className="bg-gray-100 p-6 min-h-screen ">
-          <div ref={sameRef} className="max-w-8xl mx-auto bg-white px-6 py-0.5">
+          <div ref={sameRef} className="performa-print-root max-w-8xl mx-auto bg-white px-6 py-0.5 text-[11px]" style={{ fontFamily: 'Calibri, Arial, sans-serif', fontSize: 11 }}>
+            <style>{`
+              .performa-print-root {
+                font-family: Calibri, Arial, sans-serif !important;
+                font-size: 11px !important;
+                line-height: 1.2;
+              }
+              .performa-print-root td {
+                font-size: 11px !important;
+              }
+              .performa-print-root th {
+                font-size: 10px !important;
+              }
+              .performa-print-root td div,
+              .performa-print-root td span {
+                font-size: 11px !important;
+              }
+              .ngwpl-bank-details,
+              .ngwpl-bank-details * {
+                font-size: 7px !important;
+                line-height: 1.2 !important;
+              }
+            `}</style>
             <img loading="lazy" decoding="async" className=" my-6" src={mainpic} alt="" />
 
             {/* Client + Invoice Info */}
             <table className="w-full border-collapse border mb-3">
               <thead>
                 <tr className="bg-[#818481]">
-                  <th colSpan="8" className="text-center py-0.5 text-[#1d2129] text-xs font-semibold">
+                  <th colSpan="8" className="text-center py-0.5 text-[#1d2129] text-[10px] font-semibold">
                     Client Proforma Invoice
                   </th>
                 </tr>
@@ -344,7 +366,7 @@ const PerformaInvoiceDetails = () => {
                 <tr>
                   <td colSpan="7" className=" border px-2 py-0.5 text-[11px] font-semibold align-top">
                     Terms and Conditions :
-                    <div className="font-normal text-[10px]">
+                    <div className="font-normal text-[11px]">
                       1. Payments should be made by D.D/IMPS/NEFT/RTGS payable at New Delhi, favoring of Namo Gange Wellness Pvt Ltd.<br />
                       2. All disputes are subject to Delhi Jurisdiction.<br />
                       3. Proforma Invoice is subject to issue of Final Invoice.<br />
@@ -366,17 +388,17 @@ const PerformaInvoiceDetails = () => {
                 <thead>
                   <tr style={{ background: '#fafafa' }}>
                     <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
                         <Landmark size={14} strokeWidth={2} /> NGWPL Bank Details
                       </div>
                     </th>
                     <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
                         <SquarePen size={14} strokeWidth={2} /> Receiver's Acknowledgement
                       </div>
                     </th>
                     <th style={{ border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
                         <SquarePen size={14} strokeWidth={2} /> For Namo Gange Wellness Pvt. Ltd.
                       </div>
                     </th>
@@ -384,7 +406,7 @@ const PerformaInvoiceDetails = () => {
                 </thead>
                 <tbody>
                   <tr>
-                    <td rowSpan={2} style={{ border: 'none', borderRight: '1px solid #ccc', padding: '2px 8px 2px', verticalAlign: 'top', fontSize: 10, width: '33.33%' }}>
+                    <td className="ngwpl-bank-details" rowSpan={2} style={{ border: 'none', borderRight: '1px solid #ccc', padding: '2px 8px 2px', verticalAlign: 'top', fontSize: 7, width: '33.33%' }}>
                       <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%' }}>
                         <tbody>
                           <tr><td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>Bank Name</td><td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0' }}>:</td><td style={{ border: 'none', padding: '1px 0', wordBreak: 'break-word' }}>Kotak Mahindra Bank</td></tr>
@@ -396,7 +418,7 @@ const PerformaInvoiceDetails = () => {
                       </table>
                     </td>
                     <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '2px 8px 8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
-                        <span style={{ fontSize: 9, whiteSpace: 'nowrap' }}>Received the above goods / services in good condition.</span>
+                        <span style={{ fontSize: 11, whiteSpace: 'nowrap' }}>Received the above goods / services in good condition.</span>
                     </td>
                     <td style={{ border: 'none', padding: '8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
                         <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
@@ -408,11 +430,11 @@ const PerformaInvoiceDetails = () => {
                   <tr>
                       <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '0 8px 2px', verticalAlign: 'bottom' }}>
                           <div style={{ borderTop: '1px solid #ccc', margin: '0 2px 4px' }}></div>
-                          <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 10 }}>(Signature &amp; Company Seal)</div>
+                          <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 11 }}>(Signature &amp; Company Seal)</div>
                       </td>
                       <td style={{ border: 'none', padding: '0 8px 2px', verticalAlign: 'bottom' }}>
                           <div style={{ borderTop: '1px solid #ccc', margin: '0 2px 4px' }}></div>
-                          <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 10 }}>Authorized Signatory.</div>
+                          <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 11 }}>Authorized Signatory.</div>
                       </td>
                   </tr>
                 </tbody>
@@ -432,7 +454,7 @@ const PerformaInvoiceDetails = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Globe size={12} /> www.namogangewellness.com</div>
                 </div>
                 {/* banner text */}
-                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10.5, zIndex: 2 }}>
+                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, zIndex: 2 }}>
                   <span>This is a computer generated document and does not require a physical signature.</span>
                 </div>
               </div>
