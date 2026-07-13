@@ -180,7 +180,11 @@ export const menuItems = [
         icon: List,
         path: "/msme-pms-scheme-list",
       },
-
+      { label: "Pass Requests", path: "/mobile-pass-requests" },
+      { label: "Pass Config", path: "/mobile-pass-config" },
+      { label: "Scanner Leads", path: "/mobile-lead-captures" },
+      { label: "Feedback", path: "/mobile-feedback" },
+      { label: "Reminders & Notifications", path: "/reminders" },
     ]
   },
 
@@ -686,19 +690,6 @@ export const menuItems = [
     label: "Policy Manager",
     icon: ShieldCheck,
     path: "/policy-manager",
-  },
-
-  {
-    type: "dropdown",
-    label: "Mobile App Control",
-    icon: Phone,
-    children: [
-      { label: "Pass Requests", path: "/mobile-pass-requests" },
-      { label: "Pass Config", path: "/mobile-pass-config" },
-      { label: "Scanner Leads", path: "/mobile-lead-captures" },
-      { label: "Feedback", path: "/mobile-feedback" },
-      { label: "Reminders & Notifications", path: "/reminders" },
-    ],
   },
 
   {
