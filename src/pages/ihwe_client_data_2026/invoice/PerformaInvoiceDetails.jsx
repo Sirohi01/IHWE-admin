@@ -303,7 +303,7 @@ const PerformaInvoiceDetails = () => {
                     <td className="border px-2 py-0.5 text-[10px] font-medium text-center">{item?.hsn}</td>
                     <td className="border px-2 py-0.5 text-[10px] font-medium text-center">{item?.qty}</td>
                     <td className="border px-2 py-0.5 text-[10px] font-medium text-center">{item?.size}</td>
-                    <td className="border px-2 py-0.5 text-[10px] font-medium text-center">{item?.unit}</td>
+                    <td className="border px-2 py-0.5 text-[10px] font-medium text-center">Nos</td>
                     <td className="border px-2 py-0.5 text-[10px] font-medium text-center">{item?.rate}</td>
                     <td className="border px-2 py-0.5 text-[10px] font-medium text-center">{item?.disc}</td>
                     <td className="border px-2 py-0.5 text-[10px] font-bold text-center">{item?.tax}</td>
@@ -439,9 +439,9 @@ const PerformaInvoiceDetails = () => {
                   </tr>
                 </tbody>
               </table>
-              <div className="avoid-break" style={{ position: 'relative', height: 62, overflow: 'hidden', border: '1px solid #ccc', borderTop: 'none' }}>
+              <div className="avoid-break" style={{ position: 'relative', height: 52, overflow: 'hidden', border: '1px solid #ccc', borderTop: 'none' }}>
                 {/* navy background — banner area only, bottom-anchored */}
-                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 34, background: '#0d1f3c', zIndex: 0 }} />
+                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 24, background: '#0d1f3c', zIndex: 0 }} />
                 {/* contact row */}
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, fontSize: 11, fontWeight: 500, color: '#0d1f3c', zIndex: 2 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -454,7 +454,7 @@ const PerformaInvoiceDetails = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Globe size={12} /> www.namogangewellness.com</div>
                 </div>
                 {/* banner text */}
-                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, zIndex: 2 }}>
+                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, zIndex: 2 }}>
                   <span>This is a computer generated document and does not require a physical signature.</span>
                 </div>
               </div>
