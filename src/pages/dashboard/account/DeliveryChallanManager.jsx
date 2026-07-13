@@ -951,7 +951,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
   const deliveryChallanDate = fmtDateOnly(challan.challan_date);
 
   const th = { border: "1px solid #0d1f3c", background: "#0d1f3c", color: "#fff", padding: "3px 2px", fontSize: 10, lineHeight: 1.1, fontWeight: 700, textAlign: "center", textTransform: "uppercase", whiteSpace: "nowrap" };
-  const td = { border: "1px solid #ccc", padding: "6px", fontSize: 11, lineHeight: 1.2, verticalAlign: "top" };
+  const td = { border: "1px solid #ccc", padding: "4px 3px", fontSize: 10, lineHeight: 1.15, fontWeight: 500, verticalAlign: "top" };
   const topTh = { ...th };
   const topTd = { ...td, padding: "4px 8px" };
   const topInfoLine = { margin: 0, padding: 0, fontSize: 11, lineHeight: 1.2 };
@@ -1090,11 +1090,11 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
             <tbody>
               {items.map((item, index) => (
                 <tr key={`${item.sourceItemKey}-${index}`}>
-                  <td style={{ ...td, textAlign: "center" }}>{index + 1}</td>
+                  <td style={{ ...td, textAlign: "center", whiteSpace: "nowrap" }}>{index + 1}</td>
                   <td style={{ ...td, minHeight: 34 }}>
-                    <div style={{ fontWeight: 800, textTransform: "uppercase" }}>{challan.event_name || "9TH EDITION OF INTERNATIONAL HEALTH & WELLNESS EXPO"}</div>
-                    <div style={{ whiteSpace: "pre-wrap" }}>{item.description || "-"}</div>
-                    {item.remarks && <div style={{ whiteSpace: "pre-wrap" }}>{item.remarks}</div>}
+                    <div style={{ fontWeight: 700, textTransform: "uppercase" }}>{challan.event_name || "9TH EDITION OF INTERNATIONAL HEALTH & WELLNESS EXPO"}</div>
+                    <div style={{ fontWeight: 500, whiteSpace: "pre-wrap" }}>{item.description || "-"}</div>
+                    {item.remarks && <div style={{ fontWeight: 500, whiteSpace: "pre-wrap" }}>{item.remarks}</div>}
                   </td>
                   <td style={{ ...td, textAlign: "center" }}>{item.hsn || "-"}</td>
                   <td style={{ ...td, textAlign: "center" }}>{fmtNum(item.qty)}</td>
@@ -1157,7 +1157,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
                 <td colSpan={3} style={{ ...mutedCell, textAlign: "center" }}>GST Amount in Words (INR)</td>
                 <td colSpan={6} style={{ ...td, background: "rgb(241, 245, 249)", textTransform: "capitalize", textAlign: "center" }}>{toWords(totalGst)}</td>
                 <td style={{ ...mutedCell, textAlign: "center", whiteSpace: "nowrap" }}>Total GST Amount</td>
-                <td style={{ ...td, background: "rgb(241, 245, 249)", textAlign: "center", fontWeight: 800 }}>{fmtNum(totalGst)}</td>
+                <td style={{ ...td, background: "rgb(241, 245, 249)", textAlign: "center", fontWeight: 700 }}>{fmtNum(totalGst)}</td>
               </tr>
               <tr style={{ height: 8 }}>
                 {Array(11).fill(0).map((_, cell) => <td key={cell} style={{ border: "none", padding: 0 }}></td>)}
@@ -1166,7 +1166,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
                 <td colSpan={3} style={{ ...mutedCell, textAlign: "center" }}>Amount in Words (INR)</td>
                 <td colSpan={6} style={{ ...td, background: "rgb(241, 245, 249)", textTransform: "capitalize", textAlign: "center" }}>{toWords(grandTotal)}</td>
                 <td style={{ ...mutedCell, textAlign: "center" }}>Grand Total</td>
-                <td style={{ ...td, background: "rgb(241, 245, 249)", textAlign: "center", fontWeight: 800, fontSize: 11, color: "#000" }}>{fmtNum(grandTotal)}</td>
+                <td style={{ ...td, background: "rgb(241, 245, 249)", textAlign: "center", fontWeight: 700, fontSize: 10, color: "#000" }}>{fmtNum(grandTotal)}</td>
               </tr>
             </tbody>
           </table>

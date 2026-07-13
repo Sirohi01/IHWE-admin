@@ -281,32 +281,32 @@ const PerformaInvoiceDetails = () => {
             <table className="w-full border-collapse border mb-3">
               <thead className="bg-[#818481]">
                 <tr>
-                  <th className="border px-2 py-0.5 text-[11px] text-[#1D2129] w-12">S.No.</th>
-                  <th className="border px-2 py-0.5 text-[11px] text-[#1D2129]">Particulars</th>
-                  <th className="border px-2 py-0.5 text-[11px] text-[#1D2129] w-20">HSN Code</th>
-                  <th className="border px-2 py-0.5 text-[11px] text-[#1D2129] w-12">Qty.</th>
-                  <th className="border px-2 py-0.5 text-[11px] text-[#1D2129] w-12">Size</th>
-                  <th className="border px-2 py-0.5 text-[11px] text-[#1D2129] w-12">Unit</th>
-                  <th className="border px-2 py-0.5 text-[11px] text-[#1D2129] w-16">Rate</th>
-                  <th className="border px-2 py-0.5 text-[11px] text-[#1D2129] w-20">Discount</th>
-                  <th className="border px-2 py-0.5 text-[11px] text-[#1D2129] w-20">Amount</th>
+                  <th className="border px-2 py-0.5 text-[10px] font-bold text-[#1D2129] w-12">S.No.</th>
+                  <th className="border px-2 py-0.5 text-[10px] font-bold text-[#1D2129]">Particulars</th>
+                  <th className="border px-2 py-0.5 text-[10px] font-bold text-[#1D2129] w-20">HSN Code</th>
+                  <th className="border px-2 py-0.5 text-[10px] font-bold text-[#1D2129] w-12">Qty.</th>
+                  <th className="border px-2 py-0.5 text-[10px] font-bold text-[#1D2129] w-12">Size</th>
+                  <th className="border px-2 py-0.5 text-[10px] font-bold text-[#1D2129] w-12">Unit</th>
+                  <th className="border px-2 py-0.5 text-[10px] font-bold text-[#1D2129] w-16">Rate</th>
+                  <th className="border px-2 py-0.5 text-[10px] font-bold text-[#1D2129] w-20">Discount</th>
+                  <th className="border px-2 py-0.5 text-[10px] font-bold text-[#1D2129] w-20">Amount</th>
                 </tr>
               </thead>
               <tbody>
                 {matchedEstimate && matchedEstimate?.items.map((item, index) => (
                   <tr key={index}>
-                    <td className="border px-2 py-0.5 text-[11px] text-center">{index + 1}</td>
-                    <td className="border px-2 py-0.5 text-[11px]">
-                      {eventName}<br />{item?.description}
+                    <td className="border px-2 py-0.5 text-[10px] font-medium text-center">{index + 1}</td>
+                    <td className="border px-2 py-0.5 text-[10px] font-medium">
+                      <span className="font-bold uppercase">{eventName}</span><br />{item?.description}
                       {item?.remarks && <><br />{item.remarks}</>}
                     </td>
-                    <td className="border px-2 py-0.5 text-[11px] text-center">{item?.hsn}</td>
-                    <td className="border px-2 py-0.5 text-[11px] text-center">{item?.qty}</td>
-                    <td className="border px-2 py-0.5 text-[11px] text-center">{item?.size}</td>
-                    <td className="border px-2 py-0.5 text-[11px] text-center">{item?.unit}</td>
-                    <td className="border px-2 py-0.5 text-[11px] text-center">{item?.rate}</td>
-                    <td className="border px-2 py-0.5 text-[11px] text-center">{item?.disc}</td>
-                    <td className="border px-2 py-0.5 text-[11px] text-center">{item?.tax}</td>
+                    <td className="border px-2 py-0.5 text-[10px] font-medium text-center">{item?.hsn}</td>
+                    <td className="border px-2 py-0.5 text-[10px] font-medium text-center">{item?.qty}</td>
+                    <td className="border px-2 py-0.5 text-[10px] font-medium text-center">{item?.size}</td>
+                    <td className="border px-2 py-0.5 text-[10px] font-medium text-center">{item?.unit}</td>
+                    <td className="border px-2 py-0.5 text-[10px] font-medium text-center">{item?.rate}</td>
+                    <td className="border px-2 py-0.5 text-[10px] font-medium text-center">{item?.disc}</td>
+                    <td className="border px-2 py-0.5 text-[10px] font-bold text-center">{item?.tax}</td>
                   </tr>
                 ))}
                 {[...Array(16)].map((_, i) => (

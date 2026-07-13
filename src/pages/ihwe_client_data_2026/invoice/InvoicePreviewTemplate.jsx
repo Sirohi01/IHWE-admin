@@ -743,23 +743,23 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                     const discountPercent = getDiscountPercent(item);
                     return (
                         <tr key={`${startIndex}-${index}`}>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{startIndex + index + 1}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, lineHeight: 1.15 }}>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{startIndex + index + 1}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, fontWeight: 500, lineHeight: 1.15 }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
                                     <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>9TH EDITION OF INTERNATIONAL HEALTH & WELLNESS EXPO (IHWE GLOBAL EDITION)</div>
-                                    <div style={{ fontSize: 10, color: '#555', whiteSpace: 'pre-wrap' }}>
+                                    <div style={{ fontSize: 10, fontWeight: 500, color: '#555', whiteSpace: 'pre-wrap' }}>
                                         {item?.description}
                                         {item?.remarks ? `\n${item.remarks}` : ''}
                                     </div>
                                 </div>
                             </td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{item?.hsn || item?.hsnCode || item?.hsn_code || '—'}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{item?.qty ?? item?.quantity ?? '—'}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{formatSize(item?.area)}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{formatArea(item?.size)}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>Nos</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', whiteSpace: 'nowrap', fontSize: 10 }}>{fmtNum(item?.rate ?? item?.unit_rate ?? item?.price)}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{fmtNum(discountPercent)}%</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{item?.hsn || item?.hsnCode || item?.hsn_code || '—'}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{item?.qty ?? item?.quantity ?? '—'}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{formatSize(item?.area)}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{formatArea(item?.size)}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>Nos</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{fmtNum(item?.rate ?? item?.unit_rate ?? item?.price)}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{fmtNum(discountPercent)}%</td>
                             <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontWeight: 700, whiteSpace: 'nowrap', fontSize: 10 }}>{fmtNum(getItemTaxable(item))}</td>
                         </tr>
                     );
@@ -858,7 +858,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                     <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>Amount in Words ({currAbbr})</td>
                     <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center', background: 'rgb(241, 245, 249)' }}>{toWords(Math.round(grandTotal))}</td>
                     <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>Grand Total</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', fontSize: 11, color: '#000', background: 'rgb(241, 245, 249)' }}>{fmtNum(grandTotal)}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', fontSize: 10, color: '#000', background: 'rgb(241, 245, 249)' }}>{fmtNum(grandTotal)}</td>
                 </tr>
             </tbody>
         </table>
@@ -1378,23 +1378,23 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                         const discountPercent = getDiscountPercent(item);
                                         return (
                                             <tr key={index}>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{index + 1}</td>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, lineHeight: 1.15 }}>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{index + 1}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, fontWeight: 500, lineHeight: 1.15 }}>
                                                     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
                                                         <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>9TH EDITION OF INTERNATIONAL HEALTH & WELLNESS EXPO (IHWE GLOBAL EDITION)</div>
-                                                        <div style={{ fontSize: 10, color: '#555', whiteSpace: 'pre-wrap' }}>
+                                                        <div style={{ fontSize: 10, fontWeight: 500, color: '#555', whiteSpace: 'pre-wrap' }}>
                                                             {item?.description}
                                                             {item?.remarks ? `\n${item.remarks}` : ''}
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{item?.hsn || item?.hsnCode || item?.hsn_code || '—'}</td>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{item?.qty ?? item?.quantity ?? '—'}</td>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{formatSize(item?.area)}</td>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{formatArea(item?.size)}</td>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>Nos</td>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', whiteSpace: 'nowrap', fontSize: 10 }}>{fmtNum(item?.rate ?? item?.unit_rate ?? item?.price)}</td>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{fmtNum(discountPercent)}%</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{item?.hsn || item?.hsnCode || item?.hsn_code || '—'}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{item?.qty ?? item?.quantity ?? '—'}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{formatSize(item?.area)}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{formatArea(item?.size)}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>Nos</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{fmtNum(item?.rate ?? item?.unit_rate ?? item?.price)}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{fmtNum(discountPercent)}%</td>
                                                 <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontWeight: 700, whiteSpace: 'nowrap', fontSize: 10 }}>{fmtNum(getItemTaxable(item))}</td>
                                             </tr>
                                         );
@@ -1505,7 +1505,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                         <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>Amount in Words ({currAbbr})</td>
                                         <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center', background: 'rgb(241, 245, 249)' }}>{toWords(Math.round(grandTotal))}</td>
                                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>Grand Total</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', fontSize: 11, color: '#000', background: 'rgb(241, 245, 249)' }}>{fmtNum(grandTotal)}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', fontSize: 10, color: '#000', background: 'rgb(241, 245, 249)' }}>{fmtNum(grandTotal)}</td>
                                     </tr>
                                 </tbody>
                             </table>
