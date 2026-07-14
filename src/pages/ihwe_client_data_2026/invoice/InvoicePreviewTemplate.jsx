@@ -987,8 +987,10 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                         border: 0 !important;
                         margin: 0 !important;
                         max-width: none !important;
-                        box-shadow: inset 0 0 0 1px #cbd5e1 !important;
+                        box-shadow: none !important;
                         box-sizing: border-box !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
                     }
                     .invoice-print-shell {
                         margin: 0 !important;
@@ -1503,18 +1505,18 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                     <col style={{ width: '34%' }} />
                                 </colgroup>
                                 <thead>
-                                    <tr style={{ background: '#fafafa' }}>
-                                        <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
+                                    <tr style={{ background: 'rgb(241, 245, 249)' }}>
+                                        <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: 'rgb(241, 245, 249)', textAlign: 'center' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
                                                 <Landmark size={14} strokeWidth={2} /> NGWPL Bank Details
                                             </div>
                                         </th>
-                                        <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
+                                        <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: 'rgb(241, 245, 249)', textAlign: 'center' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
                                                 <SquarePen size={14} strokeWidth={2} /> Receiver's Acknowledgement
                                             </div>
                                         </th>
-                                        <th style={{ border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
+                                        <th style={{ border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: 'rgb(241, 245, 249)', textAlign: 'center' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
                                                 <SquarePen size={14} strokeWidth={2} /> For {companyName}
                                             </div>

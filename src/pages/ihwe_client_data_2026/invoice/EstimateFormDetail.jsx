@@ -885,6 +885,8 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                         max-width: none !important;
                         box-shadow: none !important;
                         box-sizing: border-box !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
                     }
                     .invoice-print-shell {
                         margin: 0 !important;
@@ -1091,6 +1093,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                                     fontWeight: 'bold',
                                                     width: h.width,
                                                     whiteSpace: 'nowrap',
+                                                    textTransform: h.label === 'S.No.' ? 'none' : 'uppercase',
                                                 }}
                                             >
                                                 {h.label}
@@ -1166,7 +1169,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                                 border: '1px solid #ccc',
                                                 padding: '4px 6px',
                                                 fontWeight: 700,
-                                                background: '#f8fafc',
+                                                background: 'rgb(241, 245, 249)',
                                                 fontSize: 10,
                                                 lineHeight: '1.2',
                                                 whiteSpace: 'nowrap',
@@ -1179,7 +1182,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                                 border: '1px solid #ccc',
                                                 padding: '4px 6px',
                                                 fontWeight: 700,
-                                                background: '#f8fafc',
+                                                background: 'rgb(241, 245, 249)',
                                                 textAlign: 'right',
                                                 fontSize: 10,
                                                 lineHeight: '1.2',
@@ -1193,7 +1196,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                                 border: '1px solid #ccc',
                                                 padding: '4px 4px',
                                                 fontWeight: 700,
-                                                background: '#f8fafc',
+                                                background: 'rgb(241, 245, 249)',
                                                 textAlign: 'center',
                                                 fontSize: 10,
                                                 lineHeight: '1.2',
@@ -1210,7 +1213,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                 <thead>
                                     <tr style={{ background: '#0d1f3c', color: '#fff', textTransform: 'uppercase' }}>
                                         {['S.No.', 'HSN/SAC No.', 'Item Value', 'Qty.', 'CGST(%)', 'Amount', 'SGST(%)', 'Amount', 'IGST(%)', 'Amount', 'Total Tax'].map((label, index) => (
-                                            <th key={`${label}-${index}`} style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>
+                                            <th key={`${label}-${index}`} style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold', textTransform: label === 'S.No.' ? 'none' : 'uppercase' }}>
                                                 {label}
                                             </th>
                                         ))}
@@ -1242,7 +1245,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                         );
                                     })}
 
-                                    <tr style={{ background: '#f8fafc', textTransform: 'uppercase' }}>
+                                    <tr style={{ background: 'rgb(241, 245, 249)', textTransform: 'uppercase' }}>
                                         <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>GST Amount in Words (INR)</td>
                                         <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center' }}>{toWords(Math.round(totalGstAmount))}</td>
                                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, whiteSpace: 'nowrap', textAlign: 'center' }}>Total GST Amt</td>
@@ -1253,7 +1256,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                         {Array(11).fill(0).map((_, j) => <td key={j} style={{ border: 'none', padding: 0 }}></td>)}
                                     </tr>
 
-                                    <tr style={{ background: '#f8fafc', textTransform: 'uppercase' }}>
+                                    <tr style={{ background: 'rgb(241, 245, 249)', textTransform: 'uppercase' }}>
                                         <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>Amount in Words (INR)</td>
                                         <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center' }}>{toWords(Math.round(grandTotal))}</td>
                                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>Grand Total</td>
@@ -1267,7 +1270,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                     <tbody>
                                         <tr>
                                             <td style={{ width: '60%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                                                <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Terms and Conditions:</div>
+                                                <div style={{ fontWeight: 700, marginBottom: 4, background: 'rgb(241, 245, 249)', fontSize: 10, borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Terms and Conditions:</div>
                                                 <div style={{ whiteSpace: 'pre-wrap' }}>
                                                     {estimateTerms?.termsAndConditions?.length ? (
                                                         estimateTerms.termsAndConditions.map((t, i) => <div key={i}>{i + 1}. {t}</div>)
@@ -1284,7 +1287,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                                 </div>
                                             </td>
                                             <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                                                <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment Conditions:</div>
+                                                <div style={{ fontWeight: 700, marginBottom: 4, background: 'rgb(241, 245, 249)', fontSize: 10, borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment Conditions:</div>
                                                 <div style={{ whiteSpace: 'pre-wrap' }}>
                                                     {estimateTerms?.paymentConditions?.length ? (
                                                         estimateTerms.paymentConditions.map((t, i) => <div key={i} style={{ fontWeight: 700 }}>{i + 1}. {t}</div>)
@@ -1297,25 +1300,26 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                     </tbody>
                                 </table>
 
-                                <table className="avoid-break" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 0, border: '1px solid #ccc' }}>
-                                    <colgroup>
+                                <div className="avoid-break" style={{ border: '1px solid #ccc' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 0 }}>
+                                        <colgroup>
                                         <col style={{ width: '33%' }} />
                                         <col style={{ width: '33%' }} />
                                         <col style={{ width: '34%' }} />
                                     </colgroup>
                                     <thead>
-                                        <tr style={{ background: '#fafafa' }}>
-                                            <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
+                                        <tr style={{ background: 'rgb(241, 245, 249)' }}>
+                                            <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: 'rgb(241, 245, 249)', textAlign: 'center' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                                                     <Landmark size={14} strokeWidth={2} /> NGWPL Bank Details
                                                 </div>
                                             </th>
-                                            <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
+                                            <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: 'rgb(241, 245, 249)', textAlign: 'center' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                                                     <SquarePen size={14} strokeWidth={2} /> Receiver's Acknowledgement
                                                 </div>
                                             </th>
-                                            <th style={{ border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
+                                            <th style={{ border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: 'rgb(241, 245, 249)', textAlign: 'center' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                                                     <SquarePen size={14} strokeWidth={2} /> For {companyName}
                                                 </div>
@@ -1377,10 +1381,9 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                         </tr>
                                     </tbody>
                                 </table>
-
-                                <div className="avoid-break" style={{ position: 'relative', height: 62, overflow: 'hidden', border: '1px solid #ccc', borderTop: 'none' }}>
+                                <div style={{ position: 'relative', height: 46, overflow: 'hidden', borderTop: '1px solid #ccc' }}>
                                     {/* navy background — banner area only, bottom-anchored */}
-                                    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 34, background: '#0d1f3c', zIndex: 0 }} />
+                                    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 18, background: '#0d1f3c', zIndex: 0 }} />
 
                                     {/* contact row */}
                                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, fontSize: 11, fontWeight: 500, color: '#0d1f3c', zIndex: 2 }}>
@@ -1395,10 +1398,11 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                     </div>
 
                                     {/* banner text */}
-                                    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10.5, zIndex: 2 }}>
+                                    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 9, zIndex: 2 }}>
                                         <span>This is a computer generated document and does not require a physical signature.</span>
                                     </div>
                                 </div>
+                            </div>
                             </div>
                         </td>
                     </tr>
