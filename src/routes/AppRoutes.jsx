@@ -221,6 +221,9 @@ const SellerServiceRequests = lazy(() => import("../pages/SellerServiceRequests"
 const SellerExportInquiries = lazy(() => import("../pages/SellerExportInquiries"));
 const MobilePassRequests = lazy(() => import("../pages/MobilePassRequests"));
 const MobilePassConfig = lazy(() => import("../pages/MobilePassConfig"));
+const ExhibitorRequestedPasses = lazy(() => import("../pages/ExhibitorRequestedPasses"));
+const PassTemplateDesigner = lazy(() => import("../pages/PassTemplateDesigner"));
+const PassGeneratorPage = lazy(() => import("../pages/PassGeneratorPage"));
 const MobileFeedback = lazy(() => import("../pages/MobileFeedback"));
 const MobileFeedbackDetails = lazy(() => import("../pages/MobileFeedbackDetails"));
 const AdminReminders = lazy(() => import("../pages/AdminReminders"));
@@ -775,6 +778,15 @@ export default function AppRoutes() {
             <Route path="/seller-export-inquiries" element={<SellerExportInquiries />} />
             <Route path="/mobile-pass-requests" element={<MobilePassRequests />} />
             <Route path="/mobile-pass-config" element={<MobilePassConfig />} />
+            <Route path="/exhibitor-requested-passes" element={<ExhibitorRequestedPasses />} />
+            <Route path="/pass-template-designer" element={<PassTemplateDesigner />} />
+            <Route path="/passes/media" element={<PassGeneratorPage passType="media" />} />
+            <Route path="/passes/speaker" element={<PassGeneratorPage passType="speaker" />} />
+            <Route path="/passes/organizer" element={<PassGeneratorPage passType="organizer" />} />
+            <Route path="/passes/exhibitor" element={<PassGeneratorPage passType="exhibitor" />} />
+            <Route path="/passes/service" element={<PassGeneratorPage passType="service" />} />
+            <Route path="/passes/vehicle" element={<PassGeneratorPage passType="vehicle" />} />
+            <Route path="/passes/visitor" element={<PassGeneratorPage passType="visitor" />} />
             <Route path="/mobile-feedback" element={<MobileFeedback />} />
             <Route path="/mobile-feedback/:id" element={<MobileFeedbackDetails />} />
             <Route path="/mobile-lead-captures" element={<MobileLeadCaptures />} />
