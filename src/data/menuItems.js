@@ -707,6 +707,21 @@ export const menuItems = [
       { label: "AI Document Verification", path: "/ai-verification-settings" },
       { label: "Add Unit", path: "/add-unit" },
       { label: "Marketing Materials", path: "/admin/marketing-management" },
+      {
+        type: "dropdown",
+        label: "Passes",
+        children: [
+          { label: "Media Passes", path: "/passes/media" },
+          { label: "Speaker Passes", path: "/passes/speaker" },
+          { label: "Organizer Passes", path: "/passes/organizer" },
+          { label: "Exhibitor Passes", path: "/passes/exhibitor" },
+          { label: "Service Passes", path: "/passes/service" },
+          { label: "Vehicle Passes", path: "/passes/vehicle" },
+          { label: "Visitor Passes", path: "/passes/visitor" },
+          { label: "Exhibitor Requested Passes", path: "/exhibitor-requested-passes" },
+          { label: "Pass Template Designer", path: "/pass-template-designer" },
+        ],
+      },
     ],
   },
   {
