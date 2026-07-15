@@ -28,7 +28,7 @@ const CertificateSettings = () => {
 
     const fetchData = async () => {
         try {
-            const token = localStorage.getItem('adminToken');
+            const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
             // Assuming your backend runs on same origin or proxy is setup.
             // Adjust base URL if needed.
             const response = await axios.get(`${import.meta.env.VITE_API_URL || ''}/api/certificate-data`, {
@@ -114,7 +114,12 @@ const CertificateSettings = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const token = localStorage.getItem('adminToken');
+        const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+        
+        if (!token) {
+            toast.error('Authentication token not found. Please log in again.');
+            return;
+        }
         
         const payload = new FormData();
         Object.keys(formData).forEach(key => payload.append(key, formData[key]));
