@@ -1012,8 +1012,10 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                         border: 0 !important;
                         margin: 0 !important;
                         max-width: none !important;
-                        box-shadow: inset 0 0 0 1px #cbd5e1 !important;
+                        box-shadow: none !important;
                         box-sizing: border-box !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
                     }
                     .invoice-print-shell {
                         margin: 0 !important;

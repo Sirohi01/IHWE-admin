@@ -981,9 +981,9 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
           <table className="challan-summary-table" style={{ width: "100%", borderCollapse: "collapse", marginBottom: 8, tableLayout: "fixed" }}>
             <thead>
               <tr>
-                <th className="challan-client-column" style={{ ...topTh, width: "32%" }}>Buyer's Name &amp; Address</th>
-                <th className="challan-shipment-column" style={{ ...topTh, width: "32%" }}>Shipment Details</th>
-                <th className="challan-details-column" style={{ ...topTh, width: "36%" }}>Delivery Challan Details</th>
+                <th className="challan-client-column" style={{ ...topTh, width: "38%" }}>Buyer's Name &amp; Address</th>
+                <th className="challan-shipment-column" style={{ ...topTh, width: "38%" }}>Shipment Details</th>
+                <th className="challan-details-column" style={{ ...topTh, width: "24%" }}>Delivery Challan Details</th>
               </tr>
             </thead>
             <tbody>
@@ -1032,7 +1032,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
                   </table>
                 </td>
                 <td className="challan-details-cell" style={{ ...topTd, padding: "4px 4px", overflowWrap: "anywhere", wordBreak: "break-word" }}>
-                  <table className="challan-detail-info-table" style={{ borderCollapse: "collapse", border: "none", lineHeight: 1.3, width: "auto", maxWidth: "100%" }}>
+                  <table className="challan-detail-info-table" style={{ borderCollapse: "collapse", border: "none", lineHeight: 1.3, width: "100%", maxWidth: "100%" }}>
                     <tbody>
                       {[
                         ["DC No.", deliveryChallanNo],
@@ -1047,12 +1047,12 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
                         const keepInOneLine = label === "DC No.";
                         return (
                           <tr key={label}>
-                            <td style={detailLabelCell}>{label}</td>
-                            <td style={detailColonCell}>:</td>
+                            <td style={{ ...detailLabelCell, width: "1%" }}>{label}</td>
+                            <td style={{ ...detailColonCell, width: "1%" }}>:</td>
                             <td
                               style={{
                                 ...detailValueCell,
-                                textAlign: "left",
+                                textAlign: "right",
                                 whiteSpace: keepInOneLine ? "nowrap" : "normal",
                                 overflowWrap: keepInOneLine ? "normal" : "anywhere",
                                 wordBreak: keepInOneLine ? "keep-all" : "break-word",
@@ -1084,7 +1084,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
                   ["Rate", "7%"],
                   ["Discount", "7%"],
                   ["Amount", "9%"],
-                ].map(([label, width]) => <th key={label} style={{ ...th, width }}>{label}</th>)}
+                ].map(([label, width]) => <th key={label} style={{ ...th, width, textTransform: label === 'S.No.' ? 'none' : 'uppercase' }}>{label}</th>)}
               </tr>
             </thead>
             <tbody>
@@ -1128,7 +1128,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
             <thead>
               <tr>
                 {["S.No.", "HSN/SAC No.", "Item Value", "Qty.", "CGST(%)", "Amount", "SGST(%)", "Amount", "IGST(%)", "Amount", "Total Tax"].map((head) => (
-                  <th key={head} style={th}>{head}</th>
+                  <th key={head} style={{ ...th, textTransform: head === 'S.No.' ? 'none' : 'uppercase' }}>{head}</th>
                 ))}
               </tr>
             </thead>
@@ -1214,11 +1214,12 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
           </table>
 
           <div className="invoice-footer-section">
-            <table className="avoid-break" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 0, border: '1px solid #ccc' }}>
-              <colgroup>
-                <col style={{ width: '33%' }} />
-                <col style={{ width: '33%' }} />
-                <col style={{ width: '34%' }} />
+            <div className="avoid-break" style={{ border: '1px solid #ccc' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 0 }}>
+                <colgroup>
+                  <col style={{ width: '33%' }} />
+                  <col style={{ width: '33%' }} />
+                  <col style={{ width: '34%' }} />
               </colgroup>
               <thead>
                 <tr style={{ background: 'rgb(241, 245, 249)' }}>
@@ -1297,6 +1298,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
               <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, zIndex: 2 }}>
                 <span>This is a computer generated document and does not require a physical signature.</span>
               </div>
+            </div>
             </div>
           </div>
         </div>{/* end challan-page-body */}
@@ -1900,13 +1902,15 @@ const DeliveryChallanManager = () => {
             margin: 0 !important;
             padding: 0 !important;
             border: 0 !important;
-            box-shadow: inset 0 0 0 1px #cbd5e1 !important;
+            box-shadow: none !important;
             box-sizing: border-box !important;
             background: white !important;
             overflow: visible !important;
             font-family: Calibri, Arial, sans-serif !important;
             font-size: 11px !important;
             line-height: 1.2 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
 
           .challan-print > div,
@@ -1960,8 +1964,6 @@ const DeliveryChallanManager = () => {
             margin-bottom: 8px !important;
             page-break-inside: avoid !important;
             break-inside: avoid !important;
-            outline: 1px solid #ccc !important;
-            outline-offset: -1px !important;
           }
 
           .challan-summary-table th {
@@ -1972,7 +1974,7 @@ const DeliveryChallanManager = () => {
 
           .challan-summary-table td {
             padding: 4px 8px !important;
-            font-size: 11px !important;
+            font-size: 9.5px !important;
             line-height: 1.2 !important;
             vertical-align: top !important;
           }
@@ -1984,7 +1986,7 @@ const DeliveryChallanManager = () => {
 
           .challan-summary-table table td {
             padding: 1px 4px 1px 0 !important;
-            font-size: 11px !important;
+            font-size: 9.5px !important;
             line-height: 1.3 !important;
           }
 
@@ -2004,17 +2006,20 @@ const DeliveryChallanManager = () => {
           }
 
           .challan-detail-info-table td:nth-child(2) {
-            padding: 1px 6px 1px 3px !important;
+            padding: 1px 4px 1px 0 !important;
           }
 
           .challan-detail-info-table td:last-child {
-            padding: 1px 0 1px 1px !important;
-            text-align: left !important;
+            padding: 1px 0 !important;
+            text-align: right !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow-wrap: anywhere !important;
           }
 
-          .challan-client-column { width: 32% !important; }
-          .challan-shipment-column { width: 32% !important; }
-          .challan-details-column { width: 36% !important; }
+          .challan-client-column { width: 36% !important; }
+          .challan-shipment-column { width: 34% !important; }
+          .challan-details-column { width: 30% !important; }
 
           .challan-items-table,
           .challan-tax-table,
