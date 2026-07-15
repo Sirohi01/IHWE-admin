@@ -3,9 +3,18 @@ import api from "../../../lib/api";
 
 export const fetchExhibitionRoles = createAsyncThunk(
   "exhibitionRoles/fetchAll",
-  async (status, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
-      const query = status ? `?status=${status}` : "";
+      let query = "";
+      if (typeof params === "string") {
+        query = params ? `?status=${encodeURIComponent(params)}` : "";
+      } else if (params && typeof params === "object") {
+        const searchParams = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== "") searchParams.append(key, value);
+        });
+        query = searchParams.toString() ? `?${searchParams.toString()}` : "";
+      }
       const res = await api.get(`/api/exhibition-roles${query}`);
       return res.data;
     } catch (err) {
@@ -40,10 +49,12 @@ export const updateExhibitionRole = createAsyncThunk(
 
 export const deleteExhibitionRole = createAsyncThunk(
   "exhibitionRoles/delete",
-  async (id, { rejectWithValue }) => {
+  async (payload, { rejectWithValue }) => {
     try {
-      await api.delete(`/api/exhibition-roles/${id}`);
-      return id;
+      const id = typeof payload === "object" ? payload.id : payload;
+      const data = typeof payload === "object" ? payload.data : undefined;
+      const res = await api.delete(`/api/exhibition-roles/${id}`, { data });
+      return res.data.data || { _id: id };
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
@@ -73,14 +84,17 @@ const exhibitionRoleSlice = createSlice({
         state.error = action.payload;
       })
       .addCase(createExhibitionRole.fulfilled, (state, action) => {
-        state.exhibitionRoles.push(action.payload);
+        const index = state.exhibitionRoles.findIndex((item) => item._id === action.payload._id);
+        if (index !== -1) state.exhibitionRoles[index] = action.payload;
+        else state.exhibitionRoles.push(action.payload);
       })
       .addCase(updateExhibitionRole.fulfilled, (state, action) => {
         const index = state.exhibitionRoles.findIndex((item) => item._id === action.payload._id);
         if (index !== -1) state.exhibitionRoles[index] = action.payload;
       })
       .addCase(deleteExhibitionRole.fulfilled, (state, action) => {
-        state.exhibitionRoles = state.exhibitionRoles.filter((item) => item._id !== action.payload);
+        const index = state.exhibitionRoles.findIndex((item) => item._id === action.payload._id);
+        if (index !== -1) state.exhibitionRoles[index] = action.payload;
       });
   },
 });

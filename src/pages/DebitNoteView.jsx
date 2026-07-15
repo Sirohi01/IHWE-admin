@@ -167,16 +167,16 @@ const CreditNotePreviewTemplate = ({ note, company, settings }) => {
         <tbody>
           {items.map((item, index) => (
             <tr key={`${item.description}-${index}`}>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{index + 1}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px' }}>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500 }}>{index + 1}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, lineHeight: 1.15 }}>
                 <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{item.description || '-'}</div>
               </td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item.hsn || '-'}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item.qty || '-'}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item.unit || '-'}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(item.rate)}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item.gstPct || '-'}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right', fontWeight: 700 }}>{fmtNum(item.total)}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500 }}>{item.hsn || '-'}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500 }}>{item.qty || '-'}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500 }}>Nos</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', fontSize: 10, fontWeight: 500 }}>{fmtNum(item.rate)}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500 }}>{item.gstPct || '-'}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', fontSize: 10, fontWeight: 700 }}>{fmtNum(item.total)}</td>
             </tr>
           ))}
           {Array.from({ length: Math.max(0, 7 - items.length) }).map((_, i) => (
@@ -288,7 +288,7 @@ const CreditNotePreviewTemplate = ({ note, company, settings }) => {
       <div style={{ fontSize: 12, textAlign: 'center', color: '#666', marginTop: 8, paddingTop: 6 }}>
         <b>Registered Address:</b> First Floor, E-1, Opposite KFC, Kalkaji Main Market, South Delhi-110019, Delhi, India
       </div>
-      <div style={{ fontSize: 11, textAlign: 'center', color: '#999', marginTop: 4 }}>
+      <div style={{ height: 24, background: '#0d1f3c', color: '#fff', fontSize: 10, fontWeight: 500, textAlign: 'center', marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         This is a computer generated document and does not require a physical signature.
       </div>
     </div>

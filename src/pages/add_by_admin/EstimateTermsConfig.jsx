@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { CreditCard, Edit, FileText, Plus, Save, Trash2, X } from "lucide-react";
+import { Clock3, CreditCard, Edit, FileText, History, Plus, Save, Trash2, X } from "lucide-react";
 import Swal from "sweetalert2";
 import api from "../../lib/api";
 import PageHeader from "../../components/PageHeader";
@@ -19,6 +19,30 @@ const getAdminName = () => {
   const adminInfo = JSON.parse(localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo") || "{}");
   return adminInfo.fullName || adminInfo.name || adminInfo.username || "Admin";
 };
+
+const formatDateTime = (value) => {
+  if (!value) return "N/A";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "N/A";
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const AuditCell = ({ name, date }) => (
+  <div className="flex items-center justify-center gap-1.5 whitespace-nowrap text-[11px] leading-none">
+    <span className="font-semibold text-gray-700">{name || "System"}</span>
+    <span className="text-gray-300">|</span>
+    <span className="flex items-center gap-1 font-normal text-gray-500">
+      <Clock3 className="h-3 w-3" />
+      {formatDateTime(date)}
+    </span>
+  </div>
+);
 
 const ListEditor = ({ title, icon: Icon, items, onChange, placeholder }) => {
   const updateItem = (index, value) => onChange(items.map((item, itemIndex) => (itemIndex === index ? value : item)));
@@ -94,6 +118,47 @@ const PreviewList = ({ title, icon: Icon, items, emptyText }) => (
       </table>
     ) : (
       <div className="px-3 py-4 text-sm font-medium text-gray-500">{emptyText}</div>
+    )}
+  </div>
+);
+
+const AuditHistory = ({ logs = [] }) => (
+  <div className="mt-4 overflow-hidden rounded-lg border border-gray-300 bg-white">
+    <div className="flex items-center gap-2 border-b border-gray-300 bg-gray-100 px-3 py-2">
+      <History className="h-4 w-4 text-[#23471d]" />
+      <h2 className="text-sm font-bold uppercase text-gray-800">Audit History</h2>
+    </div>
+    {logs.length ? (
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr className="bg-gray-50 text-xs uppercase text-gray-500">
+              <th className="w-16 border border-gray-300 px-2 py-2 text-center">S.No.</th>
+              <th className="w-28 border border-gray-300 px-2 py-2 text-center">Action</th>
+              <th className="w-40 border border-gray-300 px-2 py-2 text-center">By</th>
+              <th className="w-44 border border-gray-300 px-2 py-2 text-center">Time</th>
+              <th className="border border-gray-300 px-2 py-2 text-left">Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {logs.map((log, index) => (
+              <tr key={`${log.action}-${log.at}-${index}`} className="hover:bg-gray-50">
+                <td className="border border-gray-300 px-2 py-1.5 text-center font-semibold text-gray-700">{index + 1}</td>
+                <td className="border border-gray-300 px-2 py-1.5 text-center">
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${log.action === "CREATED" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}>
+                    {log.action}
+                  </span>
+                </td>
+                <td className="border border-gray-300 px-2 py-1.5 text-center text-xs font-semibold text-gray-700">{log.by || "System"}</td>
+                <td className="border border-gray-300 px-2 py-1.5 text-center text-xs text-gray-500">{formatDateTime(log.at)}</td>
+                <td className="border border-gray-300 px-2 py-1.5 text-xs font-medium text-gray-700">{log.details || "No details"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <div className="px-3 py-4 text-sm font-medium text-gray-500">No audit history found</div>
     )}
   </div>
 );
@@ -237,25 +302,31 @@ const EstimateTermsConfig = () => {
                 <table className="w-full border-collapse text-sm">
                   <thead>
                     <tr className="bg-gray-100 text-xs uppercase text-gray-600">
-                      <th className="w-16 border border-gray-300 px-3 py-2 text-center">S.No.</th>
-                      <th className="border border-gray-300 px-3 py-2 text-left">Name</th>
-                      <th className="border border-gray-300 px-3 py-2 text-left">Config Title</th>
-                      <th className="w-28 border border-gray-300 px-3 py-2 text-center">Status</th>
-                      <th className="w-36 border border-gray-300 px-3 py-2 text-center">Updated By</th>
-                      <th className="w-24 border border-gray-300 px-3 py-2 text-center">Action</th>
+                      <th className="w-14 border border-gray-300 px-2 py-1.5 text-center">S.No.</th>
+                      <th className="border border-gray-300 px-2 py-1.5 text-left">Name</th>
+                      <th className="border border-gray-300 px-2 py-1.5 text-left">Config Title</th>
+                      <th className="w-24 border border-gray-300 px-2 py-1.5 text-center">Status</th>
+                      <th className="min-w-[220px] border border-gray-300 px-2 py-1.5 text-center">Created</th>
+                      <th className="min-w-[240px] border border-gray-300 px-2 py-1.5 text-center">Last Updated</th>
+                      <th className="w-20 border border-gray-300 px-2 py-1.5 text-center">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr className="hover:bg-gray-50">
-                      <td className="border border-gray-300 px-3 py-1.5 text-center font-semibold">1</td>
-                      <td className="border border-gray-300 px-3 py-1.5 font-bold text-[#23471d]">{activeConfig.displayName}</td>
-                      <td className="border border-gray-300 px-3 py-1.5 font-medium text-gray-700">{activeConfig.title}</td>
-                      <td className="border border-gray-300 px-3 py-1.5 text-center">
+                      <td className="border border-gray-300 px-2 py-1 text-center font-semibold">1</td>
+                      <td className="border border-gray-300 px-2 py-1 font-bold text-[#23471d]">{activeConfig.displayName}</td>
+                      <td className="border border-gray-300 px-2 py-1 font-medium text-gray-700">{activeConfig.title}</td>
+                      <td className="border border-gray-300 px-2 py-1 text-center">
                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold capitalize ${activeConfig.status === "active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{activeConfig.status}</span>
                       </td>
-                      <td className="border border-gray-300 px-3 py-1.5 text-center text-xs text-gray-500">{activeConfig.updatedBy || "System"}</td>
-                      <td className="border border-gray-300 px-3 py-1.5 text-center">
-                        <button type="button" onClick={() => startEdit(activeConfig)} className="inline-flex items-center gap-1 rounded bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700 hover:bg-blue-100">
+                      <td className="border border-gray-300 px-2 py-1 text-center">
+                        <AuditCell name={activeConfig.createdBy || "System"} date={activeConfig.createdAt} />
+                      </td>
+                      <td className="border border-gray-300 px-2 py-1 text-center">
+                        <AuditCell name={activeConfig.updatedBy || "System"} date={activeConfig.updatedAt} />
+                      </td>
+                      <td className="border border-gray-300 px-2 py-1 text-center">
+                        <button type="button" onClick={() => startEdit(activeConfig)} className="inline-flex items-center gap-1 rounded bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-700 hover:bg-blue-100">
                           <Edit className="h-3.5 w-3.5" /> Edit
                         </button>
                       </td>
@@ -282,6 +353,7 @@ const EstimateTermsConfig = () => {
                   ) : (
                     <PreviewList title="Payment Conditions" icon={CreditCard} items={activeConfig.paymentConditions || []} emptyText="No payment conditions added" />
                   )}
+                  <AuditHistory logs={activeConfig.auditLogs || []} />
                 </div>
               )}
             </div>

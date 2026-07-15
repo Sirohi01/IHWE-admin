@@ -49,6 +49,8 @@ const AddTeamMembersAdmin = () => {
         mobileVerified: false,
         emailOtpVerifiedAt: null,
         mobileOtpVerifiedAt: null,
+        mobileOtp: '',
+        emailOtp: '',
         idProof: '',
         idProofDoc: null,
         idProofDocPreview: '',
@@ -92,11 +94,11 @@ const AddTeamMembersAdmin = () => {
 
     const handleFieldChange = (index, field, value) => {
         if (field === 'mobile') {
-            updateRow(index, { mobile: normalizeIndianMobile(value), mobileOtpSent: false, mobileVerified: false, mobileOtpVerifiedAt: null });
+            updateRow(index, { mobile: normalizeIndianMobile(value), mobileOtpSent: false, mobileVerified: false, mobileOtpVerifiedAt: null, mobileOtp: '' });
             return;
         }
         if (field === 'email') {
-            updateRow(index, { email: value, emailOtpSent: false, emailVerified: false, emailOtpVerifiedAt: null });
+            updateRow(index, { email: value, emailOtpSent: false, emailVerified: false, emailOtpVerifiedAt: null, emailOtp: '' });
             return;
         }
         updateRow(index, { [field]: value });
@@ -150,6 +152,7 @@ const AddTeamMembersAdmin = () => {
     const handleOtpVerify = async (index, channel) => {
         const row = rows[index];
         const identifier = channel === 'email' ? row.email?.trim() : normalizeIndianMobile(row.mobile);
+        const otpValue = channel === 'email' ? row.emailOtp : row.mobileOtp;
         const isEmail = channel === 'email';
         const valid = isEmail ? isValidEmail(identifier) : isValidIndianMobile(identifier);
 
@@ -158,19 +161,13 @@ const AddTeamMembersAdmin = () => {
             return;
         }
 
-        const result = await Swal.fire({
-            title: `Verify ${isEmail ? 'Email' : 'Mobile'}`,
-            input: 'text',
-            inputPlaceholder: 'Enter OTP',
-            showCancelButton: true,
-            confirmButtonText: 'Verify',
-            confirmButtonColor: '#2563eb',
-        });
-
-        if (!result.isConfirmed || !result.value) return;
+        if (!otpValue || otpValue.trim() === '') {
+            Swal.fire('Error', 'Please enter OTP', 'error');
+            return;
+        }
 
         try {
-            const response = await otpApi.verify(identifier, String(result.value).trim(), isEmail ? 'email' : 'phone');
+            const response = await otpApi.verify(identifier, String(otpValue).trim(), isEmail ? 'email' : 'phone');
             if (response?.success) {
                 updateRow(index, isEmail
                     ? { emailVerified: true, emailOtpVerifiedAt: new Date().toISOString() }
@@ -441,57 +438,81 @@ const AddTeamMembersAdmin = () => {
                                             />
                                         </td>
                                         <td className="p-1">
-                                            <div className="space-y-0">
-                                                <input
-                                                    type="tel"
-                                                    inputMode="numeric"
-                                                    maxLength={10}
-                                                    value={row.mobile}
-                                                    onChange={(e) => handleFieldChange(index, 'mobile', e.target.value)}
-                                                    placeholder="10-digit Mobile Number"
-                                                    className="w-full h-8 px-2 rounded-md border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700"
-                                                />
-                                                {shouldShowOtpControls(index) && (
-                                                    <div className="flex items-center gap-0 flex-wrap">
-                                                        <button type="button" onClick={() => handleOtpRequest(index, 'mobile')} className="px-2 py-0.5 rounded-md border border-blue-200 text-blue-700 text-[11px] font-semibold hover:bg-blue-50">Send OTP</button>
-                                                        <button type="button" onClick={() => handleOtpVerify(index, 'mobile')} className="px-2 py-0.5 rounded-md border border-slate-200 text-slate-700 text-[11px] font-semibold hover:bg-slate-50">Verify</button>
-                                                        {row.mobileOtpSent && !row.mobileVerified && (
-                                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold">
-                                                                <CheckCircle size={12} /> OTP Sent
-                                                            </span>
-                                                        )}
-                                                        {row.mobileVerified && (
-                                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold">
-                                                                <CheckCircle size={12} /> Verified
-                                                            </span>
-                                                        )}
+                                            <div className="flex items-center gap-1">
+                                                <div className="relative flex-1">
+                                                    <input
+                                                        type="tel"
+                                                        inputMode="numeric"
+                                                        maxLength={10}
+                                                        value={row.mobile}
+                                                        onChange={(e) => handleFieldChange(index, 'mobile', e.target.value)}
+                                                        placeholder="10-digit Mobile Number"
+                                                        className="w-full h-8 pl-2 pr-[65px] rounded-md border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700 disabled:bg-slate-50"
+                                                        disabled={row.mobileVerified}
+                                                    />
+                                                    {shouldShowOtpControls(index) && !row.mobileVerified && !row.mobileOtpSent && (
+                                                        <button type="button" onClick={() => handleOtpRequest(index, 'mobile')} className="absolute right-1 top-1/2 -translate-y-1/2 px-2 py-1 rounded text-blue-600 hover:bg-blue-50 text-[10px] font-bold">
+                                                            Send OTP
+                                                        </button>
+                                                    )}
+                                                    {row.mobileVerified && (
+                                                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-green-600 flex items-center gap-1 text-[10px] font-bold bg-white">
+                                                            <CheckCircle size={14} /> <span className="hidden sm:inline">Verified</span>
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {row.mobileOtpSent && !row.mobileVerified && (
+                                                    <div className="flex items-center gap-1 w-[110px]">
+                                                        <input 
+                                                            type="text"
+                                                            value={row.mobileOtp || ''}
+                                                            onChange={(e) => updateRow(index, { mobileOtp: e.target.value })}
+                                                            placeholder="OTP"
+                                                            className="w-14 h-8 px-1 rounded-md border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-xs font-medium text-slate-700 text-center"
+                                                            maxLength={6}
+                                                        />
+                                                        <button type="button" onClick={() => handleOtpVerify(index, 'mobile')} className="px-2 py-1 h-8 rounded-md bg-blue-600 text-white text-[11px] font-semibold hover:bg-blue-700 shadow-sm">
+                                                            Verify
+                                                        </button>
                                                     </div>
                                                 )}
                                             </div>
                                         </td>
                                         <td className="p-1">
-                                            <div className="space-y-0">
-                                                <input
-                                                    type="email"
-                                                    value={row.email}
-                                                    onChange={(e) => handleFieldChange(index, 'email', e.target.value)}
-                                                    placeholder="Email ID"
-                                                    className="w-full h-8 px-2 rounded-md border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700"
-                                                />
-                                                {shouldShowOtpControls(index) && (
-                                                    <div className="flex items-center gap-0 flex-wrap">
-                                                        <button type="button" onClick={() => handleOtpRequest(index, 'email')} className="px-2 py-0.5 rounded-md border border-blue-200 text-blue-700 text-[11px] font-semibold hover:bg-blue-50">Send OTP</button>
-                                                        <button type="button" onClick={() => handleOtpVerify(index, 'email')} className="px-2 py-0.5 rounded-md border border-slate-200 text-slate-700 text-[11px] font-semibold hover:bg-slate-50">Verify</button>
-                                                        {row.emailOtpSent && !row.emailVerified && (
-                                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold">
-                                                                <CheckCircle size={12} /> OTP Sent
-                                                            </span>
-                                                        )}
-                                                        {row.emailVerified && (
-                                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold">
-                                                                <CheckCircle size={12} /> Verified
-                                                            </span>
-                                                        )}
+                                            <div className="flex items-center gap-1">
+                                                <div className="relative flex-1">
+                                                    <input
+                                                        type="email"
+                                                        value={row.email}
+                                                        onChange={(e) => handleFieldChange(index, 'email', e.target.value)}
+                                                        placeholder="Email ID"
+                                                        className="w-full h-8 pl-2 pr-[65px] rounded-md border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm font-medium text-slate-700 disabled:bg-slate-50"
+                                                        disabled={row.emailVerified}
+                                                    />
+                                                    {shouldShowOtpControls(index) && !row.emailVerified && !row.emailOtpSent && (
+                                                        <button type="button" onClick={() => handleOtpRequest(index, 'email')} className="absolute right-1 top-1/2 -translate-y-1/2 px-2 py-1 rounded text-blue-600 hover:bg-blue-50 text-[10px] font-bold">
+                                                            Send OTP
+                                                        </button>
+                                                    )}
+                                                    {row.emailVerified && (
+                                                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-green-600 flex items-center gap-1 text-[10px] font-bold bg-white">
+                                                            <CheckCircle size={14} /> <span className="hidden sm:inline">Verified</span>
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {row.emailOtpSent && !row.emailVerified && (
+                                                    <div className="flex items-center gap-1 w-[110px]">
+                                                        <input 
+                                                            type="text"
+                                                            value={row.emailOtp || ''}
+                                                            onChange={(e) => updateRow(index, { emailOtp: e.target.value })}
+                                                            placeholder="OTP"
+                                                            className="w-14 h-8 px-1 rounded-md border border-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-xs font-medium text-slate-700 text-center"
+                                                            maxLength={6}
+                                                        />
+                                                        <button type="button" onClick={() => handleOtpVerify(index, 'email')} className="px-2 py-1 h-8 rounded-md bg-blue-600 text-white text-[11px] font-semibold hover:bg-blue-700 shadow-sm">
+                                                            Verify
+                                                        </button>
                                                     </div>
                                                 )}
                                             </div>

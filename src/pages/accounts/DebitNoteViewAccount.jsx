@@ -8,6 +8,8 @@ import api, { SERVER_URL } from '../../lib/api';
 
 const PLACE_OF_SUPPLY = 'Delhi (07)';
 const NAVY = '#0d1f3c';
+const BAND_HEIGHT = 24;
+const FOOTER_BAND_HEIGHT = BAND_HEIGHT;
 
 const formatDate = (date) => {
   if (!date) return '—';
@@ -17,6 +19,18 @@ const formatDate = (date) => {
 };
 
 const fmtNum = (value) => Math.round(Number(value || 0)).toLocaleString('en-IN');
+
+const formatSize = (value) => {
+  if (!value) return '-';
+  const valStr = String(value).toLowerCase().replace(/m$/, '').trim();
+  return `${valStr.replace(/\s*[xX*]\s*/g, ' × ').trim()} m`;
+};
+
+const formatArea = (value) => {
+  if (!value) return '-';
+  const valStr = String(value).toLowerCase().replace(/sqm$/, '').replace(/sq\.m$/, '').trim();
+  return `${valStr} sqm`;
+};
 
 const toWords = (n) => {
   const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
@@ -42,37 +56,152 @@ const detailRow = (label, value, opts = {}) => (
   </tr>
 );
 
+const plainDetailRow = (label, value, opts = {}) => (
+  <tr key={label}>
+    <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>{label}</td>
+    <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+    <td style={{ border: 'none', padding: '1px 0', ...(opts.style || {}) }}>{value || '—'}</td>
+  </tr>
+);
+
+const CompactDetailRows = ({ rows }) => (
+  <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: 1.3, width: 'auto' }}>
+    <tbody>
+      {rows.map(([label, value]) => (
+        <tr key={label}>
+          <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>{label}</td>
+          <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0' }}>:</td>
+          <td style={{ border: 'none', padding: '1px 0', wordBreak: 'break-word' }}>{value || '—'}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+);
+
 const WhatsAppIcon = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
 );
 
-const FooterBlock = ({ settings }) => (
-  <div className="avoid-break" style={{ position: 'relative', height: 82, overflow: 'hidden', border: '1px solid #ccc', borderTop: 'none' }}>
-    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 34, background: NAVY, zIndex: 0 }} />
-    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, fontSize: 10, fontWeight: 600, color: NAVY, zIndex: 2, background: '#fff' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><WhatsAppIcon /> {settings?.contactPhone || '+91 96549 00525'}</div>
-      <div style={{ width: 1, height: 12, background: '#ccc' }} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Mail size={12} /> {settings?.contactEmail || 'info@namogangewellness.com'}</div>
-      <div style={{ width: 1, height: 12, background: '#ccc' }} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Globe size={12} /> {settings?.contactWebsite || 'www.namogangewellness.com'}</div>
-    </div>
-    <div style={{ position: 'absolute', top: 28, left: 0, right: 0, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#666', zIndex: 2, background: '#fff' }}>
-      <span><b style={{ color: '#333' }}>Note:</b> Applicable TDS, if deducted, must be supported with TDS certificate / Form 16A.</span>
-    </div>
-    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10.5, zIndex: 2 }}>
-      <span>This is a computer generated document and does not require a physical signature.</span>
-    </div>
-  </div>
-);
+const ReceiptSignatureBlock = ({ note, settings, receiptSettings, mediaUrl }) => {
+  if (!receiptSettings?.showSignatureStamp) return null;
 
-const SectionIconHeader = ({ icon: Icon, label }) => (
-  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: NAVY, color: '#fff', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', padding: '4px 6px' }}>
-    {Icon && <Icon size={14} strokeWidth={2} />}
+  const borderColor = '#ccc';
+  const textMuted = '#000';
+  const authBandColor = 'rgb(241, 245, 249)';
+  const authBandTextColor = NAVY;
+  const headerH = BAND_HEIGHT;
+  const bodyH = 86;
+  const lineY = 42;
+  const detailsY = 51;
+  const captionY = 64;
+  const signatureTextSize = 8.2;
+  const authRows = [
+    {
+      label: 'PREPARED BY',
+      name: note.preparedBy?.name || 'N/A',
+      designation: note.preparedBy?.designation || 'Relationship Manager',
+      date: formatDate(note.debit_note_date),
+      signatureUrl: mediaUrl(note.preparedBy?.signatureImage),
+    },
+    {
+      label: 'REVIEWED BY',
+      name: note.reviewedBy?.name || 'N/A',
+      designation: note.reviewedBy?.designation || 'HOD',
+      date: formatDate(note.debit_note_date),
+      signatureUrl: mediaUrl(note.reviewedBy?.signatureImage),
+    },
+  ];
+
+  return (
+    <table className="avoid-break" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 4, border: `1px solid ${borderColor}` }}>
+      <tbody>
+        <tr>
+          {[...authRows, { label: `FOR ${(settings?.companyName || 'COMPANY').toUpperCase()}`, company: true }].map((col, idx) => (
+            <td key={col.label} style={{ width: '33.33%', padding: 0, border: 'none', borderRight: idx < 2 ? `1px solid ${borderColor}` : 'none', verticalAlign: 'top' }}>
+              <div style={{ height: headerH, background: authBandColor, color: authBandTextColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, lineHeight: 1, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase', padding: '0 8px' }}>
+                {col.label}
+              </div>
+              <div style={{ height: bodyH, position: 'relative', borderTop: `1px solid ${borderColor}`, boxSizing: 'border-box' }}>
+                {!col.company ? (
+                  <>
+                    {col.signatureUrl && (
+                      <img
+                        loading="lazy"
+                        decoding="async"
+                        src={col.signatureUrl}
+                        alt=""
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        style={{ position: 'absolute', top: 4, left: '50%', transform: 'translateX(-50%)', maxHeight: 36, maxWidth: 125, objectFit: 'contain', display: 'block' }}
+                      />
+                    )}
+                    <div style={{ position: 'absolute', left: 14, right: 14, top: lineY, borderTop: `1px solid ${borderColor}` }} />
+                    <div style={{ position: 'absolute', left: 8, right: 8, top: detailsY, textAlign: 'center', color: '#111827', fontSize: signatureTextSize, lineHeight: 1.1, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {[col.name, col.designation, col.date].filter(Boolean).join(' / ')}
+                    </div>
+                    <div style={{ position: 'absolute', left: 0, right: 0, top: captionY, textAlign: 'center', color: textMuted, fontSize: signatureTextSize, lineHeight: 1, fontStyle: 'italic' }}>(Signature)</div>
+                  </>
+                ) : (
+                  <>
+                    {receiptSettings?.stampImage && (
+                      <img
+                        loading="lazy"
+                        decoding="async"
+                        src={mediaUrl(receiptSettings.stampImage)}
+                        alt=""
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-90px)', maxHeight: 54, maxWidth: 56, objectFit: 'contain', display: 'block' }}
+                      />
+                    )}
+                    {receiptSettings?.signatureImage && (
+                      <img
+                        loading="lazy"
+                        decoding="async"
+                        src={mediaUrl(receiptSettings.signatureImage)}
+                        alt=""
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        style={{ position: 'absolute', top: 13, left: '50%', transform: 'translateX(-24px)', maxHeight: 46, maxWidth: 155, objectFit: 'contain', display: 'block' }}
+                      />
+                    )}
+                    <div style={{ position: 'absolute', left: 14, right: 14, top: 65, borderTop: `1px solid ${borderColor}` }} />
+                    <div style={{ position: 'absolute', left: 0, right: 0, top: captionY + 4, textAlign: 'center', color: textMuted, fontSize: signatureTextSize, lineHeight: 1, fontStyle: 'italic' }}>
+                      {receiptSettings?.signatureLabel || 'Authorized Signatory'}
+                    </div>
+                  </>
+                )}
+              </div>
+            </td>
+          ))}
+        </tr>
+      </tbody>
+    </table>
+  );
+};
+
+const FooterBlock = ({ settings, receiptSettings }) => {
+  return (
+    <div className="avoid-break" style={{ position: 'relative', height: 52, overflow: 'hidden', border: '1px solid #ccc', borderTop: 'none' }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, fontSize: 11, fontWeight: 500, color: '#111827', zIndex: 2 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><WhatsAppIcon /> {settings?.contactPhone || '+91 96549 00525'}</div>
+        <div style={{ width: 1, height: 12, background: '#ccc' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Mail size={12} /> {settings?.contactEmail || 'info@namogangewellness.com'}</div>
+        <div style={{ width: 1, height: 12, background: '#ccc' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Globe size={12} /> {settings?.contactWebsite || 'www.namogangewellness.com'}</div>
+      </div>
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: FOOTER_BAND_HEIGHT, background: NAVY, color: '#fff', fontSize: 10, fontWeight: 500, zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>{receiptSettings?.footerDisclaimerText || 'This is a computer generated document and does not require a physical signature.'}</div>
+        <div style={{ position: 'absolute', right: 10, top: 6, width: 60, textAlign: 'right' }}>Page 1 of 1</div>
+      </div>
+    </div>
+  );
+};
+
+const SectionIconHeader = ({ label }) => (
+  <div className="section-header-text" style={{ boxSizing: 'border-box', background: NAVY, color: '#fff', fontWeight: 'bold', fontSize: 10, textTransform: 'uppercase', padding: '3px 2px', textAlign: 'center', lineHeight: 'normal' }}>
     {label}
   </div>
 );
 
-const DebitNotePrintTemplate = ({ note, company, settings }) => {
+const DebitNotePrintTemplate = ({ note, company, settings, receiptSettings }) => {
   const items = note.items || [];
   const totalTaxable = note.taxableAmount || items.reduce((sum, it) => sum + (Number(it.amount) || 0), 0);
   const totalGstAmount = note.gstAmount || items.reduce((sum, it) => sum + (Number(it.gstAmount) || 0), 0);
@@ -85,54 +214,124 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
   const companyName = note.clientName || company?.companyName || company?.exhibitorName || '—';
   const address = [company?.address, company?.city, company?.pincode ? `- ${company.pincode}` : '', company?.state, company?.country]
     .filter(Boolean).join(', ');
+  const contactPersonName = [c1.title, c1.firstName, c1.surname || c1.lastName].filter(Boolean).join(' ');
+  const contactPersonDesignation = c1.designation || company?.designation;
+  const contactPersonDisplay = [contactPersonName, contactPersonDesignation].filter(Boolean).join(' | ');
 
   const firstAllocation = (note.allocations || [])[0];
 
   const mediaUrl = (val) => !val ? null : (val.startsWith('http') ? val : `${SERVER_URL}${val}`);
-  const sigUrl = mediaUrl(settings?.authorizedSignature);
-  const stampUrl = mediaUrl(settings?.companyStamp);
 
   return (
-    <div className="bg-white border border-slate-300 p-6 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', maxWidth: '1000px', margin: '0 auto' }}>
+    <div className="debit-note-print bg-white border border-slate-300 p-6 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', fontSize: 11, lineHeight: 'normal', maxWidth: '1000px', margin: '0 auto 24px' }}>
+      <style>{`
+        .debit-note-print,
+        .debit-note-print * {
+          box-sizing: border-box;
+          font-family: Calibri, Arial, sans-serif !important;
+        }
+        .debit-note-print table {
+          max-width: 100%;
+        }
+        .debit-note-print th {
+          font-size: 10px !important;
+        }
+        .debit-note-print .item-details-table {
+          table-layout: fixed;
+          width: 100%;
+        }
+        .debit-note-print .item-details-table th,
+        .debit-note-print .item-details-table td {
+          overflow-wrap: anywhere;
+          word-break: break-word;
+        }
+        .debit-note-print .invoice-title-text {
+          font-size: 18px !important;
+          font-weight: 500 !important;
+          line-height: 1 !important;
+        }
+        .debit-note-print .invoice-copy-label {
+          right: 0 !important;
+          bottom: 3px !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          line-height: 1 !important;
+          letter-spacing: -0.35px !important;
+          max-width: none !important;
+          white-space: nowrap !important;
+          overflow: visible !important;
+          text-align: right !important;
+          transform: none !important;
+          transform-origin: initial !important;
+        }
+        .debit-note-print .section-header-text {
+          font-size: 10px !important;
+          font-weight: 700 !important;
+        }
+        @media print {
+          .debit-note-print {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+          }
+          .debit-note-print .invoice-copy-label {
+            right: 0 !important;
+            bottom: 3px !important;
+            font-family: Calibri, Arial, sans-serif !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            line-height: 1 !important;
+            letter-spacing: -0.35px !important;
+            padding-right: 2px !important;
+            white-space: nowrap !important;
+            text-align: right !important;
+            transform: none !important;
+            zoom: 1 !important;
+          }
+        }
+      `}</style>
       <div className="invoice-header-image" style={{ marginBottom: 0, textAlign: 'center' }}>
         <img loading="lazy" decoding="async" src={mainpic} alt="Header" style={{ width: '100%', maxWidth: '100%', display: 'block' }} />
       </div>
 
       <div
         className="invoice-title-bar"
-        style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 22, marginBottom: 0, paddingTop: 10, paddingBottom: 4, color: NAVY, textTransform: 'uppercase' }}
+        style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 22, marginBottom: 0, paddingTop: 10, paddingBottom: 4, color: NAVY, textTransform: 'uppercase', whiteSpace: 'nowrap' }}
       >
-        <div style={{ fontWeight: 500, fontSize: 18, lineHeight: 1, textAlign: 'center' }}>DEBIT NOTE</div>
-        <div className="invoice-copy-label" style={{ position: 'absolute', right: 0, bottom: 3, fontWeight: 600, fontSize: 11, lineHeight: 1, paddingRight: 2, whiteSpace: 'nowrap', textAlign: 'right', letterSpacing: '-0.35px' }}>ORIGINAL COPY</div>
+        <div className="invoice-title-text" style={{ fontWeight: 500, fontSize: 18, lineHeight: 1, textAlign: 'center' }}>DEBIT NOTE</div>
+        <div className="invoice-copy-label" style={{ position: 'absolute', right: 0, bottom: 3, fontWeight: 600, fontSize: 11, lineHeight: 1, paddingRight: 2, whiteSpace: 'nowrap', textAlign: 'right', letterSpacing: '-0.35px', transform: 'none' }}>ORIGINAL COPY</div>
       </div>
 
       {/* Billed To + Debit Note Details + Reason */}
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 4, border: '1px solid #ccc' }}>
-        <colgroup><col style={{ width: '38%' }} /><col style={{ width: '38%' }} /><col style={{ width: '24%' }} /></colgroup>
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 5 }}>
+        <colgroup><col style={{ width: '32%' }} /><col style={{ width: '33%' }} /><col style={{ width: '35%' }} /></colgroup>
         <thead>
           <tr>
-            <th style={{ border: 'none', borderRight: '1px solid #fff', padding: 0 }}><SectionIconHeader icon={SquarePen} label="Billed To (Customer Details)" /></th>
-            <th style={{ border: 'none', borderRight: '1px solid #fff', padding: 0 }}><SectionIconHeader icon={SquarePen} label="Debit Note Details" /></th>
-            <th style={{ border: 'none', padding: 0 }}><SectionIconHeader icon={SquarePen} label="Reason for Debit Note" /></th>
+            <th style={{ background: NAVY, color: '#fff', border: `1px solid ${NAVY}`, padding: 0, width: '32%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}><SectionIconHeader label="Billed To (Customer Details)" /></th>
+            <th style={{ background: NAVY, color: '#fff', border: `1px solid ${NAVY}`, padding: 0, width: '33%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}><SectionIconHeader label="Debit Note Details" /></th>
+            <th style={{ background: NAVY, color: '#fff', border: `1px solid ${NAVY}`, padding: 0, width: '35%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}><SectionIconHeader label="Reason for Debit Note" /></th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '8px', verticalAlign: 'top' }}>
-              <div style={{ fontWeight: 700, fontSize: 13, textTransform: 'uppercase', marginBottom: 2 }}>{companyName}</div>
-              <div style={{ marginBottom: 12 }}>{address || '—'}</div>
-              <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: 1.5, width: '100%' }}>
+            <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
+              <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{companyName}</div>
+              <div style={{ marginTop: 2, textTransform: 'capitalize' }}>{address || '—'}</div>
+              <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: 1.3, width: '100%', marginTop: 4 }}>
                 <tbody>
-                  {detailRow('Contact Person', [c1.title, c1.firstName, c1.surname].filter(Boolean).join(' '))}
-                  {detailRow('Contact No.', c1.mobile || company?.landline)}
-                  {detailRow('Email', c1.email || company?.email)}
-                  {detailRow('GSTIN/PAN', company?.gstNumber)}
+                  {plainDetailRow('Contact Person', contactPersonDisplay)}
+                  {plainDetailRow('Contact No.', c1.mobile || company?.landline)}
+                  {plainDetailRow('Email', c1.email || company?.email)}
+                  {plainDetailRow('GSTIN/PAN', note.gstin || company?.gstNumber)}
                 </tbody>
               </table>
             </td>
-            <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '8px', verticalAlign: 'top' }}>
-              <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: 1.5, width: '100%' }}>
+            <td style={{ border: '1px solid #ccc', padding: '4px 6px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
+              <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: 1.2, width: '100%', marginTop: 0 }}>
                 <tbody>
+                  {detailRow('Against Invoice No.', firstAllocation?.invoiceNo)}
+                  {detailRow('Against Invoice Date', formatDate(firstAllocation?.invoiceDate))}
+                  {detailRow('Adjustment Type', 'Against Invoice')}
                   {detailRow('Debit Note No.', note.debit_note_no)}
                   {detailRow('Debit Note Date', formatDate(note.debit_note_date))}
                   {detailRow('Original Invoice No.', firstAllocation?.invoiceNo)}
@@ -141,7 +340,7 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
                 </tbody>
               </table>
             </td>
-            <td style={{ border: 'none', padding: '8px', verticalAlign: 'top', whiteSpace: 'pre-wrap' }}>
+            <td style={{ border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', whiteSpace: 'pre-wrap', fontSize: 11 }}>
               <div style={{ fontWeight: 700, marginBottom: 4 }}>
                 {note.debitNoteType
                   ? note.debitNoteType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
@@ -154,36 +353,54 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
       </table>
 
       {/* Item Details */}
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 4 }}>
+      <table className="item-details-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 5, tableLayout: 'fixed' }}>
+        <colgroup>
+          <col style={{ width: '4%' }} />
+          <col style={{ width: '39%' }} />
+          <col style={{ width: '8%' }} />
+          <col style={{ width: '5%' }} />
+          <col style={{ width: '7%' }} />
+          <col style={{ width: '7%' }} />
+          <col style={{ width: '6%' }} />
+          <col style={{ width: '8%' }} />
+          <col style={{ width: '7%' }} />
+          <col style={{ width: '9%' }} />
+        </colgroup>
         <thead>
           <tr style={{ background: NAVY, color: '#fff', textTransform: 'uppercase' }}>
             {[
-              { label: 'S.No.', width: '5%' },
-              { label: 'Item Description', width: '42%' },
-              { label: 'HSN Code', width: '10%' },
-              { label: 'Qty.', width: '8%' },
-              { label: 'Unit', width: '8%' },
-              { label: 'Rate', width: '13%' },
-              { label: 'Total', width: '14%' },
+              { label: 'S.No.', width: '4%', compact: true },
+              { label: 'Item Description', width: '39%' },
+              { label: 'HSN Code', width: '8%' },
+              { label: 'Qty.', width: '5%' },
+              { label: 'Size', width: '7%' },
+              { label: 'Area', width: '7%' },
+              { label: 'Unit', width: '6%' },
+              { label: 'Rate', width: '8%' },
+              { label: 'Discount', width: '7%' },
+              { label: 'Total', width: '9%' },
             ].map((h) => (
-              <th key={h.label} style={{ border: `1px solid ${NAVY}`, padding: '3px 2px', textAlign: 'center', fontSize: 10, background: NAVY, color: '#fff', fontWeight: 'bold', width: h.width }}>{h.label}</th>
+              <th key={h.label} style={{ border: `1px solid ${NAVY}`, padding: h.compact ? '3px 1px' : '3px 2px', textAlign: 'center', fontSize: 10, background: NAVY, color: '#fff', fontWeight: 700, width: h.width, whiteSpace: 'nowrap' }}>{h.label}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {items.map((item, i) => (
             <tr key={i}>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{i + 1}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', fontWeight: 700 }}>{item.description}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item.hsn || '—'}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item.qty}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'center' }}>{item.unit}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right' }}>{fmtNum(item.rate)}</td>
-              <td style={{ border: '1px solid #ccc', padding: '6px', textAlign: 'right', fontWeight: 700 }}>{fmtNum(item.amount)}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{i + 1}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, fontWeight: 700, lineHeight: 1.15, whiteSpace: 'normal' }}>{item.description || '—'}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{item.hsn || '—'}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{item.qty}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{formatSize(item.area)}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{formatArea(item.size)}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>Nos</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{fmtNum(item.rate)}</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{Math.round(Number(item.discountPct || 0))}%</td>
+              <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}>{fmtNum(item.amount)}</td>
             </tr>
           ))}
           <tr style={{ background: '#f8fafc' }}>
-            <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right', textTransform: 'uppercase' }}>Total Before Tax</td>
+            <td colSpan={9} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right', textTransform: 'uppercase' }}>Total Before Tax</td>
             <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'right' }}>{fmtNum(totalTaxable)}</td>
           </tr>
         </tbody>
@@ -194,44 +411,44 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
         <tbody>
           <tr>
             <td style={{ width: '52%', verticalAlign: 'top', padding: 0, border: 'none' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ccc' }}>
+              <table style={{ width: '100%', height: '100%', borderCollapse: 'collapse', border: '1px solid #ccc' }}>
                 <thead><tr><th colSpan={4} style={{ border: 'none', padding: 0 }}><SectionIconHeader label="GST Details" /></th></tr></thead>
                 <tbody>
                   <tr style={{ background: '#f8fafc', fontWeight: 700, fontSize: 10 }}>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>Tax Head</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>Rate (%)</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>Taxable Value (₹)</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>Amount (₹)</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px 6px' }}>Tax Head</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px 6px' }}>Rate (%)</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px 6px' }}>Taxable Value (₹)</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px 6px' }}>Amount (₹)</td>
                   </tr>
                   <tr>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>CGST</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>{isIgst ? '-' : '9%'}</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>{isIgst ? '-' : fmtNum(totalTaxable)}</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>{isIgst ? '-' : fmtNum(totalGstAmount / 2)}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px 6px' }}>CGST</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px 6px' }}>{isIgst ? '-' : '9%'}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px 6px' }}>{isIgst ? '-' : fmtNum(totalTaxable)}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px 6px' }}>{isIgst ? '-' : fmtNum(totalGstAmount / 2)}</td>
                   </tr>
                   <tr>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>SGST</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>{isIgst ? '-' : '9%'}</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>{isIgst ? '-' : fmtNum(totalTaxable)}</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>{isIgst ? '-' : fmtNum(totalGstAmount / 2)}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px 6px' }}>SGST</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px 6px' }}>{isIgst ? '-' : '9%'}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px 6px' }}>{isIgst ? '-' : fmtNum(totalTaxable)}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px 6px' }}>{isIgst ? '-' : fmtNum(totalGstAmount / 2)}</td>
                   </tr>
                   <tr>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>IGST</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>{isIgst ? `${fmtNum((totalGstAmount / totalTaxable) * 100)}%` : '-'}</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>{isIgst ? fmtNum(totalTaxable) : '-'}</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>{isIgst ? fmtNum(totalGstAmount) : '-'}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px 6px' }}>IGST</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px 6px' }}>{isIgst ? `${fmtNum((totalGstAmount / totalTaxable) * 100)}%` : '-'}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px 6px' }}>{isIgst ? fmtNum(totalTaxable) : '-'}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px 6px' }}>{isIgst ? fmtNum(totalGstAmount) : '-'}</td>
                   </tr>
                   <tr style={{ background: '#f8fafc', fontWeight: 700 }}>
-                    <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px' }}>Total GST Amount</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px' }}>{fmtNum(totalGstAmount)}</td>
+                    <td colSpan={3} style={{ border: '1px solid #ccc', padding: '5px 6px' }}>Total GST Amount</td>
+                    <td style={{ border: '1px solid #ccc', padding: '5px 6px' }}>{fmtNum(totalGstAmount)}</td>
                   </tr>
                 </tbody>
               </table>
             </td>
             <td style={{ width: '2%', border: 'none' }} />
             <td style={{ width: '46%', verticalAlign: 'top', padding: 0, border: 'none' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ccc' }}>
-                <thead><tr><th style={{ border: 'none', padding: 0 }}><SectionIconHeader label="Amount Summary" /></th></tr></thead>
+              <table style={{ width: '100%', height: '100%', borderCollapse: 'collapse', border: '1px solid #ccc' }}>
+                <thead><tr><th colSpan={2} style={{ border: 'none', padding: 0 }}><SectionIconHeader label="Amount Summary" /></th></tr></thead>
                 <tbody>
                   {[
                     ['Debit Amount (Before Tax)', fmtNum(totalTaxable), false],
@@ -240,7 +457,7 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
                     ['TDS Impact (If Any)', fmtNum(tdsAmount), false],
                     ['NET PAYABLE AMOUNT', fmtNum(netPayable), true],
                   ].map(([label, value, strong]) => (
-                    <tr key={label} style={strong ? { background: '#fff7ed' } : undefined}>
+                    <tr key={label} style={{ height: '20%', ...(strong ? { background: '#fff7ed' } : {}) }}>
                       <td style={{ border: '1px solid #ccc', padding: '5px 6px', fontWeight: strong ? 700 : 500 }}>{label}</td>
                       <td style={{ border: '1px solid #ccc', padding: '5px 6px', textAlign: 'right', fontWeight: strong ? 700 : 500, color: strong ? '#c2410c' : undefined }}>₹ {value}</td>
                     </tr>
@@ -252,92 +469,25 @@ const DebitNotePrintTemplate = ({ note, company, settings }) => {
         </tbody>
       </table>
 
-      {/* Additional Details */}
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 4, border: '1px solid #ccc' }}>
-        <thead><tr><th colSpan={4} style={{ border: 'none', padding: 0 }}><SectionIconHeader label="Additional Details" /></th></tr></thead>
-        <tbody>
-          <tr style={{ background: '#f8fafc', fontWeight: 700, fontSize: 10 }}>
-            <td style={{ border: '1px solid #ccc', padding: '4px 8px', width: '34%' }}>This Debit Note is raised against the following invoice.</td>
-            <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'center' }}>Against Invoice No.</td>
-            <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'center' }}>Against Invoice Date</td>
-            <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'center' }}>Adjustment Type</td>
-          </tr>
-          <tr>
-            <td style={{ border: '1px solid #ccc', padding: '4px 8px' }} />
-            <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'center' }}>{firstAllocation?.invoiceNo || '—'}</td>
-            <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'center' }}>{formatDate(firstAllocation?.invoiceDate)}</td>
-            <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'center' }}>Against Invoice</td>
-          </tr>
-        </tbody>
-      </table>
-
       {/* Amount in Words + Value */}
       <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 4 }}>
         <tbody>
-          <tr>
-            <td style={{ width: '70%', border: '1px solid #ccc', padding: '4px 6px', verticalAlign: 'middle' }}>
+          <tr style={{ background: 'rgb(241, 245, 249)' }}>
+            <td style={{ width: '70%', border: '1px solid #ccc', padding: '4px 6px', verticalAlign: 'middle', background: 'rgb(241, 245, 249)' }}>
               <span style={{ fontWeight: 700 }}>Amount in Words: </span>{toWords(grandTotal)}
             </td>
-            <td style={{ width: '30%', border: '1px solid #ccc', background: NAVY, color: '#fff', padding: '4px 6px', verticalAlign: 'middle' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <td style={{ width: '30%', height: BAND_HEIGHT, border: '1px solid #ccc', background: 'rgb(241, 245, 249)', color: NAVY, padding: '0 6px', verticalAlign: 'middle' }}>
+              <div style={{ height: BAND_HEIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>Debit Note Value</span>
-                <span style={{ fontSize: 15, fontWeight: 700 }}>₹ {fmtNum(grandTotal)}</span>
+                <span style={{ fontSize: 13, fontWeight: 700 }}>₹ {fmtNum(grandTotal)}</span>
               </div>
             </td>
           </tr>
         </tbody>
       </table>
 
-      <table className="avoid-break" style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ccc' }}>
-        <thead>
-          <tr>
-            <th style={{ width: '35%', border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '4px 6px', background: '#f8fafc', textAlign: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: NAVY, fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
-                <SquarePen size={14} strokeWidth={2} /> Prepared By
-              </div>
-            </th>
-            <th style={{ width: '35%', border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '4px 6px', background: '#f8fafc', textAlign: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: NAVY, fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
-                <SquarePen size={14} strokeWidth={2} /> Reviewed By
-              </div>
-            </th>
-            <th style={{ width: '30%', border: 'none', borderBottom: '1px solid #ccc', padding: '4px 6px', background: '#f8fafc', textAlign: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: NAVY, fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' }}>
-                <SquarePen size={14} strokeWidth={2} /> For {settings?.companyName || 'Namo Gange Wellness Pvt. Ltd.'}
-              </div>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            {[
-              { label: 'Prepared By', name: note.preparedBy?.name, designation: note.preparedBy?.designation, date: note.debit_note_date },
-              { label: 'Reviewed By', name: note.reviewedBy?.name, designation: note.reviewedBy?.designation, date: note.debit_note_date },
-            ].map((col, idx) => (
-              <td key={idx} style={{ width: '35%', border: 'none', borderRight: '1px solid #ccc', padding: '8px', verticalAlign: 'top', fontSize: 10 }}>
-                <table style={{ borderCollapse: 'collapse', border: 'none', width: '100%', lineHeight: 1.5 }}>
-                  <tbody>
-                    {detailRow('Name', col.name)}
-                    {detailRow('Designation', col.designation)}
-                    {detailRow('Date', formatDate(col.date))}
-                  </tbody>
-                </table>
-                <div style={{ borderTop: '1px solid #ccc', marginTop: 40, paddingTop: 4, textAlign: 'center', color: '#888', fontStyle: 'italic', fontSize: 9 }}>(Signature)</div>
-              </td>
-            ))}
-            <td style={{ width: '30%', border: 'none', padding: '2px 8px 8px', textAlign: 'center', verticalAlign: 'bottom' }}>
-              <div style={{ height: 55, marginTop: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-                {sigUrl && <img loading="lazy" decoding="async" src={sigUrl} alt="Signature" style={{ maxHeight: 55, maxWidth: 120 }} />}
-                {stampUrl && <img loading="lazy" decoding="async" src={stampUrl} alt="Stamp" style={{ maxHeight: 55, maxWidth: 55 }} />}
-              </div>
-              <div style={{ borderTop: '1px solid #ccc', margin: '35px 10px 8px' }}></div>
-              <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 10, marginTop: 6 }}>Authorized Signatory.</div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <FooterBlock settings={settings} />
+      <ReceiptSignatureBlock note={note} settings={settings} receiptSettings={receiptSettings} mediaUrl={mediaUrl} />
+      <FooterBlock settings={settings} receiptSettings={receiptSettings} />
     </div>
   );
 };
@@ -349,6 +499,7 @@ const DebitNoteViewAccount = () => {
   const [note, setNote] = useState(null);
   const [company, setCompany] = useState(null);
   const [settings, setSettings] = useState(null);
+  const [receiptSettings, setReceiptSettings] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -383,8 +534,12 @@ const DebitNoteViewAccount = () => {
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const res = await api.get('/api/settings');
-        setSettings(res.data?.data || res.data || null);
+        const [settingsRes, receiptSettingsRes] = await Promise.all([
+          api.get('/api/settings'),
+          api.get('/api/payment-receipt-settings').catch(() => ({ data: null })),
+        ]);
+        setSettings(settingsRes.data?.data || settingsRes.data || null);
+        setReceiptSettings(receiptSettingsRes.data?.data || receiptSettingsRes.data || null);
       } catch (err) {
         console.error('Failed to load settings', err);
       }
@@ -437,7 +592,7 @@ const DebitNoteViewAccount = () => {
         </button>
       </div>
       <div ref={printRef}>
-        <DebitNotePrintTemplate note={note} company={company} settings={settings} />
+        <DebitNotePrintTemplate note={note} company={company} settings={settings} receiptSettings={receiptSettings} />
       </div>
     </div>
   );

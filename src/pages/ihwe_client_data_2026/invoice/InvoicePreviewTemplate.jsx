@@ -708,7 +708,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                     <td style={{ border: '1px solid #ccc', padding: 3 }}>{item.description || '—'}</td>
                                     <td style={{ border: '1px solid #ccc', padding: 3, textAlign: 'center' }}>{item.hsn || '—'}</td>
                                     <td style={{ border: '1px solid #ccc', padding: 3, textAlign: 'center' }}>{item.qty ?? '—'}</td>
-                                    <td style={{ border: '1px solid #ccc', padding: 3, textAlign: 'center' }}>{item.unit || '—'}</td>
+                                    <td style={{ border: '1px solid #ccc', padding: 3, textAlign: 'center' }}>Nos</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -734,7 +734,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                         { label: 'Discount', width: '7%' },
                         { label: 'Total', width: '9%' },
                     ].map(h => (
-                        <th key={h.label} style={{ border: '1px solid #0d1f3c', padding: '3px 2px', textAlign: 'center', fontSize: 9, background: '#0d1f3c', color: '#fff', fontWeight: 'bold', width: h.width, whiteSpace: 'nowrap' }}>{h.label}</th>
+                        <th key={h.label} style={{ border: '1px solid #0d1f3c', padding: '3px 2px', textAlign: 'center', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold', width: h.width, whiteSpace: 'nowrap' }}>{h.label}</th>
                     ))}
                 </tr>
             </thead>
@@ -743,23 +743,23 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                     const discountPercent = getDiscountPercent(item);
                     return (
                         <tr key={`${startIndex}-${index}`}>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{startIndex + index + 1}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, lineHeight: 1.15 }}>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{startIndex + index + 1}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, fontWeight: 500, lineHeight: 1.15 }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
                                     <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>9TH EDITION OF INTERNATIONAL HEALTH & WELLNESS EXPO (IHWE GLOBAL EDITION)</div>
-                                    <div style={{ fontSize: 10, color: '#555', whiteSpace: 'pre-wrap' }}>
+                                    <div style={{ fontSize: 10, fontWeight: 500, color: '#555', whiteSpace: 'pre-wrap' }}>
                                         {item?.description}
                                         {item?.remarks ? `\n${item.remarks}` : ''}
                                     </div>
                                 </div>
                             </td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{item?.hsn || item?.hsnCode || item?.hsn_code || '—'}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{item?.qty ?? item?.quantity ?? '—'}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{formatSize(item?.area)}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{formatArea(item?.size)}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>Nos</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', whiteSpace: 'nowrap', fontSize: 10 }}>{fmtNum(item?.rate ?? item?.unit_rate ?? item?.price)}</td>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{fmtNum(discountPercent)}%</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{item?.hsn || item?.hsnCode || item?.hsn_code || '—'}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{item?.qty ?? item?.quantity ?? '—'}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{formatSize(item?.area)}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{formatArea(item?.size)}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>Nos</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{fmtNum(item?.rate ?? item?.unit_rate ?? item?.price)}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{fmtNum(discountPercent)}%</td>
                             <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontWeight: 700, whiteSpace: 'nowrap', fontSize: 10 }}>{fmtNum(getItemTaxable(item))}</td>
                         </tr>
                     );
@@ -847,18 +847,18 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                         </tr>
                     );
                 })}
-                <tr style={{ background: '#f8fafc', textTransform: 'uppercase' }}>
-                    <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>GST Amount in Words ({currAbbr})</td>
-                    <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center' }}>{toWords(Math.round(totalGstAmount))}</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, whiteSpace: 'nowrap', textAlign: 'center' }}>Total GST Amt</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>{fmtNum(totalGstAmount)}</td>
+                <tr style={{ background: 'rgb(241, 245, 249)', textTransform: 'uppercase' }}>
+                    <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>GST Amount in Words ({currAbbr})</td>
+                    <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center', background: 'rgb(241, 245, 249)' }}>{toWords(Math.round(totalGstAmount))}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, whiteSpace: 'nowrap', textAlign: 'center', background: 'rgb(241, 245, 249)' }}>Total GST Amt</td>
+                    <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>{fmtNum(totalGstAmount)}</td>
                 </tr>
                 <tr style={{ height: 8 }}>{Array(11).fill(0).map((_, j) => <td key={j} style={{ border: 'none', padding: 0 }}></td>)}</tr>
-                <tr style={{ background: '#f8fafc', textTransform: 'uppercase' }}>
-                    <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>Amount in Words ({currAbbr})</td>
-                    <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center' }}>{toWords(Math.round(grandTotal))}</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>Grand Total</td>
-                    <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', fontSize: 13, color: '#000' }}>{fmtNum(grandTotal)}</td>
+                <tr style={{ background: 'rgb(241, 245, 249)', textTransform: 'uppercase' }}>
+                    <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>Amount in Words ({currAbbr})</td>
+                    <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center', background: 'rgb(241, 245, 249)' }}>{toWords(Math.round(grandTotal))}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>Grand Total</td>
+                    <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', fontSize: 10, color: '#000', background: 'rgb(241, 245, 249)' }}>{fmtNum(grandTotal)}</td>
                 </tr>
             </tbody>
         </table>
@@ -869,8 +869,8 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
             <table className="invoice-terms-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
                 <tbody>
                     <tr>
-                        <td style={{ width: '60%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                            <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Terms and Conditions:</div>
+                        <td style={{ width: '60%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fff' }}>
+                            <div style={{ fontWeight: 700, marginBottom: 4, background: 'rgb(241, 245, 249)', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Terms and Conditions:</div>
                             <div>1. Payment must be made in favor of Namo Gange Wellness Pvt. Ltd. via Cheque / DD / RTGS / NEFT / UPI only.</div>
                             <div>2. Full payment is due within the stipulated invoice period.</div>
                             <div>3. Delay in payment shall attract interest @24% per annum.</div>
@@ -878,9 +878,9 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                             <div>5. Cancellation or amendments shall be subject to company policy and management approval.</div>
                             <div>6. All disputes are subject to Delhi Jurisdiction only.</div>
                         </td>
-                        <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                            <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment Conditions:</div>
-                            <div style={{ fontWeight: 700 }}>1. 100% Advance Payment.</div>
+                        <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fff' }}>
+                            <div style={{ fontWeight: 700, marginBottom: 4, background: 'rgb(241, 245, 249)', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment Conditions:</div>
+                            <div>1. 100% Advance Payment.</div>
                         </td>
                     </tr>
                 </tbody>
@@ -895,7 +895,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                 </thead>
                 <tbody>
                     <tr>
-                        <td style={{ border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10 }}>
+                        <td className="ngwpl-bank-details" style={{ border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 7 }}>
                             <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: 'auto' }}>
                                 <tbody>
                                     <tr><td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none' }}>Bank Name</td><td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0' }}>:</td><td style={{ border: 'none', whiteSpace: 'nowrap', padding: '1px 0' }}>{bankDetails?.bankname || 'Kotak Mahindra Bank'}</td></tr>
@@ -923,7 +923,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
             <div style={{ fontSize: 12, textAlign: 'center', color: '#666', marginTop: 8, paddingTop: 6 }}>
                 <b>Registered Address:</b> First Floor, E-1, Opposite KFC, Kalkaji Main Market, South Delhi-110019, Delhi, India
             </div>
-            <div style={{ fontSize: 11, textAlign: 'center', color: '#999', marginTop: 4 }}>
+            <div style={{ height: 24, background: '#0d1f3c', color: '#fff', fontSize: 10, fontWeight: 500, textAlign: 'center', marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 This is a computer generated document and does not require a physical signature.
             </div>
         </div>
@@ -932,6 +932,31 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
     return (
         <div className="invoice-print-root bg-white border border-slate-300 p-10 text-[11px] font-sans text-black" style={{ fontFamily: 'Calibri, Arial, sans-serif', maxWidth: '1000px', margin: '0 auto', position: 'relative' }}>
             <style>{`
+                .invoice-print-root {
+                    font-family: Calibri, Arial, sans-serif !important;
+                    font-size: 11px !important;
+                    line-height: 1.2;
+                }
+                .invoice-print-root td {
+                    font-size: 11px !important;
+                }
+                .invoice-print-root th {
+                    font-size: 10px !important;
+                }
+                .invoice-items-table td div,
+                .invoice-tax-table td div,
+                .invoice-terms-table td div {
+                    font-size: 11px !important;
+                }
+                .invoice-items-table th,
+                .invoice-tax-table th {
+                    font-size: 10px !important;
+                }
+                .ngwpl-bank-details,
+                .ngwpl-bank-details * {
+                    font-size: 7px !important;
+                    line-height: 1.2 !important;
+                }
                 .invoice-print-shell {
                     width: 100%;
                     border-collapse: collapse;
@@ -1013,6 +1038,24 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                         display: table-cell !important;
                         width: 100% !important;
                     }
+                    .invoice-bank-footer-print {
+                        table-layout: fixed !important;
+                    }
+                    .invoice-bank-footer-print > colgroup > col:nth-child(1) {
+                        width: 36% !important;
+                    }
+                    .invoice-bank-footer-print > colgroup > col:nth-child(2),
+                    .invoice-bank-footer-print > colgroup > col:nth-child(3) {
+                        width: 32% !important;
+                    }
+                    .invoice-bank-footer-print .receiver-ack-text {
+                        display: inline-block !important;
+                        max-width: 100% !important;
+                        white-space: normal !important;
+                        overflow-wrap: break-word !important;
+                        font-size: 10px !important;
+                        line-height: 1.2 !important;
+                    }
                     .invoice-print-shell > thead > tr > td {
                         padding-bottom: 0 !important;
                     }
@@ -1059,9 +1102,13 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                         table-layout: fixed !important;
                         width: 100% !important;
                     }
-                    .invoice-items-table th,
                     .invoice-items-table td {
-                        font-size: 9px !important;
+                        font-size: 11px !important;
+                        padding: 3px 2px !important;
+                        vertical-align: middle !important;
+                    }
+                    .invoice-items-table th {
+                        font-size: 10px !important;
                         padding: 3px 2px !important;
                         vertical-align: middle !important;
                     }
@@ -1078,10 +1125,14 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                         white-space: nowrap !important;
                         word-break: keep-all !important;
                     }
-                    .invoice-tax-table th,
                     .invoice-tax-table td {
                         white-space: nowrap !important;
-                        font-size: 9px !important;
+                        font-size: 11px !important;
+                        padding: 3px 2px !important;
+                    }
+                    .invoice-tax-table th {
+                        white-space: nowrap !important;
+                        font-size: 10px !important;
                         padding: 3px 2px !important;
                     }
                     .invoice-client-column { width: 34% !important; }
@@ -1103,7 +1154,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                     }
 
                     .taxable-total-cell {
-                        font-size: 9px !important;
+                        font-size: 11px !important;
                         line-height: 1.1 !important;
                         white-space: normal !important;
                         word-break: break-word !important;
@@ -1320,7 +1371,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                             { label: 'Discount', width: '7%' },
                                             { label: 'Total', width: '9%' },
                                         ].map(h => (
-                                            <th key={h.label} style={{ border: '1px solid #0d1f3c', padding: '3px 2px', textAlign: 'center', fontSize: 9, background: '#0d1f3c', color: '#fff', fontWeight: 'bold', width: h.width, whiteSpace: 'nowrap' }}>{h.label}</th>
+                                            <th key={h.label} style={{ border: '1px solid #0d1f3c', padding: '3px 2px', textAlign: 'center', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold', width: h.width, whiteSpace: 'nowrap' }}>{h.label}</th>
                                         ))}
                                     </tr>
                                 </thead>
@@ -1329,23 +1380,23 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                         const discountPercent = getDiscountPercent(item);
                                         return (
                                             <tr key={index}>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{index + 1}</td>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, lineHeight: 1.15 }}>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{index + 1}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, fontWeight: 500, lineHeight: 1.15 }}>
                                                     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
                                                         <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>9TH EDITION OF INTERNATIONAL HEALTH & WELLNESS EXPO (IHWE GLOBAL EDITION)</div>
-                                                        <div style={{ fontSize: 10, color: '#555', whiteSpace: 'pre-wrap' }}>
+                                                        <div style={{ fontSize: 10, fontWeight: 500, color: '#555', whiteSpace: 'pre-wrap' }}>
                                                             {item?.description}
                                                             {item?.remarks ? `\n${item.remarks}` : ''}
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{item?.hsn || item?.hsnCode || item?.hsn_code || '—'}</td>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{item?.qty ?? item?.quantity ?? '—'}</td>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{formatSize(item?.area)}</td>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{formatArea(item?.size)}</td>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>Nos</td>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', whiteSpace: 'nowrap', fontSize: 10 }}>{fmtNum(item?.rate ?? item?.unit_rate ?? item?.price)}</td>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10 }}>{fmtNum(discountPercent)}%</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{item?.hsn || item?.hsnCode || item?.hsn_code || '—'}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{item?.qty ?? item?.quantity ?? '—'}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{formatSize(item?.area)}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{formatArea(item?.size)}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>Nos</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'right', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{fmtNum(item?.rate ?? item?.unit_rate ?? item?.price)}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{fmtNum(discountPercent)}%</td>
                                                 <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontWeight: 700, whiteSpace: 'nowrap', fontSize: 10 }}>{fmtNum(getItemTaxable(item))}</td>
                                             </tr>
                                         );
@@ -1443,20 +1494,20 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                             </tr>
                                         );
                                     })}
-                                    <tr style={{ background: '#f8fafc', textTransform: 'uppercase' }}>
-                                        <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>GST Amount in Words ({currAbbr})</td>
-                                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center' }}>{toWords(Math.round(totalGstAmount))}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>Total GST Amount</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>{fmtNum(totalGstAmount)}</td>
+                                    <tr style={{ background: 'rgb(241, 245, 249)', textTransform: 'uppercase' }}>
+                                        <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>GST Amount in Words ({currAbbr})</td>
+                                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center', background: 'rgb(241, 245, 249)' }}>{toWords(Math.round(totalGstAmount))}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>Total GST Amount</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>{fmtNum(totalGstAmount)}</td>
                                     </tr>
                                     <tr style={{ height: 8 }}>
                                         {Array(11).fill(0).map((_, j) => <td key={j} style={{ border: 'none', padding: 0 }}></td>)}
                                     </tr>
-                                    <tr style={{ background: '#f8fafc', textTransform: 'uppercase' }}>
-                                        <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>Amount in Words ({currAbbr})</td>
-                                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center' }}>{toWords(Math.round(grandTotal))}</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center' }}>Grand Total</td>
-                                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', fontSize: 13, color: '#000' }}>{fmtNum(grandTotal)}</td>
+                                    <tr style={{ background: 'rgb(241, 245, 249)', textTransform: 'uppercase' }}>
+                                        <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>Amount in Words ({currAbbr})</td>
+                                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center', background: 'rgb(241, 245, 249)' }}>{toWords(Math.round(grandTotal))}</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>Grand Total</td>
+                                        <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', fontSize: 10, color: '#000', background: 'rgb(241, 245, 249)' }}>{fmtNum(grandTotal)}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1464,8 +1515,8 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                             <table className="invoice-terms-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
                                 <tbody>
                                     <tr>
-                                        <td style={{ width: '60%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                                            <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Terms and Conditions:</div>
+                                        <td style={{ width: '60%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fff' }}>
+                                            <div style={{ fontWeight: 700, marginBottom: 4, background: 'rgb(241, 245, 249)', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Terms and Conditions:</div>
                                             <div style={{ whiteSpace: 'pre-wrap' }}>
                                                 {estimateTerms?.termsAndConditions?.length ? (
                                                     estimateTerms.termsAndConditions.map((t, i) => <div key={i}>{i + 1}. {t}</div>)
@@ -1481,14 +1532,14 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fafafa' }}>
-                                            <div style={{ fontWeight: 700, marginBottom: 4, background: '#F8FAFC', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment Conditions:</div>
+                                        <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fff' }}>
+                                            <div style={{ fontWeight: 700, marginBottom: 4, background: 'rgb(241, 245, 249)', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment Conditions:</div>
                                             <div style={{ whiteSpace: 'pre-wrap' }}>
                                                 {estimateTerms?.paymentConditions?.length ? (
                                                     estimateTerms.paymentConditions.map((t, i) => <div key={i}>{i + 1}. {t}</div>)
                                                 ) : (
                                                     <>
-                                                        <div style={{ fontWeight: 700 }}>1. 100% Advance Payment.</div>
+                                                        <div>1. 100% Advance Payment.</div>
                                                         <div>2. Applicable TDS, if deducted, must be supported with TDS certificate / Form 16A.</div>
                                                     </>
                                                 )}
@@ -1498,7 +1549,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                 </tbody>
                             </table>
 
-                            <table className="avoid-break" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 0, border: '1px solid #ccc' }}>
+                            <table className="avoid-break invoice-bank-footer-print" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 0, border: '1px solid #ccc' }}>
                                 <colgroup>
                                     <col style={{ width: '33%' }} />
                                     <col style={{ width: '33%' }} />
@@ -1507,17 +1558,17 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                 <thead>
                                     <tr style={{ background: 'rgb(241, 245, 249)' }}>
                                         <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: 'rgb(241, 245, 249)', textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
                                                 <Landmark size={14} strokeWidth={2} /> NGWPL Bank Details
                                             </div>
                                         </th>
                                         <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: 'rgb(241, 245, 249)', textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
                                                 <SquarePen size={14} strokeWidth={2} /> Receiver's Acknowledgement
                                             </div>
                                         </th>
                                         <th style={{ border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: 'rgb(241, 245, 249)', textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
                                                 <SquarePen size={14} strokeWidth={2} /> For {companyName}
                                             </div>
                                         </th>
@@ -1525,7 +1576,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td rowSpan={2} style={{ border: 'none', borderRight: '1px solid #ccc', padding: '2px 8px 2px', verticalAlign: 'top', fontSize: 10, width: '33.33%' }}>
+                                        <td className="ngwpl-bank-details" rowSpan={2} style={{ border: 'none', borderRight: '1px solid #ccc', padding: '2px 8px 2px', verticalAlign: 'top', fontSize: 7, width: '33.33%' }}>
                                             <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: 'auto' }}>
                                                 <tbody>
                                                     <tr>
@@ -1557,7 +1608,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                             </table>
                                         </td>
                                         <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '2px 8px 8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
-                                            <span style={{ fontSize: 9, whiteSpace: 'nowrap' }}>Received the above goods / services in good condition.</span>
+                                            <span className="receiver-ack-text" style={{ fontSize: 11, whiteSpace: 'nowrap' }}>Received the above goods / services in good condition.</span>
                                         </td>
                                         <td style={{ border: 'none', padding: '8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
                                             <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
@@ -1569,19 +1620,19 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                     <tr>
                                         <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '0 8px 2px', verticalAlign: 'bottom' }}>
                                             <div style={{ borderTop: '1px solid #ccc', margin: '0 2px 4px' }}></div>
-                                            <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 10 }}>(Signature &amp; Company Seal)</div>
+                                            <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 11 }}>(Signature &amp; Company Seal)</div>
                                         </td>
                                         <td style={{ border: 'none', padding: '0 8px 2px', verticalAlign: 'bottom' }}>
                                             <div style={{ borderTop: '1px solid #ccc', margin: '0 2px 4px' }}></div>
-                                            <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 10 }}>Authorized Signatory.</div>
+                                            <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 11 }}>Authorized Signatory.</div>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
 
-                            <div className="avoid-break" style={{ position: 'relative', height: 62, overflow: 'hidden', border: '1px solid #ccc', borderTop: 'none' }}>
+                            <div className="avoid-break" style={{ position: 'relative', height: 52, overflow: 'hidden', border: '1px solid #ccc', borderTop: 'none' }}>
                                 {/* navy background — banner area only, bottom-anchored */}
-                                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 34, background: '#0d1f3c', zIndex: 0 }} />
+                                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 24, background: '#0d1f3c', zIndex: 0 }} />
 
                                 {/* contact row */}
                                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, fontSize: 11, fontWeight: 500, color: '#0d1f3c', zIndex: 2 }}>
@@ -1596,7 +1647,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                 </div>
 
                                 {/* banner text */}
-                                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10.5, zIndex: 2 }}>
+                                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, zIndex: 2 }}>
                                     <span>This is a computer generated document and does not require a physical signature.</span>
                                 </div>
                             </div>

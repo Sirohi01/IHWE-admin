@@ -950,18 +950,18 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
   const deliveryChallanNo = challan.challan_no || "-";
   const deliveryChallanDate = fmtDateOnly(challan.challan_date);
 
-  const th = { border: "1px solid #0d1f3c", background: "#0d1f3c", color: "#fff", padding: "3px 2px", fontSize: 10, lineHeight: 1.1, fontWeight: 700, textAlign: "center", textTransform: "uppercase" };
-  const td = { border: "1px solid #ccc", padding: "6px", fontSize: 11, lineHeight: 1.2, verticalAlign: "top" };
+  const th = { border: "1px solid #0d1f3c", background: "#0d1f3c", color: "#fff", padding: "3px 2px", fontSize: 10, lineHeight: 1.1, fontWeight: 700, textAlign: "center", textTransform: "uppercase", whiteSpace: "nowrap" };
+  const td = { border: "1px solid #ccc", padding: "4px 3px", fontSize: 10, lineHeight: 1.15, fontWeight: 500, verticalAlign: "top" };
   const topTh = { ...th };
-  const topTd = { ...td, padding: "4px 8px", fontSize: 9.5, lineHeight: "1.2" };
-  const topInfoLine = { margin: 0, padding: 0, fontSize: 9.5, lineHeight: 1.2 };
-  const labelCell = { border: "none", padding: "1px 4px 1px 0", fontSize: 9.5, fontWeight: 700, width: "1%", whiteSpace: "nowrap", lineHeight: 1.3 };
-  const colonCell = { border: "none", padding: "1px 4px 1px 0", fontSize: 9.5, fontWeight: 700, width: "1%", lineHeight: 1.3 };
-  const valueCell = { border: "none", padding: "1px 0", fontSize: 9.5, lineHeight: 1.3 };
-  const detailLabelCell = { ...labelCell, fontSize: 9.5, padding: "1px 4px 1px 0" };
-  const detailColonCell = { ...colonCell, fontSize: 9.5, padding: "1px 4px 1px 0" };
-  const detailValueCell = { ...valueCell, fontSize: 9.5, padding: "1px 0" };
-  const mutedCell = { ...td, background: "#f8fafc", fontWeight: 700, textTransform: "uppercase" };
+  const topTd = { ...td, padding: "4px 8px" };
+  const topInfoLine = { margin: 0, padding: 0, fontSize: 11, lineHeight: 1.2 };
+  const labelCell = { border: "none", padding: "1px 3px 1px 0", fontSize: 11, fontWeight: 700, width: "1%", whiteSpace: "nowrap", lineHeight: 1.3 };
+  const colonCell = { border: "none", padding: "1px 3px 1px 0", fontSize: 11, fontWeight: 700, width: "1%", lineHeight: 1.3 };
+  const valueCell = { border: "none", padding: "1px 0", fontSize: 11, lineHeight: 1.3 };
+  const detailLabelCell = { ...labelCell, fontSize: 11, padding: "1px 2px 1px 0" };
+  const detailColonCell = { ...colonCell, fontSize: 11, padding: "1px 6px 1px 3px" };
+  const detailValueCell = { ...valueCell, fontSize: 11, padding: "1px 0 1px 1px" };
+  const mutedCell = { ...td, background: "rgb(241, 245, 249)", fontWeight: 700, textTransform: "uppercase" };
 
   return (
     <div className="challan-print invoice-print-root bg-white border border-slate-300 p-10 text-[11px] font-sans text-black" style={{ fontFamily: "Calibri, Arial, sans-serif", maxWidth: "1000px", margin: "0 auto", position: "relative" }}>
@@ -1010,7 +1010,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
                 </td>
                 <td style={{ ...topTd, overflowWrap: "anywhere", wordBreak: "break-word" }}>
                   <div style={{ ...topInfoLine, fontWeight: 800, textTransform: "uppercase", marginBottom: 1 }}>{challan.event_name || "9TH EDITION OF INTERNATIONAL HEALTH & WELLNESS EXPO"}</div>
-                  <div style={{ ...topInfoLine, fontSize: 10.5, whiteSpace: "pre-wrap" }}>{shipmentAddress}</div>
+                  <div style={{ ...topInfoLine, fontSize: 11, whiteSpace: "pre-wrap" }}>{shipmentAddress}</div>
                   <table style={{ borderCollapse: "collapse", border: "none", lineHeight: 1.3, width: "100%", marginTop: 4 }}>
                     <tbody>
                       {[
@@ -1024,7 +1024,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
                           <tr key={label}>
                             <td style={labelCell}>{isCompanyGstRow ? "GST" : label}</td>
                             <td style={colonCell}>:</td>
-                            <td style={isCompanyGstRow ? { ...valueCell, whiteSpace: "nowrap", wordBreak: "keep-all", overflowWrap: "normal", fontSize: 10.5 } : valueCell}>{value}</td>
+                            <td style={isCompanyGstRow ? { ...valueCell, whiteSpace: "nowrap", wordBreak: "keep-all", overflowWrap: "normal", fontSize: 11 } : valueCell}>{value}</td>
                           </tr>
                         );
                       })}
@@ -1090,11 +1090,11 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
             <tbody>
               {items.map((item, index) => (
                 <tr key={`${item.sourceItemKey}-${index}`}>
-                  <td style={{ ...td, textAlign: "center" }}>{index + 1}</td>
+                  <td style={{ ...td, textAlign: "center", whiteSpace: "nowrap" }}>{index + 1}</td>
                   <td style={{ ...td, minHeight: 34 }}>
-                    <div style={{ fontWeight: 800, textTransform: "uppercase" }}>{challan.event_name || "9TH EDITION OF INTERNATIONAL HEALTH & WELLNESS EXPO"}</div>
-                    <div style={{ whiteSpace: "pre-wrap" }}>{item.description || "-"}</div>
-                    {item.remarks && <div style={{ whiteSpace: "pre-wrap" }}>{item.remarks}</div>}
+                    <div style={{ fontWeight: 700, textTransform: "uppercase" }}>{challan.event_name || "9TH EDITION OF INTERNATIONAL HEALTH & WELLNESS EXPO"}</div>
+                    <div style={{ fontWeight: 500, whiteSpace: "pre-wrap" }}>{item.description || "-"}</div>
+                    {item.remarks && <div style={{ fontWeight: 500, whiteSpace: "pre-wrap" }}>{item.remarks}</div>}
                   </td>
                   <td style={{ ...td, textAlign: "center" }}>{item.hsn || "-"}</td>
                   <td style={{ ...td, textAlign: "center" }}>{fmtNum(item.qty)}</td>
@@ -1153,20 +1153,20 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
                   </tr>
                 );
               })}
-              <tr style={{ background: "rgb(241, 245, 249)", textTransform: "uppercase" }}>
-                <td colSpan={3} style={{ ...td, fontWeight: 700, textAlign: "center" }}>GST Amount in Words (INR)</td>
-                <td colSpan={6} style={{ ...td, textTransform: "capitalize", textAlign: "center" }}>{toWords(totalGst)}</td>
-                <td style={{ ...td, fontWeight: 700, textAlign: "center", whiteSpace: "nowrap" }}>Total GST Amount</td>
-                <td style={{ ...td, fontWeight: 700, textAlign: "center" }}>{fmtNum(totalGst)}</td>
+              <tr>
+                <td colSpan={3} style={{ ...mutedCell, textAlign: "center" }}>GST Amount in Words (INR)</td>
+                <td colSpan={6} style={{ ...td, background: "rgb(241, 245, 249)", textTransform: "capitalize", textAlign: "center" }}>{toWords(totalGst)}</td>
+                <td style={{ ...mutedCell, textAlign: "center", whiteSpace: "nowrap" }}>Total GST Amount</td>
+                <td style={{ ...td, background: "rgb(241, 245, 249)", textAlign: "center", fontWeight: 700 }}>{fmtNum(totalGst)}</td>
               </tr>
               <tr style={{ height: 8 }}>
                 {Array(11).fill(0).map((_, cell) => <td key={cell} style={{ border: "none", padding: 0 }}></td>)}
               </tr>
-              <tr style={{ background: "rgb(241, 245, 249)", textTransform: "uppercase" }}>
-                <td colSpan={3} style={{ ...td, fontWeight: 700, textAlign: "center" }}>Amount in Words (INR)</td>
-                <td colSpan={6} style={{ ...td, textTransform: "capitalize", textAlign: "center" }}>{toWords(grandTotal)}</td>
-                <td style={{ ...td, fontWeight: 700, textAlign: "center" }}>Grand Total</td>
-                <td style={{ ...td, fontWeight: 700, textAlign: "center", fontSize: 13, color: "#000" }}>{fmtNum(grandTotal)}</td>
+              <tr>
+                <td colSpan={3} style={{ ...mutedCell, textAlign: "center" }}>Amount in Words (INR)</td>
+                <td colSpan={6} style={{ ...td, background: "rgb(241, 245, 249)", textTransform: "capitalize", textAlign: "center" }}>{toWords(grandTotal)}</td>
+                <td style={{ ...mutedCell, textAlign: "center" }}>Grand Total</td>
+                <td style={{ ...td, background: "rgb(241, 245, 249)", textAlign: "center", fontWeight: 700, fontSize: 10, color: "#000" }}>{fmtNum(grandTotal)}</td>
               </tr>
             </tbody>
           </table>
@@ -1174,7 +1174,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
           <table className="challan-remarks-table" style={{ width: "100%", borderCollapse: "collapse", marginBottom: 8 }}>
             <tbody>
               <tr>
-                <td style={{ ...td, width: '50%', verticalAlign: 'top', background: '#fafafa' }}>
+                <td style={{ ...td, width: '50%', verticalAlign: 'top', background: '#fff' }}>
                   <div style={{ fontWeight: 800, marginBottom: 6, background: 'rgb(241, 245, 249)', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Terms and Conditions:</div>
                   <div style={{ marginLeft: 4, whiteSpace: 'pre-wrap' }}>
                     {estimateTerms?.termsAndConditions?.length ? (
@@ -1190,7 +1190,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
                     )}
                   </div>
                 </td>
-                <td style={{ ...td, width: '50%', verticalAlign: 'top', background: '#fafafa' }}>
+                <td style={{ ...td, width: '50%', verticalAlign: 'top', background: '#fff' }}>
                   <div style={{ fontWeight: 800, marginBottom: 6, background: 'rgb(241, 245, 249)', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Delivery Notes:</div>
                   <div style={{ marginLeft: 4, whiteSpace: 'pre-wrap' }}>
                     {estimateTerms?.deliveryNotes?.length ? (
@@ -1224,17 +1224,17 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
               <thead>
                 <tr style={{ background: 'rgb(241, 245, 249)' }}>
                   <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: 'rgb(241, 245, 249)', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                       <Landmark size={14} strokeWidth={2} /> NGWPL Bank Details
                     </div>
                   </th>
                   <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: 'rgb(241, 245, 249)', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                       <SquarePen size={14} strokeWidth={2} /> Receiver's Acknowledgement
                     </div>
                   </th>
                   <th style={{ border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: 'rgb(241, 245, 249)', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10.5, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                       <SquarePen size={14} strokeWidth={2} /> For {companyName}
                     </div>
                   </th>
@@ -1242,7 +1242,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
               </thead>
               <tbody>
                 <tr>
-                  <td rowSpan={2} style={{ border: 'none', borderRight: '1px solid #ccc', padding: '2px 8px 2px', verticalAlign: 'top', fontSize: 10, width: '33.33%' }}>
+                  <td className="ngwpl-bank-details" rowSpan={2} style={{ border: 'none', borderRight: '1px solid #ccc', padding: '2px 8px 2px', verticalAlign: 'top', fontSize: 7, width: '33.33%' }}>
                     <table style={{ borderCollapse: "collapse", border: "none", lineHeight: 1.3, width: "auto" }}>
                       <tbody>
                         {[
@@ -1262,7 +1262,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
                     </table>
                   </td>
                   <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '2px 8px 8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
-                    <span style={{ fontSize: 9, whiteSpace: 'nowrap' }}>Received the above goods / services in good condition.</span>
+                    <span style={{ fontSize: 11, whiteSpace: 'nowrap' }}>Received the above goods / services in good condition.</span>
                   </td>
                   <td style={{ border: 'none', padding: '8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
                     <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
@@ -1274,17 +1274,17 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
                 <tr>
                   <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '0 8px 2px', verticalAlign: 'bottom' }}>
                     <div style={{ borderTop: '1px solid #ccc', margin: '0 2px 4px' }}></div>
-                    <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 10 }}>(Signature &amp; Company Seal)</div>
+                    <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 11 }}>(Signature &amp; Company Seal)</div>
                   </td>
                   <td style={{ border: 'none', padding: '0 8px 2px', verticalAlign: 'bottom' }}>
                     <div style={{ borderTop: '1px solid #ccc', margin: '0 2px 4px' }}></div>
-                    <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 10 }}>Authorized Signatory.</div>
+                    <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 11 }}>Authorized Signatory.</div>
                   </td>
                 </tr>
               </tbody>
             </table>
-            <div style={{ position: 'relative', height: 46, overflow: 'hidden', borderTop: '1px solid #ccc' }}>
-              <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 18, background: '#0d1f3c', zIndex: 0 }} />
+            <div className="avoid-break" style={{ position: 'relative', height: 52, overflow: 'hidden', border: '1px solid #ccc', borderTop: 'none' }}>
+              <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 24, background: '#0d1f3c', zIndex: 0 }} />
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, fontSize: 11, fontWeight: 500, color: '#0d1f3c', zIndex: 2 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
@@ -1295,7 +1295,7 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
                 <div style={{ width: 1, height: 12, background: '#ccc' }} />
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Globe size={12} /> www.namogangewellness.com</div>
               </div>
-              <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 9, zIndex: 2 }}>
+              <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, zIndex: 2 }}>
                 <span>This is a computer generated document and does not require a physical signature.</span>
               </div>
             </div>
@@ -1797,6 +1797,33 @@ const DeliveryChallanManager = () => {
       <style>{`
         body:has(.challan-view-page) footer { display:none!important }
 
+        .challan-print {
+          font-family: Calibri, Arial, sans-serif !important;
+          font-size: 11px !important;
+          line-height: 1.2;
+        }
+
+        .challan-print td {
+          font-size: 11px !important;
+        }
+
+        .challan-print th {
+          font-size: 10px !important;
+        }
+
+        .ngwpl-bank-details,
+        .ngwpl-bank-details * {
+          font-size: 7px !important;
+          line-height: 1.2 !important;
+        }
+
+        .challan-items-table td div,
+        .challan-tax-table td div,
+        .challan-remarks-table td div,
+        .challan-bank-table td div {
+          font-size: 11px !important;
+        }
+
         .challan-page-header {
           margin-bottom: 2px !important;
         }
@@ -1973,8 +2000,8 @@ const DeliveryChallanManager = () => {
           }
 
           .challan-detail-info-table td {
-            padding: 1px 4px 1px 0 !important;
-            font-size: 9.5px !important;
+            padding: 1px 2px 1px 0 !important;
+            font-size: 11px !important;
             line-height: 1.25 !important;
           }
 
@@ -2008,9 +2035,14 @@ const DeliveryChallanManager = () => {
             table-layout: fixed !important;
           }
 
-          .challan-items-table th,
           .challan-items-table td {
-            font-size: 9px !important;
+            font-size: 11px !important;
+            padding: 3px 2px !important;
+            vertical-align: middle !important;
+            line-height: 1.15 !important;
+          }
+          .challan-items-table th {
+            font-size: 10px !important;
             padding: 3px 2px !important;
             vertical-align: middle !important;
             line-height: 1.15 !important;
@@ -2030,10 +2062,15 @@ const DeliveryChallanManager = () => {
             word-break: keep-all !important;
           }
 
-          .challan-tax-table th,
           .challan-tax-table td {
             white-space: nowrap !important;
-            font-size: 9px !important;
+            font-size: 11px !important;
+            padding: 3px 2px !important;
+            line-height: 1.15 !important;
+          }
+          .challan-tax-table th {
+            white-space: nowrap !important;
+            font-size: 10px !important;
             padding: 3px 2px !important;
             line-height: 1.15 !important;
           }
@@ -2041,7 +2078,7 @@ const DeliveryChallanManager = () => {
           .challan-remarks-table td,
           .challan-bank-table td {
             padding: 6px 8px !important;
-            font-size: 10px !important;
+            font-size: 11px !important;
             line-height: 1.2 !important;
             vertical-align: top !important;
           }
