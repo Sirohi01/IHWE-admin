@@ -38,6 +38,7 @@ const SupportedBy = lazy(() => import("../pages/SupportedBy"));
 const UpcomingBrands = lazy(() => import("../pages/UpcomingBrands"));
 const Introduction = lazy(() => import("../pages/Introduction"));
 const NationalExpo = lazy(() => import("../pages/NationalExpo"));
+const CertificateSettings = lazy(() => import("../pages/CertificateSettings"));
 const IntegratedFormat = lazy(() => import("../pages/IntegratedFormat"));
 const WhyParticipateManagement = lazy(() => import("../pages/WhyParticipateManagement"));
 
@@ -314,6 +315,7 @@ const UpcomingEvent = lazy(() => import("../pages/UpcomingEvent"));
 // Marketing Materials
 const MarketingMaterialPage = lazy(() => import("../pages/ihwe_client_data_2026/MarketingMaterialPage"));
 const MarketingManagement = lazy(() => import("../pages/admin_management/MarketingManagement"));
+const Certificate = lazy(() => import("../pages/Certificate"));
 
 export default function AppRoutes() {
   return (
@@ -326,6 +328,7 @@ export default function AppRoutes() {
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="role-permissions" element={<RolePermissions />} />
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="certificate" element={<Certificate />} />
             <Route path="dashboard/add-payment" element={<AddPayment />} />
             <Route path="dashboard/account/AddPayment/:id" element={<AddPayment />} />
             <Route path="dashboard/account/:id/delivery-challans" element={<DeliveryChallanManager />} />
@@ -386,6 +389,7 @@ export default function AppRoutes() {
             <Route path="e-promotion-manage" element={<EPromotionManage />} />
             <Route path="why-visit-manage" element={<WhyVisitManagement />} />
             <Route path="marquee-text" element={<MarqueeManage />} />
+            <Route path="certificate-settings" element={<CertificateSettings />} />
             <Route path="/glimpse" element={<Glimpse />} />
             <Route path="/supported-by" element={<SupportedBy />} />
             <Route path="/upcoming-brands" element={<UpcomingBrands />} />

@@ -53,6 +53,12 @@ export const menuItems = [
     path: "/dashboard",
   },
   {
+    type: "item",
+    label: "Certificate",
+    icon: Award,
+    path: "/certificate",
+  },
+  {
     type: "dropdown",
     label: "IHWE 2026",
     icon: FileText,
@@ -792,4 +798,10 @@ export const menuItems = [
       }
     ],
   },
+  {
+    type: "item",
+    label: "Certificate Settings",
+    icon: Settings,
+    path: "/certificate-settings",
+  }
 ];
