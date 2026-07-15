@@ -38,14 +38,7 @@ api.interceptors.request.use(
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log("✅ Token Added");
-    } else {
-      if (!config.url.includes("/login") && !config.url.includes("/register")) {
-        console.warn("ℹ️ No token found");
-      }
     }
-
-    console.log("📤 API Request:", config.method.toUpperCase(), config.url);
 
     return config;
   },

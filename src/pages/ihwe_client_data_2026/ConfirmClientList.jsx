@@ -65,6 +65,13 @@ import ManageFinanceModal from './ManageFinanceModal';
 
 // Removed dummy rows
 
+// Module-level cache for non-registration data (events, settings, etc.)
+let _cachedMasterCompanies = null;
+let _cachedAllReviews = null;
+let _cachedEvents = null;
+let _cachedSettings = null;
+
+
 const ConfirmClientList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -82,77 +89,92 @@ const ConfirmClientList = () => {
   const { user } = useSelector(state => state.auth);
   const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, '') === 'superadmin';
 
+  // Server-side pagination state
   const [registrations, setRegistrations] = useState([]);
-  const [masterCompanies, setMasterCompanies] = useState([]);
-  const [allReviews, setAllReviews] = useState([]);
-  const [events, setEvents] = useState([]);
-  const [settings, setSettings] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [masterCompanies, setMasterCompanies] = useState(_cachedMasterCompanies || []);
+  const [allReviews, setAllReviews] = useState(_cachedAllReviews || []);
+  const [events, setEvents] = useState(_cachedEvents || []);
+  const [settings, setSettings] = useState(_cachedSettings || null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Finance Modal State
   const [isFinanceModalOpen, setIsFinanceModalOpen] = useState(false);
   const [selectedClientForFinance, setSelectedClientForFinance] = useState(null);
 
-  const fetchData = async () => {
+  // Fetch paginated registrations from backend
+  const fetchRegistrations = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [regRes, compRes, reviewRes, eventsRes, settingsRes] = await Promise.all([
-        api.get('/api/exhibitor-registration'),
-        api.get('/api/companies?dashboard=true').catch(() => ({ data: [] })),
-        api.get('/api/crm-exhibator-reviews').catch(() => ({ data: [] })),
-        api.get('/api/events/active').catch(() => ({ data: [] })),
-        api.get('/api/settings').catch(() => ({ data: null }))
-      ]);
-
+      const params = new URLSearchParams({
+        page,
+        limit,
+        ...(searchTerm && { search: searchTerm }),
+        ...(filterStage && { status: filterStage }),
+        ...(filterSource && { referredBy: filterSource }),
+        ...(filterIndustry && { industry: filterIndustry }),
+      });
+      const regRes = await api.get(`/api/exhibitor-registration?${params}`);
       if (regRes.data?.success) {
         setRegistrations(Array.isArray(regRes.data.data) ? regRes.data.data : []);
-      }
-
-      if (compRes.data && Array.isArray(compRes.data)) {
-        setMasterCompanies(compRes.data);
-      } else if (compRes.data?.data && Array.isArray(compRes.data.data)) {
-        setMasterCompanies(compRes.data.data);
-      }
-
-      if (reviewRes.data && Array.isArray(reviewRes.data)) {
-        setAllReviews(reviewRes.data);
-      } else if (reviewRes.data?.data && Array.isArray(reviewRes.data.data)) {
-        setAllReviews(reviewRes.data.data);
-      }
-
-      if (eventsRes.data?.success) {
-        setEvents(Array.isArray(eventsRes.data.data) ? eventsRes.data.data : []);
-      }
-
-      if (settingsRes.data?.success) {
-        setSettings(settingsRes.data.data);
+        setTotal(regRes.data.total || 0);
+        setTotalPages(regRes.data.totalPages || 1);
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error('Error fetching registrations:', error);
     } finally {
       setIsLoading(false);
     }
-  };
-  useEffect(() => {
-    fetchData();
-  }, []);
+  }, [page, limit, searchTerm, filterStage, filterSource, filterIndustry]);
 
-  // Frontend filtering and pagination
-  const filteredRegs = registrations.filter(r => {
-    if (filterStage && filterStage !== 'Converted' && (r.status || 'Converted') !== filterStage) return false;
-    if (filterSource && (r.referredBy || 'Direct') !== filterSource) return false;
-    if (filterIndustry && (r.natureOfBusiness || r.industrySector || r.typeOfBusiness) !== filterIndustry) return false;
-    if (searchTerm) {
-      const searchStr = `${r.exhibitorName} ${r.contact1?.email} ${r.contact1?.mobile}`.toLowerCase();
-      if (!searchStr.includes(searchTerm.toLowerCase())) return false;
+  // Fetch static data only once (cached)
+  const fetchStaticData = async () => {
+    try {
+      const [compRes, reviewRes, eventsRes, settingsRes] = await Promise.all([
+        _cachedMasterCompanies ? Promise.resolve({ data: _cachedMasterCompanies }) : api.get('/api/companies?dashboard=true').catch(() => ({ data: [] })),
+        _cachedAllReviews      ? Promise.resolve({ data: _cachedAllReviews })      : api.get('/api/crm-exhibator-reviews').catch(() => ({ data: [] })),
+        _cachedEvents          ? Promise.resolve({ data: { success: true, data: _cachedEvents } }) : api.get('/api/events/active').catch(() => ({ data: [] })),
+        _cachedSettings        ? Promise.resolve({ data: { success: true, data: _cachedSettings } }) : api.get('/api/settings').catch(() => ({ data: null })),
+      ]);
+
+      if (compRes.data && Array.isArray(compRes.data)) {
+        setMasterCompanies(compRes.data); _cachedMasterCompanies = compRes.data;
+      } else if (compRes.data?.data && Array.isArray(compRes.data.data)) {
+        setMasterCompanies(compRes.data.data); _cachedMasterCompanies = compRes.data.data;
+      }
+      if (reviewRes.data && Array.isArray(reviewRes.data)) {
+        setAllReviews(reviewRes.data); _cachedAllReviews = reviewRes.data;
+      } else if (reviewRes.data?.data && Array.isArray(reviewRes.data.data)) {
+        setAllReviews(reviewRes.data.data); _cachedAllReviews = reviewRes.data.data;
+      }
+      if (eventsRes.data?.success) {
+        const evts = Array.isArray(eventsRes.data.data) ? eventsRes.data.data : [];
+        setEvents(evts); _cachedEvents = evts;
+      }
+      if (settingsRes.data?.success) {
+        setSettings(settingsRes.data.data); _cachedSettings = settingsRes.data.data;
+      }
+    } catch (error) {
+      console.error('Error fetching static data:', error);
     }
-    return true;
-  });
+  };
 
-  const totalLeads = filteredRegs.length;
-  const totalPages = Math.ceil(totalLeads / limit);
-  const allCompanies = filteredRegs.slice((page - 1) * limit, page * limit);
+  // Initial load: static data once, registrations on every filter/page change
+  useEffect(() => { fetchStaticData(); }, []);
+
+  useEffect(() => {
+    const debounce = setTimeout(() => { fetchRegistrations(); }, searchTerm ? 400 : 0);
+    return () => clearTimeout(debounce);
+  }, [fetchRegistrations]);
+
+  // Current page data is directly from server — no frontend slicing needed
+  const allCompanies = registrations;
+  const totalLeads = total;
   const pagination = { totalPages };
+
+
 
   const isAllSelected = allCompanies.length > 0 && selectedIds.length === allCompanies.length;
   const onSelectAll = (e) => {
@@ -215,8 +237,8 @@ const ConfirmClientList = () => {
     </>
   );
 
-  const totalConverted = filteredRegs.length;
-  const existingClientsCount = filteredRegs.filter(reg => {
+  const totalConverted = registrations.length;
+  const existingClientsCount = registrations.filter(reg => {
     const rName = (reg.companyName || reg.exhibitorName || "").toLowerCase().trim();
     const rEmail1 = (reg.contact1?.email || "").toLowerCase().trim();
     const rEmail2 = (reg.contact2?.email || "").toLowerCase().trim();
@@ -248,11 +270,12 @@ const ConfirmClientList = () => {
   
   const newClientsCount = totalConverted - existingClientsCount;
   
-  const totalArea = filteredRegs.reduce((acc, curr) => acc + (Number(curr.participation?.stallSize) || Number(curr.stallSize) || 0), 0);
+  const totalArea = registrations.reduce((acc, curr) => acc + (Number(curr.participation?.stallSize) || Number(curr.stallSize) || 0), 0);
   
-  const totalRevenue = filteredRegs.reduce((acc, curr) => acc + (Number(curr.financeBreakdown?.netPayable) || Number(curr.participation?.total) || Number(curr.amountPaid) || 0), 0);
+  const totalRevenue = registrations.reduce((acc, curr) => acc + (Number(curr.financeBreakdown?.netPayable) || Number(curr.participation?.total) || Number(curr.amountPaid) || 0), 0);
   
-  const paymentReceived = filteredRegs.reduce((acc, curr) => acc + (Number(curr.amountPaid) || Number(curr.financeBreakdown?.paidAmount) || 0), 0);
+  const paymentReceived = registrations.reduce((acc, curr) => acc + (Number(curr.amountPaid) || Number(curr.financeBreakdown?.paidAmount) || 0), 0);
+
   
   const balancePayment = totalRevenue - paymentReceived;
 

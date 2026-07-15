@@ -34,8 +34,7 @@ export default function SalesTools() {
     
     const fetchLeads = async () => {
       try {
-        const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        const res = await axios.get(`${BASE_URL}/api/companies`);
+        const res = await api.get(`/api/companies?dashboard=true`);
         const data = res.data.data || res.data || [];
         setLeads(Array.isArray(data) ? data : []);
       } catch (error) {

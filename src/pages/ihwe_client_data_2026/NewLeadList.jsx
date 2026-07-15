@@ -73,7 +73,8 @@ const NewLeadList = () => {
   const pagination = companiesState?.pagination;
   const isLoading = companiesState?.loading ?? false;
   const userRole = user?.role?.trim();
-  console.log("usersed..", user);
+
+
 
   const hasFullNewLeadAccess = [
     "IHWE–Super Administrator",

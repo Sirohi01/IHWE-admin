@@ -2,9 +2,9 @@ import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import LoginPage from "../layout/LoginPage";
-const AdminLayout = lazy(() => import("../layout/AdminLayout"));
+import AdminLayout from "../layout/AdminLayout";
+import Dashboard from "../pages/Dashboard";
 const AdminUser = lazy(() => import("../layout/AdminUser"));
-const Dashboard = lazy(() => import("../pages/Dashboard"));
 const Crosual = lazy(() => import("../pages/HomeSlider"));
 const EventHighlightsPage = lazy(() => import("../pages/EventHighlights"));
 const FestivalCarousel = lazy(() => import("../pages/FestivalCarousel"));

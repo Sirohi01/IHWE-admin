@@ -16,6 +16,13 @@ import RemindersCard        from "./dashboard/RemindersCard";
 import NextActionPanel      from "./dashboard/NextActionPanel";
 import AccountDashboard     from "./dashboard/AccountDashboard";
 
+// ─── Module-Level Cache for Instant Loading ───────────────────────────────────
+let _cachedCompanies = null;
+let _cachedActivityLogs = null;
+let _cachedAllAdmins = null;
+let _cachedFullProfile = null;
+let _cachedTargets = null;
+
 const getTargetMonthForPeriod = (period) => {
   const now = new Date();
   const formatMonth = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -28,12 +35,12 @@ const getTargetMonthForPeriod = (period) => {
 export default function Dashboard() {
   // ─── State ──────────────────────────────────────────────────────────────────
   const [currentUser, setCurrentUser] = useState(null);
-  const [fullProfile, setFullProfile] = useState(null);
-  const [companies,   setCompanies]   = useState([]);
-  const [activityLogs, setActivityLogs] = useState([]);
-  const [targets,     setTargets]     = useState([]);
-  const [allAdmins,   setAllAdmins]   = useState([]);
-  const [loading,     setLoading]     = useState(true);
+  const [fullProfile, setFullProfile] = useState(_cachedFullProfile);
+  const [companies,   setCompanies]   = useState(_cachedCompanies || []);
+  const [activityLogs, setActivityLogs] = useState(_cachedActivityLogs || []);
+  const [targets,     setTargets]     = useState(_cachedTargets || []);
+  const [allAdmins,   setAllAdmins]   = useState(_cachedAllAdmins || []);
+  const [loading,     setLoading]     = useState(!_cachedCompanies);
   
   const [actualRevenue, setActualRevenue] = useState(0);
   const [actualConvertedCount, setActualConvertedCount] = useState(0);
@@ -53,6 +60,7 @@ export default function Dashboard() {
         const res = await api.get("/api/user-targets");
         if (res.data?.success) {
           setTargets(res.data.data || []);
+          _cachedTargets = res.data.data || [];
         }
       } catch (err) {
         console.error("Error fetching targets", err);
@@ -64,47 +72,29 @@ export default function Dashboard() {
   // ─── Fetch real revenue and leaderboard based on period ─────────────────────
   useEffect(() => {
     if (!currentUser) return;
-    const fetchRevenue = async () => {
+    
+    const fetchRevenueAndLeaderboard = async () => {
       try {
-        const res = await api.get(`/api/companies/achievement-revenue?username=${encodeURIComponent(currentUser.username)}&period=${globalPeriod}`);
-        if (res.data?.success) {
-          setActualRevenue(res.data.revenue || 0);
-          setActualConvertedCount(res.data.convertedCount || 0);
+        const username = encodeURIComponent(currentUser.username);
+        const [revenueRes, leaderboardRes] = await Promise.all([
+          api.get(`/api/companies/achievement-revenue?username=${username}&period=${globalPeriod}`),
+          api.get(`/api/companies/leaderboard?period=${globalPeriod}`)
+        ]);
+        
+        if (revenueRes.data?.success) {
+          setActualRevenue(revenueRes.data.revenue || 0);
+          setActualConvertedCount(revenueRes.data.convertedCount || 0);
+        }
+        
+        if (leaderboardRes.data?.success) {
+          setActualLeaderboard(leaderboardRes.data.leaderboard || []);
         }
       } catch (err) {
-        console.error("Error fetching achievement revenue", err);
+        console.error("Error fetching revenue/leaderboard", err);
       }
     };
     
-    const fetchLeaderboard = async () => {
-      try {
-        const res = await api.get(`/api/companies/leaderboard?period=${globalPeriod}`);
-        if (res.data?.success) {
-          setActualLeaderboard(res.data.leaderboard || []);
-        }
-      } catch (err) {
-        console.error("Error fetching leaderboard", err);
-      }
-    };
-    
-    fetchLeaderboard();
-  }, [currentUser, globalPeriod]);
-
-  // ─── Fetch real revenue based on period ─────────────────────
-  useEffect(() => {
-    if (!currentUser) return;
-    const fetchRevenue = async () => {
-      try {
-        const res = await api.get(`/api/companies/achievement-revenue?username=${encodeURIComponent(currentUser.username)}&period=${globalPeriod}`);
-        if (res.data?.success) {
-          setActualRevenue(res.data.revenue || 0);
-          setActualConvertedCount(res.data.convertedCount || 0);
-        }
-      } catch (err) {
-        console.error("Error fetching achievement revenue", err);
-      }
-    };
-    fetchRevenue();
+    fetchRevenueAndLeaderboard();
   }, [currentUser, globalPeriod]);
 
   // ─── Fetch actual calls made from CallLogs ───────────────────────────────────
@@ -131,20 +121,30 @@ export default function Dashboard() {
     if (!currentUser) return;
     const fetchData = async () => {
       try {
-        setLoading(true);
+        if (!_cachedCompanies) setLoading(true);
         const [compRes, actRes, admRes] = await Promise.all([
           api.get(`/api/companies?dashboard=true&username=${encodeURIComponent(currentUser.username)}&role=${encodeURIComponent(currentUser.role || '')}`),
           api.get("/api/activity-logs"),
           api.get("/api/admin/public-list"),
         ]);
-        if (compRes.data)                            setCompanies(compRes.data);
-        if (actRes.data?.success)                    setActivityLogs(actRes.data.data || []);
+        if (compRes.data) {
+          setCompanies(compRes.data);
+          _cachedCompanies = compRes.data;
+        }
+        if (actRes.data?.success) {
+          setActivityLogs(actRes.data.data || []);
+          _cachedActivityLogs = actRes.data.data || [];
+        }
         if (admRes.data?.success) {
           setAllAdmins(admRes.data.data || []);
+          _cachedAllAdmins = admRes.data.data || [];
           const match = admRes.data.data.find(
             u => u.username.toLowerCase() === currentUser.username.toLowerCase()
           );
-          if (match) setFullProfile(match);
+          if (match) {
+            setFullProfile(match);
+            _cachedFullProfile = match;
+          }
         }
       } catch (err) {
         console.error("Dashboard fetch error:", err);
