@@ -138,24 +138,34 @@ const Certificate = () => {
           {/* Header Row */}
           <div className="w-full flex justify-between items-start">
             {/* Left: Govt Logo */}
-            <div className={`w-[18%] flex flex-col items-center ${certData?.header_left_enable !== false ? '' : 'invisible'}`}>
-              <span className="text-[#7a5725] font-bold mb-[2%] underline underline-offset-[3px]" style={{ fontFamily: '"Aladin", cursive' }}>{certData?.header_left_heading || 'SUPPORTED BY:'}</span>
-              <img src={certData?.header_left_logo ? `${imgBaseUrl}${certData.header_left_logo}` : msmeLogo} alt="Left Logo" className="w-[85%] object-contain" />
+            <div className="w-[18%] flex flex-col items-center">
+              {certData?.header_left_enable !== false && (
+                <>
+                  <span className="text-[#7a5725] font-bold mb-[2%] underline underline-offset-[3px]" style={{ fontFamily: '"Aladin", cursive' }}>{certData?.header_left_heading || 'SUPPORTED BY:'}</span>
+                  <img src={certData?.header_left_logo ? `${imgBaseUrl}${certData.header_left_logo}` : msmeLogo} alt="Left Logo" className="w-[85%] object-contain" />
+                </>
+              )}
             </div>
 
             {/* Center: Namo Gange Logo & Presents */}
-            <div className={`w-[30%] flex flex-col items-center mt-[1%] ${certData?.header_center_enable !== false ? '' : 'invisible'}`}>
-              <img src={certData?.header_center_logo ? `${imgBaseUrl}${certData.header_center_logo}` : ngtLogo} alt="Center Logo" className="w-full object-contain" />
-              <p className="mt-[3%] text-3xl font-bold text-[#1f385c]" style={{ fontFamily: '"Aladin", cursive' }}>{certData?.header_center_text || 'Presents'}</p>
+            <div className="w-[30%] flex flex-col items-center mt-[1%]">
+              {certData?.header_center_enable !== false && (
+                <>
+                  <img src={certData?.header_center_logo ? `${imgBaseUrl}${certData.header_center_logo}` : ngtLogo} alt="Center Logo" className="w-full object-contain" />
+                  <p className="mt-[3%] text-3xl font-bold text-[#1f385c]" style={{ fontFamily: '"Aladin", cursive' }}>{certData?.header_center_text || 'Presents'}</p>
+                </>
+              )}
             </div>
 
             {/* Right: New Logo */}
-            <div className={`w-[18%] flex flex-col items-center ${certData?.header_right_enable ? '' : 'invisible'}`}>
-              <span className="text-[#7a5725] font-bold mb-[2%] underline underline-offset-[3px]" style={{ fontFamily: '"Aladin", cursive' }}>{certData?.header_right_heading || ''}</span>
-              {certData?.header_right_logo ? (
-                <img src={`${imgBaseUrl}${certData.header_right_logo}`} alt="Right Logo" className="w-[85%] object-contain" />
-              ) : (
-                <div className="w-[85%]"></div>
+            <div className="w-[18%] flex flex-col items-center">
+              {certData?.header_right_enable && (
+                <>
+                  <span className="text-[#7a5725] font-bold mb-[2%] underline underline-offset-[3px]" style={{ fontFamily: '"Aladin", cursive' }}>{certData?.header_right_heading || ''}</span>
+                  {certData?.header_right_logo && (
+                    <img src={`${imgBaseUrl}${certData.header_right_logo}`} alt="Right Logo" className="w-[85%] object-contain" />
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -262,7 +272,7 @@ const Certificate = () => {
                   <span className="text-[#7a5725] font-bold uppercase underline underline-offset-[3px] tracking-wide" style={{ fontFamily: '"Aladin", cursive' }}>Concurrent Events</span>
                 </div>
                 <div className="w-[14.29%] flex justify-center">
-                  <span className="text-[#7a5725] font-bold uppercase underline underline-offset-[3px] tracking-wide" style={{ fontFamily: '"Aladin", cursive' }}>Supported By:</span>
+                  <span className="text-[#7a5725] font-bold uppercase underline underline-offset-[3px] tracking-wide" style={{ fontFamily: '"Aladin", cursive' }}>{certData?.header_right_heading || 'Supported By:'}</span>
                 </div>
               </div>
               
