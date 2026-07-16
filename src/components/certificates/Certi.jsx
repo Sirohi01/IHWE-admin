@@ -77,7 +77,7 @@ const concurrentLogoSlots = [
 ];
 
 
-const Certi = ({ config, images }) => {
+const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }) => {
     const safeCompanyName = String(config?.recipientName || "").trim() || "";
 
     return (
@@ -773,7 +773,7 @@ const Certi = ({ config, images }) => {
                         className="logo-placeholder-grid initiative-logo-grid"
                         aria-label="{config?.initiativesTitle} logos"
                     >
-                        {initiativeLogoSlots.map((logo) => (
+                        {(customInitiatives && customInitiatives.length > 0 ? customInitiatives.map((src, i) => ({ id: `custom-init-${i}`, src, alt: "Custom Initiative" })) : initiativeLogoSlots).map((logo) => (
                             <div className="logo-placeholder-cell" key={logo.id}>
                                 {logo.src ? <img src={logo.src} alt={logo.alt} /> : null}
                             </div>
@@ -788,7 +788,7 @@ const Certi = ({ config, images }) => {
                         className="logo-placeholder-grid concurrent-logo-grid"
                         aria-label="Concurrent Events and Supporting Organizations logos"
                     >
-                        {concurrentLogoSlots.map((logo) => (
+                        {(customConcurrent && customConcurrent.length > 0 ? customConcurrent.map((src, i) => ({ id: `custom-conc-${i}`, src, alt: "Custom Concurrent", fit: "wide" })) : concurrentLogoSlots).map((logo) => (
                             <div
                                 className={`logo-placeholder-cell${logo.supportedBy ? " supported-by-cell" : ""}`}
                                 key={logo.id}

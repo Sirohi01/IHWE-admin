@@ -51,6 +51,23 @@ const CertificatesGenerator = () => {
     
     const [showImages, setShowImages] = useState(false);
     const [showText, setShowText] = useState(false);
+    const [initiativeImages, setInitiativeImages] = useState([]);
+    const [concurrentImages, setConcurrentImages] = useState([]);
+    const [showInitiatives, setShowInitiatives] = useState(false);
+    const [showConcurrent, setShowConcurrent] = useState(false);
+
+    const handleMultipleImageChange = (e, setter) => {
+        const files = Array.from(e.target.files);
+        const filePromises = files.map(file => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(file);
+            });
+        });
+        Promise.all(filePromises).then(results => setter(results));
+    };
+
 
     const handleTextChange = (e) => {
         const { name, value } = e.target;
@@ -99,6 +116,29 @@ const CertificatesGenerator = () => {
                         </div>
                     ))}
 
+
+                    <h3 onClick={() => setShowInitiatives(!showInitiatives)} style={{ fontSize: '16px', fontWeight: 'bold', marginTop: '10px', borderBottom: '1px solid #eee', paddingBottom: '5px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
+                        Initiative Logos (Multiple)
+                        <span>{showInitiatives ? '▼' : '▶'}</span>
+                    </h3>
+                    {showInitiatives && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                            <label style={{ fontSize: '12px', color: '#666' }}>Upload up to 24 images. Replaces default ones.</label>
+                            <input type="file" multiple accept="image/*" onChange={(e) => handleMultipleImageChange(e, setInitiativeImages)} style={{ fontSize: '12px' }} />
+                        </div>
+                    )}
+
+                    <h3 onClick={() => setShowConcurrent(!showConcurrent)} style={{ fontSize: '16px', fontWeight: 'bold', marginTop: '10px', borderBottom: '1px solid #eee', paddingBottom: '5px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
+                        Concurrent Event Logos (Multiple)
+                        <span>{showConcurrent ? '▼' : '▶'}</span>
+                    </h3>
+                    {showConcurrent && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                            <label style={{ fontSize: '12px', color: '#666' }}>Upload up to 7 images. Replaces default ones.</label>
+                            <input type="file" multiple accept="image/*" onChange={(e) => handleMultipleImageChange(e, setConcurrentImages)} style={{ fontSize: '12px' }} />
+                        </div>
+                    )}
+
                     <h3 onClick={() => setShowText(!showText)} style={{ fontSize: '16px', fontWeight: 'bold', marginTop: '10px', borderBottom: '1px solid #eee', paddingBottom: '5px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
                         Text Content
                         <span>{showText ? '▼' : '▶'}</span>
@@ -111,7 +151,7 @@ const CertificatesGenerator = () => {
                     ))}
                 </div>
                 <div className="cert-preview-container" style={{ flex: 1, backgroundColor: '#eeeeee', overflowY: 'auto' }}>
-                    <Certi config={config} images={images} />
+                    <Certi config={config} images={images} customInitiatives={initiativeImages} customConcurrent={concurrentImages} />
                 </div>
             </div>
         </div>
