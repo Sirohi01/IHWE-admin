@@ -155,7 +155,7 @@ const CertificateSettings = () => {
         }
 
         const payload = new FormData();
-        
+
         // Append all text/boolean data
         Object.keys(formData).forEach(key => {
             if (formData[key] !== null && formData[key] !== undefined) {
@@ -299,7 +299,7 @@ const CertificateSettings = () => {
                 <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <label className="block text-lg font-semibold mb-3 text-gray-700">Certificate Title Image (e.g. CERTIFICATE Of Participation & Appreciation)</label>
                     <input type="file" onChange={(e) => handleFileChange(e, 'certificate_title_image')} accept="image/*" className="mb-4 w-full p-2 bg-white border rounded" />
-                    
+
                     {localPreviews.certificate_title_image ? (
                         <div className="mt-2"><span className="text-xs text-green-600 font-bold mb-1 block">New Selection Preview:</span><img src={localPreviews.certificate_title_image} alt="Certificate Title Image Preview" className="h-20 object-contain border bg-white p-2 shadow-sm" /></div>
                     ) : previews.certificate_title_image && (
@@ -320,9 +320,9 @@ const CertificateSettings = () => {
                     />
 
                     <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Description 1 (Before Heading)</label>
-                    <textarea 
-                        name="certi_desc1" 
-                        value={formData.certi_desc1} 
+                    <textarea
+                        name="certi_desc1"
+                        value={formData.certi_desc1}
                         onChange={handleInputChange}
                         rows="2"
                         className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
@@ -330,9 +330,9 @@ const CertificateSettings = () => {
                     />
 
                     <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Description 1 (After Heading)</label>
-                    <textarea 
-                        name="certi_desc1_part2" 
-                        value={formData.certi_desc1_part2} 
+                    <textarea
+                        name="certi_desc1_part2"
+                        value={formData.certi_desc1_part2}
                         onChange={handleInputChange}
                         rows="3"
                         className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
@@ -340,9 +340,9 @@ const CertificateSettings = () => {
                     />
 
                     <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Description 2 (Second Paragraph)</label>
-                    <textarea 
-                        name="certi_desc2" 
-                        value={formData.certi_desc2} 
+                    <textarea
+                        name="certi_desc2"
+                        value={formData.certi_desc2}
                         onChange={handleInputChange}
                         rows="3"
                         className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
@@ -350,9 +350,9 @@ const CertificateSettings = () => {
                     />
 
                     <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Description 3 (Third Paragraph)</label>
-                    <textarea 
-                        name="certi_desc3" 
-                        value={formData.certi_desc3} 
+                    <textarea
+                        name="certi_desc3"
+                        value={formData.certi_desc3}
                         onChange={handleInputChange}
                         rows="2"
                         className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
@@ -360,9 +360,9 @@ const CertificateSettings = () => {
                     />
 
                     <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Address & Contact Info</label>
-                    <textarea 
-                        name="certi_address" 
-                        value={formData.certi_address} 
+                    <textarea
+                        name="certi_address"
+                        value={formData.certi_address}
                         onChange={handleInputChange}
                         rows="3"
                         className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
