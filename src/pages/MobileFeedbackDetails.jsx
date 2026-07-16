@@ -216,94 +216,133 @@ export default function MobileFeedbackDetails() {
                 <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><Star size={12} /></div>
                 <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-wider m-0">OVERALL EXPERIENCE SUMMARY</h2>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-center">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
                 <div className="flex flex-col items-center border-r border-slate-100 last:border-0 pr-1">
                   <p className="text-[8px] font-bold text-slate-500 mb-1.5 h-5 flex items-center justify-center leading-tight">Overall Expo<br />Experience</p>
                   <Smile size={20} className="text-emerald-500 mb-1.5" />
-                  <p className="text-[11px] font-bold text-slate-800 m-0">{responses?.overallRating || data.overallRating || "-"}</p>
+                  <p className="text-[11px] font-bold text-slate-800 m-0">{responses?.overallRating || "-"}</p>
                 </div>
                 <div className="flex flex-col items-center border-r border-slate-100 last:border-0 pr-1">
                   <p className="text-[8px] font-bold text-slate-500 mb-1.5 h-5 flex items-center justify-center leading-tight">Participate Next<br />Year</p>
                   <ThumbsUp size={20} className="text-blue-500 mb-1.5" />
-                  <p className="text-[11px] font-bold text-slate-800 m-0">{responses?.participateAgain || data.participateAgain || "-"}</p>
+                  <p className="text-[11px] font-bold text-slate-800 m-0">{responses?.participateAgain || "-"}</p>
+                </div>
+                <div className="flex flex-col items-center border-r border-slate-100 last:border-0 pr-1">
+                  <p className="text-[8px] font-bold text-slate-500 mb-1.5 h-5 flex items-center justify-center leading-tight">Met Expectations</p>
+                  <Star size={20} className="text-amber-500 mb-1.5" />
+                  <p className="text-[11px] font-bold text-slate-800 m-0">{responses?.meetExpectations || "-"}</p>
                 </div>
                 <div className="flex flex-col items-center pr-1">
-                  <p className="text-[8px] font-bold text-slate-500 mb-1.5 h-5 flex items-center justify-center leading-tight">Would Recommend<br />IHWE</p>
-                  <div className="flex gap-0.5 mt-0.5">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        size={13}
-                        className={i < (responses?.recommendOthers || data.recommendOthers || 0) ? "fill-amber-400 text-amber-400" : "fill-slate-100 text-slate-200"}
-                      />
-                    ))}
-                  </div>
+                  <p className="text-[8px] font-bold text-slate-500 mb-1.5 h-5 flex items-center justify-center leading-tight">Interest For Next<br />Edition</p>
+                  <Heart size={20} className="text-rose-500 mb-1.5" />
+                  <p className="text-[11px] font-bold text-slate-800 m-0">{responses?.interestNextEdition || "-"}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* STALL & VENUE EXPERIENCE */}
+            <SectionCard title="STALL & VENUE EXPERIENCE" icon={Building} headerBg="bg-[#6366F1]" headerText="text-white">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5">
+                <RatingRow label="Stall Location" value={responses?.stallLocationRating || responses?.stallLocation} />
+                <RatingRow label="Stall Construction" value={responses?.stallConstructionRating || responses?.stallConstruction} />
+                <RatingRow label="Housekeeping" value={responses?.housekeepingRating || responses?.housekeeping} />
+                <RatingRow label="Electricity / Internet" value={responses?.electricityRating || responses?.electricitySupport} />
+                <RatingRow label="Venue Facilities" value={responses?.venueFacilitiesRating || responses?.venueFacilities} />
+                <RatingRow label="Security" value={responses?.securityRating || responses?.securityArrangements} />
+              </div>
+            </SectionCard>
+
+            {/* VISITOR QUALITY & ROI */}
+            <SectionCard title="VISITOR QUALITY & ROI" icon={Users} headerBg="bg-[#0F766E]" headerText="text-white">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
+                <div className="text-center">
+                  <p className="text-[9px] font-bold text-slate-500 mb-1">Visitor Footfall</p>
+                  <div className="w-6 h-6 mx-auto rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 mb-1"><User size={12} /></div>
+                  <p className="text-[10px] font-bold text-emerald-600 m-0">{responses?.visitorFootfall || "-"}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[9px] font-bold text-slate-500 mb-1">Visitor Quality</p>
+                  <div className="w-6 h-6 mx-auto rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mb-1"><Star size={12} /></div>
+                  <p className="text-[10px] font-bold text-slate-800 m-0">{responses?.visitorQuality || "-"}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[9px] font-bold text-slate-500 mb-1">Buyer Meetings</p>
+                  <div className="w-6 h-6 mx-auto rounded-full bg-purple-50 flex items-center justify-center text-purple-600 mb-1"><Users size={12} /></div>
+                  <p className="text-[10px] font-bold text-slate-800 m-0">{responses?.buyerMeetings || "-"}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-slate-100 border-dashed">
+                <div className="text-center">
+                  <p className="text-[9px] font-bold text-slate-500 mb-1">Serious Business Leads</p>
+                  <div className="w-6 h-6 mx-auto rounded-full bg-orange-50 flex items-center justify-center text-orange-500 mb-1"><TrendingUp size={12} /></div>
+                  <p className="text-[10px] font-bold text-slate-800 m-0">{responses?.seriousLeads || "-"}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[9px] font-bold text-slate-500 mb-1">Business Expectations</p>
+                  <div className="w-6 h-6 mx-auto rounded-full bg-rose-50 flex items-center justify-center text-rose-500 mb-1"><Target size={12} /></div>
+                  <p className="text-[10px] font-bold text-slate-800 m-0">{responses?.meetExpectations || "-"}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[9px] font-bold text-slate-500 mb-1">Estimated Business Gen.</p>
+                  <div className="w-6 h-6 mx-auto rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 mb-1"><IndianRupee size={12} /></div>
+                  <p className="text-[10px] font-bold text-slate-800 m-0">{responses?.estimatedBusiness || "-"}</p>
+                </div>
+              </div>
+            </SectionCard>
+
+            {/* ORGANIZER SUPPORT & BRANDING */}
+            <div className="rounded-lg overflow-hidden shadow-sm border border-orange-100 bg-[#FFFaf5]">
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5">
+                <div className="text-orange-500"><Users size={14} /></div>
+                <h2 className="text-[11px] font-bold text-slate-800 uppercase tracking-wider m-0">ORGANIZER SUPPORT & BRANDING</h2>
+              </div>
+              <div className="p-2.5 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5">
+                <RatingRow label="Pre-Event Communication" value={responses?.preEventCommRating || responses?.preEventComm} />
+                <RatingRow label="Onsite Coordination" value={responses?.onsiteCoordinationRating || responses?.onsiteCoordination} />
+                <RatingRow label="Registration Process" value={responses?.registrationProcessRating || responses?.registrationProcess} />
+                <RatingRow label="Problem Resolution" value={responses?.problemResolutionRating || responses?.problemResolution} />
+                <RatingRow label="Help Desk Service" value={responses?.helpDeskRating || responses?.helpDeskService} />
+                <RatingRow label="Payment Support" value={responses?.paymentSupportRating || responses?.paymentSupport} />
+                <RatingRow label="RM Support" value={responses?.rmSupport} />
+                <RatingRow label="Marketing Support" value={responses?.marketingSupport} />
+                <RatingRow label="Post-Event Communication" value={responses?.postEventComm} />
+                <div className="flex items-center justify-between text-[10px] font-bold py-0.5">
+                  <span className="text-[9px] text-slate-500">Branding Effectiveness</span>
+                  <span className="text-[9px] text-emerald-600">{responses?.brandingEffectiveness || "-"}</span>
+                </div>
+                <div className="flex items-center justify-between text-[10px] font-bold py-0.5">
+                  <span className="text-[9px] text-slate-500">Sponsor Next Edition?</span>
+                  <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[8px] uppercase">{responses?.interestNextEdition || "-"}</span>
                 </div>
               </div>
             </div>
 
           </div>
 
-          {/* FEEDBACK & TESTIMONIAL (Full Width) */}
+          {/* SUGGESTIONS & REMARKS (Full Width) */}
           <div className="lg:col-span-3">
-            <SectionCard title="FEEDBACK & TESTIMONIAL" icon={MessageSquare} headerBg="bg-[#334155]" headerText="text-white">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {/* What did you like most */}
+            <SectionCard title="SUGGESTIONS & REMARKS" icon={MessageSquare} headerBg="bg-[#334155]" headerText="text-white">
+              <div className="space-y-2">
                 <div className="relative">
                   <div className="flex items-center gap-1.5 mb-1">
                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-100 border-2 border-emerald-500 shrink-0"></div>
-                    <h3 className="text-[9px] font-bold text-slate-800 m-0 tracking-wider uppercase">What They Liked Most</h3>
+                    <h3 className="text-[9px] font-bold text-slate-800 m-0 tracking-wider uppercase">IMPROVEMENTS NEEDED</h3>
                   </div>
                   <p className="text-[10px] text-slate-600 pl-4 leading-relaxed m-0 pr-6">
-                    {responses?.likedMost || data.likedMost || "No comments provided."}
+                    {responses?.improvements || "No comments provided."}
                   </p>
                   <Quote size={24} className="absolute right-0 top-0 text-slate-100 fill-slate-100" />
                 </div>
-
-                {/* Written Review */}
-                <div className="relative">
+                <div className="relative pt-2 border-t border-slate-100">
                   <div className="flex items-center gap-1.5 mb-1">
                     <div className="w-2.5 h-2.5 rounded-full bg-blue-100 border-2 border-blue-500 shrink-0"></div>
-                    <h3 className="text-[9px] font-bold text-slate-800 m-0 tracking-wider uppercase">Written Review</h3>
+                    <h3 className="text-[9px] font-bold text-slate-800 m-0 tracking-wider uppercase">SPECIAL SUGGESTIONS</h3>
                   </div>
                   <p className="text-[10px] text-slate-600 pl-4 leading-relaxed m-0 pr-6">
-                    {responses?.writtenReview || data.writtenReview || "No comments provided."}
+                    {responses?.specialSuggestions || "No comments provided."}
                   </p>
                   <Quote size={24} className="absolute right-0 top-0 text-slate-100 fill-slate-100" />
                 </div>
-              </div>
-
-              {/* Business Outcome */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3 pt-2 border-t border-slate-100">
-                <div className="text-center">
-                  <p className="text-[9px] font-bold text-slate-500 mb-1">Business Leads</p>
-                  <p className="text-[10px] font-bold text-slate-800 m-0">{responses?.businessLeads || data.businessLeads || "-"}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[9px] font-bold text-slate-500 mb-1">Business Generated</p>
-                  <p className="text-[10px] font-bold text-slate-800 m-0">{responses?.businessGenerated || data.businessGenerated || "-"}</p>
-                </div>
-              </div>
-
-              {/* Most Valuable Part */}
-              <div className="mt-3 pt-2 border-t border-slate-100">
-                <p className="text-[9px] font-bold text-slate-500 mb-1.5 tracking-wider uppercase">Most Valuable Part</p>
-                {((responses?.mostValuablePart?.length ?? 0) > 0 || (data.mostValuablePart?.length ?? 0) > 0 || responses?.mostValuablePartOther || data.mostValuablePartOther) ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {(responses?.mostValuablePart || data.mostValuablePart)?.map((item) => (
-                      <span key={item} className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-[9px] font-bold">
-                        {item}
-                      </span>
-                    ))}
-                    {(responses?.mostValuablePartOther || data.mostValuablePartOther) && (
-                      <span className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-[9px] font-bold">
-                        {responses?.mostValuablePartOther || data.mostValuablePartOther}
-                      </span>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-[10px] font-bold text-slate-800 m-0">-</p>
-                )}
               </div>
             </SectionCard>
           </div>
@@ -379,74 +418,65 @@ export default function MobileFeedbackDetails() {
 
           <div className={`mb-0 bg-transparent flex flex-col break-inside-avoid p-0 mt-2`}>
             <div className="flex items-center gap-3 border-b-[1pt] border-black pb-1 mb-1.5">
-              <h3 className="font-black uppercase tracking-wide text-[11pt] text-black">QUICK EVENT RATING</h3>
+              <h3 className="font-black uppercase tracking-wide text-[11pt] text-black">OVERALL EXPERIENCE</h3>
             </div>
             <div className="p-0 flex-1 grid grid-cols-2 gap-x-12 gap-y-0.5">
               <div className="flex items-end gap-2 py-0.5 border-b-[0.5pt] border-slate-300">
-                <span className="text-[8pt] text-slate-500 min-w-[140px] shrink-0 font-bold uppercase leading-tight">Overall Experience:</span>
-                <span className="text-[9pt] text-black font-semibold flex-1 pb-0.5 leading-tight">{responses?.overallRating || data.overallRating || '-'}</span>
+                <span className="text-[8pt] text-slate-500 min-w-[140px] shrink-0 font-bold uppercase leading-tight">Overall experience at the Expo?:</span>
+                <span className="text-[9pt] text-black font-semibold flex-1 pb-0.5 leading-tight">{responses?.overallRating || '-'}</span>
               </div>
               <div className="flex items-end gap-2 py-0.5 border-b-[0.5pt] border-slate-300">
-                <span className="text-[8pt] text-slate-500 min-w-[140px] shrink-0 font-bold uppercase leading-tight">Participate Again:</span>
-                <span className="text-[9pt] text-black font-semibold flex-1 pb-0.5 leading-tight">{responses?.participateAgain || data.participateAgain || '-'}</span>
+                <span className="text-[8pt] text-slate-500 min-w-[140px] shrink-0 font-bold uppercase leading-tight">Participate again next year?:</span>
+                <span className="text-[9pt] text-black font-semibold flex-1 pb-0.5 leading-tight">{responses?.participateAgain || '-'}</span>
               </div>
-              <div className="flex items-end gap-2 py-0.5 border-b-[0.5pt] border-slate-300">
-                <span className="text-[8pt] text-slate-500 min-w-[140px] shrink-0 font-bold uppercase leading-tight">Recommend Others:</span>
-                <span className="text-[9pt] text-black font-semibold flex-1 pb-0.5 leading-tight flex items-center">
-                  <div className="flex gap-0.5 items-center">
-                      {[1, 2, 3, 4, 5].map((star) => {
-                        const rating = responses?.recommendOthers || data.recommendOthers || 0;
-                        return (
-                          <span key={star} className="inline text-[13pt] leading-none" style={{ color: star <= rating ? "#000" : "#ddd" }}>
-                            {star <= rating ? '★' : '☆'}
-                          </span>
-                        );
-                      })}
+            </div>
+          </div>
+
+          <div className={`mb-0 bg-transparent flex flex-col break-inside-avoid p-0 mt-2`}>
+            <div className="flex items-center gap-3 border-b-[1pt] border-black pb-1 mb-1.5">
+              <h3 className="font-black uppercase tracking-wide text-[11pt] text-black">STALL & VENUE EXPERIENCE</h3>
+            </div>
+            <div className="p-0 flex-1 grid grid-cols-3 gap-x-8 gap-y-0.5">
+              {['Stall Location', 'Stall Construction', 'Venue Facilities', 'Housekeeping', 'Electricity/Internet', 'Security Arrangements'].map((label, idx) => {
+                const vals = [responses?.stallLocationRating || responses?.stallLocation, responses?.stallConstructionRating || responses?.stallConstruction, responses?.venueFacilitiesRating || responses?.venueFacilities, responses?.housekeepingRating || responses?.housekeeping, responses?.electricityRating || responses?.electricitySupport, responses?.securityRating || responses?.securityArrangements];
+                const value = vals[idx];
+                const rating = typeof value === 'number' ? value : 0;
+                return (
+                  <div key={label} className="flex flex-row items-start gap-2 py-0.5 min-w-0 text-left">
+                    <span className="text-[8.5pt] text-slate-500 font-bold normal-case leading-tight mb-0 w-36 shrink-0">{label}:</span>
+                    <div className="flex gap-0.5 items-center">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <span key={star} className="inline text-[13pt] leading-none" style={{ color: star <= rating ? "#000" : "#ddd" }}>
+                          {star <= rating ? '★' : '☆'}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </span>
-              </div>
+                )
+              })}
             </div>
           </div>
 
           <div className={`mb-0 bg-transparent flex flex-col break-inside-avoid p-0 mt-2`}>
             <div className="flex items-center gap-3 border-b-[1pt] border-black pb-1 mb-1.5">
-              <h3 className="font-black uppercase tracking-wide text-[11pt] text-black">BUSINESS OUTCOME</h3>
+              <h3 className="font-black uppercase tracking-wide text-[11pt] text-black">VISITOR QUALITY</h3>
             </div>
-            <div className="p-0 flex-1 grid grid-cols-2 gap-x-12 gap-y-0.5 text-left">
+            <div className="p-0 flex-1 grid grid-cols-1 gap-1 text-left">
               <div className="flex items-end gap-2 py-0.5 border-b-[0.5pt] border-slate-300">
-                <span className="text-[8pt] text-slate-500 min-w-[140px] shrink-0 font-bold uppercase leading-tight">Business Leads:</span>
-                <span className="text-[9pt] text-black font-semibold flex-1 pb-0.5 leading-tight">{responses?.businessLeads || data.businessLeads || '-'}</span>
+                <span className="text-[8pt] text-slate-500 min-w-[140px] shrink-0 font-bold uppercase leading-tight">Visitor Footfall:</span>
+                <span className="text-[9pt] text-black font-semibold flex-1 pb-0.5 leading-tight">{responses?.visitorFootfall || '-'}</span>
               </div>
               <div className="flex items-end gap-2 py-0.5 border-b-[0.5pt] border-slate-300">
-                <span className="text-[8pt] text-slate-500 min-w-[140px] shrink-0 font-bold uppercase leading-tight">Business Generated:</span>
-                <span className="text-[9pt] text-black font-semibold flex-1 pb-0.5 leading-tight">{responses?.businessGenerated || data.businessGenerated || '-'}</span>
+                <span className="text-[8pt] text-slate-500 min-w-[140px] shrink-0 font-bold uppercase leading-tight">Visitor Quality:</span>
+                <span className="text-[9pt] text-black font-semibold flex-1 pb-0.5 leading-tight">{responses?.visitorQuality || '-'}</span>
               </div>
-              <div className="col-span-2 flex flex-col gap-1 py-1 border-b-[0.5pt] border-slate-300">
-                <span className="text-[8pt] text-slate-500 font-bold uppercase leading-tight">Most Valuable Part:</span>
-                <span className="text-[9pt] text-black font-semibold leading-tight">
-                {((responses?.mostValuablePart?.length ?? 0) > 0 || (data.mostValuablePart?.length ?? 0) > 0 || responses?.mostValuablePartOther || data.mostValuablePartOther) ? (
-                    [
-                      ...(responses?.mostValuablePart || data.mostValuablePart || []),
-                      responses?.mostValuablePartOther || data.mostValuablePartOther
-                    ].filter(Boolean).join(", ")
-                  ) : "-"}
-                </span>
+              <div className="flex items-end gap-2 py-0.5 border-b-[0.5pt] border-slate-300">
+                <span className="text-[8pt] text-slate-500 min-w-[140px] shrink-0 font-bold uppercase leading-tight">Buyer Meetings:</span>
+                <span className="text-[9pt] text-black font-semibold flex-1 pb-0.5 leading-tight">{responses?.buyerMeetings || '-'}</span>
               </div>
-            </div>
-          </div>
-
-          <div className={`mb-0 bg-transparent flex flex-col break-inside-avoid p-0 mt-2`}>
-            <div className="flex items-center gap-3 border-b-[1pt] border-black pb-1 mb-1.5">
-              <h3 className="font-black uppercase tracking-wide text-[11pt] text-black">FEEDBACK & TESTIMONIAL</h3>
-            </div>
-            <div className="p-0 flex-1 flex flex-col gap-2 text-left mt-1">
-              <div className="flex flex-col gap-1 border-b-[0.5pt] border-slate-300 pb-1">
-                <span className="text-[8pt] text-slate-500 font-bold uppercase leading-tight">What They Liked Most:</span>
-                <span className="text-[9pt] text-black font-semibold leading-tight">{responses?.likedMost || data.likedMost || '-'}</span>
-              </div>
-              <div className="flex flex-col gap-1 border-b-[0.5pt] border-slate-300 pb-1">
-                <span className="text-[8pt] text-slate-500 font-bold uppercase leading-tight">Written Review:</span>
-                <span className="text-[9pt] text-black font-semibold leading-tight">{responses?.writtenReview || data.writtenReview || '-'}</span>
+              <div className="flex items-end gap-2 py-0.5 border-b-[0.5pt] border-slate-300">
+                <span className="text-[8pt] text-slate-500 min-w-[140px] shrink-0 font-bold uppercase leading-tight">Serious Business Leads:</span>
+                <span className="text-[9pt] text-black font-semibold flex-1 pb-0.5 leading-tight">{responses?.seriousLeads || '-'}</span>
               </div>
             </div>
           </div>
