@@ -77,8 +77,32 @@ const concurrentLogoSlots = [
 ];
 
 
+const mergeLogoSlots = (defaults, overrides, makeCustom) =>
+    defaults.map((slot, index) => {
+        const override = overrides?.[index];
+        return override ? makeCustom(override, index, slot) : slot;
+    });
+
+const nameLengthClass = (name) => {
+    const length = String(name || "").length;
+    if (length > 42) return "name-xl";
+    if (length > 30) return "name-lg";
+    if (length > 22) return "name-md";
+    return "";
+};
+
 const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }) => {
     const safeCompanyName = String(config?.recipientName || "").trim() || "";
+    const initiativeLogos = mergeLogoSlots(
+        initiativeLogoSlots,
+        customInitiatives,
+        (src, index, slot) => ({ ...slot, id: `custom-init-${index}`, src })
+    );
+    const concurrentLogos = mergeLogoSlots(
+        concurrentLogoSlots,
+        customConcurrent,
+        (src, index, slot) => ({ ...slot, id: `custom-conc-${index}`, src })
+    );
 
     return (
         <div className="certi-page-shell">
@@ -236,7 +260,7 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }
                 .recipient-name {
                     display: inline-flex;
                     min-width: 41mm;
-                    max-width: 43%;
+                    max-width: 58%;
                     min-height: 5.2mm;
                     align-items: flex-end;
                     justify-content: center;
@@ -247,9 +271,22 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }
                     line-height: 1;
                     text-transform: uppercase;
                     white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
+                    overflow: visible;
+                    text-overflow: clip;
                     vertical-align: baseline;
+                }
+
+                .recipient-name.name-md {
+                    font-size: 18px !important;
+                }
+
+                .recipient-name.name-lg {
+                    font-size: 16px !important;
+                }
+
+                .recipient-name.name-xl {
+                    font-size: 14px !important;
+                    max-width: 68%;
                 }
 
                 .certificate-blue-text {
@@ -668,7 +705,7 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }
 
                     .certificate-print-area .certificate-body,
                     .certificate-print-area .certificate-body p,
-                    .certificate-print-area .certificate-body span {
+                    .certificate-print-area .certificate-body span:not(.recipient-name) {
                         font-size: 20px !important;
                     }
 
@@ -727,7 +764,7 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }
                     <div className="certificate-body">
                         <p>
                             {config?.bodyTextPart1}{" "}
-                            <span className="recipient-name">
+                            <span className={`recipient-name ${nameLengthClass(safeCompanyName)}`}>
                                 {safeCompanyName}
                             </span>{" "}
                             {config?.bodyTextPart2} <br /> 
@@ -773,7 +810,7 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }
                         className="logo-placeholder-grid initiative-logo-grid"
                         aria-label="{config?.initiativesTitle} logos"
                     >
-                        {(customInitiatives && customInitiatives.length > 0 ? customInitiatives.map((src, i) => ({ id: `custom-init-${i}`, src, alt: "Custom Initiative" })) : initiativeLogoSlots).map((logo) => (
+                        {initiativeLogos.map((logo) => (
                             <div className="logo-placeholder-cell" key={logo.id}>
                                 {logo.src ? <img src={logo.src} alt={logo.alt} /> : null}
                             </div>
@@ -788,7 +825,7 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }
                         className="logo-placeholder-grid concurrent-logo-grid"
                         aria-label="Concurrent Events and Supporting Organizations logos"
                     >
-                        {(customConcurrent && customConcurrent.length > 0 ? customConcurrent.map((src, i) => ({ id: `custom-conc-${i}`, src, alt: "Custom Concurrent", fit: "wide" })) : concurrentLogoSlots).map((logo) => (
+                        {concurrentLogos.map((logo) => (
                             <div
                                 className={`logo-placeholder-cell${logo.supportedBy ? " supported-by-cell" : ""}`}
                                 key={logo.id}
