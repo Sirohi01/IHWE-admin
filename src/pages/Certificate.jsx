@@ -16,7 +16,7 @@ const initiativesData = Array.from({ length: 24 }).map((_, i) => ({
   image: '' // Add small image imports/paths here later
 }));
 
-const concurrentEventsData = Array.from({ length: 5 }).map((_, i) => ({
+const concurrentEventsData = Array.from({ length: 6 }).map((_, i) => ({
   id: i + 1,
   image: ''
 }));
@@ -44,7 +44,7 @@ const Certificate = () => {
   }, [imgBaseUrl]);
 
   // Use dynamic logos or fallback to static empty arrays
-  const dynamicInitiatives = certData?.namo_gange_trust_logos?.length > 0 
+  const dynamicInitiatives = certData?.namo_gange_trust_logos?.length > 0
     ? certData.namo_gange_trust_logos.map((img, i) => ({ id: i + 1, image: `${imgBaseUrl}${img}` }))
     : initiativesData;
 
@@ -87,7 +87,7 @@ const Certificate = () => {
             left: 0 !important;
             top: 0 !important;
             width: 100vw !important;
-            height: 91vh !important;
+            height: 88vh !important;
             max-width: none !important;
             max-height: none !important;
             margin: 0 !important;
@@ -152,7 +152,7 @@ const Certificate = () => {
             {/* {certData?.certi_name ? (
               <h2 className="text-[#845f28] font-bold text-[3cqi] tracking-wide text-center" style={{ fontFamily: 'Georgia, serif' }}>{certData.certi_name}</h2>
             ) : ( */}
-              <img src={certificateTitle} alt="CERTIFICATE Of Participation & Appreciation" className="w-full object-contain" />
+            <img src={certificateTitle} alt="CERTIFICATE Of Participation & Appreciation" className="w-full object-contain" />
             {/* )} */}
           </div>
 
@@ -214,7 +214,7 @@ const Certificate = () => {
                 {dynamicInitiatives.map((item) => (
                   <div key={item.id} className="border-r border-b border-[#b89b6b] flex justify-center items-center p-[2%] aspect-[1.5/1]">
                     {item.image ? (
-                      <img src={item.image} alt={`Initiative ${item.id}`} className="max-w-full max-h-full object-contain" />
+                      <img src={item.image} alt={`Initiative ${item.id}`} className="max-w-[75%] max-h-[75%] object-contain" />
                     ) : (
                       <span className="text-gray-200 text-[0.6cqi]">Logo {item.id}</span>
                     )}
@@ -238,27 +238,23 @@ const Certificate = () => {
               {/* Logos Row */}
               <div className="flex w-full items-center">
                 {/* Concurrent Events Logos */}
-                <div className="w-[82%] flex justify-between items-center pr-[1.5%] border-r-[1.5px] border-[#c5a977]">
-                  {dynamicConcurrentEvents.map((event, index) => (
+                <div className="w-full flex justify-between items-stretch pr-[1.5%]">
+                  {dynamicConcurrentEvents.filter(event => event.image).map((event, index, array) => (
                     <React.Fragment key={event.id}>
-                      <div className="flex-1 flex justify-center items-center px-[2%] aspect-[2.5/1]">
-                        {event.image ? (
-                          <img src={event.image} alt={`Event ${event.id}`} className="max-w-full max-h-full object-contain" />
-                        ) : (
-                          <span className="text-gray-200 text-[0.6cqi]">Event {event.id}</span>
-                        )}
+                      <div className="flex-1 flex justify-center items-center px-[1.5%] py-[1%] h-[5cqi]">
+                        <img src={event.image} alt={`Event ${event.id}`} className="max-w-full max-h-full object-contain" />
                       </div>
-                      {index < dynamicConcurrentEvents.length - 1 && (
-                        <div className="w-[1.5px] h-[3.5cqi] bg-[#c5a977]"></div>
+                      {index < array.length - 1 && (
+                        <div className="self-center w-[1px] h-[4.5cqi] bg-[#c5a977]"></div>
                       )}
                     </React.Fragment>
                   ))}
                 </div>
 
                 {/* Supported By Logo */}
-                <div className="w-[18%] flex justify-center items-center pl-[1.5%]">
+                {/* <div className="w-[18%] flex justify-center items-center pl-[1.5%]">
                   {supportedByData.map(support => (
-                    <div key={support.id} className="w-full flex justify-center items-center px-[2%] aspect-[2.5/1]">
+                    <div key={support.id} className="w-full flex justify-center items-center px-[1.5%] py-[1%] h-[5cqi]">
                       {support.image ? (
                         <img src={support.image} alt={`Support ${support.id}`} className="max-w-full max-h-full object-contain" />
                       ) : (
@@ -266,7 +262,7 @@ const Certificate = () => {
                       )}
                     </div>
                   ))}
-                </div>
+                </div> */}
               </div>
             </div>
 
