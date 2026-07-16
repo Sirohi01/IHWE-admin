@@ -2,6 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Image, Layers3, Printer, RotateCcw, Ticket, Upload } from "lucide-react";
 import FoodCouponCanvas from "../components/passes/FoodCouponCanvas";
+import {
+  DEFAULT_FOOD_COUPON_LOGO_NAME,
+  FOOD_COUPON_LOGO_NAME_STORAGE_KEY,
+  FOOD_COUPON_LOGO_STORAGE_KEY,
+  getStoredFoodCouponLogo,
+} from "../components/passes/foodCouponStorage";
 
 const COUPONS_PER_SHEET = 20;
 
@@ -31,7 +37,8 @@ export default function FoodCouponGeneratorPage() {
   const [quantity, setQuantity] = useState(20);
   const [persons, setPersons] = useState("2 PERSON");
   const [logoSrc, setLogoSrc] = useState("");
-  const [logoName, setLogoName] = useState("Default Namo Gange logo");
+  const [logoName, setLogoName] = useState(DEFAULT_FOOD_COUPON_LOGO_NAME);
+  const [logoError, setLogoError] = useState("");
   const coupons = useMemo(
     () => Array.from({ length: Math.max(1, Number(quantity) || 1) }, (_, index) => index + 1),
     [quantity],
@@ -44,28 +51,47 @@ export default function FoodCouponGeneratorPage() {
     onBeforePrint: () => waitForPrintAssets(printRef.current),
   });
 
-  useEffect(() => () => {
-    if (logoSrc) URL.revokeObjectURL(logoSrc);
-  }, [logoSrc]);
+  useEffect(() => {
+    const storedLogo = getStoredFoodCouponLogo();
+    setLogoSrc(storedLogo.logoSrc);
+    setLogoName(storedLogo.logoName);
+  }, []);
 
   const changeLogo = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const nextLogo = URL.createObjectURL(file);
-    setLogoSrc((currentLogo) => {
-      if (currentLogo) URL.revokeObjectURL(currentLogo);
-      return nextLogo;
-    });
-    setLogoName(file.name);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const nextLogo = typeof reader.result === "string" ? reader.result : "";
+      if (!nextLogo) {
+        setLogoError("Unable to read logo image.");
+        return;
+      }
+      try {
+        window.localStorage.setItem(FOOD_COUPON_LOGO_STORAGE_KEY, nextLogo);
+        window.localStorage.setItem(FOOD_COUPON_LOGO_NAME_STORAGE_KEY, file.name);
+        setLogoSrc(nextLogo);
+        setLogoName(file.name);
+        setLogoError("");
+      } catch {
+        setLogoError("Logo is too large to save. Please use a smaller image.");
+      }
+    };
+    reader.onerror = () => setLogoError("Unable to read logo image.");
+    reader.readAsDataURL(file);
     event.target.value = "";
   };
 
   const resetLogo = () => {
-    setLogoSrc((currentLogo) => {
-      if (currentLogo) URL.revokeObjectURL(currentLogo);
-      return "";
-    });
-    setLogoName("Default Namo Gange logo");
+    try {
+      window.localStorage.removeItem(FOOD_COUPON_LOGO_STORAGE_KEY);
+      window.localStorage.removeItem(FOOD_COUPON_LOGO_NAME_STORAGE_KEY);
+    } catch {
+      // Local storage can be unavailable in private/restricted browser modes.
+    }
+    setLogoSrc("");
+    setLogoName(DEFAULT_FOOD_COUPON_LOGO_NAME);
+    setLogoError("");
   };
 
   return (
@@ -176,6 +202,7 @@ export default function FoodCouponGeneratorPage() {
                 Default
               </button>
             </div>
+            {logoError && <p className="mt-2 text-[10px] font-bold text-rose-600">{logoError}</p>}
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">

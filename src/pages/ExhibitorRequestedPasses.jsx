@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import api from "../lib/api";
 import FoodCouponCanvas from "../components/passes/FoodCouponCanvas";
+import { getStoredFoodCouponLogo } from "../components/passes/foodCouponStorage";
 import PassTemplateCanvas from "../components/passes/PassTemplateCanvas";
 
 const PASS_META = {
@@ -126,6 +127,7 @@ export default function ExhibitorRequestedPasses() {
   const [statusFilter, setStatusFilter] = useState("approved");
   const [showPrintGapPrompt, setShowPrintGapPrompt] = useState(false);
   const [activePrintMode, setActivePrintMode] = useState("");
+  const [foodCouponLogoSrc, setFoodCouponLogoSrc] = useState("");
   const [printGapCm, setPrintGapCm] = useState(0.7);
   const [printGapDraft, setPrintGapDraft] = useState("0.7");
   const [printRowGapCm, setPrintRowGapCm] = useState(1.3);
@@ -152,6 +154,15 @@ export default function ExhibitorRequestedPasses() {
 
   useEffect(() => {
     load();
+  }, []);
+
+  useEffect(() => {
+    const refreshFoodCouponLogo = () => {
+      setFoodCouponLogoSrc(getStoredFoodCouponLogo().logoSrc);
+    };
+    refreshFoodCouponLogo();
+    window.addEventListener("storage", refreshFoodCouponLogo);
+    return () => window.removeEventListener("storage", refreshFoodCouponLogo);
   }, []);
 
   const templateByPassType = useMemo(() => {
@@ -317,6 +328,7 @@ export default function ExhibitorRequestedPasses() {
       return;
     }
     setError("");
+    setFoodCouponLogoSrc(getStoredFoodCouponLogo().logoSrc);
     setActivePrintMode("food");
     requestAnimationFrame(() => requestAnimationFrame(() => printFoodCoupons()));
   };
@@ -813,7 +825,7 @@ export default function ExhibitorRequestedPasses() {
             <div key={`food-${pageIndex}`} className="food-coupon-print-sheet">
               {pageItems.map((item) => (
                 <div key={item.id} className="food-coupon-print-card">
-                  <FoodCouponCanvas persons="2 PERSON" />
+                  <FoodCouponCanvas persons="2 PERSON" logoSrc={foodCouponLogoSrc} />
                 </div>
               ))}
             </div>
