@@ -635,37 +635,37 @@ export default function ExhibitorRequestedPasses() {
                     <div className="flex items-center justify-between gap-2 border-b border-slate-100 bg-slate-50 px-2.5 py-1.5">
                       <div className="flex min-w-0 items-center gap-2">
                         <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border ${meta.tone}`}>
-                          <Icon size={13} />
+                          <Icon size={14} />
                         </div>
                         <div className="min-w-0">
-                          <h3 className="truncate text-[11px] font-black text-[#15173D]">{meta.label} Passes</h3>
-                          <p className="text-[8.5px] font-bold leading-tight text-slate-500">{items.length} request{items.length === 1 ? "" : "s"} | {names.length} item{names.length === 1 ? "" : "s"}</p>
+                          <h3 className="truncate text-xs font-black text-[#15173D]">{meta.label} Passes</h3>
+                          <p className="text-[10px] font-bold leading-tight text-slate-500">{items.length} request{items.length === 1 ? "" : "s"} | {names.length} item{names.length === 1 ? "" : "s"}</p>
                         </div>
                       </div>
-                      <span className="shrink-0 rounded-md bg-white px-1.5 py-0.5 text-[8.5px] font-black text-slate-600 shadow-sm ring-1 ring-slate-200">{meta.category}</span>
+                      <span className="shrink-0 rounded-md bg-white px-1.5 py-0.5 text-[10px] font-black text-slate-600 shadow-sm ring-1 ring-slate-200">{meta.category}</span>
                     </div>
-                    <div className="thin-scrollbar h-[168px] overflow-auto">
+                    <div className="thin-scrollbar h-[200px] overflow-auto">
                       {items.map((request) => {
                         const requestNames = getRequestFallbackNames(request);
                         return (
-                          <div key={request._id} className="border-b border-slate-100 px-2 py-1 last:border-b-0">
-                            <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-1.5">
+                          <div key={request._id} className="border-b border-slate-100 px-2 py-1.5 last:border-b-0">
+                            <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2">
                               <div className="flex shrink-0 items-center gap-1">
-                                <span className={`inline-flex rounded border px-1 py-0.5 text-[8px] font-black uppercase leading-none ${STATUS_STYLES[request.status] || STATUS_STYLES.pending}`}>
+                                <span className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] font-black uppercase leading-none ${STATUS_STYLES[request.status] || STATUS_STYLES.pending}`}>
                                   {request.status || "pending"}
                                 </span>
-                                <span className="rounded bg-slate-100 px-1 py-0.5 text-[8px] font-black uppercase leading-none text-slate-500">
+                                <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-black uppercase leading-none text-slate-500">
                                   Qty {request.quantity || requestNames.length || 1}
                                 </span>
                               </div>
-                              <div className="grid min-w-0 grid-cols-1 gap-1 sm:grid-cols-2 xl:grid-cols-3">
+                              <div className="flex flex-wrap gap-1.5">
                                 {requestNames.map((name, index) => {
                                   const itemId = `${request._id}-${index}`;
                                   const selected = selectedPrintIds.includes(itemId);
                                   return (
                                     <label
                                       key={itemId}
-                                      className={`flex h-6 cursor-pointer items-center gap-1 rounded border px-1.5 transition ${selected
+                                      className={`flex min-h-[28px] cursor-pointer items-center gap-1.5 rounded border px-2 py-1 transition ${selected
                                           ? "border-emerald-200 bg-emerald-50 text-slate-900"
                                           : "border-slate-200 bg-white text-slate-400"
                                         }`}
@@ -674,20 +674,20 @@ export default function ExhibitorRequestedPasses() {
                                         type="checkbox"
                                         checked={selected}
                                         onChange={() => togglePrintItem(itemId)}
-                                        className="h-3 w-3 accent-[#016B61]"
+                                        className="h-3.5 w-3.5 shrink-0 accent-[#016B61]"
                                       />
-                                      <span className="min-w-0 truncate text-[10px] font-black leading-none" title={name}>{name}</span>
+                                      <span className="text-xs font-black leading-tight whitespace-nowrap" title={name}>{name}</span>
                                     </label>
                                   );
                                 })}
                               </div>
-                              <span className="inline-flex shrink-0 items-center gap-1 pt-0.5 text-[8.5px] font-bold text-slate-400">
-                                <Clock3 size={10} />
+                              <span className="inline-flex shrink-0 items-center gap-1 pt-0.5 text-[10px] font-bold text-slate-400">
+                                <Clock3 size={11} />
                                 {formatDate(request.createdAt)}
                               </span>
                             </div>
                             {request.passType === "vehicle" && (
-                              <p className="mt-0.5 line-clamp-1 pl-[82px] text-[8.5px] font-bold leading-tight text-slate-400">
+                              <p className="mt-1 line-clamp-1 pl-[92px] text-[10px] font-bold leading-tight text-slate-400">
                                 {(request.vehicles || []).map((vehicle) => [vehicle.vehicleNumber, vehicle.vehicleType].filter(Boolean).join(" - ")).filter(Boolean).join(", ") || "Vehicle details pending"}
                               </p>
                             )}
