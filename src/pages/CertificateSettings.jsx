@@ -5,16 +5,31 @@ import { toast } from 'react-hot-toast';
 const CertificateSettings = () => {
     const [formData, setFormData] = useState({
         certi_name: '',
+        certi_desc1: '',
+        certi_desc1_part2: '',
+        certi_desc2: '',
+        certi_desc3: '',
+        certi_address: '',
         sign1_name: '',
         sign1_designation: '',
         sign2_name: '',
-        sign2_designation: ''
+        sign2_designation: '',
+        header_left_heading: 'SUPPORTED BY:',
+        header_left_enable: true,
+        header_center_text: 'Presents',
+        header_center_enable: true,
+        header_right_heading: 'SUPPORTED BY:',
+        header_right_enable: false
     });
 
     const [files, setFiles] = useState({
         expo_logo: null,
         sign1_image: null,
         sign2_image: null,
+        header_left_logo: null,
+        header_center_logo: null,
+        header_right_logo: null,
+        certificate_title_image: null,
         namo_gange_trust_logos: [],
         concurrent_events: []
     });
@@ -38,15 +53,30 @@ const CertificateSettings = () => {
                 const data = response.data.data;
                 setFormData({
                     certi_name: data.certi_name || '',
+                    certi_desc1: data.certi_desc1 || '',
+                    certi_desc1_part2: data.certi_desc1_part2 || '',
+                    certi_desc2: data.certi_desc2 || '',
+                    certi_desc3: data.certi_desc3 || '',
+                    certi_address: data.certi_address || '',
                     sign1_name: data.sign1_name || '',
                     sign1_designation: data.sign1_designation || '',
                     sign2_name: data.sign2_name || '',
-                    sign2_designation: data.sign2_designation || ''
+                    sign2_designation: data.sign2_designation || '',
+                    header_left_heading: data.header_left_heading || 'SUPPORTED BY:',
+                    header_left_enable: data.header_left_enable !== undefined ? data.header_left_enable : true,
+                    header_center_text: data.header_center_text || 'Presents',
+                    header_center_enable: data.header_center_enable !== undefined ? data.header_center_enable : true,
+                    header_right_heading: data.header_right_heading || 'SUPPORTED BY:',
+                    header_right_enable: data.header_right_enable !== undefined ? data.header_right_enable : false
                 });
                 setPreviews({
                     expo_logo: data.expo_logo,
                     sign1_image: data.sign1_image,
                     sign2_image: data.sign2_image,
+                    header_left_logo: data.header_left_logo,
+                    header_center_logo: data.header_center_logo,
+                    header_right_logo: data.header_right_logo,
+                    certificate_title_image: data.certificate_title_image,
                     namo_gange_trust_logos: data.namo_gange_trust_logos || [],
                     concurrent_events: data.concurrent_events || []
                 });
@@ -58,31 +88,34 @@ const CertificateSettings = () => {
     };
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
     };
 
     const handleFileChange = (e, fieldName) => {
         if (e.target.files.length > 0) {
             if (fieldName === 'namo_gange_trust_logos' || fieldName === 'concurrent_events') {
                 const newSelectedFiles = Array.from(e.target.files);
-                
-                // Append instead of replace
-                setFiles(prev => ({ 
-                    ...prev, 
-                    [fieldName]: [...(prev[fieldName] || []), ...newSelectedFiles] 
+
+                // Replace instead of append (like standard file inputs)
+                setFiles(prev => ({
+                    ...prev,
+                    [fieldName]: newSelectedFiles
                 }));
-                
-                // Append preview URLs
+
+                // Replace preview URLs
                 const newPreviewUrls = newSelectedFiles.map(file => URL.createObjectURL(file));
-                setLocalPreviews(prev => ({ 
-                    ...prev, 
-                    [fieldName]: [...(prev[fieldName] || []), ...newPreviewUrls] 
+                setLocalPreviews(prev => ({
+                    ...prev,
+                    [fieldName]: newPreviewUrls
                 }));
             } else {
                 const file = e.target.files[0];
                 setFiles(prev => ({ ...prev, [fieldName]: file }));
-                
+
                 // Set local preview URL for single file
                 setLocalPreviews(prev => ({ ...prev, [fieldName]: URL.createObjectURL(file) }));
             }
@@ -115,19 +148,27 @@ const CertificateSettings = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
-        
+
         if (!token) {
             toast.error('Authentication token not found. Please log in again.');
             return;
         }
-        
+
         const payload = new FormData();
-        Object.keys(formData).forEach(key => payload.append(key, formData[key]));
         
-        if (files.expo_logo) payload.append('expo_logo', files.expo_logo);
-        if (files.sign1_image) payload.append('sign1_image', files.sign1_image);
-        if (files.sign2_image) payload.append('sign2_image', files.sign2_image);
-        
+        // Append all text/boolean data
+        Object.keys(formData).forEach(key => {
+            if (formData[key] !== null && formData[key] !== undefined) {
+                payload.append(key, formData[key]);
+            }
+        });
+
+        // Append single files
+        const singleFiles = ['expo_logo', 'sign1_image', 'sign2_image', 'header_left_logo', 'header_center_logo', 'header_right_logo', 'certificate_title_image'];
+        singleFiles.forEach(key => {
+            if (files[key]) payload.append(key, files[key]);
+        });
+
         if (files.namo_gange_trust_logos.length > 0) {
             files.namo_gange_trust_logos.forEach(file => {
                 payload.append('namo_gange_trust_logos', file);
@@ -150,13 +191,24 @@ const CertificateSettings = () => {
         try {
             const toastId = toast.loading('Saving settings...');
             const response = await axios.post(`${import.meta.env.VITE_API_URL || ''}/api/certificate-data/update`, payload, {
-                headers: { 
+                headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
                 }
             });
             toast.success('Certificate settings updated!', { id: toastId });
             setLocalPreviews({}); // Clear local previews on successful save
+            setFiles({
+                expo_logo: null,
+                sign1_image: null,
+                sign2_image: null,
+                header_left_logo: null,
+                header_center_logo: null,
+                header_right_logo: null,
+                certificate_title_image: null,
+                namo_gange_trust_logos: [],
+                concurrent_events: []
+            });
             fetchData(); // Refresh previews from server
         } catch (error) {
             console.error('Error updating certificate data:', error);
@@ -170,12 +222,72 @@ const CertificateSettings = () => {
         <div className="p-2 bg-gray-50 min-h-screen">
             <h1 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">Certificate Data Settings</h1>
             <form onSubmit={handleSubmit} className="bg-white p-4 rounded-xl shadow-lg w-full">
-                
+
+                {/* Header Configuration */}
+                <div className="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h2 className="text-xl font-bold mb-4 text-blue-800 border-b border-blue-200 pb-2">Top Header Configuration</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Header Left */}
+                        <div className="bg-white p-4 rounded shadow-sm border border-gray-100">
+                            <div className="flex justify-between items-center mb-3">
+                                <label className="font-semibold text-gray-700">Left Section</label>
+                                <label className="flex items-center cursor-pointer">
+                                    <input type="checkbox" name="header_left_enable" checked={formData.header_left_enable} onChange={handleInputChange} className="mr-2 h-4 w-4 text-blue-600 rounded" />
+                                    <span className="text-sm font-medium">Enable</span>
+                                </label>
+                            </div>
+                            <input type="text" name="header_left_heading" value={formData.header_left_heading} onChange={handleInputChange} className="w-full p-2 border rounded mb-3 text-sm" placeholder="e.g. SUPPORTED BY:" />
+                            <input type="file" onChange={(e) => handleFileChange(e, 'header_left_logo')} accept="image/*" className="w-full p-1 border rounded text-sm" />
+                            {localPreviews.header_left_logo ? (
+                                <img src={localPreviews.header_left_logo} className="h-12 mt-2 object-contain" />
+                            ) : previews.header_left_logo && (
+                                <img src={`${imgBaseUrl}${previews.header_left_logo}`} className="h-12 mt-2 object-contain" />
+                            )}
+                        </div>
+
+                        {/* Header Center */}
+                        <div className="bg-white p-4 rounded shadow-sm border border-gray-100">
+                            <div className="flex justify-between items-center mb-3">
+                                <label className="font-semibold text-gray-700">Center Section</label>
+                                <label className="flex items-center cursor-pointer">
+                                    <input type="checkbox" name="header_center_enable" checked={formData.header_center_enable} onChange={handleInputChange} className="mr-2 h-4 w-4 text-blue-600 rounded" />
+                                    <span className="text-sm font-medium">Enable</span>
+                                </label>
+                            </div>
+                            <input type="text" name="header_center_text" value={formData.header_center_text} onChange={handleInputChange} className="w-full p-2 border rounded mb-3 text-sm" placeholder="e.g. Presents" />
+                            <input type="file" onChange={(e) => handleFileChange(e, 'header_center_logo')} accept="image/*" className="w-full p-1 border rounded text-sm" />
+                            {localPreviews.header_center_logo ? (
+                                <img src={localPreviews.header_center_logo} className="h-12 mt-2 object-contain" />
+                            ) : previews.header_center_logo && (
+                                <img src={`${imgBaseUrl}${previews.header_center_logo}`} className="h-12 mt-2 object-contain" />
+                            )}
+                        </div>
+
+                        {/* Header Right */}
+                        <div className="bg-white p-4 rounded shadow-sm border border-gray-100">
+                            <div className="flex justify-between items-center mb-3">
+                                <label className="font-semibold text-gray-700">Right Section</label>
+                                <label className="flex items-center cursor-pointer">
+                                    <input type="checkbox" name="header_right_enable" checked={formData.header_right_enable} onChange={handleInputChange} className="mr-2 h-4 w-4 text-blue-600 rounded" />
+                                    <span className="text-sm font-medium">Enable</span>
+                                </label>
+                            </div>
+                            <input type="text" name="header_right_heading" value={formData.header_right_heading} onChange={handleInputChange} className="w-full p-2 border rounded mb-3 text-sm" placeholder="e.g. SPONSORED BY:" />
+                            <input type="file" onChange={(e) => handleFileChange(e, 'header_right_logo')} accept="image/*" className="w-full p-1 border rounded text-sm" />
+                            {localPreviews.header_right_logo ? (
+                                <img src={localPreviews.header_right_logo} className="h-12 mt-2 object-contain" />
+                            ) : previews.header_right_logo && (
+                                <img src={`${imgBaseUrl}${previews.header_right_logo}`} className="h-12 mt-2 object-contain" />
+                            )}
+                        </div>
+                    </div>
+                </div>
+
                 {/* Expo Logo */}
                 <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <label className="block text-lg font-semibold mb-3 text-gray-700">Expo Logo (Top Left)</label>
                     <input type="file" onChange={(e) => handleFileChange(e, 'expo_logo')} accept="image/*" className="mb-4 w-full p-2 bg-white border rounded" />
-                    
+
                     {localPreviews.expo_logo ? (
                         <div className="mt-2"><span className="text-xs text-green-600 font-bold mb-1 block">New Selection Preview:</span><img src={localPreviews.expo_logo} alt="Expo Logo Preview" className="h-20 object-contain border bg-white p-2 shadow-sm" /></div>
                     ) : previews.expo_logo && (
@@ -183,16 +295,78 @@ const CertificateSettings = () => {
                     )}
                 </div>
 
+                {/* Certificate Title Image */}
+                <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <label className="block text-lg font-semibold mb-3 text-gray-700">Certificate Title Image (e.g. CERTIFICATE Of Participation & Appreciation)</label>
+                    <input type="file" onChange={(e) => handleFileChange(e, 'certificate_title_image')} accept="image/*" className="mb-4 w-full p-2 bg-white border rounded" />
+                    
+                    {localPreviews.certificate_title_image ? (
+                        <div className="mt-2"><span className="text-xs text-green-600 font-bold mb-1 block">New Selection Preview:</span><img src={localPreviews.certificate_title_image} alt="Certificate Title Image Preview" className="h-20 object-contain border bg-white p-2 shadow-sm" /></div>
+                    ) : previews.certificate_title_image && (
+                        <div className="mt-2"><span className="text-xs text-gray-500 font-bold mb-1 block">Currently Saved:</span><img src={`${imgBaseUrl}${previews.certificate_title_image}`} alt="Certificate Title Image" className="h-20 object-contain border bg-white p-2 shadow-sm" /></div>
+                    )}
+                </div>
+
                 {/* Certificate Name */}
                 <div className="mb-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <label className="block text-lg font-semibold mb-2 text-gray-700">Certificate Main Heading</label>
-                    <input 
-                        type="text" 
-                        name="certi_name" 
-                        value={formData.certi_name} 
+                    <input
+                        type="text"
+                        name="certi_name"
+                        value={formData.certi_name}
                         onChange={handleInputChange}
-                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none mb-4"
                         placeholder="CERTIFICATE Of Participation & Appreciation"
+                    />
+
+                    <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Description 1 (Before Heading)</label>
+                    <textarea 
+                        name="certi_desc1" 
+                        value={formData.certi_desc1} 
+                        onChange={handleInputChange}
+                        rows="2"
+                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder="We extend our heartfelt gratitude to "
+                    />
+
+                    <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Description 1 (After Heading)</label>
+                    <textarea 
+                        name="certi_desc1_part2" 
+                        value={formData.certi_desc1_part2} 
+                        onChange={handleInputChange}
+                        rows="3"
+                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder="for valuable participation in the 9th..."
+                    />
+
+                    <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Description 2 (Second Paragraph)</label>
+                    <textarea 
+                        name="certi_desc2" 
+                        value={formData.certi_desc2} 
+                        onChange={handleInputChange}
+                        rows="3"
+                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder="Your stall and the innovative solutions showcased..."
+                    />
+
+                    <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Description 3 (Third Paragraph)</label>
+                    <textarea 
+                        name="certi_desc3" 
+                        value={formData.certi_desc3} 
+                        onChange={handleInputChange}
+                        rows="2"
+                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder="We deeply appreciate your commitment and support..."
+                    />
+
+                    <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Address & Contact Info</label>
+                    <textarea 
+                        name="certi_address" 
+                        value={formData.certi_address} 
+                        onChange={handleInputChange}
+                        rows="3"
+                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder="Head Office: 12/52..."
                     />
                 </div>
 
@@ -202,34 +376,34 @@ const CertificateSettings = () => {
                         <h3 className="text-lg font-bold mb-3 text-gray-800 border-b pb-2">Signature 1 (Left)</h3>
                         <label className="block text-sm font-semibold text-gray-600 mb-1">Upload Signature Image</label>
                         <input type="file" onChange={(e) => handleFileChange(e, 'sign1_image')} accept="image/*" className="mb-2 w-full p-1 bg-white border rounded" />
-                        
+
                         {localPreviews.sign1_image ? (
                             <div className="mb-2"><span className="text-xs text-green-600 font-bold mb-1 block">New Selection:</span><img src={localPreviews.sign1_image} alt="Sign 1 Preview" className="h-12 object-contain border bg-white p-1 shadow-sm" /></div>
                         ) : previews.sign1_image && (
                             <div className="mb-2"><span className="text-xs text-gray-500 font-bold mb-1 block">Currently Saved:</span><img src={`${imgBaseUrl}${previews.sign1_image}`} alt="Sign 1" className="h-12 object-contain border bg-white p-1 shadow-sm" /></div>
                         )}
-                        
+
                         <label className="block text-sm font-semibold text-gray-600 mb-1">Name</label>
                         <input type="text" name="sign1_name" value={formData.sign1_name} onChange={handleInputChange} className="w-full p-2 border border-gray-300 rounded mb-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. H.H.Shri Acharya Jagdish ji" />
-                        
+
                         <label className="block text-sm font-semibold text-gray-600 mb-1">Designation</label>
                         <input type="text" name="sign1_designation" value={formData.sign1_designation} onChange={handleInputChange} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. Founder" />
                     </div>
-                    
+
                     <div className="border border-gray-200 p-4 rounded-lg bg-gray-50">
                         <h3 className="text-lg font-bold mb-3 text-gray-800 border-b pb-2">Signature 2 (Right)</h3>
                         <label className="block text-sm font-semibold text-gray-600 mb-1">Upload Signature Image</label>
                         <input type="file" onChange={(e) => handleFileChange(e, 'sign2_image')} accept="image/*" className="mb-2 w-full p-1 bg-white border rounded" />
-                        
+
                         {localPreviews.sign2_image ? (
                             <div className="mb-2"><span className="text-xs text-green-600 font-bold mb-1 block">New Selection:</span><img src={localPreviews.sign2_image} alt="Sign 2 Preview" className="h-12 object-contain border bg-white p-1 shadow-sm" /></div>
                         ) : previews.sign2_image && (
                             <div className="mb-2"><span className="text-xs text-gray-500 font-bold mb-1 block">Currently Saved:</span><img src={`${imgBaseUrl}${previews.sign2_image}`} alt="Sign 2" className="h-12 object-contain border bg-white p-1 shadow-sm" /></div>
                         )}
-                        
+
                         <label className="block text-sm font-semibold text-gray-600 mb-1">Name</label>
                         <input type="text" name="sign2_name" value={formData.sign2_name} onChange={handleInputChange} className="w-full p-2 border border-gray-300 rounded mb-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. Shri Vijay Sharma" />
-                        
+
                         <label className="block text-sm font-semibold text-gray-600 mb-1">Designation</label>
                         <input type="text" name="sign2_designation" value={formData.sign2_designation} onChange={handleInputChange} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. Chairman" />
                     </div>
@@ -240,7 +414,7 @@ const CertificateSettings = () => {
                     <label className="block text-lg font-semibold mb-2 text-gray-700">Namo Gange Trust Initiatives (Upload up to 24 Images)</label>
                     <p className="text-xs text-gray-500 mb-2">You can add new images or remove existing ones using the 'X' button.</p>
                     <input type="file" multiple onChange={(e) => handleFileChange(e, 'namo_gange_trust_logos')} accept="image/*" className="mb-2 w-full p-1 bg-white border rounded" />
-                    
+
                     <div className="flex flex-col gap-4 mt-2">
                         {previews.namo_gange_trust_logos?.length > 0 && (
                             <div>
@@ -255,7 +429,7 @@ const CertificateSettings = () => {
                                 </div>
                             </div>
                         )}
-                        
+
                         {localPreviews.namo_gange_trust_logos?.length > 0 && (
                             <div>
                                 <span className="text-xs text-green-600 font-bold mb-2 block">Newly Selected to Add ({localPreviews.namo_gange_trust_logos.length} files):</span>
@@ -276,7 +450,7 @@ const CertificateSettings = () => {
                     <label className="block text-lg font-semibold mb-2 text-gray-700">Concurrent Events (Upload up to 7 Images)</label>
                     <p className="text-xs text-gray-500 mb-2">You can add new images or remove existing ones using the 'X' button.</p>
                     <input type="file" multiple onChange={(e) => handleFileChange(e, 'concurrent_events')} accept="image/*" className="mb-2 w-full p-1 bg-white border rounded" />
-                    
+
                     <div className="flex flex-col gap-4 mt-2">
                         {previews.concurrent_events?.length > 0 && (
                             <div>
@@ -291,7 +465,7 @@ const CertificateSettings = () => {
                                 </div>
                             </div>
                         )}
-                        
+
                         {localPreviews.concurrent_events?.length > 0 && (
                             <div>
                                 <span className="text-xs text-green-600 font-bold mb-2 block">Newly Selected to Add ({localPreviews.concurrent_events.length} files):</span>
