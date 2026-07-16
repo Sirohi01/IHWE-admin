@@ -11,9 +11,11 @@ import {
   Search,
   ShieldCheck,
   Ticket,
+  Utensils,
   Users,
 } from "lucide-react";
 import api from "../lib/api";
+import FoodCouponCanvas from "../components/passes/FoodCouponCanvas";
 import PassTemplateCanvas from "../components/passes/PassTemplateCanvas";
 
 const PASS_META = {
@@ -22,6 +24,7 @@ const PASS_META = {
   service: { label: "Service", category: "SERVICE", templateNames: ["service", "service provider", "service_provider"], icon: BadgeCheck, tone: "bg-emerald-50 text-emerald-700 border-emerald-100" },
   visitor: { label: "Visitor", category: "VISITOR", templateNames: ["visitor"], icon: Users, tone: "bg-violet-50 text-violet-700 border-violet-100" },
   delegate: { label: "Speaker", category: "SPEAKER", templateNames: ["speaker", "delegate"], icon: FileText, tone: "bg-amber-50 text-amber-700 border-amber-100" },
+  lunch: { label: "Food Coupon", category: "FOOD COUPON", templateNames: ["food", "food coupon", "lunch"], icon: Utensils, tone: "bg-blue-50 text-blue-700 border-blue-100", isFoodCoupon: true },
 };
 
 const STATUS_STYLES = {
@@ -34,6 +37,9 @@ const TEMPLATE_CANVAS_WIDTH = 1122;
 const PRINT_CARD_WIDTH_CM = 9.5;
 const PRINT_CARD_HEIGHT_CM = 13;
 const PRINT_SCALE = (PRINT_CARD_WIDTH_CM * 96 / 2.54) / TEMPLATE_CANVAS_WIDTH;
+const FOOD_COUPONS_PER_SHEET = 20;
+
+const isFoodPassType = (passType) => Boolean(PASS_META[passType]?.isFoodCoupon);
 
 const getExhibitorId = (request) => String(request?.exhibitorId?._id || request?.exhibitorId || "");
 
@@ -64,6 +70,10 @@ const getPassNames = (request) => {
 const getRequestFallbackNames = (request) => {
   const names = getPassNames(request);
   if (names.length) return names;
+  if (isFoodPassType(request.passType)) {
+    const quantity = Math.max(1, Number(request.quantity || 1));
+    return Array.from({ length: quantity }, (_, index) => `Food Coupon ${index + 1}`);
+  }
   const fallback = getExhibitorName(request);
   const quantity = Math.max(1, Number(request.quantity || 1));
   return Array.from({ length: quantity }, (_, index) => quantity === 1 ? fallback : `${fallback} ${index + 1}`);
@@ -103,6 +113,7 @@ const waitForPrintAssets = async (root) => {
 
 export default function ExhibitorRequestedPasses() {
   const printRef = useRef(null);
+  const foodPrintRef = useRef(null);
   const [requests, setRequests] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [defaultTemplate, setDefaultTemplate] = useState(null);
@@ -114,6 +125,7 @@ export default function ExhibitorRequestedPasses() {
   const [showExhibitorDropdown, setShowExhibitorDropdown] = useState(false);
   const [statusFilter, setStatusFilter] = useState("approved");
   const [showPrintGapPrompt, setShowPrintGapPrompt] = useState(false);
+  const [activePrintMode, setActivePrintMode] = useState("");
   const [printGapCm, setPrintGapCm] = useState(0.7);
   const [printGapDraft, setPrintGapDraft] = useState("0.7");
   const [printRowGapCm, setPrintRowGapCm] = useState(1.3);
@@ -184,7 +196,11 @@ export default function ExhibitorRequestedPasses() {
     .filter((request) => getExhibitorId(request) === selectedExhibitorId)
     .filter((request) => PASS_META[request.passType])
     .filter((request) => statusFilter === "all" || request.status === statusFilter)
-    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)), [requests, selectedExhibitorId, statusFilter]);
+    .sort((a, b) => {
+      const foodSort = Number(isFoodPassType(a.passType)) - Number(isFoodPassType(b.passType));
+      if (foodSort !== 0) return foodSort;
+      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+    }), [requests, selectedExhibitorId, statusFilter]);
 
   const printItems = useMemo(() => selectedRequests.flatMap((request) => {
     const meta = PASS_META[request.passType];
@@ -208,6 +224,16 @@ export default function ExhibitorRequestedPasses() {
   const selectedPrintItems = useMemo(
     () => printItems.filter((item) => selectedPrintIds.includes(item.id)),
     [printItems, selectedPrintIds],
+  );
+
+  const normalPrintItems = useMemo(
+    () => selectedPrintItems.filter((item) => !isFoodPassType(item.passType)),
+    [selectedPrintItems],
+  );
+
+  const foodPrintItems = useMemo(
+    () => selectedPrintItems.filter((item) => isFoodPassType(item.passType)),
+    [selectedPrintItems],
   );
 
   const groupedRequests = useMemo(() => selectedRequests.reduce((acc, request) => {
@@ -248,10 +274,18 @@ export default function ExhibitorRequestedPasses() {
     contentRef: printRef,
     documentTitle: `${selectedExhibitor?.name || "exhibitor"}-requested-passes`,
     onBeforePrint: () => waitForPrintAssets(printRef.current),
+    onAfterPrint: () => setActivePrintMode(""),
+  });
+
+  const printFoodCoupons = useReactToPrint({
+    contentRef: foodPrintRef,
+    documentTitle: `${selectedExhibitor?.name || "exhibitor"}-food-coupons`,
+    onBeforePrint: () => waitForPrintAssets(foodPrintRef.current),
+    onAfterPrint: () => setActivePrintMode(""),
   });
 
   const openPrintPrompt = () => {
-    if (!selectedPrintItems.length) {
+    if (!normalPrintItems.length) {
       setError("No passes available to print for this selection.");
       return;
     }
@@ -273,7 +307,18 @@ export default function ExhibitorRequestedPasses() {
     setPrintRowGapCm(roundedRowGap);
     setPrintRowGapDraft(String(roundedRowGap));
     setShowPrintGapPrompt(false);
+    setActivePrintMode("passes");
     requestAnimationFrame(() => requestAnimationFrame(() => printPasses()));
+  };
+
+  const openFoodPrint = () => {
+    if (!foodPrintItems.length) {
+      setError("No food coupons available to print for this selection.");
+      return;
+    }
+    setError("");
+    setActivePrintMode("food");
+    requestAnimationFrame(() => requestAnimationFrame(() => printFoodCoupons()));
   };
 
   const dataForItem = (item) => ({
@@ -296,7 +341,9 @@ export default function ExhibitorRequestedPasses() {
   const selectAllPrintItems = () => setSelectedPrintIds(printItems.map((item) => item.id));
   const clearPrintItems = () => setSelectedPrintIds([]);
 
-  const printPages = Math.ceil(selectedPrintItems.length / 8) || 1;
+  const normalPrintPages = Math.ceil(normalPrintItems.length / 8);
+  const foodPrintPages = Math.ceil(foodPrintItems.length / FOOD_COUPONS_PER_SHEET);
+  const printPages = normalPrintPages || 1;
 
   return (
     <div className="min-h-screen bg-[#f6f8fb] p-3 md:p-4" style={{ fontFamily: "Inter, sans-serif" }}>
@@ -307,12 +354,22 @@ export default function ExhibitorRequestedPasses() {
         .thin-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
         .thin-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .mixed-pass-print-root { position: fixed; left: -10000px; top: 0; width: 42cm; opacity: 0; pointer-events: none; }
+        .food-coupon-print-root { position: fixed; left: -10000px; top: 0; width: 29.7cm; opacity: 0; pointer-events: none; }
         @media print {
-          html, body { margin: 0 !important; padding: 0 !important; width: 42cm !important; background: #fff !important; }
+          html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
           body * { visibility: hidden !important; }
+          ${activePrintMode === "passes" ? `
+          @page { size: A3 landscape; margin: 0; }
           .mixed-pass-print-root, .mixed-pass-print-root * { visibility: visible !important; }
           .mixed-pass-print-root { display: block !important; position: absolute; left: 0; top: 0; width: 42cm; opacity: 1; pointer-events: auto; background: #fff; }
-          @page { size: A3 landscape; margin: 0; }
+          .food-coupon-print-root { display: none !important; }
+          ` : ""}
+          ${activePrintMode === "food" ? `
+          @page { size: A3 portrait; margin: 0; }
+          .food-coupon-print-root, .food-coupon-print-root * { visibility: visible !important; }
+          .food-coupon-print-root { display: block !important; position: absolute; left: 0; top: 0; width: 29.7cm; opacity: 1; pointer-events: auto; background: #fff; }
+          .mixed-pass-print-root { display: none !important; }
+          ` : ""}
           .mixed-pass-print-sheet {
             width: 42cm;
             height: 29.7cm;
@@ -331,6 +388,24 @@ export default function ExhibitorRequestedPasses() {
           }
           .mixed-pass-print-sheet:last-child { break-after: auto; page-break-after: auto; }
           .mixed-pass-print-card { width: 9.5cm; height: 13cm; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
+          .food-coupon-print-sheet {
+            width: 29.7cm;
+            height: 42cm;
+            box-sizing: border-box;
+            padding: 0.55cm;
+            display: grid;
+            grid-template-columns: repeat(2, 14.3cm);
+            grid-template-rows: repeat(10, 3.95cm);
+            column-gap: 0.1cm;
+            row-gap: 0.15cm;
+            align-content: start;
+            justify-content: start;
+            break-after: page;
+            page-break-after: always;
+            overflow: hidden;
+          }
+          .food-coupon-print-sheet:last-child { break-after: auto; page-break-after: auto; }
+          .food-coupon-print-card { width: 14.3cm; height: 3.95cm; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
         }
       `}</style>
 
@@ -563,7 +638,7 @@ export default function ExhibitorRequestedPasses() {
                   <option value="rejected">Rejected only</option>
                 </select>
                 <span className="inline-flex h-8 items-center rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] font-bold text-slate-500">
-                  {selectedPrintItems.length}/{printItems.length} selected | A3 landscape | {printPages} sheet{printPages === 1 ? "" : "s"}
+                  {normalPrintItems.length} passes | {foodPrintItems.length} food coupons | {printPages} pass sheet{printPages === 1 ? "" : "s"}
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -586,11 +661,20 @@ export default function ExhibitorRequestedPasses() {
                 <button
                   type="button"
                   onClick={openPrintPrompt}
-                  disabled={!selectedPrintItems.length}
+                  disabled={!normalPrintItems.length}
                   className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-[#124170] px-3 text-[11px] font-bold text-white transition hover:bg-[#0A2643] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Printer size={13} />
-                  Print {selectedPrintItems.length || 0} Passes
+                  Print {normalPrintItems.length || 0} Passes
+                </button>
+                <button
+                  type="button"
+                  onClick={openFoodPrint}
+                  disabled={!foodPrintItems.length}
+                  className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-[#083ef5] px-3 text-[11px] font-bold text-white transition hover:bg-[#002fc7] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Utensils size={13} />
+                  Print {foodPrintItems.length || 0} Food Coupons
                 </button>
               </div>
             </div>
@@ -704,8 +788,8 @@ export default function ExhibitorRequestedPasses() {
       </div>
 
       <div ref={printRef} className="mixed-pass-print-root">
-        {Array.from({ length: printPages }).map((_, pageIndex) => {
-          const pageItems = selectedPrintItems.slice(pageIndex * 8, pageIndex * 8 + 8);
+        {Array.from({ length: normalPrintPages }).map((_, pageIndex) => {
+          const pageItems = normalPrintItems.slice(pageIndex * 8, pageIndex * 8 + 8);
           return (
             <div key={pageIndex} className="mixed-pass-print-sheet">
               {pageItems.map((item) => (
@@ -715,6 +799,21 @@ export default function ExhibitorRequestedPasses() {
                     data={dataForItem(item)}
                     scale={PRINT_SCALE}
                   />
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+
+      <div ref={foodPrintRef} className="food-coupon-print-root">
+        {Array.from({ length: foodPrintPages }).map((_, pageIndex) => {
+          const pageItems = foodPrintItems.slice(pageIndex * FOOD_COUPONS_PER_SHEET, pageIndex * FOOD_COUPONS_PER_SHEET + FOOD_COUPONS_PER_SHEET);
+          return (
+            <div key={`food-${pageIndex}`} className="food-coupon-print-sheet">
+              {pageItems.map((item) => (
+                <div key={item.id} className="food-coupon-print-card">
+                  <FoodCouponCanvas persons="2 PERSON" />
                 </div>
               ))}
             </div>

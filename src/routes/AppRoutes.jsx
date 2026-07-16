@@ -223,6 +223,7 @@ const SellerExportInquiries = lazy(() => import("../pages/SellerExportInquiries"
 const MobilePassRequests = lazy(() => import("../pages/MobilePassRequests"));
 const MobilePassConfig = lazy(() => import("../pages/MobilePassConfig"));
 const ExhibitorRequestedPasses = lazy(() => import("../pages/ExhibitorRequestedPasses"));
+const FoodCouponGeneratorPage = lazy(() => import("../pages/FoodCouponGeneratorPage"));
 const PassTemplateDesigner = lazy(() => import("../pages/PassTemplateDesigner"));
 const PassGeneratorPage = lazy(() => import("../pages/PassGeneratorPage"));
 const MobileFeedback = lazy(() => import("../pages/MobileFeedback"));
@@ -792,6 +793,7 @@ export default function AppRoutes() {
             <Route path="/passes/service" element={<PassGeneratorPage passType="service" />} />
             <Route path="/passes/vehicle" element={<PassGeneratorPage passType="vehicle" />} />
             <Route path="/passes/visitor" element={<PassGeneratorPage passType="visitor" />} />
+            <Route path="/passes/food-coupons" element={<FoodCouponGeneratorPage />} />
             <Route path="/mobile-feedback" element={<MobileFeedback />} />
             <Route path="/mobile-feedback/:id" element={<MobileFeedbackDetails />} />
             <Route path="/mobile-lead-captures" element={<MobileLeadCaptures />} />
