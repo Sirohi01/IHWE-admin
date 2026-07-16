@@ -365,25 +365,25 @@ export default function PassTemplateDesigner() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-6">
-      <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div>
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 p-3 sm:p-4 md:p-6">
+      <div className="mb-5 flex min-w-0 flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#23471d] text-white">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#23471d] text-white">
               <Layers size={19} />
             </div>
-            <div>
-              <h1 className="text-2xl font-black text-slate-900">Pass Template Designer</h1>
+            <div className="min-w-0">
+              <h1 className="text-xl font-black text-slate-900 sm:text-2xl">Pass Template Designer</h1>
               <p className="text-xs font-bold text-slate-500">Default size: 1122px x 1533px. Name/category: Arial. Date/hall: Aladin.</p>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => load()} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-700">
+        <div className="flex min-w-0 flex-wrap gap-2">
+          <button type="button" onClick={() => load()} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-700">
             <RefreshCw size={15} /> Reload
           </button>
-          <button type="button" onClick={save} disabled={saving} className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#23471d] px-4 text-xs font-black text-white disabled:opacity-60">
+          <button type="button" onClick={save} disabled={saving} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#23471d] px-4 text-xs font-black text-white disabled:opacity-60">
             {saving ? <RefreshCw size={15} className="animate-spin" /> : <Save size={15} />} Save
           </button>
         </div>
@@ -392,8 +392,8 @@ export default function PassTemplateDesigner() {
       {error && <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-700">{error}</div>}
       {status && <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-bold text-emerald-700">{status}</div>}
 
-      <div className="mb-4 grid grid-cols-1 gap-3 xl:grid-cols-[320px_1fr]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="mb-4 grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
+        <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <div>
               <p className="text-sm font-black text-slate-900">Saved Templates</p>
@@ -422,22 +422,22 @@ export default function PassTemplateDesigner() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div>
+        <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="min-w-0">
               <p className="text-sm font-black text-slate-900">Current Template</p>
               <p className="mt-1 text-xs font-bold text-slate-500">{template?.name || "No template selected"}</p>
               <p className="mt-1 text-[11px] font-bold text-slate-400">Current categories: {(template?.categories || []).join(", ") || "General"}</p>
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
               <select
                 value={selectedTemplateType}
                 onChange={event => setSelectedTemplateType(event.target.value)}
-                className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 outline-none"
+                className="h-10 min-w-0 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 outline-none"
               >
                 {PASS_TEMPLATE_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
               </select>
-              <button type="button" onClick={saveAsType} disabled={saving} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[#23471d] bg-white px-4 text-xs font-black text-[#23471d] disabled:opacity-60">
+              <button type="button" onClick={saveAsType} disabled={saving} className="inline-flex h-10 min-w-0 items-center justify-center gap-2 rounded-xl border border-[#23471d] bg-white px-4 text-xs font-black text-[#23471d] disabled:opacity-60">
                 <Copy size={15} /> Save As Separate Type
               </button>
             </div>
@@ -445,10 +445,10 @@ export default function PassTemplateDesigner() {
         </div>
       </div>
 
-      <div className="mb-4 grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto]">
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
+      <div className="mb-4 grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="min-w-0 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="min-w-0">
               <p className="text-sm font-black text-amber-900">Full Pass Background Image</p>
               <p className="mt-1 text-xs font-bold text-amber-700">
                 Upload the complete 1122 x 1533 px pass/background image here. Editable logos and text can be managed as layers above it.
@@ -462,13 +462,13 @@ export default function PassTemplateDesigner() {
           </div>
           {(backgroundLayer?.quality?.warnings || []).map(warning => <p key={warning} className="mt-2 text-[11px] font-bold text-amber-700">{warning}</p>)}
         </div>
-        <button type="button" onClick={() => setSelectedLayerId("pass-background-image")} className="rounded-2xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-700 shadow-sm">
+        <button type="button" onClick={() => setSelectedLayerId("pass-background-image")} className="min-h-11 rounded-2xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-700 shadow-sm">
           Select Background Layer
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[260px_minmax(640px,1fr)_320px]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="grid min-w-0 grid-cols-1 gap-4 2xl:grid-cols-[240px_minmax(0,1fr)_300px]">
+        <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm 2xl:max-h-[calc(100vh-220px)] 2xl:overflow-auto">
           <p className="mb-3 text-xs font-black uppercase tracking-widest text-slate-500">Layers</p>
           <div className="space-y-1">
             {[...(template?.layers || [])].sort((a, b) => Number(b.zIndex || 0) - Number(a.zIndex || 0)).map(layer => (
@@ -488,8 +488,8 @@ export default function PassTemplateDesigner() {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 p-4 shadow-sm">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white px-3 py-2">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 p-3 shadow-sm sm:p-4">
+          <div className="mb-3 flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-xl bg-white px-3 py-2">
             <p className="text-xs font-black text-slate-600">Preview</p>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black uppercase text-slate-400">Aspect Fit</span>
@@ -505,89 +505,91 @@ export default function PassTemplateDesigner() {
             </div>
           </div>
 
-          <div
-            className="mx-auto rounded bg-white shadow-xl"
-            style={{
-              width: Number(canvas.width) * previewScale,
-              height: Number(canvas.height) * previewScale,
-              maxWidth: "100%",
-              aspectRatio: `${Number(canvas.width)} / ${Number(canvas.height)}`,
-            }}
-          >
+          <div className="w-full overflow-auto pb-2">
             <div
-              className="relative overflow-hidden"
+              className="mx-auto rounded bg-white shadow-xl"
               style={{
-                width: Number(canvas.width),
-                height: Number(canvas.height),
-                backgroundColor: canvas.backgroundColor,
-                transform: `scale(${previewScale})`,
-                transformOrigin: "top left",
+                width: Number(canvas.width) * previewScale,
+                height: Number(canvas.height) * previewScale,
+                maxWidth: "100%",
+                aspectRatio: `${Number(canvas.width)} / ${Number(canvas.height)}`,
               }}
             >
               <div
-                className="pointer-events-none absolute border border-dashed border-emerald-500/60"
+                className="relative overflow-hidden"
                 style={{
-                  left: canvas.safeArea?.left || 0,
-                  top: canvas.safeArea?.top || 0,
-                  right: canvas.safeArea?.right || 0,
-                  bottom: canvas.safeArea?.bottom || 0,
-                  zIndex: 999,
+                  width: Number(canvas.width),
+                  height: Number(canvas.height),
+                  backgroundColor: canvas.backgroundColor,
+                  transform: `scale(${previewScale})`,
+                  transformOrigin: "top left",
                 }}
-              />
-              {visibleLayers.map(layer => {
-                const isFullBackground = layer.id === "pass-background-image";
-                const bleed = isFullBackground ? 12 : 0;
-                return (
-                <button
+              >
+                <div
+                  className="pointer-events-none absolute border border-dashed border-emerald-500/60"
+                  style={{
+                    left: canvas.safeArea?.left || 0,
+                    top: canvas.safeArea?.top || 0,
+                    right: canvas.safeArea?.right || 0,
+                    bottom: canvas.safeArea?.bottom || 0,
+                    zIndex: 999,
+                  }}
+                />
+                {visibleLayers.map(layer => {
+                  const isFullBackground = layer.id === "pass-background-image";
+                  const bleed = isFullBackground ? 12 : 0;
+                  return (
+                  <button
                     key={layer.id}
                     type="button"
                     onClick={() => setSelectedLayerId(layer.id)}
-                  className={`absolute overflow-hidden ${selectedLayerId === layer.id ? "ring-2 ring-[#23471d]" : ""}`}
-                  style={{
-                    left: isFullBackground ? -bleed : Number(layer.x || 0),
-                    top: isFullBackground ? -bleed : Number(layer.y || 0),
-                    width: isFullBackground ? Number(canvas.width) + (bleed * 2) : Number(layer.width || 0),
-                    height: isFullBackground ? Number(canvas.height) + (bleed * 2) : Number(layer.height || 0),
-                      opacity: Number(layer.opacity || 1),
-                      transform: `rotate(${Number(layer.rotation || 0)}deg)`,
-                      zIndex: Number(layer.zIndex || 0),
-                    }}
-                  >
-                    {layer.type === "shape" && <div className="h-full w-full" style={{ background: layer.style?.gradient || layer.style?.backgroundColor, border: layer.style?.border, borderRadius: layer.style?.borderRadius }} />}
-                    {layer.type === "image" && (
-                      <div className="flex h-full w-full items-center justify-center overflow-hidden text-xs font-black text-slate-400" style={{ padding: layer.padding, border: layer.border, borderRadius: layer.borderRadius, backgroundColor: layer.backgroundColor }}>
-                        {layer.assetUrl ? (
-                          <img src={assetSrc(layer.assetUrl)} alt={layer.name} style={{ display: "block", width: "100%", height: "100%", objectFit: isFullBackground ? "cover" : (layer.objectFit || "contain"), objectPosition: layer.objectPosition || "center", filter: layer.filter, mixBlendMode: layer.mixBlendMode }} />
-                        ) : layer.placeholder}
-                      </div>
-                    )}
-                    {layer.type === "text" && (
-                      <div
-                        className="flex h-full w-full items-center justify-center whitespace-pre-line"
-                        style={{
-                          fontFamily: layer.style?.fontFamily,
-                          fontSize: layer.style?.fontSize,
-                          fontWeight: layer.style?.fontWeight,
-                          color: layer.style?.color,
-                          lineHeight: layer.style?.lineHeight,
-                          textAlign: layer.style?.textAlign,
-                          textTransform: layer.style?.textTransform,
-                          letterSpacing: layer.style?.letterSpacing,
-                          textShadow: layer.style?.textShadow,
-                        }}
-                      >
-                        {renderText(layer.text)}
-                      </div>
-                    )}
-                    {layer.type === "logoGroup" && renderLogoGroup(layer.groupId)}
-                  </button>
-                )
-              })}
+                    className={`absolute overflow-hidden ${selectedLayerId === layer.id ? "ring-2 ring-[#23471d]" : ""}`}
+                    style={{
+                      left: isFullBackground ? -bleed : Number(layer.x || 0),
+                      top: isFullBackground ? -bleed : Number(layer.y || 0),
+                      width: isFullBackground ? Number(canvas.width) + (bleed * 2) : Number(layer.width || 0),
+                      height: isFullBackground ? Number(canvas.height) + (bleed * 2) : Number(layer.height || 0),
+                        opacity: Number(layer.opacity || 1),
+                        transform: `rotate(${Number(layer.rotation || 0)}deg)`,
+                        zIndex: Number(layer.zIndex || 0),
+                      }}
+                    >
+                      {layer.type === "shape" && <div className="h-full w-full" style={{ background: layer.style?.gradient || layer.style?.backgroundColor, border: layer.style?.border, borderRadius: layer.style?.borderRadius }} />}
+                      {layer.type === "image" && (
+                        <div className="flex h-full w-full items-center justify-center overflow-hidden text-xs font-black text-slate-400" style={{ padding: layer.padding, border: layer.border, borderRadius: layer.borderRadius, backgroundColor: layer.backgroundColor }}>
+                          {layer.assetUrl ? (
+                            <img src={assetSrc(layer.assetUrl)} alt={layer.name} style={{ display: "block", width: "100%", height: "100%", objectFit: isFullBackground ? "cover" : (layer.objectFit || "contain"), objectPosition: layer.objectPosition || "center", filter: layer.filter, mixBlendMode: layer.mixBlendMode }} />
+                          ) : layer.placeholder}
+                        </div>
+                      )}
+                      {layer.type === "text" && (
+                        <div
+                          className="flex h-full w-full items-center justify-center whitespace-pre-line"
+                          style={{
+                            fontFamily: layer.style?.fontFamily,
+                            fontSize: layer.style?.fontSize,
+                            fontWeight: layer.style?.fontWeight,
+                            color: layer.style?.color,
+                            lineHeight: layer.style?.lineHeight,
+                            textAlign: layer.style?.textAlign,
+                            textTransform: layer.style?.textTransform,
+                            letterSpacing: layer.style?.letterSpacing,
+                            textShadow: layer.style?.textShadow,
+                          }}
+                        >
+                          {renderText(layer.text)}
+                        </div>
+                      )}
+                      {layer.type === "logoGroup" && renderLogoGroup(layer.groupId)}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+        <div className="min-w-0 space-y-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm 2xl:max-h-[calc(100vh-220px)] 2xl:overflow-auto">
           <p className="text-xs font-black uppercase tracking-widest text-slate-500">Selected Layer</p>
           {selectedLayer ? (
             <>

@@ -76,9 +76,13 @@ const concurrentLogoSlots = [
     { id: "concurrent-7", src: concurrentIcoaLogo, alt: "ICOA", fit: "icoa", supportedBy: true },
 ];
 
-
-const Certi = ({ config, images }) => {
-    const safeCompanyName = String(config?.recipientName || "").trim() || "";
+const Certi = ({
+    recipientName = "",
+    supportedByLogo = msmeSupportedBy,
+    mainLogo = namoGangeLogo,
+    titleLogo = eventLogo,
+}) => {
+    const safeCompanyName = String(recipientName || "").trim() || "";
 
     return (
         <div className="certi-page-shell">
@@ -240,7 +244,7 @@ const Certi = ({ config, images }) => {
                     min-height: 5.2mm;
                     align-items: flex-end;
                     justify-content: center;
-                    color: var(--certificate-red);
+                    color: var(--certificate-dark);
                     border-bottom: 1.5px dotted rgba(124, 87, 37, 0.38);
                     font-size: 20px !important;
                     font-weight: 700;
@@ -699,79 +703,86 @@ const Certi = ({ config, images }) => {
                 >
                     <img
                         className="certificate-image msme-logo"
-                        src={images?.supportedByLogo}
+                        src={supportedByLogo}
                         alt="Supported by Government of India, Ministry of MSME"
                     />
-                    <div className="supported-by-text">{config?.supportedByText}</div>
+                    <div className="supported-by-text">SUPPORTED BY:</div>
 
                     <img
                         className="certificate-image namo-logo"
-                        src={images?.mainLogo}
+                        src={mainLogo}
                         alt="Namo Gange"
                     />
 
-                    <div className="presents-text">{config?.presentsText}</div>
+                    <div className="presents-text">Presents</div>
 
                     <img
                         className="certificate-image event-title-logo"
-                        src={images?.titleLogo}
+                        src={titleLogo}
                         alt="18th Edition Arogya Sangoshthi"
                     />
 
                     <img
                         className="certificate-image certificate-heading"
-                        src={images?.certificateHeading}
+                        src={certificateHeading}
                         alt="Certificate of Participation"
                     />
 
                     <div className="certificate-body">
                         <p>
-                            {config?.bodyTextPart1}{" "}
+                            This is to certify that{" "}
                             <span className="recipient-name">
                                 {safeCompanyName}
                             </span>{" "}
-                            {config?.bodyTextPart2} <br /> 
+                            has actively participated in the 18th <br /> Edition of{" "}
                             <span className="certificate-blue-text">
-                                {config?.highlightText1}
+                                Arogya Sangosthi
                             </span>{" "}
-                            {config?.bodyTextPart3}{" "}
+                            Seminar &amp; 9th Edition of{" "}
                             <span className="certificate-blue-text">
-                                {config?.highlightText2} <br />
+                                International Health &amp; Wellness <br />
                             </span>{" "}
                             <span className="certificate-blue-text">
-                                {config?.highlightText3}
+                                Expo 2026
                             </span>
-                            {config?.bodyTextPart4} <br /> {config?.bodyTextPart5} <br /> {config?.bodyTextPart6} <br /> {config?.bodyTextPart7} <br /> {config?.bodyTextPart8} <br /> {config?.bodyTextPart9}
+                            , organised by Namo Gange Trust, held from 21st
+                            August to 23rd August 2026 <br /> at Pragati Maidan, New
+                            Delhi, Bharat. <br /> Your valuable contributions and
+                            active engagement during the seminar have greatly <br />
+                            enriched the discussions on healthcare and wellness. <br />
+                            We, at Namo Gange Trust, appreciate your dedication
+                            and wish you continued success <br /> in your future
+                            endeavours.
                         </p>
                     </div>
 
                     <div className="signature-line" />
 
                     <div className="signature-block founder-signature">
-                        <img src={images?.founderSignature} alt="{config?.founderName} signature" />
-                        <div className="signature-name">{config?.founderName}</div>
-                        <div className="signature-role">{config?.founderRole}</div>
+                        <img src={founderSignature} alt="H.H. Shri Acharya Jagdish Ji signature" />
+                        <div className="signature-name">H.H. Shri Acharya Jagdish Ji</div>
+                        <div className="signature-role">Founder</div>
                     </div>
 
                     <img
                         className="certificate-image global-award-logo"
-                        src={images?.globalAwardLogo}
+                        src={globalAwardLogo}
                         alt="Namo Gange Global Healthcare Excellence Award"
                     />
 
                     <div className="signature-block chairman-signature">
-                        <img src={images?.chairmanSignature} alt="{config?.chairmanName} signature" />
-                        <div className="signature-name">{config?.chairmanName}</div>
-                        <div className="signature-role">{config?.chairmanRole}</div>
+                        <img src={chairmanSignature} alt="Shri Vijay Sharma signature" />
+                        <div className="signature-name">Shri Vijay Sharma</div>
+                        <div className="signature-role">Chairman</div>
                     </div>
 
                     <div className="certificate-section-title initiatives-title">
-                        {config?.initiativesTitle}
+                        Namo Gange Trust Initiatives
                     </div>
 
                     <div
                         className="logo-placeholder-grid initiative-logo-grid"
-                        aria-label="{config?.initiativesTitle} logos"
+                        aria-label="Namo Gange Trust Initiatives logos"
                     >
                         {initiativeLogoSlots.map((logo) => (
                             <div className="logo-placeholder-cell" key={logo.id}>
@@ -781,7 +792,7 @@ const Certi = ({ config, images }) => {
                     </div>
 
                     <div className="certificate-section-title concurrent-title">
-                        {config?.concurrentTitle}
+                        CONCURRENT EVENTS
                     </div>
 
                     <div
@@ -810,9 +821,10 @@ const Certi = ({ config, images }) => {
                     </div>
 
                     <div className="certificate-footer certificate-footer-address">
-                        {config?.footerAddress}
+                        Head Office: 12/52, Site-II, Loni Road Industrial Area,
+                        Mohan Nagar, Ghaziabad 201007, UP, Bharat
                         <br />
-                        {config?.footerContact}
+                        info@namogange.org | web: www.namogange.org
                     </div>
                 </section>
             </div>

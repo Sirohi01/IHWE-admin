@@ -318,7 +318,7 @@ const UpcomingEvent = lazy(() => import("../pages/UpcomingEvent"));
 // Marketing Materials
 const MarketingMaterialPage = lazy(() => import("../pages/ihwe_client_data_2026/MarketingMaterialPage"));
 const MarketingManagement = lazy(() => import("../pages/admin_management/MarketingManagement"));
-const Certi = lazy(() => import("../components/certificates/Certi"));
+const CertificatesGenerator = lazy(() => import("../pages/CertificatesGenerator"));
 const Certificate = lazy(() => import("../pages/Certificate"));
 
 export default function AppRoutes() {
@@ -840,7 +840,7 @@ export default function AppRoutes() {
 
             {/* Communication */}
             <Route path="communication" element={<Communication />} />
-            <Route path="certificates-generation" element={<Certi />} />
+            <Route path="certificates-generation" element={<CertificatesGenerator />} />
             <Route path="certificatesgeneration" element={<Navigate to="/certificates-generation" replace />} />
           </Route>
           <Route path="*" element={<NotFound />} />

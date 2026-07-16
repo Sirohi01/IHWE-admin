@@ -131,11 +131,35 @@ export default function PassGeneratorPage({ passType = "organizer" }) {
   const [printGapDraft, setPrintGapDraft] = useState("0.7");
   const [printRowGapCm, setPrintRowGapCm] = useState(1.3);
   const [printRowGapDraft, setPrintRowGapDraft] = useState("1.3");
+  const previewBoxRef = useRef(null);
+  const [previewBoxWidth, setPreviewBoxWidth] = useState(0);
 
   const selectedRows = useMemo(() => nameRows.filter((row) => row.selected && row.name.trim()), [nameRows]);
   const printRows = selectedRows.length ? selectedRows : nameRows.filter((row) => row.name.trim());
   const hasTypeTemplate = useMemo(() => templateMatchesType(template, config.templateNames), [template, config.templateNames]);
-  const previewScale = 0.24;
+  const previewScale = useMemo(() => {
+    const canvasWidth = Number(template?.canvas?.width || TEMPLATE_CANVAS_WIDTH);
+    const availableWidth = Math.max((previewBoxWidth || 0) - 24, 0);
+    if (!availableWidth || !canvasWidth) return 0.24;
+    return Math.min(0.24, Math.max(0.12, availableWidth / canvasWidth));
+  }, [template, previewBoxWidth]);
+
+  useEffect(() => {
+    const node = previewBoxRef.current;
+    if (!node) return undefined;
+
+    const updatePreviewWidth = () => setPreviewBoxWidth(node.clientWidth || 0);
+    updatePreviewWidth();
+
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updatePreviewWidth);
+      return () => window.removeEventListener("resize", updatePreviewWidth);
+    }
+
+    const observer = new ResizeObserver(updatePreviewWidth);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -328,7 +352,7 @@ export default function PassGeneratorPage({ passType = "organizer" }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-6">
+    <div className="min-h-screen overflow-x-hidden bg-slate-50 p-4 md:p-6">
       <style>{`
         .pass-print-root { position: fixed; left: -10000px; top: 0; width: ${passesPerPage === 8 ? "42cm" : "297mm"}; opacity: 0; pointer-events: none; }
         @media print {
@@ -468,8 +492,8 @@ export default function PassGeneratorPage({ passType = "organizer" }) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[360px_minmax(520px,1fr)_300px]">
-        <div className="space-y-4">
+      <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-[minmax(260px,360px)_minmax(0,1fr)_minmax(240px,300px)]">
+        <div className="min-w-0 space-y-4">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <p className="mb-3 text-sm font-black text-slate-900">Batch Setup</p>
             <label className="block">
@@ -535,7 +559,7 @@ export default function PassGeneratorPage({ passType = "organizer" }) {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div>
               <p className="text-sm font-black text-slate-900">Names</p>
@@ -547,7 +571,7 @@ export default function PassGeneratorPage({ passType = "organizer" }) {
           </div>
           <div className="max-h-[540px] space-y-2 overflow-auto pr-1">
             {nameRows.map((row, index) => (
-              <div key={row.id} className="grid grid-cols-[34px_1fr_36px] items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
+              <div key={row.id} className="grid min-w-0 grid-cols-[34px_minmax(0,1fr)_36px] items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
                 <input
                   type="checkbox"
                   checked={row.selected}
@@ -559,7 +583,7 @@ export default function PassGeneratorPage({ passType = "organizer" }) {
                   value={row.name}
                   onChange={(event) => updateRow(row.id, { name: event.target.value })}
                   placeholder={`Name ${index + 1}`}
-                  className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold outline-none focus:border-[#23471d]"
+                  className="min-w-0 h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold outline-none focus:border-[#23471d]"
                 />
                 <button type="button" onClick={() => removeRow(row.id)} className="flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 bg-white text-rose-600">
                   <Trash2 size={14} />
@@ -569,13 +593,13 @@ export default function PassGeneratorPage({ passType = "organizer" }) {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="mb-3 flex items-center gap-2">
             <LayoutGrid size={16} className="text-[#23471d]" />
             <p className="text-sm font-black text-slate-900">Preview</p>
           </div>
           {template ? (
-            <div className="flex justify-center rounded-xl bg-slate-100 p-3">
+            <div ref={previewBoxRef} className="flex w-full min-w-0 justify-center overflow-hidden rounded-xl bg-slate-100 p-3">
               <PassTemplateCanvas
                 template={template}
                 data={dataForName(printRows[0]?.name || "Sample Name")}
