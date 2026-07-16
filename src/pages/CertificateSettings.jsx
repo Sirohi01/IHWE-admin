@@ -5,17 +5,31 @@ import { toast } from 'react-hot-toast';
 const CertificateSettings = () => {
     const [formData, setFormData] = useState({
         certi_name: '',
-        certi_description: '',
+        certi_desc1: '',
+        certi_desc1_part2: '',
+        certi_desc2: '',
+        certi_desc3: '',
+        certi_address: '',
         sign1_name: '',
         sign1_designation: '',
         sign2_name: '',
-        sign2_designation: ''
+        sign2_designation: '',
+        header_left_heading: 'SUPPORTED BY:',
+        header_left_enable: true,
+        header_center_text: 'Presents',
+        header_center_enable: true,
+        header_right_heading: 'SUPPORTED BY:',
+        header_right_enable: false
     });
 
     const [files, setFiles] = useState({
         expo_logo: null,
         sign1_image: null,
         sign2_image: null,
+        header_left_logo: null,
+        header_center_logo: null,
+        header_right_logo: null,
+        certificate_title_image: null,
         namo_gange_trust_logos: [],
         concurrent_events: []
     });
@@ -39,16 +53,30 @@ const CertificateSettings = () => {
                 const data = response.data.data;
                 setFormData({
                     certi_name: data.certi_name || '',
-                    certi_description: data.certi_description || '',
+                    certi_desc1: data.certi_desc1 || '',
+                    certi_desc1_part2: data.certi_desc1_part2 || '',
+                    certi_desc2: data.certi_desc2 || '',
+                    certi_desc3: data.certi_desc3 || '',
+                    certi_address: data.certi_address || '',
                     sign1_name: data.sign1_name || '',
                     sign1_designation: data.sign1_designation || '',
                     sign2_name: data.sign2_name || '',
-                    sign2_designation: data.sign2_designation || ''
+                    sign2_designation: data.sign2_designation || '',
+                    header_left_heading: data.header_left_heading || 'SUPPORTED BY:',
+                    header_left_enable: data.header_left_enable !== undefined ? data.header_left_enable : true,
+                    header_center_text: data.header_center_text || 'Presents',
+                    header_center_enable: data.header_center_enable !== undefined ? data.header_center_enable : true,
+                    header_right_heading: data.header_right_heading || 'SUPPORTED BY:',
+                    header_right_enable: data.header_right_enable !== undefined ? data.header_right_enable : false
                 });
                 setPreviews({
                     expo_logo: data.expo_logo,
                     sign1_image: data.sign1_image,
                     sign2_image: data.sign2_image,
+                    header_left_logo: data.header_left_logo,
+                    header_center_logo: data.header_center_logo,
+                    header_right_logo: data.header_right_logo,
+                    certificate_title_image: data.certificate_title_image,
                     namo_gange_trust_logos: data.namo_gange_trust_logos || [],
                     concurrent_events: data.concurrent_events || []
                 });
@@ -60,8 +88,11 @@ const CertificateSettings = () => {
     };
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
     };
 
     const handleFileChange = (e, fieldName) => {
@@ -69,17 +100,17 @@ const CertificateSettings = () => {
             if (fieldName === 'namo_gange_trust_logos' || fieldName === 'concurrent_events') {
                 const newSelectedFiles = Array.from(e.target.files);
 
-                // Append instead of replace
+                // Replace instead of append (like standard file inputs)
                 setFiles(prev => ({
                     ...prev,
-                    [fieldName]: [...(prev[fieldName] || []), ...newSelectedFiles]
+                    [fieldName]: newSelectedFiles
                 }));
 
-                // Append preview URLs
+                // Replace preview URLs
                 const newPreviewUrls = newSelectedFiles.map(file => URL.createObjectURL(file));
                 setLocalPreviews(prev => ({
                     ...prev,
-                    [fieldName]: [...(prev[fieldName] || []), ...newPreviewUrls]
+                    [fieldName]: newPreviewUrls
                 }));
             } else {
                 const file = e.target.files[0];
@@ -124,11 +155,19 @@ const CertificateSettings = () => {
         }
 
         const payload = new FormData();
-        Object.keys(formData).forEach(key => payload.append(key, formData[key]));
+        
+        // Append all text/boolean data
+        Object.keys(formData).forEach(key => {
+            if (formData[key] !== null && formData[key] !== undefined) {
+                payload.append(key, formData[key]);
+            }
+        });
 
-        if (files.expo_logo) payload.append('expo_logo', files.expo_logo);
-        if (files.sign1_image) payload.append('sign1_image', files.sign1_image);
-        if (files.sign2_image) payload.append('sign2_image', files.sign2_image);
+        // Append single files
+        const singleFiles = ['expo_logo', 'sign1_image', 'sign2_image', 'header_left_logo', 'header_center_logo', 'header_right_logo', 'certificate_title_image'];
+        singleFiles.forEach(key => {
+            if (files[key]) payload.append(key, files[key]);
+        });
 
         if (files.namo_gange_trust_logos.length > 0) {
             files.namo_gange_trust_logos.forEach(file => {
@@ -159,6 +198,17 @@ const CertificateSettings = () => {
             });
             toast.success('Certificate settings updated!', { id: toastId });
             setLocalPreviews({}); // Clear local previews on successful save
+            setFiles({
+                expo_logo: null,
+                sign1_image: null,
+                sign2_image: null,
+                header_left_logo: null,
+                header_center_logo: null,
+                header_right_logo: null,
+                certificate_title_image: null,
+                namo_gange_trust_logos: [],
+                concurrent_events: []
+            });
             fetchData(); // Refresh previews from server
         } catch (error) {
             console.error('Error updating certificate data:', error);
@@ -173,6 +223,66 @@ const CertificateSettings = () => {
             <h1 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">Certificate Data Settings</h1>
             <form onSubmit={handleSubmit} className="bg-white p-4 rounded-xl shadow-lg w-full">
 
+                {/* Header Configuration */}
+                <div className="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h2 className="text-xl font-bold mb-4 text-blue-800 border-b border-blue-200 pb-2">Top Header Configuration</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Header Left */}
+                        <div className="bg-white p-4 rounded shadow-sm border border-gray-100">
+                            <div className="flex justify-between items-center mb-3">
+                                <label className="font-semibold text-gray-700">Left Section</label>
+                                <label className="flex items-center cursor-pointer">
+                                    <input type="checkbox" name="header_left_enable" checked={formData.header_left_enable} onChange={handleInputChange} className="mr-2 h-4 w-4 text-blue-600 rounded" />
+                                    <span className="text-sm font-medium">Enable</span>
+                                </label>
+                            </div>
+                            <input type="text" name="header_left_heading" value={formData.header_left_heading} onChange={handleInputChange} className="w-full p-2 border rounded mb-3 text-sm" placeholder="e.g. SUPPORTED BY:" />
+                            <input type="file" onChange={(e) => handleFileChange(e, 'header_left_logo')} accept="image/*" className="w-full p-1 border rounded text-sm" />
+                            {localPreviews.header_left_logo ? (
+                                <img src={localPreviews.header_left_logo} className="h-12 mt-2 object-contain" />
+                            ) : previews.header_left_logo && (
+                                <img src={`${imgBaseUrl}${previews.header_left_logo}`} className="h-12 mt-2 object-contain" />
+                            )}
+                        </div>
+
+                        {/* Header Center */}
+                        <div className="bg-white p-4 rounded shadow-sm border border-gray-100">
+                            <div className="flex justify-between items-center mb-3">
+                                <label className="font-semibold text-gray-700">Center Section</label>
+                                <label className="flex items-center cursor-pointer">
+                                    <input type="checkbox" name="header_center_enable" checked={formData.header_center_enable} onChange={handleInputChange} className="mr-2 h-4 w-4 text-blue-600 rounded" />
+                                    <span className="text-sm font-medium">Enable</span>
+                                </label>
+                            </div>
+                            <input type="text" name="header_center_text" value={formData.header_center_text} onChange={handleInputChange} className="w-full p-2 border rounded mb-3 text-sm" placeholder="e.g. Presents" />
+                            <input type="file" onChange={(e) => handleFileChange(e, 'header_center_logo')} accept="image/*" className="w-full p-1 border rounded text-sm" />
+                            {localPreviews.header_center_logo ? (
+                                <img src={localPreviews.header_center_logo} className="h-12 mt-2 object-contain" />
+                            ) : previews.header_center_logo && (
+                                <img src={`${imgBaseUrl}${previews.header_center_logo}`} className="h-12 mt-2 object-contain" />
+                            )}
+                        </div>
+
+                        {/* Header Right */}
+                        <div className="bg-white p-4 rounded shadow-sm border border-gray-100">
+                            <div className="flex justify-between items-center mb-3">
+                                <label className="font-semibold text-gray-700">Right Section</label>
+                                <label className="flex items-center cursor-pointer">
+                                    <input type="checkbox" name="header_right_enable" checked={formData.header_right_enable} onChange={handleInputChange} className="mr-2 h-4 w-4 text-blue-600 rounded" />
+                                    <span className="text-sm font-medium">Enable</span>
+                                </label>
+                            </div>
+                            <input type="text" name="header_right_heading" value={formData.header_right_heading} onChange={handleInputChange} className="w-full p-2 border rounded mb-3 text-sm" placeholder="e.g. SPONSORED BY:" />
+                            <input type="file" onChange={(e) => handleFileChange(e, 'header_right_logo')} accept="image/*" className="w-full p-1 border rounded text-sm" />
+                            {localPreviews.header_right_logo ? (
+                                <img src={localPreviews.header_right_logo} className="h-12 mt-2 object-contain" />
+                            ) : previews.header_right_logo && (
+                                <img src={`${imgBaseUrl}${previews.header_right_logo}`} className="h-12 mt-2 object-contain" />
+                            )}
+                        </div>
+                    </div>
+                </div>
+
                 {/* Expo Logo */}
                 <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <label className="block text-lg font-semibold mb-3 text-gray-700">Expo Logo (Top Left)</label>
@@ -182,6 +292,18 @@ const CertificateSettings = () => {
                         <div className="mt-2"><span className="text-xs text-green-600 font-bold mb-1 block">New Selection Preview:</span><img src={localPreviews.expo_logo} alt="Expo Logo Preview" className="h-20 object-contain border bg-white p-2 shadow-sm" /></div>
                     ) : previews.expo_logo && (
                         <div className="mt-2"><span className="text-xs text-gray-500 font-bold mb-1 block">Currently Saved:</span><img src={`${imgBaseUrl}${previews.expo_logo}`} alt="Expo Logo" className="h-20 object-contain border bg-white p-2 shadow-sm" /></div>
+                    )}
+                </div>
+
+                {/* Certificate Title Image */}
+                <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <label className="block text-lg font-semibold mb-3 text-gray-700">Certificate Title Image (e.g. CERTIFICATE Of Participation & Appreciation)</label>
+                    <input type="file" onChange={(e) => handleFileChange(e, 'certificate_title_image')} accept="image/*" className="mb-4 w-full p-2 bg-white border rounded" />
+                    
+                    {localPreviews.certificate_title_image ? (
+                        <div className="mt-2"><span className="text-xs text-green-600 font-bold mb-1 block">New Selection Preview:</span><img src={localPreviews.certificate_title_image} alt="Certificate Title Image Preview" className="h-20 object-contain border bg-white p-2 shadow-sm" /></div>
+                    ) : previews.certificate_title_image && (
+                        <div className="mt-2"><span className="text-xs text-gray-500 font-bold mb-1 block">Currently Saved:</span><img src={`${imgBaseUrl}${previews.certificate_title_image}`} alt="Certificate Title Image" className="h-20 object-contain border bg-white p-2 shadow-sm" /></div>
                     )}
                 </div>
 
@@ -197,14 +319,54 @@ const CertificateSettings = () => {
                         placeholder="CERTIFICATE Of Participation & Appreciation"
                     />
 
-                    <label className="block text-lg font-semibold mb-2 text-gray-700">Description</label>
-                    <textarea
-                        name="certi_description"
-                        value={formData.certi_description}
+                    <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Description 1 (Before Heading)</label>
+                    <textarea 
+                        name="certi_desc1" 
+                        value={formData.certi_desc1} 
                         onChange={handleInputChange}
-                        rows="4"
+                        rows="2"
                         className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder="We extend our heartfelt gratitude to..."
+                        placeholder="We extend our heartfelt gratitude to "
+                    />
+
+                    <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Description 1 (After Heading)</label>
+                    <textarea 
+                        name="certi_desc1_part2" 
+                        value={formData.certi_desc1_part2} 
+                        onChange={handleInputChange}
+                        rows="3"
+                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder="for valuable participation in the 9th..."
+                    />
+
+                    <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Description 2 (Second Paragraph)</label>
+                    <textarea 
+                        name="certi_desc2" 
+                        value={formData.certi_desc2} 
+                        onChange={handleInputChange}
+                        rows="3"
+                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder="Your stall and the innovative solutions showcased..."
+                    />
+
+                    <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Description 3 (Third Paragraph)</label>
+                    <textarea 
+                        name="certi_desc3" 
+                        value={formData.certi_desc3} 
+                        onChange={handleInputChange}
+                        rows="2"
+                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder="We deeply appreciate your commitment and support..."
+                    />
+
+                    <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Address & Contact Info</label>
+                    <textarea 
+                        name="certi_address" 
+                        value={formData.certi_address} 
+                        onChange={handleInputChange}
+                        rows="3"
+                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder="Head Office: 12/52..."
                     />
                 </div>
 
