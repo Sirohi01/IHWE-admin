@@ -76,10 +76,12 @@ const concurrentLogoSlots = [
     { id: "concurrent-7", src: concurrentIcoaLogo, alt: "ICOA", fit: "icoa", supportedBy: true },
 ];
 
+const EMPTY_IMAGE_VALUE = '__CERT_IMAGE_EMPTY__';
 
 const mergeLogoSlots = (defaults, overrides, makeCustom) =>
     defaults.map((slot, index) => {
         const override = overrides?.[index];
+        if (override === EMPTY_IMAGE_VALUE) return { ...slot, src: "" };
         return override ? makeCustom(override, index, slot) : slot;
     });
 
@@ -91,8 +93,15 @@ const nameLengthClass = (name) => {
     return "";
 };
 
+const CertificateImage = ({ className, src, alt }) => (
+    src ? <img className={className} src={src} alt={alt} /> : null
+);
+
 const Certi = ({ config, images, customInitiatives = [], customConcurrent = [], printSize = "A4" }) => {
     const safeCompanyName = String(config?.recipientName || "").trim() || "";
+    const supportedByLeftText = config?.supportedByLeftText ?? config?.supportedByText;
+    const supportedByRightText = config?.supportedByRightText ?? config?.supportedByText;
+    const supportedByBottomRightText = config?.supportedByBottomRightText ?? config?.supportedByText;
     const normalizedPrintSize = printSize === "A3" ? "A3" : "A4";
     const printPage = normalizedPrintSize === "A3"
         ? { width: 297, height: 420, scale: 297 / 210 }
@@ -765,27 +774,27 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [], 
                     className="certificate-print-area"
                     aria-label={`Certificate for ${safeCompanyName}`}
                 >
-                    <img
+                    <CertificateImage
                         className="certificate-image msme-logo"
                         src={images?.supportedByLogo}
                         alt="Supported by Government of India, Ministry of MSME"
                     />
-                    <div className="supported-by-text">{config?.supportedByText}</div>
+                    <div className="supported-by-text">{supportedByLeftText}</div>
 
-                    <img
+                    <CertificateImage
                         className="certificate-image msme-logo-right"
-                        src={images?.supportedByRightLogo || images?.supportedByLogo}
+                        src={images?.supportedByRightLogo}
                         alt="Supported by"
                     />
-                    <div className="supported-by-text supported-by-text-right-bottom">{config?.supportedByText}</div>
-                    <img
+                    <div className="supported-by-text supported-by-text-right-bottom">{supportedByBottomRightText}</div>
+                    <CertificateImage
                         className="certificate-image msme-logo-right-bottom"
-                        src={images?.supportedByBottomRightLogo || images?.supportedByRightLogo || images?.supportedByLogo}
+                        src={images?.supportedByBottomRightLogo}
                         alt="Supported by"
                     />
-                    <div className="supported-by-text supported-by-text-right">{config?.supportedByText}</div>
+                    <div className="supported-by-text supported-by-text-right">{supportedByRightText}</div>
 
-                    <img
+                    <CertificateImage
                         className="certificate-image namo-logo"
                         src={images?.mainLogo}
                         alt="Namo Gange"
@@ -793,13 +802,13 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [], 
 
                     <div className="presents-text">{config?.presentsText}</div>
 
-                    <img
+                    <CertificateImage
                         className="certificate-image event-title-logo"
                         src={images?.titleLogo}
                         alt="18th Edition Arogya Sangoshthi"
                     />
 
-                    <img
+                    <CertificateImage
                         className="certificate-image certificate-heading"
                         src={images?.certificateHeading}
                         alt="Certificate of Participation"
@@ -829,19 +838,19 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [], 
                     <div className="signature-line" />
 
                     <div className="signature-block founder-signature">
-                        <img src={images?.founderSignature} alt="{config?.founderName} signature" />
+                        {images?.founderSignature ? <img src={images.founderSignature} alt="{config?.founderName} signature" /> : null}
                         <div className="signature-name">{config?.founderName}</div>
                         <div className="signature-role">{config?.founderRole}</div>
                     </div>
 
-                    <img
+                    <CertificateImage
                         className="certificate-image global-award-logo"
                         src={images?.globalAwardLogo}
                         alt="Namo Gange Global Healthcare Excellence Award"
                     />
 
                     <div className="signature-block chairman-signature">
-                        <img src={images?.chairmanSignature} alt="{config?.chairmanName} signature" />
+                        {images?.chairmanSignature ? <img src={images.chairmanSignature} alt="{config?.chairmanName} signature" /> : null}
                         <div className="signature-name">{config?.chairmanName}</div>
                         <div className="signature-role">{config?.chairmanRole}</div>
                     </div>

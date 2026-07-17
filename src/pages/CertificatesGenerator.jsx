@@ -12,6 +12,9 @@ import globalAwardLogo from "../assets/certificates/Certificate/Global Award.png
 
 const defaultSeed = {
     supportedByText: "SUPPORTED BY:",
+    supportedByLeftText: "SUPPORTED BY:",
+    supportedByRightText: "SUPPORTED BY:",
+    supportedByBottomRightText: "SUPPORTED BY:",
     presentsText: "Presents",
     bodyTextPart1: "This is to certify that",
     recipientName: "DABUR INDIA LIMITED",
@@ -67,6 +70,7 @@ const resolveMedia = (value) => {
 };
 
 const makeEmptyArray = (count) => Array.from({ length: count }, () => '');
+const EMPTY_IMAGE_VALUE = '__CERT_IMAGE_EMPTY__';
 
 const CertificatesGenerator = () => {
     const [config, setConfig] = useState(defaultSeed);
@@ -78,6 +82,8 @@ const CertificatesGenerator = () => {
     const [concurrentFiles, setConcurrentFiles] = useState({});
     const [rawInitiativeLogos, setRawInitiativeLogos] = useState(makeEmptyArray(24));
     const [rawConcurrentLogos, setRawConcurrentLogos] = useState(makeEmptyArray(7));
+    const [clearedImageFields, setClearedImageFields] = useState([]);
+    const [resetImageFields, setResetImageFields] = useState([]);
     const [showImages, setShowImages] = useState(false);
     const [showText, setShowText] = useState(false);
     const [showInitiatives, setShowInitiatives] = useState(false);
@@ -89,17 +95,22 @@ const CertificatesGenerator = () => {
         const res = await api.get('/api/arogya-certificate-config');
         const data = res.data?.data || {};
         setConfig({ ...defaultSeed, ...Object.fromEntries(Object.keys(defaultSeed).map((key) => [key, data[key] ?? defaultSeed[key]])) });
-        setImages(Object.fromEntries(Object.keys(defaultImages).map((key) => [key, resolveMedia(data[key]) || defaultImages[key]])));
+        setImages(Object.fromEntries(Object.keys(defaultImages).map((key) => {
+            if (data[key] === EMPTY_IMAGE_VALUE) return [key, ''];
+            return [key, resolveMedia(data[key]) || defaultImages[key]];
+        })));
 
         const savedInitiatives = [...makeEmptyArray(24)];
         (data.initiativeLogos || []).forEach((url, index) => { savedInitiatives[index] = url || ''; });
         setRawInitiativeLogos(savedInitiatives);
-        setInitiativeImages(savedInitiatives.map(resolveMedia));
+        setInitiativeImages(savedInitiatives.map((url) => url === EMPTY_IMAGE_VALUE ? '' : resolveMedia(url)));
 
         const savedConcurrent = [...makeEmptyArray(7)];
         (data.concurrentLogos || []).forEach((url, index) => { savedConcurrent[index] = url || ''; });
         setRawConcurrentLogos(savedConcurrent);
-        setConcurrentImages(savedConcurrent.map(resolveMedia));
+        setConcurrentImages(savedConcurrent.map((url) => url === EMPTY_IMAGE_VALUE ? '' : resolveMedia(url)));
+        setClearedImageFields([]);
+        setResetImageFields([]);
     };
 
     useEffect(() => {
@@ -122,7 +133,31 @@ const CertificatesGenerator = () => {
         const file = files?.[0];
         if (!file) return;
         setImageFiles(prev => ({ ...prev, [name]: file }));
+        setClearedImageFields(prev => prev.filter(field => field !== name));
+        setResetImageFields(prev => prev.filter(field => field !== name));
         readPreview(file, (src) => setImages(prev => ({ ...prev, [name]: src })));
+    };
+
+    const deleteMainImage = (key) => {
+        setImages(prev => ({ ...prev, [key]: '' }));
+        setImageFiles(prev => {
+            const next = { ...prev };
+            delete next[key];
+            return next;
+        });
+        setClearedImageFields(prev => prev.includes(key) ? prev : [...prev, key]);
+        setResetImageFields(prev => prev.filter(field => field !== key));
+    };
+
+    const useDefaultMainImage = (key) => {
+        setImages(prev => ({ ...prev, [key]: defaultImages[key] }));
+        setImageFiles(prev => {
+            const next = { ...prev };
+            delete next[key];
+            return next;
+        });
+        setClearedImageFields(prev => prev.filter(field => field !== key));
+        setResetImageFields(prev => prev.includes(key) ? prev : [...prev, key]);
     };
 
     const handleLogoSlotChange = (e, index, type) => {
@@ -141,7 +176,29 @@ const CertificatesGenerator = () => {
         });
     };
 
-    const clearLogoSlot = (index, type) => {
+    const deleteLogoSlot = (index, type) => {
+        const setImagesForType = type === 'initiative' ? setInitiativeImages : setConcurrentImages;
+        const setRawForType = type === 'initiative' ? setRawInitiativeLogos : setRawConcurrentLogos;
+        const setFiles = type === 'initiative' ? setInitiativeFiles : setConcurrentFiles;
+
+        setImagesForType(prev => {
+            const next = [...prev];
+            next[index] = '';
+            return next;
+        });
+        setRawForType(prev => {
+            const next = [...prev];
+            next[index] = EMPTY_IMAGE_VALUE;
+            return next;
+        });
+        setFiles(prev => {
+            const next = { ...prev };
+            delete next[index];
+            return next;
+        });
+    };
+
+    const useDefaultLogoSlot = (index, type) => {
         const setImagesForType = type === 'initiative' ? setInitiativeImages : setConcurrentImages;
         const setRawForType = type === 'initiative' ? setRawInitiativeLogos : setRawConcurrentLogos;
         const setFiles = type === 'initiative' ? setInitiativeFiles : setConcurrentFiles;
@@ -163,12 +220,17 @@ const CertificatesGenerator = () => {
         });
     };
 
+    const clearTextField = (key) => setConfig(prev => ({ ...prev, [key]: '' }));
+    const resetTextField = (key) => setConfig(prev => ({ ...prev, [key]: defaultSeed[key] ?? '' }));
+
     const saveConfig = async () => {
         setSaving(true);
         try {
             const form = new FormData();
             Object.entries(config).forEach(([key, value]) => form.append(key, value ?? ''));
             Object.entries(imageFiles).forEach(([key, file]) => form.append(key, file));
+            form.append('clearedImageFields', JSON.stringify(clearedImageFields));
+            form.append('resetImageFields', JSON.stringify(resetImageFields));
             form.append('initiativeLogos', JSON.stringify(rawInitiativeLogos));
             form.append('concurrentLogos', JSON.stringify(rawConcurrentLogos));
             Object.entries(initiativeFiles).forEach(([index, file]) => form.append(`initiativeLogo_${index}`, file));
@@ -176,6 +238,8 @@ const CertificatesGenerator = () => {
 
             await api.post('/api/arogya-certificate-config/update', form);
             setImageFiles({});
+            setClearedImageFields([]);
+            setResetImageFields([]);
             setInitiativeFiles({});
             setConcurrentFiles({});
             await loadConfig();
@@ -221,7 +285,18 @@ const CertificatesGenerator = () => {
                     {showImages && Object.keys(images).map(key => (
                         <div key={key} style={fieldStyle}>
                             <label style={labelStyle}>{imageLabels[key] || key}</label>
+                            <div style={imagePreviewStyle}>
+                                {images[key] ? (
+                                    <img src={images[key]} alt={imageLabels[key] || key} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                                ) : (
+                                    <span style={{ fontSize: 11, color: '#999' }}>Deleted</span>
+                                )}
+                            </div>
                             <input type="file" accept="image/*" name={key} onChange={handleImageChange} style={{ fontSize: '12px' }} />
+                            <div style={buttonRowStyle}>
+                                <button type="button" onClick={() => deleteMainImage(key)} style={dangerSmallButtonStyle}>Delete</button>
+                                <button type="button" onClick={() => useDefaultMainImage(key)} style={smallButtonStyle}>Use Default</button>
+                            </div>
                         </div>
                     ))}
 
@@ -230,7 +305,7 @@ const CertificatesGenerator = () => {
                         <span>{showInitiatives ? '▼' : '▶'}</span>
                     </h3>
                     {showInitiatives && (
-                        <LogoSlotEditor count={24} images={initiativeImages} type="initiative" onChange={handleLogoSlotChange} onClear={clearLogoSlot} />
+                        <LogoSlotEditor count={24} images={initiativeImages} type="initiative" onChange={handleLogoSlotChange} onDelete={deleteLogoSlot} onDefault={useDefaultLogoSlot} />
                     )}
 
                     <h3 onClick={() => setShowConcurrent(!showConcurrent)} style={sectionHeaderStyle}>
@@ -238,7 +313,7 @@ const CertificatesGenerator = () => {
                         <span>{showConcurrent ? '▼' : '▶'}</span>
                     </h3>
                     {showConcurrent && (
-                        <LogoSlotEditor count={7} images={concurrentImages} type="concurrent" onChange={handleLogoSlotChange} onClear={clearLogoSlot} />
+                        <LogoSlotEditor count={7} images={concurrentImages} type="concurrent" onChange={handleLogoSlotChange} onDelete={deleteLogoSlot} onDefault={useDefaultLogoSlot} />
                     )}
 
                     <h3 onClick={() => setShowText(!showText)} style={sectionHeaderStyle}>
@@ -249,6 +324,10 @@ const CertificatesGenerator = () => {
                         <div key={key} style={fieldStyle}>
                             <label style={labelStyle}>{key}</label>
                             <textarea name={key} value={config[key]} onChange={handleTextChange} rows={key === 'recipientName' ? 1 : 3} style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }} />
+                            <div style={buttonRowStyle}>
+                                <button type="button" onClick={() => clearTextField(key)} style={dangerSmallButtonStyle}>Delete Text</button>
+                                <button type="button" onClick={() => resetTextField(key)} style={smallButtonStyle}>Use Default</button>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -273,8 +352,12 @@ const sectionHeaderStyle = {
 
 const fieldStyle = { display: 'flex', flexDirection: 'column', gap: '5px' };
 const labelStyle = { fontSize: '14px', fontWeight: '500' };
+const imagePreviewStyle = { width: '100%', height: 58, border: '1px solid #eee', borderRadius: 6, background: '#fafafa', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+const buttonRowStyle = { display: 'flex', gap: 8, flexWrap: 'wrap' };
+const smallButtonStyle = { padding: '6px 8px', border: '1px solid #ddd', borderRadius: 4, background: '#fff', cursor: 'pointer', fontSize: 12 };
+const dangerSmallButtonStyle = { ...smallButtonStyle, borderColor: '#f1b4b4', color: '#b42318', background: '#fff7f7' };
 
-const LogoSlotEditor = ({ count, images, type, onChange, onClear }) => (
+const LogoSlotEditor = ({ count, images, type, onChange, onDelete, onDefault }) => (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
         {Array.from({ length: count }).map((_, index) => (
             <div key={`${type}-${index}`} style={{ display: 'grid', gridTemplateColumns: '54px 1fr auto', alignItems: 'center', gap: '8px', padding: '8px', border: '1px solid #eee', borderRadius: '6px' }}>
@@ -285,7 +368,10 @@ const LogoSlotEditor = ({ count, images, type, onChange, onClear }) => (
                     <label style={{ fontSize: 13, fontWeight: 600 }}>{type === 'initiative' ? 'Initiative' : 'Concurrent'} Logo {index + 1}</label>
                     <input type="file" accept="image/*" onChange={(e) => onChange(e, index, type)} style={{ display: 'block', fontSize: 12, marginTop: 4 }} />
                 </div>
-                <button type="button" onClick={() => onClear(index, type)} style={{ padding: '6px 8px', border: '1px solid #ddd', borderRadius: 4, background: '#fff', cursor: 'pointer', fontSize: 12 }}>Default</button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <button type="button" onClick={() => onDelete(index, type)} style={dangerSmallButtonStyle}>Delete</button>
+                    <button type="button" onClick={() => onDefault(index, type)} style={smallButtonStyle}>Default</button>
+                </div>
             </div>
         ))}
     </div>
