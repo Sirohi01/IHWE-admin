@@ -19,7 +19,9 @@ const CertificateSettings = () => {
         header_center_text: 'Presents',
         header_center_enable: true,
         header_right_heading: 'SUPPORTED BY:',
-        header_right_enable: false
+        header_right_enable: false,
+        header_right_bottom_heading: 'AFFILIATED BY:',
+        header_right_bottom_enable: false
     });
 
     const [files, setFiles] = useState({
@@ -29,6 +31,7 @@ const CertificateSettings = () => {
         header_left_logo: null,
         header_center_logo: null,
         header_right_logo: null,
+        header_right_bottom_logo: null,
         certificate_title_image: null,
         namo_gange_trust_logos: [],
         concurrent_events: []
@@ -36,6 +39,7 @@ const CertificateSettings = () => {
 
     const [previews, setPreviews] = useState({});
     const [localPreviews, setLocalPreviews] = useState({});
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -63,11 +67,13 @@ const CertificateSettings = () => {
                     sign2_name: data.sign2_name || '',
                     sign2_designation: data.sign2_designation || '',
                     header_left_heading: data.header_left_heading || 'SUPPORTED BY:',
-                    header_left_enable: data.header_left_enable !== undefined ? data.header_left_enable : true,
+                    header_left_enable: data.header_left_enable !== false,
                     header_center_text: data.header_center_text || 'Presents',
-                    header_center_enable: data.header_center_enable !== undefined ? data.header_center_enable : true,
+                    header_center_enable: data.header_center_enable !== false,
                     header_right_heading: data.header_right_heading || 'SUPPORTED BY:',
-                    header_right_enable: data.header_right_enable !== undefined ? data.header_right_enable : false
+                    header_right_enable: data.header_right_enable || false,
+                    header_right_bottom_heading: data.header_right_bottom_heading || 'AFFILIATED BY:',
+                    header_right_bottom_enable: data.header_right_bottom_enable || false
                 });
                 setPreviews({
                     expo_logo: data.expo_logo,
@@ -76,6 +82,7 @@ const CertificateSettings = () => {
                     header_left_logo: data.header_left_logo,
                     header_center_logo: data.header_center_logo,
                     header_right_logo: data.header_right_logo,
+                    header_right_bottom_logo: data.header_right_bottom_logo,
                     certificate_title_image: data.certificate_title_image,
                     namo_gange_trust_logos: data.namo_gange_trust_logos || [],
                     concurrent_events: data.concurrent_events || []
@@ -145,12 +152,39 @@ const CertificateSettings = () => {
         });
     };
 
+    const handleDragStart = (e, index, fieldName) => {
+        e.dataTransfer.setData('dragIndex', index);
+        e.dataTransfer.setData('fieldName', fieldName);
+    };
+
+    const handleDrop = (e, dropIndex, fieldName) => {
+        e.preventDefault();
+        const dragIndex = parseInt(e.dataTransfer.getData('dragIndex'));
+        const dragField = e.dataTransfer.getData('fieldName');
+
+        if (dragField === fieldName && dragIndex !== dropIndex) {
+            setPreviews(prev => {
+                const newArray = [...prev[fieldName]];
+                const temp = newArray[dragIndex];
+                newArray[dragIndex] = newArray[dropIndex];
+                newArray[dropIndex] = temp;
+                return { ...prev, [fieldName]: newArray };
+            });
+        }
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSaving(true);
         const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
 
         if (!token) {
             toast.error('Authentication token not found. Please log in again.');
+            setIsSaving(false);
             return;
         }
 
@@ -164,7 +198,7 @@ const CertificateSettings = () => {
         });
 
         // Append single files
-        const singleFiles = ['expo_logo', 'sign1_image', 'sign2_image', 'header_left_logo', 'header_center_logo', 'header_right_logo', 'certificate_title_image'];
+        const singleFiles = ['expo_logo', 'sign1_image', 'sign2_image', 'header_left_logo', 'header_center_logo', 'header_right_logo', 'header_right_bottom_logo', 'certificate_title_image'];
         singleFiles.forEach(key => {
             if (files[key]) payload.append(key, files[key]);
         });
@@ -205,6 +239,7 @@ const CertificateSettings = () => {
                 header_left_logo: null,
                 header_center_logo: null,
                 header_right_logo: null,
+                header_right_bottom_logo: null,
                 certificate_title_image: null,
                 namo_gange_trust_logos: [],
                 concurrent_events: []
@@ -213,6 +248,8 @@ const CertificateSettings = () => {
         } catch (error) {
             console.error('Error updating certificate data:', error);
             toast.error('Failed to update certificate settings');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -278,6 +315,24 @@ const CertificateSettings = () => {
                                 <img src={localPreviews.header_right_logo} className="h-12 mt-2 object-contain" />
                             ) : previews.header_right_logo && (
                                 <img src={`${imgBaseUrl}${previews.header_right_logo}`} className="h-12 mt-2 object-contain" />
+                            )}
+                        </div>
+
+                        {/* Header Right Bottom */}
+                        <div className="bg-white p-4 rounded shadow-sm border border-gray-100">
+                            <div className="flex justify-between items-center mb-3">
+                                <label className="font-semibold text-gray-700">Right Bottom Section</label>
+                                <label className="flex items-center cursor-pointer">
+                                    <input type="checkbox" name="header_right_bottom_enable" checked={formData.header_right_bottom_enable} onChange={handleInputChange} className="mr-2 h-4 w-4 text-blue-600 rounded" />
+                                    <span className="text-sm font-medium">Enable</span>
+                                </label>
+                            </div>
+                            <input type="text" name="header_right_bottom_heading" value={formData.header_right_bottom_heading} onChange={handleInputChange} className="w-full p-2 border rounded mb-3 text-sm" placeholder="e.g. AFFILIATED BY:" />
+                            <input type="file" onChange={(e) => handleFileChange(e, 'header_right_bottom_logo')} accept="image/*" className="w-full p-1 border rounded text-sm" />
+                            {localPreviews.header_right_bottom_logo ? (
+                                <img src={localPreviews.header_right_bottom_logo} className="h-12 mt-2 object-contain" />
+                            ) : previews.header_right_bottom_logo && (
+                                <img src={`${imgBaseUrl}${previews.header_right_bottom_logo}`} className="h-12 mt-2 object-contain" />
                             )}
                         </div>
                     </div>
@@ -421,9 +476,17 @@ const CertificateSettings = () => {
                                 <span className="text-xs text-gray-500 font-bold mb-2 block">Currently Saved ({previews.namo_gange_trust_logos.length} files):</span>
                                 <div className="flex flex-wrap gap-3">
                                     {previews.namo_gange_trust_logos.map((img, idx) => (
-                                        <div key={idx} className="relative group">
+                                        <div 
+                                            key={idx} 
+                                            className="relative group cursor-move"
+                                            draggable
+                                            onDragStart={(e) => handleDragStart(e, idx, 'namo_gange_trust_logos')}
+                                            onDrop={(e) => handleDrop(e, idx, 'namo_gange_trust_logos')}
+                                            onDragOver={handleDragOver}
+                                        >
+                                            <span className="absolute -top-2 -left-2 bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs z-10 shadow">{idx + 1}</span>
                                             <img src={`${imgBaseUrl}${img}`} className="h-16 w-24 object-contain border bg-white p-1 shadow-sm rounded" alt="Initiative" />
-                                            <button type="button" onClick={() => removeExistingFile('namo_gange_trust_logos', idx)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">X</button>
+                                            <button type="button" onClick={() => removeExistingFile('namo_gange_trust_logos', idx)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10">X</button>
                                         </div>
                                     ))}
                                 </div>
@@ -457,9 +520,17 @@ const CertificateSettings = () => {
                                 <span className="text-xs text-gray-500 font-bold mb-2 block">Currently Saved ({previews.concurrent_events.length} files):</span>
                                 <div className="flex flex-wrap gap-3">
                                     {previews.concurrent_events.map((img, idx) => (
-                                        <div key={idx} className="relative group">
+                                        <div 
+                                            key={idx} 
+                                            className="relative group cursor-move"
+                                            draggable
+                                            onDragStart={(e) => handleDragStart(e, idx, 'concurrent_events')}
+                                            onDrop={(e) => handleDrop(e, idx, 'concurrent_events')}
+                                            onDragOver={handleDragOver}
+                                        >
+                                            <span className="absolute -top-2 -left-2 bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs z-10 shadow">{idx + 1}</span>
                                             <img src={`${imgBaseUrl}${img}`} className="h-16 w-24 object-contain border bg-white p-1 shadow-sm rounded" alt="Event" />
-                                            <button type="button" onClick={() => removeExistingFile('concurrent_events', idx)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">X</button>
+                                            <button type="button" onClick={() => removeExistingFile('concurrent_events', idx)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10">X</button>
                                         </div>
                                     ))}
                                 </div>
@@ -483,8 +554,18 @@ const CertificateSettings = () => {
                 </div>
 
                 <div className="flex justify-end border-t pt-4">
-                    <button type="submit" className="px-8 py-3 bg-blue-600 text-white text-lg font-bold rounded-lg shadow hover:bg-blue-700 transition-colors">
-                        Save Certificate Data
+                    <button type="submit" disabled={isSaving} className="px-8 py-3 bg-blue-600 text-white text-lg font-bold rounded-lg shadow hover:bg-blue-700 transition-colors disabled:bg-gray-400 flex items-center gap-2">
+                        {isSaving ? (
+                            <>
+                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Saving...
+                            </>
+                        ) : (
+                            'Save Certificate Data'
+                        )}
                     </button>
                 </div>
             </form>
