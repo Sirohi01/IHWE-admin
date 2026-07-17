@@ -68,12 +68,16 @@ const getPassNames = (request) => {
     .filter(Boolean);
 };
 
+const getFoodCouponText = (request) => {
+  const quantity = Math.max(1, Number(request.quantity || 1));
+  return `${quantity} PACKED LUNCH`;
+};
+
 const getRequestFallbackNames = (request) => {
   const names = getPassNames(request);
   if (names.length) return names;
   if (isFoodPassType(request.passType)) {
-    const quantity = Math.max(1, Number(request.quantity || 1));
-    return Array.from({ length: quantity }, (_, index) => `Food Coupon ${index + 1}`);
+    return [getFoodCouponText(request)];
   }
   const fallback = getExhibitorName(request);
   const quantity = Math.max(1, Number(request.quantity || 1));
@@ -196,6 +200,7 @@ export default function ExhibitorRequestedPasses() {
   }, {}), [requests]);
 
   const selectedExhibitor = exhibitors.find((item) => item.id === selectedExhibitorId);
+  const isAllExhibitorsSelected = selectedExhibitorId === "all";
 
   const filteredExhibitors = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -204,17 +209,34 @@ export default function ExhibitorRequestedPasses() {
   }, [exhibitors, search]);
 
   const selectedRequests = useMemo(() => requests
-    .filter((request) => getExhibitorId(request) === selectedExhibitorId)
+    .filter((request) => isAllExhibitorsSelected || getExhibitorId(request) === selectedExhibitorId)
     .filter((request) => PASS_META[request.passType])
     .filter((request) => statusFilter === "all" || request.status === statusFilter)
     .sort((a, b) => {
+      if (isAllExhibitorsSelected) {
+        const exhibitorSort = getExhibitorName(a).localeCompare(getExhibitorName(b));
+        if (exhibitorSort !== 0) return exhibitorSort;
+      }
       const foodSort = Number(isFoodPassType(a.passType)) - Number(isFoodPassType(b.passType));
       if (foodSort !== 0) return foodSort;
       return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-    }), [requests, selectedExhibitorId, statusFilter]);
+    }), [requests, selectedExhibitorId, statusFilter, isAllExhibitorsSelected]);
 
   const printItems = useMemo(() => selectedRequests.flatMap((request) => {
     const meta = PASS_META[request.passType];
+    if (isFoodPassType(request.passType)) {
+      return [{
+        id: `${request._id}-food`,
+        requestId: request._id,
+        passType: request.passType,
+        name: getExhibitorName(request),
+        category: meta.category,
+        status: request.status,
+        date: request.createdAt,
+        mealQuantity: Math.max(1, Number(request.quantity || 1)),
+        foodCouponText: getFoodCouponText(request),
+      }];
+    }
     return getRequestFallbackNames(request).map((name, index) => ({
       id: `${request._id}-${index}`,
       requestId: request._id,
@@ -254,14 +276,14 @@ export default function ExhibitorRequestedPasses() {
   }, {}), [selectedRequests]);
 
   const stats = useMemo(() => {
-    const source = requests.filter((request) => getExhibitorId(request) === selectedExhibitorId && PASS_META[request.passType]);
+    const source = requests.filter((request) => (isAllExhibitorsSelected || getExhibitorId(request) === selectedExhibitorId) && PASS_META[request.passType]);
     return {
       requests: source.length,
       approved: source.filter((request) => request.status === "approved").length,
       printable: selectedPrintItems.length,
       types: new Set(source.map((request) => request.passType)).size,
     };
-  }, [requests, selectedExhibitorId, selectedPrintItems.length]);
+  }, [requests, selectedExhibitorId, selectedPrintItems.length, isAllExhibitorsSelected]);
 
   const globalStats = useMemo(() => {
     const printableRequests = requests.filter((request) => PASS_META[request.passType]);
@@ -290,7 +312,7 @@ export default function ExhibitorRequestedPasses() {
 
   const printFoodCoupons = useReactToPrint({
     contentRef: foodPrintRef,
-    documentTitle: `${selectedExhibitor?.name || "exhibitor"}-food-coupons`,
+    documentTitle: `${isAllExhibitorsSelected ? "all-exhibitors" : selectedExhibitor?.name || "exhibitor"}-food-coupons`,
     onBeforePrint: () => waitForPrintAssets(foodPrintRef.current),
     onAfterPrint: () => setActivePrintMode(""),
   });
@@ -346,6 +368,12 @@ export default function ExhibitorRequestedPasses() {
 
   const selectExhibitor = (exhibitor) => {
     setSelectedExhibitorId(exhibitor.id);
+    setSearch("");
+    setShowExhibitorDropdown(false);
+  };
+
+  const selectAllExhibitors = () => {
+    setSelectedExhibitorId("all");
     setSearch("");
     setShowExhibitorDropdown(false);
   };
@@ -593,32 +621,50 @@ export default function ExhibitorRequestedPasses() {
                     />
                   </div>
                   <p className="mt-1 truncate text-[10px] font-bold text-slate-500">
-                    {selectedExhibitor ? `Selected: ${selectedExhibitor.name}` : "No exhibitor selected"}
+                    {isAllExhibitorsSelected ? "Selected: All exhibitors" : selectedExhibitor ? `Selected: ${selectedExhibitor.name}` : "No exhibitor selected"}
                   </p>
                   {showExhibitorDropdown && (
                     <div className="thin-scrollbar absolute left-0 right-0 top-[68px] z-30 max-h-64 overflow-auto rounded-lg border border-slate-200 bg-white p-1 shadow-xl">
                       {loading ? (
                         <div className="px-3 py-6 text-center text-[11px] font-black text-slate-400">Loading exhibitors...</div>
-                      ) : filteredExhibitors.length === 0 ? (
-                        <div className="px-3 py-6 text-center text-[11px] font-black text-slate-400">No exhibitors found.</div>
-                      ) : filteredExhibitors.map((exhibitor) => (
-                        <button
-                          key={exhibitor.id}
-                          type="button"
-                          onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => selectExhibitor(exhibitor)}
-                          className={`mb-1 flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-left transition ${selectedExhibitorId === exhibitor.id ? "bg-emerald-50 text-[#016B61]" : "hover:bg-slate-50"
-                            }`}
-                        >
-                          <span className="min-w-0">
-                            <span className="block truncate text-[11px] font-black text-slate-900">{exhibitor.name}</span>
-                            <span className="block truncate text-[9px] font-bold text-slate-400">{[exhibitor.registrationId, exhibitor.contact].filter(Boolean).join(" | ") || "No contact details"}</span>
-                          </span>
-                          <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[9px] font-black text-slate-500">
-                            {requestCountByExhibitor[exhibitor.id] || 0}
-                          </span>
-                        </button>
-                      ))}
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={selectAllExhibitors}
+                            className={`mb-1 flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-left transition ${isAllExhibitorsSelected ? "bg-emerald-50 text-[#016B61]" : "hover:bg-slate-50"}`}
+                          >
+                            <span className="min-w-0">
+                              <span className="block truncate text-[11px] font-black text-slate-900">All Exhibitors</span>
+                              <span className="block truncate text-[9px] font-bold text-slate-400">Print selected requests from every exhibitor</span>
+                            </span>
+                            <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[9px] font-black text-slate-500">
+                              {globalStats.requests}
+                            </span>
+                          </button>
+                          {filteredExhibitors.length === 0 ? (
+                            <div className="px-3 py-6 text-center text-[11px] font-black text-slate-400">No exhibitors found.</div>
+                          ) : filteredExhibitors.map((exhibitor) => (
+                            <button
+                              key={exhibitor.id}
+                              type="button"
+                              onMouseDown={(event) => event.preventDefault()}
+                              onClick={() => selectExhibitor(exhibitor)}
+                              className={`mb-1 flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-left transition ${selectedExhibitorId === exhibitor.id ? "bg-emerald-50 text-[#016B61]" : "hover:bg-slate-50"
+                                }`}
+                            >
+                              <span className="min-w-0">
+                                <span className="block truncate text-[11px] font-black text-slate-900">{exhibitor.name}</span>
+                                <span className="block truncate text-[9px] font-bold text-slate-400">{[exhibitor.registrationId, exhibitor.contact].filter(Boolean).join(" | ") || "No contact details"}</span>
+                              </span>
+                              <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-[9px] font-black text-slate-500">
+                                {requestCountByExhibitor[exhibitor.id] || 0}
+                              </span>
+                            </button>
+                          ))}
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -756,7 +802,7 @@ export default function ExhibitorRequestedPasses() {
                               </div>
                               <div className="flex flex-wrap gap-1.5">
                                 {requestNames.map((name, index) => {
-                                  const itemId = `${request._id}-${index}`;
+                                  const itemId = isFoodPassType(request.passType) ? `${request._id}-food` : `${request._id}-${index}`;
                                   const selected = selectedPrintIds.includes(itemId);
                                   return (
                                     <label
@@ -825,7 +871,7 @@ export default function ExhibitorRequestedPasses() {
             <div key={`food-${pageIndex}`} className="food-coupon-print-sheet">
               {pageItems.map((item) => (
                 <div key={item.id} className="food-coupon-print-card">
-                  <FoodCouponCanvas persons="2 PERSON" logoSrc={foodCouponLogoSrc} />
+                  <FoodCouponCanvas persons={item.foodCouponText || "1 PACKED LUNCH"} logoSrc={foodCouponLogoSrc} />
                 </div>
               ))}
             </div>
