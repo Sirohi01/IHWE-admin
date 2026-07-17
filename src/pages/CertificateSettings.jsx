@@ -4,6 +4,17 @@ import { toast } from 'react-hot-toast';
 import { API_URL, SERVER_URL } from '../lib/api';
 
 const CertificateSettings = () => {
+    const [selectedType, setSelectedType] = useState('default');
+    
+    const certificateTypes = [
+        { value: 'default', label: 'Default Settings' },
+        { value: 'exhibitor', label: 'Exhibitor Certificate' },
+        { value: 'knowledge_partner', label: 'Knowledge Partner Certificate' },
+        { value: 'supporting_association', label: 'Supporting Association Certificate' },
+        { value: 'healthcare_partner', label: 'Health Care Partner Certificate' },
+        { value: 'special_guest', label: 'Special Guest Certificate' },
+        { value: 'chief_guest', label: 'Chief Guest Certificate' },
+    ];
     const [formData, setFormData] = useState({
         certi_name: '',
         certi_desc1: '',
@@ -44,14 +55,14 @@ const CertificateSettings = () => {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [selectedType]);
 
     const fetchData = async () => {
         try {
             const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
             // Assuming your backend runs on same origin or proxy is setup.
             // Adjust base URL if needed.
-            const response = await axios.get(`${API_URL}/certificate-data`, {
+            const response = await axios.get(`${API_URL}/certificate-data?type=${selectedType}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (response.data.success && response.data.data) {
@@ -190,6 +201,7 @@ const CertificateSettings = () => {
         }
 
         const payload = new FormData();
+        payload.append('type', selectedType);
 
         // Append all text/boolean data
         Object.keys(formData).forEach(key => {
@@ -260,6 +272,24 @@ const CertificateSettings = () => {
         <div className="p-2 bg-gray-50 min-h-screen">
             <h1 className="text-xl font-bold mb-2 text-gray-800 border-b pb-2">Certificate Data Settings</h1>
             <form onSubmit={handleSubmit} className="bg-white p-2 rounded-xl shadow-lg w-full">
+
+                <div className="mb-6">
+                    <label className="block text-sm font-semibold mb-2 text-gray-700">Select Certificate Category to Edit</label>
+                    <select
+                        className="w-full sm:w-1/2 p-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50"
+                        value={selectedType}
+                        onChange={(e) => setSelectedType(e.target.value)}
+                    >
+                        {certificateTypes.map(type => (
+                            <option key={type.value} value={type.value}>{type.label}</option>
+                        ))}
+                    </select>
+                    {selectedType !== 'default' && (
+                        <p className="text-sm text-gray-500 mt-2">
+                            If no custom settings are saved for {certificateTypes.find(t => t.value === selectedType)?.label}, it will fall back to the Default Settings.
+                        </p>
+                    )}
+                </div>
 
                 {/* Header Configuration */}
                 <div className="mb-1 bg-blue-50 p-2 rounded-lg border border-blue-200">

@@ -28,21 +28,80 @@ const supportedByData = [
 
 const Certificate = () => {
   const [certData, setCertData] = useState(null);
+  const [selectedType, setSelectedType] = useState('exhibitor');
+  const [recipients, setRecipients] = useState([]);
+  const [selectedRecipients, setSelectedRecipients] = useState([]);
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [newManualName, setNewManualName] = useState('');
+
   const imgBaseUrl = SERVER_URL;
 
+  const certificateTypes = [
+    { value: 'exhibitor', label: 'Exhibitor Certificate' },
+    { value: 'knowledge_partner', label: 'Knowledge Partner Certificate' },
+    { value: 'supporting_association', label: 'Supporting Association Certificate' },
+    { value: 'healthcare_partner', label: 'Health Care Partner Certificate' },
+    { value: 'special_guest', label: 'Special Guest Certificate' },
+    { value: 'chief_guest', label: 'Chief Guest Certificate' },
+  ];
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/certificate-data`);
-        if (response.data.success && response.data.data) {
-          setCertData(response.data.data);
-        }
-      } catch (error) {
-        console.error('Error fetching certificate data:', error);
-      }
-    };
     fetchData();
-  }, [imgBaseUrl]);
+  }, [selectedType]);
+
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+      
+      const configRes = await axios.get(`${API_URL}/certificate-data?type=${selectedType}`);
+      if (configRes.data.success && configRes.data.data) {
+        setCertData(configRes.data.data);
+      }
+
+      const recipientsRes = await axios.get(`${API_URL}/certificate-recipients?type=${selectedType}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (recipientsRes.data.success) {
+        setRecipients(recipientsRes.data.data);
+        setSelectedRecipients([]);
+      }
+    } catch (error) {
+      console.error('Error fetching certificate data:', error);
+    }
+  };
+
+  const handleAddManualRecipient = async () => {
+    if (!newManualName.trim()) return;
+    try {
+      const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+      await axios.post(`${API_URL}/certificate-recipients`, 
+        { name: newManualName, type: selectedType },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setNewManualName('');
+      fetchData(); // Refresh list
+    } catch (error) {
+      console.error('Error adding recipient:', error);
+    }
+  };
+
+  const toggleRecipient = (id) => {
+    if (selectedRecipients.includes(id)) {
+      setSelectedRecipients(selectedRecipients.filter(rId => rId !== id));
+    } else {
+      setSelectedRecipients([...selectedRecipients, id]);
+    }
+  };
+
+  const handlePrint = () => {
+    if (selectedRecipients.length === 0) return alert('Please select at least one recipient to print.');
+    setIsPrinting(true);
+    setTimeout(() => {
+      window.print();
+      setIsPrinting(false);
+    }, 500);
+  };
+
 
   // For namo gange trust logos (24 logos, 6 cols x 4 rows)
   const baseInitiatives = certData?.namo_gange_trust_logos?.length > 0
@@ -62,15 +121,13 @@ const Certificate = () => {
         @import url('https://fonts.googleapis.com/css2?family=Aladin&display=swap');
         @media print {
           html, body {
-            height: 100vh !important;
-            overflow: hidden !important;
+            height: auto !important;
+            overflow: visible !important;
             margin: 0;
             padding: 0;
-          }
-          body {
+            background-color: white !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
-            background-color: white !important;
           }
           @page {
             size: A3 portrait;
@@ -80,61 +137,152 @@ const Certificate = () => {
             display: none !important;
           }
           .print-certificate-wrapper {
-            width: 100% !important;
-            max-width: none !important;
-            box-shadow: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          }
-          /* Hide everything else on the page except the certificate */
-          body * {
-            visibility: hidden;
-          }
-          #certificate-print-area, #certificate-print-area * {
-            visibility: visible;
-          }
-          #certificate-print-area {
-            position: fixed !important;
-            left: 0 !important;
-            top: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
             max-width: none !important;
             max-height: none !important;
             margin: 0 !important;
             padding: 0 !important;
-            aspect-ratio: auto !important;
-            transform: none !important;
+            box-shadow: none !important;
             background-size: 100% 100% !important;
+            position: relative !important;
+            visibility: visible !important;
+          }
+          /* Hide everything else on the page except the certificates */
+          body * {
+            visibility: hidden;
+          }
+          #print-container, #print-container * {
+            visibility: visible;
+          }
+          #print-container {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
           }
         }
       `}</style>
 
-      <div className="w-full flex justify-center mb-4">
-        <button
-          onClick={() => window.print()}
-          className="print-hidden px-6 py-2 bg-[#845f28] text-white font-bold rounded shadow-lg hover:bg-[#6b4c1f] transition-colors"
-          style={{ fontFamily: 'Arial, sans-serif' }}
-        >
-          Print Certificate (A3)
-        </button>
+      <div className="w-full max-w-[98%] mx-auto mb-6 print-hidden">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+          <h2 className="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">Certificate Management</h2>
+          
+          <div className="flex flex-wrap gap-6 mb-6 bg-gray-50 p-5 rounded-lg border border-gray-200 items-end">
+            <div className="flex-1 min-w-[300px]">
+              <label className="block text-sm font-bold mb-2 text-gray-800">1. Select Certificate Category</label>
+              <select
+                className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-medium text-gray-700"
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+              >
+                {certificateTypes.map(type => (
+                  <option key={type.value} value={type.value}>{type.label}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="flex-1 min-w-[400px] flex items-end gap-3 border-l-2 border-gray-200 pl-6">
+              <div className="flex-1">
+                <label className="block text-sm font-bold mb-2 text-gray-800">2. Add Manual Recipient to {certificateTypes.find(t => t.value === selectedType)?.label.replace(' Certificate', '')}</label>
+                <input
+                  type="text"
+                  className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  placeholder="Enter Name..."
+                  value={newManualName}
+                  onChange={(e) => setNewManualName(e.target.value)}
+                />
+              </div>
+              <button
+                onClick={handleAddManualRecipient}
+                className="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition-colors whitespace-nowrap"
+              >
+                + Add Recipient
+              </button>
+            </div>
+          </div>
+
+          <div className="mb-4 flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+            <h3 className="text-lg font-bold text-gray-800">Recipients List ({recipients.length})</h3>
+            <button
+              onClick={handlePrint}
+              disabled={selectedRecipients.length === 0}
+              className={`px-6 py-2 text-white font-bold rounded-lg shadow-md transition-colors ${selectedRecipients.length > 0 ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}`}
+            >
+              Print Selected ({selectedRecipients.length})
+            </button>
+          </div>
+
+          <div className="overflow-x-auto border border-gray-200 rounded-lg max-h-[400px] overflow-y-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0 shadow-sm z-20">
+                <tr>
+                  <th className="p-4 w-10">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                      checked={recipients.length > 0 && selectedRecipients.length === recipients.length}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedRecipients(recipients.map(r => r._id));
+                        else setSelectedRecipients([]);
+                      }}
+                    />
+                  </th>
+                  <th className="p-4">Name</th>
+                  <th className="p-4">Company</th>
+                  <th className="p-4">Source</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recipients.map(recipient => (
+                  <tr key={recipient._id} className="border-b hover:bg-gray-50 transition-colors">
+                    <td className="p-4">
+                      <input 
+                        type="checkbox" 
+                        className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                        checked={selectedRecipients.includes(recipient._id)}
+                        onChange={() => toggleRecipient(recipient._id)}
+                      />
+                    </td>
+                    <td className="p-4 font-semibold text-gray-800">{recipient.name}</td>
+                    <td className="p-4 text-gray-600">{recipient.company || '-'}</td>
+                    <td className="p-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${recipient.isManual ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                        {recipient.isManual ? 'Manual' : 'System'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {recipients.length === 0 && (
+                  <tr>
+                    <td colSpan="4" className="p-8 text-center text-gray-500 font-medium">No recipients found for this category. Add one manually or check system records.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
-      <div className="w-full overflow-x-auto pb-8 print:overflow-visible">
-        <div
-          id="certificate-print-area"
-          className="relative bg-white shadow-2xl overflow-hidden print-certificate-wrapper mx-auto"
-          style={{
-            width: '297mm',
-            height: '420mm',
-            backgroundImage: `url('${bgImage}')`,
-            backgroundSize: '100% 100%',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            containerType: 'inline-size',
-          }}
-        >
-          <div className="absolute inset-0 px-[8%] pt-[8%] pb-[4%] flex flex-col items-center z-10">
+      <div id="print-container" className={`w-full overflow-x-auto pb-8 ${isPrinting ? 'print:overflow-visible' : ''}`}>
+        {(isPrinting && selectedRecipients.length > 0 ? recipients.filter(r => selectedRecipients.includes(r._id)) : [{_id: 'preview', name: 'PREVIEW NAME'}]).map((recipient, index, arr) => (
+          <div
+            key={recipient._id}
+            className={`relative bg-white shadow-2xl overflow-hidden print-certificate-wrapper mx-auto ${index < arr.length - 1 ? 'mb-8' : ''}`}
+            style={{
+              width: '297mm',
+              height: '420mm',
+              backgroundImage: `url('${bgImage}')`,
+              backgroundSize: '100% 100%',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              containerType: 'inline-size',
+              pageBreakAfter: index < arr.length - 1 ? 'always' : 'auto'
+            }}
+          >
+            <div className="absolute inset-0 px-[8%] pt-[8%] pb-[4%] flex flex-col items-center z-10">
 
             {/* Header Row */}
             <div className="w-full flex justify-between items-start">
@@ -201,7 +349,7 @@ const Certificate = () => {
                     {i < arr.length - 1 && <br />}
                   </React.Fragment>
                 ))}
-                <span className="text-[#c00000] font-bold uppercase">{certData?.certi_name || 'DABUR INDIA LIMITED'}</span>{' '}
+                <span className="text-[#c00000] font-bold uppercase">{recipient.name !== 'PREVIEW NAME' ? (selectedType === 'exhibitor' && recipient.company ? recipient.company : recipient.name) : (certData?.certi_name || 'DABUR INDIA LIMITED')}</span>{' '}
                 {(certData?.certi_desc1_part2 || 'for valuable participation in the 9th\nEdition of International Health & Wellness Expo, organized by Namo Gange Trust, held from 21st\nAugust to 23 August 2026 at Pragati Maidan, New Delhi, Bharat.').split('\n').map((line, i, arr) => (
                   <React.Fragment key={i}>
                     {line}
@@ -315,7 +463,8 @@ const Certificate = () => {
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );
