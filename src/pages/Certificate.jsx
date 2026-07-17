@@ -283,7 +283,7 @@ const Certificate = () => {
                     <span className="text-[#7a5725] font-bold uppercase underline underline-offset-[3px] tracking-wide" style={{ fontFamily: '"Aladin", cursive' }}>Concurrent Events</span>
                   </div>
                   <div className="w-[14.29%] flex justify-center">
-                    <span className="text-[#7a5725] font-bold uppercase underline underline-offset-[3px] tracking-wide" style={{ fontFamily: '"Aladin", cursive' }}>{certData?.header_right_heading || 'Supported By:'}</span>
+                    <span className="text-[#7a5725] font-bold uppercase underline underline-offset-[3px] tracking-wide" style={{ fontFamily: '"Aladin", cursive' }}>{certData?.concurrent_events_right_heading || 'Supported By:'}</span>
                   </div>
                 </div>
 
