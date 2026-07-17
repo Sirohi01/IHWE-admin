@@ -38,6 +38,8 @@ const defaultSeed = {
 
 const defaultImages = {
     supportedByLogo: msmeSupportedBy,
+    supportedByRightLogo: msmeSupportedBy,
+    supportedByBottomRightLogo: msmeSupportedBy,
     mainLogo: namoGangeLogo,
     titleLogo: eventLogo,
     certificateHeading,
@@ -48,6 +50,8 @@ const defaultImages = {
 
 const imageLabels = {
     supportedByLogo: 'Supported By Logo',
+    supportedByRightLogo: 'Right Supported By Logo',
+    supportedByBottomRightLogo: 'Bottom Right Supported By Logo',
     mainLogo: 'Namo Gange Logo',
     titleLogo: 'Event Title Logo',
     certificateHeading: 'Certificate Heading',
@@ -79,6 +83,7 @@ const CertificatesGenerator = () => {
     const [showInitiatives, setShowInitiatives] = useState(false);
     const [showConcurrent, setShowConcurrent] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [printSize, setPrintSize] = useState('A4');
 
     const loadConfig = async () => {
         const res = await api.get('/api/arogya-certificate-config');
@@ -200,7 +205,14 @@ const CertificatesGenerator = () => {
                     <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '10px' }}>Certificate Settings</h2>
                     <button onClick={() => setConfig(defaultSeed)} style={{ padding: '8px', background: '#d72624', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: '4px' }}>Reset Text to Seed</button>
                     <button onClick={saveConfig} disabled={saving} style={{ padding: '8px', background: '#1d7f3a', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: '4px', opacity: saving ? .7 : 1 }}>{saving ? 'Saving...' : 'Save Settings'}</button>
-                    <button onClick={() => window.print()} style={{ padding: '8px', background: '#254b9f', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: '4px' }}>Print Certificate</button>
+                    <div style={fieldStyle}>
+                        <label style={labelStyle}>Print Paper Size</label>
+                        <select value={printSize} onChange={(e) => setPrintSize(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }}>
+                            <option value="A4">A4</option>
+                            <option value="A3">A3</option>
+                        </select>
+                    </div>
+                    <button onClick={() => window.print()} style={{ padding: '8px', background: '#254b9f', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: '4px' }}>Print Certificate ({printSize})</button>
 
                     <h3 onClick={() => setShowImages(!showImages)} style={sectionHeaderStyle}>
                         Main Images
@@ -241,7 +253,7 @@ const CertificatesGenerator = () => {
                     ))}
                 </div>
                 <div className="cert-preview-container" style={{ flex: 1, backgroundColor: '#eeeeee', overflowY: 'auto' }}>
-                    <Certi config={config} images={images} customInitiatives={initiativeImages} customConcurrent={concurrentImages} />
+                    <Certi config={config} images={images} customInitiatives={initiativeImages} customConcurrent={concurrentImages} printSize={printSize} />
                 </div>
             </div>
         </div>

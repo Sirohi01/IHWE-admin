@@ -91,8 +91,12 @@ const nameLengthClass = (name) => {
     return "";
 };
 
-const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }) => {
+const Certi = ({ config, images, customInitiatives = [], customConcurrent = [], printSize = "A4" }) => {
     const safeCompanyName = String(config?.recipientName || "").trim() || "";
+    const normalizedPrintSize = printSize === "A3" ? "A3" : "A4";
+    const printPage = normalizedPrintSize === "A3"
+        ? { width: 297, height: 420, scale: 297 / 210 }
+        : { width: 210, height: 297, scale: 1 };
     const initiativeLogos = mergeLogoSlots(
         initiativeLogoSlots,
         customInitiatives,
@@ -168,16 +172,30 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }
 
                 .msme-logo {
                     top: 9.15%;
-                    left: 9.65%;
-                    width: 17.9%;
-                    height: 8.85%;
+                    left: 11.15%;
+                    width: 14.9%;
+                    height: 7.35%;
+                }
+
+                .msme-logo-right {
+                    top: 9.15%;
+                    right: 10.95%;
+                    width: 12.9%;
+                    height: 6.35%;
+                }
+
+                .msme-logo-right-bottom {
+                    top: 17.9%;
+                    right: 10.95%;
+                    width: 12.9%;
+                    height: 6.35%;
                 }
 
                 .supported-by-text {
                     position: absolute;
                     top: 6.95%;
-                    left: 9.65%;
-                    width: 17.9%;
+                    left: 11.15%;
+                    width: 14.9%;
                     color: var(--certificate-brown);
                     font-family: var(--certificate-font);
                     font-size: 3.45mm;
@@ -189,6 +207,18 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }
                     text-decoration-thickness: 0.16mm;
                     text-underline-offset: 0.7mm;
                     white-space: nowrap;
+                }
+
+                .supported-by-text-right {
+                    left: auto;
+                    right: 9.95%;
+                }
+
+                .supported-by-text-right-bottom {
+                    top: 16.8%;
+                    left: auto;
+                    right: 9.95%;
+                    width: 14.9%;
                 }
 
                 .namo-logo {
@@ -598,14 +628,14 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }
                 }
 
                 .certificate-footer-address {
-                    top: 91.15%;
+                    top: 90.75%;
                     font-size: clamp(4.05mm, 1.3vw, 4.65mm);
                     white-space: nowrap;
                     text-overflow: ellipsis;
                 }
 
                 .certificate-footer-contact {
-                    top: 94.95%;
+                    top: 94.55%;
                     font-size: clamp(4mm, 1.28vw, 4.55mm);
                     white-space: nowrap;
                     text-overflow: ellipsis;
@@ -626,7 +656,7 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }
                 }
 
                 @page {
-                    size: A4 portrait;
+                    size: ${printPage.width}mm ${printPage.height}mm;
                     margin: 0;
                 }
 
@@ -642,8 +672,8 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }
                     html,
                     body,
                     #root {
-                        width: 210mm !important;
-                        height: 297mm !important;
+                        width: ${printPage.width}mm !important;
+                        height: ${printPage.height}mm !important;
                         margin: 0 !important;
                         padding: 0 !important;
                         overflow: hidden !important;
@@ -651,7 +681,7 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }
                     }
 
                     @page {
-                        size: 210mm 297mm;
+                        size: ${printPage.width}mm ${printPage.height}mm;
                         margin: 0;
                     }
 
@@ -666,8 +696,8 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }
 
                     .certi-page-shell,
                     .certificate-preview-wrap {
-                        width: 210mm !important;
-                        height: 297mm !important;
+                        width: ${printPage.width}mm !important;
+                        height: ${printPage.height}mm !important;
                         min-height: 0 !important;
                         margin: 0 !important;
                         padding: 0 !important;
@@ -688,7 +718,8 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }
                         padding: 0 !important;
                         overflow: hidden !important;
                         box-shadow: none !important;
-                        transform: none !important;
+                        transform: scale(${printPage.scale}) !important;
+                        transform-origin: top left !important;
                         page-break-before: avoid !important;
                         page-break-after: avoid !important;
                         page-break-inside: avoid !important;
@@ -742,6 +773,19 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }
                     <div className="supported-by-text">{config?.supportedByText}</div>
 
                     <img
+                        className="certificate-image msme-logo-right"
+                        src={images?.supportedByRightLogo || images?.supportedByLogo}
+                        alt="Supported by"
+                    />
+                    <div className="supported-by-text supported-by-text-right-bottom">{config?.supportedByText}</div>
+                    <img
+                        className="certificate-image msme-logo-right-bottom"
+                        src={images?.supportedByBottomRightLogo || images?.supportedByRightLogo || images?.supportedByLogo}
+                        alt="Supported by"
+                    />
+                    <div className="supported-by-text supported-by-text-right">{config?.supportedByText}</div>
+
+                    <img
                         className="certificate-image namo-logo"
                         src={images?.mainLogo}
                         alt="Namo Gange"
@@ -767,7 +811,7 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [] }
                             <span className={`recipient-name ${nameLengthClass(safeCompanyName)}`}>
                                 {safeCompanyName}
                             </span>{" "}
-                            {config?.bodyTextPart2} <br /> 
+                            {config?.bodyTextPart2} <br />
                             <span className="certificate-blue-text">
                                 {config?.highlightText1}
                             </span>{" "}
