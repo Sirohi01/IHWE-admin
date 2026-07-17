@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { API_URL, SERVER_URL } from '../lib/api';
 
 const CertificateSettings = () => {
+    const [selectedType, setSelectedType] = useState('default');
+    
+    const certificateTypes = [
+        { value: 'default', label: 'Default Settings' },
+        { value: 'exhibitor', label: 'Exhibitor Certificate' },
+        { value: 'knowledge_partner', label: 'Knowledge Partner Certificate' },
+        { value: 'supporting_association', label: 'Supporting Association Certificate' },
+        { value: 'healthcare_partner', label: 'Health Care Partner Certificate' },
+        { value: 'special_guest', label: 'Special Guest Certificate' },
+        { value: 'chief_guest', label: 'Chief Guest Certificate' },
+    ];
     const [formData, setFormData] = useState({
         certi_name: '',
         certi_desc1: '',
@@ -43,14 +55,14 @@ const CertificateSettings = () => {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [selectedType]);
 
     const fetchData = async () => {
         try {
             const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
             // Assuming your backend runs on same origin or proxy is setup.
             // Adjust base URL if needed.
-            const response = await axios.get(`${import.meta.env.VITE_API_URL || ''}/api/certificate-data`, {
+            const response = await axios.get(`${API_URL}/certificate-data?type=${selectedType}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (response.data.success && response.data.data) {
@@ -189,6 +201,7 @@ const CertificateSettings = () => {
         }
 
         const payload = new FormData();
+        payload.append('type', selectedType);
 
         // Append all text/boolean data
         Object.keys(formData).forEach(key => {
@@ -224,7 +237,7 @@ const CertificateSettings = () => {
 
         try {
             const toastId = toast.loading('Saving settings...');
-            const response = await axios.post(`${import.meta.env.VITE_API_URL || ''}/api/certificate-data/update`, payload, {
+            const response = await axios.post(`${API_URL}/certificate-data/update`, payload, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
@@ -253,97 +266,117 @@ const CertificateSettings = () => {
         }
     };
 
-    const imgBaseUrl = import.meta.env.VITE_API_URL || '';
+    const imgBaseUrl = SERVER_URL;
 
     return (
         <div className="p-2 bg-gray-50 min-h-screen">
-            <h1 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">Certificate Data Settings</h1>
-            <form onSubmit={handleSubmit} className="bg-white p-4 rounded-xl shadow-lg w-full">
+            <h1 className="text-xl font-bold mb-2 text-gray-800 border-b pb-2">Certificate Data Settings</h1>
+            <form onSubmit={handleSubmit} className="bg-white p-2 rounded-xl shadow-lg w-full">
+
+                <div className="mb-6 flex flex-col items-end border-b pb-4">
+                    <div className="w-72">
+                        <label className="block text-sm font-bold mb-2 text-gray-800">Select Certificate Category to Edit</label>
+                        <select
+                            className="w-full p-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white font-medium text-gray-700"
+                            value={selectedType}
+                            onChange={(e) => setSelectedType(e.target.value)}
+                        >
+                            {certificateTypes.map(type => (
+                                <option key={type.value} value={type.value}>{type.label}</option>
+                            ))}
+                        </select>
+                        {selectedType !== 'default' && (
+                            <p className="text-xs text-gray-500 mt-2">
+                                If empty, falls back to Default Settings.
+                            </p>
+                        )}
+                    </div>
+                </div>
 
                 {/* Header Configuration */}
-                <div className="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <h2 className="text-xl font-bold mb-4 text-blue-800 border-b border-blue-200 pb-2">Top Header Configuration</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="mb-1 bg-blue-50 p-2 rounded-lg border border-blue-200">
+                    <h2 className="text-xl font-bold mb-2 text-blue-800 border-b border-blue-200 pb-2">Top Header Configuration</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
                         {/* Header Left */}
-                        <div className="bg-white p-4 rounded shadow-sm border border-gray-100">
-                            <div className="flex justify-between items-center mb-3">
+                        <div className="bg-white p-2 rounded shadow-sm border border-gray-100">
+                            <div className="flex justify-between items-center mb-1">
                                 <label className="font-semibold text-gray-700">Left Section</label>
                                 <label className="flex items-center cursor-pointer">
                                     <input type="checkbox" name="header_left_enable" checked={formData.header_left_enable} onChange={handleInputChange} className="mr-2 h-4 w-4 text-blue-600 rounded" />
                                     <span className="text-sm font-medium">Enable</span>
                                 </label>
                             </div>
-                            <input type="text" name="header_left_heading" value={formData.header_left_heading} onChange={handleInputChange} className="w-full p-2 border rounded mb-3 text-sm" placeholder="e.g. SUPPORTED BY:" />
+                            <input type="text" name="header_left_heading" value={formData.header_left_heading} onChange={handleInputChange} className="w-full p-2 border rounded mb-1 text-sm" placeholder="e.g. SUPPORTED BY:" />
                             <input type="file" onChange={(e) => handleFileChange(e, 'header_left_logo')} accept="image/*" className="w-full p-1 border rounded text-sm" />
                             {localPreviews.header_left_logo ? (
-                                <img src={localPreviews.header_left_logo} className="h-12 mt-2 object-contain" />
+                                <img src={localPreviews.header_left_logo} className="h-12 mt-1 object-contain" />
                             ) : previews.header_left_logo && (
-                                <img src={`${imgBaseUrl}${previews.header_left_logo}`} className="h-12 mt-2 object-contain" />
+                                <img src={`${imgBaseUrl}${previews.header_left_logo}`} className="h-12 mt-1 object-contain" />
                             )}
                         </div>
 
                         {/* Header Center */}
-                        <div className="bg-white p-4 rounded shadow-sm border border-gray-100">
-                            <div className="flex justify-between items-center mb-3">
+                        <div className="bg-white p-2 rounded shadow-sm border border-gray-100">
+                            <div className="flex justify-between items-center mb-1">
                                 <label className="font-semibold text-gray-700">Center Section</label>
                                 <label className="flex items-center cursor-pointer">
                                     <input type="checkbox" name="header_center_enable" checked={formData.header_center_enable} onChange={handleInputChange} className="mr-2 h-4 w-4 text-blue-600 rounded" />
                                     <span className="text-sm font-medium">Enable</span>
                                 </label>
                             </div>
-                            <input type="text" name="header_center_text" value={formData.header_center_text} onChange={handleInputChange} className="w-full p-2 border rounded mb-3 text-sm" placeholder="e.g. Presents" />
+                            <input type="text" name="header_center_text" value={formData.header_center_text} onChange={handleInputChange} className="w-full p-2 border rounded mb-1 text-sm" placeholder="e.g. Presents" />
                             <input type="file" onChange={(e) => handleFileChange(e, 'header_center_logo')} accept="image/*" className="w-full p-1 border rounded text-sm" />
                             {localPreviews.header_center_logo ? (
-                                <img src={localPreviews.header_center_logo} className="h-12 mt-2 object-contain" />
+                                <img src={localPreviews.header_center_logo} className="h-12 mt-1 object-contain" />
                             ) : previews.header_center_logo && (
-                                <img src={`${imgBaseUrl}${previews.header_center_logo}`} className="h-12 mt-2 object-contain" />
+                                <img src={`${imgBaseUrl}${previews.header_center_logo}`} className="h-12 mt-1 object-contain" />
                             )}
                         </div>
 
                         {/* Header Right */}
-                        <div className="bg-white p-4 rounded shadow-sm border border-gray-100">
-                            <div className="flex justify-between items-center mb-3">
+                        <div className="bg-white p-2 rounded shadow-sm border border-gray-100">
+                            <div className="flex justify-between items-center mb-1">
                                 <label className="font-semibold text-gray-700">Right Section</label>
                                 <label className="flex items-center cursor-pointer">
                                     <input type="checkbox" name="header_right_enable" checked={formData.header_right_enable} onChange={handleInputChange} className="mr-2 h-4 w-4 text-blue-600 rounded" />
                                     <span className="text-sm font-medium">Enable</span>
                                 </label>
                             </div>
-                            <input type="text" name="header_right_heading" value={formData.header_right_heading} onChange={handleInputChange} className="w-full p-2 border rounded mb-3 text-sm" placeholder="e.g. SPONSORED BY:" />
+                            <input type="text" name="header_right_heading" value={formData.header_right_heading} onChange={handleInputChange} className="w-full p-2 border rounded mb-1 text-sm" placeholder="e.g. SPONSORED BY:" />
                             <input type="file" onChange={(e) => handleFileChange(e, 'header_right_logo')} accept="image/*" className="w-full p-1 border rounded text-sm" />
                             {localPreviews.header_right_logo ? (
-                                <img src={localPreviews.header_right_logo} className="h-12 mt-2 object-contain" />
+                                <img src={localPreviews.header_right_logo} className="h-12 mt-1 object-contain" />
                             ) : previews.header_right_logo && (
-                                <img src={`${imgBaseUrl}${previews.header_right_logo}`} className="h-12 mt-2 object-contain" />
+                                <img src={`${imgBaseUrl}${previews.header_right_logo}`} className="h-12 mt-1 object-contain" />
                             )}
                         </div>
 
                         {/* Header Right Bottom */}
-                        <div className="bg-white p-4 rounded shadow-sm border border-gray-100">
-                            <div className="flex justify-between items-center mb-3">
+                        <div className="bg-white p-2 rounded shadow-sm border border-gray-100">
+                            <div className="flex justify-between items-center mb-1">
                                 <label className="font-semibold text-gray-700">Right Bottom Section</label>
                                 <label className="flex items-center cursor-pointer">
                                     <input type="checkbox" name="header_right_bottom_enable" checked={formData.header_right_bottom_enable} onChange={handleInputChange} className="mr-2 h-4 w-4 text-blue-600 rounded" />
                                     <span className="text-sm font-medium">Enable</span>
                                 </label>
                             </div>
-                            <input type="text" name="header_right_bottom_heading" value={formData.header_right_bottom_heading} onChange={handleInputChange} className="w-full p-2 border rounded mb-3 text-sm" placeholder="e.g. AFFILIATED BY:" />
+                            <input type="text" name="header_right_bottom_heading" value={formData.header_right_bottom_heading} onChange={handleInputChange} className="w-full p-2 border rounded mb-1 text-sm" placeholder="e.g. AFFILIATED BY:" />
                             <input type="file" onChange={(e) => handleFileChange(e, 'header_right_bottom_logo')} accept="image/*" className="w-full p-1 border rounded text-sm" />
                             {localPreviews.header_right_bottom_logo ? (
-                                <img src={localPreviews.header_right_bottom_logo} className="h-12 mt-2 object-contain" />
+                                <img src={localPreviews.header_right_bottom_logo} className="h-12 mt-1 object-contain" />
                             ) : previews.header_right_bottom_logo && (
-                                <img src={`${imgBaseUrl}${previews.header_right_bottom_logo}`} className="h-12 mt-2 object-contain" />
+                                <img src={`${imgBaseUrl}${previews.header_right_bottom_logo}`} className="h-12 mt-1 object-contain" />
                             )}
                         </div>
                     </div>
                 </div>
 
                 {/* Logos & Top Text Section */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-1">
                     {/* Expo Logo */}
                     <div className="bg-gray-50 p-2 rounded-lg border border-gray-200 flex flex-col">
                         <label className="block text-sm font-semibold mb-2 text-gray-700">Expo Logo (Top Left)</label>
-                        <input type="file" onChange={(e) => handleFileChange(e, 'expo_logo')} accept="image/*" className="mb-4 w-full p-2 bg-white border rounded text-sm" />
+                        <input type="file" onChange={(e) => handleFileChange(e, 'expo_logo')} accept="image/*" className="mb-2 w-full p-2 bg-white border rounded text-sm" />
 
                         {localPreviews.expo_logo ? (
                             <div className=""><span className="text-xs text-green-600 font-bold mb-1 block">New Selection Preview:</span><img src={localPreviews.expo_logo} alt="Expo Logo Preview" className="h-16 object-contain border bg-white p-2 shadow-sm" /></div>
@@ -354,19 +387,19 @@ const CertificateSettings = () => {
 
                     {/* Certificate Title Image */}
                     <div className="bg-gray-50 p-2 rounded-lg border border-gray-200 flex flex-col">
-                        <label className="block text-sm font-semibold mb-3 text-gray-700">Certificate Title Image</label>
-                        <input type="file" onChange={(e) => handleFileChange(e, 'certificate_title_image')} accept="image/*" className="mb-4 w-full p-2 bg-white border rounded text-sm" />
+                        <label className="block text-sm font-semibold mb-1 text-gray-700">Certificate Title Image</label>
+                        <input type="file" onChange={(e) => handleFileChange(e, 'certificate_title_image')} accept="image/*" className="mb-2 w-full p-2 bg-white border rounded text-sm" />
 
                         {localPreviews.certificate_title_image ? (
-                            <div className="mt-2"><span className="text-xs text-green-600 font-bold mb-1 block">New Selection Preview:</span><img src={localPreviews.certificate_title_image} alt="Certificate Title Image Preview" className="h-16 object-contain border bg-white p-2 shadow-sm" /></div>
+                            <div className="mt-1"><span className="text-xs text-green-600 font-bold mb-1 block">New Selection Preview:</span><img src={localPreviews.certificate_title_image} alt="Certificate Title Image Preview" className="h-16 object-contain border bg-white p-2 shadow-sm" /></div>
                         ) : previews.certificate_title_image && (
-                            <div className="mt-2"><span className="text-xs text-gray-500 font-bold mb-1 block">Currently Saved:</span><img src={`${imgBaseUrl}${previews.certificate_title_image}`} alt="Certificate Title Image" className="h-16 object-contain border bg-white p-2 shadow-sm" /></div>
+                            <div className="mt-1"><span className="text-xs text-gray-500 font-bold mb-1 block">Currently Saved:</span><img src={`${imgBaseUrl}${previews.certificate_title_image}`} alt="Certificate Title Image" className="h-16 object-contain border bg-white p-2 shadow-sm" /></div>
                         )}
                     </div>
 
                     {/* Certificate Main Heading */}
-                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col">
-                        <label className="block text-sm font-semibold mb-3 text-gray-700">Certificate Main Heading</label>
+                    <div className="bg-gray-50 p-2 rounded-lg border border-gray-200 flex flex-col">
+                        <label className="block text-sm font-semibold mb-1 text-gray-700">Certificate Main Heading</label>
                         <textarea
                             name="certi_name"
                             value={formData.certi_name}
@@ -378,8 +411,8 @@ const CertificateSettings = () => {
                     </div>
 
                     {/* Description 1 (Before Heading) */}
-                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col">
-                        <label className="block text-sm font-semibold mb-3 text-gray-700">Description 1 (Before Heading)</label>
+                    <div className="bg-gray-50 p-2 rounded-lg border border-gray-200 flex flex-col">
+                        <label className="block text-sm font-semibold mb-1 text-gray-700">Description 1 (Before Heading)</label>
                         <textarea
                             name="certi_desc1"
                             value={formData.certi_desc1}
@@ -392,8 +425,8 @@ const CertificateSettings = () => {
                 </div>
 
                 {/* Remaining Certificate Text */}
-                <div className="mb-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="mb-2 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div className="flex flex-col">
                             <label className="block text-sm font-semibold mb-2 text-gray-700">Description 1 (After Heading)</label>
                             <textarea
@@ -445,10 +478,10 @@ const CertificateSettings = () => {
                 </div>
 
                 {/* Signatures */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-                    <div className="border border-gray-200 p-4 rounded-lg bg-gray-50 flex flex-col">
-                        <h3 className="text-lg font-bold mb-3 text-gray-800 border-b pb-2">Signature 1 (Left)</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-2">
+                    <div className="border border-gray-200 p-2 rounded-lg bg-gray-50 flex flex-col">
+                        <h3 className="text-lg font-bold mb-1 text-gray-800 border-b pb-2">Signature 1 (Left)</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                             <div>
                                 <label className="block text-sm font-semibold text-gray-600 mb-1">Upload Image</label>
                                 <input type="file" onChange={(e) => handleFileChange(e, 'sign1_image')} accept="image/*" className="mb-2 w-full p-1 bg-white border rounded text-xs" />
@@ -469,9 +502,9 @@ const CertificateSettings = () => {
                         </div>
                     </div>
 
-                    <div className="border border-gray-200 p-4 rounded-lg bg-gray-50 flex flex-col">
-                        <h3 className="text-lg font-bold mb-3 text-gray-800 border-b pb-2">Signature 2 (Right)</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="border border-gray-200 p-2 rounded-lg bg-gray-50 flex flex-col">
+                        <h3 className="text-lg font-bold mb-1 text-gray-800 border-b pb-2">Signature 2 (Right)</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                             <div>
                                 <label className="block text-sm font-semibold text-gray-600 mb-1">Upload Image</label>
                                 <input type="file" onChange={(e) => handleFileChange(e, 'sign2_image')} accept="image/*" className="mb-2 w-full p-1 bg-white border rounded text-xs" />
@@ -494,12 +527,12 @@ const CertificateSettings = () => {
                 </div>
 
                 {/* Bulk Uploads */}
-                <div className="mb-4 border border-gray-200 p-4 rounded-lg bg-gray-50">
+                <div className="mb-2 border border-gray-200 p-2 rounded-lg bg-gray-50">
                     <label className="block text-lg font-semibold mb-2 text-gray-700">Namo Gange Trust Initiatives (Upload up to 24 Images)</label>
                     <p className="text-xs text-gray-500 mb-2">You can add new images or remove existing ones using the 'X' button.</p>
                     <input type="file" multiple onChange={(e) => handleFileChange(e, 'namo_gange_trust_logos')} accept="image/*" className="mb-2 w-full p-1 bg-white border rounded" />
 
-                    <div className="flex flex-col gap-4 mt-2">
+                    <div className="flex flex-col gap-2 mt-1">
                         {previews.namo_gange_trust_logos?.length > 0 && (
                             <div>
                                 <span className="text-xs text-gray-500 font-bold mb-2 block">Currently Saved ({previews.namo_gange_trust_logos.length} files):</span>
@@ -538,12 +571,12 @@ const CertificateSettings = () => {
                     </div>
                 </div>
 
-                <div className="mb-4 border border-gray-200 p-4 rounded-lg bg-gray-50">
+                <div className="mb-2 border border-gray-200 p-2 rounded-lg bg-gray-50">
                     <label className="block text-lg font-semibold mb-2 text-gray-700">Concurrent Events (Upload up to 7 Images)</label>
                     <p className="text-xs text-gray-500 mb-2">You can add new images or remove existing ones using the 'X' button.</p>
                     <input type="file" multiple onChange={(e) => handleFileChange(e, 'concurrent_events')} accept="image/*" className="mb-2 w-full p-1 bg-white border rounded" />
 
-                    <div className="flex flex-col gap-4 mt-2">
+                    <div className="flex flex-col gap-2 mt-1">
                         {previews.concurrent_events?.length > 0 && (
                             <div>
                                 <span className="text-xs text-gray-500 font-bold mb-2 block">Currently Saved ({previews.concurrent_events.length} files):</span>
