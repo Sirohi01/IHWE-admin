@@ -71,6 +71,13 @@ const resolveMedia = (value) => {
 
 const makeEmptyArray = (count) => Array.from({ length: count }, () => '');
 const EMPTY_IMAGE_VALUE = '__CERT_IMAGE_EMPTY__';
+const certificateTypes = [
+    { value: 'speaker', label: 'Speaker' },
+    { value: 'delegate', label: 'Delegate' },
+    { value: 'paperPresentation', label: 'Paper Presentation' },
+    { value: 'posterPresentation', label: 'Poster Presentation' },
+    { value: 'juryMember', label: 'Jury Member' }
+];
 
 const CertificatesGenerator = () => {
     const [config, setConfig] = useState(defaultSeed);
@@ -90,9 +97,10 @@ const CertificatesGenerator = () => {
     const [showConcurrent, setShowConcurrent] = useState(false);
     const [saving, setSaving] = useState(false);
     const [printSize, setPrintSize] = useState('A4');
+    const [certificateType, setCertificateType] = useState('speaker');
 
-    const loadConfig = async () => {
-        const res = await api.get('/api/arogya-certificate-config');
+    const loadConfig = async (type = certificateType) => {
+        const res = await api.get('/api/arogya-certificate-config', { params: { type } });
         const data = res.data?.data || {};
         setConfig({ ...defaultSeed, ...Object.fromEntries(Object.keys(defaultSeed).map((key) => [key, data[key] ?? defaultSeed[key]])) });
         setImages(Object.fromEntries(Object.keys(defaultImages).map((key) => {
@@ -114,8 +122,8 @@ const CertificatesGenerator = () => {
     };
 
     useEffect(() => {
-        loadConfig().catch((error) => console.error('Failed to load certificate config', error));
-    }, []);
+        loadConfig(certificateType).catch((error) => console.error('Failed to load certificate config', error));
+    }, [certificateType]);
 
     const handleTextChange = (e) => {
         const { name, value } = e.target;
@@ -227,6 +235,7 @@ const CertificatesGenerator = () => {
         setSaving(true);
         try {
             const form = new FormData();
+            form.append('certificateType', certificateType);
             Object.entries(config).forEach(([key, value]) => form.append(key, value ?? ''));
             Object.entries(imageFiles).forEach(([key, file]) => form.append(key, file));
             form.append('clearedImageFields', JSON.stringify(clearedImageFields));
@@ -242,7 +251,7 @@ const CertificatesGenerator = () => {
             setResetImageFields([]);
             setInitiativeFiles({});
             setConcurrentFiles({});
-            await loadConfig();
+            await loadConfig(certificateType);
             alert('Certificate settings saved.');
         } catch (error) {
             console.error('Failed to save certificate config', error);
@@ -269,6 +278,14 @@ const CertificatesGenerator = () => {
                     <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '10px' }}>Certificate Settings</h2>
                     <button onClick={() => setConfig(defaultSeed)} style={{ padding: '8px', background: '#d72624', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: '4px' }}>Reset Text to Seed</button>
                     <button onClick={saveConfig} disabled={saving} style={{ padding: '8px', background: '#1d7f3a', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: '4px', opacity: saving ? .7 : 1 }}>{saving ? 'Saving...' : 'Save Settings'}</button>
+                    <div style={fieldStyle}>
+                        <label style={labelStyle}>Certificate Type</label>
+                        <select value={certificateType} onChange={(e) => setCertificateType(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }}>
+                            {certificateTypes.map((type) => (
+                                <option key={type.value} value={type.value}>{type.label}</option>
+                            ))}
+                        </select>
+                    </div>
                     <div style={fieldStyle}>
                         <label style={labelStyle}>Print Paper Size</label>
                         <select value={printSize} onChange={(e) => setPrintSize(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }}>
@@ -332,7 +349,7 @@ const CertificatesGenerator = () => {
                     ))}
                 </div>
                 <div className="cert-preview-container" style={{ flex: 1, backgroundColor: '#eeeeee', overflowY: 'auto' }}>
-                    <Certi config={config} images={images} customInitiatives={initiativeImages} customConcurrent={concurrentImages} printSize={printSize} />
+                    <Certi config={config} images={images} customInitiatives={initiativeImages} customConcurrent={concurrentImages} printSize={printSize} certificateType={certificateType} />
                 </div>
             </div>
         </div>

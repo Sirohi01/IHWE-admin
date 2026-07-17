@@ -97,7 +97,7 @@ const CertificateImage = ({ className, src, alt }) => (
     src ? <img className={className} src={src} alt={alt} /> : null
 );
 
-const Certi = ({ config, images, customInitiatives = [], customConcurrent = [], printSize = "A4" }) => {
+const Certi = ({ config, images, customInitiatives = [], customConcurrent = [], printSize = "A4", certificateType = "speaker" }) => {
     const safeCompanyName = String(config?.recipientName || "").trim() || "";
     const supportedByLeftText = config?.supportedByLeftText ?? config?.supportedByText;
     const supportedByRightText = config?.supportedByRightText ?? config?.supportedByText;
@@ -772,7 +772,7 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [], 
             <div className="certificate-preview-wrap">
                 <section
                     className="certificate-print-area"
-                    aria-label={`Certificate for ${safeCompanyName}`}
+                    aria-label={`${certificateType} certificate for ${safeCompanyName}`}
                 >
                     <CertificateImage
                         className="certificate-image msme-logo"
