@@ -263,7 +263,7 @@ const CertificateSettings = () => {
                 {/* Header Configuration */}
                 <div className="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
                     <h2 className="text-xl font-bold mb-4 text-blue-800 border-b border-blue-200 pb-2">Top Header Configuration</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {/* Header Left */}
                         <div className="bg-white p-4 rounded shadow-sm border border-gray-100">
                             <div className="flex justify-between items-center mb-3">
@@ -338,129 +338,158 @@ const CertificateSettings = () => {
                     </div>
                 </div>
 
-                {/* Expo Logo */}
-                <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <label className="block text-lg font-semibold mb-3 text-gray-700">Expo Logo (Top Left)</label>
-                    <input type="file" onChange={(e) => handleFileChange(e, 'expo_logo')} accept="image/*" className="mb-4 w-full p-2 bg-white border rounded" />
+                {/* Logos & Top Text Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    {/* Expo Logo */}
+                    <div className="bg-gray-50 p-2 rounded-lg border border-gray-200 flex flex-col">
+                        <label className="block text-sm font-semibold mb-2 text-gray-700">Expo Logo (Top Left)</label>
+                        <input type="file" onChange={(e) => handleFileChange(e, 'expo_logo')} accept="image/*" className="mb-4 w-full p-2 bg-white border rounded text-sm" />
 
-                    {localPreviews.expo_logo ? (
-                        <div className="mt-2"><span className="text-xs text-green-600 font-bold mb-1 block">New Selection Preview:</span><img src={localPreviews.expo_logo} alt="Expo Logo Preview" className="h-20 object-contain border bg-white p-2 shadow-sm" /></div>
-                    ) : previews.expo_logo && (
-                        <div className="mt-2"><span className="text-xs text-gray-500 font-bold mb-1 block">Currently Saved:</span><img src={`${imgBaseUrl}${previews.expo_logo}`} alt="Expo Logo" className="h-20 object-contain border bg-white p-2 shadow-sm" /></div>
-                    )}
+                        {localPreviews.expo_logo ? (
+                            <div className=""><span className="text-xs text-green-600 font-bold mb-1 block">New Selection Preview:</span><img src={localPreviews.expo_logo} alt="Expo Logo Preview" className="h-16 object-contain border bg-white p-2 shadow-sm" /></div>
+                        ) : previews.expo_logo && (
+                            <div className=""><span className="text-xs text-gray-500 font-bold mb-1 block">Currently Saved:</span><img src={`${imgBaseUrl}${previews.expo_logo}`} alt="Expo Logo" className="h-16 object-contain border bg-white p-2 shadow-sm" /></div>
+                        )}
+                    </div>
+
+                    {/* Certificate Title Image */}
+                    <div className="bg-gray-50 p-2 rounded-lg border border-gray-200 flex flex-col">
+                        <label className="block text-sm font-semibold mb-3 text-gray-700">Certificate Title Image</label>
+                        <input type="file" onChange={(e) => handleFileChange(e, 'certificate_title_image')} accept="image/*" className="mb-4 w-full p-2 bg-white border rounded text-sm" />
+
+                        {localPreviews.certificate_title_image ? (
+                            <div className="mt-2"><span className="text-xs text-green-600 font-bold mb-1 block">New Selection Preview:</span><img src={localPreviews.certificate_title_image} alt="Certificate Title Image Preview" className="h-16 object-contain border bg-white p-2 shadow-sm" /></div>
+                        ) : previews.certificate_title_image && (
+                            <div className="mt-2"><span className="text-xs text-gray-500 font-bold mb-1 block">Currently Saved:</span><img src={`${imgBaseUrl}${previews.certificate_title_image}`} alt="Certificate Title Image" className="h-16 object-contain border bg-white p-2 shadow-sm" /></div>
+                        )}
+                    </div>
+
+                    {/* Certificate Main Heading */}
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col">
+                        <label className="block text-sm font-semibold mb-3 text-gray-700">Certificate Main Heading</label>
+                        <textarea
+                            name="certi_name"
+                            value={formData.certi_name}
+                            onChange={handleInputChange}
+                            rows="4"
+                            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none flex-grow text-sm"
+                            placeholder="CERTIFICATE Of Participation & Appreciation"
+                        />
+                    </div>
+
+                    {/* Description 1 (Before Heading) */}
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col">
+                        <label className="block text-sm font-semibold mb-3 text-gray-700">Description 1 (Before Heading)</label>
+                        <textarea
+                            name="certi_desc1"
+                            value={formData.certi_desc1}
+                            onChange={handleInputChange}
+                            rows="4"
+                            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none flex-grow text-sm"
+                            placeholder="We extend our heartfelt gratitude to "
+                        />
+                    </div>
                 </div>
 
-                {/* Certificate Title Image */}
-                <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <label className="block text-lg font-semibold mb-3 text-gray-700">Certificate Title Image (e.g. CERTIFICATE Of Participation & Appreciation)</label>
-                    <input type="file" onChange={(e) => handleFileChange(e, 'certificate_title_image')} accept="image/*" className="mb-4 w-full p-2 bg-white border rounded" />
-
-                    {localPreviews.certificate_title_image ? (
-                        <div className="mt-2"><span className="text-xs text-green-600 font-bold mb-1 block">New Selection Preview:</span><img src={localPreviews.certificate_title_image} alt="Certificate Title Image Preview" className="h-20 object-contain border bg-white p-2 shadow-sm" /></div>
-                    ) : previews.certificate_title_image && (
-                        <div className="mt-2"><span className="text-xs text-gray-500 font-bold mb-1 block">Currently Saved:</span><img src={`${imgBaseUrl}${previews.certificate_title_image}`} alt="Certificate Title Image" className="h-20 object-contain border bg-white p-2 shadow-sm" /></div>
-                    )}
-                </div>
-
-                {/* Certificate Name */}
+                {/* Remaining Certificate Text */}
                 <div className="mb-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <label className="block text-lg font-semibold mb-2 text-gray-700">Certificate Main Heading</label>
-                    <input
-                        type="text"
-                        name="certi_name"
-                        value={formData.certi_name}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none mb-4"
-                        placeholder="CERTIFICATE Of Participation & Appreciation"
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex flex-col">
+                            <label className="block text-sm font-semibold mb-2 text-gray-700">Description 1 (After Heading)</label>
+                            <textarea
+                                name="certi_desc1_part2"
+                                value={formData.certi_desc1_part2}
+                                onChange={handleInputChange}
+                                rows="3"
+                                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                placeholder="for valuable participation in the 9th..."
+                            />
+                        </div>
 
-                    <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Description 1 (Before Heading)</label>
-                    <textarea
-                        name="certi_desc1"
-                        value={formData.certi_desc1}
-                        onChange={handleInputChange}
-                        rows="2"
-                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder="We extend our heartfelt gratitude to "
-                    />
+                        <div className="flex flex-col">
+                            <label className="block text-sm font-semibold mb-2 text-gray-700">Description 2 (Second Paragraph)</label>
+                            <textarea
+                                name="certi_desc2"
+                                value={formData.certi_desc2}
+                                onChange={handleInputChange}
+                                rows="3"
+                                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                placeholder="Your stall and the innovative solutions showcased..."
+                            />
+                        </div>
 
-                    <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Description 1 (After Heading)</label>
-                    <textarea
-                        name="certi_desc1_part2"
-                        value={formData.certi_desc1_part2}
-                        onChange={handleInputChange}
-                        rows="3"
-                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder="for valuable participation in the 9th..."
-                    />
+                        <div className="flex flex-col">
+                            <label className="block text-sm font-semibold mb-2 text-gray-700">Description 3 (Third Paragraph)</label>
+                            <textarea
+                                name="certi_desc3"
+                                value={formData.certi_desc3}
+                                onChange={handleInputChange}
+                                rows="3"
+                                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                placeholder="We deeply appreciate your commitment and support..."
+                            />
+                        </div>
 
-                    <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Description 2 (Second Paragraph)</label>
-                    <textarea
-                        name="certi_desc2"
-                        value={formData.certi_desc2}
-                        onChange={handleInputChange}
-                        rows="3"
-                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder="Your stall and the innovative solutions showcased..."
-                    />
-
-                    <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Description 3 (Third Paragraph)</label>
-                    <textarea
-                        name="certi_desc3"
-                        value={formData.certi_desc3}
-                        onChange={handleInputChange}
-                        rows="2"
-                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder="We deeply appreciate your commitment and support..."
-                    />
-
-                    <label className="block text-lg font-semibold mb-2 text-gray-700 mt-4">Address & Contact Info</label>
-                    <textarea
-                        name="certi_address"
-                        value={formData.certi_address}
-                        onChange={handleInputChange}
-                        rows="3"
-                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder="Head Office: 12/52..."
-                    />
+                        <div className="flex flex-col">
+                            <label className="block text-sm font-semibold mb-2 text-gray-700">Address & Contact Info</label>
+                            <textarea
+                                name="certi_address"
+                                value={formData.certi_address}
+                                onChange={handleInputChange}
+                                rows="3"
+                                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                placeholder="Head Office: 12/52..."
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 {/* Signatures */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-                    <div className="border border-gray-200 p-4 rounded-lg bg-gray-50">
+                    <div className="border border-gray-200 p-4 rounded-lg bg-gray-50 flex flex-col">
                         <h3 className="text-lg font-bold mb-3 text-gray-800 border-b pb-2">Signature 1 (Left)</h3>
-                        <label className="block text-sm font-semibold text-gray-600 mb-1">Upload Signature Image</label>
-                        <input type="file" onChange={(e) => handleFileChange(e, 'sign1_image')} accept="image/*" className="mb-2 w-full p-1 bg-white border rounded" />
-
-                        {localPreviews.sign1_image ? (
-                            <div className="mb-2"><span className="text-xs text-green-600 font-bold mb-1 block">New Selection:</span><img src={localPreviews.sign1_image} alt="Sign 1 Preview" className="h-12 object-contain border bg-white p-1 shadow-sm" /></div>
-                        ) : previews.sign1_image && (
-                            <div className="mb-2"><span className="text-xs text-gray-500 font-bold mb-1 block">Currently Saved:</span><img src={`${imgBaseUrl}${previews.sign1_image}`} alt="Sign 1" className="h-12 object-contain border bg-white p-1 shadow-sm" /></div>
-                        )}
-
-                        <label className="block text-sm font-semibold text-gray-600 mb-1">Name</label>
-                        <input type="text" name="sign1_name" value={formData.sign1_name} onChange={handleInputChange} className="w-full p-2 border border-gray-300 rounded mb-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. H.H.Shri Acharya Jagdish ji" />
-
-                        <label className="block text-sm font-semibold text-gray-600 mb-1">Designation</label>
-                        <input type="text" name="sign1_designation" value={formData.sign1_designation} onChange={handleInputChange} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. Founder" />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-600 mb-1">Upload Image</label>
+                                <input type="file" onChange={(e) => handleFileChange(e, 'sign1_image')} accept="image/*" className="mb-2 w-full p-1 bg-white border rounded text-xs" />
+                                {localPreviews.sign1_image ? (
+                                    <div className="mb-2"><span className="text-[10px] text-green-600 font-bold mb-1 block">New:</span><img src={localPreviews.sign1_image} alt="Sign 1 Preview" className="h-10 object-contain border bg-white p-1 shadow-sm" /></div>
+                                ) : previews.sign1_image && (
+                                    <div className="mb-2"><span className="text-[10px] text-gray-500 font-bold mb-1 block">Saved:</span><img src={`${imgBaseUrl}${previews.sign1_image}`} alt="Sign 1" className="h-10 object-contain border bg-white p-1 shadow-sm" /></div>
+                                )}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-600 mb-1">Name</label>
+                                <input type="text" name="sign1_name" value={formData.sign1_name} onChange={handleInputChange} className="w-full p-2 border border-gray-300 rounded mb-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="e.g. H.H.Shri Acharya..." />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-600 mb-1">Designation</label>
+                                <input type="text" name="sign1_designation" value={formData.sign1_designation} onChange={handleInputChange} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="e.g. Founder" />
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="border border-gray-200 p-4 rounded-lg bg-gray-50">
+                    <div className="border border-gray-200 p-4 rounded-lg bg-gray-50 flex flex-col">
                         <h3 className="text-lg font-bold mb-3 text-gray-800 border-b pb-2">Signature 2 (Right)</h3>
-                        <label className="block text-sm font-semibold text-gray-600 mb-1">Upload Signature Image</label>
-                        <input type="file" onChange={(e) => handleFileChange(e, 'sign2_image')} accept="image/*" className="mb-2 w-full p-1 bg-white border rounded" />
-
-                        {localPreviews.sign2_image ? (
-                            <div className="mb-2"><span className="text-xs text-green-600 font-bold mb-1 block">New Selection:</span><img src={localPreviews.sign2_image} alt="Sign 2 Preview" className="h-12 object-contain border bg-white p-1 shadow-sm" /></div>
-                        ) : previews.sign2_image && (
-                            <div className="mb-2"><span className="text-xs text-gray-500 font-bold mb-1 block">Currently Saved:</span><img src={`${imgBaseUrl}${previews.sign2_image}`} alt="Sign 2" className="h-12 object-contain border bg-white p-1 shadow-sm" /></div>
-                        )}
-
-                        <label className="block text-sm font-semibold text-gray-600 mb-1">Name</label>
-                        <input type="text" name="sign2_name" value={formData.sign2_name} onChange={handleInputChange} className="w-full p-2 border border-gray-300 rounded mb-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. Shri Vijay Sharma" />
-
-                        <label className="block text-sm font-semibold text-gray-600 mb-1">Designation</label>
-                        <input type="text" name="sign2_designation" value={formData.sign2_designation} onChange={handleInputChange} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. Chairman" />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-600 mb-1">Upload Image</label>
+                                <input type="file" onChange={(e) => handleFileChange(e, 'sign2_image')} accept="image/*" className="mb-2 w-full p-1 bg-white border rounded text-xs" />
+                                {localPreviews.sign2_image ? (
+                                    <div className="mb-2"><span className="text-[10px] text-green-600 font-bold mb-1 block">New:</span><img src={localPreviews.sign2_image} alt="Sign 2 Preview" className="h-10 object-contain border bg-white p-1 shadow-sm" /></div>
+                                ) : previews.sign2_image && (
+                                    <div className="mb-2"><span className="text-[10px] text-gray-500 font-bold mb-1 block">Saved:</span><img src={`${imgBaseUrl}${previews.sign2_image}`} alt="Sign 2" className="h-10 object-contain border bg-white p-1 shadow-sm" /></div>
+                                )}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-600 mb-1">Name</label>
+                                <input type="text" name="sign2_name" value={formData.sign2_name} onChange={handleInputChange} className="w-full p-2 border border-gray-300 rounded mb-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="e.g. Shri Vijay Sharma" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-600 mb-1">Designation</label>
+                                <input type="text" name="sign2_designation" value={formData.sign2_designation} onChange={handleInputChange} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="e.g. Chairman" />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -476,8 +505,8 @@ const CertificateSettings = () => {
                                 <span className="text-xs text-gray-500 font-bold mb-2 block">Currently Saved ({previews.namo_gange_trust_logos.length} files):</span>
                                 <div className="flex flex-wrap gap-3">
                                     {previews.namo_gange_trust_logos.map((img, idx) => (
-                                        <div 
-                                            key={idx} 
+                                        <div
+                                            key={idx}
                                             className="relative group cursor-move"
                                             draggable
                                             onDragStart={(e) => handleDragStart(e, idx, 'namo_gange_trust_logos')}
@@ -520,8 +549,8 @@ const CertificateSettings = () => {
                                 <span className="text-xs text-gray-500 font-bold mb-2 block">Currently Saved ({previews.concurrent_events.length} files):</span>
                                 <div className="flex flex-wrap gap-3">
                                     {previews.concurrent_events.map((img, idx) => (
-                                        <div 
-                                            key={idx} 
+                                        <div
+                                            key={idx}
                                             className="relative group cursor-move"
                                             draggable
                                             onDragStart={(e) => handleDragStart(e, idx, 'concurrent_events')}
