@@ -35,7 +35,7 @@ const waitForPrintAssets = async (root) => {
 export default function FoodCouponGeneratorPage() {
   const printRef = useRef(null);
   const [quantity, setQuantity] = useState(20);
-  const [persons, setPersons] = useState("2 PERSON");
+  const [persons, setPersons] = useState("1 PACKED LUNCH");
   const [logoSrc, setLogoSrc] = useState("");
   const [logoName, setLogoName] = useState(DEFAULT_FOOD_COUPON_LOGO_NAME);
   const [logoError, setLogoError] = useState("");
@@ -220,7 +220,7 @@ export default function FoodCouponGeneratorPage() {
           <p className="mb-2 text-xs font-black text-[#15173D]">Preview</p>
           <div className="max-w-3xl overflow-hidden rounded-lg border border-slate-200 bg-white">
             <div style={{ width: "100%", aspectRatio: "3.62 / 1" }}>
-              <FoodCouponCanvas persons={persons || "2 PERSON"} logoSrc={logoSrc} />
+              <FoodCouponCanvas persons={persons || "1 PACKED LUNCH"} logoSrc={logoSrc} />
             </div>
           </div>
         </div>
@@ -233,7 +233,7 @@ export default function FoodCouponGeneratorPage() {
             <div key={pageIndex} className="food-coupon-print-sheet">
               {pageItems.map((coupon) => (
                 <div key={coupon} className="food-coupon-print-card">
-                  <FoodCouponCanvas persons={persons || "2 PERSON"} logoSrc={logoSrc} />
+                  <FoodCouponCanvas persons={persons || "1 PACKED LUNCH"} logoSrc={logoSrc} />
                 </div>
               ))}
             </div>
