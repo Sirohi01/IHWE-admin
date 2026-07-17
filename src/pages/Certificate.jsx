@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_URL, SERVER_URL } from '../lib/api';
 
 import bgImage from '../assets/9th_certificate/Background.jpg';
 import logo9th from '../assets/9th_certificate/9thlogo.png';
@@ -27,12 +28,12 @@ const supportedByData = [
 
 const Certificate = () => {
   const [certData, setCertData] = useState(null);
-  const imgBaseUrl = import.meta.env.VITE_API_URL || '';
+  const imgBaseUrl = SERVER_URL;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${imgBaseUrl}/api/certificate-data`);
+        const response = await axios.get(`${API_URL}/certificate-data`);
         if (response.data.success && response.data.data) {
           setCertData(response.data.data);
         }

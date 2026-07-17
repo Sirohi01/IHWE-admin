@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { API_URL, SERVER_URL } from '../lib/api';
 
 const CertificateSettings = () => {
     const [formData, setFormData] = useState({
@@ -50,7 +51,7 @@ const CertificateSettings = () => {
             const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
             // Assuming your backend runs on same origin or proxy is setup.
             // Adjust base URL if needed.
-            const response = await axios.get(`${import.meta.env.VITE_API_URL || ''}/api/certificate-data`, {
+            const response = await axios.get(`${API_URL}/certificate-data`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (response.data.success && response.data.data) {
@@ -224,7 +225,7 @@ const CertificateSettings = () => {
 
         try {
             const toastId = toast.loading('Saving settings...');
-            const response = await axios.post(`${import.meta.env.VITE_API_URL || ''}/api/certificate-data/update`, payload, {
+            const response = await axios.post(`${API_URL}/certificate-data/update`, payload, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
@@ -253,7 +254,7 @@ const CertificateSettings = () => {
         }
     };
 
-    const imgBaseUrl = import.meta.env.VITE_API_URL || '';
+    const imgBaseUrl = SERVER_URL;
 
     return (
         <div className="p-2 bg-gray-50 min-h-screen">
