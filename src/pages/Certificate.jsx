@@ -170,23 +170,11 @@ const Certificate = () => {
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
           <h2 className="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">Certificate Management</h2>
           
-          <div className="flex flex-wrap gap-6 mb-6 bg-gray-50 p-5 rounded-lg border border-gray-200 items-end">
-            <div className="flex-1 min-w-[300px]">
-              <label className="block text-sm font-bold mb-2 text-gray-800">1. Select Certificate Category</label>
-              <select
-                className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-medium text-gray-700"
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-              >
-                {certificateTypes.map(type => (
-                  <option key={type.value} value={type.value}>{type.label}</option>
-                ))}
-              </select>
-            </div>
+          <div className="flex flex-wrap gap-6 mb-6 bg-gray-50 p-5 rounded-lg border border-gray-200 items-end justify-between">
             
-            <div className="flex-1 min-w-[400px] flex items-end gap-3 border-l-2 border-gray-200 pl-6">
+            <div className="flex-1 min-w-[400px] flex items-end gap-3">
               <div className="flex-1">
-                <label className="block text-sm font-bold mb-2 text-gray-800">2. Add Manual Recipient to {certificateTypes.find(t => t.value === selectedType)?.label.replace(' Certificate', '')}</label>
+                <label className="block text-sm font-bold mb-2 text-gray-800">Add Manual Recipient to {certificateTypes.find(t => t.value === selectedType)?.label.replace(' Certificate', '')}</label>
                 <input
                   type="text"
                   className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
@@ -202,6 +190,20 @@ const Certificate = () => {
                 + Add Recipient
               </button>
             </div>
+
+            <div className="w-72 flex-none border-l-2 border-gray-200 pl-6">
+              <label className="block text-sm font-bold mb-2 text-gray-800">Select Certificate Category</label>
+              <select
+                className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-medium text-gray-700"
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+              >
+                {certificateTypes.map(type => (
+                  <option key={type.value} value={type.value}>{type.label}</option>
+                ))}
+              </select>
+            </div>
+
           </div>
 
           <div className="mb-4 flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200">

@@ -273,22 +273,24 @@ const CertificateSettings = () => {
             <h1 className="text-xl font-bold mb-2 text-gray-800 border-b pb-2">Certificate Data Settings</h1>
             <form onSubmit={handleSubmit} className="bg-white p-2 rounded-xl shadow-lg w-full">
 
-                <div className="mb-6">
-                    <label className="block text-sm font-semibold mb-2 text-gray-700">Select Certificate Category to Edit</label>
-                    <select
-                        className="w-full sm:w-1/2 p-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-gray-50"
-                        value={selectedType}
-                        onChange={(e) => setSelectedType(e.target.value)}
-                    >
-                        {certificateTypes.map(type => (
-                            <option key={type.value} value={type.value}>{type.label}</option>
-                        ))}
-                    </select>
-                    {selectedType !== 'default' && (
-                        <p className="text-sm text-gray-500 mt-2">
-                            If no custom settings are saved for {certificateTypes.find(t => t.value === selectedType)?.label}, it will fall back to the Default Settings.
-                        </p>
-                    )}
+                <div className="mb-6 flex flex-col items-end border-b pb-4">
+                    <div className="w-72">
+                        <label className="block text-sm font-bold mb-2 text-gray-800">Select Certificate Category to Edit</label>
+                        <select
+                            className="w-full p-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white font-medium text-gray-700"
+                            value={selectedType}
+                            onChange={(e) => setSelectedType(e.target.value)}
+                        >
+                            {certificateTypes.map(type => (
+                                <option key={type.value} value={type.value}>{type.label}</option>
+                            ))}
+                        </select>
+                        {selectedType !== 'default' && (
+                            <p className="text-xs text-gray-500 mt-2">
+                                If empty, falls back to Default Settings.
+                            </p>
+                        )}
+                    </div>
                 </div>
 
                 {/* Header Configuration */}
