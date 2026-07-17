@@ -243,6 +243,7 @@ const AccountSection1 = lazy(() => import("../pages/ihwe_client_data_2026/Accoun
 const CreateEstimate1 = lazy(() => import("../pages/ihwe_client_data_2026/CreateEstimate1"));
 import EstimateDetails from "../pages/ihwe_client_data_2026/invoice/EstimateDetails"
 import BuyerRegistrationForm from '../pages/buyer/BuyerRegistrationForm';
+import MobileFeedbackDetailsNew from '../pages/MobileFeedbackDetailsNew';
 const EditEstimate = lazy(() => import("../pages/ihwe_client_data_2026/invoice/EditEstimate"));
 const PerformaInvoiceDetails = lazy(() => import("../pages/ihwe_client_data_2026/invoice/PerformaInvoiceDetails"));
 const PerformaInvoiceList = lazy(() => import("../pages/ihwe_client_data_2026/invoice/PerformaInvoiceList"));
@@ -795,7 +796,7 @@ export default function AppRoutes() {
             <Route path="/passes/visitor" element={<PassGeneratorPage passType="visitor" />} />
             <Route path="/passes/food-coupons" element={<FoodCouponGeneratorPage />} />
             <Route path="/mobile-feedback" element={<MobileFeedback />} />
-            <Route path="/mobile-feedback/:id" element={<MobileFeedbackDetails />} />
+            <Route path="/mobile-feedback/:id" element={<MobileFeedbackDetailsNew />} />
             <Route path="/mobile-lead-captures" element={<MobileLeadCaptures />} />
             <Route path="/marketing-toolkit-manage" element={<MarketingToolkitManage />} />
             <Route path="/reminder" element={<Reminder />} />
