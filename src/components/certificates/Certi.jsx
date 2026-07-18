@@ -304,7 +304,6 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [], 
                     align-items: flex-end;
                     justify-content: center;
                     color: var(--certificate-red);
-                    border-bottom: 1.5px dotted rgba(124, 87, 37, 0.38);
                     font-size: 20px !important;
                     font-weight: 700;
                     line-height: 1;
