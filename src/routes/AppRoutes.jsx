@@ -111,6 +111,7 @@ const InternationalBuyerRegistrationConfig = lazy(() => import("../pages/Interna
 const StallVendorManage = lazy(() => import("../pages/StallVendorManage"));
 const ExhibitorListManage = lazy(() => import("../pages/ExhibitorListManage"));
 const PartnerManagement = lazy(() => import("../pages/PartnerManagement"));
+const SpecificPartnerManage = lazy(() => import("../pages/SpecificPartnerManage"));
 const AdvisoryManagement = lazy(() => import("../pages/AdvisoryManagement"));
 const ImageGalleryManagement = lazy(() => import("../pages/ImageGalleryManagement"));
 const VideoGalleryManagement = lazy(() => import("../pages/VideoGalleryManagement"));
@@ -535,6 +536,9 @@ export default function AppRoutes() {
               path="individual-clients-list"
               element={<IndividualClientList />}
             />
+            <Route path="knowledge-partners-manage" element={<SpecificPartnerManage pageTitle="Knowledge Partners" subheading="Knowledge Partners" heading="Industry Leadership" />} />
+            <Route path="healthcare-partners-manage" element={<SpecificPartnerManage pageTitle="Healthcare Partners" subheading="Healthcare Partner" heading="Healthcare Excellence" />} />
+            <Route path="supporting-associations-manage" element={<SpecificPartnerManage pageTitle="Supporting Associations" subheading="Supporting Association" heading="Key Associations" />} />
             <Route path="partners-manage" element={<PartnerManagement />} />
             <Route path="advisory-manage" element={<AdvisoryManagement />} />
             <Route path="gallery-images" element={<ImageGalleryManagement />} />

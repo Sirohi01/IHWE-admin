@@ -376,7 +376,10 @@ export const menuItems = [
     icon: Handshake,
     children: [
       { label: "Partner Registrations", path: "/partner-registrations" },
-      { label: "Manage Partners", path: "/partners-manage" },
+      { label: "Knowledge Partners", path: "/knowledge-partners-manage" },
+      { label: "Healthcare Partners", path: "/healthcare-partners-manage" },
+      { label: "Supporting Associations", path: "/supporting-associations-manage" },
+      { label: "Manage Partner Groups", path: "/partners-manage" },
       { label: "Hotel Stay Partner", path: "/hotel-stay-partner-manage" },
       { label: "Fabrication Partner", path: "/fabrication-partner-manage" },
       { label: "Travel Partner", path: "/travel-partner-manage" },

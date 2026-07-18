@@ -1,347 +1,383 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Printer, FileText, CheckCircle, XCircle, Handshake, Download } from "lucide-react";
+import { ArrowLeft, Printer, FileText, CheckCircle, XCircle, Download, Clock, MapPin, Phone, Mail, Building, Globe, Settings, FileCheck, Handshake } from "lucide-react";
 import api from "../lib/api";
 import { showSuccess, showError } from "../utils/toastMessage";
+import Swal from "sweetalert2";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
 
 const Button = ({ children, onClick, className, variant, ...props }) => {
-  const baseStyles = "px-4 py-2 text-sm font-bold uppercase tracking-widest rounded-sm flex items-center gap-2 transition-all";
-  const variants = {
-    primary: "bg-gray-800 text-white hover:bg-gray-700",
-    outline: "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50",
-    success: "bg-green-700 text-white hover:bg-green-800",
-    danger: "bg-red-700 text-white hover:bg-red-800",
-  };
-  return (
-    <button
-      onClick={onClick}
-      className={`${baseStyles} ${variant ? variants[variant] : variants.primary} ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  );
+    const baseStyles = "px-4 py-2 text-[11px] font-bold uppercase tracking-widest rounded flex items-center gap-2 transition-all shadow-sm";
+    const variants = {
+        primary: "bg-[#0B2545] text-white hover:bg-[#081a31] border border-[#0B2545]",
+        outline: "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50",
+        success: "bg-emerald-600 text-white hover:bg-emerald-700 border border-emerald-600",
+        danger: "bg-red-600 text-white hover:bg-red-700 border border-red-600",
+        warning: "bg-amber-500 text-white hover:bg-amber-600 border border-amber-500",
+    };
+    return (
+        <button
+            onClick={onClick}
+            className={`${baseStyles} ${variant ? variants[variant] : variants.primary} ${className}`}
+            {...props}
+        >
+            {children}
+        </button>
+    );
 };
 
 const PartnerRegistrationDetail = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [partner, setPartner] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const [partner, setPartner] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchDetail();
-  }, [id]);
-
-  const fetchDetail = async () => {
-    try {
-      setIsLoading(true);
-      const response = await api.get(`/api/partner-registration/${id}`);
-      if (response.data.success) {
-        setPartner(response.data.data);
-      }
-    } catch (error) {
-      console.error("Error fetching partner details:", error);
-      showError("Failed to fetch details");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handleStatusChange = async (newStatus) => {
-    try {
-      const response = await api.patch(`/api/partner-registration/${id}/status`, { status: newStatus });
-      if (response.data.success) {
-        showSuccess(`Partner registration marked as ${newStatus}`);
+    useEffect(() => {
         fetchDetail();
-      }
-    } catch (error) {
-      console.error("Error updating status:", error);
-      showError("Failed to update status");
+    }, [id]);
+
+    const fetchDetail = async () => {
+        try {
+            setIsLoading(true);
+            const response = await api.get(`/api/partner-registration/${id}`);
+            if (response.data.success) {
+                setPartner(response.data.data);
+            }
+        } catch (error) {
+            console.error("Error fetching partner details:", error);
+            showError("Failed to fetch details");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handlePrint = () => {
+        window.print();
+    };
+
+    const handleStatusChange = async (newStatus) => {
+        const result = await Swal.fire({
+            title: `Mark as ${newStatus}?`,
+            text: `Are you sure you want to change the status to ${newStatus}?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0B2545',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: 'Yes, update it!'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const response = await api.patch(`/api/partner-registration/${id}/status`, { status: newStatus });
+                if (response.data.success) {
+                    showSuccess(`Partner registration marked as ${newStatus}`);
+                    fetchDetail();
+                }
+            } catch (error) {
+                console.error("Error updating status:", error);
+                showError("Failed to update status");
+            }
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[calc(100vh-100px)]">
+                <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
     }
-  };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-2 border-gray-800 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  if (!partner) {
-    return (
-      <div className="p-8 text-center bg-white m-8 rounded-lg shadow">
-        <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-gray-800">Partner registration not found</h2>
-        <Button onClick={() => navigate("/partner-registrations")} variant="outline" className="mt-4 mx-auto">
-          Back to List
-        </Button>
-      </div>
-    );
-  }
-
-  const printStyles = `
-    @media print {
-      body { margin: 0; padding: 0; background: white; }
-      .no-print { display: none !important; }
-      .print-container { padding: 0; margin: 0; width: 100%; }
-      .print-section { break-inside: avoid; page-break-inside: avoid; margin-bottom: 15px !important; }
-      .detail-row { break-inside: avoid; page-break-inside: avoid; }
-      @page { size: A4; margin: 1.5cm; }
-      h1, h2, h3 { page-break-after: avoid; }
-      .document-header { border-bottom: 3px solid #1f2937; margin-bottom: 20px; padding-bottom: 10px; }
+    if (!partner) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-100px)] bg-slate-50">
+                <XCircle className="w-16 h-16 text-red-400 mb-4" />
+                <h2 className="text-2xl font-black text-slate-800 uppercase">Registration Not Found</h2>
+                <p className="text-slate-500 font-medium mt-2 mb-6">The requested partner profile could not be located in the system.</p>
+                <Button onClick={() => navigate("/partner-registrations")} variant="outline">
+                    <ArrowLeft className="w-4 h-4" /> Back to List
+                </Button>
+            </div>
+        );
     }
-    @media screen {
-      .print-container { width: 100%; background: white; padding: 16px; }
-      body { background: #f3f4f6; }
-    }
-  `;
 
-  const formatValue = (value) => {
-    if (value === null || value === undefined || value === "") return "—";
-    if (typeof value === "boolean") return value ? "Yes" : "No";
-    return value;
-  };
+    const printStyles = `
+        @media print {
+            html, body { height: auto !important; min-height: auto !important; margin: 0; padding: 0; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body * { visibility: hidden; }
+            .print-container, .print-container * { visibility: visible; }
+            .print-container { position: absolute; left: 0; top: 0; width: 100%; max-width: 100%; padding: 30px !important; margin: 0 !important; background: white !important; box-shadow: none !important; border: none !important; box-sizing: border-box; }
+            .no-print, .no-print * { display: none !important; }
+            .print-section { break-inside: avoid; page-break-inside: avoid; margin-bottom: 8px !important; }
+            .detail-row { break-inside: avoid; page-break-inside: avoid; }
+            @page { size: A4; margin: 0.5cm; }
+            h1, h2, h3 { page-break-after: avoid; }
+            .print-grid { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 16px !important; }
+            .print-grid-2 { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 16px !important; }
+            .document-header { border-bottom: 4px solid #0B2545; padding-bottom: 12px; margin-bottom: 16px; }
+            .bg-slate-50 { background-color: #f8fafc !important; }
+            .print-bg-slate { background-color: #f8fafc !important; border: 1px solid #e2e8f0 !important; }
+            .print-status-badge { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        }
+    `;
 
-  const DetailRow = ({ label, value, className = "" }) => (
-    <div className={`detail-row mb-3 ${className}`}>
-      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-0.5">
-        {label}
-      </span>
-      <p className="text-sm text-gray-900 font-semibold break-words leading-tight">
-        {formatValue(value)}
-      </p>
-    </div>
-  );
+    const formatValue = (value) => {
+        if (value === null || value === undefined || value === "") return "—";
+        if (typeof value === "boolean") return value ? "Yes" : "No";
+        return value;
+    };
 
-  const Section = ({ title, children, columns = "lg:grid-cols-6" }) => (
-    <div className="print-section mb-6">
-      <div className="border-b-2 border-gray-300 pb-1 mb-3">
-        <h2 className="text-xs font-black text-gray-800 uppercase tracking-widest flex items-center gap-2">
-          <div className="w-1.5 h-3 bg-gray-800"></div>
-          {title}
-        </h2>
-      </div>
-      <div className={`grid grid-cols-2 md:grid-cols-3 ${columns} gap-x-4 gap-y-1`}>
-        {children}
-      </div>
-    </div>
-  );
-
-  const DocumentLink = ({ label, filePath }) => {
-    if (!filePath) return <DetailRow label={label} value="Not Uploaded" className="text-gray-400 italic" />;
-    return (
-      <div className="detail-row mb-3">
-        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-0.5">
-          {label}
-        </span>
-        <a
-          href={`${SERVER_URL}${filePath}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 border border-green-200 text-green-700 text-xs font-bold uppercase rounded hover:bg-green-100 transition-all no-print"
-        >
-          <Download className="w-3.5 h-3.5" /> View / Download Document
-        </a>
-        <p className="hidden print:block text-xs font-bold text-gray-600">[Uploaded]</p>
-      </div>
-    );
-  };
-
-  return (
-    <>
-      <style>{printStyles}</style>
-      <div className="print-container mt-6 ">
-        <div className="w-full px-4">
-          {/* Control Header (Hidden in Print) */}
-          <div className="flex justify-between items-start mb-8 no-print border-b border-gray-100 pb-6">
-            <div>
-              <Button onClick={() => navigate("/partner-registrations")} variant="outline" className="mb-4">
-                <ArrowLeft className="w-4 h-4" />
-                Back to List
-              </Button>
-              <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">
-                Service Partner Registration Profile
-              </h1>
-              <div className="flex items-center gap-3 mt-2">
-                <span className="text-xs font-black bg-gray-100 text-gray-600 px-3 py-1 rounded-sm uppercase tracking-widest">
-                  REG ID: {partner.registrationId}
-                </span>
-                <span
-                  className={`text-[10px] font-black px-3 py-1 rounded-sm uppercase tracking-widest ${partner.status === "Accepted"
-                    ? "bg-green-100 text-green-700"
-                    : partner.status === "Rejected"
-                      ? "bg-red-100 text-red-700"
-                      : partner.status === "Reviewed"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
-                >
-                  Status: {partner.status || "Pending"}
-                </span>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              {partner.status !== "Accepted" && (
-                <Button onClick={() => handleStatusChange("Accepted")} variant="success">
-                  <CheckCircle className="w-4 h-4" /> Accept
-                </Button>
-              )}
-              {partner.status !== "Rejected" && (
-                <Button onClick={() => handleStatusChange("Rejected")} variant="danger">
-                  <XCircle className="w-4 h-4" /> Reject
-                </Button>
-              )}
-              {partner.status === "Pending" && (
-                <Button onClick={() => handleStatusChange("Reviewed")} variant="primary">
-                  Mark Reviewed
-                </Button>
-              )}
-              <Button onClick={handlePrint} variant="outline">
-                <Printer className="w-4 h-4" /> Print Profile
-              </Button>
-            </div>
-          </div>
-
-          {/* Document Header (Visible in Print Only) */}
-          <div className="hidden print:block document-header">
-            <div className="flex justify-between items-end">
-              <div>
-                <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter leading-none">
-                  IHWE 2026 Service Partner Profile
-                </h1>
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em] mt-1">
-                  Official Partnership Assessment Profile
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs font-black text-gray-400 uppercase">Registration Number</p>
-                <p className="text-xl font-black text-gray-800">{partner.registrationId}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* SECTION 1: COMPANY PROFILE */}
-          <Section title="Section 1 – Company Information">
-            <DetailRow label="Company Name" value={partner.companyName} />
-            <DetailRow label="Business Category" value={partner.businessCategory} />
-            <DetailRow label="Website" value={partner.website} />
-            <DetailRow label="Year Established" value={partner.yearEstablished} />
-            <DetailRow label="GST Number" value={partner.gstNumber} />
-            <DetailRow label="MSME Registration No" value={partner.msmeRegistration} />
-          </Section>
-
-          {/* SECTION 2: CONTACT DETAILS */}
-          <Section title="Section 2 – Contact Information">
-            <DetailRow label="Contact Person" value={partner.fullName} />
-            <DetailRow label="Designation" value={partner.designation} />
-            <DetailRow label="Mobile Number" value={partner.mobile} />
-            <DetailRow label="WhatsApp Number" value={partner.whatsapp} />
-            <DetailRow label="Email Address" value={partner.email} />
-            <DetailRow label="Pin Code" value={partner.pinCode} />
-            <DetailRow label="Office Address" value={partner.officeAddress} className="col-span-2" />
-            <DetailRow label="City" value={partner.city} />
-            <DetailRow label="State" value={partner.state} />
-            <DetailRow label="Country" value={partner.country} />
-          </Section>
-
-          {/* SECTION 3: SERVICES AND CAPACITY */}
-          <Section title="Section 3 – Services & Professional Capacity">
-            <div className="col-span-full mb-3">
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">
-                Which Services Do You Offer?
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {partner.selectedServices && partner.selectedServices.length > 0 ? (
-                  partner.selectedServices.map((s, index) => (
-                    <span
-                      key={index}
-                      className="px-2.5 py-1 bg-green-50 border border-green-100 text-green-800 text-[11px] font-bold rounded-md"
-                    >
-                      {s}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-gray-400 italic">None specified</span>
-                )}
-              </div>
-            </div>
-            {partner.otherService && (
-              <DetailRow label="Other Services Description" value={partner.otherService} className="col-span-full" />
-            )}
-            <DetailRow label="Years of Experience" value={partner.experience} />
-            <DetailRow label="Operational Cities" value={partner.operationalCities} className="col-span-2" />
-            <DetailRow label="Can Handle International Projects?" value={partner.canHandleInternational} />
-            <DetailRow label="Major Clients / Key Accounts" value={partner.majorClients} className="col-span-full bg-gray-50 p-2.5 rounded" />
-          </Section>
-
-          {/* SECTION 4: PARTNERSHIP PREFERENCES */}
-          <Section title="Section 4 – Partnership Preferences & Additional Information">
-            <div className="col-span-full mb-3">
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">
-                Interests & Partnership Model
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {partner.partnershipInterests && partner.partnershipInterests.length > 0 ? (
-                  partner.partnershipInterests.map((p, index) => (
-                    <span
-                      key={index}
-                      className="px-2.5 py-1 bg-blue-50 border border-blue-100 text-blue-800 text-[11px] font-bold rounded-md"
-                    >
-                      {p}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-gray-400 italic">None specified</span>
-                )}
-              </div>
-            </div>
-            <DetailRow label="Additional Remarks" value={partner.additionalInfo} className="col-span-full bg-gray-50 p-2.5 rounded" />
-          </Section>
-
-          {/* SECTION 5: SUPPORTING DOCUMENTS */}
-          <Section title="Section 5 – Supporting Documents & Certifications" columns="lg:grid-cols-3">
-            <DocumentLink label="Company Profile" filePath={partner.companyProfilePath} />
-            <DocumentLink label="GST Certificate" filePath={partner.gstCertificatePath} />
-            <DocumentLink label="PAN Card" filePath={partner.panCardPath} />
-            <DocumentLink label="MSME Certificate" filePath={partner.msmeCertificatePath} />
-            <DocumentLink label="Portfolio / Credentials" filePath={partner.portfolioPath} />
-            <DocumentLink label="Visiting Card" filePath={partner.visitingCardPath} />
-          </Section>
-
-          {/* SECTION 6: METADATA & DECLARATION */}
-          <Section title="Section 6 – Declaration & Registration Status">
-            <DetailRow label="Declaration Accepted?" value={partner.declaration ? "YES, ACCEPTED" : "NO"} className="font-bold text-green-700" />
-            <DetailRow label="Otp Verified Email" value={partner.otpVerifiedEmail ? "Yes" : "No"} />
-            <DetailRow label="Otp Verified Mobile" value={partner.otpVerifiedMobile ? "Yes" : "No"} />
-            <DetailRow label="Submitted At" value={new Date(partner.createdAt).toLocaleString()} />
-            <DetailRow label="Last Updated At" value={new Date(partner.updatedAt).toLocaleString()} />
-          </Section>
-
-          {/* Document Footer (Visible in Print) */}
-          <div className="hidden print:block mt-16 pt-8 border-t border-gray-200">
-            <div className="flex justify-between items-end">
-              <div className="text-[9px] font-bold text-gray-400 uppercase leading-none">
-                <p>System Generated Document</p>
-                <p className="mt-1">© 2026 IHWE | Namo Gange Wellness Pvt. Ltd.</p>
-              </div>
-              <div className="text-center w-48">
-                <div className="border-b border-gray-400 mb-2"></div>
-                <p className="text-[10px] font-black text-gray-600 uppercase">Assessment Officer Signature</p>
-              </div>
-            </div>
-          </div>
+    const DetailRow = ({ label, value, className = "", icon: Icon }) => (
+        <div className={`detail-row flex flex-col ${className}`}>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5 mb-1">
+                {Icon && <Icon className="w-3 h-3 text-emerald-600" />} {label}
+            </span>
+            <p className="text-sm font-bold text-slate-900 leading-tight">
+                {formatValue(value)}
+            </p>
         </div>
-      </div>
-    </>
-  );
+    );
+
+    const Section = ({ title, icon: Icon, children, gridClass = "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 print-grid" }) => (
+        <div className="print-section mb-2 bg-white border border-slate-200 rounded-lg p-3 shadow-sm print:shadow-none print:border-slate-300">
+            <div className="border-b-2 border-slate-100 pb-1 mb-2">
+                <h2 className="text-sm font-black text-[#0B2545] uppercase tracking-wider flex items-center gap-2">
+                    {Icon && <Icon className="w-4 h-4 text-emerald-600" />}
+                    {title}
+                </h2>
+            </div>
+            <div className={`grid ${gridClass} gap-y-2 gap-x-6`}>
+                {children}
+            </div>
+        </div>
+    );
+
+    const DocumentLink = ({ label, filePath }) => {
+        if (!filePath) return <DetailRow label={label} value="Not Uploaded" className="text-slate-400 italic" icon={FileText} />;
+        return (
+            <div className="detail-row flex flex-col">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5 mb-2">
+                    <FileText className="w-3 h-3 text-blue-600" /> {label}
+                </span>
+                <a
+                    href={`${SERVER_URL}${filePath}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 text-[11px] font-bold uppercase tracking-wide rounded hover:bg-blue-100 transition-all no-print w-fit"
+                >
+                    <Download className="w-3.5 h-3.5" /> Download File
+                </a>
+                <p className="hidden print:flex items-center gap-1 text-[11px] font-black text-emerald-600 uppercase tracking-wide border border-emerald-200 bg-emerald-50 px-2 py-1 rounded w-fit">
+                    <CheckCircle className="w-3 h-3" /> Uploaded & Verified
+                </p>
+            </div>
+        );
+    };
+
+    return (
+        <div className="min-h-screen print:min-h-0 print:p-0 bg-slate-50 p-4 md:p-6 lg:p-8" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <style>{printStyles}</style>
+
+            <div className="mx-auto">
+                {/* Control Header (Hidden in Print) */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6 no-print">
+                    <div>
+                        <Button onClick={() => navigate("/partner-registrations")} variant="outline" className="mb-4 text-[10px]">
+                            <ArrowLeft className="w-3.5 h-3.5" />
+                            Back to List
+                        </Button>
+                        <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-3">
+                            Partner Profile
+                            <span className="text-sm bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded border border-emerald-200 font-black">
+                                #{partner.registrationId}
+                            </span>
+                        </h1>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {partner.status !== "Accepted" && (
+                            <Button onClick={() => handleStatusChange("Accepted")} variant="success">
+                                <CheckCircle className="w-4 h-4" /> Accept
+                            </Button>
+                        )}
+                        {partner.status !== "Rejected" && (
+                            <Button onClick={() => handleStatusChange("Rejected")} variant="danger">
+                                <XCircle className="w-4 h-4" /> Reject
+                            </Button>
+                        )}
+                        {partner.status === "Pending" && (
+                            <Button onClick={() => handleStatusChange("Reviewed")} variant="primary">
+                                <FileCheck className="w-4 h-4" /> Mark Reviewed
+                            </Button>
+                        )}
+                        {/* <Button onClick={handlePrint} variant="outline" className="ml-2">
+                            <Printer className="w-4 h-4" /> Print
+                        </Button> */}
+                    </div>
+                </div>
+
+                <div className="print-container bg-white rounded-xl shadow-lg border border-slate-200 p-6 md:p-8 print:border-none">
+
+                    {/* Document Header (Visible in Print Only) */}
+                    <div className="hidden print:block document-header">
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <h1 className="text-3xl font-black text-[#0B2545] uppercase tracking-tighter leading-none">
+                                    Service Partner Profile
+                                </h1>
+                                <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-[0.2em] mt-2">
+                                    Official Partnership Assessment Document
+                                </p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Registration ID</p>
+                                <p className="text-2xl font-black text-slate-900">{partner.registrationId}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Status Ribbon */}
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 mb-2 bg-slate-50 border border-slate-200 rounded-lg print-bg-slate">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-white rounded-md shadow-sm border border-slate-200">
+                                <Building className="w-6 h-6 text-[#0B2545]" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-black text-slate-800">{partner.companyName}</h2>
+                                <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest">{partner.businessCategory}</p>
+                            </div>
+                        </div>
+                        <div className="mt-4 sm:mt-0 text-right">
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Current Status</p>
+                            <span
+                                className={`print-status-badge text-xs font-black px-3 py-1.5 rounded uppercase tracking-widest border ${partner.status === "Accepted"
+                                    ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                                    : partner.status === "Rejected"
+                                        ? "bg-red-100 text-red-800 border-red-200"
+                                        : partner.status === "Reviewed"
+                                            ? "bg-blue-100 text-blue-800 border-blue-200"
+                                            : "bg-amber-100 text-amber-800 border-amber-200"
+                                    }`}
+                            >
+                                {partner.status || "Pending"}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* SECTION 1: COMPANY PROFILE */}
+                    <Section title="Company Information" icon={Building}>
+                        <DetailRow label="Company Name" value={partner.companyName} />
+                        <DetailRow label="Business Category" value={partner.businessCategory} />
+                        <DetailRow label="Website" value={partner.website} icon={Globe} />
+                        <DetailRow label="Year Established" value={partner.yearEstablished} icon={Clock} />
+                        <DetailRow label="GST Number" value={partner.gstNumber} />
+                        <DetailRow label="MSME Registration No." value={partner.msmeRegistration} />
+                    </Section>
+
+                    {/* SECTION 2: CONTACT DETAILS */}
+                    <Section title="Contact & Location" icon={Phone}>
+                        <DetailRow label="Primary Contact" value={partner.fullName} />
+                        <DetailRow label="Designation" value={partner.designation} />
+                        <DetailRow label="Email Address" value={partner.email} icon={Mail} />
+                        <DetailRow label="Mobile Number" value={partner.mobile} icon={Phone} />
+                        <DetailRow label="WhatsApp Number" value={partner.whatsapp} />
+                        <div className="hidden lg:block print:block"></div> {/* Spacer for grid alignment */}
+
+                        <DetailRow label="Full Office Address" value={`${partner.officeAddress}, ${partner.city}, ${partner.state}, ${partner.country} - ${partner.pinCode}`} className="col-span-1 md:col-span-2 lg:col-span-3 print:col-span-3 bg-slate-50 p-3 rounded border border-slate-100 print-bg-slate" icon={MapPin} />
+                    </Section>
+
+                    {/* SECTION 3: SERVICES AND CAPACITY */}
+                    <Section title="Services & Capabilities" icon={Settings} gridClass="grid-cols-1 md:grid-cols-2 print-grid-2">
+                        <div className="col-span-1 md:col-span-2 print:col-span-2 mb-2">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">
+                                Offered Services
+                            </span>
+                            <div className="flex flex-wrap gap-2">
+                                {partner.selectedServices && partner.selectedServices.length > 0 ? (
+                                    partner.selectedServices.map((s, index) => (
+                                        <span
+                                            key={index}
+                                            className="px-2.5 py-1.5 bg-[#0B2545] text-white text-[10px] font-bold tracking-wide rounded-sm"
+                                        >
+                                            {s}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <span className="text-slate-400 italic text-sm">None specified</span>
+                                )}
+                            </div>
+                        </div>
+
+                        {partner.otherService && (
+                            <DetailRow label="Other Services Details" value={partner.otherService} className="col-span-1 md:col-span-2 print:col-span-2" />
+                        )}
+                        <DetailRow label="Years of Experience" value={partner.experience} />
+                        <DetailRow label="Operational Cities" value={partner.operationalCities} />
+                        <DetailRow label="International Capabilities" value={partner.canHandleInternational} />
+                        <div className="hidden md:block print:block"></div>
+                        <DetailRow label="Major Clients / Key Accounts" value={partner.majorClients} className="col-span-1 md:col-span-2 print:col-span-2 bg-amber-50 p-3 rounded border border-amber-100" />
+                    </Section>
+
+                    {/* SECTION 4: PARTNERSHIP PREFERENCES */}
+                    <Section title="Partnership Interests" icon={Handshake} gridClass="grid-cols-1 md:grid-cols-2 print-grid-2">
+                        <div className="col-span-1 md:col-span-2 print:col-span-2 mb-2">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">
+                                Preferred Partnership Models
+                            </span>
+                            <div className="flex flex-wrap gap-2">
+                                {partner.partnershipInterests && partner.partnershipInterests.length > 0 ? (
+                                    partner.partnershipInterests.map((p, index) => (
+                                        <span
+                                            key={index}
+                                            className="px-2.5 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold tracking-wide rounded-sm uppercase"
+                                        >
+                                            {p}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <span className="text-slate-400 italic text-sm">None specified</span>
+                                )}
+                            </div>
+                        </div>
+                        <DetailRow label="Additional Remarks / Proposal" value={partner.additionalInfo} className="col-span-1 md:col-span-2 print:col-span-2 bg-slate-50 p-3 rounded border border-slate-100 print-bg-slate" />
+                    </Section>
+
+                    {/* SECTION 5: SUPPORTING DOCUMENTS */}
+                    <Section title="Uploaded Documents" icon={FileCheck}>
+                        <DocumentLink label="Company Profile" filePath={partner.companyProfilePath} />
+                        <DocumentLink label="GST Certificate" filePath={partner.gstCertificatePath} />
+                        <DocumentLink label="PAN Card" filePath={partner.panCardPath} />
+                        <DocumentLink label="MSME Certificate" filePath={partner.msmeCertificatePath} />
+                        <DocumentLink label="Portfolio / Credentials" filePath={partner.portfolioPath} />
+                        <DocumentLink label="Visiting Card" filePath={partner.visitingCardPath} />
+                    </Section>
+
+                    {/* SECTION 6: METADATA & DECLARATION */}
+                    <Section title="System Information & Verification" icon={Settings} gridClass="grid-cols-1 md:grid-cols-2 lg:grid-cols-4 print-grid-2">
+                        <DetailRow label="Terms Declaration" value={partner.declaration ? "ACCEPTED" : "NOT ACCEPTED"} className={partner.declaration ? "text-emerald-700" : "text-red-600"} />
+                        <DetailRow label="Email Verification" value={partner.otpVerifiedEmail ? "VERIFIED" : "PENDING"} className={partner.otpVerifiedEmail ? "text-emerald-700" : "text-amber-600"} />
+                        <DetailRow label="Mobile Verification" value={partner.otpVerifiedMobile ? "VERIFIED" : "PENDING"} className={partner.otpVerifiedMobile ? "text-emerald-700" : "text-amber-600"} />
+                        <div className="hidden lg:block print:hidden"></div>
+                        <DetailRow label="Registration Date" value={new Date(partner.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} />
+                        <DetailRow label="Last Updated" value={new Date(partner.updatedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} />
+                    </Section>
+
+                    {/* Document Footer (Visible in Print) */}
+                    <div className="hidden print:flex justify-between items-end mt-16 pt-6 border-t-[3px] border-slate-800">
+                        <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-relaxed">
+                            <p>This is a system generated document.</p>
+                            <p className="text-emerald-700">© 2026 9th IHWE | Namo Gange Wellness Pvt. Ltd.</p>
+                        </div>
+                        <div className="text-center w-64">
+                            <div className="border-b-2 border-slate-800 mb-2 h-10"></div>
+                            <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest">Authorized Signature / Stamp</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    );
 };
 
 export default PartnerRegistrationDetail;

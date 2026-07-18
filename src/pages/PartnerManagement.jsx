@@ -126,8 +126,8 @@ const PartnerManagement = () => {
     };
 
     const handlePartnerSubmit = async (groupId) => {
-        if (!imageFile && !partnerForm.logo) {
-            Swal.fire('Warning', 'Please upload a logo', 'warning');
+        if (!imageFile && !partnerForm.logo && !partnerForm.name) {
+            Swal.fire('Warning', 'Please provide a name or upload a logo', 'warning');
             return;
         }
 
@@ -140,9 +140,6 @@ const PartnerManagement = () => {
 
             let response;
             if (isEditingPartnerId) {
-                // For simplicity in sub-document updates, we can use a PUT on the group with the partner ID
-                // But I'll implement a specific route for updating partner details if needed.
-                // For now, let's assume we add/delete or I'll add the PUT route in backend.
                 response = await api.put(`/api/partners/groups/${groupId}/partners/${isEditingPartnerId}`, {
                     name: partnerForm.name,
                     logo: logoUrl,
@@ -371,7 +368,7 @@ const PartnerManagement = () => {
                                                                 <span className="text-[#23471d]">Image Selected</span>
                                                             </div>
                                                         ) : (
-                                                            <><ImageIcon className="w-4 h-4" /> Click to Upload Logo</>
+                                                            <><ImageIcon className="w-4 h-4" /> Click to Upload Logo (Optional)</>
                                                         )}
                                                     </label>
                                                     {partnerForm.groupId === group._id && imagePreview && (
@@ -414,7 +411,7 @@ const PartnerManagement = () => {
                                             {!group.partners?.length ? (
                                                 <tr>
                                                     <td colSpan={4} className="py-10 text-center text-slate-400 italic">
-                                                        No logos added yet for this group.
+                                                        No partners added yet for this group.
                                                     </td>
                                                 </tr>
                                             ) : group.partners.map((partner, pIdx) => (
