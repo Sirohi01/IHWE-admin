@@ -21,12 +21,21 @@ import {
 } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa6';
 import { useNavigate } from "react-router-dom";
-const safe = (value, fallback = '—') => {
+
+const safe = (value: unknown, fallback: string | number = '—'): string | number => {
     if (value === null || value === undefined || value === '') return fallback;
-    return value;
+    return value as string | number;
 };
 
-const STEPS = [
+type StepStatus = 'done' | 'active' | 'pending';
+
+type Step = {
+    id: number;
+    label: string;
+    status: StepStatus;
+};
+
+const STEPS: Step[] = [
     { id: 1, label: 'Applicant Details', status: 'done' },
     { id: 2, label: 'Bank Details', status: 'done' },
     { id: 3, label: 'Documents Upload', status: 'done' },
@@ -34,21 +43,32 @@ const STEPS = [
     { id: 5, label: 'Submit', status: 'active' },
 ];
 
-const CHECKLIST = [
+type ChecklistItem = {
+    icon: typeof ClipboardList;
+    title: string;
+};
+
+const CHECKLIST: ChecklistItem[] = [
     { icon: ClipboardList, title: 'Applicant & MSME Details' },
     { icon: Landmark, title: 'Bank Details' },
     { icon: FileText, title: 'Documents Upload' },
     { icon: FileEdit, title: 'Review & Confirmation' },
 ];
 
-const DECLARATIONS = [
+const DECLARATIONS: string[] = [
     'I hereby declare that all the information provided in this application is true, complete and correct to the best of my knowledge.',
     'I understand that any false information or misleading documents may lead to rejection of application and legal action.',
     'I have read and understood the PMS Scheme guidelines and terms & conditions.',
     'I agree to abide by the decisions of the concerned authorities regarding reimbursement.',
 ];
 
-const NEXT_STEPS = [
+type NextStep = {
+    icon: typeof ClipboardList;
+    title: string;
+    desc: string;
+};
+
+const NEXT_STEPS: NextStep[] = [
     { icon: ClipboardList, title: 'Application Submitted', desc: 'You will recieve a confirmation with Application ID.' },
     { icon: UserCheck, title: 'Under Verification', desc: 'Our team will verify your details and documents.' },
     { icon: HelpCircle, title: 'Query (If Any)', desc: 'You will be notified if any additional information is required.' },
@@ -172,7 +192,7 @@ function Panel({ icon, title, headerRight, className = '', children, noRounded =
     );
 }
 
-function SummaryRow({ label, value }) {
+function SummaryRow({ label, value }: { label: string; value: ReactNode }) {
     return (
         <div className="flex items-center justify-between gap-2 border-b border-[#e9eef4] py-1 last:border-b-0">
             <span className="text-[9.5px] font-semibold text-[#31446c]">{label}</span>
@@ -181,7 +201,7 @@ function SummaryRow({ label, value }) {
     );
 }
 
-function StepNode({ step }) {
+function StepNode({ step }: { step: Step }) {
     const isDone = step.status === 'done';
     const isActive = step.status === 'active';
 
@@ -203,7 +223,7 @@ function StepNode({ step }) {
     );
 }
 
-function ChecklistRow({ item }) {
+function ChecklistRow({ item }: { item: ChecklistItem }) {
     const Icon = item.icon;
     return (
         <div className="flex items-center gap-2 rounded-lg border border-[#e9eef4] px-2 py-1.5">
@@ -232,7 +252,7 @@ function NextStepArrow() {
     );
 }
 
-function NextStepNode({ step }) {
+function NextStepNode({ step }: { step: NextStep }) {
     const Icon = step.icon;
     return (
         <div className="flex w-[104px] shrink-0 flex-col items-center gap-1 text-center sm:w-[130px]">
@@ -245,7 +265,7 @@ function NextStepNode({ step }) {
     );
 }
 
-function ProgressRing({ percent }) {
+function ProgressRing({ percent }: { percent: number }) {
     const radius = 30;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (percent / 100) * circumference;
@@ -268,7 +288,44 @@ function ProgressRing({ percent }) {
     );
 }
 
-export default function PMSFinalSubmission({ data, onBack, onSaveDraft, onSubmit, onDeclarationChange, saving }) {
+type PMSCoordinator = {
+    name?: string;
+    designation?: string;
+    photo?: string;
+    phone?: string;
+    whatsapp?: string;
+    email?: string;
+};
+
+type PMSFinalSubmissionData = {
+    _id?: string;
+    id?: string;
+    applicationId?: string;
+    exhibitorName?: string;
+    companyName?: string;
+    msme?: { msmeCategory?: string; udyamRegNo?: string };
+    gstNo?: string;
+    gstNumber?: string;
+    status?: string;
+    declarationAgreed?: boolean;
+    progressPercent?: number;
+    submittedAt?: string;
+    event?: { bookingStatus?: string; paymentStatus?: string };
+    bookingStatus?: string;
+    paymentStatus?: string;
+    pmsCoordinator?: PMSCoordinator;
+};
+
+type PMSFinalSubmissionProps = {
+    data?: PMSFinalSubmissionData;
+    onBack?: () => void;
+    onSaveDraft?: (agreed: boolean) => void;
+    onSubmit?: (agreed: boolean) => void | Promise<void>;
+    onDeclarationChange?: (agreed: boolean) => void;
+    saving?: boolean;
+};
+
+export default function PMSFinalSubmission({ data, onBack, onSaveDraft, onSubmit, onDeclarationChange, saving }: PMSFinalSubmissionProps) {
     const [agreed, setAgreed] = useState<boolean>(data?.declarationAgreed !== false);
 
     const companyName = safe(data?.exhibitorName || data?.companyName);
@@ -286,7 +343,20 @@ export default function PMSFinalSubmission({ data, onBack, onSaveDraft, onSubmit
         setAgreed(next);
         onDeclarationChange?.(next);
     };
-    const navigate = useNavigate()
+    const navigate = useNavigate();
+
+    // Real record id (e.g. 6a1c152e70eb364727b4e56f) — different from the
+    // human-readable `applicationId` shown in the UI. Falls back through the
+    // common id fields so it works with whichever one the API actually sends.
+    const recordId = data?._id || data?.id || data?.applicationId;
+
+    const handleSubmit = async () => {
+        await onSubmit?.(agreed);
+        if (recordId) {
+            navigate(`/pms-application/${recordId}`);
+        }
+    };
+
     return (
         <div className="w-full min-h-[calc(100dvh-58px)] bg-white p-3 px-3 lg:px-6 pt-2 pb-3 font-sans text-[#061743] antialiased">
             <header className="mb-1 flex flex-wrap items-start justify-between gap-3  xl:pr-[300px]">
@@ -431,7 +501,7 @@ export default function PMSFinalSubmission({ data, onBack, onSaveDraft, onSubmit
                             <button
                                 type="button"
                                 disabled={!agreed || saving || Boolean(data?.submittedAt)}
-                                onClick={() => onSubmit?.(agreed)}
+                                onClick={handleSubmit}
                                 className={`flex h-7 items-center justify-center gap-2 rounded-md text-[10px] font-semibold text-white shadow-[0_4px_9px_rgba(8,117,54,0.18)] ${agreed ? 'bg-gradient-to-r from-[#0b7137] to-[#087536]' : 'cursor-not-allowed bg-[#a9c9b6]'
                                     }`}
                             >
@@ -474,7 +544,7 @@ export default function PMSFinalSubmission({ data, onBack, onSaveDraft, onSubmit
                                 <span>RS</span>
                                 <img
                                     src={data?.pmsCoordinator?.photo || undefined}
-                                    alt={safe(data?.pmsCoordinator?.name, 'PMS Coordinator')}
+                                    alt={safe(data?.pmsCoordinator?.name, 'PMS Coordinator') as string}
                                     className="absolute inset-0 h-full w-full object-cover"
                                     onError={(event) => { event.currentTarget.style.display = 'none'; }}
                                 />
@@ -490,7 +560,7 @@ export default function PMSFinalSubmission({ data, onBack, onSaveDraft, onSubmit
                             <span>{safe(data?.pmsCoordinator?.phone)}</span>
                         </a>
                         <a href={data?.pmsCoordinator?.whatsapp ? `https://wa.me/${String(data.pmsCoordinator.whatsapp).replace(/\D/g, '')}` : undefined} target="_blank" rel="noreferrer" className="mt-1 flex h-[31px] min-w-0 items-center gap-2.5 rounded-md border border-[#e0e7f0] bg-white px-2.5 text-[9.5px] font-semibold text-[#061743] no-underline">
-                            <FaWhatsapp size={15} strokeWidth={1.9} className="shrink-0 text-[#089a50]" />
+                            <FaWhatsapp size={15} className="shrink-0 text-[#089a50]" />
                             <span>WhatsApp Support</span>
                         </a>
                         <a href={data?.pmsCoordinator?.email ? `mailto:${data.pmsCoordinator.email}` : undefined} className="mt-1 flex h-[31px] min-w-0 items-center gap-2.5 rounded-md border border-[#e0e7f0] bg-white px-2.5 text-[9.5px] font-semibold text-[#061743] no-underline">

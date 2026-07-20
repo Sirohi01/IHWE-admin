@@ -749,7 +749,7 @@ export default function MSMEPMSApplication({ data, onSaveDraft, onContinue, savi
                             <span>{safe(data?.pmsCoordinator?.email)}</span>
                         </a>
 
-                        <div className="mt-[5px] flex h-[42px] w-full min-w-0 items-start gap-[10px] rounded-[5px] border border-[#e0e7f0] bg-white px-[9px] pt-[7px] text-[9.5px] leading-none font-bold text-[#061743] [@media(max-height:1100px)_and_(min-width:1181px)]:mt-1 [@media(max-height:1100px)_and_(min-width:1181px)]:h-9 [@media(max-height:1100px)_and_(min-width:1181px)]:pt-[5px] max-[820px]:h-[52px] max-[820px]:pt-2.5 max-[820px]:px-3 max-[820px]:gap-3">
+                        <div className="mt-[5px] flex min-h-[42px] w-full min-w-0 items-start gap-[10px] rounded-[5px] border border-[#e0e7f0] bg-white px-[9px] pt-[7px] text-[9.5px] leading-none font-bold text-[#061743] [@media(max-height:1100px)_and_(min-width:1181px)]:mt-1 [@media(max-height:1100px)_and_(min-width:1181px)]:h-9 [@media(max-height:1100px)_and_(min-width:1181px)]:pt-[5px] max-[820px]:h-[52px] max-[820px]:pt-2.5 max-[820px]:px-3 max-[820px]:gap-3">
                             <Clock3 className="flex-none text-[#5924c6]" size={15} strokeWidth={1.9} />
                             <div className="min-w-0">
                                 <b className="block text-[9px] leading-none font-extrabold text-[#061743] max-[820px]:text-[11px]">Support Hours</b>
