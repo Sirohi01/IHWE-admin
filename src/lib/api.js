@@ -299,6 +299,10 @@ export const pmsApi = {
     const payload = unwrapApiResponse(await api.put(`/api/msme-pms-scheme/${id}/step/${step}`, data));
     return payload.success ? payload.data : null;
   },
+  getForEdit: async (id) => {
+    const payload = unwrapApiResponse(await api.get(`/api/msme-pms-scheme/${id}/edit`));
+    return payload.success ? payload.data : null;
+  },
   uploadDocumentById: async (id, documentType, file) => {
     const formData = new FormData();
     formData.append('file', file);

@@ -17,15 +17,23 @@ export default function ClientOverview2Page() {
         setError('');
         try {
             const result = await pmsApi.getById(id);
+            if (result?.status === 'Draft' && !(result?.completedSteps || []).length) {
+                navigate(`/pms-application/${result?._id || id}/edit`, { replace: true });
+                return;
+            }
             setData(result);
         } catch (err) {
             console.error('Failed to load application', err);
+            if (err?.response?.status === 404) {
+                navigate(`/pms-application/${id}/edit`, { replace: true });
+                return;
+            }
             setData(null);
             setError(err?.response?.data?.message || 'Application could not be loaded.');
         } finally {
             setLoading(false);
         }
-    }, [id]);
+    }, [id, navigate]);
 
     useEffect(() => {
         if (id) fetchApplication();

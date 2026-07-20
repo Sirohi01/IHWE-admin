@@ -58,7 +58,7 @@ export function useAdminPmsApplication(id) {
         setLoading(true);
         setError('');
         try {
-            setData(normalize(await pmsApi.getById(id)));
+            setData(normalize(await pmsApi.getForEdit(id)));
         } catch (err) {
             setError(err?.response?.data?.message || 'Application could not be loaded.');
         } finally {
