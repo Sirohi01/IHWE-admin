@@ -210,7 +210,7 @@ export default function ClientOverview2({ data, onEdit, onApprove, onDisapprove,
                 <button
                     type="button"
                     onClick={function () { if (onEdit) onEdit(data); }}
-                    className="flex h-8 items-center justify-center gap-2 rounded-md border border-[#d5deea] bg-white text-[10.5px] font-semibold text-[#061743]"
+                    className="flex h-8 items-center justify-center gap-2 rounded-md border cursor-pointer border-[#d5deea] bg-white text-[10.5px] font-semibold text-[#061743]"
                 >
                     <FileEdit size={14} strokeWidth={2} />
                     Edit Application
@@ -220,7 +220,7 @@ export default function ClientOverview2({ data, onEdit, onApprove, onDisapprove,
                     type="button"
                     disabled={isDecided || processing}
                     onClick={function () { setShowReasonBox(true); }}
-                    className="flex h-8 items-center justify-center gap-2 rounded-md border border-[#f4d3d3] bg-[#fdeeee] text-[10.5px] font-semibold text-[#c62828] disabled:opacity-50"
+                    className="flex h-8 items-center justify-center gap-2 rounded-md border cursor-pointer border-[#f4d3d3] bg-[#fdeeee] text-[10.5px] font-semibold text-[#c62828] disabled:opacity-50"
                 >
                     <Ban size={14} strokeWidth={2} />
                     Disapprove
@@ -230,7 +230,7 @@ export default function ClientOverview2({ data, onEdit, onApprove, onDisapprove,
                     type="button"
                     disabled={isDecided || processing}
                     onClick={function () { if (onApprove) onApprove(); }}
-                    className="flex h-8 items-center justify-center gap-2 rounded-md bg-gradient-to-r from-[#0b7137] to-[#087536] text-[10.5px] font-semibold text-white shadow-[0_4px_9px_rgba(8,117,54,0.18)] disabled:opacity-50"
+                    className="flex h-8 items-center justify-center gap-2 rounded-md cursor-pointer bg-gradient-to-r from-[#0b7137] to-[#087536] text-[10.5px] font-semibold text-white shadow-[0_4px_9px_rgba(8,117,54,0.18)] disabled:opacity-50"
                 >
                     <Award size={14} strokeWidth={2} />
                     {processing ? 'Processing...' : 'Approve Application'}
