@@ -64,16 +64,18 @@ export default function ClientOverview2({ data, onEdit, onApprove, onDisapprove,
     const [showReasonBox, setShowReasonBox] = useState(false);
     const [reason, setReason] = useState('');
 
-    const companyName = safe(data && (data.exhibitorName || data.companyName));
+    const applicant = data?.applicantDetails || {};
+    const bank = data?.bankDetails || data?.bank || {};
+    const companyName = safe(applicant.companyName || data?.exhibitorName || data?.companyName);
     const applicationId = safe(data && data.applicationId);
-    const msmeCategory = safe(data && data.msme && data.msme.msmeCategory);
-    const udyamNumber = safe(data && data.msme && data.msme.udyamRegNo);
-    const gstNumber = safe(data && (data.gstNo || data.gstNumber));
-    const bankName = safe(data && data.bank && data.bank.bankName);
-    const accountNo = safe(data && data.bank && data.bank.accountNo);
-    const ifsc = safe(data && data.bank && data.bank.ifsc);
-    const bookingStatus = safe(data && (data.event ? data.event.bookingStatus : data.bookingStatus));
-    const paymentStatus = safe(data && (data.event ? data.event.paymentStatus : data.paymentStatus));
+    const msmeCategory = safe(applicant.msmeCategory || data?.msme?.msmeCategory || data?.category);
+    const udyamNumber = safe(applicant.udyamRegNo || data?.msme?.udyamRegNo || data?.udyamNumber);
+    const gstNumber = safe(applicant.gstNumber || data?.gstNo || data?.gstNumber);
+    const bankName = safe(bank.bankName);
+    const accountNo = safe(bank.accountNumber || bank.accountNo);
+    const ifsc = safe(bank.ifscCode || bank.ifsc);
+    const bookingStatus = safe(applicant.bookingStatus || data?.event?.bookingStatus || data?.bookingStatus);
+    const paymentStatus = safe(applicant.paymentStatus || data?.event?.paymentStatus || data?.paymentStatus);
     const declarationAgreed = data && data.declarationAgreed ? 'Yes' : 'No';
     const submittedAt = data && data.submittedAt ? new Date(data.submittedAt).toLocaleString() : undefined;
     const documents = (data && Array.isArray(data.documents)) ? data.documents : [];
@@ -108,40 +110,43 @@ export default function ClientOverview2({ data, onEdit, onApprove, onDisapprove,
                     <Field label="MSME Category" value={msmeCategory} />
                     <Field label="Udyam Number" value={udyamNumber} />
                     <Field label="GST Number" value={gstNumber} />
-                    <Field label="PAN Number" value={safe(data?.panNo || data?.panNumber)} />
-                    <Field label="Organization Type" value={safe(data?.organizationType)} />
-                    <Field label="Year of Establishment" value={safe(data?.yearOfEstablishment)} />
+                    <Field label="PAN Number" value={safe(applicant.panNumber || data?.panNo || data?.panNumber)} />
+                    <Field label="Organization Type" value={safe(applicant.organizationType || data?.organizationType)} />
+                    <Field label="Year of Establishment" value={safe(applicant.yearOfEstablishment || data?.yearOfEstablishment)} />
                 </Block>
 
                 <Block icon={FileText} title="Authorized Person">
-                    <Field label="Name" value={safe(data?.contactName || (data?.contact1?.firstName ? `${data.contact1.firstName} ${data.contact1.lastName || ''}` : null))} />
-                    <Field label="Designation" value={safe(data?.designation || data?.contact1?.designation)} />
-                    <Field label="Mobile Number" value={safe(data?.mobileNumber || data?.contact1?.mobile)} />
-                    <Field label="Alternate Number" value={safe(data?.alternateNumber || data?.contact1?.alternateNo)} />
+                    <Field label="Name" value={safe(applicant.contactName || data?.contactName || (data?.contact1?.firstName ? `${data.contact1.firstName} ${data.contact1.lastName || ''}` : null))} />
+                    <Field label="Designation" value={safe(applicant.designation || data?.designation || data?.contact1?.designation)} />
+                    <Field label="Mobile Number" value={safe(applicant.mobileNumber || data?.mobileNumber || data?.contact1?.mobile)} />
+                    <Field label="Alternate Number" value={safe(applicant.alternateNumber || data?.alternateNumber || data?.contact1?.alternateNo)} />
                 </Block>
 
                 <Block icon={Building2} title="Registered Address">
-                    <Field label="Address Line 1" value={safe(data?.addressLine1 || data?.address)} />
-                    <Field label="Address Line 2" value={safe(data?.addressLine2)} />
-                    <Field label="City" value={safe(data?.city)} />
-                    <Field label="State" value={safe(data?.state)} />
-                    <Field label="Country" value={safe(data?.country)} />
-                    <Field label="Pincode" value={safe(data?.pincode)} />
+                    <Field label="Address Line 1" value={safe(applicant.addressLine1 || data?.addressLine1 || data?.address)} />
+                    <Field label="Address Line 2" value={safe(applicant.addressLine2 || data?.addressLine2)} />
+                    <Field label="City" value={safe(applicant.city || data?.city)} />
+                    <Field label="State" value={safe(applicant.state || data?.state)} />
+                    <Field label="Country" value={safe(applicant.country || data?.country)} />
+                    <Field label="Pincode" value={safe(applicant.pincode || data?.pincode)} />
                 </Block>
 
                 <Block icon={Landmark} title="Event Participation">
-                    <Field label="Event Name" value={safe(data?.event?.name || data?.eventName)} />
-                    <Field label="Stall Number" value={safe(data?.event?.stallNumber || data?.participation?.stallFor || data?.participation?.stall?.stallNumber || data?.participation?.stallNumber || data?.stallFor || data?.participation?.stallNo || data?.stallNo)} />
-                    <Field label="Hall Number" value={safe(data?.event?.hallNumber || data?.participation?.stall?.hallNo || data?.participation?.hallNo || data?.hallNo, 'Hall 8, 9 & 10')} />
-                    <Field label="Stall Size" value={safe(data?.event?.stallSize || data?.participation?.stallSize || data?.participation?.stall?.area || data?.participation?.area || data?.stallSize)} />
-                    <Field label="Participation Type" value={safe(data?.event?.participationType || data?.participationType)} />
+                    <Field label="Event Name" value={safe(applicant.eventName || data?.event?.name || data?.eventName)} />
+                    <Field label="Stall Number" value={safe(applicant.stallNo || data?.event?.stallNumber || data?.participation?.stallFor || data?.participation?.stall?.stallNumber || data?.participation?.stallNumber || data?.stallFor || data?.participation?.stallNo || data?.stallNo)} />
+                    <Field label="Hall Number" value={safe(applicant.hallNo || data?.event?.hallNumber || data?.participation?.stall?.hallNo || data?.participation?.hallNo || data?.hallNo, 'Hall 8, 9 & 10')} />
+                    <Field label="Stall Size" value={safe(applicant.stallSize || data?.event?.stallSize || data?.participation?.stallSize || data?.participation?.stall?.area || data?.participation?.area || data?.stallSize)} />
+                    <Field label="Participation Type" value={safe(applicant.participationType || data?.event?.participationType || data?.participationType)} />
                     <Field label="Selected Expenses" value={safe(data?.selectedExpenses && Array.isArray(data.selectedExpenses) ? data.selectedExpenses.join(', ') : null)} />
                 </Block>
 
                 <Block icon={Landmark} title="Bank Details">
+                    <Field label="Account Holder" value={safe(bank.accountHolderName || bank.accountHolder)} />
                     <Field label="Bank Name" value={bankName} />
+                    <Field label="Branch Name" value={safe(bank.branchName || bank.branch)} />
                     <Field label="Account No." value={accountNo} />
                     <Field label="IFSC Code" value={ifsc} />
+                    <Field label="Account Type" value={safe(bank.accountType)} />
                 </Block>
 
                 <Block icon={CheckCircle2} title="Application Status">
@@ -156,8 +161,8 @@ export default function ClientOverview2({ data, onEdit, onApprove, onDisapprove,
                 <Block icon={FileText} title="Uploaded Documents">
                     <div className="flex flex-wrap gap-1.5 pt-0.5">
                         {documents.map(function (doc, i) {
-                            var docName = doc && doc.name ? doc.name : 'Document ' + (i + 1);
-                            var docUrl = doc && doc.url ? doc.url : undefined;
+                            var docName = doc?.filename || doc?.name || doc?.documentType || 'Document ' + (i + 1);
+                            var docUrl = doc?.path || doc?.url;
                             return (
                                 <a key={i} href={docUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 rounded-md border border-[#e0e7f0] bg-[#f7f9fc] px-2 py-1 text-[9.5px] font-semibold text-[#061743] no-underline">
                                     <FileText size={12} strokeWidth={1.9} className="text-[#087536]" />

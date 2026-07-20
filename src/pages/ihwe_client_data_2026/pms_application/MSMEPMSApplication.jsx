@@ -349,7 +349,7 @@ export default function MSMEPMSApplication({ data, onSaveDraft, onContinue, savi
         { name: 'udyamRegNo', label: 'Udyam Registration Number', required: true },
         { name: 'gstNumber', label: 'GST Number', required: true },
         { name: 'panNumber', label: 'PAN Number', required: true },
-        { name: 'organizationType', label: 'Type of Organization', required: true, type: 'select', options: ['Private Limited Company', 'Proprietorship', 'Partnership', 'LLP', 'Public Limited Company', 'Trust', 'Society'] },
+        { name: 'organizationType', label: 'Type of Organization', required: true, type: 'select', options: ['Private Limited Company', 'Proprietorship', 'Partnership', 'LLP', 'Limited Liability Partnership (LLP)', 'Public Limited Company', 'Trust', 'Society'] },
         { name: 'yearOfEstablishment', label: 'Year of Establishment', required: true, type: 'select', options: Array.from({ length: 77 }, (_, index) => String(2026 - index)) },
     ];
 
@@ -694,7 +694,7 @@ const navigate = useNavigate();
                         )}
                     >
                         <h2 className="mb-[13px] flex items-center gap-[9px] text-[13px] leading-none font-extrabold text-[#5924c6] [@media(max-height:1100px)_and_(min-width:1181px)]:mb-2 max-[820px]:mb-4 max-[820px]:text-[15px]">
-                            <Headphones size={19} strokeWidth={1.8} /> Relationship Manager
+                            <Headphones size={19} strokeWidth={1.8} /> Contact Person 1
                         </h2>
 
                         <div className="mb-[10px] flex items-center gap-3 [@media(max-height:1100px)_and_(min-width:1181px)]:mb-1.5 max-[820px]:mb-3">

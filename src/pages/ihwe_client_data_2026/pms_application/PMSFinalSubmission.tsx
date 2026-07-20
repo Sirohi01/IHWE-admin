@@ -466,7 +466,7 @@ export default function PMSFinalSubmission({ data, onBack, onSaveDraft, onSubmit
                     <section className="min-w-0 overflow-hidden rounded-xl border border-[#dbe4ef] bg-white px-3 py-1.5">
                         <h2 className="mb-1.5 flex items-center gap-2 text-[13px] font-semibold text-[#5924c6]">
                             <HelpCircle size={16} strokeWidth={1.9} />
-                            Relationship Manager
+                            Contact Person 1
                         </h2>
 
                         <div className="mb-1.5 flex items-center gap-2">

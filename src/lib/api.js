@@ -295,5 +295,22 @@ export const pmsApi = {
     });
     return unwrapApiResponse(response);
   },
+  saveStepById: async (id, step, data) => {
+    const payload = unwrapApiResponse(await api.put(`/api/msme-pms-scheme/${id}/step/${step}`, data));
+    return payload.success ? payload.data : null;
+  },
+  uploadDocumentById: async (id, documentType, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const payload = unwrapApiResponse(await api.post(`/api/msme-pms-scheme/${id}/documents/${documentType}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }));
+    return payload.success ? payload.data : null;
+  },
+  deleteDocumentById: async (id, documentType) => {
+    const payload = unwrapApiResponse(await api.delete(`/api/msme-pms-scheme/${id}/documents/${documentType}`));
+    return payload.success ? payload.data : null;
+  },
+  submitById: async (id) => unwrapApiResponse(await api.post(`/api/msme-pms-scheme/${id}/submit`)),
 };
 export default api;

@@ -435,7 +435,7 @@ export default function MSMEPMSDocumentsUpload({ data, onBack, onContinue, onUpl
                             <button
                                 type="button"
                                 disabled={saving}
-                                onClick={() => navigate("/exhibitor-dashboard/msme/bank-details")}
+                                onClick={() => onBack ? onBack() : navigate("/exhibitor-dashboard/msme/bank-details")}
                                 className="flex h-7 items-center justify-center gap-2 rounded-md border border-[#d5deea] bg-white text-[10px] font-semibold text-[#061743]"
                             >
                                 <ArrowLeft size={15} strokeWidth={2} />
@@ -499,7 +499,7 @@ export default function MSMEPMSDocumentsUpload({ data, onBack, onContinue, onUpl
                     <section className="min-w-0 overflow-hidden rounded-xl border border-[#dbe4ef] bg-white px-3 py-1.5">
                         <h2 className="mb-1.5 flex items-center gap-2 text-[13px] font-semibold text-[#5924c6]">
                             <Headphones size={19} strokeWidth={1.8} />
-                            Relationship Manager
+                            Contact Person 1
                         </h2>
 
                         <div className="mb-1.5 flex items-center gap-2">

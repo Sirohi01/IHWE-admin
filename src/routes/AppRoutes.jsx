@@ -247,6 +247,11 @@ import BuyerRegistrationForm from '../pages/buyer/BuyerRegistrationForm';
 import MobileFeedbackDetailsNew from '../pages/MobileFeedbackDetailsNew';
 import ClientOverview2 from '../pages/ihwe_client_data_2026/pms_application/ClientOverview2';
 import ClientOverview2Page from '../pages/ihwe_client_data_2026/pms_application/ClientOverview2Page';
+import MSMEPMSApplicationPage from '../pages/ihwe_client_data_2026/pms_application/MSMEPMSApplicationPage';
+import MSMEPMSBankDetailsPage from '../pages/ihwe_client_data_2026/pms_application/MSMEPMSBankDetailsPage';
+import MSMEPMSDocumentsUploadPage from '../pages/ihwe_client_data_2026/pms_application/MSMEPMSDocumentsUploadPage';
+import MSMEApplicationReviewPage from '../pages/ihwe_client_data_2026/pms_application/MSMEApplicationReviewPage';
+import PMSFinalSubmissionPage from '../pages/ihwe_client_data_2026/pms_application/PMSFinalSubmissionPage';
 const EditEstimate = lazy(() => import("../pages/ihwe_client_data_2026/invoice/EditEstimate"));
 const PerformaInvoiceDetails = lazy(() => import("../pages/ihwe_client_data_2026/invoice/PerformaInvoiceDetails"));
 const PerformaInvoiceList = lazy(() => import("../pages/ihwe_client_data_2026/invoice/PerformaInvoiceList"));
@@ -763,6 +768,11 @@ export default function AppRoutes() {
             <Route path="credit-note-view/:id" element={<CreditNoteView />} />
             <Route path="/client-overview/:id" element={<ClientOverview1 />} />
             <Route path="/pms-application/:id" element={<ClientOverview2Page />} />
+            <Route path="/pms-application/:id/edit" element={<MSMEPMSApplicationPage />} />
+            <Route path="/pms-application/:id/edit/bank-details" element={<MSMEPMSBankDetailsPage />} />
+            <Route path="/pms-application/:id/edit/documents" element={<MSMEPMSDocumentsUploadPage />} />
+            <Route path="/pms-application/:id/edit/review" element={<MSMEApplicationReviewPage />} />
+            <Route path="/pms-application/:id/edit/submit" element={<PMSFinalSubmissionPage />} />
             <Route path="/client-contacts/:id" element={<ClientContacts />} />
             <Route path="/add-team-members/:id" element={<AddTeamMembersAdmin />} />
             <Route path="/client-documents/:id" element={<ClientDocuments />} />

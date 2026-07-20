@@ -411,7 +411,7 @@ export default function MSMEPMSReviewConfirmation({ data, onBack, onContinue, sa
                         <footer className="grid grid-cols-1 items-center gap-2 rounded-lg border border-[#dbe4ef] bg-white p-1.5 sm:grid-cols-[120px_minmax(0,1fr)_190px]">
                             <button
                                 type="button"
-                                onClick={() => navigate('/exhibitor-dashboard/msme/documents-upload')}
+                                onClick={() => onBack ? onBack() : navigate('/exhibitor-dashboard/msme/documents-upload')}
                                 className="flex h-7 items-center justify-center gap-2 rounded-md border border-[#d5deea] bg-white text-[10px] font-semibold text-[#061743]"
                             >
                                 <ArrowLeft size={15} strokeWidth={2} />
@@ -469,7 +469,7 @@ export default function MSMEPMSReviewConfirmation({ data, onBack, onContinue, sa
                     <section className="min-w-0 overflow-hidden rounded-xl border border-[#dbe4ef] bg-white px-3 py-1.5">
                         <h2 className="mb-1.5 flex items-center gap-2 text-[13px] font-semibold text-[#5924c6]">
                             <Headphones size={19} strokeWidth={1.8} />
-                            Relationship Manager
+                            Contact Person 1
                         </h2>
 
                         <div className="mb-1.5 flex items-center gap-2">
