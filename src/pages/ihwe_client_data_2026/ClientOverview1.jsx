@@ -21,6 +21,7 @@ import {
   User2,
   BadgeCheck,
   MessageCircleMore,
+  KanbanSquare,
 } from "lucide-react";
 
 import { FaWhatsapp } from "react-icons/fa";
@@ -48,7 +49,6 @@ import WhatsAppModal from "./communication/WhatsAppModal";
 import EmailModal from "./communication/EmailModal";
 import CallLogModal from "./communication/CallLogModal";
 import SearchableDropdown from "../../components/SearchableDropdown";
-
 const getMediaUrl = (value) => {
   if (!value) return "";
   const normalized = String(value).replace(/\\/g, "/");
@@ -833,7 +833,7 @@ const ClientOverview1 = () => {
 
               <div className="border border-gray-300 rounded-2xl p-1 flex items-center justify-center w-fit h-fit min-h-[110px] min-w-[130px] flex-shrink-0 overflow-hidden bg-white">
                 {(companyLogoSrc || company.companyLogoUrl || company.companyLogo) ? (
-                  <img loading="lazy" decoding="async"                     src={companyLogoSrc || getMediaUrl(company.companyLogoUrl || company.companyLogo)}
+                  <img loading="lazy" decoding="async" src={companyLogoSrc || getMediaUrl(company.companyLogoUrl || company.companyLogo)}
                     alt="Logo"
                     className="max-w-[160px] max-h-[130px] w-auto h-auto object-contain rounded-xl"
                   />
@@ -1098,6 +1098,19 @@ const ClientOverview1 = () => {
                   </div>
                 </div>
               ))}
+              <div
+                onClick={() => navigate(`/pms-application/${company?.clientId || company?._id || id}`)}
+                className="h-[40px] rounded-lg border px-3 flex items-center justify-between transition-all border-slate-200 cursor-pointer hover:shadow-sm hover:bg-slate-50 group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors bg-slate-100 group-hover:bg-white">
+                    <KanbanSquare size={16} className="text-teal-500" />
+                  </div>
+                  <span className="text-[10px] font-bold transition-colors text-[#15173D]">
+                    PMS Application
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 

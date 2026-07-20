@@ -245,6 +245,8 @@ const CreateEstimate1 = lazy(() => import("../pages/ihwe_client_data_2026/Create
 import EstimateDetails from "../pages/ihwe_client_data_2026/invoice/EstimateDetails"
 import BuyerRegistrationForm from '../pages/buyer/BuyerRegistrationForm';
 import MobileFeedbackDetailsNew from '../pages/MobileFeedbackDetailsNew';
+import ClientOverview2 from '../pages/ihwe_client_data_2026/pms_application/ClientOverview2';
+import ClientOverview2Page from '../pages/ihwe_client_data_2026/pms_application/ClientOverview2Page';
 const EditEstimate = lazy(() => import("../pages/ihwe_client_data_2026/invoice/EditEstimate"));
 const PerformaInvoiceDetails = lazy(() => import("../pages/ihwe_client_data_2026/invoice/PerformaInvoiceDetails"));
 const PerformaInvoiceList = lazy(() => import("../pages/ihwe_client_data_2026/invoice/PerformaInvoiceList"));
@@ -760,6 +762,7 @@ export default function AppRoutes() {
             <Route path="dashboard/account/create-credit-note/:id" element={<CreateCreditNote />} />
             <Route path="credit-note-view/:id" element={<CreditNoteView />} />
             <Route path="/client-overview/:id" element={<ClientOverview1 />} />
+            <Route path="/pms-application/:id" element={<ClientOverview2Page />} />
             <Route path="/client-contacts/:id" element={<ClientContacts />} />
             <Route path="/add-team-members/:id" element={<AddTeamMembersAdmin />} />
             <Route path="/client-documents/:id" element={<ClientDocuments />} />

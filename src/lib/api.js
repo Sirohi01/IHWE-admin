@@ -283,4 +283,17 @@ export const aiVerificationSettingsApi = {
   },
 };
 
+export const pmsApi = {
+  getById: async (id) => {
+    const payload = unwrapApiResponse(await api.get(`/api/msme-pms-scheme/${id}`));
+    return payload.success ? payload.data : null;
+  },
+  updateStatus: async (id, status, reason) => {
+    const response = await api.patch(`/api/msme-pms-scheme/${id}/status`, {
+      status,
+      ...(reason ? { reason } : {}),
+    });
+    return unwrapApiResponse(response);
+  },
+};
 export default api;
