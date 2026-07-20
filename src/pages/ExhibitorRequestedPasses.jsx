@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import {
   BadgeCheck,
-  Car,
   Clock3,
   FileText,
   Layers3,
@@ -21,10 +20,9 @@ import PassTemplateCanvas from "../components/passes/PassTemplateCanvas";
 
 const PASS_META = {
   exhibitor: { label: "Exhibitor", category: "EXHIBITOR", templateNames: ["exhibitor"], icon: Ticket, tone: "bg-sky-50 text-sky-700 border-sky-100" },
-  vehicle: { label: "Vehicle", category: "VEHICLE", templateNames: ["vehicle"], icon: Car, tone: "bg-cyan-50 text-cyan-700 border-cyan-100" },
   service: { label: "Service", category: "SERVICE", templateNames: ["service", "service provider", "service_provider"], icon: BadgeCheck, tone: "bg-emerald-50 text-emerald-700 border-emerald-100" },
   visitor: { label: "Visitor", category: "VISITOR", templateNames: ["visitor"], icon: Users, tone: "bg-violet-50 text-violet-700 border-violet-100" },
-  delegate: { label: "Speaker", category: "SPEAKER", templateNames: ["speaker", "delegate"], icon: FileText, tone: "bg-amber-50 text-amber-700 border-amber-100" },
+  delegate: { label: "Delegate", category: "DELEGATE", templateNames: ["delegate"], icon: FileText, tone: "bg-amber-50 text-amber-700 border-amber-100" },
   lunch: { label: "Food Coupon", category: "FOOD COUPON", templateNames: ["food", "food coupon", "lunch"], icon: Utensils, tone: "bg-blue-50 text-blue-700 border-blue-100", isFoodCoupon: true },
 };
 
@@ -57,12 +55,6 @@ const templateMatchesType = (template, typeNames) => {
 };
 
 const getPassNames = (request) => {
-  if (request.passType === "vehicle") {
-    return (request.vehicles || [])
-      .map((vehicle) => vehicle.name || vehicle.vehicleNumber || vehicle.vehicleType)
-      .filter(Boolean);
-  }
-
   return (request.personnel || [])
     .map((person) => person.name)
     .filter(Boolean);
@@ -412,7 +404,7 @@ export default function ExhibitorRequestedPasses() {
           ` : ""}
           .mixed-pass-print-sheet {
             width: 42cm;
-            height: 29.7cm;
+            height: 29.65cm;
             padding: 0.8cm;
             box-sizing: border-box;
             display: grid;
@@ -422,11 +414,11 @@ export default function ExhibitorRequestedPasses() {
             row-gap: ${printRowGapCm}cm;
             align-content: start;
             justify-content: start;
-            break-after: page;
-            page-break-after: always;
+            break-after: auto;
+            page-break-after: auto;
             overflow: hidden;
           }
-          .mixed-pass-print-sheet:last-child { break-after: auto; page-break-after: auto; }
+          .mixed-pass-print-sheet:not(:first-child) { break-before: page; page-break-before: always; }
           .mixed-pass-print-card { width: 9.5cm; height: 13cm; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
           .food-coupon-print-sheet {
             width: 29.7cm;
@@ -828,11 +820,6 @@ export default function ExhibitorRequestedPasses() {
                                 {formatDate(request.createdAt)}
                               </span>
                             </div>
-                            {request.passType === "vehicle" && (
-                              <p className="mt-1 line-clamp-1 pl-[92px] text-[10px] font-bold leading-tight text-slate-400">
-                                {(request.vehicles || []).map((vehicle) => [vehicle.vehicleNumber, vehicle.vehicleType].filter(Boolean).join(" - ")).filter(Boolean).join(", ") || "Vehicle details pending"}
-                              </p>
-                            )}
                           </div>
                         );
                       })}

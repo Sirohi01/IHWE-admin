@@ -97,6 +97,12 @@ const CertificatesGenerator = () => {
     const [showInitiatives, setShowInitiatives] = useState(false);
     const [showConcurrent, setShowConcurrent] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [recipients, setRecipients] = useState([]);
+    const [recipientsLoading, setRecipientsLoading] = useState(false);
+    const [selectedRecipientNames, setSelectedRecipientNames] = useState([]);
+    const [batchPrintNames, setBatchPrintNames] = useState([]);
+    const [printLimit, setPrintLimit] = useState(10);
+    const [isBatchPrinting, setIsBatchPrinting] = useState(false);
     const [printSize, setPrintSize] = useState('A4');
     const [certificateType, setCertificateType] = useState('speaker');
 
@@ -122,9 +128,73 @@ const CertificatesGenerator = () => {
         setResetImageFields([]);
     };
 
+    const loadRecipients = async (type = certificateType) => {
+        setRecipientsLoading(true);
+        try {
+            const res = await api.get('/api/certificate-recipients', { params: { type } });
+            const nextRecipients = Array.isArray(res.data?.data) ? res.data.data.filter((item) => item?.name) : [];
+            setRecipients(nextRecipients);
+            setSelectedRecipientNames([]);
+            setBatchPrintNames([]);
+        } catch (error) {
+            console.error('Failed to load certificate recipients', error);
+            setRecipients([]);
+            setSelectedRecipientNames([]);
+            setBatchPrintNames([]);
+        } finally {
+            setRecipientsLoading(false);
+        }
+    };
+
     useEffect(() => {
         loadConfig(certificateType).catch((error) => console.error('Failed to load certificate config', error));
+        loadRecipients(certificateType);
     }, [certificateType]);
+
+    const handleRecipientChange = (e) => {
+        const name = e.target.value;
+        setConfig(prev => ({ ...prev, recipientName: name }));
+    };
+
+    const hasCurrentRecipient = recipients.some((recipient) => recipient.name === config.recipientName);
+
+    const handleBatchRecipientChange = (e) => {
+        const names = Array.from(e.target.selectedOptions).map((option) => option.value);
+        setSelectedRecipientNames(names);
+        if (names[0]) {
+            setConfig(prev => ({ ...prev, recipientName: names[0] }));
+        }
+    };
+
+    const printCertificates = (names) => {
+        if (names.length === 0) {
+            alert('Please select at least one recipient.');
+            return;
+        }
+
+        const cleanup = () => {
+            setIsBatchPrinting(false);
+            setBatchPrintNames([]);
+        };
+        window.addEventListener('afterprint', cleanup, { once: true });
+        setBatchPrintNames(names);
+        setIsBatchPrinting(true);
+        setTimeout(() => {
+            window.print();
+            setTimeout(cleanup, 1000);
+        }, 100);
+    };
+
+    const printSelectedCertificates = () => printCertificates(selectedRecipientNames);
+    const printAllCertificates = () => printCertificates(recipients.map((recipient) => recipient.name));
+    const selectLimitedRecipients = () => {
+        const limit = Math.max(1, Math.min(Number(printLimit) || 1, recipients.length));
+        const names = recipients.slice(0, limit).map((recipient) => recipient.name);
+        setSelectedRecipientNames(names);
+        if (names[0]) {
+            setConfig(prev => ({ ...prev, recipientName: names[0] }));
+        }
+    };
 
     const handleTextChange = (e) => {
         const { name, value } = e.target;
@@ -263,7 +333,7 @@ const CertificatesGenerator = () => {
     };
 
     return (
-        <div className="admin-cert-generator" style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        <div className={`admin-cert-generator ${isBatchPrinting ? 'batch-printing' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
             <style>{`
                 @media print {
                     .cert-form-sidebar { display: none !important; }
@@ -272,6 +342,10 @@ const CertificatesGenerator = () => {
                     body * { visibility: hidden !important; }
                     .admin-cert-generator, .admin-cert-generator * { visibility: visible !important; }
                     .cert-preview-container, .cert-preview-container * { visibility: visible !important; }
+                    .batch-printing .cert-single-preview { display: none !important; }
+                    .batch-printing .cert-batch-print { display: block !important; }
+                    .batch-printing .cert-batch-print,
+                    .batch-printing .cert-batch-print * { visibility: visible !important; }
                 }
             `}</style>
             <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
@@ -286,6 +360,42 @@ const CertificatesGenerator = () => {
                                 <option key={type.value} value={type.value}>{type.label}</option>
                             ))}
                         </select>
+                    </div>
+                    <div style={fieldStyle}>
+                        <label style={labelStyle}>Recipient Name</label>
+                        <select value={config.recipientName || ''} onChange={handleRecipientChange} disabled={recipientsLoading || recipients.length === 0} style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }}>
+                            <option value="">{recipientsLoading ? 'Loading names...' : 'Select recipient'}</option>
+                            {config.recipientName && !hasCurrentRecipient && (
+                                <option value={config.recipientName}>{config.recipientName}</option>
+                            )}
+                            {recipients.map((recipient) => (
+                                <option key={`${recipient.type}-${recipient._id}`} value={recipient.name}>
+                                    {recipient.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div style={fieldStyle}>
+                        <label style={labelStyle}>Multiple Recipients</label>
+                        <select multiple value={selectedRecipientNames} onChange={handleBatchRecipientChange} disabled={recipientsLoading || recipients.length === 0} style={{ width: '100%', height: '130px', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }}>
+                            {recipients.map((recipient) => (
+                                <option key={`batch-${recipient.type}-${recipient._id}`} value={recipient.name}>
+                                    {recipient.name}
+                                </option>
+                            ))}
+                        </select>
+                        <div style={buttonRowStyle}>
+                            <button type="button" onClick={() => setSelectedRecipientNames(recipients.map((recipient) => recipient.name))} disabled={recipients.length === 0} style={smallButtonStyle}>Select All</button>
+                            <button type="button" onClick={printAllCertificates} disabled={recipients.length === 0} style={smallButtonStyle}>Print All</button>
+                            <button type="button" onClick={() => setSelectedRecipientNames([])} style={smallButtonStyle}>Clear</button>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8 }}>
+                            <input type="number" min="1" max={recipients.length || 1} value={printLimit} onChange={(e) => setPrintLimit(e.target.value)} disabled={recipients.length === 0} style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }} />
+                            <button type="button" onClick={selectLimitedRecipients} disabled={recipients.length === 0} style={smallButtonStyle}>Select First</button>
+                        </div>
+                        <button type="button" onClick={printSelectedCertificates} disabled={selectedRecipientNames.length === 0} style={{ padding: '8px', background: '#254b9f', color: '#fff', border: 'none', cursor: selectedRecipientNames.length === 0 ? 'not-allowed' : 'pointer', borderRadius: '4px', opacity: selectedRecipientNames.length === 0 ? .6 : 1 }}>
+                            Print Selected ({selectedRecipientNames.length})
+                        </button>
                     </div>
                     <div style={fieldStyle}>
                         <label style={labelStyle}>Print Paper Size</label>
@@ -350,7 +460,14 @@ const CertificatesGenerator = () => {
                     ))}
                 </div>
                 <div className="cert-preview-container" style={{ flex: 1, backgroundColor: '#eeeeee', overflowY: 'auto' }}>
-                    <Certi config={config} images={images} customInitiatives={initiativeImages} customConcurrent={concurrentImages} printSize={printSize} certificateType={certificateType} />
+                    <div className="cert-single-preview">
+                        <Certi config={config} images={images} customInitiatives={initiativeImages} customConcurrent={concurrentImages} printSize={printSize} certificateType={certificateType} />
+                    </div>
+                    <div className="cert-batch-print" style={{ display: 'none' }}>
+                        {batchPrintNames.map((name, index) => (
+                            <Certi key={`print-${index}-${name}`} config={{ ...config, recipientName: name }} images={images} customInitiatives={initiativeImages} customConcurrent={concurrentImages} printSize={printSize} certificateType={certificateType} printMode="batch" />
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>
