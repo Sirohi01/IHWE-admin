@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { pmsApi } from '../../../lib/api';
+import { pmsApi, SERVER_URL } from '../../../lib/api';
+
+const absoluteAssetUrl = value => {
+    if (!value) return '';
+    const url = String(value);
+    return url.startsWith('http') ? url : `${SERVER_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+};
 
 const normalize = application => {
     if (!application) return null;
@@ -16,6 +22,14 @@ const normalize = application => {
     return {
         ...application,
         ...applicant,
+        pmsCoordinator: application.pmsCoordinator ? {
+            ...application.pmsCoordinator,
+            photo: absoluteAssetUrl(application.pmsCoordinator.photo),
+        } : null,
+        contact1: application.contact1 ? {
+            ...application.contact1,
+            photoUrl: absoluteAssetUrl(application.contact1.photoUrl || application.contact1.photo),
+        } : application.contact1,
         emailId: applicant.emailId || application.contact1?.email || application.emailId,
         bank: {
             ...savedBank,
