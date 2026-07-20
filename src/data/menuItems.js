@@ -858,12 +858,12 @@ export const menuItems = [
       { label: "Designation Management", path: "/manage-designations" },
     ],
   },
-  {
-    type: "item",
-    label: "Settings",
-    icon: Settings,
-    path: "/settings",
-  },
+  // {
+  //   type: "item",
+  //   label: "Settings",
+  //   icon: Settings,
+  //   path: "/settings",
+  // },
   {
     type: "item",
     label: "Customize Sidebar",
