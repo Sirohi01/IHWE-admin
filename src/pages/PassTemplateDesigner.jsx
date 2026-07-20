@@ -19,7 +19,10 @@ import {
 } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
 
-const PASS_TEMPLATE_TYPES = ["Media", "Speaker", "Organizer", "Exhibitor", "Service", "Vehicle", "Visitor"];
+const PASS_TEMPLATE_TYPES = ["Media", "Speaker", "Organizer", "Exhibitor", "Service", "Delegate", "Visitor"];
+
+const isVehicleTemplate = (template) => [...(template?.passTypes || []), ...(template?.categories || [])]
+  .some(value => String(value || '').toLowerCase() === 'vehicle');
 
 const SAMPLE_DATA = {
   "{{person.name}}": "Vijay Sharma",
@@ -47,8 +50,9 @@ export default function PassTemplateDesigner() {
 
   const refreshTemplates = async () => {
     const res = await api.get("/api/pass-templates");
-    setTemplates(res.data.data || []);
-    return res.data.data || [];
+    const visibleTemplates = (res.data.data || []).filter(template => !isVehicleTemplate(template));
+    setTemplates(visibleTemplates);
+    return visibleTemplates;
   };
 
   const load = async (templateId = "") => {
