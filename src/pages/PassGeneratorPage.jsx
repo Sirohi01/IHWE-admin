@@ -21,7 +21,7 @@ const PASS_CONFIG = {
   organizer: { title: "Organizer Passes", category: "ORGANIZER", templateNames: ["organizer"] },
   exhibitor: { title: "Exhibitor Passes", category: "EXHIBITOR", templateNames: ["exhibitor"] },
   service: { title: "Service Passes", category: "SERVICE", templateNames: ["service", "service provider", "service_provider"] },
-  vehicle: { title: "Vehicle Passes", category: "VEHICLE", templateNames: ["vehicle"] },
+  delegate: { title: "Delegate Passes", category: "DELEGATE", templateNames: ["delegate"] },
   visitor: { title: "Visitor Passes", category: "VISITOR", templateNames: ["visitor"] },
 };
 

@@ -809,7 +809,8 @@ export default function AppRoutes() {
             <Route path="/passes/organizer" element={<PassGeneratorPage passType="organizer" />} />
             <Route path="/passes/exhibitor" element={<PassGeneratorPage passType="exhibitor" />} />
             <Route path="/passes/service" element={<PassGeneratorPage passType="service" />} />
-            <Route path="/passes/vehicle" element={<PassGeneratorPage passType="vehicle" />} />
+            <Route path="/passes/delegate" element={<PassGeneratorPage passType="delegate" />} />
+            <Route path="/passes/vehicle" element={<Navigate to="/passes/delegate" replace />} />
             <Route path="/passes/visitor" element={<PassGeneratorPage passType="visitor" />} />
             <Route path="/passes/food-coupons" element={<FoodCouponGeneratorPage />} />
             <Route path="/mobile-feedback" element={<MobileFeedback />} />
