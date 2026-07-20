@@ -93,12 +93,19 @@ const nameLengthClass = (name) => {
     return "";
 };
 
+const truncateRecipientName = (name) => {
+    const value = String(name || "").trim();
+    return value.length > 19 ? `${value.slice(0, 19)}...` : value;
+};
+
 const CertificateImage = ({ className, src, alt }) => (
     src ? <img className={className} src={src} alt={alt} /> : null
 );
 
-const Certi = ({ config, images, customInitiatives = [], customConcurrent = [], printSize = "A4", certificateType = "speaker" }) => {
+const Certi = ({ config, images, customInitiatives = [], customConcurrent = [], printSize = "A4", certificateType = "speaker", printMode = "single" }) => {
     const safeCompanyName = String(config?.recipientName || "").trim() || "";
+    const displayCompanyName = truncateRecipientName(safeCompanyName);
+    const isBatchPrint = printMode === "batch";
     const supportedByLeftText = config?.supportedByLeftText ?? config?.supportedByText;
     const supportedByRightText = config?.supportedByRightText ?? config?.supportedByText;
     const supportedByBottomRightText = config?.supportedByBottomRightText ?? config?.supportedByText;
@@ -118,7 +125,7 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [], 
     );
 
     return (
-        <div className="certi-page-shell">
+        <div className={`certi-page-shell ${isBatchPrint ? "certi-batch-page" : ""}`}>
             <style>{`
                 @import url("https://fonts.googleapis.com/css2?family=Aladin&display=swap");
 
@@ -681,10 +688,10 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [], 
                     body,
                     #root {
                         width: ${printPage.width}mm !important;
-                        height: ${printPage.height}mm !important;
+                        height: ${isBatchPrint ? "auto" : `${printPage.height}mm`} !important;
                         margin: 0 !important;
                         padding: 0 !important;
-                        overflow: hidden !important;
+                        overflow: ${isBatchPrint ? "visible" : "hidden"} !important;
                         background: #ffffff !important;
                     }
 
@@ -713,9 +720,19 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [], 
                         background: transparent !important;
                     }
 
+                    .certi-batch-page {
+                        page-break-after: always !important;
+                        break-after: page !important;
+                    }
+
+                    .certi-batch-page:last-child {
+                        page-break-after: avoid !important;
+                        break-after: auto !important;
+                    }
+
                     .certificate-print-area {
-                        position: fixed !important;
-                        inset: 0 !important;
+                        position: ${isBatchPrint ? "relative" : "fixed"} !important;
+                        inset: ${isBatchPrint ? "auto" : "0"} !important;
                         width: 210mm !important;
                         height: 297mm !important;
                         min-width: 210mm !important;
@@ -729,9 +746,9 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [], 
                         transform: scale(${printPage.scale}) !important;
                         transform-origin: top left !important;
                         page-break-before: avoid !important;
-                        page-break-after: avoid !important;
+                        page-break-after: ${isBatchPrint ? "always" : "avoid"} !important;
                         page-break-inside: avoid !important;
-                        break-after: avoid-page !important;
+                        break-after: ${isBatchPrint ? "page" : "avoid-page"} !important;
                         break-inside: avoid-page !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
@@ -816,8 +833,8 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [], 
                     <div className="certificate-body">
                         <p>
                             {config?.bodyTextPart1}{" "}
-                            <span className={`recipient-name ${nameLengthClass(safeCompanyName)}`}>
-                                {safeCompanyName}
+                            <span className={`recipient-name ${nameLengthClass(displayCompanyName)}`} title={safeCompanyName}>
+                                {displayCompanyName}
                             </span>{" "}
                             {config?.bodyTextPart2} <br />
                             <span className="certificate-blue-text">
