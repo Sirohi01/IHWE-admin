@@ -84,7 +84,7 @@ function InfoField({ label, value, required, type = 'text', options = [], onChan
                     <>
                         <select
                             className={cx(controlClass, 'cursor-pointer appearance-none pr-7')}
-                            value={value ?? ''}
+                            value={value == null ? '' : String(value)}
                             onChange={(event) => onChange?.(event.target.value)}
                         >
                             {options.map(option => (
@@ -304,7 +304,11 @@ export default function MSMEPMSApplication({ data, onSaveDraft, onContinue, savi
         gstNumber: safe(data?.gstNo || data?.gstNumber, ''),
         panNumber: safe(data?.panNo || data?.panNumber, ''),
         organizationType: safe(data?.organizationType, ''),
-        yearOfEstablishment: safe(data?.yearOfEstablishment, ''),
+        // FIX: use safe() so an empty string from the API also falls back
+        // to the current year instead of leaving the select blank.
+        yearOfEstablishment: String(
+            safe(data?.yearOfEstablishment, new Date().getFullYear())
+        ),
         msmeCategory: safe(data?.msme?.msmeCategory, ''),
         contactName,
         designation: safe(data?.designation || data?.contact1?.designation, ''),
@@ -350,7 +354,15 @@ export default function MSMEPMSApplication({ data, onSaveDraft, onContinue, savi
         { name: 'gstNumber', label: 'GST Number', required: true },
         { name: 'panNumber', label: 'PAN Number', required: true },
         { name: 'organizationType', label: 'Type of Organization', required: true, type: 'select', options: ['Private Limited Company', 'Proprietorship', 'Partnership', 'LLP', 'Limited Liability Partnership (LLP)', 'Public Limited Company', 'Trust', 'Society'] },
-        { name: 'yearOfEstablishment', label: 'Year of Establishment', required: true, type: 'select', options: Array.from({ length: 77 }, (_, index) => String(2026 - index)) },
+        {
+            name: 'yearOfEstablishment',
+            label: 'Year of Establishment',
+            required: true,
+            type: 'select',
+            // FIX: only last 10 years, generated dynamically from the current year
+            // (instead of a hardcoded 2026 base going 77 years back).
+            options: Array.from({ length: 10 }, (_, index) => String(new Date().getFullYear() - index)),
+        },
     ];
 
     const personFields = [
@@ -376,9 +388,9 @@ export default function MSMEPMSApplication({ data, onSaveDraft, onContinue, savi
         '[&_.pms-control]:border-[#d0e9da] [&_.pms-control]:bg-[#f2faf5]',
         '[&_.pms-control]:font-bold [&_.pms-control]:text-[#087536]'
     );
-const navigate = useNavigate();
+    const navigate = useNavigate();
     return (
-       <div className={"box-border w-full h-[calc(100dvh-58px)] min-h-0 bg-white px-6 pt-5 pb-[18px] text-[#061743] [font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe_UI,sans-serif] antialiased [text-rendering:geometricPrecision] [&_*]:box-border [@media(max-height:1100px)_and_(min-width:1181px)]:px-5 [@media(max-height:1100px)_and_(min-width:1181px)]:pt-[13px] [@media(max-height:1100px)_and_(min-width:1181px)]:pb-[10px] [@media(max-width:1365px)_and_(min-width:1181px)]:px-[18px] max-[1180px]:h-auto max-[1180px]:min-h-[calc(100dvh-58px)] max-[1180px]:overflow-auto max-[1180px]:p-[18px] max-[820px]:px-4 max-[820px]:pt-4 max-[820px]:pb-6"}>
+      <div className="w-full min-h-[calc(100dvh-58px)] bg-white p-3 px-3 lg:px-6 pt-2 pb-3 font-sans text-[#061743] antialiased">
             <header className={"flex h-[61px] items-start justify-between gap-[22px] [@media(max-height:1100px)_and_(min-width:1181px)]:h-[52px] max-[1180px]:mb-[18px] max-[1180px]:h-auto max-[820px]:block max-[820px]:mb-6"}>
                 <div className={"pt-0.5 [@media(max-height:1100px)_and_(min-width:1181px)]:pt-0 max-[820px]:pt-0"}>
                     <h1 className={"m-0 text-[24px] leading-[1.08] font-semibold tracking-[-0.35px] text-[#061743] [@media(max-height:1100px)_and_(min-width:1181px)]:text-[21px] max-[820px]:text-[20px]"}>MSME PMS Application Form</h1>
