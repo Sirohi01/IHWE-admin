@@ -720,7 +720,7 @@ export const menuItems = [
           { label: "Organizer Passes", path: "/passes/organizer" },
           { label: "Exhibitor Passes", path: "/passes/exhibitor" },
           { label: "Service Passes", path: "/passes/service" },
-          { label: "Vehicle Passes", path: "/passes/vehicle" },
+          { label: "Delegate Passes", path: "/passes/delegate" },
           { label: "Visitor Passes", path: "/passes/visitor" },
           { label: "Food Coupons", path: "/passes/food-coupons" },
           { label: "Exhibitor Requested Passes", path: "/exhibitor-requested-passes" },
