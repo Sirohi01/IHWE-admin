@@ -65,6 +65,7 @@ const TimeRemaining = ({ schedule }) => {
 };
 
 const HeroSlider = () => {
+  const [selectedWebsite, setSelectedWebsite] = useState('9th IHWE');
   const [slides, setSlides] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 25;
@@ -107,12 +108,12 @@ const HeroSlider = () => {
 
   useEffect(() => {
     fetchSlides();
-  }, []);
+  }, [selectedWebsite]);
 
   const fetchSlides = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get('/api/hero/all');
+      const response = await api.get(`/api/hero/all?website=${encodeURIComponent(selectedWebsite)}`);
 
       if (response.data.success) {
         setSlides(response.data.data);
@@ -190,6 +191,7 @@ const HeroSlider = () => {
       formDataToSend.append('button3Url', formData.button3Url);
       formDataToSend.append('isActive', formData.isActive);
       formDataToSend.append('order', formData.order);
+      formDataToSend.append('website', selectedWebsite);
 
       if (schedule.startDate && schedule.startTime) {
         formDataToSend.append('schedule', JSON.stringify(schedule));
@@ -381,6 +383,7 @@ const HeroSlider = () => {
         formDataToSend.append('descriptionFontSize', formData.descriptionFontSize);
         formDataToSend.append('isActive', formData.isActive);
         formDataToSend.append('schedule', JSON.stringify(schedule));
+        formDataToSend.append('website', selectedWebsite);
 
         const response = await api.put(`/api/hero/update/${editId}`, formDataToSend, {
           headers: { 'Content-Type': 'multipart/form-data' }
@@ -434,6 +437,15 @@ const HeroSlider = () => {
       width: "80px",
       render: (row, index) => (
         <div className="font-bold text-gray-900">{startIndex + index + 1}</div>
+      )
+    },
+    {
+      key: "website",
+      label: "WEBSITE",
+      render: (row) => (
+        <span className="font-semibold text-[10px] uppercase tracking-wider text-purple-700 bg-purple-50 border border-purple-200 px-2 py-1 rounded">
+          {row.website || '9th IHWE'}
+        </span>
       )
     },
     {
@@ -607,13 +619,29 @@ const HeroSlider = () => {
       <div className="bg-gray-50 shadow-md  p-6">
         <div className="w-full ">
           <div className="border border-gray-200 rounded-lg p-6 mb-6 shadow-lg">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-blue-50">
-                <Image className="w-4 h-4 text-blue-600" />
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-50">
+                  <Image className="w-4 h-4 text-blue-600" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {editMode ? 'Edit Hero Slide' : 'Create New Hero Slide'}
+                </h2>
               </div>
-              <h2 className="text-lg font-semibold text-gray-900">
-                {editMode ? 'Edit Hero Slide' : 'Create New Hero Slide'}
-              </h2>
+              <div className="flex items-center gap-2 border-2 border-[#d26019] rounded-lg px-2 py-1 bg-[#d26019]/5">
+                <span className="text-[10px] font-bold text-[#d26019] uppercase tracking-wider">Website:</span>
+                <select
+                  value={selectedWebsite}
+                  onChange={(e) => {
+                    setSelectedWebsite(e.target.value);
+                    handleReset();
+                  }}
+                  className="bg-transparent text-sm font-semibold text-gray-900 focus:outline-none cursor-pointer"
+                >
+                  <option value="9th IHWE">9th IHWE</option>
+                  <option value="Organicexpo">Organicexpo</option>
+                </select>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
