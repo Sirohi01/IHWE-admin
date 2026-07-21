@@ -29,6 +29,9 @@ import PageHeader from '../components/PageHeader';
 import MsmeLogosManager from '../components/MsmeLogosManager';
 
 const Settings = () => {
+    // Website selection state
+    const [selectedWebsite, setSelectedWebsite] = useState('9th IHWE');
+
     // Logo state
     const [logo, setLogo] = useState(null);
     const [logoPreview, setLogoPreview] = useState('');
@@ -140,15 +143,15 @@ const Settings = () => {
 
     const [isLoading, setIsLoading] = useState(false);
 
-    // Fetch settings on mount
+    // Fetch settings on mount and when selectedWebsite changes
     useEffect(() => {
         fetchSettings();
-    }, []);
+    }, [selectedWebsite]);
 
     const fetchSettings = async () => {
         setIsLoading(true);
         try {
-            const res = await api.get('/api/settings');
+            const res = await api.get(`/api/settings?website=${encodeURIComponent(selectedWebsite)}`);
             if (res.data.success && res.data.data) {
                 const {
                     logo, exhibitorBrochurePdf, domesticRegistrationFormPdf, internationalRegistrationFormPdf, sponsorshipDeckPdf,
@@ -323,6 +326,9 @@ const Settings = () => {
             if (msmeLogo) formData.append('msmeLogo', msmeLogo);
             formData.append('msmeLogoTitle', msmeLogoTitle);
             formData.append('isMsmeLogoActive', isMsmeLogoActive);
+            
+            // Add selected website
+            formData.append('website', selectedWebsite);
 
             // Multiple MSME Logos
             const msmeLogosData = msmeLogos.map(({ id, preview, ...rest }) => rest);
@@ -673,16 +679,26 @@ const Settings = () => {
         <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="SYSTEM CONFIGURATION"
-                description="Manage your exhibition's branding and contact information"
+                description={`Manage branding and contact information for ${selectedWebsite}`}
             >
-                <button
-                    onClick={saveSystemSettings}
-                    disabled={isLoading}
-                    className="py-2.5 px-6 bg-[#23471d] text-white font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 uppercase text-xs tracking-wider disabled:opacity-50"
-                >
-                    <Save className="w-4 h-4" />
-                    {isLoading ? "Saving..." : "Save Configuration"}
-                </button>
+                <div className="flex items-center gap-4">
+                    <select
+                        value={selectedWebsite}
+                        onChange={(e) => setSelectedWebsite(e.target.value)}
+                        className="py-2.5 px-4 bg-gray-50 border border-gray-300 text-gray-800 font-semibold rounded focus:outline-none focus:ring-2 focus:ring-[#23471d] cursor-pointer text-sm shadow-sm"
+                    >
+                        <option value="9th IHWE">9th IHWE</option>
+                        <option value="Organicexpo">Organicexpo</option>
+                    </select>
+                    <button
+                        onClick={saveSystemSettings}
+                        disabled={isLoading}
+                        className="py-2.5 px-6 bg-[#23471d] text-white font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 uppercase text-xs tracking-wider disabled:opacity-50 rounded"
+                    >
+                        <Save className="w-4 h-4" />
+                        {isLoading ? "Saving..." : "Save Configuration"}
+                    </button>
+                </div>
             </PageHeader>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
