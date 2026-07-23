@@ -7,7 +7,7 @@ import api, { SERVER_URL } from '../../../lib/api';
 import { Landmark, SquarePen, Mail, Globe } from 'lucide-react';
 
 const PROFORMA_EVENT_NAME = '9th Edition of International Health & Wellness Expo (IHWE Global Edition)';
-const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, India';
+const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 12, Pragati Maidan, New Delhi - 110001, India';
 const PROFORMA_EVENT_STATE = 'Delhi';
 const PROFORMA_PLACE_OF_SUPPLY_WITH_CODE = 'Delhi (07)';
 const PROFORMA_EVENT_GST_NO = '07AAFCN9238F1Z6';

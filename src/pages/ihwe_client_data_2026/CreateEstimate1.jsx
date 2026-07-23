@@ -44,7 +44,7 @@ const unitOptions = [
 ];
 
 const EVENT_NAME = "9th Edition of International Health & Wellness Expo (IHWE Global Edition)";
-const EVENT_PLACE_OF_SUPPLY = "Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, Bharat";
+const EVENT_PLACE_OF_SUPPLY = "Hall Nos. 12, Pragati Maidan, New Delhi - 110001, Bharat";
 const EVENT_GST_NO = "08AAFCN9238F1Z6";
 
 // Helper function to safely extract an array from any Redux slice

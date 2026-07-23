@@ -1,7 +1,7 @@
 import api from "../lib/api";
 
 export const PROFORMA_EVENT_NAME = "9th Edition of International Health & Wellness Expo (IHWE Global Edition)";
-export const PROFORMA_PLACE_OF_SUPPLY = "Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, Bharat";
+export const PROFORMA_PLACE_OF_SUPPLY = "Hall Nos. 12, Pragati Maidan, New Delhi - 110001, Bharat";
 
 const roundAmount = (value) => Math.round(Number(value || 0));
 

@@ -12,7 +12,7 @@ import { LayoutGrid, UserCheck, Upload, ChevronDown, ChevronLeft, X, Landmark, S
 import api, { SERVER_URL } from "../../../lib/api";
 
 const PROFORMA_EVENT_NAME = "9th Edition of International Health & Wellness Expo (IHWE Global Edition)";
-const PROFORMA_PLACE_OF_SUPPLY = "Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, Bharat";
+const PROFORMA_PLACE_OF_SUPPLY = "Hall Nos. 12, Pragati Maidan, New Delhi - 110001, Bharat";
 const PROFORMA_EVENT_GST_NO = "08AAFCN9238F1Z6";
 
 const joinAddressParts = (parts) => {
@@ -388,17 +388,17 @@ const PerformaInvoiceDetails = () => {
                 <thead>
                   <tr style={{ background: '#fafafa' }}>
                     <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                         <Landmark size={14} strokeWidth={2} /> NGWPL Bank Details
                       </div>
                     </th>
                     <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                         <SquarePen size={14} strokeWidth={2} /> Receiver's Acknowledgement
                       </div>
                     </th>
                     <th style={{ border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: '#fafafa', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                         <SquarePen size={14} strokeWidth={2} /> For Namo Gange Wellness Pvt. Ltd.
                       </div>
                     </th>
@@ -418,24 +418,24 @@ const PerformaInvoiceDetails = () => {
                       </table>
                     </td>
                     <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '2px 8px 8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
-                        <span style={{ fontSize: 11, whiteSpace: 'nowrap' }}>Received the above goods / services in good condition.</span>
+                      <span style={{ fontSize: 11, whiteSpace: 'nowrap' }}>Received the above goods / services in good condition.</span>
                     </td>
                     <td style={{ border: 'none', padding: '8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
-                        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-                            {sigUrl && <img src={sigUrl} alt="Signature" style={{ maxHeight: 45, maxWidth: 100 }} />}
-                            {stampUrl && <img src={stampUrl} alt="Stamp" style={{ maxHeight: 45, maxWidth: 45 }} />}
-                        </div>
+                      <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                        {sigUrl && <img src={sigUrl} alt="Signature" style={{ maxHeight: 45, maxWidth: 100 }} />}
+                        {stampUrl && <img src={stampUrl} alt="Stamp" style={{ maxHeight: 45, maxWidth: 45 }} />}
+                      </div>
                     </td>
                   </tr>
                   <tr>
-                      <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '0 8px 2px', verticalAlign: 'bottom' }}>
-                          <div style={{ borderTop: '1px solid #ccc', margin: '0 2px 4px' }}></div>
-                          <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 11 }}>(Signature &amp; Company Seal)</div>
-                      </td>
-                      <td style={{ border: 'none', padding: '0 8px 2px', verticalAlign: 'bottom' }}>
-                          <div style={{ borderTop: '1px solid #ccc', margin: '0 2px 4px' }}></div>
-                          <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 11 }}>Authorized Signatory.</div>
-                      </td>
+                    <td style={{ border: 'none', borderRight: '1px solid #ccc', padding: '0 8px 2px', verticalAlign: 'bottom' }}>
+                      <div style={{ borderTop: '1px solid #ccc', margin: '0 2px 4px' }}></div>
+                      <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 11 }}>(Signature &amp; Company Seal)</div>
+                    </td>
+                    <td style={{ border: 'none', padding: '0 8px 2px', verticalAlign: 'bottom' }}>
+                      <div style={{ borderTop: '1px solid #ccc', margin: '0 2px 4px' }}></div>
+                      <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#888', fontSize: 11 }}>Authorized Signatory.</div>
+                    </td>
                   </tr>
                 </tbody>
               </table>
