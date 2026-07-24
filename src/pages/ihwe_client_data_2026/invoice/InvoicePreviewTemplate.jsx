@@ -350,20 +350,17 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
     const primaryTeamMember = resolvedCompany?.teamMembers?.find((member) =>
         member.isPrimary || /primary contact/i.test(member.roleAtExhibition || '')
     );
-    const c1HasDetails = Boolean(
-        savedContact1.firstName || savedContact1.lastName || savedContact1.mobile || savedContact1.email
-    );
-    const c1 = c1HasDetails
-        ? savedContact1
-        : primaryTeamMember
-            ? {
-                firstName: primaryTeamMember.name || '',
-                surname: '',
-                designation: primaryTeamMember.designation || '',
-                mobile: primaryTeamMember.mobile || '',
-                email: primaryTeamMember.email || '',
-            }
-            : resolvedCompany?.contacts?.[0] || {};
+    const c1 = primaryTeamMember
+        ? {
+            firstName: primaryTeamMember.name || '',
+            surname: '',
+            designation: primaryTeamMember.designation || primaryTeamMember.roleAtExhibition || '',
+            mobile: primaryTeamMember.mobile || savedContact1.mobile || '',
+            email: primaryTeamMember.email || savedContact1.email || '',
+        }
+        : (savedContact1.firstName || savedContact1.lastName || savedContact1.mobile || savedContact1.email)
+            ? savedContact1
+            : resolvedCompany?.contacts?.find((contact) => contact?.isPrimary) || resolvedCompany?.contacts?.[0] || {};
     const companyName = "Namo Gange Wellness Pvt. Ltd.";
 
     const PROFORMA_EVENT_NAME = '9th Edition of International Health & Wellness Expo (IHWE Global Edition)';
@@ -406,13 +403,13 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
         resolvedCompany?.mobile
     ) || '—';
     const clientEmail = getFirstCleanValue(
+        c1.email,
         matchedInvoice?.company_email,
         matchedInvoice?.contact_email,
         matchedInvoice?.email,
         form?.company_email,
         form?.contact_email,
         form?.email,
-        c1.email,
         resolvedCompany?.companyEmail,
         resolvedCompany?.email
     ) || '—';
