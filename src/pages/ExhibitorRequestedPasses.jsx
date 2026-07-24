@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
+import QRCode from "react-qr-code";
 import {
   BadgeCheck,
   Clock3,
@@ -14,9 +15,9 @@ import {
   Users,
 } from "lucide-react";
 import api from "../lib/api";
-import FoodCouponCanvas from "../components/passes/FoodCouponCanvas";
 import { getStoredFoodCouponLogo } from "../components/passes/foodCouponStorage";
 import PassTemplateCanvas from "../components/passes/PassTemplateCanvas";
+import namoGangeLogo from "../assets/namogangelogo.webp";
 
 const PASS_META = {
   exhibitor: { label: "Exhibitor", category: "EXHIBITOR", templateNames: ["exhibitor"], icon: Ticket, tone: "bg-sky-50 text-sky-700 border-sky-100" },
@@ -36,7 +37,8 @@ const TEMPLATE_CANVAS_WIDTH = 1122;
 const PRINT_CARD_WIDTH_CM = 9.5;
 const PRINT_CARD_HEIGHT_CM = 13;
 const PRINT_SCALE = (PRINT_CARD_WIDTH_CM * 96 / 2.54) / TEMPLATE_CANVAS_WIDTH;
-const FOOD_COUPONS_PER_SHEET = 20;
+const PASSES_PER_SHEET = 4;
+const FOOD_COUPONS_PER_SHEET = 10;
 
 const isFoodPassType = (passType) => Boolean(PASS_META[passType]?.isFoodCoupon);
 
@@ -106,6 +108,65 @@ const waitForPrintAssets = async (root) => {
     }
   }));
   await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+};
+
+const PassBack = ({ item, compact = false }) => (
+  <div className={`pass-back ${compact ? "pass-back--compact" : ""}`}>
+    <div className="pass-back__accent" />
+    <div className="pass-back__content">
+      <div className="pass-back__info">
+        <p className="pass-back__eyebrow">IHWE 2026 • ENTRY PASS</p>
+        <h2>{item.name || item.exhibitorName}</h2>
+        <p className="pass-back__company">{item.exhibitorName}</p>
+        <div className="pass-back__details">
+          <span><strong>Pass</strong>{item.category}</span>
+          {item.designation && <span><strong>Designation</strong>{item.designation}</span>}
+          {item.registrationId && <span><strong>Exhibitor ID</strong>{item.registrationId}</span>}
+          {item.phone && <span><strong>Mobile</strong>{item.phone}</span>}
+        </div>
+        <p className="pass-back__note">Scan this QR at the IHWE entry desk for verification and attendance.</p>
+      </div>
+      <div className="pass-back__qr">
+        <QRCode value={item.qrValue} size={compact ? 96 : 190} level="H" />
+        <span>SCAN TO VERIFY</span>
+      </div>
+    </div>
+  </div>
+);
+
+const ExhibitorFoodCoupon = ({ item, logoSrc }) => {
+  const passId = `S${String(item.requestId || "").replace(/[^a-z0-9]/gi, "").slice(-8).toUpperCase()}`;
+
+  return (
+    <div className="exhibitor-food-coupon">
+      <div className="exhibitor-food-coupon__brand">
+        <img src={logoSrc || namoGangeLogo} alt="Namo Gange" />
+      </div>
+      <div className="exhibitor-food-coupon__meal">
+        <div className="exhibitor-food-coupon__title">FOOD COUPON</div>
+        <div className="exhibitor-food-coupon__quantity">
+          {item.foodCouponText || "1 PACKED LUNCH"}
+        </div>
+        <Utensils className="exhibitor-food-coupon__meal-icon" />
+      </div>
+      <div className="exhibitor-food-coupon__identity">
+        <div className="exhibitor-food-coupon__information">
+          <div className="exhibitor-food-coupon__eyebrow">IHWE 2026 • ENTRY PASS</div>
+          <div className="exhibitor-food-coupon__company">{item.exhibitorName}</div>
+          <div className="exhibitor-food-coupon__person">{item.name || item.exhibitorName}</div>
+          <div className="exhibitor-food-coupon__fields">
+            <span><strong>Pass</strong>Food Coupon</span>
+            <span><strong>Exhibitor ID</strong>{item.registrationId || "-"}</span>
+            <span><strong>Pass ID</strong>{passId || "-"}</span>
+          </div>
+        </div>
+        <div className="exhibitor-food-coupon__qr">
+          <QRCode value={item.qrValue} size={104} level="H" />
+          <span>▣ &nbsp; SCAN TO VERIFY</span>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default function ExhibitorRequestedPasses() {
@@ -216,28 +277,39 @@ export default function ExhibitorRequestedPasses() {
 
   const printItems = useMemo(() => selectedRequests.flatMap((request) => {
     const meta = PASS_META[request.passType];
-    if (isFoodPassType(request.passType)) {
-      return [{
-        id: `${request._id}-food`,
-        requestId: request._id,
-        passType: request.passType,
-        name: getExhibitorName(request),
-        category: meta.category,
-        status: request.status,
-        date: request.createdAt,
-        mealQuantity: Math.max(1, Number(request.quantity || 1)),
-        foodCouponText: getFoodCouponText(request),
-      }];
-    }
-    return getRequestFallbackNames(request).map((name, index) => ({
-      id: `${request._id}-${index}`,
+    const exhibitor = request.exhibitorId || {};
+    const common = {
       requestId: request._id,
       passType: request.passType,
-      name,
       category: meta.category,
       status: request.status,
       date: request.createdAt,
-    }));
+      exhibitorName: getExhibitorName(request),
+      registrationId: exhibitor.registrationId || "",
+    };
+    if (isFoodPassType(request.passType)) {
+      return [{
+        ...common,
+        id: `${request._id}-food`,
+        name: getExhibitorName(request),
+        phone: exhibitor.contact1?.mobile || "",
+        mealQuantity: Math.max(1, Number(request.quantity || 1)),
+        foodCouponText: getFoodCouponText(request),
+        qrValue: JSON.stringify({ reqId: request._id, type: request.passType, index: 0 }),
+      }];
+    }
+    return getRequestFallbackNames(request).map((name, index) => {
+      const person = request.personnel?.[index] || {};
+      return {
+        ...common,
+        id: `${request._id}-${index}`,
+        name,
+        designation: person.designation || "",
+        email: person.email || "",
+        phone: person.phone || "",
+        qrValue: JSON.stringify({ reqId: request._id, type: request.passType, index }),
+      };
+    });
   }), [selectedRequests]);
 
   const printItemKey = useMemo(() => printItems.map((item) => item.id).join("|"), [printItems]);
@@ -373,7 +445,7 @@ export default function ExhibitorRequestedPasses() {
   const selectAllPrintItems = () => setSelectedPrintIds(printItems.map((item) => item.id));
   const clearPrintItems = () => setSelectedPrintIds([]);
 
-  const normalPrintPages = Math.ceil(normalPrintItems.length / 8);
+  const normalPrintPages = Math.ceil(normalPrintItems.length / PASSES_PER_SHEET);
   const foodPrintPages = Math.ceil(foodPrintItems.length / FOOD_COUPONS_PER_SHEET);
   const printPages = normalPrintPages || 1;
 
@@ -426,9 +498,8 @@ export default function ExhibitorRequestedPasses() {
             box-sizing: border-box;
             padding: 0.55cm;
             display: grid;
-            grid-template-columns: repeat(2, 14.3cm);
+            grid-template-columns: 28.6cm;
             grid-template-rows: repeat(10, 3.95cm);
-            column-gap: 0.1cm;
             row-gap: 0.15cm;
             align-content: start;
             justify-content: start;
@@ -437,7 +508,234 @@ export default function ExhibitorRequestedPasses() {
             overflow: hidden;
           }
           .food-coupon-print-sheet:last-child { break-after: auto; page-break-after: auto; }
-          .food-coupon-print-card { width: 14.3cm; height: 3.95cm; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
+          .food-coupon-combined {
+            width: 28.6cm;
+            height: 3.95cm;
+            overflow: hidden;
+            box-sizing: border-box;
+            border-radius: 0.16cm;
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+          .exhibitor-food-coupon {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 23% 33% 44%;
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+            border: 0.04cm solid #102d57;
+            border-radius: 0.16cm;
+            background: #fff;
+            color: #0d213e;
+            font-family: Arial, Helvetica, sans-serif;
+          }
+          .exhibitor-food-coupon__brand {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.2cm 0.3cm;
+            background:
+              radial-gradient(circle at 25% 28%, rgba(255,255,255,.55) 0 .03cm, transparent .04cm),
+              linear-gradient(125deg, #fff733 0%, #ffe700 58%, #ffd500 100%);
+          }
+          .exhibitor-food-coupon__brand::after {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            top: -12%;
+            right: -0.65cm;
+            width: 1.4cm;
+            height: 124%;
+            border-radius: 0 60% 60% 0;
+            background: #ffd900;
+            border-right: 0.08cm solid rgba(255,255,255,.8);
+          }
+          .exhibitor-food-coupon__brand img {
+            display: block;
+            width: 82%;
+            max-height: 2.2cm;
+            object-fit: contain;
+          }
+          .exhibitor-food-coupon__meal {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.15cm 0.35cm 0.1cm 0.7cm;
+            overflow: hidden;
+            color: #fff;
+            text-align: center;
+            background:
+              radial-gradient(circle at 20% 25%, rgba(255,255,255,.055) 0 .08cm, transparent .09cm),
+              radial-gradient(circle at 75% 72%, rgba(255,255,255,.045) 0 .11cm, transparent .12cm),
+              linear-gradient(135deg, #092f9b 0%, #003fae 62%, #063383 100%);
+            background-size: .7cm .7cm, .9cm .9cm, auto;
+          }
+          .exhibitor-food-coupon__meal::after {
+            content: "";
+            position: absolute;
+            top: -12%;
+            right: -0.42cm;
+            width: 0.85cm;
+            height: 124%;
+            border-radius: 50%;
+            background: #0b756e;
+            border-right: 0.08cm solid #fff;
+          }
+          .exhibitor-food-coupon__title {
+            width: 92%;
+            padding-bottom: 0.08cm;
+            border-bottom: 0.055cm solid #f8d51b;
+            font-size: 17pt;
+            font-weight: 950;
+            line-height: 1;
+            letter-spacing: -0.02cm;
+            white-space: nowrap;
+          }
+          .exhibitor-food-coupon__quantity {
+            margin-top: 0.1cm;
+            color: #ffe116;
+            font-size: 8.7pt;
+            font-weight: 950;
+            line-height: 1;
+            white-space: nowrap;
+          }
+          .exhibitor-food-coupon__meal-icon {
+            width: 0.62cm;
+            height: 0.62cm;
+            margin-top: 0.08cm;
+            color: rgba(255,255,255,.9);
+            stroke-width: 1.7;
+          }
+          .exhibitor-food-coupon__identity {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 2.85cm;
+            align-items: center;
+            gap: 0.26cm;
+            min-width: 0;
+            padding: 0.28cm 0.3cm 0.24cm 0.65cm;
+            background:
+              repeating-radial-gradient(ellipse at 50% 120%, transparent 0 .16cm, rgba(9,77,110,.035) .17cm .18cm),
+              #fff;
+          }
+          .exhibitor-food-coupon__information { min-width: 0; }
+          .exhibitor-food-coupon__eyebrow {
+            width: fit-content;
+            margin-bottom: 0.12cm;
+            padding-bottom: 0.06cm;
+            border-bottom: 0.02cm solid #178078;
+            color: #14756f;
+            font-size: 6.3pt;
+            font-weight: 900;
+            letter-spacing: 0.09cm;
+            text-transform: uppercase;
+            white-space: nowrap;
+          }
+          .exhibitor-food-coupon__company {
+            max-width: 100%;
+            overflow: hidden;
+            color: #0b1d38;
+            font-size: 12.5pt;
+            font-weight: 950;
+            line-height: 1.05;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          .exhibitor-food-coupon__person {
+            margin-top: 0.05cm;
+            overflow: hidden;
+            color: #566170;
+            font-size: 6.8pt;
+            font-weight: 700;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          .exhibitor-food-coupon__fields {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.08cm 0.28cm;
+            margin-top: 0.18cm;
+          }
+          .exhibitor-food-coupon__fields span {
+            min-width: 0;
+            overflow: hidden;
+            color: #10223d;
+            font-size: 6pt;
+            font-weight: 900;
+            text-overflow: ellipsis;
+            text-transform: uppercase;
+            white-space: nowrap;
+          }
+          .exhibitor-food-coupon__fields strong {
+            display: block;
+            margin-bottom: 0.025cm;
+            color: #14756f;
+            font-size: 4.6pt;
+            letter-spacing: 0.025cm;
+          }
+          .exhibitor-food-coupon__qr {
+            align-self: center;
+            overflow: hidden;
+            border: 0.025cm solid #17386c;
+            border-radius: 0.09cm;
+            background: #fff;
+            text-align: center;
+          }
+          .exhibitor-food-coupon__qr svg {
+            display: block;
+            width: 2.55cm;
+            height: 2.55cm;
+            margin: 0.12cm auto 0.08cm;
+          }
+          .exhibitor-food-coupon__qr span {
+            display: block;
+            padding: 0.09cm 0.06cm;
+            background: #073482;
+            color: #fff;
+            font-size: 4.6pt;
+            font-weight: 950;
+            letter-spacing: 0.025cm;
+            white-space: nowrap;
+          }
+          .pass-back { position: relative; width: 100%; height: 100%; overflow: hidden; box-sizing: border-box; border: 0.08cm solid #123f70; background: #fff; color: #142033; font-family: Arial, sans-serif; }
+          .pass-back__accent { position: absolute; inset: 0 auto 0 0; width: 0.32cm; background: linear-gradient(180deg, #0b6b60, #123f70); }
+          .pass-back__content { height: 100%; box-sizing: border-box; padding: 0.75cm 0.65cm 0.65cm 0.9cm; display: flex; align-items: center; justify-content: space-between; gap: 0.45cm; }
+          .pass-back__info { min-width: 0; flex: 1; }
+          .pass-back__eyebrow { margin: 0 0 0.3cm; color: #0b6b60; font-size: 9pt; font-weight: 900; letter-spacing: 0.08cm; }
+          .pass-back h2 { margin: 0; color: #123f70; font-size: 20pt; font-weight: 900; line-height: 1.08; }
+          .pass-back__company { margin: 0.18cm 0 0.45cm; color: #64748b; font-size: 10pt; font-weight: 700; }
+          .pass-back__details { display: grid; grid-template-columns: 1fr; gap: 0.22cm; }
+          .pass-back__details span { font-size: 9pt; font-weight: 700; }
+          .pass-back__details strong { display: block; color: #94a3b8; font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.04cm; }
+          .pass-back__note { margin: 0.55cm 0 0; color: #64748b; font-size: 7.5pt; line-height: 1.35; }
+          .pass-back__qr { flex: 0 0 auto; padding: 0.3cm; border: 0.04cm solid #dbe4ea; background: #fff; text-align: center; }
+          .pass-back__qr svg { display: block; width: 4.2cm; height: 4.2cm; }
+          .pass-back__qr span { display: block; margin-top: 0.18cm; color: #123f70; font-size: 6.5pt; font-weight: 900; letter-spacing: 0.04cm; }
+          .pass-back:not(.pass-back--compact) .pass-back__content { flex-direction: column; align-items: stretch; justify-content: flex-start; padding: 0.62cm 0.55cm 0.48cm 0.85cm; gap: 0.25cm; }
+          .pass-back:not(.pass-back--compact) h2 { max-height: 1.25cm; overflow: hidden; font-size: 16pt; }
+          .pass-back:not(.pass-back--compact) .pass-back__company { margin: 0.1cm 0 0.22cm; }
+          .pass-back:not(.pass-back--compact) .pass-back__details { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.14cm 0.28cm; }
+          .pass-back:not(.pass-back--compact) .pass-back__details span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+          .pass-back:not(.pass-back--compact) .pass-back__note { margin: 0.2cm 0 0; font-size: 7pt; }
+          .pass-back:not(.pass-back--compact) .pass-back__qr { align-self: center; margin-top: auto; }
+          .pass-back:not(.pass-back--compact) .pass-back__qr svg { width: 3.7cm; height: 3.7cm; }
+          .pass-back--compact .pass-back__content { padding: 0.22cm 0.35cm 0.2cm 0.6cm; gap: 0.25cm; }
+          .pass-back--compact .pass-back__eyebrow { margin-bottom: 0.08cm; font-size: 6.5pt; }
+          .pass-back--compact h2 { font-size: 11pt; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          .pass-back--compact .pass-back__company { margin: 0.05cm 0 0.12cm; font-size: 7pt; }
+          .pass-back--compact .pass-back__details { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.08cm 0.25cm; }
+          .pass-back--compact .pass-back__details span { font-size: 6.5pt; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          .pass-back--compact .pass-back__details strong { font-size: 5pt; }
+          .pass-back--compact .pass-back__note { display: none; }
+          .pass-back--compact .pass-back__qr { padding: 0.1cm; }
+          .pass-back--compact .pass-back__qr svg { width: 2.7cm; height: 2.7cm; }
+          .pass-back--compact .pass-back__qr span { margin-top: 0.05cm; font-size: 5pt; }
         }
       `}</style>
 
@@ -834,17 +1132,22 @@ export default function ExhibitorRequestedPasses() {
 
       <div ref={printRef} className="mixed-pass-print-root">
         {Array.from({ length: normalPrintPages }).map((_, pageIndex) => {
-          const pageItems = normalPrintItems.slice(pageIndex * 8, pageIndex * 8 + 8);
+          const pageItems = normalPrintItems.slice(pageIndex * PASSES_PER_SHEET, pageIndex * PASSES_PER_SHEET + PASSES_PER_SHEET);
           return (
             <div key={pageIndex} className="mixed-pass-print-sheet">
               {pageItems.map((item) => (
-                <div key={item.id} className="mixed-pass-print-card">
-                  <PassTemplateCanvas
-                    template={templateByPassType[item.passType] || defaultTemplate}
-                    data={dataForItem(item)}
-                    scale={PRINT_SCALE}
-                  />
-                </div>
+                <Fragment key={item.id}>
+                  <div className="mixed-pass-print-card">
+                    <PassTemplateCanvas
+                      template={templateByPassType[item.passType] || defaultTemplate}
+                      data={dataForItem(item)}
+                      scale={PRINT_SCALE}
+                    />
+                  </div>
+                  <div className="mixed-pass-print-card">
+                    <PassBack item={item} />
+                  </div>
+                </Fragment>
               ))}
             </div>
           );
@@ -857,8 +1160,8 @@ export default function ExhibitorRequestedPasses() {
           return (
             <div key={`food-${pageIndex}`} className="food-coupon-print-sheet">
               {pageItems.map((item) => (
-                <div key={item.id} className="food-coupon-print-card">
-                  <FoodCouponCanvas persons={item.foodCouponText || "1 PACKED LUNCH"} logoSrc={foodCouponLogoSrc} />
+                <div key={item.id} className="food-coupon-combined">
+                  <ExhibitorFoodCoupon item={item} logoSrc={foodCouponLogoSrc} />
                 </div>
               ))}
             </div>
