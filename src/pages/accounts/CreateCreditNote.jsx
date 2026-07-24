@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, UploadCloud, Plus, Trash2, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import api from '../../lib/api';
+import { resolveLinkedIds } from '../../utils/resolveLinkedIds';
 import toast from 'react-hot-toast';
 import { getCurrentUserName, getCurrentUsername } from '../../utils/currentUser';
 
@@ -77,8 +78,9 @@ const CreateCreditNote = () => {
 
                 // ── Invoices for table (filter by this company) ───────
                 const allInvs = allInvRes.data?.data || allInvRes.data || [];
+                const linkedIds = new Set(await resolveLinkedIds(id));
                 const rawCompanyInvs = (Array.isArray(allInvs) ? allInvs : [])
-                    .filter(inv => String(inv.companyId) === String(id));
+                    .filter(inv => linkedIds.has(String(inv.companyId)));
 
                 // Store full raw objects for auto-populate
                 setAllInvoicesForDropdown(rawCompanyInvs);
