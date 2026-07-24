@@ -166,6 +166,15 @@ const PerformaInvoiceDetails = () => {
 
   const sigUrl = settings?.authorizedSignature ? (settings.authorizedSignature.startsWith('http') ? settings.authorizedSignature : `${SERVER_URL}${settings.authorizedSignature}`) : null;
   const stampUrl = settings?.companyStamp ? (settings.companyStamp.startsWith('http') ? settings.companyStamp : `${SERVER_URL}${settings.companyStamp}`) : null;
+  const contactPersonName =
+    matchedEstimate?.consignee_person ||
+    matchedPerIvo?.consignee_person ||
+    [c1?.title, c1?.firstName, c1?.surname].filter(Boolean).join(" ");
+  const contactPersonMobile =
+    matchedEstimate?.consignee_phone ||
+    matchedPerIvo?.consignee_phone ||
+    c1?.mobile ||
+    "";
 
   return (
     <>
@@ -245,7 +254,8 @@ const PerformaInvoiceDetails = () => {
                   <td className="border px-1 py-0.5 text-[11px]">{clientCompanyName}</td>
                   <td className="border px-1 py-0.5 text-[11px] font-semibold">Contact Person</td>
                   <td className="border px-1 py-0.5 text-[11px]">
-                    {[c1?.title, c1?.firstName, c1?.surname].filter(Boolean).join(" ")}
+                    <div>{contactPersonName}</div>
+                    {contactPersonMobile && <div className="text-[10px]">Mobile: {contactPersonMobile}</div>}
                   </td>
                   <td className="border px-1 py-0.5 text-[11px] font-semibold">PF Invoice No.</td>
                   <td className="border px-1 py-0.5 text-[11px]">{matchedPerIvo?.pi_no}</td>
