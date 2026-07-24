@@ -79,7 +79,18 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
 
             try {
                 const res = await api.get(`/api/companies/lookup/${cId}`);
-                setCompany(res.data.data || res.data);
+                const companyData = res.data.data || res.data;
+                if (companyData?._source === 'company' && companyData.exhibitorRegistrationId) {
+                    try {
+                        const exhibitorRes = await api.get(`/api/exhibitor-registration/${companyData.exhibitorRegistrationId}`);
+                        const exhibitorData = exhibitorRes.data?.data || exhibitorRes.data;
+                        setCompany({ ...companyData, ...exhibitorData, companyName: companyData.companyName || exhibitorData.exhibitorName });
+                        return;
+                    } catch (exhibitorError) {
+                        console.error("Error fetching linked exhibitor contact:", exhibitorError);
+                    }
+                }
+                setCompany(companyData);
             } catch (err) {
                 console.error("Error fetching company details:", err);
                 // Fallback to redux state if lookup fails
@@ -335,7 +346,24 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
         String(item?.clientId) === String(normalizedCompanyId)
     );
     const resolvedCompany = company || reduxCompany || {};
-    const c1 = resolvedCompany?.contacts?.[0] || resolvedCompany?.contact1 || {};
+    const savedContact1 = resolvedCompany?.contact1 || {};
+    const primaryTeamMember = resolvedCompany?.teamMembers?.find((member) =>
+        member.isPrimary || /primary contact/i.test(member.roleAtExhibition || '')
+    );
+    const c1HasDetails = Boolean(
+        savedContact1.firstName || savedContact1.lastName || savedContact1.mobile || savedContact1.email
+    );
+    const c1 = c1HasDetails
+        ? savedContact1
+        : primaryTeamMember
+            ? {
+                firstName: primaryTeamMember.name || '',
+                surname: '',
+                designation: primaryTeamMember.designation || '',
+                mobile: primaryTeamMember.mobile || '',
+                email: primaryTeamMember.email || '',
+            }
+            : resolvedCompany?.contacts?.[0] || {};
     const companyName = "Namo Gange Wellness Pvt. Ltd.";
 
     const PROFORMA_EVENT_NAME = '9th Edition of International Health & Wellness Expo (IHWE Global Edition)';
@@ -347,25 +375,19 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
     const clientCompanyName = matchedInvoice?.company_name || form?.company_name || resolvedCompany?.companyName || resolvedCompany?.exhibitorName || '—';
     const titledContactPerson = [c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ');
     const rawClientContactPerson = getFirstCleanValue(
-        matchedInvoice?.contact_person,
-        matchedInvoice?.company_contact_person,
-        matchedInvoice?.consignee_person,
+        titledContactPerson,
+        resolvedCompany?.contactPerson,
+        resolvedCompany?.contact_person,
         form?.contact_person,
         form?.company_contact_person,
         form?.consignee_person,
-        titledContactPerson,
-        resolvedCompany?.contactPerson,
-        resolvedCompany?.contact_person
+        matchedInvoice?.contact_person,
+        matchedInvoice?.company_contact_person,
+        matchedInvoice?.consignee_person
     ) || '—';
     const clientContactPerson = normalizeContactName(rawClientContactPerson, titledContactPerson);
     const clientContactNo = getFirstCleanValue(
-        matchedInvoice?.contact_no,
-        matchedInvoice?.contact_phone,
-        matchedInvoice?.company_contact_no,
-        matchedInvoice?.company_phone,
-        matchedInvoice?.mobile,
-        matchedInvoice?.phone,
-        matchedInvoice?.consignee_phone,
+        c1.mobile,
         form?.contact_no,
         form?.contact_phone,
         form?.company_contact_no,
@@ -373,7 +395,13 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
         form?.mobile,
         form?.phone,
         form?.consignee_phone,
-        c1.mobile,
+        matchedInvoice?.contact_no,
+        matchedInvoice?.contact_phone,
+        matchedInvoice?.company_contact_no,
+        matchedInvoice?.company_phone,
+        matchedInvoice?.mobile,
+        matchedInvoice?.phone,
+        matchedInvoice?.consignee_phone,
         resolvedCompany?.landline,
         resolvedCompany?.mobile
     ) || '—';
@@ -560,10 +588,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                 <tbody>
                     <tr>
                         <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
-                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>
-                                {clientContactPerson !== '—' ? clientContactPerson : clientCompanyName}
-                            </div>
-                            <div style={{ marginTop: 2, textTransform: 'uppercase' }}>{clientCompanyName}</div>
+                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{clientCompanyName}</div>
                             <div style={{ marginTop: 2, textTransform: 'capitalize' }}>{clientCompanyAddress || '—'}</div>
                             <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%', marginTop: 4 }}>
                                 <tbody>
@@ -1236,10 +1261,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                 <tbody>
                                     <tr>
                                         <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
-                                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>
-                                                {clientContactPerson !== '—' ? clientContactPerson : clientCompanyName}
-                                            </div>
-                                            <div style={{ marginTop: 2, textTransform: 'uppercase' }}>{clientCompanyName}</div>
+                                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{clientCompanyName}</div>
                                             <div style={{ marginTop: 2, textTransform: 'capitalize' }}>
                                                 {clientCompanyAddress || '—'}
                                             </div>
