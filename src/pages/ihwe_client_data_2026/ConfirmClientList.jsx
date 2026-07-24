@@ -472,6 +472,30 @@ const ConfirmClientList = () => {
       ) : allCompanies.map((row, i) => {
         const isSelected = selectedIds.includes(row._id);
         const source = row.referredBy || "Direct";
+        const primaryTeamMember = row.teamMembers?.find((member) =>
+          member.isPrimary || /primary contact/i.test(member.roleAtExhibition || '')
+        );
+        const companyContact =
+          row.contacts?.find((contact) => contact.isPrimary)
+          || row.contacts?.[0];
+        const contactName =
+          row.contact1?.name
+          || (row.contact1?.firstName
+            ? `${row.contact1.firstName} ${row.contact1.lastName || ''}`.trim()
+            : '')
+          || primaryTeamMember?.name
+          || companyContact?.name
+          || [companyContact?.firstName, companyContact?.surname].filter(Boolean).join(' ')
+          || row.contactPerson
+          || "N/A";
+        const contactMobile =
+          row.contact1?.mobile
+          || row.contact1?.phone
+          || primaryTeamMember?.mobile
+          || companyContact?.mobile
+          || row.mobile
+          || row.phone
+          || "N/A";
         return (
           <tr key={row._id || i} className={`hover:bg-slate-50 transition-colors ${isSelected ? 'bg-emerald-50/30' : ''}`}>
             <td className="px-2 py-2 text-center">
@@ -490,11 +514,11 @@ const ConfirmClientList = () => {
             </td>
             <td className="px-2 py-2">
               <div className="font-bold text-[10px]" style={{ color: '#15173D' }}>
-                {toTitleCase(row.contact1?.name || (row.contact1?.firstName ? `${row.contact1.firstName} ${row.contact1.lastName || ''}`.trim() : null) || row.contactPerson || "N/A")}
+                {toTitleCase(contactName)}
               </div>
               <div className="text-[9px] text-blue-600 font-medium flex items-center gap-1 mt-0.5">
                 <Phone size={9} className="text-blue-500 shrink-0" />
-                {row.contact1?.mobile || row.contact1?.phone || row.mobile || row.phone || "N/A"}
+                {contactMobile}
               </div>
             </td>
             <td className="px-2 py-2 text-center">
