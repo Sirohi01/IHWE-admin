@@ -209,6 +209,21 @@ export default function ExhibitorRequestedPasses() {
     }
   };
 
+  const revokePass = async (request) => {
+    const reason = window.prompt("Reason for revoking this QR");
+    if (!reason?.trim()) return;
+    await api.post(`/api/exhibitor-pass-requests/admin/${request._id}/revoke`, {
+      reason: reason.trim(),
+    });
+    await load();
+  };
+
+  const reissuePass = async (request) => {
+    if (!window.confirm("Issue a new QR and invalidate every older copy?")) return;
+    await api.post(`/api/exhibitor-pass-requests/admin/${request._id}/reissue`);
+    await load();
+  };
+
   useEffect(() => {
     load();
   }, []);
@@ -295,7 +310,7 @@ export default function ExhibitorRequestedPasses() {
         phone: exhibitor.contact1?.mobile || "",
         mealQuantity: Math.max(1, Number(request.quantity || 1)),
         foodCouponText: getFoodCouponText(request),
-        qrValue: JSON.stringify({ reqId: request._id, type: request.passType, index: 0 }),
+        qrValue: request.qrPayloads?.[0] || "",
       }];
     }
     return getRequestFallbackNames(request).map((name, index) => {
@@ -307,7 +322,7 @@ export default function ExhibitorRequestedPasses() {
         designation: person.designation || "",
         email: person.email || "",
         phone: person.phone || "",
-        qrValue: JSON.stringify({ reqId: request._id, type: request.passType, index }),
+        qrValue: request.qrPayloads?.[index] || "",
       };
     });
   }), [selectedRequests]);
@@ -1113,10 +1128,24 @@ export default function ExhibitorRequestedPasses() {
                                   );
                                 })}
                               </div>
-                              <span className="inline-flex shrink-0 items-center gap-1 pt-0.5 text-[10px] font-bold text-slate-400">
-                                <Clock3 size={11} />
-                                {formatDate(request.createdAt)}
-                              </span>
+                              <div className="flex shrink-0 items-center gap-1">
+                                {request.source !== "delegate_registration" && (
+                                  <>
+                                    <button onClick={() => reissuePass(request)} className="p-1 text-blue-700 hover:bg-blue-50" title="Reissue QR">
+                                      <RefreshCw size={13} />
+                                    </button>
+                                    {!request.revokedAt && (
+                                      <button onClick={() => revokePass(request)} className="px-1 py-0.5 text-[9px] font-black text-rose-700 hover:bg-rose-50" title="Revoke QR">
+                                        REVOKE
+                                      </button>
+                                    )}
+                                  </>
+                                )}
+                                <span className="inline-flex items-center gap-1 pt-0.5 text-[10px] font-bold text-slate-400">
+                                  <Clock3 size={11} />
+                                  {formatDate(request.createdAt)}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         );
