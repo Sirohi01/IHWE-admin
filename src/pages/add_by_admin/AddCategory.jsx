@@ -468,7 +468,6 @@ import {
   X,
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import {
   fetchCategories,
@@ -487,7 +486,7 @@ const getCategoryStatus = (category) => {
   return status.toLowerCase() === 'active' ? 'Active' : 'Inactive';
 };
 
-const getMainCategory = (category, allCategories = []) => {
+const getMainCategory = (category) => {
   const value =
     category?.main_category?.name ||
     category?.main_category?.cat_name ||
@@ -496,13 +495,6 @@ const getMainCategory = (category, allCategories = []) => {
     category?.parent_category ||
     category?.category_group ||
     category?.cat_group;
-
-  if (value && typeof value === 'string' && allCategories.length > 0) {
-    const parent = allCategories.find((c) => c._id === value || String(c.cat_id) === value);
-    if (parent) {
-      return normaliseText(parent.cat_name || parent.name);
-    }
-  }
 
   return normaliseText(value) || 'Unassigned';
 };
@@ -597,7 +589,6 @@ const csvEscape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
 
 const AddCategory = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const categoriesState = useSelector((state) => state.categories);
   const categories = Array.isArray(categoriesState?.categories)
@@ -639,7 +630,7 @@ const AddCategory = () => {
 
   const mainCategoryOptions = useMemo(
     () =>
-      [...new Set(categories.map(c => getMainCategory(c, categories)).filter((item) => item !== 'Unassigned'))]
+      [...new Set(categories.map(getMainCategory).filter((item) => item !== 'Unassigned'))]
         .sort((a, b) => a.localeCompare(b)),
     [categories],
   );
@@ -657,7 +648,7 @@ const AddCategory = () => {
           businessNatureFilter === 'All' ||
           getBusinessNature(category) === businessNatureFilter;
         const matchesMainCategory =
-          mainCategoryFilter === 'All' || getMainCategory(category, categories) === mainCategoryFilter;
+          mainCategoryFilter === 'All' || getMainCategory(category) === mainCategoryFilter;
 
         return (
           matchesSearch &&
@@ -666,7 +657,7 @@ const AddCategory = () => {
           matchesMainCategory
         );
       })
-      .sort((a, b) => (a.display_order || 9999) - (b.display_order || 9999));
+      .sort((a, b) => normaliseText(a?.cat_name).localeCompare(normaliseText(b?.cat_name)));
   }, [categories, debouncedSearch, statusFilter, businessNatureFilter, mainCategoryFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredCategories.length / ITEMS_PER_PAGE));
@@ -707,7 +698,13 @@ const AddCategory = () => {
   };
 
   const startEdit = (category) => {
-    navigate(`/ihweClientData2026/AddCategory/edit/${category?._id}`);
+    setIsEditing(category?._id);
+    setCategoryForm({
+      name: normaliseText(category?.cat_name),
+      status: getCategoryStatus(category),
+    });
+    setOpenActionId(null);
+    setIsModalOpen(true);
   };
 
   const handleInputChange = (event) => {
@@ -1163,7 +1160,7 @@ const AddCategory = () => {
                   ].map((heading) => (
                     <th
                       key={heading}
-                      className="truncate px-[clamp(8px,1.1vw,20px)] text-[clamp(8px,.62vw,10px)] font-extrabold tracking-[0.02em]"
+                      className="whitespace-nowrap px-[clamp(6px,.8vw,14px)] text-[clamp(8px,.62vw,10px)] font-extrabold tracking-[0.02em]"
                     >
                       {heading}
                     </th>
@@ -1184,7 +1181,7 @@ const AddCategory = () => {
                 ) : paginatedCategories.length ? (
                   paginatedCategories.map((category, index) => {
                     const status = getCategoryStatus(category);
-                    const mainCategory = getMainCategory(category, categories);
+                    const mainCategory = getMainCategory(category);
                     const dateValue = getDateValue(category);
                     const itemId = category?._id || category?.cat_id || `${category?.cat_name}-${index}`;
 
