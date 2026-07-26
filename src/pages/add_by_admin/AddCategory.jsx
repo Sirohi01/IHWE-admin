@@ -440,6 +440,9 @@
 // };
 
 // export default AddCategory;
+
+
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -1131,7 +1134,7 @@ const AddCategory = () => {
           </div>
 
           <div className="min-h-0 flex-1 overflow-hidden">
-            <table className="h-full w-full table-fixed border-collapse text-left">
+            <table className="w-full table-fixed border-collapse text-left">
               <colgroup>
                 <col className="w-[5%]" />
                 <col className="w-[20%]" />
@@ -1169,7 +1172,7 @@ const AddCategory = () => {
                 {isLoading ? (
                   <tr>
                     <td colSpan={8} className="text-center">
-                      <div className="flex h-full min-h-[280px] flex-col items-center justify-center gap-3 text-slate-500">
+                      <div className="flex h-[220px] flex-col items-center justify-center gap-3 text-slate-500">
                         <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
                         <span className="text-sm font-semibold">Loading categories...</span>
                       </div>
@@ -1185,8 +1188,7 @@ const AddCategory = () => {
                     return (
                       <tr
                         key={itemId}
-                        className="bg-white transition hover:bg-blue-50/30"
-                        style={{ height: 'calc((100% - 40px) / 10)' }}
+                        className="h-11 bg-white transition hover:bg-blue-50/30"
                       >
                         <td className="px-[clamp(8px,1.1vw,20px)] text-[clamp(9px,.68vw,11px)] font-bold text-[#173978]">
                           {firstItemIndex + index + 1}
@@ -1290,7 +1292,7 @@ const AddCategory = () => {
                 ) : (
                   <tr>
                     <td colSpan={8} className="text-center">
-                      <div className="flex h-full min-h-[280px] flex-col items-center justify-center gap-2 text-slate-500">
+                      <div className="flex h-[220px] flex-col items-center justify-center gap-2 text-slate-500">
                         <Info className="h-8 w-8 text-slate-400" />
                         <p className="text-sm font-semibold">No categories found.</p>
                         <button
@@ -1310,7 +1312,7 @@ const AddCategory = () => {
                   Array.from({
                     length: Math.max(0, ITEMS_PER_PAGE - paginatedCategories.length),
                   }).map((_, index) => (
-                    <tr key={`empty-row-${index}`} style={{ height: 'calc((100% - 40px) / 10)' }}>
+                    <tr key={`empty-row-${index}`} className="h-11">
                       <td colSpan={8} />
                     </tr>
                   ))}
