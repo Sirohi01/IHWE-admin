@@ -86,8 +86,8 @@ export default function MyProfile() {
         if (targetId) {
           try {
             const profileRes = await api.get(`/api/admin/${targetId}`);
-            const statsRes = await api.get(`/api/dashboard/stats`).catch(error => {
-              console.error("Failed to fetch dashboard stats", error);
+            const statsRes = await api.get(`/api/admin/performance/${targetId}`).catch(error => {
+              console.error("Failed to fetch user performance", error);
               return null;
             });
 
@@ -95,14 +95,9 @@ export default function MyProfile() {
               const profileData = Array.isArray(profileRes.data.data) ? profileRes.data.data[0] : profileRes.data.data;
 
               // Map available dashboard stats to performance
-              if (statsRes?.data?.success && statsRes.data?.data) {
-                const counts = statsRes.data.data.counts || {};
-                profileData.performance = {
-                  ...profileData.performance, // Preserve existing performance data if any
-                  totalLeads: counts.totalContactQueries,
-                  stallBookings: counts.totalBookings
-                };
-              }
+              profileData.performance = statsRes?.data?.success
+                ? statsRes.data.data
+                : { totalLeads: 0, stallBookings: 0, conversionRate: 0, totalAmountAchieved: 0 };
 
               setAdminData(profileData);
               setFormData({ ...profileData, password: "" });
@@ -1008,7 +1003,7 @@ export default function MyProfile() {
               <TrendingUp size={100} />
             </div>
             <div className="flex justify-between items-center mb-1 relative z-10">
-              <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-wider">My Performance <span className="text-slate-400 font-bold lowercase tracking-normal">(This Financial Year)</span></h3>
+              <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-wider">{adminData.fullName || adminData.username || 'User'} Performance <span className="text-slate-400 font-bold lowercase tracking-normal">(This Year)</span></h3>
               <Link to="/dashboard" className="text-[9px] font-bold text-emerald-700 border border-emerald-200 px-2 py-1 rounded bg-emerald-50 hover:bg-emerald-100 transition-colors">View Details</Link>
             </div>
 
@@ -1018,11 +1013,7 @@ export default function MyProfile() {
                   <Users className="w-3.5 h-3.5 text-blue-600" />
                 </div>
                 <p className="text-[8.5px] font-bold text-slate-400 mb-0.5 leading-tight">Total Leads</p>
-                <p className="text-base font-black text-slate-900 leading-none tracking-tight whitespace-nowrap">{adminData.performance?.totalLeads ?? '—'}</p>
-                <div className="bg-emerald-50 px-1 py-1 rounded w-full text-center mt-auto pt-1.5 flex flex-col items-center justify-center leading-[1.1]">
-                  <span className="text-[9px] font-bold text-emerald-600">↑ {adminData.performance?.leadsGrowth ?? 18}%</span>
-                  <span className="text-[7.5px] font-medium text-emerald-600/60">vs last year</span>
-                </div>
+                <p className="text-base font-black text-slate-900 leading-none tracking-tight whitespace-nowrap">{adminData.performance?.totalLeads ?? 0}</p>
               </div>
 
               <div className="p-2 border border-slate-100 rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-center flex flex-col items-center h-full">
@@ -1030,51 +1021,41 @@ export default function MyProfile() {
                   <CheckCircle2 className="w-3.5 h-3.5 text-purple-600" />
                 </div>
                 <p className="text-[8.5px] font-bold text-slate-400 mb-0.5 leading-tight">Stall Bookings</p>
-                <p className="text-base font-black text-slate-900 leading-none tracking-tight whitespace-nowrap">{adminData.performance?.stallBookings ?? '—'}</p>
-                <div className="bg-emerald-50 px-1 py-1 rounded w-full text-center mt-auto pt-1.5 flex flex-col items-center justify-center leading-[1.1]">
-                  <span className="text-[9px] font-bold text-emerald-600">↑ {adminData.performance?.bookingsGrowth ?? 22}%</span>
-                  <span className="text-[7.5px] font-medium text-emerald-600/60">vs last year</span>
-                </div>
+                <p className="text-base font-black text-slate-900 leading-none tracking-tight whitespace-nowrap">{adminData.performance?.stallBookings ?? 0}</p>
               </div>
 
               <div className="p-2 border border-slate-100 rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-center flex flex-col items-center h-full">
                 <div className="w-7 h-7 rounded-full bg-orange-50 flex items-center justify-center mb-1.5 shrink-0">
-                  <span className="text-orange-600 font-bold text-sm">₹</span>
+                  <Target className="w-3.5 h-3.5 text-orange-600" />
                 </div>
-                <p className="text-[8.5px] font-bold text-slate-400 mb-0.5 leading-tight">Business Generated</p>
-                <p className="text-base font-black text-slate-900 leading-none tracking-tight whitespace-nowrap">₹ {adminData.performance?.businessGenerated ?? '1.24 Cr'}</p>
-                <div className="bg-emerald-50 px-1 py-1 rounded w-full text-center mt-auto pt-1.5 flex flex-col items-center justify-center leading-[1.1]">
-                  <span className="text-[9px] font-bold text-emerald-600">↑ {adminData.performance?.businessGrowth ?? 25}%</span>
-                  <span className="text-[7.5px] font-medium text-emerald-600/60">vs last year</span>
-                </div>
+                <p className="text-[8.5px] font-bold text-slate-400 mb-0.5 leading-tight">Conversion Rate</p>
+                <p className="text-base font-black text-slate-900 leading-none tracking-tight whitespace-nowrap">{adminData.performance?.conversionRate ?? 0}%</p>
               </div>
 
               <div className="p-2 border border-slate-100 rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-center flex flex-col items-center h-full">
                 <div className="w-7 h-7 rounded-full bg-amber-50 flex items-center justify-center mb-1.5 shrink-0">
-                  <Target className="w-3.5 h-3.5 text-amber-600" />
+                  <CreditCard className="w-3.5 h-3.5 text-amber-600" />
                 </div>
-                <p className="text-[8.5px] font-bold text-slate-400 mb-0.5 leading-tight">Conversion Rate</p>
-                <p className="text-base font-black text-slate-900 leading-none tracking-tight whitespace-nowrap">{adminData.performance?.conversionRate ?? '14.77'}%</p>
-                <div className="bg-emerald-50 px-1 py-1 rounded w-full text-center mt-auto pt-1.5 flex flex-col items-center justify-center leading-[1.1]">
-                  <span className="text-[9px] font-bold text-emerald-600">↑ {adminData.performance?.conversionGrowth ?? 8}%</span>
-                  <span className="text-[7.5px] font-medium text-emerald-600/60">vs last year</span>
-                </div>
+                <p className="text-[8.5px] font-bold text-slate-400 mb-0.5 leading-tight">Amount Achieved</p>
+                <p className="text-sm font-black text-slate-900 leading-none tracking-tight whitespace-nowrap">
+                  ₹ {Number(adminData.performance?.totalAmountAchieved || 0).toLocaleString('en-IN')}
+                </p>
               </div>
             </div>
 
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 relative z-10">
               <div className="flex justify-between items-end mb-2">
-                <span className="text-[10px] font-bold text-slate-600">Annual Target Achievement</span>
-                <span className="text-lg font-black text-slate-900 leading-none">{adminData.performance?.targetAchievement ?? 82}%</span>
+                <span className="text-[10px] font-bold text-slate-600">Lead-to-Booking Conversion</span>
+                <span className="text-lg font-black text-slate-900 leading-none">{adminData.performance?.conversionRate ?? 0}%</span>
               </div>
               <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden shadow-inner">
-                <div className={`h-full bg-[#006039] relative`} style={{ width: `${adminData.performance?.targetAchievement ?? 82}%` }}>
+                <div className={`h-full bg-[#006039] relative`} style={{ width: `${Math.min(100, adminData.performance?.conversionRate ?? 0)}%` }}>
                   <div className="absolute top-0 right-0 bottom-0 w-4 bg-white/20 blur-[2px]"></div>
                 </div>
               </div>
               <div className="flex justify-between text-[9px] mt-2 font-bold">
-                <span className="text-slate-500">Target: ₹ {adminData.performance?.targetAmount ?? '1.50 Cr'}</span>
-                <span className="text-emerald-700">Achieved: ₹ {adminData.performance?.businessGenerated ?? '1.24 Cr'}</span>
+                <span className="text-slate-500">New Leads: {adminData.performance?.totalLeads ?? 0}</span>
+                <span className="text-emerald-700">Bookings: {adminData.performance?.stallBookings ?? 0}</span>
               </div>
             </div>
           </div>
