@@ -1020,32 +1020,32 @@ const AddCategory = () => {
           </Link>
         </header>
 
-        <section className="grid grid-cols-5 gap-[clamp(10px,1.4vw,24px)]">
+        <section className="grid grid-cols-5 gap-[clamp(4px,0.5vw,10px)]">
           {statCards.map((card) => {
             const Icon = card.icon;
             return (
               <article
                 key={card.title}
-                className="flex min-w-0 items-center gap-[clamp(10px,1vw,18px)] rounded-xl border border-slate-200/80 bg-white px-[clamp(12px,1.35vw,22px)] py-[clamp(12px,1.15vw,18px)] shadow-[0_4px_16px_rgba(15,23,42,0.05)]"
+                className="flex min-w-0 items-center gap-[clamp(6px,.6vw,10px)] rounded-xl border border-slate-200/80 bg-white px-3 py-1.5 shadow-[0_4px_16px_rgba(15,23,42,0.05)]"
               >
                 <div
-                  className={`grid h-[clamp(48px,4vw,64px)] w-[clamp(48px,4vw,64px)] shrink-0 place-items-center rounded-full ${card.bubbleClass}`}
+                  className={`grid h-[clamp(32px,2.5vw,40px)] w-[clamp(32px,2.5vw,40px)] shrink-0 place-items-center rounded-full ${card.bubbleClass}`}
                 >
-                  <Icon className={`h-[clamp(24px,2vw,31px)] w-[clamp(24px,2vw,31px)] ${card.iconClass}`} />
+                  <Icon className={`h-[clamp(16px,1.2vw,20px)] w-[clamp(16px,1.2vw,20px)] ${card.iconClass}`} />
                 </div>
                 <div className="min-w-0 leading-tight">
-                  <p className="truncate text-[clamp(10px,.72vw,12px)] font-bold text-[#173978]">
+                  <p className="truncate text-[clamp(9.5px,.7vw,11px)] font-bold text-[#173978]">
                     {card.title}
                   </p>
                   <p
-                    className={`mt-1 truncate font-extrabold text-[#102a67] ${card.isDate
-                      ? 'text-[clamp(14px,1.15vw,14px)]'
-                      : 'text-[clamp(19px,1.55vw,19px)]'
+                    className={`truncate font-extrabold text-[#102a67] ${card.isDate
+                      ? 'text-[clamp(12px,1vw,13px)] mt-0.5'
+                      : 'text-[clamp(16px,1.3vw,17px)]'
                       }`}
                   >
                     {card.value}
                   </p>
-                  <p className="mt-1 truncate text-[clamp(9px,.66vw,11px)] font-semibold text-slate-500">
+                  <p className="truncate text-[clamp(8.5px,.6vw,10px)] font-semibold text-slate-500">
                     {card.subtitle}
                   </p>
                 </div>
