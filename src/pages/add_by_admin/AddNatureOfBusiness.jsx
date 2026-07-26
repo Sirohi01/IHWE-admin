@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
     Plus, Search, Edit, Trash2, Filter, 
     RefreshCcw, Download, MoreVertical, Briefcase, 
-    CheckCircle2, XCircle, Calendar, X, Save
+    CheckCircle2, XCircle, Calendar, X, Save, ArrowLeft
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
@@ -18,10 +18,19 @@ const AddNatureOfBusiness = () => {
     const dispatch = useDispatch();
     const { natures, loading: isLoading } = useSelector((state) => state.natures);
 
+    const [currentView, setCurrentView] = useState('list'); // 'list' | 'add' | 'edit'
     const [isSaving, setIsSaving] = useState(false);
     const [isEditing, setIsEditing] = useState(null); 
-    const [formData, setFormData] = useState({ name: '', description: '', status: 'Active' });
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [formData, setFormData] = useState({ 
+        name: '', 
+        shortCode: '',
+        description: '', 
+        displayOrder: '',
+        status: 'Active',
+        applicableFor: [],
+        allowedOperations: [],
+        remarks: ''
+    });
 
     // Search and Filter states
     const [searchTerm, setSearchTerm] = useState('');
@@ -78,10 +87,25 @@ const AddNatureOfBusiness = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleCheckboxChange = (e, fieldName) => {
+        const { value, checked } = e.target;
+        setFormData(prev => {
+            const arr = prev[fieldName];
+            if (checked) {
+                return { ...prev, [fieldName]: [...arr, value] };
+            } else {
+                return { ...prev, [fieldName]: arr.filter(item => item !== value) };
+            }
+        });
+    };
+
     const resetForm = () => {
         setIsEditing(null);
-        setFormData({ name: '', description: '', status: 'Active' });
-        setIsModalOpen(false);
+        setFormData({ 
+            name: '', shortCode: '', description: '', displayOrder: '', 
+            status: 'Active', applicableFor: [], allowedOperations: [], remarks: '' 
+        });
+        setCurrentView('list');
     };
 
     const startEdit = (natureId) => {
@@ -90,10 +114,15 @@ const AddNatureOfBusiness = () => {
             setIsEditing(n._id);
             setFormData({
                 name: n.nature_name,
+                shortCode: n.short_code || '',
                 description: n.description || '',
-                status: n.nature_status ? n.nature_status.charAt(0).toUpperCase() + n.nature_status.slice(1) : "Active"
+                displayOrder: n.display_order || '',
+                status: n.nature_status ? n.nature_status.charAt(0).toUpperCase() + n.nature_status.slice(1) : "Active",
+                applicableFor: n.applicable_for || [],
+                allowedOperations: n.allowed_operations || [],
+                remarks: n.remarks || ''
             });
-            setIsModalOpen(true);
+            setCurrentView('edit');
         }
     };
 
@@ -102,6 +131,9 @@ const AddNatureOfBusiness = () => {
 
         if (!formData.name.trim()) {
             return Swal.fire({ icon: 'warning', title: 'Missing Field', text: 'Please enter a business name', confirmButtonColor: '#1B42C1' });
+        }
+        if (!formData.description.trim()) {
+            return Swal.fire({ icon: 'warning', title: 'Missing Field', text: 'Please enter a description', confirmButtonColor: '#1B42C1' });
         }
 
         const trimmedName = formData.name.trim();
@@ -120,9 +152,13 @@ const AddNatureOfBusiness = () => {
 
             const natureData = {
                 nature_name: trimmedName,
+                short_code: formData.shortCode.trim(),
                 description: formData.description.trim(),
+                display_order: formData.displayOrder,
                 nature_status: formData.status.toLowerCase(),
-                added: new Date().toISOString(),
+                applicable_for: formData.applicableFor,
+                allowed_operations: formData.allowedOperations,
+                remarks: formData.remarks.trim(),
                 updated_by: userName
             };
 
@@ -133,7 +169,7 @@ const AddNatureOfBusiness = () => {
                 if (userId) dispatch(createActivityLogThunk({ user_id: userId, message: `System Config: Updated business nature '${formData.name}'`, section: "System Configuration", data: { action: "UPDATE", type: "NATURE_OF_BUSINESS" } }));
             } else {
                 const newId = natures?.length > 0 ? Math.max(...natures.map((n) => n.nature_id || 0)) + 1 : 1;
-                await dispatch(createNature({ ...natureData, nature_id: newId, updated_by: userName })).unwrap();
+                await dispatch(createNature({ ...natureData, nature_id: newId, added: new Date().toISOString(), updated_by: userName })).unwrap();
                 if (userId) dispatch(createActivityLogThunk({ user_id: userId, message: `System Config: Added business nature '${formData.name}'`, section: "System Configuration", data: { action: "ADD", type: "NATURE_OF_BUSINESS" } }));
             }
 
@@ -169,6 +205,219 @@ const AddNatureOfBusiness = () => {
         }
     };
 
+    if (currentView === 'add' || currentView === 'edit') {
+        return (
+            <div className="bg-[#f8f9fc] h-[calc(100vh-64px)] overflow-y-auto font-sans text-sm pb-6" style={{ fontFamily: 'Inter, sans-serif' }}>
+                {/* Add/Edit View Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center px-6 py-5 bg-white border-b border-gray-100 sticky top-0 z-10">
+                    <div className="flex gap-4 items-center">
+                        <div className="w-12 h-12 rounded-xl bg-[#1B42C1] text-white flex items-center justify-center shadow-sm">
+                            <Briefcase size={22} />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2 text-[11px] font-semibold text-gray-500 mb-0.5">
+                                <span>System Configuration</span>
+                                <span className="text-gray-300">›</span>
+                                <span>Business Nature</span>
+                                <span className="text-gray-300">›</span>
+                                <span className="text-blue-600 font-bold">{isEditing ? 'Edit' : 'Add New'}</span>
+                            </div>
+                            <h1 className="text-2xl font-bold text-gray-800">{isEditing ? 'Edit' : 'Add New'} Business Nature</h1>
+                            <p className="text-xs text-gray-500 font-medium">Create a new business nature option for exhibitor lead and registration.</p>
+                        </div>
+                    </div>
+                    <button 
+                        onClick={() => setCurrentView('list')}
+                        className="mt-4 md:mt-0 flex items-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg font-semibold text-sm transition-colors shadow-sm"
+                    >
+                        <ArrowLeft size={16} /> Back to Business Nature
+                    </button>
+                </div>
+
+                <div className="px-6 mt-6 max-w-[1200px] mx-auto">
+                    <form onSubmit={handleAddOrUpdateNature}>
+                        {/* Section 1: Business Nature Information */}
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-5">
+                            <h2 className="text-blue-800 font-bold text-base mb-5 pb-2 border-b border-gray-100">Business Nature Information</h2>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+                                {/* Business Nature Name */}
+                                <div>
+                                    <label className="block text-[13px] font-bold text-gray-800 mb-1.5">Business Nature Name <span className="text-red-500">*</span></label>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter business nature name"
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm text-gray-800 transition-all placeholder:text-gray-400"
+                                    />
+                                    <p className="text-[11px] text-gray-400 mt-1.5">Example: Manufacturer, Importer, Distributor etc.</p>
+                                </div>
+
+                                {/* Short Code */}
+                                <div>
+                                    <label className="block text-[13px] font-bold text-gray-800 mb-1.5">Short Code (Optional)</label>
+                                    <input
+                                        type="text"
+                                        name="shortCode"
+                                        value={formData.shortCode}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter short code"
+                                        maxLength={10}
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm text-gray-800 transition-all placeholder:text-gray-400"
+                                    />
+                                    <p className="text-[11px] text-gray-400 mt-1.5">Example: MFG, IMP, DIST (Max 10 characters)</p>
+                                </div>
+
+                                {/* Description */}
+                                <div>
+                                    <label className="block text-[13px] font-bold text-gray-800 mb-1.5">Description <span className="text-red-500">*</span></label>
+                                    <textarea
+                                        name="description"
+                                        value={formData.description}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter description of this business nature"
+                                        rows={3}
+                                        maxLength={250}
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm text-gray-800 transition-all placeholder:text-gray-400 resize-none"
+                                    />
+                                    <div className="flex justify-between items-center mt-1.5">
+                                        <p className="text-[11px] text-gray-400">Explain the role or nature of business in detail.</p>
+                                        <p className="text-[11px] text-gray-400">{formData.description.length} / 250</p>
+                                    </div>
+                                </div>
+
+                                {/* Display Order */}
+                                <div>
+                                    <label className="block text-[13px] font-bold text-gray-800 mb-1.5">Display Order <span className="text-red-500">*</span></label>
+                                    <input
+                                        type="number"
+                                        name="displayOrder"
+                                        value={formData.displayOrder}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter display order"
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm text-gray-800 transition-all placeholder:text-gray-400"
+                                    />
+                                    <p className="text-[11px] text-gray-400 mt-1.5">Lower number will be shown first in dropdown.</p>
+                                </div>
+
+                                {/* Status */}
+                                <div>
+                                    <label className="block text-[13px] font-bold text-gray-800 mb-2">Status <span className="text-red-500">*</span></label>
+                                    <div className="flex items-center gap-6">
+                                        <label className="flex items-center gap-2 cursor-pointer group">
+                                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${formData.status === 'Active' ? 'border-blue-600' : 'border-gray-300'}`}>
+                                                {formData.status === 'Active' && <div className="w-2 h-2 rounded-full bg-blue-600"></div>}
+                                            </div>
+                                            <input type="radio" name="status" value="Active" checked={formData.status === 'Active'} onChange={handleInputChange} className="hidden" />
+                                            <span className="text-[13px] font-bold text-gray-700">Active</span>
+                                            <span className="text-[10px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded ml-1">Active</span>
+                                        </label>
+                                        
+                                        <label className="flex items-center gap-2 cursor-pointer group">
+                                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${formData.status === 'Inactive' ? 'border-blue-600' : 'border-gray-300'}`}>
+                                                {formData.status === 'Inactive' && <div className="w-2 h-2 rounded-full bg-blue-600"></div>}
+                                            </div>
+                                            <input type="radio" name="status" value="Inactive" checked={formData.status === 'Inactive'} onChange={handleInputChange} className="hidden" />
+                                            <span className="text-[13px] font-bold text-gray-700">Inactive</span>
+                                            <span className="text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded ml-1">Inactive</span>
+                                        </label>
+                                    </div>
+                                    <p className="text-[11px] text-gray-400 mt-2">Inactive option will not be available in selection.</p>
+                                </div>
+
+                                {/* Applicable For */}
+                                <div>
+                                    <label className="block text-[13px] font-bold text-gray-800 mb-2">Applicable For <span className="text-red-500">*</span></label>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-y-2.5 gap-x-4">
+                                        {['Exhibitor Lead', 'Exhibitor Registration', 'Buyer Lead', 'Sponsor Lead', 'All'].map(option => (
+                                            <label key={option} className="flex items-center gap-2 cursor-pointer">
+                                                <div className={`w-4 h-4 rounded border flex items-center justify-center ${formData.applicableFor.includes(option) ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 bg-white'}`}>
+                                                    {formData.applicableFor.includes(option) && <svg viewBox="0 0 14 14" fill="none" className="w-3 h-3"><path d="M3 7.5L5.5 10L11 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                                </div>
+                                                <input type="checkbox" value={option} checked={formData.applicableFor.includes(option)} onChange={(e) => handleCheckboxChange(e, 'applicableFor')} className="hidden" />
+                                                <span className="text-[13px] font-medium text-gray-700">{option}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                    <p className="text-[11px] text-gray-400 mt-2">Select where this business nature will be applicable.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Section 2: Additional Settings */}
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-5">
+                            <h2 className="text-blue-800 font-bold text-base mb-5 pb-2 border-b border-gray-100">Additional Settings</h2>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+                                {/* Allowed Operations */}
+                                <div>
+                                    <label className="block text-[13px] font-bold text-gray-800 mb-1.5">Allowed Operations (Optional)</label>
+                                    <div className="relative">
+                                        <div className="flex flex-wrap items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg min-h-[40px] bg-white cursor-pointer group hover:border-blue-400 transition-colors">
+                                            {/* Dummy Tags */}
+                                            {['Sell Products', 'Provide Services', 'Both Products & Services'].map(tag => (
+                                                <div key={tag} className="flex items-center gap-1.5 bg-[#f0f4ff] text-[#1B42C1] px-2.5 py-1 rounded-md text-[11px] font-bold">
+                                                    {tag}
+                                                    <X size={12} className="cursor-pointer opacity-70 hover:opacity-100" />
+                                                </div>
+                                            ))}
+                                            <div className="flex-1 min-w-[50px]"></div>
+                                            <div className="text-gray-400"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+                                        </div>
+                                    </div>
+                                    <p className="text-[11px] text-gray-400 mt-1.5">Select operations allowed for this business nature.</p>
+                                </div>
+
+                                {/* Remarks */}
+                                <div>
+                                    <label className="block text-[13px] font-bold text-gray-800 mb-1.5">Remarks (Optional)</label>
+                                    <input
+                                        type="text"
+                                        name="remarks"
+                                        value={formData.remarks}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter any remarks or notes"
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm text-gray-800 transition-all placeholder:text-gray-400"
+                                    />
+                                    <p className="text-[11px] text-gray-400 mt-1.5">Internal notes for this business nature.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex justify-end gap-3 pb-6">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setFormData({ name: '', shortCode: '', description: '', displayOrder: '', status: 'Active', applicableFor: [], allowedOperations: [], remarks: '' });
+                                }}
+                                className="flex items-center gap-2 px-6 py-2 border border-gray-300 bg-white text-gray-700 rounded-lg font-bold text-sm hover:bg-gray-50 transition-colors shadow-sm"
+                            >
+                                <RefreshCcw size={15} /> Reset
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={isSaving}
+                                className="flex items-center gap-2 px-6 py-2 bg-[#1B42C1] text-white rounded-lg font-bold text-sm hover:bg-[#15349e] transition-colors shadow-sm"
+                            >
+                                {isSaving ? (
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <>
+                                        <Save size={15} />
+                                        <span>{isEditing ? 'Update Business Nature' : 'Save Business Nature'}</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="bg-[#f8f9fc] min-h-screen font-sans text-sm pb-10" style={{ fontFamily: 'Inter, sans-serif' }}>
             
@@ -189,7 +438,7 @@ const AddNatureOfBusiness = () => {
                     </div>
                 </div>
                 <button 
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={() => setCurrentView('add')}
                     className="mt-4 md:mt-0 flex items-center gap-2 bg-[#1B42C1] hover:bg-[#15349e] text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition-colors shadow-sm"
                 >
                     <Plus size={16} /> Add Business Nature
@@ -404,89 +653,6 @@ const AddNatureOfBusiness = () => {
                     </div>
                 </div>
             </div>
-
-            {/* Modal */}
-            {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
-                        <div className="bg-[#1B42C1] px-6 py-4 flex items-center justify-between">
-                            <h2 className="text-white text-base font-bold flex items-center gap-2">
-                                {isEditing ? <Edit size={18} /> : <Plus size={18} />}
-                                {isEditing ? 'Edit Business Nature' : 'Add Business Nature'}
-                            </h2>
-                            <button onClick={resetForm} className="text-white/70 hover:text-white transition-colors">
-                                <X size={20} />
-                            </button>
-                        </div>
-                        <form onSubmit={handleAddOrUpdateNature} className="p-6 space-y-5">
-                            <div>
-                                <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1.5">Business Name <span className="text-red-500">*</span></label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleInputChange}
-                                    placeholder="e.g. Distributor, Retailer"
-                                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm text-gray-800 font-medium shadow-sm transition-all"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1.5">Description</label>
-                                <input
-                                    type="text"
-                                    name="description"
-                                    value={formData.description}
-                                    onChange={handleInputChange}
-                                    placeholder="Brief description of the business nature"
-                                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm text-gray-800 shadow-sm transition-all"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1.5">Status</label>
-                                <div className="flex gap-3 mt-1">
-                                    {['Active', 'Inactive'].map(s => (
-                                        <label key={s}
-                                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-semibold cursor-pointer transition-all ${formData.status === s
-                                                ? (s === 'Active' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700')
-                                                : 'border-gray-200 text-gray-500 hover:bg-gray-50'
-                                                }`}>
-                                            <input type="radio" name="status" value={s}
-                                                checked={formData.status === s}
-                                                onChange={handleInputChange}
-                                                className="hidden" />
-                                            {s === 'Active' ? <CheckCircle2 size={16} className={formData.status === s ? 'text-green-600' : ''}/> : <XCircle size={16} className={formData.status === s ? 'text-red-600' : ''}/>}
-                                            {s}
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="flex gap-3 pt-4 border-t border-gray-100 mt-6">
-                                <button
-                                    type="button"
-                                    onClick={resetForm}
-                                    className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200 transition-colors text-sm"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={isSaving}
-                                    className="flex-1 py-2.5 bg-[#1B42C1] text-white rounded-lg font-bold hover:bg-[#15349e] transition-colors flex items-center justify-center gap-2 text-sm shadow-md"
-                                >
-                                    {isSaving ? (
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    ) : (
-                                        <>
-                                            <Save size={16} />
-                                            <span>{isEditing ? 'Update' : 'Save'}</span>
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
