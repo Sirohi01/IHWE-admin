@@ -56,9 +56,9 @@ const ReferralMembers = () => {
     };
 
     return (
-        <div className="bg-white shadow-md p-6 mt-6 min-h-screen">
+        <div className="bg-white shadow-md p-6 min-h-screen">
             <PageHeader
-                title="REFERRAL MEMBERS"
+                title="REFERRAL LEADS"
                 description="View and manage referrals submitted by users"
             />
 

@@ -52,142 +52,181 @@ export const menuItems = [
     icon: LayoutDashboard,
     path: "/dashboard",
   },
+
+  /* ================= SALES CRM ================= */
+  {
+    type: "heading",
+    label: "Sales CRM",
+  },
   {
     type: "dropdown",
-    label: "IHWE 2026",
+    label: "Organic Expo 2027",
+    icon: FileText,
+    children: [
+      { label: "Sales Tools", path: "/#" },
+      { label: "New Leads", path: "/#" },
+      { label: "Follow-Ups", path: "/#" },
+      { label: "Hot Leads", path: "/#" },
+      { label: "Proposal Sent", path: "/#" },
+      { label: "Lost Leads", path: "/#" },
+      { label: "Converted Leads", path: "/#" },
+      { label: "All Leads", path: "/#" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "IHWE Expo 2026 ",
     icon: FileText,
     children: [
       { label: "Sales Tools", path: "/sales-tools" },
-      {
-        type: "dropdown",
-        label: "Lead Section",
-        children: [
-          { label: "New Leads", path: "/ihweClientData2026/newLeadList" },
-          { label: "Follow-Ups", path: "/ihweClientData2026/warmClientList" },
-          { label: "Hot Leads", path: "/ihweClientData2026/hotClientList" },
-          { label: "Proposal Sent", path: "/ihweClientData2026/proposalSentList" },
-
-          { label: "Lost Leads", path: "/ihweClientData2026/coldClientList" },
-          { label: "All Leads", path: "/ihweClientData2026/allLeadsList" },
-          { label: "Converted", path: "/ihweClientData2026/convertedList" },
-        ]
-      },
-      // { label: "Master Data", path: "/ihweClientData2026/masterData" },
-      // { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
-      // { label: "Exhibitor Section", path: "/ihweClientData2026/confirmClientList" },
-      // { label: "New  Registration", path: "/book-a-stand" },
+      { label: "New Leads", path: "/ihweClientData2026/newLeadList" },
+      { label: "Follow-Ups", path: "/ihweClientData2026/warmClientList" },
+      { label: "Hot Leads", path: "/ihweClientData2026/hotClientList" },
+      { label: "Proposal Sent", path: "/ihweClientData2026/proposalSentList" },
+      { label: "Lost Leads", path: "/ihweClientData2026/coldClientList" },
+      { label: "Converted Leads", path: "/ihweClientData2026/convertedList" },
+      { label: "All Leads", path: "/ihweClientData2026/allLeadsList" },
     ],
   },
-
-
-  {
-    type: "dropdown",
-    label: "Exhibitor Section",
-    icon: FileText,
-    children: [
-      // { label: "Sales Tools", path: "/sales-tools" },
-      // { label: "Add New Leads", path: "/ihweClientData2026/addNewClients" },
-      // { label: "New Leads List", path: "/ihweClientData2026/newLeadList" },
-      // { label: "Follow-Ups", path: "/ihweClientData2026/warmClientList" },
-      // { label: "Hot Leads", path: "/ihweClientData2026/hotClientList" },
-      { label: "Exhibitor List", path: "/ihweClientData2026/confirmClientList" },
-      { label: "New  Registration", path: "/book-a-stand" },
-      { label: "Exhibitor Useful Documents", path: "/exhibitor-useful-documents" },
-    ],
-  },
-
-
   {
     type: "dropdown",
     label: "Organic Expo 2026",
     icon: FileText,
     children: [
-      { label: "Add New Leads", path: "/organicExpo/addNewClients" },
-      { label: "New Leads List", path: "/organicExpo/newLeadList" },
-      { label: "Follow-Ups", path: "/organicExpo/warmClientList" },
-      { label: "Hot Leads", path: "/organicExpo/hotClientList" },
-      { label: "Hold / Lost Leads", path: "/organicExpo/coldClientList" },
-      { label: "Master Data", path: "/organicExpo/masterData" },
-      { label: "Raw Data List", path: "/organicExpo/rawDataList" },
-      { label: "Converted Clients", path: "/organicExpo/confirmClientList" },
-      { label: "Book A Stand", path: "/organicExpo/book-a-stand" },
+      { label: "Sales Tools", path: "/#" },
+      { label: "New Leads", path: "/#" },
+      { label: "Follow-Ups", path: "/#" },
+      { label: "Hot Leads", path: "/#" },
+      { label: "Proposal Sent", path: "/#" },
+      { label: "Lost Leads", path: "/#" },
+      { label: "Converted Leads", path: "/#" },
+      { label: "All Leads", path: "/#" },
     ],
   },
-  { type: "item", label: "Master Data", icon: LibraryBig, path: "/ihweClientData2026/masterData" },
-
-
   {
     type: "item",
-    label: "Communication",
+    label: "Expo Master Data",
+    icon: LibraryBig,
+    path: "/ihweClientData2026/masterData",
+  },
+  {
+    type: "item",
+    label: "Communication-IVR",
     icon: MessageSquare,
     path: "/communication",
   },
+  {
+    type: "item",
+    label: "Referral Leads",
+    icon: Users,
+    path: "/referral-leads",
+  },
+  {
+    type: "item",
+    label: "Response Templates",
+    icon: MessageSquare,
+    path: "/response-templates",
+  },
 
+  /* ================= EXHIBITOR MANAGEMENT ================= */
+  {
+    type: "heading",
+    label: "Exhibitor Management",
+  },
   {
     type: "dropdown",
-    label: "Exhibitor Management",
-    icon: FileText,
+    label: "Exhibitors",
+    icon: Users,
     children: [
+      { label: "Exhibitor List", path: "/ihweClientData2026/confirmClientList" },
+      { label: "New Exhibitor Registration", path: "/book-a-stand" },
+      { label: "Useful Documents", path: "/exhibitor-useful-documents" },
       { label: "Exhibitor Chat", path: "/exhibitor-chat" },
-      {
-        label: "Stall Inventory",
-        path: "/stalls",
-      },
-      {
-        label: "Exhibition Events",
-        path: "/events",
-      },
-      {
-        label: "Stall Pricing Rates",
-        path: "/stall-rates",
-      },
-
-      {
-        label: "Exhibitors Products",
-        path: "/exhibitor-products-profile",
-      },
-
-      {
-        label: "Failed Payments",
-        path: "/failed-payments",
-      },
-      {
-        type: "item",
-        label: "Marketing Toolkit",
-        icon: Package,
-        path: "/marketing-toolkit-manage",
-      },
-      {
-        type: "item",
-        label: "BSM Management",
-        icon: Handshake,
-        path: "/bsm-management",
-      },
-      {
-        type: "item",
-        label: "E-Promotion Registers",
-        icon: List,
-        path: "/e-promotion-registers",
-      },
-      {
-        type: "item",
-        label: "E-Promotion Packages",
-        icon: Package,
-        path: "/e-promotion-packages",
-      },
-      {
-        label: "MSME PMS Scheme",
-        icon: List,
-        path: "/msme-pms-scheme-list",
-      },
+      { label: "Exhibitor Products", path: "/exhibitor-products-profile" },
+      { label: "Exhibitor Website List", path: "/exhibitor-list-manage" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Stall Management",
+    icon: Package,
+    children: [
+      { label: "Stall Inventory", path: "/stalls" },
+      { label: "Stall Pricing", path: "/stall-rates" },
+      { label: "Manage Accessories", path: "/stall-accessories" },
+      { label: "Accessory Orders", path: "/accessory-orders" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Exhibitor Services",
+    icon: Sparkles,
+    children: [
+      { label: "Marketing Toolkit", path: "/marketing-toolkit-manage" },
+      { label: "E-Promotion Registers", path: "/e-promotion-registers" },
+      { label: "E-Promotion Packages", path: "/e-promotion-packages" },
+      { label: "MSME PMS Scheme", path: "/msme-pms-scheme-list" },
+      { label: "BSM Management", path: "/bsm-management" },
+      { label: "Failed Payments", path: "/failed-payments" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Exhibitor Passes",
+    icon: List,
+    children: [
       { label: "Pass Requests", path: "/mobile-pass-requests" },
-      { label: "Pass Config", path: "/mobile-pass-config" },
+      { label: "Pass Configuration", path: "/mobile-pass-config" },
       { label: "Scanner Leads", path: "/mobile-lead-captures" },
       { label: "Feedback", path: "/mobile-feedback" },
       { label: "Reminders & Notifications", path: "/reminders" },
-    ]
+    ],
   },
 
+  /* ================= NETWORKING & PARTICIPANTS ================= */
+  {
+    type: "heading",
+    label: "Participants & Networking",
+  },
+  {
+    type: "dropdown",
+    label: "Buyer Management",
+    icon: Users,
+    children: [
+      { label: "Buyer Registration", path: "/buyer-registration-form" },
+      { label: "Domestic Buyers", path: "/buyer-list" },
+      { label: "International Buyers", path: "/international-buyer-list" },
+      { label: "Domestic Buyer Config", path: "/buyer-registration-config" },
+      { label: "International Buyer Config", path: "/international-buyer-registration-config" },
+      { label: "BSM Testimonials", path: "/bsm-testimonial" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Seller Management",
+    icon: Users,
+    children: [
+      { label: "Add Domestic Seller", path: "/#" },
+      { label: "Domestic Sellers", path: "/#" },
+      { label: "Add International Seller", path: "/#" },
+      { label: "International Sellers", path: "/#" },
+      { label: "Seller Subscription Plans", path: "/seller-subscription-plans" },
+      { label: "Seller Service Requests", path: "/seller-service-requests" },
+      { label: "Seller Export Inquiries", path: "/seller-export-inquiries" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Visitor Management",
+    icon: Users,
+    children: [
+      { label: "Add Visitor", path: "/ihweClientData2026/VisitorRegistrationForm" },
+      { label: "Corporate Visitors", path: "/ihweClientData2026/CorporateVisitorsList" },
+      { label: "General Visitors", path: "/ihweClientData2026/GeneralVisitorsList" },
+      { label: "Health Camp Visitors", path: "/ihweClientData2026/FreeHealthCampVisitorsList" },
+      { label: "Visitor Reviews", path: "/ihweClientData2026/VisitorReview" },
+    ],
+  },
   {
     type: "dropdown",
     label: "Delegate Management",
@@ -200,57 +239,263 @@ export const menuItems = [
     ],
   },
 
-  {
-    type: "dropdown",
-    label: "Buyer Management",
-    icon: Users,
-    children: [
-      { label: "Buyer Registration", path: "/buyer-registration-form" },
-      // { label: "Add Domestic Buyer ", path: "/buyer-registration" },
-      { label: "Domestic Buyer List", path: "/buyer-list" },
-      // { label: "Add International Buyer", path: "/international-buyer-registration" },
-      { label: "International Buyer List", path: "/international-buyer-list" },
-      { label: "Buyer Registration Config", path: "/buyer-registration-config" },
-      { label: "International Registration Config", path: "/international-buyer-registration-config" },
-      { label: "BSM Testimonials", path: "/bsm-testimonial" }
-    ],
-  },
-
-  {
-    type: "dropdown",
-    label: "Visitor Management",
-    icon: Users,
-    children: [
-      { label: "Add Visitor", path: "/ihweClientData2026/VisitorRegistrationForm" },
-      { label: "Corporate Visitors List", path: "/ihweClientData2026/CorporateVisitorsList" },
-      { label: "General Visitors List", path: "/ihweClientData2026/GeneralVisitorsList" },
-      { label: "Health Camp Visitors List", path: "/ihweClientData2026/FreeHealthCampVisitorsList" },
-      { label: "Visitor Review", path: "/ihweClientData2026/VisitorReview" },
-    ],
-  },
-
-  {
-    type: "dropdown",
-    label: "Seller Management",
-    icon: Users,
-    children: [
-      { label: "Add Domestic Seller ", path: "/#" },
-      { label: "Domestic Seller List", path: "/#" },
-      { label: "Add International Seller", path: "/#" },
-      { label: "International Seller List", path: "/#" },
-    ],
-  },
-
-  {
-    type: "item",
-    label: "Referral Members",
-    icon: Users,
-    path: "/referral-members",
-  },
-
+  /* ================= CONFERENCE & AWARDS ================= */
   {
     type: "heading",
-    label: "Analytics Section",
+    label: "Conference & Awards",
+  },
+  {
+    type: "dropdown",
+    label: "Conference Management",
+    icon: CalendarCheck,
+    children: [
+      { label: "Conference Days", path: "/conference-days-manage" },
+      { label: "Conference Tracks", path: "/conference-tracks-manage" },
+      { label: "Conference Agenda", path: "/agenda-management" },
+      { label: "Paper Presentation", path: "/paper-presentation-manage" },
+      { label: "Poster Presentation", path: "/poster-presentation-manage" },
+      { label: "Abstract Submissions", path: "/abstract-submission-manage" },
+      { label: "Speaker Nominations", path: "/speaker-registration-list" },
+      { label: "Approved Speakers", path: "/approved-speakers-list" },
+      { label: "Distinguished Speakers", path: "/distinguished-speakers-manage" },
+      { label: "Conference Testimonials", path: "/conference-testimonials-manage" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Awards Management",
+    icon: Award,
+    children: [
+      { label: "Award Nominations", path: "/awards-nominations" },
+      { label: "Approved Awards", path: "/approved-awards-list" },
+      { label: "Award Categories", path: "/award-categories-manage" },
+      { label: "Awards Gallery", path: "/awards-gallery-manage" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Certificates",
+    icon: FileText,
+    children: [
+      { label: "Certificate Management", path: "/certificate" },
+      { label: "Certificate Settings", path: "/certificate-settings" },
+    ],
+  },
+
+  /* ================= EVENT OPERATIONS ================= */
+  {
+    type: "heading",
+    label: "Event Operations",
+  },
+  {
+    type: "dropdown",
+    label: "Event Setup",
+    icon: CalendarCheck,
+    children: [
+      { label: "Exhibition Events", path: "/events" },
+      { label: "Upcoming Events", path: "/upcoming-events" },
+      { label: "Payment Delay Warnings", path: "/payment-delay-warnings" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Partner Management",
+    icon: Handshake,
+    children: [
+      { label: "Partner Registrations", path: "/partner-registrations" },
+      { label: "Knowledge Partners", path: "/knowledge-partners-manage" },
+      { label: "Healthcare Partners", path: "/healthcare-partners-manage" },
+      { label: "Supporting Associations", path: "/supporting-associations-manage" },
+      { label: "Partner Groups", path: "/partners-manage" },
+      { label: "Hotel & Stay Partners", path: "/hotel-stay-partner-manage" },
+      { label: "Fabrication Partners", path: "/fabrication-partner-manage" },
+      { label: "Travel Partners", path: "/travel-partner-manage" },
+      { label: "Logistics Partners", path: "/logistic-partner-manage" },
+      { label: "Printing & Branding", path: "/printing-branding-partner-manage" },
+      { label: "Hospitality Partners", path: "/hospitality-partner-manage" },
+      { label: "Partner Categories", path: "/partner-categories" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Advisory Management",
+    icon: Users,
+    children: [
+      { label: "Advisory Nominations", path: "/advisory-nominations" },
+      { label: "Advisory Members", path: "/advisory-manage" },
+      { label: "Chairman Message", path: "/chairman-message" },
+    ],
+  },
+
+  /* ================= FINANCE ================= */
+  {
+    type: "heading",
+    label: "Finance & Accounts",
+  },
+  {
+    type: "dropdown",
+    label: "Accounts",
+    icon: FileText,
+    children: [
+      { label: "Payments", path: "/accounts/payments" },
+      { label: "Receipts", path: "/accounts/receipts" },
+      { label: "Accounts Receivable", path: "/accounts/ar" },
+      { label: "Client Ledger", path: "/accounts/client-ledger" },
+      { label: "Imprest / Reimbursement", path: "/accounts/imprest" },
+      { label: "Invoices", path: "/accounts/invoices" },
+      { label: "Credit Notes", path: "/accounts/credit-notes" },
+      { label: "Debit Notes", path: "/account-debit-notes" },
+      { label: "Bank Details", path: "/accounts/bank-details" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Finance Reports",
+    icon: TrendingUp,
+    children: [
+      { label: "Sales Report", path: "/accounts/salesreport" },
+      { label: "Credit Note Register", path: "/debit-note-list/all" },
+      { label: "Invoice Register", path: "/invoice-list" },
+    ],
+  },
+
+  /* ================= WEBSITE CMS ================= */
+  {
+    type: "heading",
+    label: "Website CMS",
+  },
+  {
+    type: "dropdown",
+    label: "Home Page",
+    icon: Globe,
+    children: [
+      { label: "Home Slider", path: "/carousel" },
+      { label: "Supported By", path: "/supported-by" },
+      { label: "Upcoming Brands", path: "/upcoming-brands" },
+      { label: "Introduction", path: "/introduction" },
+      { label: "National Expo", path: "/national-expo" },
+      { label: "Integrated Format", path: "/integrated-format" },
+      { label: "Why Participate", path: "/why-participate-manage" },
+      { label: "Event Highlights", path: "/event-highlights" },
+      { label: "About Us", path: "/about-us" },
+      { label: "Add PDF", path: "/add-pdf" },
+      { label: "Marquee Text", path: "/marquee-text" },
+      { label: "Who We Are", path: "/who-we-are" },
+      { label: "Featured Services", path: "/featured-services" },
+      { label: "Healthcare Sectors", path: "/healthcare-sectors" },
+      { label: "E-Promotion Web", path: "/epromotion" },
+      { label: "FAQ Management", path: "/faq-manage" },
+      { label: "Event Glimpses", path: "/glimpse" },
+      { label: "Our Clients", path: "/clients" },
+      { label: "Parallax Image", path: "/parallax-manage" },
+      { label: "Testimonials", path: "/testimonials-manage" },
+      { label: "New Testimonials", path: "/new-testimonials-manage" },
+      { label: "Exhibitor Testimonials", path: "/exhibitor-testimonials" },
+      { label: "Counters", path: "/stats-manage" },
+      { label: "Floating Video", path: "/floating-video-management" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "About Page",
+    icon: Info,
+    children: [
+      { label: "Global Platform", path: "/global-platform" },
+      { label: "Event Overview", path: "/event-overview" },
+      { label: "About Organizer", path: "/about-organizer" },
+      { label: "Our Journey", path: "/our-journey" },
+      { label: "Vision & Mission", path: "/vision-mission" },
+      { label: "Why Attend", path: "/why-attend" },
+      { label: "Target Audience", path: "/target-audience" },
+      { label: "Organized By", path: "/organized-by" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Gallery & Media",
+    icon: Images,
+    children: [
+      { label: "Gallery Categories", path: "/gallery-category" },
+      { label: "Add Gallery Images", path: "/add-gallery-images" },
+      { label: "Video Categories", path: "/video-category" },
+      { label: "Add Video", path: "/gallery-videos" },
+      { label: "Video Listings", path: "/video-list" },
+      { label: "Media Categories", path: "/media-category" },
+      { label: "Media Photos", path: "/gallery-media" },
+      { label: "All Gallery Listings", path: "/gallery-list" },
+      { label: "Media Registration Content", path: "/media-registration-manage" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Exhibit & Visit Pages",
+    icon: Rocket,
+    children: [
+      { label: "Why Exhibit", path: "/why-exhibit-manage" },
+      { label: "Exhibitor Profile", path: "/exhibitor-profile-manage" },
+      { label: "E-Promotion Management", path: "/e-promotion-manage" },
+      { label: "Stall Designing Vendor", path: "/stall-vendor-manage" },
+      { label: "Travel & Accommodation", path: "/travel-accommodation-manage" },
+      { label: "Why Visit", path: "/why-visit-manage" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Services",
+    icon: Sparkles,
+    children: [
+      { label: "Add Service", path: "/create-service" },
+      { label: "Services List", path: "/service-list" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Blogs & Resources",
+    icon: FileText,
+    children: [
+      { label: "Add Blog", path: "/add-blogs" },
+      { label: "Blogs List", path: "/blogs-list" },
+      { label: "Expert Insights", path: "/blog-experts" },
+      { label: "Media Resources", path: "/blog-resources" },
+      { label: "Newsletter Subscribers", path: "/blog-subscribers" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "SEO & Social",
+    icon: TrendingUp,
+    children: [
+      { label: "Add Meta", path: "/add-meta" },
+      { label: "Meta List", path: "/meta-list" },
+      { label: "Advanced SEO", path: "/advanced-seo" },
+      { label: "Social Media", path: "/social-media" },
+      { label: "Background Images", path: "/hero-images" },
+      { label: "Exhibitor Hero Slider", path: "/exhibitor-hero-slider" },
+      { label: "Dashboard Banners", path: "/dashboard-banners" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Website Enquiries",
+    icon: MessageSquare,
+    children: [
+      { label: "Expo Enquiries", path: "/expo-support-enquiries" },
+      { label: "Sponsorship Enquiries", path: "/sponsorship-enquiries" },
+      { label: "Contact Enquiries", path: "/contact-enquiries" },
+      { label: "Sponsor Packages & Matrix", path: "/sponsor-comparison-manage" },
+    ],
+  },
+  {
+    type: "item",
+    label: "MSME PMS Page",
+    icon: Settings,
+    path: "/msme-pms-scheme-config",
+  },
+
+  /* ================= ANALYTICS ================= */
+  {
+    type: "heading",
+    label: "Analytics & Logs",
   },
   {
     type: "item",
@@ -270,397 +515,6 @@ export const menuItems = [
     icon: TrendingUp,
     path: "/click-analytics",
   },
-
-
-  {
-    type: "heading",
-    label: "Website Section",
-  },
-  {
-    type: "dropdown",
-    label: "Home Page",
-    icon: Globe,
-    children: [
-      { label: "Home Slider", path: "/carousel" },
-      { label: "Supported By", path: "/supported-by" },
-      { label: "Upcoming brands", path: "/upcoming-brands" },
-      { label: "Introduction", path: "/introduction" },
-      { label: "National Expo", path: "/national-expo" },
-      { label: "Integrated Format", path: "/integrated-format" },
-      { label: "Why Participate", path: "/why-participate-manage" },
-      { label: "Event Highlights", path: "/event-highlights" },
-      { label: "About Us", path: "/about-us" },
-      { label: "Add PDF", path: "/add-pdf" },
-      { label: "Marquee Text", path: "/marquee-text" },
-      { label: "Who We Are", path: "/who-we-are" },
-      { label: "Featured Services", path: "/featured-services" },
-      { label: "Healthcare Sectors", path: "/healthcare-sectors" },
-      { label: "E-Promotion Web", path: "/epromotion" },
-      { label: "FAQ Management", path: "/faq-manage" },
-      { label: "Glimpse Event", path: "/glimpse" },
-      { label: "Our Clients", path: "/clients" },
-      { label: "Parallax Image", path: "/parallax-manage" },
-      { label: "Testimonials", path: "/testimonials-manage" },
-      { label: "New Testimonials", path: "/new-testimonials-manage" },
-      { label: "Exhibitor Testimonials", path: "/exhibitor-testimonials" },
-      { label: "Counters", path: "/stats-manage" },
-      { label: "Floating Video", path: "/floating-video-management" },
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "About Page",
-    icon: Info,
-    children: [
-      { label: "Global Platform", path: "/global-platform" },
-      {
-        label: "Event Overview",
-        path: "/event-overview",
-      },
-      {
-        label: "About Organizer",
-        path: "/about-organizer",
-      },
-      {
-        label: "Our Journey",
-        path: "/our-journey",
-      },
-      { label: "Vision & Mission", path: "/vision-mission" },
-      { label: "Why Attend", path: "/why-attend" },
-      { label: "Target Audience", path: "/target-audience" },
-      { label: "Organized By", path: "/organized-by" },
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "Gallery Page",
-    icon: Images,
-    children: [
-      { label: "Gallery Categories", path: "/gallery-category" },
-      { label: "Add Gallery Images", path: "/add-gallery-images" },
-      { label: "Video Categories", path: "/video-category" },
-      { label: "Add Video", path: "/gallery-videos" },
-      { label: "Video Listings", path: "/video-list" },
-      { label: "Media Categories", path: "/media-category" },
-      { label: "Media Photo Management", path: "/gallery-media" },
-      { label: "View All Listings", path: "/gallery-list" },
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "Exhibit Page",
-    icon: Rocket,
-    children: [
-      { label: "Why Exhibit", path: "/why-exhibit-manage" },
-      { label: "Exhibitor Profile", path: "/exhibitor-profile-manage" },
-      { label: "E-Promotion Management", path: "/e-promotion-manage" },
-      { label: "Stall Designing Vendor", path: "/stall-vendor-manage" },
-      { label: "Travel & Accommodation", path: "/travel-accommodation-manage" },
-    ],
-  },
-  {
-    type: "item",
-    label: "Why Visit",
-    icon: Rocket,
-    path: "/why-visit-manage",
-  },
-  {
-    type: "item",
-    label: "Exhibitor List",
-    icon: List,
-    path: "/exhibitor-list-manage",
-  },
-  {
-    type: "dropdown",
-    label: "Partner Management",
-    icon: Handshake,
-    children: [
-      { label: "Partner Registrations", path: "/partner-registrations" },
-      { label: "Knowledge Partners", path: "/knowledge-partners-manage" },
-      { label: "Healthcare Partners", path: "/healthcare-partners-manage" },
-      { label: "Supporting Associations", path: "/supporting-associations-manage" },
-      { label: "Manage Partner Groups", path: "/partners-manage" },
-      { label: "Hotel Stay Partner", path: "/hotel-stay-partner-manage" },
-      { label: "Fabrication Partner", path: "/fabrication-partner-manage" },
-      { label: "Travel Partner", path: "/travel-partner-manage" },
-      { label: "Partner Categories", path: "/partner-categories" },
-      { label: "Logistics", path: "/logistic-partner-manage" },
-      { label: "Printing & Branding", path: "/printing-branding-partner-manage" },
-      { label: "Hospitality", path: "/hospitality-partner-manage" },
-    ],
-  },
-
-  {
-    type: "dropdown",
-    label: "Advisory Management",
-    icon: Users,
-    children: [
-      { label: "Advisory Nominations", path: "/advisory-nominations" },
-      { label: "Manage Advisory Members", path: "/advisory-manage" },
-      { label: "Chairman Message", path: "/chairman-message" },
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "Media Page",
-    icon: Globe,
-    children: [
-      { label: "Media Registration Content", path: "/media-registration-manage" },
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "Services Page",
-
-    icon: Sparkles,
-    children: [
-      { label: "Add Services", path: "/create-service" },
-      { label: "Services List", path: "/service-list" },
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "Blogs",
-    icon: FileText,
-    children: [
-      { label: "Add Blogs", path: "/add-blogs" },
-      { label: "Blogs List", path: "/blogs-list" },
-      { label: "Expert Insights", path: "/blog-experts" },
-      { label: "Media Resources", path: "/blog-resources" },
-      { label: "Newsletter Subscribers", path: "/blog-subscribers" },
-    ],
-  },
-  {
-    type: "item",
-    label: "Background Images",
-    icon: Images,
-    path: "/hero-images",
-  },
-  {
-    type: "dropdown",
-    label: "SEO Manager",
-    icon: TrendingUp,
-    children: [
-      { label: "Add Meta", path: "/add-meta" },
-      { label: "Meta List", path: "/meta-list" },
-      { label: "Advanced SEO", path: "/advanced-seo" },
-    ],
-  },
-  {
-    type: "item",
-    label: "MSME PMS Page",
-    icon: Settings,
-    path: "/msme-pms-scheme-config",
-  },
-  {
-    type: "item",
-    label: "Social Media",
-    icon: MessageSquare,
-    path: "/social-media",
-  },
-  {
-    type: "item",
-    label: "Request Expo Enquiry",
-    path: "/expo-support-enquiries",
-    icon: MessageSquare,
-  },
-  {
-    type: "item",
-    label: "Sponsorship Enquiry",
-    path: "/sponsorship-enquiries",
-    icon: MessageSquare,
-  },
-  {
-    type: "item",
-    label: "Sponsor Packages & Matrix",
-    path: "/sponsor-comparison-manage",
-    icon: MessageSquare,
-  },
-
-  {
-    type: "item",
-    label: "Contact Enquiry",
-    path: "/contact-enquiries",
-    icon: MessageSquare,
-  },
-
-
-  {
-    type: "heading",
-    label: "Awards Section",
-  },
-  {
-    type: "dropdown",
-    label: "Awards Management",
-    icon: Award,
-    children: [
-      { label: "Award Nominations", path: "/awards-nominations" },
-      { label: "Approved Awards", path: "/approved-awards-list" },
-      { label: "Award Categories", path: "/award-categories-manage" },
-      { label: "Awards Gallery", path: "/awards-gallery-manage" },
-    ],
-  },
-
-  {
-    type: "heading",
-    label: "Conference Section",
-  },
-  {
-    type: "dropdown",
-    label: "Conference Management",
-    icon: CalendarCheck,
-    children: [
-      { label: "Conference Days Content", path: "/conference-days-manage" },
-      { label: "Conference Tracks", path: "/conference-tracks-manage" },
-      { label: "Paper Presentation", path: "/paper-presentation-manage" },
-      { label: "Poster Presentation", path: "/poster-presentation-manage" },
-      { label: "Abstract Submission", path: "/abstract-submission-manage" },
-      { label: "Speaker Nomination", path: "/speaker-registration-list" },
-      { label: "Approved Speakers", path: "/approved-speakers-list" },
-      { label: "Distinguished Speakers", path: "/distinguished-speakers-manage" },
-      { label: "Conference Agenda", path: "/agenda-management" },
-      { label: "Testimonials", path: "/conference-testimonials-manage" },
-    ],
-  },
-
-  /* ================= Marketing Section ================= */
-  // {
-  //   type: "heading",
-  //   label: "Marketing Section",
-  // },
-  // {
-  //   type: "item",
-  //   label: "Book A Stand",
-  //   icon: Ticket,
-  //   path: "/book-a-stand",
-  // },
-  // {
-  //   type: "dropdown",
-  //   label: "IHWE Client Data 2026",
-  //   icon: FileText,
-  //   children: [
-  //     { label: "Add New Client", path: "/ihweClientData2026/addNewClients" },
-  //     { label: "New Leads List", path: "/ihweClientData2026/newLeadList" },
-  //     { label: "Warm Client List", path: "/ihweClientData2026/warmClientList" },
-  //     { label: "Hot Client List", path: "/ihweClientData2026/hotClientList" },
-  //     { label: "Confirmed Client List", path: "/ihweClientData2026/confirmClientList" },
-  //     { label: "Cold Client List", path: "/ihweClientData2026/coldClientList" },
-  //     { label: "Master Data", path: "/ihweClientData2026/masterData" },
-  //     { label: "Raw Data List", path: "/ihweClientData2026/rawDataList" },
-  //   ],
-  // },
-  // {
-  //   type: "dropdown",
-  //   label: "Buyer Management",
-  //   icon: Users,
-  //   children: [
-  //     { label: "Buyer Registration", path: "/buyer-registration" },
-  //     { label: "International Buyer Registration", path: "/international-buyer-registration" },
-  //     { label: "Buyer List", path: "/buyer-list" },
-  //     { label: "International Buyer List", path: "/international-buyer-list" },
-  //   ],
-  // },
-  // {
-  //   type: "dropdown",
-  //   label: "Visitor Management",
-  //   icon: Users,
-  //   children: [
-  //     { label: "Add Domestic Visitor", path: "/ihweClientData2026/AddNewVisitor" },
-  //     { label: "Add International Visitor", path: "/ihweClientData2026/VisitorRegistration" },
-  //     { label: "Corporate Visitors List", path: "/ihweClientData2026/CorporateVisitorsList" },
-  //     { label: "General Visitors List", path: "/ihweClientData2026/GeneralVisitorsList" },
-  //     { label: "Health Camp Visitors List", path: "/ihweClientData2026/FreeHealthCampVisitorsList" },
-  //     { label: "Visitor Review", path: "/ihweClientData2026/VisitorReview" },
-  //   ],
-  // },
-  // {
-  //   type: "dropdown",
-  //   label: "Exhibitor Management",
-  //   icon: FileText,
-  //   children: [
-  //     { label: "Exhibitor Chat", path: "/exhibitor-chat" },
-  //     {
-  //       label: "Stall Inventory",
-  //       path: "/stalls",
-  //     },
-  //     {
-  //       label: "Exhibition Events",
-  //       path: "/events",
-  //     },
-  //     {
-  //       label: "Stall Pricing Rates",
-  //       path: "/stall-rates",
-  //     },
-  //     {
-  //       label: "Exhibitor Bookings",
-  //       path: "/exhibitor-bookings",
-  //     },
-  //     {
-  //       label: "Exhibitors Products",
-  //       path: "/exhibitor-products-profile",
-  //     },
-  //     {
-  //       label: "Failed Payments",
-  //       path: "/failed-payments",
-  //     },
-  {
-    label: "Payment Delay Warnings",
-    path: "/payment-delay-warnings",
-  },
-  { label: "Seller Subscription Plans", path: "/seller-subscription-plans" },
-  { label: "Seller Service Requests", path: "/seller-service-requests" },
-  { label: "Seller Export Inquiries", path: "/seller-export-inquiries" },
-  //   ]
-  // },
-
-  // {
-  //   type: "item",
-  //   label: "Marketing Toolkit",
-  //   icon: Package,
-  //   path: "/marketing-toolkit-manage",
-  // },
-  // {
-  //   type: "item",
-  //   label: "BSM Management",
-  //   icon: Handshake,
-  //   path: "/bsm-management",
-  // },
-  // {
-  //   type: "item",
-  //   label: "E-Promotion Registers",
-  //   icon: List,
-  //   path: "/e-promotion-registers",
-  // },
-
-
-
-
-  /* ================= Admin SECTION ================= */
-  {
-    type: "heading",
-    label: "Admin Section",
-  },
-  {
-    type: "dropdown",
-    label: "Ownership Transfer",
-    icon: Users,
-    children: [
-      { label: "Transfer Client", path: "/transfer-client" },
-      { label: "Reassign Leads", path: "/reassign-leads" },
-    ],
-  },
-  {
-    type: "item",
-    label: "Exhibitor Hero Slider",
-    icon: Images,
-    path: "/exhibitor-hero-slider",
-  },
-  {
-    type: "item",
-    label: "Upcoming Event",
-    icon: CalendarCheck,
-    path: "/upcoming-events",
-  },
   {
     type: "item",
     label: "Email Logs",
@@ -673,35 +527,39 @@ export const menuItems = [
     icon: MessageSquare,
     path: "/whatsapp-logs",
   },
+
+  /* ================= ADMINISTRATION ================= */
   {
-    type: "item",
-    label: "Dashboard Banners",
-    icon: Images,
-    path: "/dashboard-banners",
+    type: "heading",
+    label: "Administration",
   },
-
-
-  {
-    type: "item",
-    label: "Response Templates",
-    icon: MessageSquare,
-    path: "/response-templates",
-  },
-
-
-  {
-    type: "item",
-    label: "Policy Manager",
-    icon: ShieldCheck,
-    path: "/policy-manager",
-  },
-
   {
     type: "dropdown",
-    label: "Admin Management",
-    icon: TrendingUp,
+    label: "Ownership & Assignment",
+    icon: Users,
     children: [
-      { label: "Previous Exhibition List", path: "/previous-exhibitions" },
+      { label: "Transfer Client", path: "/transfer-client" },
+      { label: "Reassign Leads", path: "/reassign-leads" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "User Management",
+    icon: Users,
+    children: [
+      { label: "User ID Management", path: "/admin-users" },
+      { label: "Access & Permissions", path: "/role-permissions" },
+      { label: "Role Management", path: "/manage-roles" },
+      { label: "Department Management", path: "/manage-departments" },
+      { label: "Designation Management", path: "/manage-designations" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Admin Masters",
+    icon: Settings,
+    children: [
+      { label: "Previous Exhibitions", path: "/previous-exhibitions" },
       { label: "Business Type", path: "/business-type" },
       { label: "Annual Turnover", path: "/annual-turnover" },
       { label: "Primary Product Interest", path: "/primary-product-interest" },
@@ -711,23 +569,24 @@ export const menuItems = [
       { label: "AI Document Verification", path: "/ai-verification-settings" },
       { label: "Add Unit", path: "/add-unit" },
       { label: "Marketing Materials", path: "/admin/marketing-management" },
-      {
-        type: "dropdown",
-        label: "Passes",
-        children: [
-          { label: "Media Passes", path: "/passes/media" },
-          { label: "Speaker Passes", path: "/passes/speaker" },
-          { label: "Organizer Passes", path: "/passes/organizer" },
-          { label: "Exhibitor Passes", path: "/passes/exhibitor" },
-          { label: "Service Passes", path: "/passes/service" },
-          { label: "Delegate Passes", path: "/passes/delegate" },
-          { label: "Visitor Passes", path: "/passes/visitor" },
-          { label: "Food Coupons", path: "/passes/food-coupons" },
-          { label: "Exhibitor Requested Passes", path: "/exhibitor-requested-passes" },
-          { label: "Pass Confirmation Report", path: "/pass-confirmation-report" },
-          { label: "Pass Template Designer", path: "/pass-template-designer" },
-        ],
-      },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Pass Management",
+    icon: List,
+    children: [
+      { label: "Media Passes", path: "/passes/media" },
+      { label: "Speaker Passes", path: "/passes/speaker" },
+      { label: "Organizer Passes", path: "/passes/organizer" },
+      { label: "Exhibitor Passes", path: "/passes/exhibitor" },
+      { label: "Service Passes", path: "/passes/service" },
+      { label: "Delegate Passes", path: "/passes/delegate" },
+      { label: "Visitor Passes", path: "/passes/visitor" },
+      { label: "Food Coupons", path: "/passes/food-coupons" },
+      { label: "Exhibitor Requested Passes", path: "/exhibitor-requested-passes" },
+      { label: "Pass Confirmation Report", path: "/pass-confirmation-report" },
+      { label: "Pass Template Designer", path: "/pass-template-designer" },
     ],
   },
   {
@@ -737,44 +596,24 @@ export const menuItems = [
     children: [
       { label: "Add Bank", path: "/ihweClientData2026/AddBank" },
       { label: "Add Category", path: "/ihweClientData2026/AddCategory" },
-      { label: "Add CRM Whatsapp Message", path: "/ihweClientData2026/AddCrmWhatsappMessage" },
-      { label: "Add Data Source", path: "/ihweClientData2026/AddDataSource" },
+      { label: "CRM WhatsApp Messages", path: "/ihweClientData2026/AddCrmWhatsappMessage" },
+      { label: "Data Sources", path: "/ihweClientData2026/AddDataSource" },
       { label: "Add Event", path: "/ihweClientData2026/AddEvent" },
-      { label: "Add Nature Of Business", path: "/ihweClientData2026/AddNatureOfBusiness" },
-      { label: "Add Next Action", path: "/ihweClientData2026/AddNextAction" },
-      { label: "Add Remark Length Fixed", path: "/ihweClientData2026/AddRemarkLengthFixed" },
-      { label: "Add Lead Status", path: "/ihweClientData2026/AddStatus" },
+      { label: "Nature of Business", path: "/ihweClientData2026/AddNatureOfBusiness" },
+      { label: "Next Actions", path: "/ihweClientData2026/AddNextAction" },
+      { label: "Remark Length", path: "/ihweClientData2026/AddRemarkLengthFixed" },
+      { label: "Lead Status", path: "/ihweClientData2026/AddStatus" },
       { label: "Role at Exhibition", path: "/ihweClientData2026/AddExhibitionRole" },
-      { label: "Document Terms Config", path: "/ihweClientData2026/EstimateTermsConfig" },
-      { label: "USER TARGET", path: "/ihweClientData2026/AddTarget" },
-      { label: "Buyer Registration Config", path: "/buyer-registration-config" },
-      { label: "International Registration Config", path: "/international-buyer-registration-config" },
+      { label: "Document Terms", path: "/ihweClientData2026/EstimateTermsConfig" },
+      { label: "User Targets", path: "/ihweClientData2026/AddTarget" },
       { label: "Receipt Configuration", path: "/accounts/payment-management" },
     ],
   },
   {
     type: "item",
-    label: "Manage Accessories",
-    icon: Package,
-    path: "/stall-accessories",
-  },
-  {
-    type: "item",
-    label: "Accessory Orders",
-    icon: ShoppingCart,
-    path: "/accessory-orders",
-  },
-  {
-    type: "dropdown",
-    label: "User Management",
-    icon: Users,
-    children: [
-      { label: "Users Id Management", path: "/admin-users" },
-      { label: "User Access Management", path: "/role-permissions" },
-      { label: "User Role Management", path: "/manage-roles" },
-      { label: "Department Management", path: "/manage-departments" },
-      { label: "Designation Management", path: "/manage-designations" },
-    ],
+    label: "Policy Manager",
+    icon: ShieldCheck,
+    path: "/policy-manager",
   },
   {
     type: "item",
@@ -788,121 +627,4 @@ export const menuItems = [
     icon: Palette,
     path: "/sidebar-customize",
   },
-  {
-    type: "dropdown",
-    label: "Account Section",
-    icon: FileText,
-    children: [
-      { label: "Payments", path: "/accounts/payments" },
-      { label: "Receipts", path: "/accounts/receipts" },
-      { label: "Accounts Receivable", path: "/accounts/ar" },
-      { label: "Client Ledger", path: "/accounts/client-ledger" },
-      { label: "Imprest / Reimbursement", path: "/accounts/imprest" },
-      { label: "Invoices", path: "/accounts/invoices" },
-      { label: "Credit Notes", path: "/accounts/credit-notes" },
-      { label: "Debit Notes", path: "/account-debit-notes" },
-      { label: "Bank Details", path: "/accounts/bank-details" },
-      {
-        type: "dropdown",
-        label: "Reports",
-        children: [
-          { label: "Sales Report", path: "/accounts/salesreport" },
-          { label: "Create Credit Note", path: "/debit-note-list/all" },
-          { label: "Create Invoice", path: "/invoice-list" },
-        ]
-      }
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "System Configuration",
-    icon: Settings,
-    children: [
-      { label: "Add Bank", path: "/ihweClientData2026/AddBank" },
-      { label: "Add Category", path: "/ihweClientData2026/AddCategory" },
-      { label: "Add CRM Whatsapp Message", path: "/ihweClientData2026/AddCrmWhatsappMessage" },
-      { label: "Add Data Source", path: "/ihweClientData2026/AddDataSource" },
-      { label: "Add Event", path: "/ihweClientData2026/AddEvent" },
-      { label: "Add Nature Of Business", path: "/ihweClientData2026/AddNatureOfBusiness" },
-      { label: "Add Next Action", path: "/ihweClientData2026/AddNextAction" },
-      { label: "Add Remark Length Fixed", path: "/ihweClientData2026/AddRemarkLengthFixed" },
-      { label: "Add Lead Status", path: "/ihweClientData2026/AddStatus" },
-      { label: "Role at Exhibition", path: "/ihweClientData2026/AddExhibitionRole" },
-      { label: "Document Terms Config", path: "/ihweClientData2026/EstimateTermsConfig" },
-      { label: "USER TARGET", path: "/ihweClientData2026/AddTarget" },
-      { label: "Buyer Registration Config", path: "/buyer-registration-config" },
-      { label: "International Registration Config", path: "/international-buyer-registration-config" },
-      { label: "Receipt Configuration", path: "/accounts/payment-management" },
-    ],
-  },
-  {
-    type: "item",
-    label: "Manage Accessories",
-    icon: Package,
-    path: "/stall-accessories",
-  },
-  {
-    type: "item",
-    label: "Accessory Orders",
-    icon: ShoppingCart,
-    path: "/accessory-orders",
-  },
-  {
-    type: "dropdown",
-    label: "User Management",
-    icon: Users,
-    children: [
-      { label: "Users Id Management", path: "/admin-users" },
-      { label: "User Access Management", path: "/role-permissions" },
-      { label: "User Role Management", path: "/manage-roles" },
-      { label: "Department Management", path: "/manage-departments" },
-      { label: "Designation Management", path: "/manage-designations" },
-    ],
-  },
-  // {
-  //   type: "item",
-  //   label: "Settings",
-  //   icon: Settings,
-  //   path: "/settings",
-  // },
-  {
-    type: "item",
-    label: "Customize Sidebar",
-    icon: Palette,
-    path: "/sidebar-customize",
-  },
-  {
-    type: "dropdown",
-    label: "Account Section",
-    icon: FileText,
-    children: [
-      { label: "Payments", path: "/accounts/payments" },
-      { label: "Receipts", path: "/accounts/receipts" },
-      { label: "Accounts Receivable", path: "/accounts/ar" },
-      { label: "Client Ledger", path: "/accounts/client-ledger" },
-      { label: "Imprest / Reimbursement", path: "/accounts/imprest" },
-      { label: "Invoices", path: "/accounts/invoices" },
-      { label: "Credit Notes", path: "/accounts/credit-notes" },
-      { label: "Debit Notes", path: "/account-debit-notes" },
-      { label: "Bank Details", path: "/accounts/bank-details" },
-      {
-        type: "dropdown",
-        label: "Reports",
-        children: [
-          { label: "Sales Report", path: "/accounts/salesreport" },
-          { label: "Create Credit Note", path: "/debit-note-list/all" },
-          { label: "Create Invoice", path: "/invoice-list" },
-        ],
-      },
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "9th Certificate",
-    icon: FileText,
-    children: [
-      { label: "Certificate Management", path: "/certificate" },
-      { label: "Certificate Settings", path: "/certificate-settings" }
-    ],
-  }
 ];

@@ -179,7 +179,7 @@ export default function Sidebar({
       }
     });
 
-    if (activeSection) setOpenSections((prev) => ({ ...prev, [activeSection]: true }));
+    if (activeSection) setOpenSections({ [activeSection]: true });
     if (activeDropdown) setOpenDropdown(activeDropdown);
   }, [location.pathname, groupedMenuItems]);
 
@@ -244,11 +244,9 @@ export default function Sidebar({
         <div key={item.label} className="w-full">
           <button
             onClick={() => toggleDropdown(item.label)}
-            className={`sb-dropdown-btn w-full flex items-center justify-between px-3 py-1.5 rounded-md transition-all duration-200 ${!sidebarOpen && "justify-center"} ${hasActiveChild
+            className={`sb-dropdown-btn w-full flex items-center justify-between px-3 py-1.5 rounded-md transition-all duration-200 ${!sidebarOpen && "justify-center"} ${(hasActiveChild || isOpen)
               ? "active-dropdown"
-              : isOpen
-                ? "bg-white/8 text-white"
-                : "text-white/80 hover:bg-white/5 hover:text-white"
+              : "text-white/80 hover:bg-white/5 hover:text-white"
               }`}
           >
             <div className="flex items-center gap-3">
@@ -266,7 +264,7 @@ export default function Sidebar({
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.2, ease: "easeInOut" }}
-                className="sb-sub-border ml-5 mt-1 space-y-1 border-l pl-3 overflow-hidden"
+                className="sb-sub-border ml-4 mt-1 space-y-1 border-l pl-2 pr-1 py-1 overflow-hidden bg-black/40 shadow-inner rounded-r-md"
               >
                 {item.children.map((sub, idx) => {
                   if (sub.type === 'label') {
@@ -392,13 +390,15 @@ export default function Sidebar({
         #dh-sidebar .sb-item.active .sb-icon, #dh-sidebar .sb-item.active .sb-label {
           color: #ffffff !important;
         }
-        #dh-sidebar .sb-dropdown-btn.active-dropdown {
+        #dh-sidebar .sb-dropdown-btn.active-dropdown,
+        #dh-sidebar .sb-heading.active-section {
           background-color: rgba(9, 91, 85, 0.25) !important;
           color: #06d6a0 !important;
         }
         #dh-sidebar .sb-dropdown-btn.active-dropdown .sb-icon,
         #dh-sidebar .sb-dropdown-btn.active-dropdown .sb-label,
-        #dh-sidebar .sb-dropdown-btn.active-dropdown .sb-chevron {
+        #dh-sidebar .sb-dropdown-btn.active-dropdown .sb-chevron,
+        #dh-sidebar .sb-heading.active-section .sb-chevron {
           color: #06d6a0 !important;
         }
         #dh-sidebar .sb-sub-item {
@@ -529,8 +529,8 @@ export default function Sidebar({
                 <div key={`section-${index}`} className={`w-full ${sidebarOpen ? "mb-2" : "mb-0"}`}>
                   {sidebarOpen && (
                     <button
-                      onClick={() => setOpenSections(prev => ({ ...prev, [item.label]: !prev[item.label] }))}
-                      className={`sb-heading w-full flex items-center justify-between px-3 py-2 text-[11px] font-bold uppercase tracking-wider hover:bg-white/5 rounded-md transition-colors ${index === 0 ? "mt-0" : "mt-2"}`}
+                      onClick={() => setOpenSections(prev => prev[item.label] ? {} : { [item.label]: true })}
+                      className={`sb-heading w-full flex items-center justify-between px-3 py-2 text-[11px] font-bold uppercase tracking-wider hover:bg-white/5 rounded-md transition-colors ${index === 0 ? "mt-0" : "mt-2"} ${isOpen ? "active-section" : ""}`}
                     >
                       <span className="whitespace-nowrap">{item.label}</span>
                       <ChevronDown size={14} className={`transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
@@ -545,7 +545,7 @@ export default function Sidebar({
                         animate={sidebarOpen ? { height: "auto", opacity: 1 } : false}
                         exit={sidebarOpen ? { height: 0, opacity: 0 } : false}
                         transition={{ duration: 0.2, ease: "easeInOut" }}
-                        className="overflow-hidden space-y-1"
+                        className="overflow-hidden space-y-1 bg-black/40 shadow-inner rounded-b-md p-1 border border-t-0 border-white/5"
                       >
                         {item.children.map(subItem => renderMenuItem(subItem))}
                       </motion.div>

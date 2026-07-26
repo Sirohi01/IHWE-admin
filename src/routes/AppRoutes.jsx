@@ -828,7 +828,7 @@ export default function AppRoutes() {
             <Route path="/activity-log" element={<ActivityLog />} />
             <Route path="/exhibitor-activity-logs" element={<ExhibitorActivityLogs />} />
             <Route path="/floating-video-management" element={<FloatingVideoManagement />} />
-            <Route path="/referral-members" element={<ReferralMembers />} />
+            <Route path="/referral-leads" element={<ReferralMembers />} />
             <Route path="/expo-support-enquiries" element={<ExpoSupportEnquiries />} />
             <Route path="/sponsorship-enquiries" element={<SponsorshipEnquiries />} />
             <Route path="/media-registration-manage" element={<MediaRegistrationManage />} />
