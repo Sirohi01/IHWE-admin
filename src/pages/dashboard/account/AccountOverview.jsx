@@ -54,6 +54,9 @@ const AccountOverview = () => {
     if (doc.documentType === "Proforma Invoice") return `/payments/estimateDetails/${doc.id}`;
     if (doc.documentType === "Delivery Challan") return `/dashboard/account/${id}/delivery-challans`;
     if (doc.documentType === "Payment") return `/payment-list/${id}`;
+    if (doc.documentType === "Credit Note") return `/credit-note-view/${doc.id}`;
+    if (doc.documentType === "Credit Note (Legacy)") return `/debit-note-view/${doc.id}`;
+    if (doc.documentType === "Debit Note") return `/debit-note-view-account/${doc.id}`;
     return null;
   };
 
@@ -116,7 +119,7 @@ const AccountOverview = () => {
       <CompanyAccountSummary companyInfo={companyInfo} financials={financials} />
 
       {/* Action Buttons Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mb-1">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-1">
         <button onClick={() => navigate(`/performa-invoice-list/${id}`)} className="flex items-center gap-2 p-2 bg-[#f0f5ff] hover:bg-[#e6edfa] border border-[#dbe6fa] rounded-lg transition-colors text-left group">
           <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
             <FilePlus size={16} className="text-[#2563eb]" />
@@ -161,7 +164,7 @@ const AccountOverview = () => {
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
 
-        <button onClick={() => navigate(`/debit-note-list/${id}`)} className="flex items-center gap-2 p-2 bg-[#faf5ff] hover:bg-[#f3e8ff] border border-[#ecd9fb] rounded-lg transition-colors text-left group">
+        <button onClick={() => navigate(`/dashboard/account/credit-notes/${id}`)} className="flex items-center gap-2 p-2 bg-[#faf5ff] hover:bg-[#f3e8ff] border border-[#ecd9fb] rounded-lg transition-colors text-left group">
           <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
             <FileMinus size={16} className="text-[#7e22ce]" />
           </div>
@@ -172,13 +175,13 @@ const AccountOverview = () => {
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
 
-        <button onClick={() => navigate(`/create-account-debit-note/${id}`)} className="flex items-center gap-2 p-2 bg-[#fff7ed] hover:bg-[#ffedd5] border border-[#fbe3c4] rounded-lg transition-colors text-left group">
+        <button onClick={() => navigate(`/account-debit-notes/${id}`)} className="flex items-center gap-2 p-2 bg-[#fff7ed] hover:bg-[#ffedd5] border border-[#fbe3c4] rounded-lg transition-colors text-left group">
           <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
             <FileWarning size={16} className="text-[#c2410c]" />
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="text-[13px] font-normal text-[#1a2b4b] leading-tight truncate">Debit Note</h4>
-            <p className="text-[10.5px] text-slate-500 leading-tight truncate">Charge additional amount</p>
+            <p className="text-[10.5px] text-slate-500 leading-tight truncate">View and create debit notes</p>
           </div>
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>

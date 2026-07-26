@@ -134,7 +134,7 @@ export default function ClientOverview2({ data, onEdit, onApprove, onDisapprove,
                 <Block icon={Landmark} title="Event Participation">
                     <Field label="Event Name" value={safe(applicant.eventName || data?.event?.name || data?.eventName)} />
                     <Field label="Stall Number" value={safe(applicant.stallNo || data?.event?.stallNumber || data?.participation?.stallFor || data?.participation?.stall?.stallNumber || data?.participation?.stallNumber || data?.stallFor || data?.participation?.stallNo || data?.stallNo)} />
-                    <Field label="Hall Number" value={safe(applicant.hallNo || data?.event?.hallNumber || data?.participation?.stall?.hallNo || data?.participation?.hallNo || data?.hallNo, 'Hall 8, 9 & 10')} />
+                    <Field label="Hall Number" value={safe(applicant.hallNo || data?.event?.hallNumber || data?.participation?.stall?.hallNo || data?.participation?.hallNo || data?.hallNo, 'Hall 12')} />
                     <Field label="Stall Size" value={safe(applicant.stallSize || data?.event?.stallSize || data?.participation?.stallSize || data?.participation?.stall?.area || data?.participation?.area || data?.stallSize)} />
                     <Field label="Participation Type" value={safe(applicant.participationType || data?.event?.participationType || data?.participationType)} />
                     <Field label="Selected Expenses" value={safe(data?.selectedExpenses && Array.isArray(data.selectedExpenses) ? data.selectedExpenses.join(', ') : null)} />

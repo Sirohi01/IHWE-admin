@@ -1,7 +1,7 @@
 import api from "../lib/api";
 
 export const PROFORMA_EVENT_NAME = "9th Edition of International Health & Wellness Expo (IHWE Global Edition)";
-export const PROFORMA_PLACE_OF_SUPPLY = "Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, Bharat";
+export const PROFORMA_PLACE_OF_SUPPLY = "Hall Nos. 12, Pragati Maidan, New Delhi - 110001, Bharat";
 
 const roundAmount = (value) => Math.round(Number(value || 0));
 
@@ -167,6 +167,8 @@ export const estimateToInvoiceForm = (estimate, client, prev = {}) => {
     event_name: estimate?.event_name || PROFORMA_EVENT_NAME,
     consignee_name: estimate?.event_name || estimate?.consignee_name || PROFORMA_EVENT_NAME,
     consignee_addr: eventAddress || prev.consignee_addr,
+    consignee_person: estimate?.consignee_person || clientData.contactPerson || prev.consignee_person,
+    consignee_phone: estimate?.consignee_phone || clientData.phone || prev.consignee_phone,
     billingState: estimate?.state || clientData.state || prev.billingState,
     billingPin: estimate?.pincode || clientData.pincode || prev.billingPin,
     country: estimate?.country || clientData.country || prev.country,
@@ -190,6 +192,8 @@ export const clientToInvoiceForm = (client, id, prev = {}) => {
     company_addr: clientData.address || prev.company_addr,
     consignee_name: clientData.name || prev.consignee_name,
     consignee_addr: clientData.address || prev.consignee_addr,
+    consignee_person: clientData.contactPerson || prev.consignee_person,
+    consignee_phone: clientData.phone || prev.consignee_phone,
     billingState: clientData.state || prev.billingState,
     billingPin: clientData.pincode || prev.billingPin,
     country: clientData.country || prev.country,

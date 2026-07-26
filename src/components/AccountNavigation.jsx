@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronRight, FileText, FileSpreadsheet, FileMinus, Truck, CreditCard, ArrowLeft, BookOpen } from 'lucide-react';
+import { ChevronRight, FileText, FileSpreadsheet, FileMinus, FileWarning, Truck, CreditCard, ArrowLeft } from 'lucide-react';
 
 const AccountNavigation = ({ id, accountName, pageName }) => {
   const navigate = useNavigate();
@@ -13,8 +13,8 @@ const AccountNavigation = ({ id, accountName, pageName }) => {
     { label: 'Delivery Challans', path: `/dashboard/account/${id}/delivery-challans`, icon: <Truck size={12} /> },
     { label: 'Invoices', path: `/invoice-list/${id}`, icon: <FileSpreadsheet size={12} /> },
     { label: 'Payments', path: `/payment-list/${id}`, icon: <CreditCard size={12} /> },
-    { label: 'Credit Notes', path: `/debit-note-list/${id}`, icon: <FileMinus size={12} /> },
-    // { label: 'Client Ledger', path: `/dashboard/account/client-ledger/${id}`, icon: <BookOpen size={12} /> },
+    { label: 'Credit Notes', path: `/dashboard/account/credit-notes/${id}`, icon: <FileMinus size={12} /> },
+    { label: 'Debit Notes', path: `/account-debit-notes/${id}`, icon: <FileWarning size={12} /> },
   ];
 
   return (

@@ -5,6 +5,7 @@ import api, { SERVER_URL } from '../../../lib/api';
 import Swal from 'sweetalert2';
 import toast from 'react-hot-toast';
 import AccountNavigation from '../../../components/AccountNavigation';
+import { resolveLinkedIds } from '../../../utils/resolveLinkedIds';
 
 // Hook: animate number from 0 to target when element enters viewport
 function useCountUp(target, duration = 1200) {
@@ -72,6 +73,7 @@ const PaymentList = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [accountName, setAccountName] = useState('Account');
     const [sendingReceipt, setSendingReceipt] = useState({});
+    const [linkedAccountIds, setLinkedAccountIds] = useState([]);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -80,8 +82,12 @@ const PaymentList = () => {
     useEffect(() => {
         const fetchPayments = async () => {
             try {
-                const res = await api.get('/api/payments');
+                const [res, linkedIds] = await Promise.all([
+                    api.get('/api/payments'),
+                    isAllList ? Promise.resolve([]) : resolveLinkedIds(id),
+                ]);
                 setPayments(res.data?.data || res.data || []);
+                setLinkedAccountIds(linkedIds);
             } catch (err) {
                 console.error("Failed to fetch payments", err);
             } finally {
@@ -89,7 +95,7 @@ const PaymentList = () => {
             }
         };
         fetchPayments();
-    }, []);
+    }, [id, isAllList]);
 
     useEffect(() => {
         if (isAllList) {
@@ -180,7 +186,7 @@ const PaymentList = () => {
 
     const filteredPayments = payments.filter(pmt => {
         // filter by company if not all list
-        if (!isAllList && String(pmt.companyId || '') !== String(id)) return false;
+        if (!isAllList && !linkedAccountIds.includes(String(pmt.companyId || ''))) return false;
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();
         return (
@@ -192,7 +198,7 @@ const PaymentList = () => {
     });
 
     const groupedPayments = Object.values(filteredPayments.reduce((acc, pmt) => {
-        const invoiceKey = String(pmt.invoice_id || pmt.invoice_no || 'no-invoice');
+        const invoiceKey = String(pmt.payment_group_id || pmt.invoice_id || pmt.invoice_no || 'no-invoice');
         if (!acc[invoiceKey]) {
             acc[invoiceKey] = {
                 key: invoiceKey,

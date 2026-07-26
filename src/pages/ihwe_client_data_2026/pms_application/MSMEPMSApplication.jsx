@@ -285,7 +285,7 @@ export default function MSMEPMSApplication({ data, onSaveDraft, onContinue, savi
     const hallNo = fieldValue(
         data,
         ['event.hallNumber', 'participation.stall.hallNo', 'participation.hallNo', 'hallNo'],
-        'Hall 8, 9 & 10'
+        'Hall 12'
     );
 
     const stallSize = fieldValue(
@@ -390,7 +390,7 @@ export default function MSMEPMSApplication({ data, onSaveDraft, onContinue, savi
     );
     const navigate = useNavigate();
     return (
-      <div className="w-full min-h-[calc(100dvh-58px)] bg-white p-3 px-3 lg:px-6 pt-2 pb-3 font-sans text-[#061743] antialiased">
+        <div className="w-full min-h-[calc(100dvh-58px)] bg-white p-3 px-3 lg:px-6 pt-2 pb-3 font-sans text-[#061743] antialiased">
             <header className={"flex h-[61px] items-start justify-between gap-[22px] [@media(max-height:1100px)_and_(min-width:1181px)]:h-[52px] max-[1180px]:mb-[18px] max-[1180px]:h-auto max-[820px]:block max-[820px]:mb-6"}>
                 <div className={"pt-0.5 [@media(max-height:1100px)_and_(min-width:1181px)]:pt-0 max-[820px]:pt-0"}>
                     <h1 className={"m-0 text-[24px] leading-[1.08] font-semibold tracking-[-0.35px] text-[#061743] [@media(max-height:1100px)_and_(min-width:1181px)]:text-[21px] max-[820px]:text-[20px]"}>MSME PMS Application Form</h1>

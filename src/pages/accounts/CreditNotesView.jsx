@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FileText, Download, Search, Plus, Eye, Filter, CheckCircle2, AlertTriangle, RefreshCcw, Activity, Calendar, BarChart2, FilePlus, ChevronRight, ChevronDown, Building2, SquarePen } from 'lucide-react';
 import api from '../../lib/api';
+import { resolveLinkedIds } from '../../utils/resolveLinkedIds';
 import toast from 'react-hot-toast';
 import Select from 'react-select';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -167,7 +168,10 @@ const CreditNotesView = () => {
 
                 let allNotes = [...normalizedNew, ...normalizedOld];
 
-                if (!isAllList) allNotes = allNotes.filter(n => String(n.companyId) === String(id));
+                if (!isAllList) {
+                    const linkedIds = new Set(await resolveLinkedIds(id));
+                    allNotes = allNotes.filter(n => linkedIds.has(String(n.companyId)));
+                }
 
                 // Map company details and invoice details
                 allNotes = allNotes.map(n => {

@@ -79,7 +79,18 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
 
             try {
                 const res = await api.get(`/api/companies/lookup/${cId}`);
-                setCompany(res.data.data || res.data);
+                const companyData = res.data.data || res.data;
+                if (companyData?._source === 'company' && companyData.exhibitorRegistrationId) {
+                    try {
+                        const exhibitorRes = await api.get(`/api/exhibitor-registration/${companyData.exhibitorRegistrationId}`);
+                        const exhibitorData = exhibitorRes.data?.data || exhibitorRes.data;
+                        setCompany({ ...companyData, ...exhibitorData, companyName: companyData.companyName || exhibitorData.exhibitorName });
+                        return;
+                    } catch (exhibitorError) {
+                        console.error("Error fetching linked exhibitor contact:", exhibitorError);
+                    }
+                }
+                setCompany(companyData);
             } catch (err) {
                 console.error("Error fetching company details:", err);
                 // Fallback to redux state if lookup fails
@@ -335,11 +346,25 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
         String(item?.clientId) === String(normalizedCompanyId)
     );
     const resolvedCompany = company || reduxCompany || {};
-    const c1 = resolvedCompany?.contacts?.[0] || resolvedCompany?.contact1 || {};
+    const savedContact1 = resolvedCompany?.contact1 || {};
+    const primaryTeamMember = resolvedCompany?.teamMembers?.find((member) =>
+        member.isPrimary || /primary contact/i.test(member.roleAtExhibition || '')
+    );
+    const c1 = primaryTeamMember
+        ? {
+            firstName: primaryTeamMember.name || '',
+            surname: '',
+            designation: primaryTeamMember.designation || primaryTeamMember.roleAtExhibition || '',
+            mobile: primaryTeamMember.mobile || savedContact1.mobile || '',
+            email: primaryTeamMember.email || savedContact1.email || '',
+        }
+        : (savedContact1.firstName || savedContact1.lastName || savedContact1.mobile || savedContact1.email)
+            ? savedContact1
+            : resolvedCompany?.contacts?.find((contact) => contact?.isPrimary) || resolvedCompany?.contacts?.[0] || {};
     const companyName = "Namo Gange Wellness Pvt. Ltd.";
 
     const PROFORMA_EVENT_NAME = '9th Edition of International Health & Wellness Expo (IHWE Global Edition)';
-    const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, Bharat';
+    const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 12, Pragati Maidan, New Delhi - 110001, Bharat';
     const PROFORMA_EVENT_STATE = 'Delhi';
     const PROFORMA_PLACE_OF_SUPPLY_WITH_CODE = 'Delhi (07)';
     const PROFORMA_EVENT_GST_NO = '07AAFCN9238F1Z6';
@@ -347,25 +372,19 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
     const clientCompanyName = matchedInvoice?.company_name || form?.company_name || resolvedCompany?.companyName || resolvedCompany?.exhibitorName || '—';
     const titledContactPerson = [c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ');
     const rawClientContactPerson = getFirstCleanValue(
-        matchedInvoice?.contact_person,
-        matchedInvoice?.company_contact_person,
-        matchedInvoice?.consignee_person,
+        titledContactPerson,
+        resolvedCompany?.contactPerson,
+        resolvedCompany?.contact_person,
         form?.contact_person,
         form?.company_contact_person,
         form?.consignee_person,
-        titledContactPerson,
-        resolvedCompany?.contactPerson,
-        resolvedCompany?.contact_person
+        matchedInvoice?.contact_person,
+        matchedInvoice?.company_contact_person,
+        matchedInvoice?.consignee_person
     ) || '—';
     const clientContactPerson = normalizeContactName(rawClientContactPerson, titledContactPerson);
     const clientContactNo = getFirstCleanValue(
-        matchedInvoice?.contact_no,
-        matchedInvoice?.contact_phone,
-        matchedInvoice?.company_contact_no,
-        matchedInvoice?.company_phone,
-        matchedInvoice?.mobile,
-        matchedInvoice?.phone,
-        matchedInvoice?.consignee_phone,
+        c1.mobile,
         form?.contact_no,
         form?.contact_phone,
         form?.company_contact_no,
@@ -373,18 +392,24 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
         form?.mobile,
         form?.phone,
         form?.consignee_phone,
-        c1.mobile,
+        matchedInvoice?.contact_no,
+        matchedInvoice?.contact_phone,
+        matchedInvoice?.company_contact_no,
+        matchedInvoice?.company_phone,
+        matchedInvoice?.mobile,
+        matchedInvoice?.phone,
+        matchedInvoice?.consignee_phone,
         resolvedCompany?.landline,
         resolvedCompany?.mobile
     ) || '—';
     const clientEmail = getFirstCleanValue(
+        c1.email,
         matchedInvoice?.company_email,
         matchedInvoice?.contact_email,
         matchedInvoice?.email,
         form?.company_email,
         form?.contact_email,
         form?.email,
-        c1.email,
         resolvedCompany?.companyEmail,
         resolvedCompany?.email
     ) || '—';
@@ -560,10 +585,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                 <tbody>
                     <tr>
                         <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
-                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>
-                                {clientContactPerson !== '—' ? clientContactPerson : clientCompanyName}
-                            </div>
-                            <div style={{ marginTop: 2, textTransform: 'uppercase' }}>{clientCompanyName}</div>
+                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{clientCompanyName}</div>
                             <div style={{ marginTop: 2, textTransform: 'capitalize' }}>{clientCompanyAddress || '—'}</div>
                             <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%', marginTop: 4 }}>
                                 <tbody>
@@ -1236,10 +1258,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                 <tbody>
                                     <tr>
                                         <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
-                                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>
-                                                {clientContactPerson !== '—' ? clientContactPerson : clientCompanyName}
-                                            </div>
-                                            <div style={{ marginTop: 2, textTransform: 'uppercase' }}>{clientCompanyName}</div>
+                                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{clientCompanyName}</div>
                                             <div style={{ marginTop: 2, textTransform: 'capitalize' }}>
                                                 {clientCompanyAddress || '—'}
                                             </div>
@@ -1558,17 +1577,17 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, heading, invoiceC
                                 <thead>
                                     <tr style={{ background: 'rgb(241, 245, 249)' }}>
                                         <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: 'rgb(241, 245, 249)', textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                                                 <Landmark size={14} strokeWidth={2} /> NGWPL Bank Details
                                             </div>
                                         </th>
                                         <th style={{ border: 'none', borderRight: '1px solid #ccc', borderBottom: '1px solid #ccc', padding: '6px 8px', background: 'rgb(241, 245, 249)', textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                                                 <SquarePen size={14} strokeWidth={2} /> Receiver's Acknowledgement
                                             </div>
                                         </th>
                                         <th style={{ border: 'none', borderBottom: '1px solid #ccc', padding: '6px 8px', background: 'rgb(241, 245, 249)', textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase' , whiteSpace: 'nowrap' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#0d1f3c', fontWeight: 700, fontSize: 10, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                                                 <SquarePen size={14} strokeWidth={2} /> For {companyName}
                                             </div>
                                         </th>

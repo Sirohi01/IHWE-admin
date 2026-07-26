@@ -724,6 +724,7 @@ export const menuItems = [
           { label: "Visitor Passes", path: "/passes/visitor" },
           { label: "Food Coupons", path: "/passes/food-coupons" },
           { label: "Exhibitor Requested Passes", path: "/exhibitor-requested-passes" },
+          { label: "Pass Confirmation Report", path: "/pass-confirmation-report" },
           { label: "Pass Template Designer", path: "/pass-template-designer" },
         ],
       },

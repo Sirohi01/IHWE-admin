@@ -416,8 +416,8 @@ const EstimateTable = ({ clientId }) => {
       <AnimatedStatCard
         icon={<DollarSign className="w-5 h-5 text-indigo-600" strokeWidth={2.5} />}
         gradientTo="to-indigo-50" iconBg="bg-indigo-100"
-        rawValue={totalValue / 100000}
-        displayValue={(c) => `₹ ${c.toFixed(1)}L`}
+        rawValue={totalValue}
+        displayValue={(c) => `₹ ${Math.round(c).toLocaleString('en-IN')}`}
         label="TOTAL VALUE"
         subLabel="Amount" subColor="#4f46e5"
       />

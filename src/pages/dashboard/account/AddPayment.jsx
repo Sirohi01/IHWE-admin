@@ -91,8 +91,20 @@ const AddPayment = () => {
         const allEstimates = Array.isArray(estRes.data) ? estRes.data : estRes.data?.data || [];
         const allPayments = Array.isArray(payRes.data) ? payRes.data : payRes.data?.data || [];
 
-        setInvoices(allInvoices.filter((inv) => linkedIds.includes(inv.companyId) && !isCancelled(inv)));
-        setProformas(allEstimates.filter((est) => linkedIds.includes(est.companyId) && !isCancelled(est)));
+        const accountInvoices = allInvoices.filter((inv) => linkedIds.includes(inv.companyId) && !isCancelled(inv));
+        const convertedEstimateIds = new Set(
+          accountInvoices.map((inv) => String(inv.source_estimate_id || "")).filter(Boolean)
+        );
+        const convertedEstimateNos = new Set(
+          accountInvoices.map((inv) => String(inv.estimate_no || "")).filter(Boolean)
+        );
+        setInvoices(accountInvoices);
+        setProformas(allEstimates.filter((est) =>
+          linkedIds.includes(est.companyId)
+          && !isCancelled(est)
+          && !convertedEstimateIds.has(String(est._id))
+          && !convertedEstimateNos.has(String(est.est_no))
+        ));
         setPayments(allPayments);
       } catch (err) {
         console.error(err);
@@ -109,8 +121,12 @@ const AddPayment = () => {
     return list.filter((doc) => {
       const amount = doc.finalAmount || 0;
       if (amount <= 0) return true;
+      const relatedDocumentIds = new Set([
+        String(doc._id),
+        String(doc.source_estimate_id || ""),
+      ].filter(Boolean));
       const docPaid = payments
-        .filter((p) => p.invoice_id === doc._id)
+        .filter((p) => relatedDocumentIds.has(String(p.invoice_id)))
         .reduce((sum, p) => sum + (parseFloat(p.amount_text) || 0), 0);
       return docPaid < amount;
     });
@@ -129,8 +145,12 @@ const AddPayment = () => {
 
   const outstandingAmount = useMemo(() => {
     if (!selectedDoc) return 0;
+    const relatedDocumentIds = new Set([
+      String(selectedDoc._id),
+      String(selectedDoc.source_estimate_id || ""),
+    ].filter(Boolean));
     const docPaid = payments
-      .filter((p) => p.invoice_id === selectedDoc._id)
+      .filter((p) => relatedDocumentIds.has(String(p.invoice_id)))
       .reduce((sum, p) => sum + (parseFloat(p.amount_text) || 0), 0);
     return Math.max(0, invoiceAmount - docPaid);
   }, [selectedDoc, payments, invoiceAmount]);

@@ -108,7 +108,7 @@ const ESTIMATE_TYPES = ['Intrastate', 'Interstate Sale', 'Foreign Sale'];
 const UNITS = ['Nos', 'Sqm', 'Sqft', 'Mtrs', 'Kgs', 'Ltrs', 'Pcs'];
 
 const PROFORMA_EVENT_NAME = '9th Edition of International Health & Wellness Expo (IHWE Global Edition)';
-const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, Bharat';
+const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 12, Pragati Maidan, New Delhi - 110001, Bharat';
 const PROFORMA_EVENT_GST_NO = '09AAFCN9238F1Z6';
 
 
@@ -357,8 +357,8 @@ export const PerformaInvoices = () => {
                         supplyDate: estimateForPrefill.supply_date || new Date().toISOString().split('T')[0],
                         consigneeName: estimateForPrefill.company_name || (estimateForPrefill.consignee_name !== PROFORMA_EVENT_NAME ? estimateForPrefill.consignee_name : '') || companyInfo?.companyName || companyInfo?.exhibitorName || '',
                         consigneeAddress: estimateForPrefill.company_addr || (estimateForPrefill.consignee_addr !== PROFORMA_PLACE_OF_SUPPLY ? estimateForPrefill.consignee_addr : '') || companyInfo?.address || companyInfo?.companyAddress || '',
-                        consigneePerson: estimateForPrefill.consignee_person || companyInfo?.contactPerson || (companyInfo?.contacts && companyInfo.contacts[0] ? [companyInfo.contacts[0].firstName, companyInfo.contacts[0].surname].filter(Boolean).join(' ') : '') || '',
-                        consigneePhone: estimateForPrefill.consignee_phone || companyInfo?.mobile || (companyInfo?.contacts && companyInfo.contacts[0] ? companyInfo.contacts[0].mobile : '') || '',
+                        consigneePerson: companyInfo?.contactPerson || (companyInfo?.contacts && companyInfo.contacts[0] ? [companyInfo.contacts[0].firstName, companyInfo.contacts[0].surname].filter(Boolean).join(' ') : '') || estimateForPrefill.consignee_person || '',
+                        consigneePhone: companyInfo?.mobile || (companyInfo?.contacts && companyInfo.contacts[0] ? companyInfo.contacts[0].mobile : '') || estimateForPrefill.consignee_phone || '',
                         consigneeEventName: estimateForPrefill.event_name || PROFORMA_EVENT_NAME,
                         consigneeEventAddress: estimateForPrefill.event_place_of_supply || PROFORMA_PLACE_OF_SUPPLY,
                         consigneeGstin: estimateForPrefill.event_gst_no || PROFORMA_EVENT_GST_NO,

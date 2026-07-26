@@ -7,7 +7,7 @@ import api, { SERVER_URL } from '../../../lib/api';
 import { Landmark, SquarePen, Mail, Globe } from 'lucide-react';
 
 const PROFORMA_EVENT_NAME = '9th Edition of International Health & Wellness Expo (IHWE Global Edition)';
-const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 8, 9 & 10, Pragati Maidan, New Delhi - 110001, India';
+const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 12, Pragati Maidan, New Delhi - 110001, India';
 const PROFORMA_EVENT_STATE = 'Delhi';
 const PROFORMA_PLACE_OF_SUPPLY_WITH_CODE = 'Delhi (07)';
 const PROFORMA_EVENT_GST_NO = '07AAFCN9238F1Z6';
@@ -428,8 +428,10 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
             }
 
             const embeddedCompany =
-                typeof matchedEstimate.company === 'object' && matchedEstimate.company
-                    ? matchedEstimate.company
+                typeof matchedEstimate.exhibitor === 'object' && matchedEstimate.exhibitor
+                    ? matchedEstimate.exhibitor
+                    : typeof matchedEstimate.company === 'object' && matchedEstimate.company
+                        ? matchedEstimate.company
                     : null;
 
             if (embeddedCompany && (embeddedCompany.companyName || embeddedCompany.contacts || embeddedCompany.address)) {
@@ -517,7 +519,24 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
         return <div className="text-center p-10">Estimate not found.</div>;
     }
 
-    const c1 = company?.contacts?.[0] || company?.contact1 || {};
+    const savedContact1 = company?.contact1 || {};
+    const primaryTeamMember = company?.teamMembers?.find((member) =>
+        member.isPrimary || /primary contact/i.test(member.roleAtExhibition || '')
+    );
+    const c1HasDetails = Boolean(
+        savedContact1.firstName || savedContact1.lastName || savedContact1.mobile || savedContact1.email
+    );
+    const c1 = c1HasDetails
+        ? savedContact1
+        : primaryTeamMember
+            ? {
+                firstName: primaryTeamMember.name || '',
+                surname: '',
+                designation: primaryTeamMember.designation || '',
+                mobile: primaryTeamMember.mobile || '',
+                email: primaryTeamMember.email || '',
+            }
+            : company?.contacts?.[0] || {};
     const companyName = 'Namo Gange Wellness Pvt. Ltd.';
 
     const invoiceNo =
@@ -604,23 +623,23 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
 
     const titledContactPerson = [c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ');
     const rawClientContactPerson =
-        matchedEstimate?.contact_person ||
-        matchedEstimate?.company_contact_person ||
-        matchedEstimate?.consignee_person ||
         titledContactPerson ||
         company?.contactPerson ||
         company?.contact_person ||
+        matchedEstimate?.contact_person ||
+        matchedEstimate?.company_contact_person ||
+        matchedEstimate?.consignee_person ||
         '—';
     const clientContactPerson = normalizeContactName(rawClientContactPerson, titledContactPerson);
 
     const clientContactNo =
+        c1.mobile ||
         matchedEstimate?.contact_no ||
         matchedEstimate?.company_contact_no ||
         matchedEstimate?.company_phone ||
         matchedEstimate?.mobile ||
         matchedEstimate?.phone ||
         matchedEstimate?.consignee_phone ||
-        c1.mobile ||
         company?.landline ||
         company?.mobile ||
         '—';
@@ -721,8 +740,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                 <tbody>
                     <tr>
                         <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
-                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{clientContactPerson !== '—' ? clientContactPerson : clientCompanyName}</div>
-                            <div style={{ marginTop: 2, textTransform: 'uppercase' }}>{clientCompanyName}</div>
+                            <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{clientCompanyName}</div>
                             <div style={{ marginTop: 2, textTransform: 'capitalize' }}>{clientCompanyAddress || '—'}</div>
 
                             <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%', marginTop: 4 }}>
