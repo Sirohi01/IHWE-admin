@@ -744,6 +744,10 @@ export default function AppRoutes() {
               element={<AddExhibitorCategory />}
             />
             <Route
+              path="ihweClientData2026/AddCategory/edit/:id"
+              element={<AddExhibitorCategory />}
+            />
+            <Route
               path="ihweClientData2026/AddCrmWhatsappMessage"
               element={<AddCrmWhatsappMessage />}
             />

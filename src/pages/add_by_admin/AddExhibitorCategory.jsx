@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
   ArrowLeft,
@@ -15,11 +15,12 @@ import {
 
 import {
   createCategory,
+  updateCategory,
   fetchCategories,
 } from "../../features/add_by_admin/category/categorySlice";
 import { createActivityLogThunk } from "../../features/activityLog/activityLogSlice";
 
-const BACK_PATH = "/admin/exhibitor-category";
+const BACK_PATH = "/ihweClientData2026/AddCategory";
 
 const APPLICABLE_OPTIONS = [
   "Exhibitor Lead",
@@ -64,6 +65,28 @@ const AddNewExhibitorCategory = () => {
 
   const [form, setForm] = useState(initialForm);
   const [isSaving, setIsSaving] = useState(false);
+  const { id } = useParams();
+
+  useEffect(() => {
+    if (id && categories.length > 0) {
+      const existingCategory = categories.find((c) => c._id === id);
+      if (existingCategory) {
+        setForm({
+          name: existingCategory.cat_name || "",
+          parentCategory: getParentId(existingCategory) || "",
+          description: existingCategory.cat_description || "",
+          displayOrder: existingCategory.display_order || 1,
+          status: String(existingCategory.cat_status || "Active").toLowerCase() === "active" ? "Active" : "Inactive",
+          applicableFor: Array.isArray(existingCategory.applicable_for) ? existingCategory.applicable_for : ["Exhibitor Lead", "Exhibitor Registration"],
+          iconFile: null,
+          iconPreview: existingCategory.icon_data_url || "",
+        });
+      }
+    } else if (!id && categories.length > 0) {
+      const maxOrder = Math.max(...categories.map((c) => Number(c.display_order) || 0));
+      setForm((prev) => ({ ...prev, displayOrder: maxOrder + 1 }));
+    }
+  }, [id, categories]);
 
   useEffect(() => {
     dispatch(fetchCategories());
@@ -244,7 +267,8 @@ const AddNewExhibitorCategory = () => {
       (category) =>
         String(category?.cat_name || "")
           .trim()
-          .toLowerCase() === form.name.trim().toLowerCase()
+          .toLowerCase() === form.name.trim().toLowerCase() &&
+        category._id !== id
     );
 
     if (duplicate) {
@@ -328,36 +352,58 @@ const AddNewExhibitorCategory = () => {
         icon_data_url: form.iconPreview || "",
       };
 
-      await dispatch(createCategory(payload)).unwrap();
-
       const userId =
         sessionStorage.getItem("user_id") ||
         localStorage.getItem("user_id");
 
-      if (userId) {
-        dispatch(
-          createActivityLogThunk({
-            user_id: userId,
-            message: `System Config: Added new category '${form.name.trim()}'`,
-            section: "System Configuration",
-            data: {
-              action: "ADD",
-              type: "CATEGORY",
-              name: form.name.trim(),
-            },
-          })
-        );
+      if (id) {
+        await dispatch(updateCategory({ id, updates: payload })).unwrap();
+        if (userId) {
+          dispatch(
+            createActivityLogThunk({
+              user_id: userId,
+              message: `System Config: Updated category '${form.name.trim()}'`,
+              section: "System Configuration",
+              data: {
+                action: "UPDATE",
+                type: "CATEGORY",
+                name: form.name.trim(),
+              },
+            })
+          );
+        }
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: "Category updated successfully.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } else {
+        await dispatch(createCategory(payload)).unwrap();
+        if (userId) {
+          dispatch(
+            createActivityLogThunk({
+              user_id: userId,
+              message: `System Config: Added new category '${form.name.trim()}'`,
+              section: "System Configuration",
+              data: {
+                action: "ADD",
+                type: "CATEGORY",
+                name: form.name.trim(),
+              },
+            })
+          );
+        }
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: "Category added successfully.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
       }
 
-      await Swal.fire({
-        icon: "success",
-        title: "Category saved",
-        text: "The exhibitor category was created successfully.",
-        timer: 1400,
-        showConfirmButton: false,
-      });
-
-      resetForm();
       dispatch(fetchCategories());
       navigate(BACK_PATH);
     } catch (error) {
@@ -367,7 +413,7 @@ const AddNewExhibitorCategory = () => {
         text:
           error?.message ||
           error?.payload?.message ||
-          "Category creation failed.",
+          "Category operation failed.",
         confirmButtonColor: "#07813f",
       });
     } finally {
@@ -399,7 +445,7 @@ const AddNewExhibitorCategory = () => {
             Exhibitor Category
           </button>
           <ChevronRight className="h-4 w-4" />
-          <span className="font-bold text-[#17327b]">Add New</span>
+          <span className="font-bold text-[#17327b]">{id ? "Edit Category" : "Add New"}</span>
         </div>
 
         <div className="mt-[clamp(4px,0.55vh,7px)] flex items-center justify-between gap-4">
@@ -410,10 +456,10 @@ const AddNewExhibitorCategory = () => {
 
             <div className="min-w-0">
               <h1 className="truncate text-[clamp(20px,1.8vw,28px)] font-extrabold leading-tight tracking-[-0.025em] text-[#0d1d4d]">
-                Add New Exhibitor Category
+                {id ? "Edit Exhibitor Category" : "Add New Exhibitor Category"}
               </h1>
               <p className="mt-0.5 text-[clamp(10px,0.88vw,14px)] font-medium text-[#59637f]">
-                Create a new exhibitor category for lead and exhibitor classification.
+                {id ? "Update the existing exhibitor category details." : "Create a new exhibitor category for lead and exhibitor classification."}
               </p>
             </div>
           </div>
@@ -533,10 +579,10 @@ const AddNewExhibitorCategory = () => {
                         onChange={(event) =>
                           updateField("status", event.target.value)
                         }
-                        className="peer sr-only"
+                        className="hidden"
                       />
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-[#bec5d4] peer-checked:border-[#13854b]">
-                        <span className="h-2.5 w-2.5 rounded-full bg-transparent peer-checked:bg-[#13854b]" />
+                      <span className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${form.status === status ? "border-[#13854b]" : "border-[#bec5d4]"}`}>
+                        {form.status === status && <span className="h-2.5 w-2.5 rounded-full bg-[#13854b]" />}
                       </span>
                       {status}
                     </label>
@@ -644,12 +690,12 @@ const AddNewExhibitorCategory = () => {
             {isSaving ? (
               <>
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/35 border-t-white" />
-                Saving...
+                {id ? "Updating..." : "Saving..."}
               </>
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                Save Category
+                {id ? "Update Category" : "Save Category"}
               </>
             )}
           </button>
