@@ -181,6 +181,7 @@ const AddNatureOfBusiness = lazy(() => import("../pages/add_by_admin/AddNatureOf
 const AddNextAction = lazy(() => import("../pages/add_by_admin/AddNextAction"));
 const AddRemarkLengthFixed = lazy(() => import("../pages/add_by_admin/AddRemarkLengthFixed"));
 const AddStatus = lazy(() => import("../pages/add_by_admin/AddStatus"));
+const AddStatusForm = lazy(() => import("../pages/add_by_admin/AddStatusForm"));
 const AddExhibitionRole = lazy(() => import("../pages/add_by_admin/AddExhibitionRole"));
 const EstimateTermsConfig = lazy(() => import("../pages/add_by_admin/EstimateTermsConfig"));
 const AddTarget = lazy(() => import("../pages/add_by_admin/AddTarget"));
@@ -638,6 +639,14 @@ export default function AppRoutes() {
             <Route
               path="ihweClientData2026/createEstimate1/:id"
               element={<CreateEstimate1 />}
+            />
+            <Route
+              path="ihweClientData2026/AddStatus/add"
+              element={<AddStatusForm />}
+            />
+            <Route
+              path="ihweClientData2026/AddStatus/edit/:id"
+              element={<AddStatusForm />}
             />
             <Route
               path="payments/estimateDetails/:id"

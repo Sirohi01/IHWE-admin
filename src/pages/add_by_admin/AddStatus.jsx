@@ -260,6 +260,7 @@ import {
   X,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 import {
@@ -391,6 +392,7 @@ const SummaryCard = ({ icon: Icon, iconClass, iconWrapClass, label, value, note 
 );
 
 const AddStatus = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { statusOptions, loading: isLoading } =
     useSelector((state) => state.statusOptions) || {};
@@ -440,7 +442,7 @@ const AddStatus = () => {
         typeFilter === "All" || getItemType(item) === typeFilter;
 
       return matchesSearch && matchesStatus && matchesType;
-    });
+    }).sort((a, b) => (a.display_order || 9999) - (b.display_order || 9999));
   }, [normalizedOptions, debouncedSearch, statusFilter, typeFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
@@ -493,15 +495,7 @@ const AddStatus = () => {
   };
 
   const startEdit = (id) => {
-    const item = normalizedOptions.find((option) => option?._id === id);
-    if (!item) return;
-
-    setIsEditing(id);
-    setFormData({
-      name: item.name || "",
-      status: getItemStatus(item),
-    });
-    setIsModalOpen(true);
+    navigate(`/ihweClientData2026/AddStatus/edit/${id}`);
   };
 
   const logActivity = (message, action, name) => {
@@ -749,7 +743,7 @@ const AddStatus = () => {
             <div className="flex items-center justify-center border-l border-[#e7ebf0] px-4">
               <button
                 type="button"
-                onClick={openAddModal}
+                onClick={() => navigate("/ihweClientData2026/AddStatus/add")}
                 className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#08752f] px-4 text-[13px] font-semibold text-white shadow-[0_2px_5px_rgba(8,117,47,0.22)] transition hover:bg-[#066326]"
               >
                 <Plus className="h-4 w-4" strokeWidth={2.2} />
@@ -868,8 +862,8 @@ const AddStatus = () => {
 
         {/* Table */}
         <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-[#e0e5eb] bg-white shadow-[0_1px_3px_rgba(15,23,42,0.03)]">
-          <div className="min-h-0 flex-1 overflow-hidden">
-            <table className="h-full w-full table-fixed border-collapse text-left">
+          <div className="min-h-0 flex-1 overflow-auto">
+            <table className="w-full table-fixed border-collapse text-left">
               <colgroup>
                 <col className="w-[3.5%]" />
                 <col className="w-[14%]" />
@@ -918,7 +912,7 @@ const AddStatus = () => {
                     return (
                       <tr
                         key={item?._id || `${item?.name}-${absoluteIndex}`}
-                        className="border-b border-[#e7ebef] transition last:border-b-0 hover:bg-[#fbfcfd]"
+                        className="border-b border-[#e7ebef] transition last:border-b-0 hover:bg-[#fbfcfd] h-[60px]"
                       >
                         <td className="px-4 font-medium text-[#52627a]">
                           {absoluteIndex + 1}
@@ -927,10 +921,8 @@ const AddStatus = () => {
                         <td className="px-3">
                           <div className="flex min-w-0 items-center gap-2.5">
                             <span
-                              className={`h-2.5 w-2.5 shrink-0 rounded-full ${STATUS_DOT_COLORS[
-                                absoluteIndex % STATUS_DOT_COLORS.length
-                                ]
-                                }`}
+                              className="h-2.5 w-2.5 shrink-0 rounded-full"
+                              style={{ backgroundColor: item?.color || "#2563eb" }}
                             />
                             <span className="truncate font-semibold text-[#263754]">
                               {item?.name || "Unnamed Status"}
