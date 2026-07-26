@@ -200,16 +200,41 @@ const ClientOverview1 = () => {
         } catch (e) { console.log(e); }
         setCompany(data);
       } catch (err) {
-        // If 404 from companies, try exhibitor-registration
         if (err.response?.status === 404 || err.response?.status === 400) {
           console.log("Not found in companies, trying exhibitor-registration...");
-          const res = await api.get(`/api/exhibitor-registration/${id}?light=true&t=${Date.now()}`);
-          let data = res.data.data || res.data;
           try {
-            const resContacts = await api.get(`/api/client-contacts/${id}`);
-            data.contacts = resContacts.data?.data || [];
-          } catch (e) { console.log(e); }
-          setCompany(data);
+            const res = await api.get(`/api/exhibitor-registration/${id}?light=true&t=${Date.now()}`);
+            let data = res.data.data || res.data;
+            try {
+              const resContacts = await api.get(`/api/client-contacts/${id}`);
+              data.contacts = resContacts.data?.data || [];
+            } catch (e) { console.log(e); }
+            setCompany(data);
+          } catch(err2) {
+             console.log("Not found in exhibitor-registration, trying referrals...");
+             try {
+                const resRef = await api.get(`/api/referrals/${id}`);
+                let refData = resRef.data.data || resRef.data;
+                refData = {
+                    ...refData,
+                    companyName: refData.companyName,
+                    mobileNo: refData.mobileNumber,
+                    email: refData.emailId,
+                    industrySector: refData.category,
+                    aboutCompany: refData.remarks,
+                    companyStatus: refData.status,
+                    contacts: [{
+                        firstName: refData.contactPerson,
+                        mobile: refData.mobileNumber,
+                        email: refData.emailId
+                    }]
+                };
+                setCompany(refData);
+             } catch(err3) {
+                console.log("Not found in referrals either.");
+                throw err3;
+             }
+          }
         } else {
           throw err;
         }

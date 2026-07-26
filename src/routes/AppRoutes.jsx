@@ -277,7 +277,9 @@ const SpeakerRegistrationDetail = lazy(() => import("../pages/SpeakerRegistratio
 const SpeakerNominationsList = lazy(() => import("../pages/SpeakerNominationsList"));
 const ApprovedSpeakersList = lazy(() => import("../pages/ApprovedSpeakersList"));
 const FloatingVideoManagement = lazy(() => import("../pages/FloatingVideoManagement"));
-const ReferralMembers = lazy(() => import("../pages/ReferralMembers"));
+const OrganicExpo2027ReferralLeads = lazy(() => import("../pages/OrganicExpo2027ReferralLeads"));
+const IHWEExpo2026ReferralLeads = lazy(() => import("../pages/IHWEExpo2026ReferralLeads"));
+const OrganicExpo2026ReferralLeads = lazy(() => import("../pages/OrganicExpo2026ReferralLeads"));
 const ExpoSupportEnquiries = lazy(() => import("../pages/ExpoSupportEnquiries"));
 const SponsorshipEnquiries = lazy(() => import("../pages/SponsorshipEnquiries"));
 const RejectedSpeakersList = lazy(() => import("../pages/RejectedSpeakersList"));
@@ -850,7 +852,9 @@ export default function AppRoutes() {
             <Route path="/activity-log" element={<ActivityLog />} />
             <Route path="/exhibitor-activity-logs" element={<ExhibitorActivityLogs />} />
             <Route path="/floating-video-management" element={<FloatingVideoManagement />} />
-            <Route path="/referral-leads" element={<ReferralMembers />} />
+            <Route path="/organic-expo-2027/referral-leads" element={<OrganicExpo2027ReferralLeads />} />
+            <Route path="/ihwe-expo-2026/referral-leads" element={<IHWEExpo2026ReferralLeads />} />
+            <Route path="/organic-expo-2026/referral-leads" element={<OrganicExpo2026ReferralLeads />} />
             <Route path="/expo-support-enquiries" element={<ExpoSupportEnquiries />} />
             <Route path="/sponsorship-enquiries" element={<SponsorshipEnquiries />} />
             <Route path="/media-registration-manage" element={<MediaRegistrationManage />} />
