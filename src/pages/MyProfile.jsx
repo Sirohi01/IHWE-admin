@@ -41,6 +41,8 @@ export default function MyProfile() {
   const [profilePreview, setProfilePreview] = useState("");
   const [signaturePreview, setSignaturePreview] = useState("");
   const [recentActivities, setRecentActivities] = useState([]);
+  const [performanceLoading, setPerformanceLoading] = useState(false);
+  const [activityLoading, setActivityLoading] = useState(false);
 
   useEffect(() => {
     const fetchDropdowns = async () => {
@@ -87,19 +89,30 @@ export default function MyProfile() {
         if (targetId) {
           try {
             const profileRes = await api.get(`/api/admin/${targetId}`);
-            const statsRes = await api.get(`/api/admin/performance/${targetId}`).catch(error => {
-              console.error("Failed to fetch user performance", error);
-              return null;
-            });
 
             if (profileRes.data.success && profileRes.data.data) {
               const profileData = Array.isArray(profileRes.data.data) ? profileRes.data.data[0] : profileRes.data.data;
 
-              // Map available dashboard stats to performance
-              profileData.performance = statsRes?.data?.success
+              setAdminData({ ...profileData, performance: null });
+              setFormData({ ...profileData, password: "" });
+              setEmailVerified(Boolean(profileData.email));
+              setMobileVerified(Boolean(profileData.mobile));
+              setVerifiedEmailValue(profileData.email?.trim() || "");
+              setVerifiedMobileValue(profileData.mobile?.trim() || "");
+              setLoading(false);
+
+              setPerformanceLoading(true);
+              const statsRes = await api.get(`/api/admin/performance/${targetId}`).catch(error => {
+                console.error("Failed to fetch user performance", error);
+                return null;
+              });
+              const performance = statsRes?.data?.success
                 ? statsRes.data.data
                 : { totalLeads: 0, stallBookings: 0, conversionRate: 0, totalAmountAchieved: 0 };
+              setAdminData(previous => ({ ...previous, performance }));
+              setPerformanceLoading(false);
 
+              setActivityLoading(true);
               const activityRes = await api.get(
                 `/api/activity-logs?limit=4&search=${encodeURIComponent(profileData.username || profileData.fullName || "")}`
               ).catch(error => {
@@ -116,13 +129,7 @@ export default function MyProfile() {
               } else {
                 setRecentActivities([]);
               }
-
-              setAdminData(profileData);
-              setFormData({ ...profileData, password: "" });
-              setEmailVerified(Boolean(profileData.email));
-              setMobileVerified(Boolean(profileData.mobile));
-              setVerifiedEmailValue(profileData.email?.trim() || "");
-              setVerifiedMobileValue(profileData.mobile?.trim() || "");
+              setActivityLoading(false);
             }
           } catch (e) {
             console.error("Error parsing adminInfo or fetching profile/stats", e);
@@ -134,6 +141,8 @@ export default function MyProfile() {
         setLoadError("Unable to load this profile.");
       } finally {
         setLoading(false);
+        setPerformanceLoading(false);
+        setActivityLoading(false);
       }
     };
 
@@ -1018,6 +1027,11 @@ export default function MyProfile() {
         <div className="space-y-1">
           {/* PERFORMANCE CARD */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 relative overflow-hidden">
+            {performanceLoading && (
+              <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-[1px] flex items-center justify-center">
+                <div className="h-7 w-7 rounded-full border-3 border-emerald-100 border-t-emerald-600 animate-spin" />
+              </div>
+            )}
             <div className="absolute top-0 right-0 p-4 opacity-5">
               <TrendingUp size={100} />
             </div>
@@ -1111,14 +1125,19 @@ export default function MyProfile() {
             </h3>
 
             <div className="relative border-l-2 border-slate-100 ml-2 space-y-5 pb-2">
-              {recentActivities.map((activity) => (
+              {activityLoading && (
+                <div className="py-6 flex items-center justify-center">
+                  <div className="h-6 w-6 rounded-full border-2 border-emerald-100 border-t-emerald-600 animate-spin" />
+                </div>
+              )}
+              {!activityLoading && recentActivities.map((activity) => (
                 <div key={activity.id} className="relative pl-5">
                   <div className={`absolute w-2.5 h-2.5 rounded-full -left-[5.5px] top-0.5 border-2 border-white ring-2 ${activity.color === "red" ? "bg-red-500 ring-red-100" : activity.color === "blue" ? "bg-blue-500 ring-blue-100" : "bg-emerald-500 ring-emerald-100"}`}></div>
                   <p className="text-[11px] font-bold text-slate-800 leading-none mb-1">{activity.title}</p>
                   <p className="text-[9px] font-semibold text-slate-400">{activity.time}</p>
                 </div>
               ))}
-              {!recentActivities.length && <p className="pl-5 text-[10px] font-medium text-slate-400">No recent activity found.</p>}
+              {!activityLoading && !recentActivities.length && <p className="pl-5 text-[10px] font-medium text-slate-400">No recent activity found.</p>}
             </div>
 
             {canViewActivityLogs ? (
