@@ -473,7 +473,7 @@ export default function MyProfile() {
               </div>
             </div>
 
-            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-1">
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-[minmax(150px,0.7fr)_minmax(250px,1.3fr)] gap-y-2 gap-x-2">
               <div className="col-span-full mb-1">
                 <h2 className="text-[20px] font-bold text-slate-800 flex items-center gap-2 mb-0.5">
                   {adminData.title ? `${adminData.title} ` : ''}{adminData.fullName || adminData.username || 'User'}
