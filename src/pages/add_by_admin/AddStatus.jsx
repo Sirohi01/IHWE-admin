@@ -260,6 +260,7 @@ import {
   X,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 import {
@@ -391,6 +392,7 @@ const SummaryCard = ({ icon: Icon, iconClass, iconWrapClass, label, value, note 
 );
 
 const AddStatus = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { statusOptions, loading: isLoading } =
     useSelector((state) => state.statusOptions) || {};
@@ -440,7 +442,7 @@ const AddStatus = () => {
         typeFilter === "All" || getItemType(item) === typeFilter;
 
       return matchesSearch && matchesStatus && matchesType;
-    });
+    }).sort((a, b) => (a.display_order || 9999) - (b.display_order || 9999));
   }, [normalizedOptions, debouncedSearch, statusFilter, typeFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
@@ -493,15 +495,7 @@ const AddStatus = () => {
   };
 
   const startEdit = (id) => {
-    const item = normalizedOptions.find((option) => option?._id === id);
-    if (!item) return;
-
-    setIsEditing(id);
-    setFormData({
-      name: item.name || "",
-      status: getItemStatus(item),
-    });
-    setIsModalOpen(true);
+    navigate(`/ihweClientData2026/AddStatus/edit/${id}`);
   };
 
   const logActivity = (message, action, name) => {
@@ -749,7 +743,7 @@ const AddStatus = () => {
             <div className="flex items-center justify-center border-l border-[#e7ebf0] px-4">
               <button
                 type="button"
-                onClick={openAddModal}
+                onClick={() => navigate("/ihweClientData2026/AddStatus/add")}
                 className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#08752f] px-4 text-[13px] font-semibold text-white shadow-[0_2px_5px_rgba(8,117,47,0.22)] transition hover:bg-[#066326]"
               >
                 <Plus className="h-4 w-4" strokeWidth={2.2} />
