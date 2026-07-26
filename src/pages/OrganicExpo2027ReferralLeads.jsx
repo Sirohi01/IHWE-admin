@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { 
+import {
     Trash2, Layers, ShieldCheck, Mail, Phone, Building2, User, Tag
 } from 'lucide-react';
 import { toast } from "react-toastify";
@@ -7,7 +7,7 @@ import PageHeader from '../components/PageHeader';
 import api from "../lib/api";
 import Swal from "sweetalert2";
 
-const ReferralMembers = () => {
+const OrganicExpo2027ReferralLeads = () => {
     const [referrals, setReferrals] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -58,7 +58,7 @@ const ReferralMembers = () => {
     return (
         <div className="bg-white shadow-md p-6 min-h-screen">
             <PageHeader
-                title="REFERRAL LEADS"
+                title="ORGANIC EXPO 2027 - REFERRAL LEADS"
                 description="View and manage referrals submitted by users"
             />
 
@@ -67,7 +67,7 @@ const ReferralMembers = () => {
                     {/* Table Header */}
                     <div className="bg-[#23471d] px-5 py-3 flex items-center justify-between">
                         <h2 className="text-white font-bold flex items-center gap-2 text-sm uppercase tracking-wider">
-                            <Layers className="w-4 h-4" /> Referral Submissions
+                            <Layers className="w-4 h-4" /> Referral Leads
                         </h2>
                         <span className="bg-[#d26019] text-white text-[10px] font-black px-3 py-1 uppercase tracking-wider">
                             {referrals.length} REFERRALS
@@ -171,4 +171,4 @@ const ReferralMembers = () => {
     );
 };
 
-export default ReferralMembers;
+export default OrganicExpo2027ReferralLeads;

@@ -71,6 +71,7 @@ export const menuItems = [
       { label: "Lost Leads", path: "/#" },
       { label: "Converted Leads", path: "/#" },
       { label: "All Leads", path: "/#" },
+      { label: "Referral Leads", path: "/organic-expo-2027/referral-leads" },
     ],
   },
   {
@@ -86,6 +87,7 @@ export const menuItems = [
       { label: "Lost Leads", path: "/ihweClientData2026/coldClientList" },
       { label: "Converted Leads", path: "/ihweClientData2026/convertedList" },
       { label: "All Leads", path: "/ihweClientData2026/allLeadsList" },
+      { label: "Referral Leads", path: "/ihwe-expo-2026/referral-leads" },
     ],
   },
   {
@@ -101,6 +103,7 @@ export const menuItems = [
       { label: "Lost Leads", path: "/#" },
       { label: "Converted Leads", path: "/#" },
       { label: "All Leads", path: "/#" },
+      { label: "Referral Leads", path: "/organic-expo-2026/referral-leads" },
     ],
   },
   {
@@ -114,12 +117,6 @@ export const menuItems = [
     label: "Communication-IVR",
     icon: MessageSquare,
     path: "/communication",
-  },
-  {
-    type: "item",
-    label: "Referral Leads",
-    icon: Users,
-    path: "/referral-leads",
   },
   {
     type: "item",
