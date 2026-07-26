@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { 
-    Trash2, Layers, ShieldCheck, Mail, Phone, Building2, User, Tag
+    Trash2, Layers, ShieldCheck, Mail, Phone, Building2, User, Tag, Search
 } from 'lucide-react';
 import { toast } from "react-toastify";
 import PageHeader from '../components/PageHeader';
@@ -10,6 +10,17 @@ import Swal from "sweetalert2";
 const OrganicExpo2026ReferralLeads = () => {
     const [referrals, setReferrals] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+
+    const filteredReferrals = referrals.filter(ref => {
+        const term = searchTerm.toLowerCase();
+        return (
+            (ref.companyName && ref.companyName.toLowerCase().includes(term)) ||
+            (ref.contactPerson && ref.contactPerson.toLowerCase().includes(term)) ||
+            (ref.mobileNumber && ref.mobileNumber.includes(term)) ||
+            (ref.emailId && ref.emailId.toLowerCase().includes(term))
+        );
+    });
 
     useEffect(() => {
         fetchReferrals();
@@ -60,7 +71,18 @@ const OrganicExpo2026ReferralLeads = () => {
             <PageHeader
                 title="ORGANIC EXPO 2026 - REFERRAL LEADS"
                 description="View and manage referrals submitted by users"
-            />
+            >
+                <div className="relative w-72">
+                    <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
+                    <input
+                        type="text"
+                        placeholder="Search by company, name, email, phone..."
+                        className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#23471d]"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+            </PageHeader>
 
             <div className="mt-6">
                 <div className="bg-white border-2 border-gray-200 shadow-sm">
@@ -70,7 +92,7 @@ const OrganicExpo2026ReferralLeads = () => {
                             <Layers className="w-4 h-4" /> Referral Leads
                         </h2>
                         <span className="bg-[#d26019] text-white text-[10px] font-black px-3 py-1 uppercase tracking-wider">
-                            {referrals.length} REFERRALS
+                            {filteredReferrals.length} REFERRALS
                         </span>
                     </div>
 
@@ -95,13 +117,13 @@ const OrganicExpo2026ReferralLeads = () => {
                                             <div className="w-8 h-8 border-4 border-[#23471d] border-t-transparent rounded-full animate-spin mx-auto" />
                                         </td>
                                     </tr>
-                                ) : referrals.length === 0 ? (
+                                ) : filteredReferrals.length === 0 ? (
                                     <tr>
                                         <td colSpan={7} className="text-center py-12 text-gray-400 italic font-medium">
-                                            No referral members found.
+                                            No referral leads found.
                                         </td>
                                     </tr>
-                                ) : referrals.map((ref, idx) => (
+                                ) : filteredReferrals.map((ref, idx) => (
                                     <tr key={ref._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                         <td className="py-3 px-4 text-gray-500 font-bold">{idx + 1}</td>
                                         <td className="py-3 px-4">
