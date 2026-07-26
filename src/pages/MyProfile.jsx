@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
   User, Mail, Phone, ShieldCheck, Clock, Briefcase, Camera,
   Activity, Users, Target, CheckCircle2, LayoutDashboard, Settings,
   FileText, MessageSquare, CreditCard, ChevronRight, Edit3, Save, Upload, Eye, EyeOff, TrendingUp
 } from "lucide-react";
 import { FaUserAstronaut } from "react-icons/fa";
-import api from "../lib/api";
+import Swal from "sweetalert2";
+import api, { otpApi } from "../lib/api";
 
 export default function MyProfile() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [adminData, setAdminData] = useState({});
   const [loggedInUser, setLoggedInUser] = useState(null);
   const [activeTab, setActiveTab] = useState('User Details');
@@ -22,30 +22,53 @@ export default function MyProfile() {
   const [designations, setDesignations] = useState([]);
   const [admins, setAdmins] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [loadError, setLoadError] = useState("");
+  const [emailOtp, setEmailOtp] = useState("");
+  const [mobileOtp, setMobileOtp] = useState("");
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
+  const [mobileOtpSent, setMobileOtpSent] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [mobileVerified, setMobileVerified] = useState(false);
+  const [verifiedEmailValue, setVerifiedEmailValue] = useState("");
+  const [verifiedMobileValue, setVerifiedMobileValue] = useState("");
+  const [emailVerificationToken, setEmailVerificationToken] = useState("");
+  const [mobileVerificationToken, setMobileVerificationToken] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [sendingEmailOtp, setSendingEmailOtp] = useState(false);
+  const [sendingMobileOtp, setSendingMobileOtp] = useState(false);
+  const [verifyingEmailOtp, setVerifyingEmailOtp] = useState(false);
+  const [verifyingMobileOtp, setVerifyingMobileOtp] = useState(false);
+  const [profilePreview, setProfilePreview] = useState("");
+  const [signaturePreview, setSignaturePreview] = useState("");
 
   useEffect(() => {
     const fetchDropdowns = async () => {
-      try {
-        const [deptRes, desigRes, adminRes, rolesRes] = await Promise.all([
-          api.get('/api/departments'),
-          api.get('/api/designations'),
-          api.get('/api/admin/all'),
-          api.get('/api/roles')
-        ]);
-        if (deptRes.data?.success) setDepartments(deptRes.data.data);
-        if (desigRes.data?.success) setDesignations(desigRes.data.data);
-        if (adminRes.data?.success) setAdmins(adminRes.data.data);
-        if (rolesRes.data?.success) setRoles(rolesRes.data.data);
-      } catch (e) {
-        console.error('Failed to fetch dropdowns', e);
-      }
+      const deptRes = await api.get('/api/departments').catch(error => {
+        console.error('Failed to fetch departments', error); return null;
+      });
+      if (deptRes?.data?.success) setDepartments(deptRes.data.data);
+
+      const desigRes = await api.get('/api/designations').catch(error => {
+        console.error('Failed to fetch designations', error); return null;
+      });
+      if (desigRes?.data?.success) setDesignations(desigRes.data.data);
+
+      const adminRes = await api.get('/api/admin/all').catch(error => {
+        console.error('Failed to fetch admin users', error); return null;
+      });
+      if (adminRes?.data?.success) setAdmins(adminRes.data.data);
+
+      const rolesRes = await api.get('/api/roles').catch(error => {
+        console.error('Failed to fetch roles', error); return null;
+      });
+      if (rolesRes?.data?.success) setRoles(rolesRes.data.data);
     };
     fetchDropdowns();
 
     const fetchProfile = async () => {
       try {
         setLoading(true);
+        setLoadError("");
         const storedInfo = localStorage.getItem('adminInfo') || sessionStorage.getItem('adminInfo');
 
         let targetId = id;
@@ -55,55 +78,79 @@ export default function MyProfile() {
             currentUser = JSON.parse(storedInfo);
             setLoggedInUser(currentUser);
             if (!targetId) targetId = currentUser._id;
-          } catch (e) { }
+          } catch {
+            setLoadError("Your saved login details are invalid. Please sign in again.");
+          }
         }
 
         if (targetId) {
           try {
-            // Fetch the profile data and dashboard stats in parallel
-            const [profileRes, statsRes] = await Promise.all([
-              api.get(`/api/admin/${targetId}`),
-              api.get(`/api/dashboard/stats`).catch(() => ({ data: { success: false } }))
-            ]);
+            const profileRes = await api.get(`/api/admin/${targetId}`);
+            const statsRes = await api.get(`/api/dashboard/stats`).catch(error => {
+              console.error("Failed to fetch dashboard stats", error);
+              return null;
+            });
 
             if (profileRes.data.success && profileRes.data.data) {
               const profileData = Array.isArray(profileRes.data.data) ? profileRes.data.data[0] : profileRes.data.data;
 
               // Map available dashboard stats to performance
-              if (statsRes.data?.success && statsRes.data?.data) {
+              if (statsRes?.data?.success && statsRes.data?.data) {
                 const counts = statsRes.data.data.counts || {};
                 profileData.performance = {
                   ...profileData.performance, // Preserve existing performance data if any
-                  totalLeads: counts.totalContactQueries ?? 325,
-                  stallBookings: counts.totalBookings ?? 48,
-                  // The following are placeholders as they will come from CRM modules later
-                  businessGenerated: '1.24 Cr',
-                  conversionRate: '14.77',
-                  targetAchievement: 82,
-                  targetAmount: '1.50 Cr',
-                  leadsGrowth: 18,
-                  bookingsGrowth: 22,
-                  businessGrowth: 25,
-                  conversionGrowth: 8
+                  totalLeads: counts.totalContactQueries,
+                  stallBookings: counts.totalBookings
                 };
               }
 
               setAdminData(profileData);
-              setFormData(profileData);
+              setFormData({ ...profileData, password: "" });
+              setEmailVerified(Boolean(profileData.email));
+              setMobileVerified(Boolean(profileData.mobile));
+              setVerifiedEmailValue(profileData.email?.trim() || "");
+              setVerifiedMobileValue(profileData.mobile?.trim() || "");
             }
           } catch (e) {
             console.error("Error parsing adminInfo or fetching profile/stats", e);
+            setLoadError(e.response?.data?.message || "Unable to load this profile.");
           }
         }
       } catch (err) {
         console.error("Failed to load profile:", err);
+        setLoadError("Unable to load this profile.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchProfile();
-  }, []);
+  }, [id]);
+
+  useEffect(() => {
+    const email = (formData.email || "").trim();
+    if (!email || email !== verifiedEmailValue) {
+      setEmailVerified(false);
+      setEmailOtpSent(false);
+      setEmailOtp("");
+      setEmailVerificationToken("");
+    }
+  }, [formData.email, verifiedEmailValue]);
+
+  useEffect(() => {
+    const mobile = (formData.mobile || "").trim();
+    if (!mobile || mobile !== verifiedMobileValue) {
+      setMobileVerified(false);
+      setMobileOtpSent(false);
+      setMobileOtp("");
+      setMobileVerificationToken("");
+    }
+  }, [formData.mobile, verifiedMobileValue]);
+
+  useEffect(() => () => {
+    if (profilePreview) URL.revokeObjectURL(profilePreview);
+    if (signaturePreview) URL.revokeObjectURL(signaturePreview);
+  }, [profilePreview, signaturePreview]);
 
 
   const handleDepartmentChange = (e) => {
@@ -167,24 +214,160 @@ export default function MyProfile() {
   };
 
   const handleChange = (e) => {
-
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === "mobile" || name === "altMobile" ? value.replace(/\D/g, "").slice(0, 10) : value
+    }));
+  };
+
+  const handleImageSelection = (field, file) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      Swal.fire("Invalid file", "Please select a JPG, PNG or WebP image.", "error");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      Swal.fire("File too large", "Image size must be 5 MB or less.", "error");
+      return;
+    }
+    const previewUrl = URL.createObjectURL(file);
+    if (field === "profileImage") {
+      if (profilePreview) URL.revokeObjectURL(profilePreview);
+      setProfilePreview(previewUrl);
+    } else {
+      if (signaturePreview) URL.revokeObjectURL(signaturePreview);
+      setSignaturePreview(previewUrl);
+    }
+    setFormData(previous => ({ ...previous, [field]: file }));
+  };
+
+  const isFile = value => value instanceof File;
+  const currentRole = roles.find(role =>
+    role.name?.toLowerCase() === loggedInUser?.role?.toLowerCase()
+  );
+  const currentRoleSlug = (loggedInUser?.role || "").toLowerCase().replace(/[^a-z]/g, "");
+  const isSuperAdmin = currentRoleSlug === "superadmin" || currentRoleSlug === "ihwesuperadministrator";
+  const canManagePrivileges = isSuperAdmin || currentRole?.permissions?.["User ID Management"] === true;
+  const canEditProfile = canManagePrivileges;
+
+  const checkOfficialContact = async field => {
+    if (field === "email") {
+      const res = await api.post("/api/admin/verify-email", { email: formData.email.trim(), id: adminData._id });
+      if (!res.data?.success) throw new Error(res.data?.message || "Official Email is not available");
+    } else {
+      const res = await api.post("/api/admin/verify-mobile", { mobile: formData.mobile.trim(), id: adminData._id });
+      if (!res.data?.success) throw new Error(res.data?.message || "Official Mobile Number is not available");
+    }
+  };
+
+  const sendOtp = async type => {
+    const isEmail = type === "email";
+    const identifier = (isEmail ? formData.email : formData.mobile || "").trim();
+    if (!identifier) return Swal.fire("Error", `${isEmail ? "Official Email" : "Official Mobile No"} is required`, "error");
+    if (isEmail && !/^\S+@\S+\.\S+$/.test(identifier)) return Swal.fire("Error", "Enter a valid official email", "error");
+    if (!isEmail && !/^\d{10}$/.test(identifier)) return Swal.fire("Error", "Enter a valid 10-digit mobile number", "error");
+
+    (isEmail ? setSendingEmailOtp : setSendingMobileOtp)(true);
+    try {
+      await checkOfficialContact(type);
+      const result = await otpApi.request(identifier, isEmail ? "email" : "phone", formData.fullName || formData.username || "Admin User", "ADMIN_USER");
+      if (!result.success) throw new Error(result.message || "Failed to send OTP");
+      (isEmail ? setEmailOtpSent : setMobileOtpSent)(true);
+      Swal.fire({ icon: "success", title: isEmail ? "Email OTP sent" : "WhatsApp OTP sent", timer: 1400, showConfirmButton: false });
+    } catch (error) {
+      Swal.fire("Error", error.response?.data?.message || error.message || "Failed to send OTP", "error");
+    } finally {
+      (isEmail ? setSendingEmailOtp : setSendingMobileOtp)(false);
+    }
+  };
+
+  const verifyOtp = async type => {
+    const isEmail = type === "email";
+    const identifier = (isEmail ? formData.email : formData.mobile || "").trim();
+    const code = (isEmail ? emailOtp : mobileOtp).trim();
+    if (code.length !== 6) return Swal.fire("Error", "Enter the 6-digit OTP", "error");
+
+    (isEmail ? setVerifyingEmailOtp : setVerifyingMobileOtp)(true);
+    try {
+      const result = await otpApi.verify(identifier, code, isEmail ? "email" : "phone");
+      if (!result.success || !result.verificationToken) throw new Error(result.message || "Invalid OTP");
+      if (isEmail) {
+        setEmailVerified(true); setVerifiedEmailValue(identifier); setEmailVerificationToken(result.verificationToken);
+        setEmailOtp(""); setEmailOtpSent(false);
+      } else {
+        setMobileVerified(true); setVerifiedMobileValue(identifier); setMobileVerificationToken(result.verificationToken);
+        setMobileOtp(""); setMobileOtpSent(false);
+      }
+      Swal.fire({ icon: "success", title: `${isEmail ? "Email" : "Mobile"} verified`, timer: 1300, showConfirmButton: false });
+    } catch (error) {
+      Swal.fire("Error", error.response?.data?.message || error.message || "Invalid or expired OTP", "error");
+    } finally {
+      (isEmail ? setVerifyingEmailOtp : setVerifyingMobileOtp)(false);
+    }
+  };
+
+  const buildPayload = () => {
+    const cleaned = {
+      ...formData,
+      username: (formData.username || "").trim(),
+      email: (formData.email || "").trim(),
+      mobile: (formData.mobile || "").trim(),
+      emailVerificationToken,
+      mobileVerificationToken
+    };
+    if (!canManagePrivileges || !cleaned.password) delete cleaned.password;
+    if (!canManagePrivileges) {
+      delete cleaned.role;
+      delete cleaned.status;
+    }
+    const hasFiles = isFile(cleaned.profileImage) || isFile(cleaned.signatureImage);
+    if (!hasFiles) return cleaned;
+    const body = new FormData();
+    Object.entries(cleaned).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      if ((key === "profileImage" || key === "signatureImage") && !isFile(value)) return;
+      body.append(key, value);
+    });
+    return body;
   };
 
   const handleSaveProfile = async () => {
+    if (!formData.title || !formData.fullName?.trim() || !formData.username?.trim()
+      || !formData.department || !formData.designation || !formData.email?.trim()
+      || !formData.mobile?.trim()) {
+      return Swal.fire("Required fields", "Please complete all required user details.", "error");
+    }
+    if (!emailVerified || verifiedEmailValue !== formData.email.trim()) {
+      return Swal.fire("Email verification required", "Please verify the changed Official Email via OTP.", "error");
+    }
+    if (!mobileVerified || verifiedMobileValue !== formData.mobile.trim()) {
+      return Swal.fire("Mobile verification required", "Please verify the changed Official Mobile Number via WhatsApp OTP.", "error");
+    }
+    if (formData.password && formData.password.length < 6) {
+      return Swal.fire("Invalid password", "New password must be at least 6 characters long.", "error");
+    }
     try {
       setSaving(true);
-      const res = await api.put(`/api/admin/update/${adminData._id}`, formData);
+      const payload = buildPayload();
+      const config = payload instanceof FormData ? { headers: { "Content-Type": "multipart/form-data" } } : undefined;
+      const res = await api.put(`/api/admin/update/${adminData._id}`, payload, config);
       if (res.data.success) {
-        setAdminData(formData);
+        const updated = res.data.data || { ...adminData, ...formData };
+        setAdminData(updated);
+        setFormData({ ...updated, password: "" });
+        setShowPassword(false);
+        setProfilePreview("");
+        setSignaturePreview("");
         setEditMode(false);
+        window.dispatchEvent(new Event("admin-profile-updated"));
+        Swal.fire({ icon: "success", title: "Profile updated", timer: 1500, showConfirmButton: false });
       } else {
-        alert(res.data.message || 'Failed to update profile');
+        Swal.fire("Error", res.data.message || "Failed to update profile", "error");
       }
     } catch (e) {
       console.error(e);
-      alert('Error updating profile');
+      Swal.fire("Error", e.response?.data?.message || "Error updating profile", "error");
     } finally {
       setSaving(false);
     }
@@ -192,6 +375,29 @@ export default function MyProfile() {
 
   return (
     <div className="p-4 md:p-6 bg-[#f8fafc] min-h-screen font-['Inter',sans-serif]">
+      {saving && (
+        <div className="fixed inset-0 z-[300] bg-slate-950/35 backdrop-blur-[2px] flex items-center justify-center px-4">
+          <div className="w-full max-w-xs rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 text-center">
+            <div className="mx-auto mb-4 h-11 w-11 rounded-full border-4 border-emerald-100 border-t-emerald-600 animate-spin" />
+            <h3 className="text-sm font-black text-slate-900">Updating profile</h3>
+            <p className="mt-1 text-[11px] font-medium text-slate-500">
+              Uploading images and saving user details. Please wait…
+            </p>
+          </div>
+        </div>
+      )}
+      {loading && (
+        <div className="mb-4 rounded-xl border border-emerald-100 bg-white p-5 shadow-sm animate-pulse">
+          <div className="h-5 w-40 rounded bg-slate-200 mb-3" />
+          <div className="h-3 w-72 max-w-full rounded bg-slate-100" />
+        </div>
+      )}
+      {loadError && !loading && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+          {loadError}
+          <button type="button" onClick={() => window.location.reload()} className="ml-3 underline">Retry</button>
+        </div>
+      )}
       {/* BREADCRUMB & HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-1 gap-4">
         <div>
@@ -209,7 +415,7 @@ export default function MyProfile() {
             Manage your personal information, performance and account settings
           </p>
         </div>
-        {loggedInUser?.role?.includes('Super Administrator') && (
+        {canEditProfile && !loading && !loadError && (
           <div className="flex items-center gap-2">
             {!editMode ? (
               <button
@@ -222,7 +428,15 @@ export default function MyProfile() {
             ) : (
               <>
                 <button
-                  onClick={() => { setEditMode(false); setFormData(adminData); }}
+                  onClick={() => {
+                    if (profilePreview) URL.revokeObjectURL(profilePreview);
+                    if (signaturePreview) URL.revokeObjectURL(signaturePreview);
+                    setProfilePreview("");
+                    setSignaturePreview("");
+                    setShowPassword(false);
+                    setEditMode(false);
+                    setFormData({ ...adminData, password: "" });
+                  }}
                   className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 text-xs font-bold rounded-lg shadow-sm hover:bg-slate-50 transition-all focus:ring-2 focus:ring-slate-500 focus:ring-offset-1"
                 >
                   Cancel
@@ -256,7 +470,7 @@ export default function MyProfile() {
                     className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   />
                 </div>
-                {loggedInUser?.role?.includes('Super Administrator') && (
+                {canEditProfile && (
                   <div className="absolute bottom-0 right-0 bg-[#00a859] p-1.5 rounded-full text-white shadow-sm border-2 border-white z-10">
                     <Camera size={14} />
                   </div>
@@ -427,12 +641,42 @@ export default function MyProfile() {
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-slate-700 mb-1">Password</label>
-                      <div className="relative">
-                        <input type={showPassword ? "text" : "password"} name="password" value={editMode ? (formData.password || "") : (adminData.password || "")} placeholder="Leave blank to keep current" className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" readOnly={!editMode} onChange={handleChange} />
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-2 text-slate-400 hover:text-emerald-600 focus:outline-none">
-                          {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                        </button>
-                      </div>
+                      {canManagePrivileges && editMode ? (
+                        <>
+                          <div className="relative">
+                            <input
+                              type={showPassword ? "text" : "password"}
+                              name="password"
+                              value={formData.password || ""}
+                              onChange={handleChange}
+                              autoComplete="new-password"
+                              placeholder="Leave blank to keep current password"
+                              className="w-full text-xs font-semibold px-3 py-2 pr-9 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none"
+                            />
+                            <button type="button" onClick={() => setShowPassword(value => !value)} className="absolute right-3 top-2 text-slate-400 hover:text-emerald-600" aria-label={showPassword ? "Hide password" : "Show password"}>
+                              {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                            </button>
+                          </div>
+                          <p className="mt-1 text-[9px] font-medium text-amber-600">
+                            Resets this selected user's password.
+                          </p>
+                        </>
+                      ) : !canManagePrivileges ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => window.dispatchEvent(new Event("open-admin-change-password"))}
+                            className="w-full flex items-center justify-between text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-slate-600 hover:border-emerald-300 hover:text-emerald-700"
+                          >
+                            Change My Password with OTP <ChevronRight size={13} />
+                          </button>
+                          <p className="mt-1 text-[9px] font-medium text-slate-400">Opens your secure password verification modal.</p>
+                        </>
+                      ) : (
+                        <p className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-slate-400">
+                          Enter Edit mode to reset this user's password
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -442,12 +686,14 @@ export default function MyProfile() {
                       <label className="block text-[10px] font-bold text-slate-700 mb-1">User Photo <span className="text-red-500">*</span></label>
                       <div className="flex gap-3 items-start">
                         <div className="w-14 h-14 bg-slate-100 rounded border border-slate-200 overflow-hidden shrink-0">
-                          <img src={adminData.profileImage || `https://ui-avatars.com/api/?name=${adminData.fullName || adminData.username || 'User'}&background=e2e8f0&color=0f172a&bold=true&size=100`} alt="User" className="w-full h-full object-cover" />
+                          <img src={profilePreview || adminData.profileImage || `https://ui-avatars.com/api/?name=${adminData.fullName || adminData.username || 'User'}&background=e2e8f0&color=0f172a&bold=true&size=100`} alt="User" className="w-full h-full object-cover" />
                         </div>
                         <div className="flex flex-col gap-1">
-                          <button className="text-[9px] font-bold text-slate-700 border border-slate-200 px-2 py-1 rounded flex items-center justify-center gap-1 hover:bg-slate-50">
+                          <label className={`text-[9px] font-bold text-slate-700 border border-slate-200 px-2 py-1 rounded flex items-center justify-center gap-1 ${editMode ? "hover:bg-slate-50 cursor-pointer" : "opacity-50 cursor-not-allowed"}`}>
                             <Upload size={10} /> Upload New
-                          </button>
+                            <input type="file" accept="image/jpeg,image/png,image/webp" disabled={!editMode || saving} className="hidden" onChange={e => handleImageSelection("profileImage", e.target.files?.[0])} />
+                          </label>
+                          {formData.profileImage instanceof File && <span className="max-w-[120px] truncate text-[9px] font-semibold text-emerald-600" title={formData.profileImage.name}>{formData.profileImage.name}</span>}
                           {adminData.profileImage && (
                             <a href={adminData.profileImage} target="_blank" rel="noopener noreferrer" className="text-[9px] font-bold text-emerald-600 border border-emerald-200 bg-emerald-50 px-2 py-1 rounded flex items-center justify-center gap-1 hover:bg-emerald-100">
                               <Eye size={10} /> View Photo
@@ -461,16 +707,18 @@ export default function MyProfile() {
                       <label className="block text-[10px] font-bold text-slate-700 mb-1">Signature</label>
                       <div className="flex gap-3 items-start">
                         <div className="w-24 h-12 bg-white rounded border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
-                          {adminData.signatureImage ? (
-                            <img src={adminData.signatureImage} alt="Signature" className="w-full h-full object-contain" />
+                          {signaturePreview || adminData.signatureImage ? (
+                            <img src={signaturePreview || adminData.signatureImage} alt="Signature" className="w-full h-full object-contain" />
                           ) : (
                             <span className="font-[cursive] text-lg text-slate-800 italic">No Sig</span>
                           )}
                         </div>
                         <div className="flex flex-col gap-1">
-                          <button className="text-[9px] font-bold text-slate-700 border border-slate-200 px-2 py-1 rounded flex items-center justify-center gap-1 hover:bg-slate-50">
+                          <label className={`text-[9px] font-bold text-slate-700 border border-slate-200 px-2 py-1 rounded flex items-center justify-center gap-1 ${editMode ? "hover:bg-slate-50 cursor-pointer" : "opacity-50 cursor-not-allowed"}`}>
                             <Upload size={10} /> Upload New
-                          </button>
+                            <input type="file" accept="image/jpeg,image/png,image/webp" disabled={!editMode || saving} className="hidden" onChange={e => handleImageSelection("signatureImage", e.target.files?.[0])} />
+                          </label>
+                          {formData.signatureImage instanceof File && <span className="max-w-[120px] truncate text-[9px] font-semibold text-emerald-600" title={formData.signatureImage.name}>{formData.signatureImage.name}</span>}
                           {adminData.signatureImage && (
                             <a href={adminData.signatureImage} target="_blank" rel="noopener noreferrer" className="text-[9px] font-bold text-emerald-600 border border-emerald-200 bg-emerald-50 px-2 py-1 rounded flex items-center justify-center gap-1 hover:bg-emerald-100">
                               <Eye size={10} /> View Signature
@@ -500,17 +748,37 @@ export default function MyProfile() {
                       <label className="block text-[10px] font-bold text-slate-700 mb-1">Official Email <span className="text-red-500">*</span></label>
                       <div className="flex items-center gap-2">
                         <input type="email" value={editMode ? (formData.email || "") : (adminData.email || "")} name="email" className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" readOnly={!editMode} onChange={handleChange} />
-                        <span className="text-[9px] font-bold bg-emerald-50 text-emerald-600 px-2 py-1 rounded border border-emerald-100">Verified</span>
+                        {editMode ? (
+                          <button type="button" disabled={sendingEmailOtp || emailVerified} onClick={() => sendOtp("email")} className="min-w-[74px] text-[9px] font-bold bg-emerald-600 text-white px-2 py-2 rounded disabled:opacity-60">
+                            {sendingEmailOtp ? "Sending..." : emailVerified ? "Verified" : "Send OTP"}
+                          </button>
+                        ) : emailVerified && <span className="text-[9px] font-bold bg-emerald-50 text-emerald-600 px-2 py-1 rounded border border-emerald-100">Verified</span>}
                       </div>
-                      <p className="text-[9px] text-emerald-600 font-semibold mt-1 flex items-center gap-1"><CheckCircle2 size={10} /> Official Email verified</p>
+                      {emailOtpSent && editMode && (
+                        <div className="flex gap-2 mt-2">
+                          <input value={emailOtp} onChange={e => setEmailOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="6-digit Email OTP" className="flex-1 text-xs px-3 py-2 border border-amber-300 rounded-md outline-none focus:border-emerald-500" />
+                          <button type="button" disabled={verifyingEmailOtp} onClick={() => verifyOtp("email")} className="px-3 py-2 text-[9px] font-bold text-white bg-[#1e4018] rounded-md disabled:opacity-60">{verifyingEmailOtp ? "Checking..." : "Verify"}</button>
+                        </div>
+                      )}
+                      <p className={`text-[9px] font-semibold mt-1 flex items-center gap-1 ${emailVerified ? "text-emerald-600" : "text-amber-600"}`}><CheckCircle2 size={10} /> {emailVerified ? "Official Email verified" : "Email change requires OTP verification"}</p>
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-slate-700 mb-1">Official Mobile No <span className="text-red-500">*</span></label>
                       <div className="flex items-center gap-2">
                         <input type="text" value={editMode ? (formData.mobile || "") : (adminData.mobile || "")} name="mobile" className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" readOnly={!editMode} onChange={handleChange} />
-                        <span className="text-[9px] font-bold bg-emerald-50 text-emerald-600 px-2 py-1 rounded border border-emerald-100">Verified</span>
+                        {editMode ? (
+                          <button type="button" disabled={sendingMobileOtp || mobileVerified} onClick={() => sendOtp("mobile")} className="min-w-[74px] text-[9px] font-bold bg-emerald-600 text-white px-2 py-2 rounded disabled:opacity-60">
+                            {sendingMobileOtp ? "Sending..." : mobileVerified ? "Verified" : "Send OTP"}
+                          </button>
+                        ) : mobileVerified && <span className="text-[9px] font-bold bg-emerald-50 text-emerald-600 px-2 py-1 rounded border border-emerald-100">Verified</span>}
                       </div>
-                      <p className="text-[9px] text-emerald-600 font-semibold mt-1 flex items-center gap-1"><CheckCircle2 size={10} /> Official Mobile No verified</p>
+                      {mobileOtpSent && editMode && (
+                        <div className="flex gap-2 mt-2">
+                          <input value={mobileOtp} onChange={e => setMobileOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="6-digit WhatsApp OTP" className="flex-1 text-xs px-3 py-2 border border-amber-300 rounded-md outline-none focus:border-emerald-500" />
+                          <button type="button" disabled={verifyingMobileOtp} onClick={() => verifyOtp("mobile")} className="px-3 py-2 text-[9px] font-bold text-white bg-[#1e4018] rounded-md disabled:opacity-60">{verifyingMobileOtp ? "Checking..." : "Verify"}</button>
+                        </div>
+                      )}
+                      <p className={`text-[9px] font-semibold mt-1 flex items-center gap-1 ${mobileVerified ? "text-emerald-600" : "text-amber-600"}`}><CheckCircle2 size={10} /> {mobileVerified ? "Official Mobile No verified" : "Mobile change requires WhatsApp OTP verification"}</p>
                     </div>
 
                   </div>
@@ -578,8 +846,8 @@ export default function MyProfile() {
 
                       <div>
                         <label className="block text-[10px] font-bold text-[#1e293b] mb-1">Role <span className="text-red-500">*</span></label>
-                        <select className="w-full text-[11px] font-semibold px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none text-slate-700" disabled={!editMode} value={editMode ? (formData.role || "") : (adminData.role || "")} name="role" onChange={handleChange}>
-                          {editMode ? roles.map(r => <option key={r._id || r.name} value={r.name}>{r.name}</option>) : <option value={adminData.role}>{adminData.role || 'Super Administrator'}</option>}
+                        <select className="w-full text-[11px] font-semibold px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none text-slate-700" disabled={!editMode || !canManagePrivileges} value={editMode ? (formData.role || "") : (adminData.role || "")} name="role" onChange={handleChange}>
+                          {editMode && canManagePrivileges ? roles.map(r => <option key={r._id || r.name} value={r.name}>{r.name}</option>) : <option value={adminData.role}>{adminData.role || 'Role not assigned'}</option>}
                         </select>
                       </div>
 
@@ -588,21 +856,21 @@ export default function MyProfile() {
                         <div className="flex rounded-md shadow-sm">
                           <button
                             type="button"
-                            disabled={!editMode}
+                            disabled={!editMode || !canManagePrivileges}
                             onClick={() => setFormData({ ...formData, status: 'Active' })}
                             className={`flex-1 py-2 text-[11px] font-bold rounded-l-md border transition-colors ${(editMode ? formData.status : adminData.status) !== 'Inactive'
-                                ? 'bg-emerald-700 text-white border-emerald-700'
-                                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                              ? 'bg-emerald-700 text-white border-emerald-700'
+                              : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
                               }`}
                           >
                             Active
                           </button>
                           <button
                             type="button"
-                            disabled={!editMode}
+                            disabled={!editMode || !canManagePrivileges}
                             onClick={() => setFormData({ ...formData, status: 'Inactive' })}
                             className={`flex-1 py-2 text-[11px] font-bold rounded-r-md border-y border-r transition-colors ${(editMode ? formData.status : adminData.status) === 'Inactive'
-                                ? 'bg-white text-slate-500 border-slate-200 shadow-inner'
+                                ? 'bg-red-600 text-white border-red-600 shadow-sm'
                                 : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
                               }`}
                           >
@@ -741,7 +1009,7 @@ export default function MyProfile() {
             </div>
             <div className="flex justify-between items-center mb-1 relative z-10">
               <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-wider">My Performance <span className="text-slate-400 font-bold lowercase tracking-normal">(This Financial Year)</span></h3>
-              <button className="text-[9px] font-bold text-emerald-700 border border-emerald-200 px-2 py-1 rounded bg-emerald-50 hover:bg-emerald-100 transition-colors">View Details</button>
+              <Link to="/dashboard" className="text-[9px] font-bold text-emerald-700 border border-emerald-200 px-2 py-1 rounded bg-emerald-50 hover:bg-emerald-100 transition-colors">View Details</Link>
             </div>
 
             <div className="grid grid-cols-4 gap-1.5 mb-1 relative z-10">
@@ -750,7 +1018,7 @@ export default function MyProfile() {
                   <Users className="w-3.5 h-3.5 text-blue-600" />
                 </div>
                 <p className="text-[8.5px] font-bold text-slate-400 mb-0.5 leading-tight">Total Leads</p>
-                <p className="text-base font-black text-slate-900 leading-none tracking-tight whitespace-nowrap">{adminData.performance?.totalLeads ?? 325}</p>
+                <p className="text-base font-black text-slate-900 leading-none tracking-tight whitespace-nowrap">{adminData.performance?.totalLeads ?? '—'}</p>
                 <div className="bg-emerald-50 px-1 py-1 rounded w-full text-center mt-auto pt-1.5 flex flex-col items-center justify-center leading-[1.1]">
                   <span className="text-[9px] font-bold text-emerald-600">↑ {adminData.performance?.leadsGrowth ?? 18}%</span>
                   <span className="text-[7.5px] font-medium text-emerald-600/60">vs last year</span>
@@ -762,7 +1030,7 @@ export default function MyProfile() {
                   <CheckCircle2 className="w-3.5 h-3.5 text-purple-600" />
                 </div>
                 <p className="text-[8.5px] font-bold text-slate-400 mb-0.5 leading-tight">Stall Bookings</p>
-                <p className="text-base font-black text-slate-900 leading-none tracking-tight whitespace-nowrap">{adminData.performance?.stallBookings ?? 48}</p>
+                <p className="text-base font-black text-slate-900 leading-none tracking-tight whitespace-nowrap">{adminData.performance?.stallBookings ?? '—'}</p>
                 <div className="bg-emerald-50 px-1 py-1 rounded w-full text-center mt-auto pt-1.5 flex flex-col items-center justify-center leading-[1.1]">
                   <span className="text-[9px] font-bold text-emerald-600">↑ {adminData.performance?.bookingsGrowth ?? 22}%</span>
                   <span className="text-[7.5px] font-medium text-emerald-600/60">vs last year</span>
@@ -819,7 +1087,7 @@ export default function MyProfile() {
             <p className="text-[10px] font-medium text-slate-500 mb-4">Modules and features this user can access.</p>
 
             <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-              {Object.entries(roles.find(r => r.name === adminData.role)?.permissions || {}).filter(([_, hasAccess]) => hasAccess).slice(0, 6).map(([module]) => ({ module, access: 'Full Access' })).map((right, idx) => (
+              {Object.entries(roles.find(r => r.name === adminData.role)?.permissions || {}).filter(([, hasAccess]) => hasAccess).slice(0, 6).map(([module]) => ({ module, access: 'Full Access' })).map((right, idx) => (
                 <div key={idx} className="flex justify-between items-center p-2 rounded-lg bg-slate-50 border border-slate-100">
                   <span className="text-[10px] font-bold text-slate-700 flex items-center gap-1.5"><CheckCircle2 size={12} className="text-slate-400" /> {right.module}</span>
                   <span className="text-[9px] font-bold text-emerald-600 flex items-center gap-0.5">

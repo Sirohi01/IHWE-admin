@@ -140,6 +140,15 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
   const [adminData, setAdminData] = useState({ username: "Admin", role: "Authorized Access" });
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
+  useEffect(() => {
+    const openChangePassword = () => {
+      setProfileOpen(false);
+      setIsChangePasswordOpen(true);
+    };
+    window.addEventListener("open-admin-change-password", openChangePassword);
+    return () => window.removeEventListener("open-admin-change-password", openChangePassword);
+  }, []);
+
   const companiesState = useSelector((state) => state.companies);
   const companiesArray = getArrayFromSlice(companiesState, "companies");
   const newLeadsCount = companiesArray.filter((c) => c.companyStatus === "New Lead").length;

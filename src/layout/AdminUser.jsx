@@ -57,6 +57,8 @@ export default function AdminUser() {
     const [mobileVerified, setMobileVerified] = useState(false);
     const [verifiedEmailValue, setVerifiedEmailValue] = useState('');
     const [verifiedMobileValue, setVerifiedMobileValue] = useState('');
+    const [emailVerificationToken, setEmailVerificationToken] = useState('');
+    const [mobileVerificationToken, setMobileVerificationToken] = useState('');
     const [sendingEmailOtp, setSendingEmailOtp] = useState(false);
     const [sendingMobileOtp, setSendingMobileOtp] = useState(false);
     const [verifyingEmailOtp, setVerifyingEmailOtp] = useState(false);
@@ -70,7 +72,9 @@ export default function AdminUser() {
         try {
             const res = await api.get('/api/admin/all');
             if (res.data.success) setAdmins(res.data.data);
-        } catch { }
+        } catch (error) {
+            console.error('Error fetching admin users:', error);
+        }
         setLoading(false);
     };
 
@@ -78,7 +82,9 @@ export default function AdminUser() {
         try {
             const res = await api.get('/api/roles');
             if (res.data.success) setRoles(res.data.data);
-        } catch { }
+        } catch (error) {
+            console.error('Error fetching roles:', error);
+        }
     };
 
     const fetchDepartments = async () => {
@@ -136,6 +142,7 @@ export default function AdminUser() {
         const email = form.email.trim();
         if (!email || email !== verifiedEmailValue) {
             setEmailVerified(false);
+            setEmailVerificationToken('');
             setEmailOtpSent(false);
             setEmailOtp('');
         }
@@ -145,6 +152,7 @@ export default function AdminUser() {
         const mobile = form.mobile.trim();
         if (!mobile || mobile !== verifiedMobileValue) {
             setMobileVerified(false);
+            setMobileVerificationToken('');
             setMobileOtpSent(false);
             setMobileOtp('');
         }
@@ -213,6 +221,8 @@ export default function AdminUser() {
     const buildPayload = () => {
         const cleaned = {
             ...form,
+            emailVerificationToken,
+            mobileVerificationToken,
             username: form.username.trim(),
             email: form.email.trim(),
             mobile: form.mobile.trim(),
@@ -270,6 +280,8 @@ export default function AdminUser() {
         setMobileVerified(false);
         setVerifiedEmailValue('');
         setVerifiedMobileValue('');
+        setEmailVerificationToken('');
+        setMobileVerificationToken('');
     };
 
     const sendOfficialEmailOtp = async () => {
@@ -302,6 +314,7 @@ export default function AdminUser() {
             if (!res.success) throw new Error(res.message || 'Invalid email OTP');
             setEmailVerified(true);
             setVerifiedEmailValue(email);
+            setEmailVerificationToken(res.verificationToken || res.data?.verificationToken || '');
             setEmailOtpSent(false);
             setEmailOtp('');
             Swal.fire({ icon: 'success', title: 'Email verified', timer: 1300, showConfirmButton: false });
@@ -340,6 +353,7 @@ export default function AdminUser() {
             if (!res.success) throw new Error(res.message || 'Invalid mobile OTP');
             setMobileVerified(true);
             setVerifiedMobileValue(mobile);
+            setMobileVerificationToken(res.verificationToken || res.data?.verificationToken || '');
             setMobileOtpSent(false);
             setMobileOtp('');
             Swal.fire({ icon: 'success', title: 'Mobile verified', timer: 1300, showConfirmButton: false });
@@ -357,6 +371,8 @@ export default function AdminUser() {
         setMobileVerified(Boolean(admin.mobile));
         setVerifiedEmailValue(admin.email?.trim() || '');
         setVerifiedMobileValue(admin.mobile?.trim() || '');
+        setEmailVerificationToken('');
+        setMobileVerificationToken('');
         setEmailOtp('');
         setMobileOtp('');
         setEmailOtpSent(false);
