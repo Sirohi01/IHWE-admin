@@ -52,10 +52,10 @@ const initialForm = {
 };
 
 const inputClass =
-  "w-full rounded-[7px] border border-[#d6dbe6] bg-white px-3.5 py-2.5 text-[clamp(13px,1vw,15px)] font-medium text-[#1a264e] shadow-[0_2px_10px_rgba(20,40,80,0.02)] transition-all placeholder:font-normal placeholder:text-[#9ea7bd] focus:border-[#104db4] focus:outline-none focus:ring-[3px] focus:ring-[#104db4]/10 hover:border-[#b4becd]";
+  "h-[clamp(39px,4.4vh,46px)] w-full rounded-[6px] border border-[#d5dae4] bg-white px-4 text-[clamp(10px,.86vw,13px)] font-semibold text-[#263451] outline-none transition placeholder:text-[#8e97aa] focus:border-[#1761db] focus:ring-2 focus:ring-[#1761db]/10";
 
 const labelClass =
-  "mb-2 block text-[clamp(12px,0.92vw,14px)] font-bold text-[#1f2d59]";
+  "mb-2 block text-[clamp(11px,.92vw,14px)] font-extrabold text-[#122252]";
 
 const Field = ({ label, required, optional, children }) => (
   <div className="flex flex-col">
@@ -69,7 +69,7 @@ const Field = ({ label, required, optional, children }) => (
 );
 
 const HelperText = ({ children }) => (
-  <p className="mt-1.5 text-[clamp(10px,0.8vw,12px)] font-semibold text-[#8790a7]">
+  <p className="mt-2 text-[clamp(9px,.73vw,11px)] font-semibold text-[#7a8399]">
     {children}
   </p>
 );
@@ -83,7 +83,7 @@ const AddNextActionForm = () => {
   const nextActions = Array.isArray(nextActionState.nextActions)
     ? nextActionState.nextActions
     : [];
-  
+
   const [form, setForm] = useState(initialForm);
   const [isSaving, setIsSaving] = useState(false);
   const pageRef = useRef(null);
@@ -148,7 +148,7 @@ const AddNextActionForm = () => {
 
   const validateForm = () => {
     if (!form.name.trim()) return "Please enter the action name.";
-    
+
     const duplicate = nextActions.some(
       (action) =>
         String(action?.name || "")
@@ -158,7 +158,7 @@ const AddNextActionForm = () => {
     );
 
     if (duplicate) return "A next action with this name already exists.";
-    
+
     if (
       form.display_order === "" ||
       Number.isNaN(Number(form.display_order)) ||
@@ -281,308 +281,352 @@ const AddNextActionForm = () => {
   };
 
   return (
-    <div
+    <section
       ref={pageRef}
-      className="box-border flex min-h-0 w-full flex-col overflow-hidden bg-[#f7f9fc] px-[clamp(14px,1.8vw,30px)] py-[clamp(6px,0.75vh,10px)] text-[#111f4c]"
+      className="box-border h-[calc(100dvh-72px)] min-h-0 overflow-hidden bg-[#f7f9fc] px-[clamp(18px,2.25vw,34px)] py-[clamp(10px,1.25vh,16px)] font-sans text-[#122252]"
       style={{
-        height: "calc(100dvh - 64px)",
-        maxHeight: "calc(100dvh - 64px)",
-        minHeight: 0,
         fontFamily:
           'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       }}
     >
-      <header className="shrink-0">
-        <div className="flex items-center gap-2 text-[clamp(11px,0.85vw,14px)] font-semibold text-[#68728e]">
-          <span>System Configuration</span>
-          <ChevronRight className="h-4 w-4" />
-          <button
-            type="button"
-            onClick={() => navigate(BACK_PATH)}
-            className="font-bold text-[#104db4] hover:underline"
-          >
-            Next Action
-          </button>
-          <ChevronRight className="h-4 w-4" />
-          <span className="font-bold text-[#104db4]">{id ? "Edit Next Action" : "Add New"}</span>
-        </div>
-
-        <div className="mt-[clamp(4px,0.55vh,7px)] flex items-center justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-[clamp(12px,1.4vw,20px)]">
-            <div className="flex h-[clamp(46px,4.3vw,58px)] w-[clamp(46px,4.3vw,58px)] shrink-0 items-center justify-center rounded-[10px] bg-[#104db4]">
-              <CalendarCheck2 className="h-[clamp(23px,2vw,29px)] w-[clamp(23px,2vw,29px)] text-white" strokeWidth={1.8} />
+      <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-[clamp(9px,1.15vh,14px)]">
+        {/* Page Header */}
+        <header className="flex shrink-0 items-center justify-between gap-5">
+          <div className="min-w-0">
+            <div className="mb-[clamp(7px,.8vh,10px)] flex items-center gap-2 text-[clamp(10px,.78vw,12px)] font-semibold text-[#68748b]">
+              <span>System Configuration</span>
+              <ChevronRight className="h-3.5 w-3.5 text-[#a8b0be]" />
+              <button
+                type="button"
+                onClick={() => navigate(BACK_PATH)}
+                className="font-bold text-[#48556c] hover:text-[#1761db]"
+              >
+                Next Action
+              </button>
+              <ChevronRight className="h-3.5 w-3.5 text-[#a8b0be]" />
+              <span className="font-extrabold text-[#24408d]">
+                {id ? "Edit" : "Add New"}
+              </span>
             </div>
 
-            <div className="min-w-0">
-              <h1 className="truncate text-[clamp(20px,1.8vw,28px)] font-extrabold leading-tight tracking-[-0.025em] text-[#0d1d4d]">
-                {id ? "Edit Next Action" : "Add New Next Action"}
-              </h1>
-              <p className="mt-0.5 text-[clamp(10px,0.88vw,14px)] font-medium text-[#59637f]">
-                {id ? "Update the existing next action details." : "Create a new next action for follow-up activities and task management."}
-              </p>
+            <div className="flex min-w-0 items-center gap-[clamp(12px,1.35vw,19px)]">
+              <div className="flex h-[clamp(48px,4.6vw,62px)] w-[clamp(48px,4.6vw,62px)] shrink-0 items-center justify-center rounded-[9px] bg-gradient-to-br from-[#2167e7] to-[#083fbd] shadow-[0_8px_18px_rgba(20,91,215,.22)]">
+                <CalendarCheck2
+                  className="h-[clamp(24px,2vw,30px)] w-[clamp(24px,2vw,30px)] text-white"
+                  strokeWidth={1.8}
+                />
+              </div>
+
+              <div className="min-w-0">
+                <h1 className="truncate text-[clamp(21px,1.8vw,29px)] font-extrabold leading-tight tracking-[-.025em] text-[#0d1d4e]">
+                  {id ? "Edit Next Action" : "Add New Next Action"}
+                </h1>
+                <p className="mt-1 text-[clamp(10px,.84vw,13px)] font-semibold text-[#5e6981]">
+                  {id
+                    ? "Update the next action details for follow-up activities and task management."
+                    : "Create a new next action for follow-up activities and task management."}
+                </p>
+              </div>
             </div>
           </div>
 
           <button
             type="button"
             onClick={() => navigate(BACK_PATH)}
-            className="flex h-[clamp(36px,4vh,44px)] shrink-0 items-center gap-3 rounded-[7px] border border-[#ccd1dd] bg-white px-[clamp(16px,1.8vw,26px)] text-[clamp(11px,0.9vw,14px)] font-bold text-[#17244d] shadow-sm transition hover:border-[#9ea7bd] hover:bg-[#fafbfe]"
+            className="inline-flex h-[clamp(40px,4.5vh,47px)] shrink-0 items-center justify-center gap-2 rounded-[7px] border border-[#cfd4de] bg-white px-[clamp(16px,1.8vw,24px)] text-[clamp(10px,.85vw,13px)] font-extrabold text-[#17264f] shadow-sm transition hover:border-[#aeb6c6] hover:bg-[#fafbfc]"
           >
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Back to Next Action</span>
             <span className="sm:hidden">Back</span>
           </button>
-        </div>
-      </header>
+        </header>
 
-      <form
-        onSubmit={handleSubmit}
-        className="mt-[clamp(5px,0.65vh,8px)] flex min-h-0 flex-1 flex-col overflow-hidden rounded-[10px] border border-[#e1e5ec] bg-white px-[clamp(16px,1.9vw,28px)] py-[clamp(8px,0.9vh,12px)] shadow-[0_5px_22px_rgba(19,38,80,0.06)]"
-      >
-        <section className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mb-[clamp(6px,0.75vh,10px)]">
-            <h2 className="text-[clamp(15px,1.25vw,19px)] font-extrabold text-[#104db4]">
-              Next Action Information
-            </h2>
-            <div className="mt-1.5 h-[3px] w-16 rounded-full bg-[#104db4]" />
-          </div>
+        {/* Form Card */}
+        <form
+          onSubmit={handleSubmit}
+          className="flex min-h-0 flex-col overflow-hidden rounded-[10px] border border-[#e0e4eb] bg-white px-[clamp(18px,2.15vw,32px)] py-[clamp(12px,1.5vh,19px)] shadow-[0_5px_20px_rgba(15,31,75,.05)]"
+        >
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <div className="mb-[clamp(11px,1.45vh,18px)]">
+              <h2 className="text-[clamp(14px,1.08vw,17px)] font-extrabold text-[#1556c7]">
+                Next Action Information
+              </h2>
+              <div className="mt-2 h-[3px] w-16 rounded-full bg-[#2f6fe5]" />
+            </div>
 
-          <div className="grid grid-cols-1 gap-x-[clamp(22px,2.8vw,44px)] gap-y-[clamp(5px,0.65vh,9px)] lg:grid-cols-2 mt-4">
-            <Field label="Action Name" required>
-              <input
-                value={form.name}
-                onChange={(event) => updateField("name", event.target.value)}
-                type="text"
-                placeholder="Enter action name"
-                className={inputClass}
-              />
-              <HelperText>Example: Call, Email, Send Proposal, Meeting, Follow Up etc.</HelperText>
-            </Field>
+            <div className="grid grid-cols-1 gap-x-[clamp(28px,3vw,48px)] gap-y-[clamp(10px,1.25vh,16px)] md:grid-cols-2">
+              <Field label="Action Name" required>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(event) => updateField("name", event.target.value)}
+                  placeholder="Enter action name"
+                  className={inputClass}
+                />
+                <HelperText>
+                  Example: Call, Email, Send Proposal, Meeting, Follow Up etc.
+                </HelperText>
+              </Field>
 
-            <Field label="Action Code" optional>
-              <input
-                value={form.action_code}
-                onChange={(event) => updateField("action_code", event.target.value.slice(0, 10))}
-                type="text"
-                placeholder="Enter action code"
-                className={inputClass}
-              />
-              <HelperText>For internal reference only. (Max 10 characters)</HelperText>
-            </Field>
-
-            <Field label="Description" optional>
-              <div className="relative">
-                <textarea
-                  value={form.description}
+              <Field label="Action Code" optional>
+                <input
+                  type="text"
+                  maxLength={10}
+                  value={form.action_code}
                   onChange={(event) =>
                     updateField(
-                      "description",
-                      event.target.value.slice(0, 250)
+                      "action_code",
+                      event.target.value.replace(/\s+/g, "").toUpperCase()
                     )
                   }
-                  maxLength={250}
-                  placeholder="Enter description"
-                  className={`${inputClass} h-[clamp(58px,7vh,72px)] resize-none py-2.5`}
+                  placeholder="Enter action code"
+                  className={inputClass}
                 />
-                <span className="absolute bottom-3 right-4 text-[12px] font-semibold text-[#8790a7]">
-                  {form.description.length} / 250
-                </span>
-              </div>
-              <HelperText>Brief description about this action.</HelperText>
-            </Field>
+                <HelperText>
+                  For internal reference only. (Max 10 characters)
+                </HelperText>
+              </Field>
 
-            <Field label="Display Order" required>
-              <div className="relative">
+              <Field label="Description" optional>
+                <div className="relative">
+                  <textarea
+                    maxLength={250}
+                    value={form.description}
+                    onChange={(event) =>
+                      updateField(
+                        "description",
+                        event.target.value.slice(0, 250)
+                      )
+                    }
+                    placeholder="Enter description"
+                    className={`${inputClass} h-[clamp(80px,9.5vh,106px)] resize-none py-3`}
+                  />
+                  <span className="absolute bottom-3 right-3 bg-white px-1 text-[10px] font-semibold text-[#8992a5]">
+                    {form.description.length} / 250
+                  </span>
+                </div>
+                <HelperText>Brief description about this action.</HelperText>
+              </Field>
+
+              <Field label="Display Order" required>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="1"
+                    value={form.display_order}
+                    onChange={(event) =>
+                      updateField(
+                        "display_order",
+                        event.target.value.replace(/[^\d]/g, "")
+                      )
+                    }
+                    placeholder="Enter display order"
+                    className={`${inputClass} appearance-none pr-10`}
+                  />
+                  <div className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 flex-col text-[#53627e]">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <polyline points="18 15 12 9 6 15" />
+                    </svg>
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="-mt-1"
+                    >
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </div>
+                </div>
+                <HelperText>Lower number will be shown first.</HelperText>
+              </Field>
+
+              <Field label="Action Type" required>
+                <div className="relative">
+                  <select
+                    value={form.action_type}
+                    onChange={(event) =>
+                      updateField("action_type", event.target.value)
+                    }
+                    className={`${inputClass} appearance-none pr-10`}
+                  >
+                    <option value="">Select action type</option>
+                    {ACTION_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#53627e]" />
+                </div>
+                <HelperText>Select the type of action.</HelperText>
+              </Field>
+
+              <Field label="Default Follow-up Days" optional>
                 <input
-                  value={form.display_order}
+                  type="number"
+                  min="0"
+                  value={form.follow_up_days}
                   onChange={(event) =>
                     updateField(
-                      "display_order",
+                      "follow_up_days",
                       event.target.value.replace(/[^\d]/g, "")
                     )
                   }
-                  min="1"
-                  type="number"
-                  inputMode="numeric"
-                  placeholder="Enter display order"
-                  className={`${inputClass} appearance-none`}
+                  placeholder="Enter number of days"
+                  className={inputClass}
                 />
-              </div>
-              <HelperText>Lower number will be shown first.</HelperText>
-            </Field>
+                <HelperText>
+                  No. of days after which reminder should be set.
+                </HelperText>
+              </Field>
 
-            <Field label="Action Type" required>
-              <div className="relative">
-                <select
-                  value={form.action_type}
-                  onChange={(event) =>
-                    updateField("action_type", event.target.value)
-                  }
-                  className={`${inputClass} appearance-none pr-11`}
-                >
-                  <option value="">Select action type</option>
-                  {ACTION_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#273659]" />
-              </div>
-              <HelperText>Select the type of action.</HelperText>
-            </Field>
-            
-            <Field label="Default Follow-up Days" optional>
-              <input
-                value={form.follow_up_days}
-                onChange={(event) =>
-                  updateField(
-                    "follow_up_days",
-                    event.target.value.replace(/[^\d]/g, "")
-                  )
-                }
-                min="0"
-                type="number"
-                inputMode="numeric"
-                placeholder="Enter number of days"
-                className={inputClass}
-              />
-              <HelperText>No. of days after which reminder should be set.</HelperText>
-            </Field>
-
-            <div>
               <Field label="Status" required>
-                <div className="flex items-center gap-7 pt-0.5">
-                  {["Active", "Inactive"].map((status) => (
+                <div className="flex h-[clamp(38px,4.2vh,44px)] items-center gap-8">
+                  {["Active", "Inactive"].map((statusOption) => (
                     <label
-                      key={status}
-                      className="flex cursor-pointer items-center gap-2.5 text-[clamp(12px,0.92vw,14px)] font-bold text-[#273659]"
+                      key={statusOption}
+                      className="flex cursor-pointer items-center gap-2.5"
                     >
                       <input
                         type="radio"
                         name="status"
-                        value={status}
-                        checked={form.status === status}
-                        onChange={(event) =>
-                          updateField("status", event.target.value)
-                        }
-                        className="hidden"
+                        value={statusOption}
+                        checked={form.status === statusOption}
+                        onChange={() => updateField("status", statusOption)}
+                        className="peer sr-only"
                       />
-                      <span className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${form.status === status ? "border-[#104db4]" : "border-[#bec5d4]"}`}>
-                        {form.status === status && <span className="h-2.5 w-2.5 rounded-full bg-[#104db4]" />}
+                      <span className="flex h-[19px] w-[19px] items-center justify-center rounded-full border-2 border-[#c5cad5] peer-checked:border-[#1761db]">
+                        <span
+                          className={`h-2.5 w-2.5 rounded-full ${form.status === statusOption
+                              ? "bg-[#1761db]"
+                              : "bg-transparent"
+                            }`}
+                        />
                       </span>
-                      {status}
+                      <span className="text-[clamp(11px,.88vw,13px)] font-bold text-[#17264f]">
+                        {statusOption}
+                      </span>
                     </label>
                   ))}
                 </div>
               </Field>
-            </div>
 
-            <div>
               <Field label="Applicable For" required>
-                <div className="grid grid-cols-2 gap-y-3 gap-x-4 pt-1 sm:grid-cols-3 lg:grid-cols-4">
-                  {APPLICABLE_OPTIONS.map((option) => (
-                    <label
-                      key={option}
-                      className="flex cursor-pointer items-center gap-2.5 text-[clamp(12px,0.85vw,13px)] font-semibold text-[#1a264e] transition hover:text-[#104db4]"
-                    >
-                      <div className="relative flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[4px] border-2 border-[#ccd1dd] bg-white transition peer-checked:border-[#104db4] peer-checked:bg-[#104db4]">
+                <div className="flex flex-wrap gap-x-[clamp(20px,2.2vw,34px)] gap-y-3 pt-0.5">
+                  {APPLICABLE_OPTIONS.map((option) => {
+                    const checked = form.applicable_for.includes(option);
+
+                    return (
+                      <label
+                        key={option}
+                        className="flex cursor-pointer items-center gap-2.5"
+                      >
                         <input
                           type="checkbox"
-                          checked={form.applicable_for.includes(option)}
+                          checked={checked}
                           onChange={() => handleApplicableToggle(option)}
-                          className="peer absolute inset-0 cursor-pointer opacity-0"
+                          className="peer sr-only"
                         />
-                        {form.applicable_for.includes(option) && (
-                          <svg
-                            className="h-3 w-3 text-[#104db4]"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={3}
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                      <span className="truncate">{option}</span>
-                    </label>
-                  ))}
-                  
-                  <label className="flex cursor-pointer items-center gap-2.5 text-[clamp(12px,0.85vw,13px)] font-semibold text-[#1a264e] transition hover:text-[#104db4]">
-                    <div className="relative flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[4px] border-2 border-[#ccd1dd] bg-white transition peer-checked:border-[#104db4] peer-checked:bg-[#104db4]">
-                      <input
-                        type="checkbox"
-                        checked={form.applicable_for.length === APPLICABLE_OPTIONS.length}
-                        onChange={() => handleApplicableToggle("All")}
-                        className="peer absolute inset-0 cursor-pointer opacity-0"
-                      />
-                      {form.applicable_for.length === APPLICABLE_OPTIONS.length && (
-                        <svg
-                          className="h-3 w-3 text-[#104db4]"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={3}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      )}
-                    </div>
-                    <span className="truncate">All</span>
+                        <span className="flex h-[18px] w-[18px] items-center justify-center rounded-[3px] border border-[#c7ccd6] bg-white text-[12px] font-black text-white peer-checked:border-[#1761db] peer-checked:bg-[#1761db]">
+                          {checked ? "✓" : ""}
+                        </span>
+                        <span className="whitespace-nowrap text-[clamp(10px,.8vw,12px)] font-bold text-[#17264f]">
+                          {option}
+                        </span>
+                      </label>
+                    );
+                  })}
+
+                  <label className="flex cursor-pointer items-center gap-2.5">
+                    <input
+                      type="checkbox"
+                      checked={
+                        form.applicable_for.length ===
+                        APPLICABLE_OPTIONS.length
+                      }
+                      onChange={() => handleApplicableToggle("All")}
+                      className="peer sr-only"
+                    />
+                    <span className="flex h-[18px] w-[18px] items-center justify-center rounded-[3px] border border-[#c7ccd6] bg-white text-[12px] font-black text-white peer-checked:border-[#1761db] peer-checked:bg-[#1761db]">
+                      {form.applicable_for.length ===
+                        APPLICABLE_OPTIONS.length
+                        ? "✓"
+                        : ""}
+                    </span>
+                    <span className="whitespace-nowrap text-[clamp(10px,.8vw,12px)] font-bold text-[#17264f]">
+                      All
+                    </span>
                   </label>
                 </div>
-                <HelperText>Select where this action will be applicable.</HelperText>
+                <HelperText>
+                  Select where this action will be applicable.
+                </HelperText>
               </Field>
             </div>
           </div>
-          
-          <div className="mt-6 flex items-start gap-3 rounded-lg bg-[#f0f4ff] p-4 text-[#104db4]">
-            <Info className="h-5 w-5 shrink-0 mt-0.5" />
-            <p className="text-sm font-semibold leading-relaxed">
-              Note: You can manage next actions after saving the action.
-            </p>
+
+          <div className="mt-[clamp(11px,1.35vh,17px)] shrink-0 rounded-[7px] border border-[#ccdcfa] bg-[#eef5ff] px-[clamp(14px,1.45vw,21px)] py-[clamp(9px,1.05vh,13px)] text-[#1557bd]">
+            <div className="flex items-center gap-3">
+              <Info className="h-5 w-5 shrink-0 fill-[#1761db] text-white" />
+              <p className="text-[clamp(10px,.82vw,12px)] font-semibold">
+                <span className="font-extrabold text-[#163f98]">Note:</span>
+                <span className="ml-1">
+                  You can manage next actions after saving the action.
+                </span>
+              </p>
+            </div>
           </div>
-        </section>
 
-        <footer className="mt-[clamp(6px,0.8vh,12px)] flex shrink-0 items-center justify-end gap-3 border-t border-[#e8ecf3] pt-[clamp(8px,1vh,12px)]">
-          <button
-            type="button"
-            onClick={resetForm}
-            className="flex h-[clamp(38px,4.2vh,46px)] min-w-[clamp(100px,10vw,120px)] items-center justify-center gap-2 rounded-[7px] border-2 border-[#dde3ee] bg-white px-5 text-[clamp(12px,0.95vw,14px)] font-bold text-[#455273] transition hover:border-[#b8c2d4] hover:bg-[#f6f8fb] active:scale-[0.98]"
-            disabled={isSaving}
-          >
-            <RotateCcw className="h-4 w-4" /> Reset
-          </button>
+          <div className="mt-[clamp(10px,1.25vh,15px)] flex shrink-0 justify-end gap-4">
+            <button
+              type="button"
+              onClick={resetForm}
+              disabled={isSaving}
+              className="inline-flex h-[clamp(39px,4.4vh,46px)] items-center justify-center gap-2 rounded-[7px] border border-[#cfd4de] bg-white px-[clamp(20px,2vw,28px)] text-[clamp(10px,.86vw,13px)] font-extrabold text-[#17264f] transition hover:bg-[#f8f9fb] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Reset
+            </button>
 
-          <button
-            type="submit"
-            disabled={isSaving}
-            className="group relative flex h-[clamp(38px,4.2vh,46px)] min-w-[clamp(140px,14vw,170px)] items-center justify-center gap-2 overflow-hidden rounded-[7px] bg-[#104db4] px-6 text-[clamp(12px,0.95vw,14px)] font-bold text-white shadow-[0_4px_12px_rgba(16,77,180,0.25)] transition hover:bg-[#0c3e92] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {isSaving ? (
-              <span className="flex items-center gap-2">
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                Saving...
-              </span>
-            ) : (
-              <>
-                <Save className="h-4 w-4 transition-transform group-hover:scale-110" />
-                Save Next Action
-              </>
-            )}
-          </button>
+            <button
+              type="submit"
+              disabled={isSaving}
+              className="inline-flex h-[clamp(39px,4.4vh,46px)] min-w-[clamp(170px,14vw,205px)] items-center justify-center gap-2 rounded-[7px] bg-gradient-to-b from-[#1b65df] to-[#0d49c6] px-7 text-[clamp(10px,.86vw,13px)] font-extrabold text-white shadow-[0_6px_14px_rgba(13,73,198,.2)] transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-65"
+            >
+              {isSaving ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/35 border-t-white" />
+                  Saving...
+                </span>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  {id ? "Update Next Action" : "Save Next Action"}
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+
+        <footer className="flex shrink-0 items-center gap-2 px-1 text-[clamp(9px,.7vw,11px)] font-semibold text-[#7d869c]">
+          <span>© 2026 International Health &amp; Wellness Expo</span>
+          <span>|</span>
+          <span>Namo Gange Wellness Pvt. Ltd.</span>
+          <span>|</span>
+          <span>All Rights Reserved.</span>
         </footer>
-      </form>
-    </div>
+      </div>
+    </section>
   );
 };
 
