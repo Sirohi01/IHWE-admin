@@ -1152,7 +1152,7 @@ const AddCategory = () => {
               <thead>
                 <tr className="h-[40px] bg-[#073c9d] text-white">
                   {[
-                    'SL. NO.',
+                    'S.No.',
                     'CATEGORY NAME',
                     'MAIN CATEGORY',
                     'BUSINESS NATURE',
