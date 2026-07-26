@@ -94,7 +94,7 @@ const nameLengthClass = (name) => {
 };
 
 const truncateRecipientName = (name) => {
-    const value = String(name || "").trim();
+    const value = String(name || "").replace(/\s+/g, " ").trim();
     return value.length > 19 ? `${value.slice(0, 19)}...` : value;
 };
 
@@ -103,7 +103,7 @@ const CertificateImage = ({ className, src, alt }) => (
 );
 
 const Certi = ({ config, images, customInitiatives = [], customConcurrent = [], printSize = "A4", certificateType = "speaker", printMode = "single" }) => {
-    const safeCompanyName = String(config?.recipientName || "").trim() || "";
+    const safeCompanyName = String(config?.recipientName || "").replace(/\s+/g, " ").trim() || "";
     const displayCompanyName = truncateRecipientName(safeCompanyName);
     const isBatchPrint = printMode === "batch";
     const supportedByLeftText = config?.supportedByLeftText ?? config?.supportedByText;
@@ -305,7 +305,7 @@ const Certi = ({ config, images, customInitiatives = [], customConcurrent = [], 
 
                 .recipient-name {
                     display: inline-flex;
-                    min-width: 41mm;
+                    min-width: auto;
                     max-width: 58%;
                     min-height: 5.2mm;
                     align-items: flex-end;
