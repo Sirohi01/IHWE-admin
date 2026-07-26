@@ -33,6 +33,18 @@ const EMPTY_FORM = {
 };
 const iCls = 'w-full h-8 px-2.5 border border-gray-500 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]';
 const lCls = 'text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1 block';
+const formatDateTime = (value) => value
+    ? new Date(value).toLocaleString('en-IN', {
+        day: '2-digit', month: 'short', year: '2-digit',
+        hour: '2-digit', minute: '2-digit', hour12: true
+    })
+    : '—';
+const formatDate = (value) => new Date(value).toLocaleDateString('en-IN', {
+    day: '2-digit', month: 'short', year: '2-digit'
+});
+const formatTime = (value) => new Date(value).toLocaleTimeString('en-IN', {
+    hour: '2-digit', minute: '2-digit', hour12: true
+});
 
 export default function AdminUser() {
     const [admins, setAdmins] = useState([]);
@@ -459,7 +471,7 @@ export default function AdminUser() {
                         <select
                             value={statusFilter}
                             onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-                            className="pl-7 pr-6 py-1.5 h-9 bg-white text-[#23471d] text-xs font-bold uppercase tracking-wider rounded-[2px] border border-gray-300 outline-none cursor-pointer hover:bg-gray-50 shadow-sm"
+                            className="h-9 cursor-pointer rounded-md border border-gray-300 bg-white py-1.5 pl-7 pr-6 text-xs font-normal text-[#23471d] outline-none shadow-sm hover:bg-gray-50"
                         >
                             <option value="Active">Active Only</option>
                             <option value="Inactive">Inactive Only</option>
@@ -476,7 +488,7 @@ export default function AdminUser() {
                             className="w-full pl-9 pr-4 h-9 border border-gray-300 rounded-[2px] text-xs outline-none focus:border-[#23471d]" />
                     </div>
                     <button onClick={openCreate}
-                        className="flex items-center gap-2 px-4 py-0 h-9 bg-[#d26019] text-white text-[11px] font-black uppercase tracking-wider hover:bg-[#b8521a]">
+                        className="flex h-9 items-center gap-2 rounded-md bg-[#d26019] px-4 py-0 text-[11px] font-normal text-white transition-colors hover:bg-[#b8521a]">
                         <UserPlus size={13} /> Add User
                     </button>
                 </div>
@@ -484,57 +496,72 @@ export default function AdminUser() {
 
 
             {/* Table */}
-            <div className="border border-gray-200 overflow-hidden shadow-sm">
+            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
                 {loading ? (
                     <div className="flex items-center justify-center py-16">
                         <div className="w-8 h-8 border-4 border-[#23471d] border-t-transparent rounded-full animate-spin" />
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
+                        <table className="w-full min-w-max border-collapse text-sm">
                             <thead>
                                 <tr className="bg-[#23471d]">
-                                    {['#', 'Username', 'Full Name', 'Department', 'Designation', 'Email', 'Mobile', 'Role', 'Status', 'Last Login', 'Updated At', ''].map(h => (
-                                        <th key={h} className="py-2.5 px-3 text-[10px] font-black text-white uppercase text-left whitespace-nowrap">{h}</th>
+                                    {['#', 'Username', 'Full Name', 'Department', 'Designation', 'Email', 'Mobile', 'Role', 'Status', 'Last Login', 'Updated By', ''].map(h => (
+                                        <th key={h} className="whitespace-nowrap border-b border-[#315c29] px-3 py-3 text-left text-[10px] font-medium uppercase tracking-wide text-white">{h}</th>
                                     ))}
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
+                            <tbody className="divide-y divide-slate-100">
                                 {paginated.map((admin, i) => (
-                                    <tr key={admin._id} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
-                                        <td className="py-2 px-3 text-[11px] text-gray-400 font-bold">{(currentPage - 1) * itemsPerPage + i + 1}</td>
-                                        <td className="py-2 px-3 text-[11px] font-bold text-[#d26019]">{admin.username}</td>
-                                        <td className="py-2 px-3 text-[11px] font-bold text-gray-800">{admin.fullName || '—'}</td>
-                                        <td className="py-2 px-3 text-[11px] text-gray-600">{admin.department || '—'}</td>
-                                        <td className="py-2 px-3 text-[11px] text-gray-600">{admin.designation || '—'}</td>
-                                        <td className="py-2 px-3 text-[11px] text-gray-600">{admin.email || '—'}</td>
-                                        <td className="py-2 px-3 text-[11px] text-gray-600">{admin.mobile || '—'}</td>
-                                        <td className="py-2 px-3">
-                                            <span className="px-2 py-0.5 bg-slate-100 text-slate-700 text-[9px] font-black uppercase rounded-full">
+                                    <tr key={admin._id} className={`${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'} transition-colors hover:bg-[#f4f8f2]`}>
+                                        <td className="whitespace-nowrap px-3 py-3 text-[11px] font-normal text-slate-400">{(currentPage - 1) * itemsPerPage + i + 1}</td>
+                                        <td className="whitespace-nowrap px-3 py-3 text-[11px] font-normal text-[#c55718]">{admin.username}</td>
+                                        <td className="whitespace-nowrap px-3 py-3 text-[11px] font-normal text-slate-700">{admin.fullName || '—'}</td>
+                                        <td className="whitespace-nowrap px-3 py-3 text-[11px] font-normal text-slate-600">{admin.department || '—'}</td>
+                                        <td className="whitespace-nowrap px-3 py-3 text-[11px] font-normal text-slate-600">{admin.designation || '—'}</td>
+                                        <td className="whitespace-nowrap px-3 py-3 text-[11px] font-normal text-slate-600">{admin.email || '—'}</td>
+                                        <td className="whitespace-nowrap px-3 py-3 text-[11px] font-normal text-slate-600">{admin.mobile || '—'}</td>
+                                        <td className="whitespace-nowrap px-3 py-3">
+                                            <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[9px] font-normal text-slate-600">
                                                 {admin.role || 'N/A'}
                                             </span>
                                         </td>
-                                        <td className="py-2 px-3">
-                                            <span className={`flex items-center gap-1 px-2 py-0.5 text-[9px] font-black uppercase rounded-full w-fit ${admin.status === 'Active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                                        <td className="whitespace-nowrap px-3 py-3">
+                                            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[9px] font-normal ${admin.status === 'Active' ? 'border-green-200 bg-green-50 text-green-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
                                                 {admin.status === 'Active' ? <CheckCircle size={9} /> : <XCircle size={9} />}
                                                 {admin.status}
                                             </span>
                                         </td>
-                                        <td className="py-2 px-3 text-[10px] text-gray-500">
-                                            {admin.lastLogin ? new Date(admin.lastLogin).toLocaleDateString('en-IN') : 'Never'}
+                                        <td className="whitespace-nowrap px-3 py-3 text-[10px] font-normal text-slate-500">
+                                            {admin.lastLogin ? (
+                                                <div className="leading-tight">
+                                                    <p>{formatDate(admin.lastLogin)}</p>
+                                                    <p className="mt-1 text-[9px] text-slate-400">{formatTime(admin.lastLogin)}</p>
+                                                </div>
+                                            ) : 'Never'}
                                         </td>
-                                        <td className="py-2 px-3 text-[10px] text-gray-500">
-                                            {admin.updatedAt ? new Date(admin.updatedAt).toLocaleDateString('en-IN') : '—'}
+                                        <td className="whitespace-nowrap px-3 py-3 text-[10px] font-normal text-slate-500">
+                                            {(() => {
+                                                const actor = admin.updatedBy || admin.createdBy;
+                                                const actorName = actor?.fullName || actor?.username || (typeof actor === 'string' ? actor : 'System');
+                                                const actedAt = admin.updatedBy ? admin.updatedAt : admin.createdAt;
+                                                return (
+                                                    <div className="whitespace-nowrap leading-tight">
+                                                        <p className="font-normal text-slate-700">{actorName}</p>
+                                                        <p className="mt-1 text-[9px] font-normal text-slate-400">{formatDateTime(actedAt)}</p>
+                                                    </div>
+                                                );
+                                            })()}
                                         </td>
-                                        <td className="py-2 px-3">
-                                            <div className="flex gap-1.5">
-                                                <Link to={`/my-profile/${admin._id}`} className="p-1.5 bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-600 rounded-[2px] transition-colors">
+                                        <td className="whitespace-nowrap px-3 py-3">
+                                            <div className="flex items-center gap-1.5">
+                                                <Link to={`/my-profile/${admin._id}`} className="rounded-md border border-slate-200 bg-white p-1.5 text-slate-500 transition-colors hover:border-blue-600 hover:bg-blue-600 hover:text-white">
                                                     <Eye size={11} />
                                                 </Link>
-                                                <button onClick={() => openEdit(admin)} className="p-1.5 bg-slate-100 hover:bg-[#23471d] hover:text-white text-slate-600 rounded-[2px] transition-colors">
+                                                <button onClick={() => openEdit(admin)} className="rounded-md border border-slate-200 bg-white p-1.5 text-slate-500 transition-colors hover:border-[#23471d] hover:bg-[#23471d] hover:text-white">
                                                     <Pencil size={11} />
                                                 </button>
-                                                <button onClick={() => handleDelete(admin)} className="p-1.5 bg-slate-100 hover:bg-red-600 hover:text-white text-slate-600 rounded-[2px] transition-colors">
+                                                <button onClick={() => handleDelete(admin)} className="rounded-md border border-slate-200 bg-white p-1.5 text-slate-500 transition-colors hover:border-red-600 hover:bg-red-600 hover:text-white">
                                                     <Trash2 size={11} />
                                                 </button>
                                             </div>
@@ -542,7 +569,7 @@ export default function AdminUser() {
                                     </tr>
                                 ))}
                                 {paginated.length === 0 && (
-                                    <tr><td colSpan={11} className="py-12 text-center text-[11px] text-slate-400 font-bold uppercase">No users found</td></tr>
+                                    <tr><td colSpan={12} className="py-12 text-center text-[11px] font-normal text-slate-400">No users found</td></tr>
                                 )}
                             </tbody>
                         </table>
