@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   User, Mail, Phone, ShieldCheck, Clock, Briefcase, Camera,
   Activity, Users, Target, CheckCircle2, LayoutDashboard,
@@ -9,29 +9,65 @@ import { FaUserAstronaut } from "react-icons/fa";
 import api from "../lib/api";
 
 export default function MyProfile() {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [adminData, setAdminData] = useState({});
+  const [loggedInUser, setLoggedInUser] = useState(null);
   const [activeTab, setActiveTab] = useState('User Details');
   const [loading, setLoading] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState({});
+  const [departments, setDepartments] = useState([]);
+  const [designations, setDesignations] = useState([]);
+  const [admins, setAdmins] = useState([]);
+  const [roles, setRoles] = useState([]);
 
   useEffect(() => {
+    const fetchDropdowns = async () => {
+      try {
+        const [deptRes, desigRes, adminRes, rolesRes] = await Promise.all([
+          api.get('/api/departments'),
+          api.get('/api/designations'),
+          api.get('/api/admin/all'),
+          api.get('/api/roles')
+        ]);
+        if (deptRes.data?.success) setDepartments(deptRes.data.data);
+        if (desigRes.data?.success) setDesignations(desigRes.data.data);
+        if (adminRes.data?.success) setAdmins(adminRes.data.data);
+        if (rolesRes.data?.success) setRoles(rolesRes.data.data);
+      } catch (e) {
+        console.error('Failed to fetch dropdowns', e);
+      }
+    };
+    fetchDropdowns();
+
     const fetchProfile = async () => {
       try {
         setLoading(true);
         const storedInfo = localStorage.getItem('adminInfo') || sessionStorage.getItem('adminInfo');
-        
+
+        let targetId = id;
+        let currentUser = null;
         if (storedInfo) {
           try {
-            const parsed = JSON.parse(storedInfo);
-            
+            currentUser = JSON.parse(storedInfo);
+            setLoggedInUser(currentUser);
+            if (!targetId) targetId = currentUser._id;
+          } catch (e) { }
+        }
+
+        if (targetId) {
+          try {
             // Fetch the profile data and dashboard stats in parallel
             const [profileRes, statsRes] = await Promise.all([
-              api.get(`/api/admin/${parsed._id}`),
+              api.get(`/api/admin/${targetId}`),
               api.get(`/api/dashboard/stats`).catch(() => ({ data: { success: false } }))
             ]);
-            
+
             if (profileRes.data.success && profileRes.data.data) {
               const profileData = Array.isArray(profileRes.data.data) ? profileRes.data.data[0] : profileRes.data.data;
-              
+
               // Map available dashboard stats to performance
               if (statsRes.data?.success && statsRes.data?.data) {
                 const counts = statsRes.data.data.counts || {};
@@ -50,8 +86,9 @@ export default function MyProfile() {
                   conversionGrowth: 8
                 };
               }
-              
+
               setAdminData(profileData);
+              setFormData(profileData);
             }
           } catch (e) {
             console.error("Error parsing adminInfo or fetching profile/stats", e);
@@ -63,9 +100,94 @@ export default function MyProfile() {
         setLoading(false);
       }
     };
-    
+
     fetchProfile();
   }, []);
+
+
+  const handleDepartmentChange = (e) => {
+    const depName = e.target.value;
+    setFormData(prev => {
+      const p = { ...prev, department: depName };
+      const dep = departments.find(d => d.name === depName);
+      if (dep && dep.hodName) {
+        p.hodName = dep.hodName;
+        const hodUser = admins.find(a => (a.fullName || a.username) === dep.hodName);
+        if (hodUser) {
+          p.hodMobile = hodUser.mobile || '';
+          p.hodEmail = hodUser.email || '';
+          p.hodDesignation = hodUser.designation || '';
+          p.hodImage = hodUser.profileImage || hodUser.hodImage || '';
+        } else {
+          p.hodMobile = '';
+          p.hodEmail = '';
+          p.hodDesignation = '';
+          p.hodImage = '';
+        }
+      } else {
+        p.hodName = '';
+        p.hodMobile = '';
+        p.hodEmail = '';
+        p.hodDesignation = '';
+        p.hodImage = '';
+      }
+      return p;
+    });
+  };
+
+  const handleDesignationChange = (e) => {
+    const desName = e.target.value;
+    setFormData(prev => {
+      const p = { ...prev, designation: desName };
+      const des = designations.find(d => d.name === desName);
+      if (des && des.reportTo) {
+        p.reportingToName = des.reportTo;
+        const reportUser = admins.find(a => (a.fullName || a.username) === des.reportTo);
+        if (reportUser) {
+          p.reportingToMobile = reportUser.mobile || '';
+          p.reportingToEmail = reportUser.email || '';
+          p.reportingToDesignation = reportUser.designation || '';
+          p.reportingToImage = reportUser.profileImage || reportUser.hodImage || '';
+        } else {
+          p.reportingToMobile = '';
+          p.reportingToEmail = '';
+          p.reportingToDesignation = '';
+          p.reportingToImage = '';
+        }
+      } else {
+        p.reportingToName = '';
+        p.reportingToMobile = '';
+        p.reportingToEmail = '';
+        p.reportingToDesignation = '';
+        p.reportingToImage = '';
+      }
+      return p;
+    });
+  };
+
+  const handleChange = (e) => {
+
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      setSaving(true);
+      const res = await api.put(`/api/admin/update/${adminData._id}`, formData);
+      if (res.data.success) {
+        setAdminData(formData);
+        setEditMode(false);
+      } else {
+        alert(res.data.message || 'Failed to update profile');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Error updating profile');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="p-4 md:p-6 bg-[#f8fafc] min-h-screen font-['Inter',sans-serif]">
@@ -86,10 +208,36 @@ export default function MyProfile() {
             Manage your personal information, performance and account settings
           </p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-white border border-emerald-200 text-emerald-700 text-xs font-bold rounded-lg shadow-sm hover:bg-emerald-50 transition-all focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1">
-          <Edit3 size={14} />
-          Edit Profile
-        </button>
+        {loggedInUser?.role?.includes('Super Administrator') && (
+          <div className="flex items-center gap-2">
+            {!editMode ? (
+              <button
+                onClick={() => setEditMode(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-emerald-200 text-emerald-700 text-xs font-bold rounded-lg shadow-sm hover:bg-emerald-50 transition-all focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1"
+              >
+                <Edit3 size={14} />
+                Edit Profile
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => { setEditMode(false); setFormData(adminData); }}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 text-xs font-bold rounded-lg shadow-sm hover:bg-slate-50 transition-all focus:ring-2 focus:ring-slate-500 focus:ring-offset-1"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={saving}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 border border-emerald-600 text-white text-xs font-bold rounded-lg shadow-sm hover:bg-emerald-700 transition-all focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 disabled:opacity-50"
+                >
+                  <Save size={14} />
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-1">
@@ -107,21 +255,23 @@ export default function MyProfile() {
                     className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   />
                 </div>
-                <div className="absolute bottom-0 right-0 bg-[#00a859] p-1.5 rounded-full text-white shadow-sm border-2 border-white z-10">
-                  <Camera size={14} />
-                </div>
+                {loggedInUser?.role?.includes('Super Administrator') && (
+                  <div className="absolute bottom-0 right-0 bg-[#00a859] p-1.5 rounded-full text-white shadow-sm border-2 border-white z-10">
+                    <Camera size={14} />
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6">
-              <div className="col-span-full mb-1.5">
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-1">
+              <div className="col-span-full mb-1">
                 <h2 className="text-[20px] font-bold text-slate-800 flex items-center gap-2 mb-0.5">
                   {adminData.title ? `${adminData.title} ` : ''}{adminData.fullName || adminData.username || 'User'}
                   <span className={`px-2 py-0.5 text-[10px] font-bold rounded ${adminData.status === 'Inactive' ? 'bg-red-100 text-red-700' : 'bg-[#e6f7ec] text-[#00a859]'}`}>
                     {adminData.status || 'Active'}
                   </span>
                 </h2>
-                <p className="text-xs font-medium text-slate-500 mb-2.5">
+                <p className="text-xs font-medium text-slate-500 mb-2">
                   @{adminData.username || 'username'}
                 </p>
                 <div className="inline-block px-2.5 py-0.5 bg-transparent text-[#00a859] text-[10px] font-bold rounded border border-[#00a859]/30">
@@ -129,7 +279,7 @@ export default function MyProfile() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-1">
                 <div className="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center shrink-0">
                   <Briefcase size={12} className="text-slate-400" />
                 </div>
@@ -185,19 +335,19 @@ export default function MyProfile() {
 
             <div className="flex flex-col justify-center gap-3 min-w-[200px]">
               <div className="grid grid-cols-[85px_10px_1fr] items-start">
-                <p className="text-[11px] font-bold text-slate-500">User ID</p>
+                <p className="text-[10px] font-bold text-slate-500">User ID</p>
                 <p className="text-[11px] font-bold text-slate-400 text-center">:</p>
                 <p className="text-[11px] font-bold text-slate-700">{adminData._id ? adminData._id.slice(-8).toUpperCase() : 'USR-ADM-0157'}</p>
               </div>
               <div className="grid grid-cols-[85px_10px_1fr] items-start">
-                <p className="text-[11px] font-bold text-slate-500">ID Created On</p>
+                <p className="text-[10px] font-bold text-slate-500">ID Created On</p>
                 <p className="text-[11px] font-bold text-slate-400 text-center">:</p>
                 <div className="text-[11px] font-bold text-slate-700 leading-snug">
                   {adminData.createdAt ? new Date(adminData.createdAt).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' }) : 'N/A'}
                 </div>
               </div>
               <div className="grid grid-cols-[85px_10px_1fr] items-start">
-                <p className="text-[11px] font-bold text-slate-500">Created By</p>
+                <p className="text-[10px] font-bold text-slate-500">Created By</p>
                 <p className="text-[11px] font-bold text-slate-400 text-center">:</p>
                 <div>
                   <p className="text-[11px] font-bold text-slate-700 leading-none mb-0.5">{adminData.createdBy ? adminData.createdBy.username : 'Super Admin'}</p>
@@ -205,14 +355,14 @@ export default function MyProfile() {
                 </div>
               </div>
               <div className="grid grid-cols-[85px_10px_1fr] items-start">
-                <p className="text-[11px] font-bold text-slate-500">Last Updated</p>
+                <p className="text-[10px] font-bold text-slate-500">Last Updated</p>
                 <p className="text-[11px] font-bold text-slate-400 text-center">:</p>
                 <div className="text-[11px] font-bold text-slate-700 leading-snug">
                   {adminData.updatedAt ? new Date(adminData.updatedAt).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' }) : 'N/A'}
                 </div>
               </div>
               <div className="grid grid-cols-[85px_10px_1fr] items-start">
-                <p className="text-[11px] font-bold text-slate-500">Last Updated By</p>
+                <p className="text-[10px] font-bold text-slate-500">Last Updated By</p>
                 <p className="text-[11px] font-bold text-slate-400 text-center">:</p>
                 <div>
                   <p className="text-[11px] font-bold text-slate-700 leading-none mb-0.5">Vijay Sharma</p>
@@ -231,6 +381,8 @@ export default function MyProfile() {
                 className={`px-5 py-3 text-[11px] font-bold flex items-center gap-2 whitespace-nowrap transition-colors ${activeTab === 'User Details' ? 'border-b-2 border-emerald-600 text-emerald-700 bg-emerald-50/30' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}>
                 <FaUserAstronaut size={14} /> User Details
               </button>
+
+
               <button
                 onClick={() => setActiveTab('HOD Details')}
                 className={`px-5 py-3 text-[11px] font-bold flex items-center gap-2 whitespace-nowrap transition-colors ${activeTab === 'HOD Details' ? 'border-b-2 border-emerald-600 text-emerald-700 bg-emerald-50/30' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}>
@@ -258,7 +410,7 @@ export default function MyProfile() {
                   <div className="space-y-3">
                     <div>
                       <label className="block text-[10px] font-bold text-slate-700 mb-1">Title <span className="text-red-500">*</span></label>
-                      <select value={adminData.title || ''} className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" readOnly disabled>
+                      <select value={editMode ? (formData.title || "") : (adminData.title || "")} name="title" className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" disabled={!editMode} onChange={handleChange}>
                         <option value="Mr.">Mr.</option>
                         <option value="Ms.">Ms.</option>
                         <option value="Mrs.">Mrs.</option>
@@ -266,16 +418,16 @@ export default function MyProfile() {
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-slate-700 mb-1">Full Name <span className="text-red-500">*</span></label>
-                      <input type="text" value={adminData.fullName || ""} className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" readOnly />
+                      <input type="text" value={editMode ? (formData.fullName || "") : (adminData.fullName || "")} name="fullName" className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" readOnly={!editMode} onChange={handleChange} />
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-slate-700 mb-1">Username <span className="text-red-500">*</span></label>
-                      <input type="text" value={adminData.username || ""} className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" readOnly />
+                      <input type="text" value={editMode ? (formData.username || "") : (adminData.username || "")} name="username" className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" readOnly={!editMode} onChange={handleChange} />
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-slate-700 mb-1">Password</label>
                       <div className="relative">
-                        <input type="password" placeholder="Leave blank to keep current" className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" readOnly />
+                        <input type="password" name="password" value={editMode ? (formData.password || "") : ""} placeholder="Leave blank to keep current" className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" readOnly={!editMode} onChange={handleChange} />
                         <Eye className="absolute right-3 top-2 text-slate-400 cursor-pointer" size={14} />
                       </div>
                     </div>
@@ -331,20 +483,20 @@ export default function MyProfile() {
                   <div className="space-y-3 xl:col-span-2">
                     <div>
                       <label className="block text-[10px] font-bold text-slate-700 mb-1">Department <span className="text-red-500">*</span></label>
-                      <select className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" readOnly disabled value={adminData.department || ''}>
-                        <option value={adminData.department}>{adminData.department || 'Management'}</option>
+                      <select className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" disabled={!editMode} onChange={editMode ? handleDepartmentChange : handleChange} value={editMode ? (formData.department || "") : (adminData.department || "")} name="department">
+                        {editMode ? departments.map(d => <option key={d._id || d.name} value={d.name}>{d.name}</option>) : <option value={adminData.department}>{adminData.department || 'Management'}</option>}
                       </select>
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-slate-700 mb-1">Designation <span className="text-red-500">*</span></label>
-                      <select className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" readOnly disabled value={adminData.designation || ''}>
-                        <option value={adminData.designation}>{adminData.designation || 'Managing Director'}</option>
+                      <select className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" disabled={!editMode} onChange={editMode ? handleDesignationChange : handleChange} value={editMode ? (formData.designation || "") : (adminData.designation || "")} name="designation">
+                        {editMode ? designations.map(d => <option key={d._id || d.name} value={d.name}>{d.name}</option>) : <option value={adminData.designation}>{adminData.designation || 'Managing Director'}</option>}
                       </select>
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-slate-700 mb-1">Official Email <span className="text-red-500">*</span></label>
                       <div className="flex items-center gap-2">
-                        <input type="email" value={adminData.email || ""} className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" readOnly />
+                        <input type="email" value={editMode ? (formData.email || "") : (adminData.email || "")} name="email" className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" readOnly={!editMode} onChange={handleChange} />
                         <span className="text-[9px] font-bold bg-emerald-50 text-emerald-600 px-2 py-1 rounded border border-emerald-100">Verified</span>
                       </div>
                       <p className="text-[9px] text-emerald-600 font-semibold mt-1 flex items-center gap-1"><CheckCircle2 size={10} /> Official Email verified</p>
@@ -352,12 +504,15 @@ export default function MyProfile() {
                     <div>
                       <label className="block text-[10px] font-bold text-slate-700 mb-1">Official Mobile No <span className="text-red-500">*</span></label>
                       <div className="flex items-center gap-2">
-                        <input type="text" value={adminData.mobile || ""} className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" readOnly />
+                        <input type="text" value={editMode ? (formData.mobile || "") : (adminData.mobile || "")} name="mobile" className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" readOnly={!editMode} onChange={handleChange} />
                         <span className="text-[9px] font-bold bg-emerald-50 text-emerald-600 px-2 py-1 rounded border border-emerald-100">Verified</span>
                       </div>
                       <p className="text-[9px] text-emerald-600 font-semibold mt-1 flex items-center gap-1"><CheckCircle2 size={10} /> Official Mobile No verified</p>
                     </div>
                   </div>
+
+
+
                 </div>
               )}
 
@@ -367,41 +522,31 @@ export default function MyProfile() {
                   <div className="space-y-3">
                     <div>
                       <label className="block text-[10px] font-bold text-slate-700 mb-1">HOD Name</label>
-                      <input type="text" value={adminData.hodName || ""} className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:outline-none" readOnly />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-700 mb-1">HOD Official Email</label>
-                      <input type="text" value={adminData.hodEmail || ""} className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:outline-none" readOnly />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-700 mb-1">HOD Mobile No</label>
-                      <input type="text" value={adminData.hodMobile || ""} className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:outline-none" readOnly />
+                      <input type="text" value={editMode ? (formData.hodName || "") : (adminData.hodName || "")} name="hodName" className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-md focus:outline-none text-slate-600" readOnly disabled />
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-slate-700 mb-1">HOD Designation</label>
-                      <input type="text" value={adminData.hodDesignation || ""} className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:outline-none" readOnly />
+                      <input type="text" value={editMode ? (formData.hodDesignation || "") : (adminData.hodDesignation || "")} name="hodDesignation" className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-md focus:outline-none text-slate-600" readOnly disabled />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-700 mb-1">HOD Email</label>
+                      <input type="email" value={editMode ? (formData.hodEmail || "") : (adminData.hodEmail || "")} name="hodEmail" className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-md focus:outline-none text-slate-600" readOnly disabled />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-700 mb-1">HOD Mobile</label>
+                      <input type="text" value={editMode ? (formData.hodMobile || "") : (adminData.hodMobile || "")} name="hodMobile" className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-md focus:outline-none text-slate-600" readOnly disabled />
                     </div>
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-700 mb-2">HOD Photo</label>
-                    <div className="flex gap-4 items-start">
-                      <div className="w-24 h-24 bg-slate-100 rounded border border-slate-200 overflow-hidden shrink-0">
-                        <img src={adminData.hodImage || `https://ui-avatars.com/api/?name=${adminData.hodName || 'HOD'}&background=e2e8f0&color=0f172a&bold=true&size=150`} alt="HOD" className="w-full h-full object-cover" />
-                      </div>
-                      {adminData.hodImage && (
-                        <div className="flex flex-col gap-1.5 mt-1">
-                          <a href={adminData.hodImage} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-emerald-600 border border-emerald-200 bg-emerald-50 px-3 py-1.5 rounded flex items-center justify-center gap-1.5 hover:bg-emerald-100">
-                            <Eye size={12} /> View Full Photo
-                          </a>
+                    <div className="w-24 h-24 bg-white rounded-lg border border-slate-200 p-1 flex items-center justify-center shrink-0">
+                      {(editMode ? formData.hodImage : adminData.hodImage) ? (
+                        <img src={editMode ? formData.hodImage : adminData.hodImage} alt="HOD Photo" className="w-full h-full object-cover rounded shadow-sm" />
+                      ) : (
+                        <div className="w-full h-full bg-slate-50 flex items-center justify-center rounded text-slate-300">
+                          <User size={32} />
                         </div>
                       )}
-                    </div>
-                    <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-md flex items-start gap-2">
-                      <div className="mt-0.5"><Users size={14} className="text-blue-600" /></div>
-                      <div>
-                        <p className="text-[10px] font-bold text-blue-900 mb-0.5">Auto-synced Details</p>
-                        <p className="text-[9px] text-blue-700">HOD details are automatically populated from the system directory. Contact HR for updates.</p>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -412,42 +557,32 @@ export default function MyProfile() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl animate-in fade-in duration-300">
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-700 mb-1">Reporting Name</label>
-                      <input type="text" value={adminData.reportingToName || ""} className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:outline-none" readOnly />
+                      <label className="block text-[10px] font-bold text-slate-700 mb-1">Reporting To Name</label>
+                      <input type="text" value={editMode ? (formData.reportingToName || "") : (adminData.reportingToName || "")} name="reportingToName" className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-md focus:outline-none text-slate-600" readOnly disabled />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-700 mb-1">Reporting Email</label>
-                      <input type="text" value={adminData.reportingToEmail || ""} className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:outline-none" readOnly />
+                      <label className="block text-[10px] font-bold text-slate-700 mb-1">Reporting To Designation</label>
+                      <input type="text" value={editMode ? (formData.reportingToDesignation || "") : (adminData.reportingToDesignation || "")} name="reportingToDesignation" className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-md focus:outline-none text-slate-600" readOnly disabled />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-700 mb-1">Reporting Mobile</label>
-                      <input type="text" value={adminData.reportingToMobile || ""} className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:outline-none" readOnly />
+                      <label className="block text-[10px] font-bold text-slate-700 mb-1">Reporting To Email</label>
+                      <input type="email" value={editMode ? (formData.reportingToEmail || "") : (adminData.reportingToEmail || "")} name="reportingToEmail" className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-md focus:outline-none text-slate-600" readOnly disabled />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-700 mb-1">Reporting Designation</label>
-                      <input type="text" value={adminData.reportingToDesignation || ""} className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:outline-none" readOnly />
+                      <label className="block text-[10px] font-bold text-slate-700 mb-1">Reporting To Mobile</label>
+                      <input type="text" value={editMode ? (formData.reportingToMobile || "") : (adminData.reportingToMobile || "")} name="reportingToMobile" className="w-full text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-md focus:outline-none text-slate-600" readOnly disabled />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-700 mb-2">Reporting Photo</label>
-                    <div className="flex gap-4 items-start">
-                      <div className="w-24 h-24 bg-slate-100 rounded border border-slate-200 overflow-hidden shrink-0">
-                        <img src={adminData.reportingToImage || `https://ui-avatars.com/api/?name=${adminData.reportingToName || 'Reporting'}&background=e2e8f0&color=0f172a&bold=true&size=150`} alt="Reporting" className="w-full h-full object-cover" />
-                      </div>
-                      {adminData.reportingToImage && (
-                        <div className="flex flex-col gap-1.5 mt-1">
-                          <a href={adminData.reportingToImage} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-emerald-600 border border-emerald-200 bg-emerald-50 px-3 py-1.5 rounded flex items-center justify-center gap-1.5 hover:bg-emerald-100">
-                            <Eye size={12} /> View Full Photo
-                          </a>
+                    <label className="block text-[10px] font-bold text-slate-700 mb-2">Reporting To Photo</label>
+                    <div className="w-24 h-24 bg-white rounded-lg border border-slate-200 p-1 flex items-center justify-center shrink-0">
+                      {(editMode ? formData.reportingToImage : adminData.reportingToImage) ? (
+                        <img src={editMode ? formData.reportingToImage : adminData.reportingToImage} alt="Reporting To Photo" className="w-full h-full object-cover rounded shadow-sm" />
+                      ) : (
+                        <div className="w-full h-full bg-slate-50 flex items-center justify-center rounded text-slate-300">
+                          <User size={32} />
                         </div>
                       )}
-                    </div>
-                    <div className="mt-4 p-3 bg-purple-50 border border-purple-100 rounded-md flex items-start gap-2">
-                      <div className="mt-0.5"><Target size={14} className="text-purple-600" /></div>
-                      <div>
-                        <p className="text-[10px] font-bold text-purple-900 mb-0.5">Manager Details</p>
-                        <p className="text-[9px] text-purple-700">These details represent your direct reporting manager in the hierarchy workflow.</p>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -496,52 +631,64 @@ export default function MyProfile() {
         </div>
 
         {/* RIGHT COLUMN */}
-        <div className="space-y-3">
+        <div className="space-y-1">
           {/* PERFORMANCE CARD */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-5">
               <TrendingUp size={100} />
             </div>
-            <div className="flex justify-between items-center mb-3 relative z-10">
+            <div className="flex justify-between items-center mb-1 relative z-10">
               <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-wider">My Performance <span className="text-slate-400 font-bold lowercase tracking-normal">(This Financial Year)</span></h3>
               <button className="text-[9px] font-bold text-emerald-700 border border-emerald-200 px-2 py-1 rounded bg-emerald-50 hover:bg-emerald-100 transition-colors">View Details</button>
             </div>
 
-            <div className="grid grid-cols-4 gap-1.5 mb-3 relative z-10">
-              <div className="p-2 border border-slate-100 rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-center flex flex-col items-center">
-                <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center mb-2">
-                  <Users className="w-4 h-4 text-blue-600" />
+            <div className="grid grid-cols-4 gap-1.5 mb-1 relative z-10">
+              <div className="p-2 border border-slate-100 rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-center flex flex-col items-center h-full">
+                <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center mb-1.5 shrink-0">
+                  <Users className="w-3.5 h-3.5 text-blue-600" />
                 </div>
-                <p className="text-[9px] font-bold text-slate-400 mb-0.5">Total Leads</p>
-                <p className="text-xl font-black text-slate-900 leading-none tracking-tight">{adminData.performance?.totalLeads ?? 325}</p>
-                <div className="bg-emerald-50 px-1.5 py-0.5 rounded text-[9px] font-bold text-emerald-600 mt-2 flex items-center gap-1">↑ {adminData.performance?.leadsGrowth ?? 18}% <span className="text-emerald-600/50">vs last year</span></div>
+                <p className="text-[8.5px] font-bold text-slate-400 mb-0.5 leading-tight">Total Leads</p>
+                <p className="text-base font-black text-slate-900 leading-none tracking-tight whitespace-nowrap">{adminData.performance?.totalLeads ?? 325}</p>
+                <div className="bg-emerald-50 px-1 py-1 rounded w-full text-center mt-auto pt-1.5 flex flex-col items-center justify-center leading-[1.1]">
+                  <span className="text-[9px] font-bold text-emerald-600">↑ {adminData.performance?.leadsGrowth ?? 18}%</span>
+                  <span className="text-[7.5px] font-medium text-emerald-600/60">vs last year</span>
+                </div>
               </div>
 
-              <div className="p-2 border border-slate-100 rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-center flex flex-col items-center">
-                <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center mb-2">
-                  <CheckCircle2 className="w-4 h-4 text-purple-600" />
+              <div className="p-2 border border-slate-100 rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-center flex flex-col items-center h-full">
+                <div className="w-7 h-7 rounded-full bg-purple-50 flex items-center justify-center mb-1.5 shrink-0">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-purple-600" />
                 </div>
-                <p className="text-[9px] font-bold text-slate-400 mb-0.5">Stall Bookings</p>
-                <p className="text-xl font-black text-slate-900 leading-none tracking-tight">{adminData.performance?.stallBookings ?? 48}</p>
-                <div className="bg-emerald-50 px-1.5 py-0.5 rounded text-[9px] font-bold text-emerald-600 mt-2 flex items-center gap-1">↑ {adminData.performance?.bookingsGrowth ?? 22}% <span className="text-emerald-600/50">vs last year</span></div>
+                <p className="text-[8.5px] font-bold text-slate-400 mb-0.5 leading-tight">Stall Bookings</p>
+                <p className="text-base font-black text-slate-900 leading-none tracking-tight whitespace-nowrap">{adminData.performance?.stallBookings ?? 48}</p>
+                <div className="bg-emerald-50 px-1 py-1 rounded w-full text-center mt-auto pt-1.5 flex flex-col items-center justify-center leading-[1.1]">
+                  <span className="text-[9px] font-bold text-emerald-600">↑ {adminData.performance?.bookingsGrowth ?? 22}%</span>
+                  <span className="text-[7.5px] font-medium text-emerald-600/60">vs last year</span>
+                </div>
               </div>
 
-              <div className="p-2 border border-slate-100 rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-center flex flex-col items-center">
-                <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center mb-2">
-                  <span className="text-orange-600 font-bold">₹</span>
+              <div className="p-2 border border-slate-100 rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-center flex flex-col items-center h-full">
+                <div className="w-7 h-7 rounded-full bg-orange-50 flex items-center justify-center mb-1.5 shrink-0">
+                  <span className="text-orange-600 font-bold text-sm">₹</span>
                 </div>
-                <p className="text-[9px] font-bold text-slate-400 mb-0.5">Business Generated</p>
-                <p className="text-[17px] font-black text-slate-900 leading-none tracking-tight">₹ {adminData.performance?.businessGenerated ?? '1.24 Cr'}</p>
-                <div className="bg-emerald-50 px-1.5 py-0.5 rounded text-[9px] font-bold text-emerald-600 mt-2 flex items-center gap-1">↑ {adminData.performance?.businessGrowth ?? 25}% <span className="text-emerald-600/50">vs last year</span></div>
+                <p className="text-[8.5px] font-bold text-slate-400 mb-0.5 leading-tight">Business Generated</p>
+                <p className="text-base font-black text-slate-900 leading-none tracking-tight whitespace-nowrap">₹ {adminData.performance?.businessGenerated ?? '1.24 Cr'}</p>
+                <div className="bg-emerald-50 px-1 py-1 rounded w-full text-center mt-auto pt-1.5 flex flex-col items-center justify-center leading-[1.1]">
+                  <span className="text-[9px] font-bold text-emerald-600">↑ {adminData.performance?.businessGrowth ?? 25}%</span>
+                  <span className="text-[7.5px] font-medium text-emerald-600/60">vs last year</span>
+                </div>
               </div>
 
-              <div className="p-2 border border-slate-100 rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-center flex flex-col items-center">
-                <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center mb-2">
-                  <Target className="w-4 h-4 text-amber-600" />
+              <div className="p-2 border border-slate-100 rounded-xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] text-center flex flex-col items-center h-full">
+                <div className="w-7 h-7 rounded-full bg-amber-50 flex items-center justify-center mb-1.5 shrink-0">
+                  <Target className="w-3.5 h-3.5 text-amber-600" />
                 </div>
-                <p className="text-[9px] font-bold text-slate-400 mb-0.5">Conversion Rate</p>
-                <p className="text-xl font-black text-slate-900 leading-none tracking-tight">{adminData.performance?.conversionRate ?? '14.77'}%</p>
-                <div className="bg-emerald-50 px-1.5 py-0.5 rounded text-[9px] font-bold text-emerald-600 mt-2 flex items-center gap-1">↑ {adminData.performance?.conversionGrowth ?? 8}% <span className="text-emerald-600/50">vs last year</span></div>
+                <p className="text-[8.5px] font-bold text-slate-400 mb-0.5 leading-tight">Conversion Rate</p>
+                <p className="text-base font-black text-slate-900 leading-none tracking-tight whitespace-nowrap">{adminData.performance?.conversionRate ?? '14.77'}%</p>
+                <div className="bg-emerald-50 px-1 py-1 rounded w-full text-center mt-auto pt-1.5 flex flex-col items-center justify-center leading-[1.1]">
+                  <span className="text-[9px] font-bold text-emerald-600">↑ {adminData.performance?.conversionGrowth ?? 8}%</span>
+                  <span className="text-[7.5px] font-medium text-emerald-600/60">vs last year</span>
+                </div>
               </div>
             </div>
 
@@ -570,16 +717,9 @@ export default function MyProfile() {
             <p className="text-[10px] font-medium text-slate-500 mb-4">Modules and features this user can access.</p>
 
             <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-              {(adminData.accessRights || [
-                { module: 'Dashboard', icon: <LayoutDashboard size={12} className="text-slate-400" />, access: 'Full Access' },
-                { module: 'Exhibitors', icon: <Users size={12} className="text-slate-400" />, access: 'Full Access' },
-                { module: 'Stall Mgmt', icon: <Target size={12} className="text-slate-400" />, access: 'Full Access' },
-                { module: 'Payments', icon: <CreditCard size={12} className="text-slate-400" />, access: 'Full Access' },
-                { module: 'Reports', icon: <FileText size={12} className="text-slate-400" />, access: 'Full Access' },
-                { module: 'PMS Scheme', icon: <MessageSquare size={12} className="text-slate-400" />, access: 'Full Access' }
-              ]).map((right, idx) => (
+              {Object.entries(roles.find(r => r.name === adminData.role)?.permissions || {}).filter(([_, hasAccess]) => hasAccess).slice(0, 6).map(([module]) => ({ module, access: 'Full Access' })).map((right, idx) => (
                 <div key={idx} className="flex justify-between items-center p-2 rounded-lg bg-slate-50 border border-slate-100">
-                  <span className="text-[10px] font-bold text-slate-700 flex items-center gap-1.5">{right.icon} {right.module}</span>
+                  <span className="text-[10px] font-bold text-slate-700 flex items-center gap-1.5"><CheckCircle2 size={12} className="text-slate-400" /> {right.module}</span>
                   <span className="text-[9px] font-bold text-emerald-600 flex items-center gap-0.5">
                     {right.access === 'Full Access' ? <CheckCircle2 size={10} /> : null} {right.access}
                   </span>
@@ -587,9 +727,11 @@ export default function MyProfile() {
               ))}
             </div>
 
-            <button className="w-full mt-4 py-2.5 text-[11px] font-bold text-slate-700 border border-slate-200 bg-white rounded-lg hover:bg-slate-50 transition-colors shadow-sm flex items-center justify-center gap-2">
-              <ShieldCheck size={14} /> View / Edit Access Rights
-            </button>
+            {loggedInUser?.role?.includes('Super Administrator') && (
+              <Link to="/role-permissions" className="w-full mt-4 py-2.5 text-[11px] font-bold text-slate-700 border border-slate-200 bg-white rounded-lg hover:bg-slate-50 transition-colors shadow-sm flex items-center justify-center gap-2 block text-center">
+                <ShieldCheck size={14} className="inline-block" /> View / Edit Access Rights
+              </Link>
+            )}
           </div>
 
           {/* RECENT ACTIVITY */}
@@ -620,14 +762,16 @@ export default function MyProfile() {
       </div>
 
       {/* BOTTOM ACTION BAR */}
-      <div className="mt-6 flex justify-end gap-3 pb-6">
-        <button className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-lg shadow-sm hover:bg-slate-50 transition-colors">
-          Cancel
-        </button>
-        <button className="px-6 py-2.5 bg-[#006039] text-white text-xs font-bold rounded-lg shadow-sm hover:bg-[#004d2e] transition-colors flex items-center gap-2">
-          <Save size={14} /> Save Changes
-        </button>
-      </div>
+      {loggedInUser?.role?.includes('Super Administrator') && (
+        <div className="mt-6 flex justify-end gap-3 pb-6">
+          <button className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-lg shadow-sm hover:bg-slate-50 transition-colors">
+            Cancel
+          </button>
+          <button className="px-6 py-2.5 bg-[#006039] text-white text-xs font-bold rounded-lg shadow-sm hover:bg-[#004d2e] transition-colors flex items-center gap-2">
+            <Save size={14} /> Save Changes
+          </button>
+        </div>
+      )}
     </div>
   );
 }

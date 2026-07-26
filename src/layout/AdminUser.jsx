@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Search, UserPlus, Eye, Upload, Check, EyeOff, CheckCircle, XCircle, Pencil, Trash2, X, BadgeCheck, Users, Filter } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api, { otpApi } from '../lib/api';
@@ -105,6 +106,31 @@ export default function AdminUser() {
         }, 300);
         return () => clearTimeout(timer);
     }, [search]);
+
+    const location = useLocation();
+    useEffect(() => {
+        if (location.state?.editUserId && admins.length > 0) {
+            const userToEdit = admins.find(a => a._id === location.state.editUserId);
+            if (userToEdit) {
+                // Must wait for openEdit to be defined, but openEdit is defined below. 
+                // Wait, openEdit uses state setters so it's fine if we just call it or duplicate its logic here.
+                setForm({ ...EMPTY_FORM, ...userToEdit, password: '' });
+                setEditId(userToEdit._id);
+                setEmailVerified(Boolean(userToEdit.email));
+                setMobileVerified(Boolean(userToEdit.mobile));
+                setVerifiedEmailValue(userToEdit.email?.trim() || '');
+                setVerifiedMobileValue(userToEdit.mobile?.trim() || '');
+                setEmailOtp('');
+                setMobileOtp('');
+                setEmailOtpSent(false);
+                setMobileOtpSent(false);
+                setShowPwd(false);
+                setShowModal(true);
+                // Clear state so it doesn't trigger again on refresh
+                window.history.replaceState({}, document.title);
+            }
+        }
+    }, [location.state, admins]);
 
     useEffect(() => {
         const email = form.email.trim();
@@ -486,6 +512,9 @@ export default function AdminUser() {
                                         </td>
                                         <td className="py-2 px-3">
                                             <div className="flex gap-1.5">
+                                                <Link to={`/my-profile/${admin._id}`} className="p-1.5 bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-600 rounded-[2px] transition-colors">
+                                                    <Eye size={11} />
+                                                </Link>
                                                 <button onClick={() => openEdit(admin)} className="p-1.5 bg-slate-100 hover:bg-[#23471d] hover:text-white text-slate-600 rounded-[2px] transition-colors">
                                                     <Pencil size={11} />
                                                 </button>

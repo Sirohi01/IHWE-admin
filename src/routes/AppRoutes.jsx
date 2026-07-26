@@ -362,6 +362,7 @@ export default function AppRoutes() {
             <Route path="faq-manage" element={<FAQManage />} />
             <Route path="users/add" element={<AddUser />} />
             <Route path="my-profile" element={<MyProfile />} />
+            <Route path="my-profile/:id" element={<MyProfile />} />
             <Route path="add-pdf" element={<AddPdf />} />
             <Route path="exhibitor-useful-documents" element={<AddPdf />} />
             <Route path="stats-counter" element={<StatsCounter />} />
