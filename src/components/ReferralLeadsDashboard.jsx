@@ -8,7 +8,7 @@ import api from '../lib/api';
 import { toast } from 'react-toastify';
 import Swal from 'sweetalert2';
 
-const ReferralLeadsDashboard = ({ title, description }) => {
+const ReferralLeadsDashboard = ({ title, description, expo }) => {
     const [referrals, setReferrals] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     
@@ -29,7 +29,7 @@ const ReferralLeadsDashboard = ({ title, description }) => {
     const fetchReferrals = async () => {
         try {
             setIsLoading(true);
-            const response = await api.get('/api/referrals');
+            const response = await api.get('/api/referrals', { params: { expo } });
             if (response.data.success) {
                 setReferrals(response.data.data);
             }
@@ -138,10 +138,10 @@ const ReferralLeadsDashboard = ({ title, description }) => {
                         <Info size={16} className="text-gray-500" />
                         Referral Scheme Info
                     </button>
-                    <button onClick={() => { setEditingReferral({}); setIsEditModalOpen(true); }} className="flex items-center gap-2 px-4 py-2 bg-[#175C34] hover:bg-[#124B29] text-white rounded-lg text-sm font-semibold shadow-sm transition-all">
+                    <Link to="/addnewclient" className="flex items-center gap-2 px-4 py-2 bg-[#175C34] hover:bg-[#124B29] text-white rounded-lg text-sm font-semibold shadow-sm transition-all">
                         <Plus size={16} />
                         Add New Referral Lead
-                    </button>
+                    </Link>
                 </div>
             </div>
 
@@ -301,7 +301,7 @@ const ReferralLeadsDashboard = ({ title, description }) => {
                             <table className="w-full text-sm whitespace-nowrap">
                                 <thead>
                                     <tr className="bg-gray-50/50 border-b border-gray-100">
-                                        <th className="py-2 px-4 text-left text-[10px] font-black text-gray-500 uppercase tracking-wider w-10">#</th>
+                                        <th className="py-2 px-4 text-left text-[10px] font-black text-gray-500 uppercase tracking-wider w-10">S.No.</th>
                                         <th className="py-2 px-4 text-left text-[10px] font-black text-gray-500 uppercase tracking-wider">Company / Contact</th>
                                         <th className="py-2 px-4 text-left text-[10px] font-black text-gray-500 uppercase tracking-wider">Mobile / Email</th>
                                         <th className="py-2 px-4 text-left text-[10px] font-black text-gray-500 uppercase tracking-wider">Lead Source</th>
@@ -323,8 +323,8 @@ const ReferralLeadsDashboard = ({ title, description }) => {
                                         <tr key={ref._id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                                             <td className="py-2 px-4 text-xs font-bold text-gray-400">{i + 1}</td>
                                             <td className="py-2 px-4">
-                                                <div className="font-bold text-gray-800 text-[13px] hover:text-green-700">
-                                                    <Link to={`/client-overview/${ref._id}`}>{ref.companyName}</Link>
+                                                <div className="font-bold text-green-700 text-[13px] hover:text-green-800 hover:underline">
+                                                    <Link to={`/client-overview/${ref.clientId || ref.cmpny_id || ref._id}?expo=${expo}`}>{ref.companyName}</Link>
                                                 </div>
                                                 <div className="text-gray-500 text-[11px] mt-0.5">{ref.contactPerson}</div>
                                             </td>
