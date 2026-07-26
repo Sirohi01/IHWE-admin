@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   User, Mail, Phone, ShieldCheck, Clock, Briefcase, Camera,
-  Activity, Users, Target, CheckCircle2, LayoutDashboard,
-  FileText, MessageSquare, CreditCard, ChevronRight, Edit3, Save, Upload, Eye, TrendingUp
+  Activity, Users, Target, CheckCircle2, LayoutDashboard, Settings,
+  FileText, MessageSquare, CreditCard, ChevronRight, Edit3, Save, Upload, Eye, EyeOff, TrendingUp
 } from "lucide-react";
 import { FaUserAstronaut } from "react-icons/fa";
 import api from "../lib/api";
@@ -22,6 +22,7 @@ export default function MyProfile() {
   const [designations, setDesignations] = useState([]);
   const [admins, setAdmins] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const fetchDropdowns = async () => {
@@ -192,7 +193,7 @@ export default function MyProfile() {
   return (
     <div className="p-4 md:p-6 bg-[#f8fafc] min-h-screen font-['Inter',sans-serif]">
       {/* BREADCRUMB & HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-1 gap-4">
         <div>
           <div className="text-[11px] font-bold text-slate-500 mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
             <Link to="/dashboard" className="hover:text-emerald-600 transition-colors">Home</Link>
@@ -314,7 +315,7 @@ export default function MyProfile() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center shrink-0">
                   <Phone size={12} className="text-slate-400" />
                 </div>
@@ -405,7 +406,7 @@ export default function MyProfile() {
 
               {/* TAB: USER DETAILS */}
               {activeTab === 'User Details' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1">
                   {/* Basic Info Col */}
                   <div className="space-y-3">
                     <div>
@@ -427,27 +428,29 @@ export default function MyProfile() {
                     <div>
                       <label className="block text-[10px] font-bold text-slate-700 mb-1">Password</label>
                       <div className="relative">
-                        <input type="password" name="password" value={editMode ? (formData.password || "") : ""} placeholder="Leave blank to keep current" className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" readOnly={!editMode} onChange={handleChange} />
-                        <Eye className="absolute right-3 top-2 text-slate-400 cursor-pointer" size={14} />
+                        <input type={showPassword ? "text" : "password"} name="password" value={editMode ? (formData.password || "") : (adminData.password || "")} placeholder="Leave blank to keep current" className="w-full text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none" readOnly={!editMode} onChange={handleChange} />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-2 text-slate-400 hover:text-emerald-600 focus:outline-none">
+                          {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </button>
                       </div>
                     </div>
                   </div>
 
                   {/* Media Col */}
-                  <div className="space-y-4">
+                  <div className="space-y-2">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-700 mb-2">User Photo <span className="text-red-500">*</span></label>
-                      <div className="flex gap-4 items-start">
+                      <label className="block text-[10px] font-bold text-slate-700 mb-1">User Photo <span className="text-red-500">*</span></label>
+                      <div className="flex gap-3 items-start">
                         <div className="w-14 h-14 bg-slate-100 rounded border border-slate-200 overflow-hidden shrink-0">
                           <img src={adminData.profileImage || `https://ui-avatars.com/api/?name=${adminData.fullName || adminData.username || 'User'}&background=e2e8f0&color=0f172a&bold=true&size=100`} alt="User" className="w-full h-full object-cover" />
                         </div>
-                        <div className="flex flex-col gap-1.5">
-                          <button className="text-[10px] font-bold text-slate-700 border border-slate-200 px-3 py-1.5 rounded flex items-center justify-center gap-1.5 hover:bg-slate-50">
-                            <Upload size={12} /> Upload New
+                        <div className="flex flex-col gap-1">
+                          <button className="text-[9px] font-bold text-slate-700 border border-slate-200 px-2 py-1 rounded flex items-center justify-center gap-1 hover:bg-slate-50">
+                            <Upload size={10} /> Upload New
                           </button>
                           {adminData.profileImage && (
-                            <a href={adminData.profileImage} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-emerald-600 border border-emerald-200 bg-emerald-50 px-3 py-1.5 rounded flex items-center justify-center gap-1.5 hover:bg-emerald-100">
-                              <Eye size={12} /> View Photo
+                            <a href={adminData.profileImage} target="_blank" rel="noopener noreferrer" className="text-[9px] font-bold text-emerald-600 border border-emerald-200 bg-emerald-50 px-2 py-1 rounded flex items-center justify-center gap-1 hover:bg-emerald-100">
+                              <Eye size={10} /> View Photo
                             </a>
                           )}
                         </div>
@@ -455,8 +458,8 @@ export default function MyProfile() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-700 mb-2">Signature</label>
-                      <div className="flex gap-4 items-start">
+                      <label className="block text-[10px] font-bold text-slate-700 mb-1">Signature</label>
+                      <div className="flex gap-3 items-start">
                         <div className="w-24 h-12 bg-white rounded border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
                           {adminData.signatureImage ? (
                             <img src={adminData.signatureImage} alt="Signature" className="w-full h-full object-contain" />
@@ -464,18 +467,18 @@ export default function MyProfile() {
                             <span className="font-[cursive] text-lg text-slate-800 italic">No Sig</span>
                           )}
                         </div>
-                        <div className="flex flex-col gap-1.5">
-                          <button className="text-[10px] font-bold text-slate-700 border border-slate-200 px-3 py-1.5 rounded flex items-center justify-center gap-1.5 hover:bg-slate-50">
-                            <Upload size={12} /> Upload New
+                        <div className="flex flex-col gap-1">
+                          <button className="text-[9px] font-bold text-slate-700 border border-slate-200 px-2 py-1 rounded flex items-center justify-center gap-1 hover:bg-slate-50">
+                            <Upload size={10} /> Upload New
                           </button>
                           {adminData.signatureImage && (
-                            <a href={adminData.signatureImage} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-emerald-600 border border-emerald-200 bg-emerald-50 px-3 py-1.5 rounded flex items-center justify-center gap-1.5 hover:bg-emerald-100">
-                              <Eye size={12} /> View Signature
+                            <a href={adminData.signatureImage} target="_blank" rel="noopener noreferrer" className="text-[9px] font-bold text-emerald-600 border border-emerald-200 bg-emerald-50 px-2 py-1 rounded flex items-center justify-center gap-1 hover:bg-emerald-100">
+                              <Eye size={10} /> View Signature
                             </a>
                           )}
                         </div>
                       </div>
-                      <p className="text-[9px] text-slate-400 mt-2 font-medium">Used on Prepared By / Reviewed By in generated PDFs.</p>
+                      <p className="text-[9px] text-slate-400 mt-1 font-medium leading-tight">Used on Prepared By / Reviewed By in generated PDFs.</p>
                     </div>
                   </div>
 
@@ -508,6 +511,105 @@ export default function MyProfile() {
                         <span className="text-[9px] font-bold bg-emerald-50 text-emerald-600 px-2 py-1 rounded border border-emerald-100">Verified</span>
                       </div>
                       <p className="text-[9px] text-emerald-600 font-semibold mt-1 flex items-center gap-1"><CheckCircle2 size={10} /> Official Mobile No verified</p>
+                    </div>
+
+                  </div>
+
+                  {/* HOD, Reporting & Role Section */}
+                  <div className="col-span-full xl:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 pt-4 border-t border-slate-200">
+
+                    {/* Column 1: HOD Details */}
+                    <div className="space-y-1.5">
+                      <h4 className="text-[12px] font-bold text-emerald-700 flex items-center gap-2 mb-2"><Users size={14} /> HOD Details</h4>
+                      <div className="space-y-1">
+                        <div className="flex justify-between items-center"><span className="text-[10px] font-bold text-[#1e293b]">HOD Name</span><span className="text-[10px] font-semibold text-slate-800">{(editMode ? formData.hodName : adminData.hodName) || 'N/A'}</span></div>
+                        <div className="flex justify-between items-center"><span className="text-[10px] font-bold text-[#1e293b]">HOD Mobile No</span><span className="text-[10px] font-semibold text-slate-800">{(editMode ? formData.hodMobile : adminData.hodMobile) || 'N/A'}</span></div>
+                        <div className="flex justify-between items-center"><span className="text-[10px] font-bold text-[#1e293b]">HOD Official Email</span><span className="text-[10px] font-semibold text-slate-800">{(editMode ? formData.hodEmail : adminData.hodEmail) || 'N/A'}</span></div>
+                        <div className="flex justify-between items-center"><span className="text-[10px] font-bold text-[#1e293b]">HOD Designation</span><span className="text-[10px] font-semibold text-slate-800">{(editMode ? formData.hodDesignation : adminData.hodDesignation) || 'N/A'}</span></div>
+                      </div>
+                      <div className="mt-2">
+                        <span className="text-[10px] font-bold text-[#1e293b] block mb-2">HOD Photo</span>
+                        <div className="flex items-center gap-3 bg-slate-50/50 p-2 rounded-lg border border-slate-100 w-max pr-4">
+                          <div className="w-9 h-9 rounded-md bg-slate-200 border border-slate-300 overflow-hidden shrink-0">
+                            {(editMode ? formData.hodImage : adminData.hodImage) ? (
+                              <img src={editMode ? formData.hodImage : adminData.hodImage} alt="HOD" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-400"><User size={16} /></div>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-[#1e293b]">HOD</p>
+                            <p className="text-[9px] font-medium text-slate-500 leading-tight">Auto-fetched from<br />HOD's profile</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Column 2: Reporting To */}
+                    <div className="space-y-1.5 md:border-l border-slate-200 md:pl-6">
+                      <h4 className="text-[12px] font-bold text-emerald-700 flex items-center gap-2 mb-2"><User size={14} /> Reporting To</h4>
+                      <div className="space-y-1">
+                        <div className="flex justify-between items-center"><span className="text-[10px] font-bold text-[#1e293b]">Reporting Name</span><span className="text-[10px] font-semibold text-slate-800">{(editMode ? formData.reportingToName : adminData.reportingToName) || 'N/A'}</span></div>
+                        <div className="flex justify-between items-center"><span className="text-[10px] font-bold text-[#1e293b]">Reporting Mobile</span><span className="text-[10px] font-semibold text-slate-800">{(editMode ? formData.reportingToMobile : adminData.reportingToMobile) || 'N/A'}</span></div>
+                        <div className="flex justify-between items-center"><span className="text-[10px] font-bold text-[#1e293b]">Reporting Email</span><span className="text-[10px] font-semibold text-slate-800">{(editMode ? formData.reportingToEmail : adminData.reportingToEmail) || 'N/A'}</span></div>
+                        <div className="flex justify-between items-center"><span className="text-[10px] font-bold text-[#1e293b]">Reporting Designation</span><span className="text-[10px] font-semibold text-slate-800">{(editMode ? formData.reportingToDesignation : adminData.reportingToDesignation) || 'N/A'}</span></div>
+                      </div>
+                      <div className="mt-2">
+                        <span className="text-[10px] font-bold text-[#1e293b] block mb-2">Reporting Photo</span>
+                        <div className="flex items-center gap-3 bg-[#f2f9f5] p-2 rounded-lg border border-[#e0f0e6] w-max pr-4">
+                          <div className="w-9 h-9 rounded-md bg-slate-200 border border-slate-300 overflow-hidden shrink-0">
+                            {(editMode ? formData.reportingToImage : adminData.reportingToImage) ? (
+                              <img src={editMode ? formData.reportingToImage : adminData.reportingToImage} alt="Reporting To" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-400"><User size={16} /></div>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-emerald-700">Reporting To</p>
+                            <p className="text-[9px] font-medium text-slate-500 leading-tight">Auto-fetched from<br />profile</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Column 3: Role & Status */}
+                    <div className="space-y-2 md:border-l border-slate-200 md:pl-6">
+                      <h4 className="text-[12px] font-bold text-emerald-700 flex items-center gap-2 mb-2"><Settings size={14} /> Role & Status</h4>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-[#1e293b] mb-1">Role <span className="text-red-500">*</span></label>
+                        <select className="w-full text-[11px] font-semibold px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:border-emerald-500 focus:outline-none text-slate-700" disabled={!editMode} value={editMode ? (formData.role || "") : (adminData.role || "")} name="role" onChange={handleChange}>
+                          {editMode ? roles.map(r => <option key={r._id || r.name} value={r.name}>{r.name}</option>) : <option value={adminData.role}>{adminData.role || 'Super Administrator'}</option>}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-[#1e293b] mb-1">Status</label>
+                        <div className="flex rounded-md shadow-sm">
+                          <button
+                            type="button"
+                            disabled={!editMode}
+                            onClick={() => setFormData({ ...formData, status: 'Active' })}
+                            className={`flex-1 py-2 text-[11px] font-bold rounded-l-md border transition-colors ${(editMode ? formData.status : adminData.status) !== 'Inactive'
+                                ? 'bg-emerald-700 text-white border-emerald-700'
+                                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                              }`}
+                          >
+                            Active
+                          </button>
+                          <button
+                            type="button"
+                            disabled={!editMode}
+                            onClick={() => setFormData({ ...formData, status: 'Inactive' })}
+                            className={`flex-1 py-2 text-[11px] font-bold rounded-r-md border-y border-r transition-colors ${(editMode ? formData.status : adminData.status) === 'Inactive'
+                                ? 'bg-white text-slate-500 border-slate-200 shadow-inner'
+                                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                              }`}
+                          >
+                            Inactive
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -762,7 +864,7 @@ export default function MyProfile() {
       </div>
 
       {/* BOTTOM ACTION BAR */}
-      {loggedInUser?.role?.includes('Super Administrator') && (
+      {/* {loggedInUser?.role?.includes('Super Administrator') && (
         <div className="mt-6 flex justify-end gap-3 pb-6">
           <button className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-lg shadow-sm hover:bg-slate-50 transition-colors">
             Cancel
@@ -771,7 +873,7 @@ export default function MyProfile() {
             <Save size={14} /> Save Changes
           </button>
         </div>
-      )}
+      )} */}
     </div>
   );
 }
