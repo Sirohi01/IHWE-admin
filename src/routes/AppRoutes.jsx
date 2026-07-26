@@ -248,6 +248,7 @@ const AccountSection1 = lazy(() => import("../pages/ihwe_client_data_2026/Accoun
 const CreateEstimate1 = lazy(() => import("../pages/ihwe_client_data_2026/CreateEstimate1"));
 import EstimateDetails from "../pages/ihwe_client_data_2026/invoice/EstimateDetails"
 import BuyerRegistrationForm from '../pages/buyer/BuyerRegistrationForm';
+import AddNextActionForm from "../pages/add_by_admin/AddNextActionForm";
 import MobileFeedbackDetailsNew from '../pages/MobileFeedbackDetailsNew';
 import ClientOverview2 from '../pages/ihwe_client_data_2026/pms_application/ClientOverview2';
 import ClientOverview2Page from '../pages/ihwe_client_data_2026/pms_application/ClientOverview2Page';
@@ -771,6 +772,8 @@ export default function AppRoutes() {
             <Route path="ihweClientData2026/EstimateTermsConfig" element={<EstimateTermsConfig />} />
             <Route path="ihweClientData2026/AddTarget" element={<AddTarget />} />
             <Route path="ihweClientData2026/AddNextAction" element={<AddNextAction />} />
+            <Route path="ihweClientData2026/AddNextAction/add" element={<AddNextActionForm />} />
+            <Route path="ihweClientData2026/AddNextAction/edit/:id" element={<AddNextActionForm />} />
             <Route path="accounts/salesreport" element={<SalesReport />} />
             <Route path="accounts/bank-details" element={<BankDetailsManage />} />
             <Route path="accounts/payments" element={<PaymentsView />} />

@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 import {
@@ -169,6 +170,7 @@ const initialForm = {
 
 const AddNextAction = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const nextActionState = useSelector((state) => state.nextActions) || {};
   const nextActions = Array.isArray(nextActionState.nextActions)
@@ -234,9 +236,12 @@ const AddNextAction = () => {
           matchesApplicable
         );
       })
-      .sort((a, b) =>
-        normaliseText(a?.name).localeCompare(normaliseText(b?.name))
-      );
+      .sort((a, b) => {
+        const orderA = Number(a?.display_order) || 0;
+        const orderB = Number(b?.display_order) || 0;
+        if (orderA !== orderB) return orderA - orderB;
+        return normaliseText(a?.name).localeCompare(normaliseText(b?.name));
+      });
   }, [
     nextActions,
     debouncedSearch,
@@ -513,7 +518,7 @@ const AddNextAction = () => {
 
           <button
             type="button"
-            onClick={openAddModal}
+            onClick={() => navigate("/ihweClientData2026/AddNextAction/add")}
             className="inline-flex h-[clamp(40px,4.6vh,48px)] shrink-0 items-center justify-center gap-2 rounded-[7px] bg-[#075fd7] px-[clamp(18px,1.8vw,26px)] text-[clamp(11px,.86vw,13px)] font-extrabold text-white shadow-[0_7px_16px_rgba(7,95,215,.2)] transition hover:bg-[#064fbb] active:scale-[.98]"
           >
             <Plus className="h-4 w-4" strokeWidth={2.2} />
@@ -714,7 +719,7 @@ const AddNextAction = () => {
                           <div className="flex items-center justify-center gap-2">
                             <button
                               type="button"
-                              onClick={() => startEdit(item?._id)}
+                              onClick={() => navigate(`/ihweClientData2026/AddNextAction/edit/${item?._id}`)}
                               className="grid h-8 w-8 place-items-center rounded-[6px] border border-blue-100 bg-blue-50 text-blue-600 transition hover:bg-blue-100"
                               title="Edit action"
                             >
