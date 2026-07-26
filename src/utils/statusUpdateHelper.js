@@ -2,10 +2,11 @@ import Swal from 'sweetalert2';
 
 export const handleStatusUpdate = async (id, newStatus, regData, api, dispatch, createActivityLogThunk, fetchRegistrations) => {
     const getUserInfo = () => {
-        const userStr = sessionStorage.getItem("user");
-        const user = userStr ? JSON.parse(userStr) : {};
-        const userId = sessionStorage.getItem("user_id") || user._id;
-        const userName = user.name || "User";
+        const raw = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
+        let user = {};
+        try { user = raw ? JSON.parse(raw) : {}; } catch { user = {}; }
+        const userId = user._id || user.id || sessionStorage.getItem("user_id");
+        const userName = user.fullName || user.username || "User";
         return { userId, userName };
     };
 
@@ -295,6 +296,7 @@ export const handleStatusUpdate = async (id, newStatus, regData, api, dispatch, 
                             balanceAmount: formValues.balanceAmount,
                             paymentMode: 'manual',
                             paymentType: isAdvance ? 'installment' : 'full',
+                            updatedByName: getUserInfo().userName,
                             manualPaymentDetails: {
                                 method: formValues.method,
                                 transactionId: formValues.txid,
@@ -347,7 +349,7 @@ export const handleStatusUpdate = async (id, newStatus, regData, api, dispatch, 
                 didOpen: () => Swal.showLoading()
             });
 
-            const response = await api.put(`/api/exhibitor-registration/${id}`, { status: newStatus });
+            const response = await api.put(`/api/exhibitor-registration/${id}`, { status: newStatus, updatedByName: getUserInfo().userName });
             if (response.data.success) {
                 const reg = regData;
                 const { userId, userName } = getUserInfo();

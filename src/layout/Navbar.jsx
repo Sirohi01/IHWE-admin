@@ -471,11 +471,11 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
                   </div>
                   <div className="p-1.5">
                     <button
-                      onClick={() => { navigate("/admin-users"); setProfileOpen(false); }}
+                      onClick={() => { navigate("/my-profile"); setProfileOpen(false); }}
                       className="w-full flex items-center gap-3 px-3 py-2.5 text-[11px] font-bold text-slate-700 hover:text-[#08775e] hover:bg-emerald-50 rounded-md transition-all"
                     >
                       <FaUserAstronaut size={14} className="text-blue-600" />
-                      Manage Admin Users
+                      My Profile
                     </button>
                     <button
                       onClick={() => { setIsChangePasswordOpen(true); setProfileOpen(false); }}

@@ -5,6 +5,7 @@ import LoginPage from "../layout/LoginPage";
 import AdminLayout from "../layout/AdminLayout";
 import Dashboard from "../pages/Dashboard";
 const AdminUser = lazy(() => import("../layout/AdminUser"));
+const MyProfile = lazy(() => import("../pages/MyProfile"));
 const Crosual = lazy(() => import("../pages/HomeSlider"));
 const EventHighlightsPage = lazy(() => import("../pages/EventHighlights"));
 const FestivalCarousel = lazy(() => import("../pages/FestivalCarousel"));
@@ -359,6 +360,8 @@ export default function AppRoutes() {
             <Route path="healthcare-sectors" element={<HealthcareSectorsManagement />} />
             <Route path="epromotion" element={<EPromotionWebManagement />} />
             <Route path="faq-manage" element={<FAQManage />} />
+            <Route path="users/add" element={<AddUser />} />
+            <Route path="my-profile" element={<MyProfile />} />
             <Route path="add-pdf" element={<AddPdf />} />
             <Route path="exhibitor-useful-documents" element={<AddPdf />} />
             <Route path="stats-counter" element={<StatsCounter />} />

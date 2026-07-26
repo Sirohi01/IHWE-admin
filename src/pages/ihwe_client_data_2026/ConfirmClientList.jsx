@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Eye } from 'lucide-react';
 import { Link, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { createActivityLogThunk } from '../../features/activityLog/activityLogSlice';
 import api from "../../lib/api";
 import { handleStatusUpdate } from '../../utils/statusUpdateHelper';
@@ -85,9 +85,15 @@ const ConfirmClientList = () => {
   const [filterStage, setFilterStage] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
 
-  // Auth State
-  const { user } = useSelector(state => state.auth);
-  const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, '') === 'superadmin';
+  // Auth State — the logged-in admin's profile lives under the "adminInfo" key,
+  // in localStorage (remember-me) or sessionStorage — NOT in the auth Redux slice,
+  // which only tracks isAuthenticated/loading flags.
+  const user = (() => {
+    const raw = localStorage.getItem('adminInfo') || sessionStorage.getItem('adminInfo');
+    try { return raw ? JSON.parse(raw) : {}; } catch { return {}; }
+  })();
+  const roleSlug = (user?.role || '').toLowerCase().replace(/[^a-z]/g, '');
+  const isSuperAdmin = roleSlug === 'superadmin' || roleSlug === 'ihwesuperadministrator';
 
   // Server-side pagination state
   const [registrations, setRegistrations] = useState([]);
@@ -104,6 +110,15 @@ const ConfirmClientList = () => {
   const [isFinanceModalOpen, setIsFinanceModalOpen] = useState(false);
   const [selectedClientForFinance, setSelectedClientForFinance] = useState(null);
 
+  // Aggregated totals across ALL matching registrations (not just the current page) — feeds the stat cards
+  const [summary, setSummary] = useState({
+    totalCount: 0, totalArea: 0, totalRevenue: 0, paymentReceived: 0, newClientsCount: 0, existingClientsCount: 0,
+  });
+
+  // Filter dropdown options — distinct values across ALL of this user's registrations
+  // (not just the current page), so the dropdowns always show the correct/full choices.
+  const [filterOptions, setFilterOptions] = useState({ sources: [], statuses: [], industries: [] });
+
   // Fetch paginated registrations from backend
   const fetchRegistrations = useCallback(async () => {
     setIsLoading(true);
@@ -115,6 +130,8 @@ const ConfirmClientList = () => {
         ...(filterStage && { status: filterStage }),
         ...(filterSource && { referredBy: filterSource }),
         ...(filterIndustry && { industry: filterIndustry }),
+        ...(user?.username && { username: user.username }),
+        ...(user?.role && { role: user.role }),
       });
       const regRes = await api.get(`/api/exhibitor-registration?${params}`);
       if (regRes.data?.success) {
@@ -127,7 +144,44 @@ const ConfirmClientList = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, searchTerm, filterStage, filterSource, filterIndustry]);
+  }, [page, limit, searchTerm, filterStage, filterSource, filterIndustry, user?.username, user?.role]);
+
+  // Fetch aggregated totals (across ALL matching records, not just this page) for the stat cards
+  const fetchSummary = useCallback(async () => {
+    try {
+      const params = new URLSearchParams({
+        ...(searchTerm && { search: searchTerm }),
+        ...(filterStage && { status: filterStage }),
+        ...(filterSource && { referredBy: filterSource }),
+        ...(filterIndustry && { industry: filterIndustry }),
+        ...(user?.username && { username: user.username }),
+        ...(user?.role && { role: user.role }),
+      });
+      const res = await api.get(`/api/exhibitor-registration/summary?${params}`);
+      if (res.data?.success) {
+        setSummary(res.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching registration summary:', error);
+    }
+  }, [searchTerm, filterStage, filterSource, filterIndustry, user?.username, user?.role]);
+
+  // Fetch filter dropdown options — only depends on the user's scope, not on the
+  // filters/search themselves, so it doesn't need to refetch on every keystroke.
+  const fetchFilterOptions = useCallback(async () => {
+    try {
+      const params = new URLSearchParams({
+        ...(user?.username && { username: user.username }),
+        ...(user?.role && { role: user.role }),
+      });
+      const res = await api.get(`/api/exhibitor-registration/filter-options?${params}`);
+      if (res.data?.success) {
+        setFilterOptions(res.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching filter options:', error);
+    }
+  }, [user?.username, user?.role]);
 
   // Fetch static data only once (cached)
   const fetchStaticData = async () => {
@@ -169,6 +223,13 @@ const ConfirmClientList = () => {
     return () => clearTimeout(debounce);
   }, [fetchRegistrations]);
 
+  useEffect(() => {
+    const debounce = setTimeout(() => { fetchSummary(); }, searchTerm ? 400 : 0);
+    return () => clearTimeout(debounce);
+  }, [fetchSummary]);
+
+  useEffect(() => { fetchFilterOptions(); }, [fetchFilterOptions]);
+
   // Current page data is directly from server — no frontend slicing needed
   const allCompanies = registrations;
   const totalLeads = total;
@@ -186,9 +247,11 @@ const ConfirmClientList = () => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const uniqueSources = [...new Set(registrations.map(r => r.referredBy).filter(Boolean))];
-  const uniqueIndustries = [...new Set(registrations.map(r => r.natureOfBusiness || r.industrySector || r.typeOfBusiness).filter(Boolean))];
-  const uniqueStages = [...new Set(registrations.map(r => r.status).filter(Boolean))];
+  // Filter dropdown options come from filterOptions (scoped to the user, across ALL
+  // their registrations) — not derived from the current page's rows.
+  const uniqueSources = filterOptions.sources;
+  const uniqueIndustries = filterOptions.industries;
+  const uniqueStages = filterOptions.statuses;
 
   const getSourceStyle = (source) => {
     const s = (source || "").toLowerCase();
@@ -221,7 +284,7 @@ const ConfirmClientList = () => {
           type="text"
           placeholder="Search by Name, Company, Email, Mobile..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
           className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
@@ -237,46 +300,16 @@ const ConfirmClientList = () => {
     </>
   );
 
-  const totalConverted = registrations.length;
-  const existingClientsCount = registrations.filter(reg => {
-    const rName = (reg.companyName || reg.exhibitorName || "").toLowerCase().trim();
-    const rEmail1 = (reg.contact1?.email || "").toLowerCase().trim();
-    const rEmail2 = (reg.contact2?.email || "").toLowerCase().trim();
-    const rMobile1 = (reg.contact1?.mobile || "").trim();
-    const rMobile2 = (reg.contact2?.mobile || "").trim();
-
-    return masterCompanies.some(comp => {
-      if (comp._id === reg._id) return false;
-      const cName = (comp.companyName || comp.exhibitorName || "").toLowerCase().trim();
-      const cEmail = (comp.email || "").toLowerCase().trim();
-      const cMobile = (comp.mobile || "").trim();
-
-      if (rName && cName && rName === cName) return true;
-      if (cEmail && (rEmail1 === cEmail || rEmail2 === cEmail)) return true;
-      if (cMobile && (rMobile1 === cMobile || rMobile2 === cMobile)) return true;
-
-      if (comp.contacts && Array.isArray(comp.contacts)) {
-        return comp.contacts.some(contact => {
-          const cntEmail = (contact.email || "").toLowerCase().trim();
-          const cntMobile = (contact.mobile || "").trim();
-          if (cntEmail && (rEmail1 === cntEmail || rEmail2 === cntEmail)) return true;
-          if (cntMobile && (rMobile1 === cntMobile || rMobile2 === cntMobile)) return true;
-          return false;
-        });
-      }
-      return false;
-    });
-  }).length;
-  
-  const newClientsCount = totalConverted - existingClientsCount;
-  
-  const totalArea = registrations.reduce((acc, curr) => acc + (Number(curr.participation?.stallSize) || Number(curr.stallSize) || 0), 0);
-  
-  const totalRevenue = registrations.reduce((acc, curr) => acc + (Number(curr.financeBreakdown?.netPayable) || Number(curr.participation?.total) || Number(curr.amountPaid) || 0), 0);
-  
-  const paymentReceived = registrations.reduce((acc, curr) => acc + (Number(curr.amountPaid) || Number(curr.financeBreakdown?.paidAmount) || 0), 0);
-
-  
+  // Stat cards use server-side aggregated totals across ALL matching records
+  // (not just the current page) — see fetchSummary / /api/exhibitor-registration/summary.
+  const totalConverted = summary.totalCount;
+  // Client Status comes straight from the "New Client / Existing Client" choice
+  // made on the exhibitor registration itself (exhibitorStatus), not a guessed match.
+  const existingClientsCount = summary.existingClientsCount;
+  const newClientsCount = summary.newClientsCount;
+  const totalArea = summary.totalArea;
+  const totalRevenue = summary.totalRevenue;
+  const paymentReceived = summary.paymentReceived;
   const balancePayment = totalRevenue - paymentReceived;
 
   // Animated stat card component
@@ -324,7 +357,7 @@ const ConfirmClientList = () => {
         icon={<DollarSign className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
         gradientTo="to-blue-50" iconBg="bg-blue-100"
         rawValue={totalRevenue / 100000}
-        displayValue={(c) => `₹ ${c.toFixed(1)}L`}
+        displayValue={(c) => `₹ ${c.toFixed(2)}L`}
         label="TOTAL REVENUE"
         subLabel="Expected" subColor="#2563eb"
       />
@@ -332,7 +365,7 @@ const ConfirmClientList = () => {
         icon={<Banknote className="w-5 h-5 text-green-600" strokeWidth={2.5} />}
         gradientTo="to-green-50" iconBg="bg-green-100"
         rawValue={paymentReceived / 100000}
-        displayValue={(c) => `₹ ${c.toFixed(1)}L`}
+        displayValue={(c) => `₹ ${c.toFixed(2)}L`}
         label="PAYMENT RECEIVED"
         subLabel="Collected" subColor="#16a34a"
       />
@@ -340,7 +373,7 @@ const ConfirmClientList = () => {
         icon={<Clock className="w-5 h-5 text-rose-600" strokeWidth={2.5} />}
         gradientTo="to-rose-50" iconBg="bg-rose-100"
         rawValue={balancePayment > 0 ? balancePayment / 100000 : 0}
-        displayValue={(c) => `₹ ${c.toFixed(1)}L`}
+        displayValue={(c) => `₹ ${c.toFixed(2)}L`}
         label="BALANCE PAYMENT"
         subLabel="Pending" subColor="#e11d48"
       />
@@ -369,13 +402,13 @@ const ConfirmClientList = () => {
           placeholder="Search within converted clients..."
           className="w-full sm:w-64 pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-emerald-500"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
         />
       </div>
 
       <select
         value={filterIndustry}
-        onChange={(e) => setFilterIndustry(e.target.value)}
+        onChange={(e) => { setFilterIndustry(e.target.value); setPage(1); }}
         className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-emerald-500"
       >
         <option value="">Industry</option>
@@ -386,7 +419,7 @@ const ConfirmClientList = () => {
 
       <select
         value={filterSource}
-        onChange={(e) => setFilterSource(e.target.value)}
+        onChange={(e) => { setFilterSource(e.target.value); setPage(1); }}
         className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-emerald-500"
       >
         <option value="">Source</option>
@@ -407,7 +440,7 @@ const ConfirmClientList = () => {
 
       <select
         value={filterStage}
-        onChange={(e) => setFilterStage(e.target.value)}
+        onChange={(e) => { setFilterStage(e.target.value); setPage(1); }}
         className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-emerald-500"
       >
         <option value="">Sales Stage</option>
@@ -434,16 +467,16 @@ const ConfirmClientList = () => {
   // Table Config
   const tableHeaders = (
     <>
-      <th className="px-2 py-2 font-medium">Company Name</th>
-      <th className="px-2 py-2 font-medium">Contact Details</th>
-      <th className="px-2 py-2 font-medium text-center">Category</th>
-      <th className="px-2 py-2 font-medium text-center">Source</th>
-      <th className="px-2 py-2 font-medium text-center">Stall Size</th>
-      <th className="px-2 py-2 font-medium text-center">Booking Date</th>
-      <th className="px-2 py-2 font-medium text-center">Location</th>
-      <th className="px-2 py-2 font-medium text-right">Revenue</th>
-      <th className="px-2 py-2 font-medium text-center">PYMT Status</th>
-      <th className="px-2 py-2 font-medium text-center">Updated Details</th>
+      <th className="px-1 py-2 font-medium">Company Name</th>
+      <th className="px-1 py-2 font-medium">Contact Details</th>
+      <th className="px-1 py-2 font-medium text-left">Category</th>
+      <th className="px-1 py-2 font-medium text-left">Source</th>
+      <th className="px-1 py-2 font-medium text-center">Stall Size</th>
+      <th className="px-1 py-2 font-medium text-center">Booking Date</th>
+      <th className="px-1 py-2 font-medium text-left">Location</th>
+      <th className="px-1 py-2 font-medium text-right">Revenue</th>
+      <th className="px-1 py-2 font-medium text-center">PYMT Status</th>
+      <th className="px-1 py-2 font-medium text-center">Updated Details</th>
     </>
   );
 
@@ -452,17 +485,17 @@ const ConfirmClientList = () => {
       {isLoading ? (
         [...Array(10)].map((_, index) => (
           <tr key={`skeleton-${index}`} className="animate-pulse border-b border-slate-100 bg-white">
-            <td className="px-2 py-3 text-center"><div className="w-3 h-3 bg-slate-200 rounded-sm mx-auto"></div></td>
-            <td className="px-2 py-3"><div className="h-3 w-32 bg-slate-200 rounded mb-1.5"></div><div className="h-2 w-24 bg-slate-100 rounded"></div></td>
-            <td className="px-2 py-3"><div className="h-3 w-24 bg-slate-200 rounded mb-1.5"></div><div className="h-2 w-20 bg-slate-100 rounded"></div></td>
-            <td className="px-2 py-3 text-center"><div className="h-4 w-20 bg-slate-200 rounded mx-auto"></div></td>
-            <td className="px-2 py-3 text-center"><div className="h-3 w-16 bg-slate-200 rounded mx-auto"></div></td>
-            <td className="px-2 py-3 text-center"><div className="h-3 w-12 bg-slate-200 rounded mx-auto"></div></td>
-            <td className="px-2 py-3 text-center"><div className="h-3 w-16 bg-slate-200 rounded mx-auto mb-1.5"></div><div className="h-2 w-12 bg-slate-100 rounded mx-auto"></div></td>
-            <td className="px-2 py-3"><div className="h-3 w-20 bg-slate-200 rounded mx-auto mb-1.5"></div><div className="h-2 w-16 bg-slate-100 rounded mx-auto"></div></td>
-            <td className="px-2 py-3 text-center"><div className="h-3 w-16 bg-slate-200 rounded mx-auto"></div></td>
-            <td className="px-2 py-3 text-center"><div className="h-4 w-16 bg-slate-200 rounded-full mx-auto"></div></td>
-            <td className="px-2 py-3 text-center"><div className="h-3 w-16 bg-slate-200 rounded mx-auto mb-1.5"></div><div className="h-2 w-12 bg-slate-100 rounded mx-auto"></div></td>
+            <td className="px-1 py-3 text-center"><div className="w-3 h-3 bg-slate-200 rounded-sm mx-auto"></div></td>
+            <td className="px-1 py-3"><div className="h-3 w-32 bg-slate-200 rounded mb-1.5"></div><div className="h-2 w-24 bg-slate-100 rounded"></div></td>
+            <td className="px-1 py-3"><div className="h-3 w-24 bg-slate-200 rounded mb-1.5"></div><div className="h-2 w-20 bg-slate-100 rounded"></div></td>
+            <td className="px-1 py-3"><div className="h-4 w-20 bg-slate-200 rounded"></div></td>
+            <td className="px-1 py-3"><div className="h-3 w-16 bg-slate-200 rounded"></div></td>
+            <td className="px-1 py-3 text-center"><div className="h-3 w-12 bg-slate-200 rounded mx-auto"></div></td>
+            <td className="px-1 py-3 text-center"><div className="h-3 w-16 bg-slate-200 rounded mx-auto mb-1.5"></div><div className="h-2 w-12 bg-slate-100 rounded mx-auto"></div></td>
+            <td className="px-1 py-3"><div className="h-3 w-20 bg-slate-200 rounded mb-1.5"></div><div className="h-2 w-16 bg-slate-100 rounded"></div></td>
+            <td className="px-1 py-3 text-center"><div className="h-3 w-16 bg-slate-200 rounded mx-auto"></div></td>
+            <td className="px-1 py-3 text-center"><div className="h-4 w-16 bg-slate-200 rounded-full mx-auto"></div></td>
+            <td className="px-1 py-3 text-center"><div className="h-3 w-16 bg-slate-200 rounded mx-auto mb-1.5"></div><div className="h-2 w-12 bg-slate-100 rounded mx-auto"></div></td>
           </tr>
         ))
       ) : allCompanies.length === 0 ? (
@@ -498,7 +531,7 @@ const ConfirmClientList = () => {
           || "N/A";
         return (
           <tr key={row._id || i} className={`hover:bg-slate-50 transition-colors ${isSelected ? 'bg-emerald-50/30' : ''}`}>
-            <td className="px-2 py-2 text-center">
+            <td className="px-1 py-2 text-center">
               <input
                 type="checkbox"
                 className="w-3 h-3 accent-emerald-500 cursor-pointer rounded-sm"
@@ -506,13 +539,13 @@ const ConfirmClientList = () => {
                 onChange={() => onSelectRow(row._id)}
               />
             </td>
-            <td className="px-2 py-2">
+            <td className="px-1 py-2">
               <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D' }}>
                 <Link to={`/client-overview/${row._id}?source=exhibitor`}>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
               </div>
               <div className="text-[9px] font-bold" style={{ color: '#5E0006' }}>{toTitleCase(row.natureOfBusiness || row.industrySector || row.typeOfBusiness) || "-"}</div>
             </td>
-            <td className="px-2 py-2">
+            <td className="px-1 py-2">
               <div className="font-bold text-[10px]" style={{ color: '#15173D' }}>
                 {toTitleCase(contactName)}
               </div>
@@ -521,7 +554,7 @@ const ConfirmClientList = () => {
                 {contactMobile}
               </div>
             </td>
-            <td className="px-2 py-2 text-center">
+            <td className="px-1 py-2 text-left">
               {(() => {
                 const cat = row.participation?.stallCategory || row.exhibitorCategory || row.msme?.msmeCategory || null;
                 const isMsme = cat?.toLowerCase().includes('msme') || cat?.toLowerCase().includes('psm') || row.msme?.udyamRegNo || row.isMSME;
@@ -554,36 +587,34 @@ const ConfirmClientList = () => {
                 );
               })()}
             </td>
-            <td className="px-2 py-2 text-center">
+            <td className="px-1 py-2 text-left">
               <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-bold text-[9px] ${getSourceStyle(source)}`} style={{ color: '#443199' }}>
                 @{toTitleCase(source)}
               </span>
             </td>
-            <td className="px-2 py-2 text-center">
+            <td className="px-1 py-2 text-center">
               <span className="font-bold text-[10px]" style={{ color: '#016B61' }}>
                 {row.participation?.stallSize || row.stallSize ? `${row.participation?.stallSize || row.stallSize} sqm` : "N/A"}
               </span>
             </td>
-            <td className="px-2 py-2 text-center">
-              <div className="flex flex-col items-center justify-center gap-0.5">
+            <td className="px-1 py-2 text-center">
+              <div className="flex items-center justify-center gap-1">
                 {(row.createdAt || row.updatedAt) ? (() => {
                   const d = new Date(row.createdAt || row.updatedAt);
                   const date = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).format(d);
                   const time = new Intl.DateTimeFormat('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }).format(d);
                   return (
                     <>
-                      <div className="flex items-center gap-1">
-                        <CalendarDays className="text-slate-400" size={10} />
-                        <span className="text-[10px] font-bold" style={{ color: '#111844' }}>{date}</span>
-                      </div>
-                      <span className="text-[9px] text-slate-500 font-medium">{time}</span>
+                      <CalendarDays className="text-slate-400 shrink-0" size={10} />
+                      <span className="text-[10px] font-bold whitespace-nowrap" style={{ color: '#111844' }}>{date}</span>
+                      <span className="text-[9px] text-slate-500 font-medium whitespace-nowrap">{time}</span>
                     </>
                   );
                 })() : "-"}
               </div>
             </td>
 
-            <td className="px-2 py-2 text-center">
+            <td className="px-1 py-2 text-left">
               <div className="font-bold text-[10px]" style={{ color: '#093C5D' }}>
                 {toTitleCase(row.city || row.address?.city || row.companyCity || "N/A")}
               </div>
@@ -591,10 +622,10 @@ const ConfirmClientList = () => {
                 {toTitleCase(row.state || row.address?.state || row.companyState || "N/A")}
               </div>
             </td>
-            <td className="px-2 py-2 text-right">
+            <td className="px-1 py-2 text-right">
               <span className="font-bold text-[10px]" style={{ color: '#064232' }}>{row.participation?.currency === 'USD' ? '$' : '₹'} {(row.amountPaid || row.financeBreakdown?.netPayable || row.participation?.total || 0).toLocaleString()}</span>
             </td>
-            <td className="px-2 py-2 text-center">
+            <td className="px-1 py-2 text-center">
               <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold whitespace-nowrap ${
                 row.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                 row.status === 'confirmed' ? 'bg-green-50 text-green-700 border border-green-200' :
@@ -612,7 +643,7 @@ const ConfirmClientList = () => {
                  'Pending'}
               </span>
             </td>
-            <td className="px-2 py-2 text-center">
+            <td className="px-1 py-2 text-center">
               <div className="flex flex-col items-center justify-center gap-0.5">
                 {row.updatedAt ? (() => {
                   const d = new Date(row.updatedAt);
@@ -621,10 +652,13 @@ const ConfirmClientList = () => {
                   return (
                     <>
                       <div className="flex items-center gap-1">
-                        <RefreshCw className="text-slate-400" size={10} />
-                        <span className="text-[10px] font-bold text-slate-700">{date}</span>
+                        <RefreshCw className="text-slate-400 shrink-0" size={10} />
+                        <span className="text-[10px] font-bold text-slate-700 whitespace-nowrap">{date}</span>
+                        <span className="text-[9px] text-slate-500 font-medium whitespace-nowrap">{time}</span>
                       </div>
-                      <span className="text-[9px] text-slate-500 font-medium">{time}</span>
+                      {(row.updatedByName || row.filledByFullName) && (
+                        <span className="text-[9px] font-bold" style={{ color: '#443199' }}>by {toTitleCase(row.updatedByName || row.filledByFullName)}</span>
+                      )}
                     </>
                   );
                 })() : "-"}
