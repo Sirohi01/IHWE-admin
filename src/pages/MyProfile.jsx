@@ -40,6 +40,7 @@ export default function MyProfile() {
   const [verifyingMobileOtp, setVerifyingMobileOtp] = useState(false);
   const [profilePreview, setProfilePreview] = useState("");
   const [signaturePreview, setSignaturePreview] = useState("");
+  const [recentActivities, setRecentActivities] = useState([]);
 
   useEffect(() => {
     const fetchDropdowns = async () => {
@@ -98,6 +99,23 @@ export default function MyProfile() {
               profileData.performance = statsRes?.data?.success
                 ? statsRes.data.data
                 : { totalLeads: 0, stallBookings: 0, conversionRate: 0, totalAmountAchieved: 0 };
+
+              const activityRes = await api.get(
+                `/api/activity-logs?limit=4&search=${encodeURIComponent(profileData.username || profileData.fullName || "")}`
+              ).catch(error => {
+                console.error("Failed to fetch recent activity", error);
+                return null;
+              });
+              if (activityRes?.data?.success) {
+                setRecentActivities((activityRes.data.data || []).slice(0, 4).map(log => ({
+                  id: log._id,
+                  title: `${log.action || "Activity"} · ${log.module || "System"}`,
+                  time: log.createdAt ? new Date(log.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "—",
+                  color: String(log.action || "").toLowerCase().includes("delete") ? "red" : String(log.action || "").toLowerCase().includes("update") ? "blue" : "emerald"
+                })));
+              } else {
+                setRecentActivities([]);
+              }
 
               setAdminData(profileData);
               setFormData({ ...profileData, password: "" });
@@ -245,6 +263,7 @@ export default function MyProfile() {
   const isSuperAdmin = currentRoleSlug === "superadmin" || currentRoleSlug === "ihwesuperadministrator";
   const canManagePrivileges = isSuperAdmin || currentRole?.permissions?.["User ID Management"] === true;
   const canEditProfile = canManagePrivileges;
+  const canViewActivityLogs = isSuperAdmin || currentRole?.permissions?.["Activity Logs"] === true;
 
   const checkOfficialContact = async field => {
     if (field === "email") {
@@ -560,7 +579,7 @@ export default function MyProfile() {
                 <p className="text-[10px] font-bold text-slate-500">Created By</p>
                 <p className="text-[11px] font-bold text-slate-400 text-center">:</p>
                 <div>
-                  <p className="text-[11px] font-bold text-slate-700 leading-none mb-0.5">{adminData.createdBy ? adminData.createdBy.username : 'Super Admin'}</p>
+                  <p className="text-[11px] font-bold text-slate-700 leading-none mb-0.5">{adminData.createdBy?.fullName || adminData.createdBy?.username || 'System'}</p>
                   <p className="text-[9px] font-medium text-slate-400 leading-none">{adminData.createdBy ? adminData.createdBy.role : ''}</p>
                 </div>
               </div>
@@ -575,8 +594,8 @@ export default function MyProfile() {
                 <p className="text-[10px] font-bold text-slate-500">Last Updated By</p>
                 <p className="text-[11px] font-bold text-slate-400 text-center">:</p>
                 <div>
-                  <p className="text-[11px] font-bold text-slate-700 leading-none mb-0.5">Vijay Sharma</p>
-                  <p className="text-[9px] font-medium text-slate-400 leading-none">Super Admin</p>
+                  <p className="text-[11px] font-bold text-slate-700 leading-none mb-0.5">{adminData.updatedBy?.fullName || adminData.updatedBy?.username || 'System'}</p>
+                  <p className="text-[9px] font-medium text-slate-400 leading-none">{adminData.updatedBy?.role || ''}</p>
                 </div>
               </div>
             </div>
@@ -1092,22 +1111,25 @@ export default function MyProfile() {
             </h3>
 
             <div className="relative border-l-2 border-slate-100 ml-2 space-y-5 pb-2">
-              {(adminData.recentActivity || [
-                { title: 'Profile Updated', time: '19 Jul 2026, 09:15 AM', color: 'emerald' },
-                { title: 'Password Changed', time: '12 Jul 2026, 06:20 PM', color: 'blue' },
-                { title: 'Login Successful', time: '19 Jul 2026, 09:15 AM', color: 'emerald' }
-              ]).map((activity, idx) => (
-                <div key={idx} className="relative pl-5">
-                  <div className={`absolute w-2.5 h-2.5 bg-${activity.color || 'emerald'}-500 rounded-full -left-[5.5px] top-0.5 border-2 border-white ring-2 ring-${activity.color || 'emerald'}-100`}></div>
+              {recentActivities.map((activity) => (
+                <div key={activity.id} className="relative pl-5">
+                  <div className={`absolute w-2.5 h-2.5 rounded-full -left-[5.5px] top-0.5 border-2 border-white ring-2 ${activity.color === "red" ? "bg-red-500 ring-red-100" : activity.color === "blue" ? "bg-blue-500 ring-blue-100" : "bg-emerald-500 ring-emerald-100"}`}></div>
                   <p className="text-[11px] font-bold text-slate-800 leading-none mb-1">{activity.title}</p>
                   <p className="text-[9px] font-semibold text-slate-400">{activity.time}</p>
                 </div>
               ))}
+              {!recentActivities.length && <p className="pl-5 text-[10px] font-medium text-slate-400">No recent activity found.</p>}
             </div>
 
-            <button className="w-full text-center mt-3 pt-3 border-t border-slate-100 text-[10px] font-bold text-emerald-700 hover:text-emerald-800 flex items-center justify-center gap-1">
-              View All Activity <ChevronRight size={12} />
-            </button>
+            {canViewActivityLogs ? (
+              <Link to="/activity-logs" className="w-full text-center mt-3 pt-3 border-t border-slate-100 text-[10px] font-bold text-emerald-700 hover:text-emerald-800 flex items-center justify-center gap-1">
+                View All Activity <ChevronRight size={12} />
+              </Link>
+            ) : (
+              <button type="button" disabled className="w-full text-center mt-3 pt-3 border-t border-slate-100 text-[10px] font-bold text-slate-300 flex items-center justify-center gap-1 cursor-not-allowed" title="Activity Logs access required">
+                View All Activity <ChevronRight size={12} />
+              </button>
+            )}
           </div>
         </div>
       </div>
