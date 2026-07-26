@@ -174,6 +174,7 @@ const UserList = lazy(() => import("../pages/users/UserList"));
 const AddUser = lazy(() => import("../pages/users/AddUser"));
 const AddBank = lazy(() => import("../pages/add_by_admin/AddBank"));
 const AddCategory = lazy(() => import("../pages/add_by_admin/AddCategory"));
+const AddExhibitorCategory = lazy(() => import("../pages/add_by_admin/AddExhibitorCategory"));
 const AddCrmWhatsappMessage = lazy(() => import("../pages/add_by_admin/AddCrmWhatsappMessage"));
 const AddDataSource = lazy(() => import("../pages/add_by_admin/AddDataSource"));
 const AddEvent = lazy(() => import("../pages/add_by_admin/AddEvent"));
@@ -737,6 +738,10 @@ export default function AppRoutes() {
             <Route
               path="ihweClientData2026/AddCategory"
               element={<AddCategory />}
+            />
+            <Route
+              path="ihweClientData2026/AddCategory/add-exhibitor-category"
+              element={<AddExhibitorCategory />}
             />
             <Route
               path="ihweClientData2026/AddCrmWhatsappMessage"

@@ -862,7 +862,7 @@ const AddStatus = () => {
 
         {/* Table */}
         <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-[#e0e5eb] bg-white shadow-[0_1px_3px_rgba(15,23,42,0.03)]">
-          <div className="min-h-0 flex-1 overflow-auto">
+          <div className="min-h-0 flex-1 overflow-hidden">
             <table className="w-full table-fixed border-collapse text-left">
               <colgroup>
                 <col className="w-[3.5%]" />
@@ -893,7 +893,7 @@ const AddStatus = () => {
               <tbody className="text-[11.5px] text-[#34445d]">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={9} className="text-center">
+                    <td colSpan={9} className="h-[180px] text-center">
                       <div className="flex h-full flex-col items-center justify-center gap-3 text-[#728199]">
                         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#08752f]/20 border-t-[#08752f]" />
                         <span className="text-[12px] font-medium">
@@ -912,7 +912,7 @@ const AddStatus = () => {
                     return (
                       <tr
                         key={item?._id || `${item?.name}-${absoluteIndex}`}
-                        className="border-b border-[#e7ebef] transition last:border-b-0 hover:bg-[#fbfcfd] h-[60px]"
+                        className="h-11 border-b border-[#e7ebef] transition last:border-b-0 hover:bg-[#fbfcfd]"
                       >
                         <td className="px-4 font-medium text-[#52627a]">
                           {absoluteIndex + 1}
@@ -921,8 +921,10 @@ const AddStatus = () => {
                         <td className="px-3">
                           <div className="flex min-w-0 items-center gap-2.5">
                             <span
-                              className="h-2.5 w-2.5 shrink-0 rounded-full"
-                              style={{ backgroundColor: item?.color || "#2563eb" }}
+                              className={`h-2.5 w-2.5 shrink-0 rounded-full ${STATUS_DOT_COLORS[
+                                absoluteIndex % STATUS_DOT_COLORS.length
+                              ]
+                                }`}
                             />
                             <span className="truncate font-semibold text-[#263754]">
                               {item?.name || "Unnamed Status"}
@@ -933,8 +935,8 @@ const AddStatus = () => {
                         <td className="px-3">
                           <span
                             className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize ${itemType === "system"
-                                ? "bg-[#eaf2ff] text-[#3f78c7]"
-                                : "bg-[#eaf8ef] text-[#2d9b58]"
+                              ? "bg-[#eaf2ff] text-[#3f78c7]"
+                              : "bg-[#eaf8ef] text-[#2d9b58]"
                               }`}
                           >
                             {itemType}
@@ -953,16 +955,16 @@ const AddStatus = () => {
                               aria-checked={itemStatus === "active"}
                               onClick={() => handleToggleStatus(item)}
                               className={`relative inline-flex h-[22px] w-[40px] shrink-0 rounded-full transition-colors ${itemStatus === "active"
-                                  ? "bg-[#0b8a3d]"
-                                  : "bg-[#e7ebf0]"
+                                ? "bg-[#0b8a3d]"
+                                : "bg-[#e7ebf0]"
                                 }`}
                               title={`Set ${itemStatus === "active" ? "inactive" : "active"
                                 }`}
                             >
                               <span
                                 className={`absolute top-[3px] h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${itemStatus === "active"
-                                    ? "translate-x-[21px]"
-                                    : "translate-x-[3px]"
+                                  ? "translate-x-[21px]"
+                                  : "translate-x-[3px]"
                                   }`}
                               />
                             </button>
@@ -1013,7 +1015,7 @@ const AddStatus = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={9} className="text-center">
+                    <td colSpan={9} className="h-[180px] text-center">
                       <div className="flex h-full flex-col items-center justify-center gap-2 text-[#7b899b]">
                         <Info className="h-7 w-7 text-[#a4afbd]" />
                         <p className="text-[12px] font-medium">
@@ -1082,8 +1084,8 @@ const AddStatus = () => {
                   key={pageNumber}
                   onClick={() => setCurrentPage(pageNumber)}
                   className={`flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-[11px] font-semibold transition ${currentPage === pageNumber
-                      ? "bg-[#08752f] text-white shadow-[0_1px_3px_rgba(8,117,47,0.2)]"
-                      : "border border-[#e7ebef] bg-white text-[#6b798f] hover:bg-[#f5f7fa]"
+                    ? "bg-[#08752f] text-white shadow-[0_1px_3px_rgba(8,117,47,0.2)]"
+                    : "border border-[#e7ebef] bg-white text-[#6b798f] hover:bg-[#f5f7fa]"
                     }`}
                 >
                   {pageNumber}
@@ -1159,8 +1161,8 @@ const AddStatus = () => {
                     <label
                       key={status}
                       className={`flex h-11 cursor-pointer items-center gap-2 rounded-md border px-3 text-[12px] font-medium capitalize transition ${formData.status === status
-                          ? "border-[#2e8050] bg-[#eff8f2] text-[#176f39]"
-                          : "border-[#dfe4ea] bg-white text-[#65748a]"
+                        ? "border-[#2e8050] bg-[#eff8f2] text-[#176f39]"
+                        : "border-[#dfe4ea] bg-white text-[#65748a]"
                         }`}
                     >
                       <input

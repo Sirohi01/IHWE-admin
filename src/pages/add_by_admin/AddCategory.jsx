@@ -441,6 +441,7 @@
 
 // export default AddCategory;
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   CalendarDays,
   CheckCircle2,
@@ -691,12 +692,6 @@ const AddCategory = () => {
     setIsEditing(null);
     setCategoryForm({ name: '', status: 'Active' });
     setIsModalOpen(false);
-  };
-
-  const openCreateModal = () => {
-    setIsEditing(null);
-    setCategoryForm({ name: '', status: 'Active' });
-    setIsModalOpen(true);
   };
 
   const startEdit = (category) => {
@@ -1010,14 +1005,13 @@ const AddCategory = () => {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={openCreateModal}
+          <Link
+            to="add-exhibitor-category"
             className="mt-2 inline-flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-lg bg-[#075fd7] px-5 text-[clamp(11px,.78vw,13px)] font-bold text-white shadow-[0_8px_20px_rgba(7,95,215,0.22)] transition hover:bg-[#064fbb] active:scale-[0.98]"
           >
             <Plus className="h-4 w-4" />
             Add New Category
-          </button>
+          </Link>
         </header>
 
         <section className="grid grid-cols-5 gap-[clamp(10px,1.4vw,24px)]">
@@ -1039,8 +1033,8 @@ const AddCategory = () => {
                   </p>
                   <p
                     className={`mt-1 truncate font-extrabold text-[#102a67] ${card.isDate
-                        ? 'text-[clamp(14px,1.15vw,19px)]'
-                        : 'text-[clamp(19px,1.55vw,27px)]'
+                      ? 'text-[clamp(14px,1.15vw,14px)]'
+                      : 'text-[clamp(19px,1.55vw,19px)]'
                       }`}
                   >
                     {card.value}
@@ -1213,8 +1207,8 @@ const AddCategory = () => {
                         <td className="px-[clamp(8px,1.1vw,20px)]">
                           <span
                             className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[clamp(9px,.67vw,11px)] font-bold ${status === 'Active'
-                                ? 'bg-green-50 text-green-700'
-                                : 'bg-red-50 text-red-600'
+                              ? 'bg-green-50 text-green-700'
+                              : 'bg-red-50 text-red-600'
                               }`}
                           >
                             <span
@@ -1367,8 +1361,8 @@ const AddCategory = () => {
                     key={item}
                     onClick={() => setCurrentPage(item)}
                     className={`grid h-8 min-w-8 place-items-center rounded-lg px-2 text-xs font-bold transition ${currentPage === item
-                        ? 'bg-[#075fd7] text-white shadow-sm'
-                        : 'bg-slate-50 text-[#284780] hover:bg-slate-100'
+                      ? 'bg-[#075fd7] text-white shadow-sm'
+                      : 'bg-slate-50 text-[#284780] hover:bg-slate-100'
                       }`}
                   >
                     {item}
@@ -1448,8 +1442,8 @@ const AddCategory = () => {
                     <label
                       key={status}
                       className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-bold transition ${categoryForm.status === status
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-slate-200 text-slate-500 hover:bg-slate-50'
                         }`}
                     >
                       <input
