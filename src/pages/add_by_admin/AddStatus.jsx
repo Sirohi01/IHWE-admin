@@ -954,17 +954,16 @@ const AddStatus = () => {
                               role="switch"
                               aria-checked={itemStatus === "active"}
                               onClick={() => handleToggleStatus(item)}
-                              className={`relative inline-flex h-[22px] w-[40px] shrink-0 rounded-full transition-colors ${itemStatus === "active"
+                              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${itemStatus === "active"
                                 ? "bg-[#0b8a3d]"
-                                : "bg-[#e7ebf0]"
+                                : "bg-[#cbd5e1]"
                                 }`}
-                              title={`Set ${itemStatus === "active" ? "inactive" : "active"
-                                }`}
+                              title={`Set ${itemStatus === "active" ? "inactive" : "active"}`}
                             >
                               <span
-                                className={`absolute top-[3px] h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${itemStatus === "active"
-                                  ? "translate-x-[21px]"
-                                  : "translate-x-[3px]"
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${itemStatus === "active"
+                                  ? "translate-x-6"
+                                  : "translate-x-1"
                                   }`}
                               />
                             </button>

@@ -987,7 +987,7 @@ const AddCategory = () => {
 
   return (
     <div className="h-[calc(100dvh-72px)] overflow-hidden bg-[#f7f9fc] p-[clamp(12px,1.55vw,24px)] text-[#102a67]">
-      <div className="grid h-full min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-[clamp(10px,1.15vw,18px)]">
+      <div className="grid h-full min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-2.5">
         <header className="flex items-start justify-between gap-5 px-2">
           <div className="min-w-0">
             <div className="mb-1.5 flex items-center gap-2 text-[clamp(10px,.76vw,12px)] font-semibold text-slate-500">
@@ -1015,32 +1015,32 @@ const AddCategory = () => {
           </Link>
         </header>
 
-        <section className="grid grid-cols-5 gap-[clamp(10px,1.4vw,24px)]">
+        <section className="grid grid-cols-5 gap-[clamp(4px,0.5vw,10px)]">
           {statCards.map((card) => {
             const Icon = card.icon;
             return (
               <article
                 key={card.title}
-                className="flex min-w-0 items-center gap-[clamp(10px,1vw,18px)] rounded-xl border border-slate-200/80 bg-white px-[clamp(12px,1.35vw,22px)] py-[clamp(12px,1.15vw,18px)] shadow-[0_4px_16px_rgba(15,23,42,0.05)]"
+                className="flex min-w-0 items-center gap-[clamp(6px,.6vw,10px)] rounded-xl border border-slate-200/80 bg-white px-3 py-1.5 shadow-[0_4px_16px_rgba(15,23,42,0.05)]"
               >
                 <div
-                  className={`grid h-[clamp(48px,4vw,64px)] w-[clamp(48px,4vw,64px)] shrink-0 place-items-center rounded-full ${card.bubbleClass}`}
+                  className={`grid h-[clamp(32px,2.5vw,40px)] w-[clamp(32px,2.5vw,40px)] shrink-0 place-items-center rounded-full ${card.bubbleClass}`}
                 >
-                  <Icon className={`h-[clamp(24px,2vw,31px)] w-[clamp(24px,2vw,31px)] ${card.iconClass}`} />
+                  <Icon className={`h-[clamp(16px,1.2vw,20px)] w-[clamp(16px,1.2vw,20px)] ${card.iconClass}`} />
                 </div>
                 <div className="min-w-0 leading-tight">
-                  <p className="truncate text-[clamp(10px,.72vw,12px)] font-bold text-[#173978]">
+                  <p className="truncate text-[clamp(9.5px,.7vw,11px)] font-bold text-[#173978]">
                     {card.title}
                   </p>
                   <p
-                    className={`mt-1 truncate font-extrabold text-[#102a67] ${card.isDate
-                      ? 'text-[clamp(14px,1.15vw,14px)]'
-                      : 'text-[clamp(19px,1.55vw,19px)]'
+                    className={`truncate font-extrabold text-[#102a67] ${card.isDate
+                      ? 'text-[clamp(12px,1vw,13px)] mt-0.5'
+                      : 'text-[clamp(16px,1.3vw,17px)]'
                       }`}
                   >
                     {card.value}
                   </p>
-                  <p className="mt-1 truncate text-[clamp(9px,.66vw,11px)] font-semibold text-slate-500">
+                  <p className="truncate text-[clamp(8.5px,.6vw,10px)] font-semibold text-slate-500">
                     {card.subtitle}
                   </p>
                 </div>
@@ -1050,7 +1050,7 @@ const AddCategory = () => {
         </section>
 
         <main className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_4px_18px_rgba(15,23,42,0.05)]">
-          <div className="grid shrink-0 grid-cols-[minmax(210px,1.45fr)_minmax(150px,.85fr)_minmax(170px,1fr)_minmax(170px,1fr)_90px_1fr_auto_auto] items-end gap-3 border-b border-slate-200 px-[clamp(12px,1.15vw,20px)] py-[clamp(11px,1vw,16px)]">
+          <div className="grid shrink-0 grid-cols-[minmax(210px,1.45fr)_minmax(150px,.85fr)_minmax(170px,1fr)_minmax(170px,1fr)_90px_1fr_auto_auto] items-end gap-3 border-b border-slate-200 px-[clamp(12px,1.15vw,20px)] py-2">
             <div className="relative min-w-0">
               <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#284780]" />
               <input
@@ -1058,7 +1058,7 @@ const AddCategory = () => {
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Search category by name..."
-                className="h-[46px] w-full rounded-lg border border-slate-200 bg-white px-4 pr-10 text-[clamp(10px,.72vw,12px)] font-semibold text-[#173978] outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-4 pr-10 text-[clamp(10px,.72vw,12px)] font-semibold text-[#173978] outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
             </div>
 
@@ -1098,7 +1098,7 @@ const AddCategory = () => {
             <button
               type="button"
               onClick={resetFilters}
-              className="inline-flex h-[46px] items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-[clamp(10px,.7vw,12px)] font-bold text-[#173978] transition hover:bg-slate-50"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-[clamp(10px,.7vw,12px)] font-bold text-[#173978] transition hover:bg-slate-50"
             >
               <RotateCcw className="h-4 w-4" />
               Reset
@@ -1110,7 +1110,7 @@ const AddCategory = () => {
               type="button"
               onClick={exportCategories}
               disabled={!filteredCategories.length}
-              className="inline-flex h-[46px] items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-5 text-[clamp(10px,.72vw,12px)] font-bold text-[#173978] transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-5 text-[clamp(10px,.72vw,12px)] font-bold text-[#173978] transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Download className="h-4 w-4" />
               Export
@@ -1124,7 +1124,7 @@ const AddCategory = () => {
                 setMainCategoryFilter('All');
                 setCurrentPage(1);
               }}
-              className="grid h-[46px] w-[54px] place-items-center rounded-lg border border-slate-200 bg-white text-[#173978] transition hover:bg-slate-50"
+              className="grid h-9 w-[46px] place-items-center rounded-lg border border-slate-200 bg-white text-[#173978] transition hover:bg-slate-50"
               title="Clear advanced filters"
             >
               <SlidersHorizontal className="h-4 w-4" />
@@ -1147,7 +1147,7 @@ const AddCategory = () => {
               <thead>
                 <tr className="h-[40px] bg-[#073c9d] text-white">
                   {[
-                    'SL. NO.',
+                    'S.No.',
                     'CATEGORY NAME',
                     'MAIN CATEGORY',
                     'BUSINESS NATURE',
@@ -1493,14 +1493,14 @@ const AddCategory = () => {
 };
 
 const FilterSelect = ({ label, value, onChange, options, allLabel }) => (
-  <label className="relative block h-[46px] min-w-0 rounded-lg border border-slate-200 bg-white px-3 pt-1.5 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
-    <span className="pointer-events-none block truncate text-[clamp(8px,.58vw,10px)] font-bold text-[#284780]">
+  <label className="relative flex h-9 min-w-0 flex-col justify-center rounded-lg border border-slate-200 bg-white px-3 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
+    <span className="pointer-events-none mb-0.5 block truncate text-[clamp(8px,.58vw,9px)] font-bold leading-none text-[#284780]">
       {label}
     </span>
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className="h-6 w-full appearance-none truncate bg-transparent pr-6 text-[clamp(9px,.69vw,11px)] font-bold text-[#173978] outline-none"
+      className="w-full appearance-none truncate bg-transparent pr-6 text-[clamp(9px,.69vw,11px)] font-bold leading-none text-[#173978] outline-none"
     >
       {options.map((option) => (
         <option key={option} value={option}>
@@ -1508,7 +1508,7 @@ const FilterSelect = ({ label, value, onChange, options, allLabel }) => (
         </option>
       ))}
     </select>
-    <ChevronDown className="pointer-events-none absolute bottom-2.5 right-3 h-3.5 w-3.5 text-[#284780]" />
+    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#284780]" />
   </label>
 );
 
