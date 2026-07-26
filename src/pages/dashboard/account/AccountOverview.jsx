@@ -119,7 +119,7 @@ const AccountOverview = () => {
       <CompanyAccountSummary companyInfo={companyInfo} financials={financials} />
 
       {/* Action Buttons Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mb-1">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-1">
         <button onClick={() => navigate(`/performa-invoice-list/${id}`)} className="flex items-center gap-2 p-2 bg-[#f0f5ff] hover:bg-[#e6edfa] border border-[#dbe6fa] rounded-lg transition-colors text-left group">
           <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
             <FilePlus size={16} className="text-[#2563eb]" />
