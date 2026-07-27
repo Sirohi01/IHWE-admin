@@ -10,10 +10,11 @@ import {
   MessageCircle, Mail
 } from "lucide-react";
 import { FaStar, FaRegStar } from "react-icons/fa";
+import { getLeadScore } from "../../utils/leadScoring";
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== "string") return str;
-  return str.replace(/\b\w/g, (c) => c.toUpperCase());
+  return str.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 };
 
 const getConvIcon = (type) => {
@@ -250,10 +251,18 @@ const AllLeadsList = () => {
               </td>
               {isSuperAdmin && <td className="px-2 py-2 font-bold text-blue-600 text-[10px]">{toTitleCase(row.forwardTo) || "Unassigned"}</td>}
               <td className="px-2 py-2">
-                <div className="flex items-center gap-0.5 text-emerald-500 text-[9px]">
-                  <FaStar /><FaStar /><FaStar /><FaRegStar className="text-slate-300" /><FaRegStar className="text-slate-300" />
-                  <span className="ml-1 font-bold text-slate-700">{row.leadScore || 65}</span>
-                </div>
+                {(() => {
+                  const score = row.leadScore ?? getLeadScore(row.companyStatus);
+                  const filledStars = Math.round(score / 20);
+                  return (
+                    <div className="flex items-center gap-0.5 text-emerald-500 text-[9px]">
+                      {[...Array(5)].map((_, i) =>
+                        i < filledStars ? <FaStar key={i} /> : <FaRegStar key={i} className="text-slate-300" />
+                      )}
+                      <span className="ml-1 font-bold text-slate-700">{score}</span>
+                    </div>
+                  );
+                })()}
               </td>
               <td className="px-2 py-1.5">
                 <div className="flex items-start gap-1.5">

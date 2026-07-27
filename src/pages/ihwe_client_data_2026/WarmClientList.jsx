@@ -10,6 +10,7 @@ import {
   Search, Plus, Upload, MessageCircle, CalendarDays, Clock3, Filter, ChevronDown, MoreVertical, ArrowRight, Bell, Phone, Mail
 } from "lucide-react";
 import { FaWhatsapp, FaStar, FaRegStar } from 'react-icons/fa';
+import { getLeadScore } from "../../utils/leadScoring";
 
 // Hook: animate number from 0 to target when element enters viewport
 function useCountUp(target, duration = 1200) {
@@ -48,7 +49,7 @@ function useCountUp(target, duration = 1200) {
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
-  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 
@@ -324,10 +325,18 @@ const WarmClientList = () => {
                 </span>
               </td>
               <td className="px-2 py-1.5">
-                <div className="flex items-center gap-0.5 text-emerald-500 text-[9px]">
-                  <FaStar /><FaStar /><FaStar /><FaRegStar className="text-slate-300" /><FaRegStar className="text-slate-300" />
-                  <span className="ml-1 font-semibold text-slate-700">{row.leadScore || 70}</span>
-                </div>
+                {(() => {
+                  const score = row.leadScore ?? getLeadScore(row.companyStatus);
+                  const filledStars = Math.round(score / 20);
+                  return (
+                    <div className="flex items-center gap-0.5 text-emerald-500 text-[9px]">
+                      {[...Array(5)].map((_, i) =>
+                        i < filledStars ? <FaStar key={i} /> : <FaRegStar key={i} className="text-slate-300" />
+                      )}
+                      <span className="ml-1 font-semibold text-slate-700">{score}</span>
+                    </div>
+                  );
+                })()}
               </td>
               <td className="px-2 py-2 text-center">
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${statusBg} ${statusText} border-transparent`}>

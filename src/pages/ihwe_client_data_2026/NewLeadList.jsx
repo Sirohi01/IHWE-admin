@@ -8,6 +8,7 @@ import {
   Search, MoreVertical, Download, Filter, Calendar, MessageCircle, Phone, Mail, Users, Clock, CalendarDays, CalendarCheck, Target, ArrowRight, Plus, Upload, RefreshCw
 } from "lucide-react";
 import { FaStar, FaRegStar, FaWhatsapp } from 'react-icons/fa';
+import { getLeadScore } from "../../utils/leadScoring";
 import BaseLeadPage from "../../layout/BaseLeadPage";
 
 // Hook: animate number from 0 to target when element enters viewport
@@ -48,7 +49,7 @@ function useCountUp(target, duration = 1200) {
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
-  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 const NewLeadList = () => {
@@ -364,10 +365,18 @@ const NewLeadList = () => {
                 </td>
               )}
               <td className="px-2 py-1.5">
-                <div className="flex items-center gap-0.5 text-emerald-500 text-[9px]">
-                  <FaStar /><FaStar /><FaStar /><FaRegStar className="text-slate-300" /><FaRegStar className="text-slate-300" />
-                  <span className="ml-1 font-semibold text-slate-700">{row.leadScore || 65}</span>
-                </div>
+                {(() => {
+                  const score = row.leadScore ?? getLeadScore(row.companyStatus);
+                  const filledStars = Math.round(score / 20);
+                  return (
+                    <div className="flex items-center gap-0.5 text-emerald-500 text-[9px]">
+                      {[...Array(5)].map((_, i) =>
+                        i < filledStars ? <FaStar key={i} /> : <FaRegStar key={i} className="text-slate-300" />
+                      )}
+                      <span className="ml-1 font-semibold text-slate-700">{score}</span>
+                    </div>
+                  );
+                })()}
               </td>
               <td className="px-2 py-1.5">
                 <div className="flex items-start gap-1.5">

@@ -348,6 +348,34 @@ export const updateCompany = createAsyncThunk(
   },
 );
 
+// ==================== ASSIGN EVENTS (additive — never removes existing ones) ====================
+export const assignEventsToCompany = createAsyncThunk(
+  "company/assignEvents",
+  async ({ id, eventIds, forwardTo }, { dispatch, rejectWithValue }) => {
+    const { userId, userName } = getUserInfo();
+    try {
+      const res = await api.post(`/api/companies/${id}/assign-events`, { eventIds, forwardTo });
+      const updated = res.data.data || res.data;
+
+      if (userId) {
+        dispatch(
+          createActivityLogThunk({
+            user_id: userId,
+            message: `Company '${updated.companyName || id}' assigned to ${eventIds.length} event(s) by ${userName}`,
+            link: `/companies/${id}`,
+            section: "companies",
+            data: { action: "ASSIGN_EVENTS", company_id: id, event_ids: eventIds },
+          }),
+        );
+      }
+
+      return updated;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  },
+);
+
 // ==================== MATCHING IDS (for "select all across pages") ====================
 export const fetchMatchingCompanyIds = createAsyncThunk(
   "company/fetchMatchingIds",
@@ -521,6 +549,15 @@ const companySlice = createSlice({
       })
       .addCase(updateCompany.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload;
+      })
+
+      // ASSIGN EVENTS (additive)
+      .addCase(assignEventsToCompany.fulfilled, (state, action) => {
+        const index = state.companies.findIndex((c) => c._id === action.payload._id);
+        if (index !== -1) state.companies[index] = action.payload;
+      })
+      .addCase(assignEventsToCompany.rejected, (state, action) => {
         state.error = action.payload;
       })
 

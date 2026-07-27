@@ -11,10 +11,11 @@ import {
   Calendar, CalendarDays, ArrowRight, RefreshCw, Flame, MessageSquare, Send, CheckCircle2, Filter, ChevronDown
 } from "lucide-react";
 import { FaStar, FaRegStar, FaWhatsapp } from 'react-icons/fa';
+import { getLeadScore } from "../../utils/leadScoring";
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
-  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 // Hook: animate number from 0 to target when element enters viewport
@@ -179,19 +180,21 @@ const HotClientList = () => {
     { name: "Ready to Convert", value: readyCount, pct: pct(readyCount), color: "#10b981" }
   ];
 
+  const scoreOf = (c) => c.leadScore ?? getLeadScore(c.companyStatus);
+
   const scoreDist = [
-    { label: "90 - 100", count: allCompanies.filter(c => (c.leadScore || 85) >= 90).length, color: "bg-rose-500" },
-    { label: "80 - 89", count: allCompanies.filter(c => (c.leadScore || 85) >= 80 && (c.leadScore || 85) < 90).length, color: "bg-orange-500" },
-    { label: "70 - 79", count: allCompanies.filter(c => (c.leadScore || 85) >= 70 && (c.leadScore || 85) < 80).length, color: "bg-yellow-500" },
-    { label: "Below 70", count: allCompanies.filter(c => (c.leadScore || 85) < 70).length, color: "bg-emerald-500" },
+    { label: "90 - 100", count: allCompanies.filter(c => scoreOf(c) >= 90).length, color: "bg-rose-500" },
+    { label: "80 - 89", count: allCompanies.filter(c => scoreOf(c) >= 80 && scoreOf(c) < 90).length, color: "bg-orange-500" },
+    { label: "70 - 79", count: allCompanies.filter(c => scoreOf(c) >= 70 && scoreOf(c) < 80).length, color: "bg-yellow-500" },
+    { label: "Below 70", count: allCompanies.filter(c => scoreOf(c) < 70).length, color: "bg-emerald-500" },
   ].map(s => ({ ...s, pct: Math.round((s.count / Math.max(allCompanies.length, 1)) * 100) + '%' }));
 
   const topHotLeads = [...allCompanies]
-    .sort((a, b) => (b.leadScore || 85) - (a.leadScore || 85))
+    .sort((a, b) => scoreOf(b) - scoreOf(a))
     .slice(0, 3)
     .map(c => ({
       name: c.companyName || "Unknown",
-      score: c.leadScore || 85,
+      score: scoreOf(c),
       icon: <FaWhatsapp size={10} className="text-emerald-500" />
     }));
 
@@ -363,13 +366,18 @@ const HotClientList = () => {
               </span>
             </td>
             <td className="px-2 py-1.5">
-              <div className="flex items-center gap-0.5 text-rose-500 text-[9px]">
-                {Array.from({ length: 5 }).map((_, starIdx) => {
-                  const starsToFill = Math.round((row.leadScore || 85) / 20);
-                  return starIdx < starsToFill ? <FaStar key={starIdx} /> : <FaRegStar key={starIdx} className="text-slate-300" />;
-                })}
-                <span className="ml-1 font-semibold text-slate-700">{row.leadScore || 85}/100</span>
-              </div>
+              {(() => {
+                const score = row.leadScore ?? getLeadScore(row.companyStatus);
+                const starsToFill = Math.round(score / 20);
+                return (
+                  <div className="flex items-center gap-0.5 text-rose-500 text-[9px]">
+                    {Array.from({ length: 5 }).map((_, starIdx) => (
+                      starIdx < starsToFill ? <FaStar key={starIdx} /> : <FaRegStar key={starIdx} className="text-slate-300" />
+                    ))}
+                    <span className="ml-1 font-semibold text-slate-700">{score}/100</span>
+                  </div>
+                );
+              })()}
             </td>
             <td className="px-2 py-1.5">
               <div className="flex items-start gap-1.5">

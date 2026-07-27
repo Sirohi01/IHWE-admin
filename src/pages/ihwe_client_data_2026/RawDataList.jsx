@@ -21,7 +21,7 @@ const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
-  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 const RawDataList = () => {
