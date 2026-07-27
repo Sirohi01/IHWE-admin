@@ -14,6 +14,7 @@ import { fetchCompanies } from "../features/company/companySlice";
 import { useSelector, useDispatch } from "react-redux";
 import ChangePasswordModal from "../components/ChangePasswordModal";
 import { menuItems } from "../data/menuItems";
+import { useEventContext } from "../context/EventContext";
 
 
 const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
@@ -133,6 +134,7 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
   };
 
   const { page: pageName, section: sectionName } = getPageNameFromMenu(location.pathname);
+  const { events, currentEventId, setCurrentEventId } = useEventContext();
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [chatUnread, setChatUnread] = useState(0);
@@ -344,11 +346,27 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
         >
           {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
-        <h2 className="text-white text-[15px] uppercase font-semibold tracking-tight">
-          IHWE 2026 <span className="text-yellow-200 font-medium tracking-normal capitalize ml-1">
-            | {sectionName ? `${sectionName} > ` : ''}{pageName}
-          </span>
-        </h2>
+        <div className="flex items-center gap-2">
+          {events.length > 0 && (
+            <select
+              value={currentEventId}
+              onChange={(e) => setCurrentEventId(e.target.value)}
+              className="bg-white/10 border border-white/20 text-white text-[11px] font-bold uppercase tracking-tight rounded px-2 py-1 max-w-[160px] outline-none cursor-pointer hover:bg-white/20 transition-colors"
+              title="Currently selected event — all lists/lead lists scope to this"
+            >
+              {events.map((ev) => (
+                <option key={ev._id} value={ev._id} className="text-slate-900 normal-case">
+                  {ev.name}
+                </option>
+              ))}
+            </select>
+          )}
+          <h2 className="text-white text-[15px] uppercase font-semibold tracking-tight">
+            <span className="text-yellow-200 font-medium tracking-normal capitalize">
+              {sectionName ? `${sectionName} > ` : ''}{pageName}
+            </span>
+          </h2>
+        </div>
       </div>
 
       {/* Right */}

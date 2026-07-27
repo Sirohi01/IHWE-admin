@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
 import BaseLeadPage from "../../layout/BaseLeadPage";
+import { useEventContext } from "../../context/EventContext";
 import {
   Search, Download, Plus, Upload, RefreshCw, Calendar,
   Users, Package, DollarSign, Banknote, Clock, TrendingUp, Phone, CalendarDays,
@@ -104,6 +105,9 @@ const AllLeadsList = () => {
   const [filterSource, setFilterSource] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
 
+  // Currently selected event (global, from Navbar) — scopes the leads fetch below.
+  const { currentEventId } = useEventContext();
+
   const { user } = useSelector((s) => s.auth);
   const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, "") === "superadmin";
   const companiesState = useSelector((s) => s.companies);
@@ -113,10 +117,10 @@ const AllLeadsList = () => {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      dispatch(fetchCompanies({ page, limit, search: searchTerm, source: filterSource, startDate, endDate }));
+      dispatch(fetchCompanies({ page, limit, search: searchTerm, source: filterSource, startDate, endDate, eventId: currentEventId }));
     }, 400);
     return () => clearTimeout(t);
-  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource]);
+  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, currentEventId]);
 
   const filtered = filterStatus
     ? companies.filter((c) => (c.companyStatus || "").toLowerCase().includes(filterStatus.toLowerCase()))

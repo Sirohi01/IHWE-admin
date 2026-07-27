@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, Fragment } from "react";
 import { Phone, Search, Play, Pause, Download, Calendar, User, ChevronDown, ChevronUp, Clock, RefreshCw } from "lucide-react";
 import api from "../lib/api";
 import CallingDialerModal from "./dashboard/CallingDialerModal";
+import { useEventContext } from "../context/EventContext";
 
 function timeStr(d) {
   return new Date(d).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
@@ -122,10 +123,12 @@ export default function CallHistory() {
   const adminUsername = adminInfo.fullName || adminInfo.username || "Admin";
   const adminRole = adminInfo.role || "";
   const isSuperAdmin = adminRole === "IHWE–Super Administrator";
+  const { currentEventId } = useEventContext();
 
   const fetchHistory = () => {
     setLoading(true);
-    api.get(`/api/calls/history?adminUsername=${encodeURIComponent(adminUsername)}&adminRole=${encodeURIComponent(adminRole)}`)
+    const eventParam = currentEventId ? `&eventId=${currentEventId}` : '';
+    api.get(`/api/calls/history?adminUsername=${encodeURIComponent(adminUsername)}&adminRole=${encodeURIComponent(adminRole)}${eventParam}`)
       .then(res => {
         if (res.data.success) {
           setLogs(res.data.data);
@@ -137,7 +140,7 @@ export default function CallHistory() {
 
   useEffect(() => {
     fetchHistory();
-  }, []);
+  }, [currentEventId]);
 
   const getFilteredLogs = () => {
     return logs.filter(log => {

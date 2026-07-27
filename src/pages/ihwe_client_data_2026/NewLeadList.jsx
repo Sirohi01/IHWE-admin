@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
 import useDashboardStats from "../../hooks/useDashboardStats";
+import { useEventContext } from "../../context/EventContext";
 import {
   Search, MoreVertical, Download, Filter, Calendar, MessageCircle, Phone, Mail, Users, Clock, CalendarDays, CalendarCheck, Target, ArrowRight, Plus, Upload, RefreshCw
 } from "lucide-react";
@@ -63,6 +64,9 @@ const NewLeadList = () => {
   const [filterIndustry, setFilterIndustry] = useState('');
   const [filterAssignedTo, setFilterAssignedTo] = useState('');
 
+  // Currently selected event (global, from Navbar) — scopes the leads fetch below.
+  const { currentEventId } = useEventContext();
+
   // Auth State
   const { user } = useSelector(state => state.auth);
   const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, '') === 'superadmin';
@@ -100,12 +104,13 @@ const NewLeadList = () => {
         industry: filterIndustry,
         forwardTo: filterAssignedTo,
         startDate,
-        endDate
+        endDate,
+        eventId: currentEventId,
       }));
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, filterStatus, filterIndustry, filterAssignedTo]);
+  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, filterStatus, filterIndustry, filterAssignedTo, currentEventId]);
 
   const uniqueSources = [...new Set(newLeadCompanies.map(c => c.dataSource).filter(Boolean))];
   const uniqueStatuses = [...new Set(newLeadCompanies.map(c => c.companyStatus).filter(Boolean))];
@@ -144,7 +149,7 @@ const NewLeadList = () => {
     totalLeads, todaysLeads, thisWeekLeads, thisMonthLeads,
     pendingFollowUpsCount, followUps, sourceChartData,
     statusChartData, recentActivities, topExecutives
-  } = useDashboardStats('New Lead');
+  } = useDashboardStats('New Lead', null, currentEventId);
 
   function AnimatedStatCard({ icon, gradientTo, iconBg, iconClass, rawValue, displayValue, label, subLabel, subColor }) {
     const { ref, count } = useCountUp(rawValue);

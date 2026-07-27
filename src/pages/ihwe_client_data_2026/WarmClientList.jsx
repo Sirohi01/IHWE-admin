@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
 import useDashboardStats from "../../hooks/useDashboardStats";
+import { useEventContext } from "../../context/EventContext";
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import { motion } from "framer-motion";
 import {
@@ -64,6 +65,9 @@ const WarmClientList = () => {
   const [filterStatus, setFilterStatus] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // Currently selected event (global, from Navbar) — scopes the leads fetch below.
+  const { currentEventId } = useEventContext();
+
   // Auth State
   const { user } = useSelector(state => state.auth);
 
@@ -81,15 +85,16 @@ const WarmClientList = () => {
         search: searchTerm,
         status: filterStatus || 'Follow-Up Call',
         source: filterSource,
+        eventId: currentEventId,
       }));
     }, 400);
     return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus]);
+  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, currentEventId]);
 
   const {
     totalLeads: hookTotal, pendingFollowUpsCount, thisWeekLeads, thisMonthLeads,
     overviewData, overdueLeads
-  } = useDashboardStats('Follow');
+  } = useDashboardStats('Follow', null, currentEventId);
 
   const circumference = 2 * Math.PI * 32;
   const [mounted, setMounted] = useState(false);

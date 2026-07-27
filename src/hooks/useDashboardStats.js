@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 
-const useDashboardStats = (filterStatus, customData = null) => {
+const useDashboardStats = (filterStatus, customData = null, eventId = '') => {
   const [stats, setStats] = useState({
     totalLeads: 0,
     todaysLeads: 0,
@@ -234,7 +234,8 @@ const useDashboardStats = (filterStatus, customData = null) => {
         calculateStats(customData);
     } else {
         setStats(prev => ({ ...prev, isLoadingStats: true }));
-        api.get('/api/companies?dashboard=true')
+        const params = new URLSearchParams({ dashboard: 'true', ...(eventId && { eventId }) });
+        api.get(`/api/companies?${params}`)
             .then(res => calculateStats(res.data))
             .catch(err => {
                 console.error("Error fetching dashboard stats:", err);
@@ -246,7 +247,7 @@ const useDashboardStats = (filterStatus, customData = null) => {
       isMounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(filterStatus), customData]);
+  }, [JSON.stringify(filterStatus), customData, eventId]);
 
   return stats;
 };

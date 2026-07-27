@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
 import useDashboardStats from "../../hooks/useDashboardStats";
+import { useEventContext } from "../../context/EventContext";
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import { motion } from "framer-motion";
 import {
@@ -65,6 +66,9 @@ const HotClientList = () => {
   const [filterStatus, setFilterStatus] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // Currently selected event (global, from Navbar) — scopes the leads fetch below.
+  const { currentEventId } = useEventContext();
+
   // Auth State
   const { user } = useSelector(state => state.auth);
   const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, '') === 'superadmin';
@@ -85,14 +89,15 @@ const HotClientList = () => {
         status: filterStatus || 'Est./PI Sent', // Default hot lead status
         source: filterSource,
         industry: filterIndustry,
+        eventId: currentEventId,
       }));
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, filterIndustry]);
+  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, filterIndustry, currentEventId]);
 
   // Hook for accurate stats
-  const { totalLeads: hookTotal, statusStats } = useDashboardStats();
+  const { totalLeads: hookTotal, statusStats } = useDashboardStats(undefined, null, currentEventId);
 
   const totalLeads = pagination?.total || allCompanies.length;
 
