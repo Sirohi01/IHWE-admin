@@ -5,7 +5,7 @@ import { useReactToPrint } from "react-to-print";
 import * as XLSX from "xlsx";
 import { useSelector, useDispatch } from "react-redux";
 import Swal from "sweetalert2";
-import { fetchCompanies, fetchMatchingCompanyIds } from "../../features/company/companySlice";
+import { fetchCompanies, fetchMatchingCompanyIds, deleteCompany } from "../../features/company/companySlice";
 import { fetchEvents } from "../../features/crmEvent/crmEventSlice";
 import { fetchAdmins } from "../../features/auth/userSlice";
 import { fetchStates } from "../../features/state/stateSlice";
@@ -13,7 +13,7 @@ import { fetchCitiesByState } from "../../features/city/citySlice";
 import useDashboardStats from "../../hooks/useDashboardStats";
 import {
   FaSearch, FaPlus, FaUpload, FaWhatsapp, FaDownload,
-  FaFilter, FaRedo, FaChevronLeft, FaChevronRight, FaRegStar, FaStar, FaUserTag
+  FaFilter, FaRedo, FaChevronLeft, FaChevronRight, FaRegStar, FaStar, FaUserTag, FaTrash
 } from "react-icons/fa";
 import { MdOutlineDateRange } from "react-icons/md";
 import AssignModal from "./AssignModal";
@@ -235,6 +235,24 @@ const MasterClientsList = () => {
   const uniqueSources = [...new Set(companiesArray.map(c => c.dataSource).filter(Boolean))];
   const uniqueStatuses = [...new Set(companiesArray.map(c => c.companyStatus).filter(Boolean))];
   const uniqueIndustries = [...new Set(companiesArray.map(c => c.businessNature).filter(Boolean))];
+
+  // City filter options — fetched pre-scoped to the selected State (see the
+  // fetchCitiesByState effect above), so this is already the right list.
+  const filteredCitiesForFilter = crmCities || [];
+
+  // Resolve a company's free-text state against the CrmState reference list
+  // for display, so typos/casing differences on old records (e.g. "uttar
+  // pradesh" vs "Uttar Pradesh") still show the canonical name. City isn't
+  // matched here since the full city list (~47k rows) is never loaded at
+  // once — the state/city migration already fixed the underlying data, so
+  // raw company.city is shown as-is.
+  const resolveStateCityDisplay = (rawState, rawCity) => {
+    const matchedState = (crmStates || []).find((s) => s.name?.trim().toLowerCase() === (rawState || "").trim().toLowerCase());
+    return {
+      state: matchedState?.name || rawState || "-",
+      city: rawCity || "-",
+    };
+  };
 
   const handleDelete = (id) => {
     Swal.fire({
@@ -475,7 +493,7 @@ const MasterClientsList = () => {
                   <th className="px-2 py-1.5 font-medium">Lead Score</th>
                   <th className="px-2 py-1.5 font-medium">Handled By / Last Conversation</th>
                   <th className="px-2 py-1.5 font-medium">Next Follow Up</th>
-                  <th className="px-2 py-1.5 w-12 font-medium text-center">Assign</th>
+                  <th className="px-2 py-1.5 w-16 font-medium text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
@@ -583,21 +601,30 @@ const MasterClientsList = () => {
                             <span className="text-[10px] text-slate-400">-</span>
                           )}
                         </td>
-                        <td className="px-2 py-1.5 w-12 text-center">
-                          <button
-                            onClick={() =>
-                              setAssignModal({
-                                mode: "single",
-                                companyIds: [row._id],
-                                initialEventIds: row.events || [],
-                                initialForwardTo: row.forwardTo || "",
-                              })
-                            }
-                            className="inline-flex items-center justify-center w-6 h-6 bg-slate-100 hover:bg-[#eef5ec] hover:text-[#23471d] text-slate-600 rounded-full transition-colors"
-                            title="Assign events / person"
-                          >
-                            <FaUserTag size={11} />
-                          </button>
+                        <td className="px-2 py-1.5 w-16 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() =>
+                                setAssignModal({
+                                  mode: "single",
+                                  companyIds: [row._id],
+                                  initialEventIds: row.events || [],
+                                  initialForwardTo: row.forwardTo || "",
+                                })
+                              }
+                              className="inline-flex items-center justify-center w-6 h-6 bg-slate-100 hover:bg-[#eef5ec] hover:text-[#23471d] text-slate-600 rounded-full transition-colors"
+                              title="Assign events / person"
+                            >
+                              <FaUserTag size={11} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(row._id)}
+                              className="inline-flex items-center justify-center w-6 h-6 bg-red-50 hover:bg-red-100 text-red-600 rounded-full transition-colors"
+                              title="Delete lead"
+                            >
+                              <FaTrash size={10} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
