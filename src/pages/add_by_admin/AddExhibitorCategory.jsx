@@ -30,19 +30,35 @@ const APPLICABLE_OPTIONS = [
   "General Lead",
 ];
 
+const DEFAULT_PARENT_CATEGORIES = [
+  "Healthcare",
+  "Medical Devices",
+  "Pharma & Biotechnology",
+  "AYUSH",
+  "Wellness & Fitness",
+  "Organic & Natural",
+  "Beauty & Personal Care",
+  "Digital Health",
+  "Medical Tourism",
+  "Packaging & Manufacturing",
+];
+
+const BUSINESS_NATURE_OPTIONS = [
+  "Institution",
+  "Manufacturer",
+  "Service Provider",
+];
+
 const initialForm = {
   name: "",
   parentCategory: "",
-  description: "",
+  businessNature: "",
   displayOrder: "",
   status: "Active",
   applicableFor: ["Exhibitor Lead", "Exhibitor Registration"],
   iconFile: null,
   iconPreview: "",
 };
-
-const getCategoryId = (category) =>
-  category?._id || category?.id || category?.cat_id || "";
 
 const getParentId = (category) =>
   category?.parent_category?._id ||
@@ -52,6 +68,20 @@ const getParentId = (category) =>
   category?.parent_id ||
   "";
 
+const normaliseOptionText = (value) => String(value ?? "").trim();
+
+const getParentCategoryLabel = (category) =>
+  normaliseOptionText(
+    category?.main_category?.name ||
+      category?.main_category?.cat_name ||
+      category?.main_category ||
+      category?.parent_category?.name ||
+      category?.parent_category?.cat_name ||
+      category?.parent_category ||
+      category?.category_group ||
+      category?.cat_group
+  );
+
 const AddNewExhibitorCategory = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -59,9 +89,11 @@ const AddNewExhibitorCategory = () => {
   const pageRef = useRef(null);
 
   const categoryState = useSelector((state) => state.categories);
-  const categories = Array.isArray(categoryState?.categories)
-    ? categoryState.categories
-    : [];
+  const rawCategories = categoryState?.categories;
+  const categories = useMemo(
+    () => (Array.isArray(rawCategories) ? rawCategories : []),
+    [rawCategories]
+  );
 
   const [form, setForm] = useState(initialForm);
   const [isSaving, setIsSaving] = useState(false);
@@ -74,7 +106,12 @@ const AddNewExhibitorCategory = () => {
         setForm({
           name: existingCategory.cat_name || "",
           parentCategory: getParentId(existingCategory) || "",
-          description: existingCategory.cat_description || "",
+          businessNature:
+            existingCategory.business_nature ||
+            existingCategory.businessNature ||
+            existingCategory.nature_of_business ||
+            existingCategory.nature ||
+            "",
           displayOrder: existingCategory.display_order || 1,
           status: String(existingCategory.cat_status || "Active").toLowerCase() === "active" ? "Active" : "Inactive",
           applicableFor: Array.isArray(existingCategory.applicable_for) ? existingCategory.applicable_for : ["Exhibitor Lead", "Exhibitor Registration"],
@@ -169,10 +206,45 @@ const AddNewExhibitorCategory = () => {
     };
   }, []);
 
-  const mainCategories = useMemo(
-    () => categories.filter((category) => !getParentId(category)),
-    [categories]
-  );
+  const parentCategoryOptions = useMemo(() => {
+    const options = new Map();
+
+    const addOption = (value) => {
+      const label = normaliseOptionText(value);
+      if (label) options.set(label.toLowerCase(), label);
+    };
+
+    DEFAULT_PARENT_CATEGORIES.forEach(addOption);
+    categories.forEach((category) => {
+      addOption(getParentCategoryLabel(category));
+    });
+    addOption(form.parentCategory);
+
+    return [...options.values()];
+  }, [categories, form.parentCategory]);
+
+  const businessNatureOptions = useMemo(() => {
+    const options = new Map();
+
+    const addOption = (value) => {
+      const label = normaliseOptionText(value);
+      if (label) options.set(label.toLowerCase(), label);
+    };
+
+    BUSINESS_NATURE_OPTIONS.forEach(addOption);
+    categories.forEach((category) => {
+      addOption(
+        category?.business_nature?.name ||
+          category?.business_nature ||
+          category?.businessNature ||
+          category?.nature_of_business ||
+          category?.nature
+      );
+    });
+    addOption(form.businessNature);
+
+    return [...options.values()].sort((a, b) => a.localeCompare(b));
+  }, [categories, form.businessNature]);
 
   const updateField = (name, value) => {
     setForm((previous) => ({ ...previous, [name]: value }));
@@ -275,6 +347,10 @@ const AddNewExhibitorCategory = () => {
       return "A category with this name already exists.";
     }
 
+    if (!form.businessNature) {
+      return "Please select the business nature.";
+    }
+
     if (
       form.displayOrder === "" ||
       Number.isNaN(Number(form.displayOrder)) ||
@@ -345,7 +421,7 @@ const AddNewExhibitorCategory = () => {
         updated_by: userName,
 
         parent_category: form.parentCategory || null,
-        cat_description: form.description.trim(),
+        business_nature: form.businessNature || "",
         display_order: Number(form.displayOrder),
         applicable_for: form.applicableFor,
         icon_name: form.iconFile?.name || "",
@@ -510,12 +586,9 @@ const AddNewExhibitorCategory = () => {
                   className={`${inputClass} appearance-none pr-11`}
                 >
                   <option value="">Select parent category</option>
-                  {mainCategories.map((category) => (
-                    <option
-                      key={getCategoryId(category)}
-                      value={getCategoryId(category)}
-                    >
-                      {category?.cat_name || "Unnamed category"}
+                  {parentCategoryOptions.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
                     </option>
                   ))}
                 </select>
@@ -524,25 +597,25 @@ const AddNewExhibitorCategory = () => {
               <HelperText>Leave empty if this is a main category</HelperText>
             </Field>
 
-            <Field label="Description" optional>
+            <Field label="Business Nature" required>
               <div className="relative">
-                <textarea
-                  value={form.description}
+                <select
+                  value={form.businessNature}
                   onChange={(event) =>
-                    updateField(
-                      "description",
-                      event.target.value.slice(0, 250)
-                    )
+                    updateField("businessNature", event.target.value)
                   }
-                  maxLength={250}
-                  placeholder="Enter description"
-                  className={`${inputClass} h-[clamp(58px,7vh,72px)] resize-none py-2.5`}
-                />
-                <span className="absolute bottom-3 right-4 text-[12px] font-semibold text-[#8790a7]">
-                  {form.description.length} / 250
-                </span>
+                  className={`${inputClass} appearance-none pr-11`}
+                >
+                  <option value="">Select business nature</option>
+                  {businessNatureOptions.map((nature) => (
+                    <option key={nature} value={nature}>
+                      {nature}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#273659]" />
               </div>
-              <HelperText>Brief description about this category</HelperText>
+              <HelperText>Shown in the Business Nature column.</HelperText>
             </Field>
 
             <Field label="Display Order" required>
