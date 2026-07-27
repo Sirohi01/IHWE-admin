@@ -14,7 +14,7 @@ import { FaWhatsapp } from 'react-icons/fa';
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
-  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 // Hook: animate number from 0 to target when element enters viewport

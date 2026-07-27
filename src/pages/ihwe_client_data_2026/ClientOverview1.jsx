@@ -97,6 +97,11 @@ const SecureImage = ({ src, alt, className }) => {
   return <img loading="lazy" decoding="async" src={imgSrc} alt={alt || ""} className={className} />;
 };
 
+const toTitleCase = (str) => {
+  if (!str || typeof str !== "string") return str;
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
 const ClientOverview1 = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -876,7 +881,7 @@ const ClientOverview1 = () => {
               <div className="flex-1 min-w-[200px]">
                 <div className="flex items-center gap-1 w-full">
                   <h2 className="text-[16px] font-semibold text-[#093C5D] whitespace-nowrap">
-                    {isExhibitor ? company.exhibitorName : company.companyName}
+                    {toTitleCase(isExhibitor ? company.exhibitorName : company.companyName)}
                   </h2>
                   <button onClick={handleOpenEditProfile} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors flex-shrink-0" title="Edit Profile">
                     <Pencil size={14} />

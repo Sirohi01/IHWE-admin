@@ -2,16 +2,18 @@ import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { X, CalendarCheck, UserCheck } from "lucide-react";
 import Swal from "sweetalert2";
-import { updateCompany, bulkAssignCompanies } from "../../features/company/companySlice";
+import { updateCompany, assignEventsToCompany, bulkAssignCompanies } from "../../features/company/companySlice";
 import SearchableDropdown from "../../components/SearchableDropdown";
 
-// Assigns Events (multi-select) and/or a handling Person to one company
-// (mode="single", replaces that company's event list exactly as checked) or
-// many companies at once (mode="bulk", additively assigns — existing
-// per-company event tags are kept, not overwritten).
+// Assigns Events (multi-select) and/or a handling Person, additively, to one
+// company (mode="single") or many at once (mode="bulk"). Existing event tags
+// are never removed, and a person picked here only applies to the event(s)
+// being newly assigned in this action — never to an event the company was
+// already assigned to before.
 const AssignModal = ({ mode, companyIds, initialEventIds = [], initialForwardTo = "", events, admins, onClose, onDone }) => {
   const dispatch = useDispatch();
-  const [selectedEventIds, setSelectedEventIds] = useState(initialEventIds.map(String));
+  const lockedEventIds = initialEventIds.map(String);
+  const [selectedEventIds, setSelectedEventIds] = useState(lockedEventIds);
   const [selectedPerson, setSelectedPerson] = useState(initialForwardTo || "");
   const [submitting, setSubmitting] = useState(false);
 
@@ -20,7 +22,11 @@ const AssignModal = ({ mode, companyIds, initialEventIds = [], initialForwardTo 
     setSelectedPerson(initialForwardTo || "");
   }, [initialEventIds, initialForwardTo]);
 
+  // Events already assigned can't be unchecked here — assignment is
+  // additive-only, so removing one has to be a deliberate separate action,
+  // never an accidental side effect of adding a different event.
   const toggleEvent = (id) => {
+    if (lockedEventIds.includes(id)) return;
     setSelectedEventIds((prev) =>
       prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]
     );
@@ -40,15 +46,22 @@ const AssignModal = ({ mode, companyIds, initialEventIds = [], initialForwardTo 
     setSubmitting(true);
     try {
       if (mode === "single") {
-        await dispatch(
-          updateCompany({
-            id: companyIds[0],
-            data: {
-              events: selectedEventIds,
-              ...(selectedPerson ? { forwardTo: selectedPerson } : {}),
-            },
-          })
-        ).unwrap();
+        // Events are additive-only. A chosen person is scoped to only the
+        // NEWLY-picked events here (never the already-locked ones) — so
+        // assigning Organic Expo 2027 to Manish can never overwrite who's
+        // assigned on IHWE Expo 2026 for the same company.
+        const newEventIds = selectedEventIds.filter((id) => !lockedEventIds.includes(id));
+        if (newEventIds.length > 0) {
+          await dispatch(
+            assignEventsToCompany({ id: companyIds[0], eventIds: newEventIds, forwardTo: selectedPerson || undefined })
+          ).unwrap();
+        } else if (selectedPerson) {
+          // No new event to scope the person to — falls back to a plain,
+          // event-agnostic reassignment (same as the old behavior).
+          await dispatch(
+            updateCompany({ id: companyIds[0], data: { forwardTo: selectedPerson } })
+          ).unwrap();
+        }
       } else {
         await dispatch(
           bulkAssignCompanies({
@@ -78,7 +91,7 @@ const AssignModal = ({ mode, companyIds, initialEventIds = [], initialForwardTo 
             <p className="text-xs text-gray-500 mt-1">
               {mode === "bulk"
                 ? "Tag selected events and/or forward to a person. Existing event tags on each company are kept."
-                : "Choose which events this company belongs to, and who it's forwarded to."}
+                : "Add this company to more events and/or forward it to a person. Events it's already assigned to (locked below) can't be removed here."}
             </p>
           </div>
           <button onClick={onClose} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
@@ -95,20 +108,25 @@ const AssignModal = ({ mode, companyIds, initialEventIds = [], initialForwardTo 
               {(events || []).length === 0 ? (
                 <div className="px-3 py-4 text-xs text-gray-400 text-center">No events found. Create one first.</div>
               ) : (
-                events.map((ev) => (
-                  <label key={ev._id} className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-[#eef5ec]">
+                events.map((ev) => {
+                  const isLocked = lockedEventIds.includes(String(ev._id));
+                  return (
+                  <label key={ev._id} className={`flex items-center gap-2 px-3 py-2 text-sm ${isLocked ? "bg-slate-50" : "cursor-pointer hover:bg-[#eef5ec]"}`}>
                     <input
                       type="checkbox"
-                      className="accent-[#23471d]"
+                      className="accent-[#23471d] disabled:opacity-60"
                       checked={selectedEventIds.includes(String(ev._id))}
+                      disabled={isLocked}
                       onChange={() => toggleEvent(String(ev._id))}
                     />
                     <span className="font-medium text-gray-800">{ev.event_fullName || ev.event_name}</span>
+                    {isLocked && <span className="text-[10px] text-slate-400 uppercase tracking-wide">Assigned</span>}
                     {ev.event_name && ev.event_fullName && (
                       <span className="text-[11px] text-gray-400">({ev.event_name})</span>
                     )}
                   </label>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

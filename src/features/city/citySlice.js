@@ -14,6 +14,22 @@ export const fetchCities = createAsyncThunk(
   }
 );
 
+// FETCH cities for a single state only — the full list is 45k+ rows (~9MB)
+// which is far too heavy for a "select a state, then pick its city" filter;
+// this keeps `cities` (used by the Add/Edit Company form's cascading
+// dropdown) untouched and stores the filtered result separately.
+export const fetchCitiesByState = createAsyncThunk(
+  "cities/fetchCitiesByState",
+  async (stateCode, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/api/crm-cities?stateCode=${stateCode}`);
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
 // FETCH city by ID
 export const fetchCityById = createAsyncThunk(
   "cities/fetchCityById",
@@ -68,6 +84,7 @@ export const deleteCity = createAsyncThunk(
 
 const initialState = {
   cities: [],
+  citiesByState: [],
   loading: false,
   error: null,
 };
@@ -94,6 +111,17 @@ const citySlice = createSlice({
       })
       .addCase(fetchCities.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchCitiesByState.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(fetchCitiesByState.fulfilled, (state, action) => {
+        state.citiesByState = Array.isArray(action.payload)
+          ? action.payload
+          : action.payload?.data || [];
+      })
+      .addCase(fetchCitiesByState.rejected, (state, action) => {
         state.error = action.payload;
       })
       .addCase(createCity.fulfilled, (state, action) => {

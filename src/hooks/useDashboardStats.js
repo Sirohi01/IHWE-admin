@@ -235,8 +235,31 @@ const useDashboardStats = (filterStatus, customData = null, eventId = '') => {
     } else {
         setStats(prev => ({ ...prev, isLoadingStats: true }));
         const params = new URLSearchParams({ dashboard: 'true', ...(eventId && { eventId }) });
-        api.get(`/api/companies?${params}`)
-            .then(res => calculateStats(res.data))
+
+        // The raw-doc fetch below is capped at 3000 rows (fine for the
+        // secondary charts — source breakdown, top executives, follow-ups —
+        // which only ever show a top-N sample anyway). But the headline
+        // "Total Leads" + per-status card counts must be exact even once the
+        // collection grows past that cap, so always also pull the accurate
+        // aggregated totals (scoped to the same status filter, if any) and
+        // use those instead — this is what every list page's stat cards read.
+        const summaryParams = new URLSearchParams({
+            ...(eventId && { eventId }),
+            ...(filterStatus && { status: Array.isArray(filterStatus) ? filterStatus.join(',') : filterStatus }),
+        });
+        const statsSummaryPromise = api.get(`/api/companies/stats-summary?${summaryParams}`).catch(() => null);
+
+        Promise.all([api.get(`/api/companies?${params}`), statsSummaryPromise])
+            .then(([res, summaryRes]) => {
+                calculateStats(res.data);
+                if (summaryRes?.data?.success && isMounted) {
+                    setStats(prev => ({
+                        ...prev,
+                        totalLeads: summaryRes.data.total,
+                        statusStats: summaryRes.data.statusCounts,
+                    }));
+                }
+            })
             .catch(err => {
                 console.error("Error fetching dashboard stats:", err);
                 if (isMounted) setStats(prev => ({ ...prev, isLoadingStats: false }));

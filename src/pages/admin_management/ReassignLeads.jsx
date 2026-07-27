@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
 import PageHeader from '../../components/PageHeader';
 import { Settings, List, BadgeHelp, Search, ChevronLeft, ChevronRight } from "lucide-react";
-import axios from "axios";
+import api from "../../lib/api";
 import Swal from 'sweetalert2';
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function ReassignLeads() {
     const [form, setForm] = useState({ leadStatus: "", fromUser: "", toUser: "", remarks: "" });
@@ -17,10 +15,7 @@ export default function ReassignLeads() {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const token = localStorage.getItem("adminToken") || sessionStorage.getItem("adminToken");
-                const res = await axios.get(`${API_URL}/api/admin/public-list`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const res = await api.get("/api/admin/public-list");
                 if (res.data.success) {
                     setUsers(res.data.data);
                 }
@@ -39,14 +34,11 @@ export default function ReassignLeads() {
                 return;
             }
             try {
-                const token = localStorage.getItem("adminToken") || sessionStorage.getItem("adminToken");
                 const queryParams = new URLSearchParams();
                 if (form.fromUser) queryParams.append("currentOwner", form.fromUser);
                 if (form.leadStatus) queryParams.append("status", form.leadStatus);
-                
-                const res = await axios.get(`${API_URL}/api/ownership-transfer/leads?${queryParams.toString()}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+
+                const res = await api.get(`/api/ownership-transfer/leads?${queryParams.toString()}`);
                 if (res.data.success) {
                     setLeads(res.data.data);
                 }
@@ -85,18 +77,15 @@ export default function ReassignLeads() {
         }
         
         try {
-            const token = localStorage.getItem("adminToken") || sessionStorage.getItem("adminToken");
             const payload = {
                 fromUser: form.fromUser,
                 toUser: form.toUser,
                 leadStatus: form.leadStatus,
                 remarks: form.remarks
             };
-            
-            const res = await axios.post(`${API_URL}/api/ownership-transfer/reassign`, payload, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            
+
+            const res = await api.post("/api/ownership-transfer/reassign", payload);
+
             if (res.data.success) {
                 Swal.fire("Success", res.data.message, "success");
                 setForm({ ...form, toUser: "", remarks: "", fromUser: "" });
