@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
 import useDashboardStats from "../../hooks/useDashboardStats";
+import { useEventContext } from "../../context/EventContext";
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import { motion } from "framer-motion";
 import {
@@ -67,6 +68,9 @@ const ColdClientList = () => {
   const [filterStatus, setFilterStatus] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // Currently selected event (global, from Navbar) — scopes the leads fetch below.
+  const { currentEventId } = useEventContext();
+
   // Auth State
   const { user } = useSelector(state => state.auth);
 
@@ -86,13 +90,14 @@ const ColdClientList = () => {
         status: filterStatus || 'Hold,Lost,Not Interested',
         source: filterSource,
         industry: filterIndustry,
+        eventId: currentEventId,
       }));
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, filterIndustry]);
+  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, filterIndustry, currentEventId]);
 
-  const { totalLeads: hookTotal, statusStats, holdReasonsData, lostReasonsData } = useDashboardStats(FILTER_STATUS);
+  const { totalLeads: hookTotal, statusStats, holdReasonsData, lostReasonsData } = useDashboardStats(FILTER_STATUS, null, currentEventId);
 
   const getStatusCount = (statusMatch) => {
     if (!statusStats) return 0;

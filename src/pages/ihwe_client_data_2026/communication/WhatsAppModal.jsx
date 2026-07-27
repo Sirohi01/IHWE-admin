@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { Send, X } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import api from "../../../lib/api";
+import { useEventContext } from "../../../context/EventContext";
 
 const WhatsAppModal = ({ company, onClose, onSend }) => {
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null); // { success, message }
+  const { currentEventId } = useEventContext();
 
   const adminStr = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
   const adminInfo = adminStr ? JSON.parse(adminStr) : {};
@@ -29,6 +31,7 @@ const WhatsAppModal = ({ company, onClose, onSend }) => {
         senderId: userId,
         senderName: userName,
         companyName: companyName,
+        eventId: currentEventId,
       });
 
       if (res.data?.success) {

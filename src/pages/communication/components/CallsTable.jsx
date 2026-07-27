@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Filter, RefreshCw, ChevronLeft, ChevronRight, MoreVertical, Phone, Calendar, Mail, PhoneForwarded, PhoneMissed, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import SearchableDropdown from '../../../components/SearchableDropdown';
 import api from '../../../../src/lib/api';
+import { useEventContext } from '../../../context/EventContext';
 
 export default function CallsTable() {
   const [tableData, setTableData] = useState([]);
@@ -10,6 +11,7 @@ export default function CallsTable() {
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const { currentEventId } = useEventContext();
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -25,7 +27,7 @@ export default function CallsTable() {
       const userId = user._id || user.id;
 
       if (userId) {
-        const res = await api.get(`/api/user-targets/logs/table?userId=${userId}&type=calls&page=${page}&limit=${limit}`);
+        const res = await api.get(`/api/user-targets/logs/table?userId=${userId}&type=calls&page=${page}&limit=${limit}${currentEventId ? `&eventId=${currentEventId}` : ''}`);
         if (res.data.success) {
           if (res.data.pagination) {
             setTotalPages(res.data.pagination.pages);
@@ -57,7 +59,7 @@ export default function CallsTable() {
 
   useEffect(() => {
     fetchLogs();
-  }, [page, limit]);
+  }, [page, limit, currentEventId]);
 
 
   return (

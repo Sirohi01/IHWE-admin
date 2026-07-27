@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import { createActivityLogThunk } from '../../features/activityLog/activityLogSlice';
 import api from "../../lib/api";
 import { handleStatusUpdate } from '../../utils/statusUpdateHelper';
+import { useEventContext } from '../../context/EventContext';
 
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import {
@@ -85,6 +86,9 @@ const ConfirmClientList = () => {
   const [filterStage, setFilterStage] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // Currently selected event (global, from Navbar) — every fetch below scopes to this.
+  const { currentEventId } = useEventContext();
+
   // Auth State — the logged-in admin's profile lives under the "adminInfo" key,
   // in localStorage (remember-me) or sessionStorage — NOT in the auth Redux slice,
   // which only tracks isAuthenticated/loading flags.
@@ -132,6 +136,7 @@ const ConfirmClientList = () => {
         ...(filterIndustry && { industry: filterIndustry }),
         ...(user?.username && { username: user.username }),
         ...(user?.role && { role: user.role }),
+        ...(currentEventId && { eventId: currentEventId }),
       });
       const regRes = await api.get(`/api/exhibitor-registration?${params}`);
       if (regRes.data?.success) {
@@ -144,7 +149,7 @@ const ConfirmClientList = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, searchTerm, filterStage, filterSource, filterIndustry, user?.username, user?.role]);
+  }, [page, limit, searchTerm, filterStage, filterSource, filterIndustry, user?.username, user?.role, currentEventId]);
 
   // Fetch aggregated totals (across ALL matching records, not just this page) for the stat cards
   const fetchSummary = useCallback(async () => {
@@ -156,6 +161,7 @@ const ConfirmClientList = () => {
         ...(filterIndustry && { industry: filterIndustry }),
         ...(user?.username && { username: user.username }),
         ...(user?.role && { role: user.role }),
+        ...(currentEventId && { eventId: currentEventId }),
       });
       const res = await api.get(`/api/exhibitor-registration/summary?${params}`);
       if (res.data?.success) {
@@ -164,7 +170,7 @@ const ConfirmClientList = () => {
     } catch (error) {
       console.error('Error fetching registration summary:', error);
     }
-  }, [searchTerm, filterStage, filterSource, filterIndustry, user?.username, user?.role]);
+  }, [searchTerm, filterStage, filterSource, filterIndustry, user?.username, user?.role, currentEventId]);
 
   // Fetch filter dropdown options — only depends on the user's scope, not on the
   // filters/search themselves, so it doesn't need to refetch on every keystroke.
@@ -173,6 +179,7 @@ const ConfirmClientList = () => {
       const params = new URLSearchParams({
         ...(user?.username && { username: user.username }),
         ...(user?.role && { role: user.role }),
+        ...(currentEventId && { eventId: currentEventId }),
       });
       const res = await api.get(`/api/exhibitor-registration/filter-options?${params}`);
       if (res.data?.success) {
@@ -181,7 +188,7 @@ const ConfirmClientList = () => {
     } catch (error) {
       console.error('Error fetching filter options:', error);
     }
-  }, [user?.username, user?.role]);
+  }, [user?.username, user?.role, currentEventId]);
 
   // Fetch static data only once (cached)
   const fetchStaticData = async () => {

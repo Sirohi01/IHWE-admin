@@ -11,6 +11,7 @@ import {
   FaClipboardList, FaEye, FaPaperPlane, FaSearch, FaThLarge, FaList, FaFolderOpen
 } from "react-icons/fa";
 import EmailModal from "./communication/EmailModal";
+import { useEventContext } from "../../context/EventContext";
 
 const categoriesDef = [
   { name: "Brochure", sub: "Official expo brochure", icon: FaBookOpen, color: "text-blue-500", bg: "bg-blue-50" },
@@ -111,6 +112,7 @@ const MarketingMaterialPage = () => {
   const adminInfo = adminStr ? JSON.parse(adminStr) : {};
   const userName = adminInfo.fullName || adminInfo.username || "Admin";
   const userId = adminInfo._id || null;
+  const { currentEventId } = useEventContext();
 
   useEffect(() => {
     fetchCompanyDetails();
@@ -272,6 +274,7 @@ const MarketingMaterialPage = () => {
         clientEmail: company.companyEmail || company.email,
         clientMobile: company.companyMobile || company.mobile,
         clientName: company.companyName,
+        eventId: currentEventId,
       });
 
       if (res.data.success) {
@@ -857,6 +860,7 @@ const MarketingMaterialPage = () => {
                   clientEmail: company.companyEmail || company.email,
                   clientMobile: company.companyMobile || company.mobile,
                   clientName: company.companyName,
+                  eventId: currentEventId,
                   logOnly: true
                 });
               }

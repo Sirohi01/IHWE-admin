@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { createActivityLogThunk } from '../../features/activityLog/activityLogSlice';
 import api from "../../lib/api";
 import { handleStatusUpdate } from '../../utils/statusUpdateHelper';
+import { useEventContext } from '../../context/EventContext';
 
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import {
@@ -78,6 +79,9 @@ const ConvertedList = () => {
   const [filterStage, setFilterStage] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // Currently selected event (global, from Navbar) — scopes the registrations fetch below.
+  const { currentEventId } = useEventContext();
+
   // Auth State
   const { user } = useSelector(state => state.auth);
   const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, '') === 'superadmin';
@@ -96,8 +100,11 @@ const ConvertedList = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
+      const regParams = new URLSearchParams({
+        ...(currentEventId && { eventId: currentEventId }),
+      });
       const [regRes, compRes, reviewRes, eventsRes, settingsRes] = await Promise.all([
-        api.get('/api/exhibitor-registration'),
+        api.get(`/api/exhibitor-registration?${regParams}`),
         api.get('/api/companies?dashboard=true').catch(() => ({ data: [] })),
         api.get('/api/crm-exhibator-reviews').catch(() => ({ data: [] })),
         api.get('/api/events/active').catch(() => ({ data: [] })),
@@ -135,7 +142,7 @@ const ConvertedList = () => {
   };
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [currentEventId]);
 
   // Frontend filtering and pagination
   const filteredRegs = registrations.filter(r => {
