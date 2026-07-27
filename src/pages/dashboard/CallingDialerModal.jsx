@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Search, Phone, PhoneOff, Mic, MicOff, Volume2, Save, Check, MessageCircle } from "lucide-react";
 import api from "../../lib/api";
+import { useEventContext } from "../../context/EventContext";
 
 export default function CallingDialerModal({ onClose, onCallLogged }) {
   const [companies, setCompanies] = useState([]);
@@ -35,6 +36,7 @@ export default function CallingDialerModal({ onClose, onCallLogged }) {
   const adminName = adminInfo.fullName || adminInfo.username || "Admin";
   const adminRole = adminInfo.role || "";
   const isSuperAdmin = adminRole === "IHWE–Super Administrator";
+  const { currentEventId } = useEventContext();
 
   // 1. Fetch initial companies on mount
   useEffect(() => {
@@ -226,6 +228,7 @@ export default function CallingDialerModal({ onClose, onCallLogged }) {
       formData.append("companyStatus", selectedClient.companyStatus || "New Lead");
       formData.append("newStatus", newStatus);
       formData.append("notes", notes);
+      if (currentEventId) formData.append("eventId", currentEventId);
 
       // Attach audio Blob if recorded
       if (audioChunksRef.current.length > 0) {

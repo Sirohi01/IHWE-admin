@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { Phone, X } from "lucide-react";
 import api from "../../../lib/api";
+import { useEventContext } from "../../../context/EventContext";
 
 const CallLogModal = ({ company, onClose, onSave }) => {
   const [form, setForm] = useState({ re_msg: "", call_duration: "" });
   const [saving, setSaving] = useState(false);
+  const { currentEventId } = useEventContext();
 
   const mobile = company?.contacts?.[0]?.mobile;
 
@@ -27,7 +29,8 @@ const CallLogModal = ({ company, onClose, onSave }) => {
       const durationNum = parseInt(form.call_duration.toString().replace(/\\D/g, "") || "0");
       formData.append("duration", durationNum * 60);
       formData.append("notes", form.re_msg);
-      
+      if (currentEventId) formData.append("eventId", currentEventId);
+
       await api.post("/api/calls/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });

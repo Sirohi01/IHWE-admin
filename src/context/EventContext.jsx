@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { useContext, useEffect, useState, useCallback } from "react";
 import api from "../lib/api";
-
-const EventContext = createContext(null);
+import EventContext from "./EventContextObject";
 
 const STORAGE_KEY = "currentEventId";
 
