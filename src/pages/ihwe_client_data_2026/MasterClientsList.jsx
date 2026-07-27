@@ -81,7 +81,7 @@ const MasterClientsList = () => {
       Object.keys(statusStats).forEach((statusKey) => {
         const count = statusStats[statusKey];
         const status = statusKey.toLowerCase();
-        
+
         if (status.includes("new")) newLeads += count;
         else if (status.includes("contacted") && !status.includes("not")) contacted += count;
         else if (status.includes("interested") || status.includes("proposal")) interested += count;
@@ -236,22 +236,20 @@ const MasterClientsList = () => {
   const uniqueStatuses = [...new Set(companiesArray.map(c => c.companyStatus).filter(Boolean))];
   const uniqueIndustries = [...new Set(companiesArray.map(c => c.businessNature).filter(Boolean))];
 
-  // City filter options — fetched pre-scoped to the selected State (see the
-  // fetchCitiesByState effect above), so this is already the right list.
-  const filteredCitiesForFilter = crmCities || [];
-
-  // Resolve a company's free-text state against the CrmState reference list
-  // for display, so typos/casing differences on old records (e.g. "uttar
-  // pradesh" vs "Uttar Pradesh") still show the canonical name. City isn't
-  // matched here since the full city list (~47k rows) is never loaded at
-  // once — the state/city migration already fixed the underlying data, so
-  // raw company.city is shown as-is.
-  const resolveStateCityDisplay = (rawState, rawCity) => {
-    const matchedState = (crmStates || []).find((s) => s.name?.trim().toLowerCase() === (rawState || "").trim().toLowerCase());
-    return {
-      state: matchedState?.name || rawState || "-",
-      city: rawCity || "-",
-    };
+  const handleDelete = (id) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You will not be able to recover this lead!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        dispatch(deleteCompany(id));
+      }
+    });
   };
 
   return (
@@ -269,29 +267,6 @@ const MasterClientsList = () => {
             </h1>
             <p className="text-sm text-slate-500 mt-1">Master list of all leads with complete details and status</p>
           </div>
-
-          {/* ACTION BUTTONS */}
-          {/* <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full xl:w-auto">
-              <div className="relative flex-grow xl:flex-grow-0 min-w-[200px] w-full sm:w-auto">
-                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search by Name, Company, Email, Mobile..."
-                  value={globalSearch}
-                  onChange={(e) => { setGlobalSearch(e.target.value); setCurrentPage(1); }}
-                  className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-                />
-              </div>
-              <button className="flex items-center gap-2 bg-[#00a65a] hover:bg-[#008d4c] text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm">
-                <FaPlus size={12} /> Add Lead
-              </button>
-              <button className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm">
-                <FaUpload size={12} className="text-blue-500" /> Import Leads
-              </button>
-              <button className="flex items-center gap-2 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm">
-                <FaWhatsapp size={16} /> Send Bulk WhatsApp
-              </button>
-            </div> */}
         </div>
 
         {/* STATS CARDS */}
