@@ -4,11 +4,12 @@ import ClientOverview from "../../components/ClientOverview";
 import { useReactToPrint } from "react-to-print";
 import * as XLSX from "xlsx";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchCompanies } from "../../features/company/companySlice";
+import { fetchCompanies, deleteCompany } from "../../features/company/companySlice";
+import Swal from "sweetalert2";
 import useDashboardStats from "../../hooks/useDashboardStats";
 import {
   FaSearch, FaPlus, FaUpload, FaWhatsapp, FaDownload,
-  FaFilter, FaRedo, FaChevronLeft, FaChevronRight, FaRegStar, FaStar
+  FaFilter, FaRedo, FaChevronLeft, FaChevronRight, FaRegStar, FaStar, FaTrash
 } from "react-icons/fa";
 import { MdOutlineDateRange } from "react-icons/md";
 
@@ -55,7 +56,7 @@ const MasterClientsList = () => {
       Object.keys(statusStats).forEach((statusKey) => {
         const count = statusStats[statusKey];
         const status = statusKey.toLowerCase();
-        
+
         if (status.includes("new")) newLeads += count;
         else if (status.includes("contacted") && !status.includes("not")) contacted += count;
         else if (status.includes("interested") || status.includes("proposal")) interested += count;
@@ -165,6 +166,22 @@ const MasterClientsList = () => {
   const uniqueStatuses = [...new Set(companiesArray.map(c => c.companyStatus).filter(Boolean))];
   const uniqueIndustries = [...new Set(companiesArray.map(c => c.businessNature).filter(Boolean))];
 
+  const handleDelete = (id) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You will not be able to recover this lead!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        dispatch(deleteCompany(id));
+      }
+    });
+  };
+
   return (
     <div className="w-full bg-[#f8fafc] min-h-[calc(100vh-110px)] xl:h-[calc(100vh-110px)] flex flex-col font-sans text-slate-800 p-4 md:px-6 lg:px-8 xl:overflow-hidden">
       <div className="w-full flex-grow flex flex-col xl:min-h-0">
@@ -180,29 +197,6 @@ const MasterClientsList = () => {
             </h1>
             <p className="text-sm text-slate-500 mt-1">Master list of all leads with complete details and status</p>
           </div>
-
-          {/* ACTION BUTTONS */}
-          {/* <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full xl:w-auto">
-              <div className="relative flex-grow xl:flex-grow-0 min-w-[200px] w-full sm:w-auto">
-                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search by Name, Company, Email, Mobile..."
-                  value={globalSearch}
-                  onChange={(e) => { setGlobalSearch(e.target.value); setCurrentPage(1); }}
-                  className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-                />
-              </div>
-              <button className="flex items-center gap-2 bg-[#00a65a] hover:bg-[#008d4c] text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm">
-                <FaPlus size={12} /> Add Lead
-              </button>
-              <button className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm">
-                <FaUpload size={12} className="text-blue-500" /> Import Leads
-              </button>
-              <button className="flex items-center gap-2 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm">
-                <FaWhatsapp size={16} /> Send Bulk WhatsApp
-              </button>
-            </div> */}
         </div>
 
         {/* STATS CARDS */}
@@ -368,6 +362,7 @@ const MasterClientsList = () => {
                   <th className="px-2 py-1.5 font-medium">Lead Score</th>
                   <th className="px-2 py-1.5 font-medium">Handled By / Last Conversation</th>
                   <th className="px-2 py-1.5 font-medium">Next Follow Up</th>
+                  <th className="px-2 py-1.5 font-medium text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
@@ -463,6 +458,15 @@ const MasterClientsList = () => {
                           ) : (
                             <span className="text-[10px] text-slate-400">-</span>
                           )}
+                        </td>
+                        <td className="px-2 py-1.5 text-center">
+                          <button
+                            onClick={() => handleDelete(row._id)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
+                            title="Delete Lead"
+                          >
+                            <FaTrash size={12} />
+                          </button>
                         </td>
                       </tr>
                     );
