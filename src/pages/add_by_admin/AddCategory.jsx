@@ -382,7 +382,7 @@
 //                       ) : (
 //                         <span className="text-gray-400 text-xs italic">N/A</span>
 //                       )}
-//                     </td>
+//                     </td>s
 //                     <td className="p-4">
 //                       <div className="flex items-center justify-center gap-2">
 //                         <button
@@ -440,7 +440,6 @@
 // };
 
 // export default AddCategory;
-
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -1050,7 +1049,7 @@ const AddCategory = () => {
         </section>
 
         <main className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_4px_18px_rgba(15,23,42,0.05)]">
-          <div className="grid shrink-0 grid-cols-[minmax(210px,1.45fr)_minmax(150px,.85fr)_minmax(170px,1fr)_minmax(170px,1fr)_90px_1fr_auto_auto] items-end gap-3 border-b border-slate-200 px-[clamp(12px,1.15vw,20px)] py-2">
+          <div className="grid shrink-0 grid-cols-[minmax(210px,1.45fr)_minmax(150px,.85fr)_minmax(170px,1fr)_minmax(170px,1fr)_90px_1fr_auto_auto] items-center gap-3 border-b border-slate-200 px-[clamp(12px,1.15vw,20px)] py-[clamp(13px,1.3vw,18px)]">
             <div className="relative min-w-0">
               <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#284780]" />
               <input
@@ -1058,7 +1057,7 @@ const AddCategory = () => {
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Search category by name..."
-                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-4 pr-10 text-[clamp(10px,.72vw,12px)] font-semibold text-[#173978] outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="h-[46px] w-full rounded-lg border border-slate-200 bg-white px-4 pr-10 text-[clamp(10px,.72vw,12px)] font-semibold text-[#173978] outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
             </div>
 
@@ -1098,7 +1097,7 @@ const AddCategory = () => {
             <button
               type="button"
               onClick={resetFilters}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-[clamp(10px,.7vw,12px)] font-bold text-[#173978] transition hover:bg-slate-50"
+              className="inline-flex h-[46px] items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-[clamp(10px,.7vw,12px)] font-bold text-[#173978] transition hover:bg-slate-50"
             >
               <RotateCcw className="h-4 w-4" />
               Reset
@@ -1110,7 +1109,7 @@ const AddCategory = () => {
               type="button"
               onClick={exportCategories}
               disabled={!filteredCategories.length}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-5 text-[clamp(10px,.72vw,12px)] font-bold text-[#173978] transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-[46px] items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-5 text-[clamp(10px,.72vw,12px)] font-bold text-[#173978] transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Download className="h-4 w-4" />
               Export
@@ -1124,7 +1123,7 @@ const AddCategory = () => {
                 setMainCategoryFilter('All');
                 setCurrentPage(1);
               }}
-              className="grid h-9 w-[46px] place-items-center rounded-lg border border-slate-200 bg-white text-[#173978] transition hover:bg-slate-50"
+              className="grid h-[46px] w-[54px] place-items-center rounded-lg border border-slate-200 bg-white text-[#173978] transition hover:bg-slate-50"
               title="Clear advanced filters"
             >
               <SlidersHorizontal className="h-4 w-4" />
@@ -1493,14 +1492,15 @@ const AddCategory = () => {
 };
 
 const FilterSelect = ({ label, value, onChange, options, allLabel }) => (
-  <label className="relative flex h-9 min-w-0 flex-col justify-center rounded-lg border border-slate-200 bg-white px-3 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
-    <span className="pointer-events-none mb-0.5 block truncate text-[clamp(8px,.58vw,9px)] font-bold leading-none text-[#284780]">
+  <label className="relative block min-w-0">
+    <span className="pointer-events-none absolute left-3 top-[2px] z-10 max-w-[calc(100%-28px)] -translate-y-1/2 truncate bg-white px-1.5 text-[clamp(8px,.6vw,10px)] font-bold leading-none text-[#284780]">
       {label}
     </span>
+
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className="w-full appearance-none truncate bg-transparent pr-6 text-[clamp(9px,.69vw,11px)] font-bold leading-none text-[#173978] outline-none"
+      className="h-[46px] w-full appearance-none truncate rounded-lg border border-slate-200 bg-white px-4 pr-10 text-[clamp(9px,.69vw,11px)] font-bold text-[#173978] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
     >
       {options.map((option) => (
         <option key={option} value={option}>
@@ -1508,6 +1508,7 @@ const FilterSelect = ({ label, value, onChange, options, allLabel }) => (
         </option>
       ))}
     </select>
+
     <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#284780]" />
   </label>
 );
